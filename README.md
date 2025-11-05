@@ -18,7 +18,7 @@ This is a monorepo containing three main applications:
 - Trial lesson workflows
 - Pipeline/Kanban management for services
 
-[→ Backend Documentation](./tdf-hq/README.md)
+[→ Backend Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq/README.md)
 
 ### Web UI - `tdf-hq-ui/`
 **Tech Stack:** React + Vite + MUI + React Query + TypeScript  
@@ -31,7 +31,7 @@ This is a monorepo containing three main applications:
 - Dark/light theme toggle with persistence
 - Type-safe API client generated from OpenAPI specs
 
-[→ Web UI Documentation](./tdf-hq-ui/README.md)
+[→ Web UI Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq-ui/README.md)
 
 ### Mobile App - `tdf-mobile/`
 **Tech Stack:** Expo + React Native + React Query + TypeScript  
@@ -42,7 +42,7 @@ This is a monorepo containing three main applications:
 - Calendar integration
 - Offline support (planned)
 
-[→ Mobile Documentation](./tdf-mobile/README.md)
+[→ Mobile Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-mobile/README.md)
 
 ## 🚀 Quick Start
 
@@ -229,10 +229,10 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 
 ## 📖 Documentation
 
-- [Backend API Reference](./tdf-hq/docs/api.md)
-- [OpenAPI Specs](./tdf-hq/docs/openapi/)
-- [Business Requirements](./specs.yaml)
-- [Legacy Documentation](./docs/legacy/)
+- [Backend API Reference](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq/docs/api.md)
+- [OpenAPI Specs](https://github.com/diegueins680/tdf-app/tree/main/tdf-hq/docs/openapi/)
+- [Business Requirements](https://github.com/diegueins680/tdf-app/blob/main/specs.yaml)
+- [Legacy Documentation](https://github.com/diegueins680/tdf-app/tree/main/docs/legacy/)
 
 ## 🤝 Contributing
 
