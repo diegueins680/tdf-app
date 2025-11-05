@@ -1,0 +1,13 @@
+.stack-work/
+*~
+*.swp
+*.swo
+.env
+dist/
+dist-newstyle/
+.cabal-sandbox/
+cabal.sandbox.config
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o

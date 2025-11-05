@@ -46,6 +46,8 @@ This is a monorepo containing three main applications:
 
 ## 🚀 Quick Start
 
+**New Feature:** User Role Management system is now implemented! See [QUICKSTART.md](./QUICKSTART.md) for detailed setup instructions.
+
 ### Prerequisites
 - **Backend:** Stack (Haskell), PostgreSQL 16
 - **Frontend/Mobile:** Node.js 18+, npm 9+
@@ -185,7 +187,9 @@ EXPO_PUBLIC_API_BASE=http://localhost:8080
 
 ### CRM & Parties
 - Unified party model (customers, teachers, staff)
-- Role-based access (Admin, Manager, Teacher, Reception, etc.)
+- **User Role Management System** - Manage user roles via web UI with real-time updates
+- Role-based access (Admin, Manager, Engineer, Teacher, Reception, Accounting, ReadOnly)
+- Additional roles: Customer, Artist, Student
 - Instagram/WhatsApp integration
 - Emergency contacts & tax ID tracking
 
@@ -229,6 +233,8 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 
 ## 📖 Documentation
 
+- [Quick Start Guide](./QUICKSTART.md) - Get the user role management system running
+- [Implementation Summary](./IMPLEMENTATION_SUMMARY.md) - Technical architecture details
 - [Backend API Reference](./tdf-hq/docs/api.md)
 - [OpenAPI Specs](./tdf-hq/docs/openapi/)
 - [Business Requirements](./specs.yaml)
