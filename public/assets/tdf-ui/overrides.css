@@ -1,0 +1,11 @@
+
+/* TDF PR Bundle: header contrast + logo scale + remove wordmark */
+.site-header{ background:#11131a; border-bottom:1px solid color-mix(in oklab, white 8%, transparent); backdrop-filter:saturate(160%) blur(10px); }
+.site-header .brand-logo{ inline-size: clamp(32px, 2.8vw, 44px); block-size: clamp(32px, 2.8vw, 44px); }
+.brand-title{ display:none; }
+.nav-links a{ color:#f5f7ff; font-weight:600; opacity:.92 }
+.nav-links a:hover{ opacity:1 }
+.nav-links a[aria-current='page']{ color:#fff; background: color-mix(in oklab, var(--brand) 28%, transparent); border:1px solid color-mix(in oklab, var(--brand) 54%, transparent) }
+.site-header .btn{ color:#f5f7ff }
+.site-header .btn.btn-outline{ border-color: color-mix(in oklab, white 16%, transparent) }
+.site-header .btn.btn-outline:hover{ background: color-mix(in oklab, white 6%, transparent) }

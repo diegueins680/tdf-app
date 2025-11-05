@@ -1,0 +1,145 @@
+organization:
+  name: "TDF"
+  timezone: "America/Guayaquil"
+  currency: "USD"
+  languages: ["es", "en"]
+
+personas: ["Admin","Manager","Engineer","Teacher","Reception","Accounting","Artist","Student"]
+primary_goal_v1: "CRM + Scheduling + Packages + Invoicing/Payments + Reports"
+platforms: ["web"]
+offline_support: false
+admin_panel: true
+
+identity_model:
+  unified_party_roles: true
+  party_fields_extra: ["instagram","whatsapp","tax_id","emergency_contact"]
+  bands_and_membership: true
+  label_contracts_in_v1: false
+
+services:
+  - name: "Recording"
+    pricing_model: "hourly"
+    tax_rate: "12%"
+  - name: "Mixing"
+    pricing_model: "per_song"
+  - name: "Mastering"
+    pricing_model: "per_song"
+  - name: "Rehearsal"
+    pricing_model: "hourly"
+    default_rate_usd: 15
+  - name: "Classes"
+    pricing_model: "package"
+  - name: "Event Production"
+    pricing_model: "quote"
+discounts: ["student","promo_codes"]
+
+packages:
+  - name: "Guitar 24h"
+    service: "Classes"
+    price_usd: 500
+    units: {kind: "hours", qty: 24}
+    expires_days: 120
+    transferable: false
+    refund_policy: "credit_only"
+
+scheduling:
+  # Treat all of these as Resources(type=Room)
+  rooms: ["Booth A","Booth B","Booth C","Booth D","Live Room","Control Room","Synth Room","Studio A","Studio B","Rehearsal 1","Classroom"]
+  rules:
+    min_booking_minutes: 60
+    buffer_minutes: 15
+  cancellations:
+    free_before_hours: 24
+    late_fee_percent: 50
+  attendance_tracking: true
+  calendar_sync: {google: true, two_way: true}
+
+payments_invoicing:
+  methods: ["cash","bank_transfer","card_pos"]
+  deposits_allowed: true
+  installments: true
+  invoice_pdf_branding: true
+  sri_e_invoicing: "later"
+  split_payments: true
+  refunds: "credit_note"
+
+pipelines:
+  Recording: ["Inquiry","Quoted","Scheduled","In Session","Editing","Approved","Delivered","Closed"]
+  Mixing: ["Brief","Prep","v1 Sent","Revisions","Approved","Delivered"]
+  Mastering: ["Brief","v1","Revisions","Approved","DDP Delivered"]
+  Rehearsal: ["Booked","In Use","Completed","No-show"]
+  Classes: ["Enrolled","Scheduled","Attended","Make-up Needed","Completed"]
+  EventProduction: ["Lead","Proposal","Confirmed","Pre-Prod","Onsite","Post-Prod","Settled"]
+
+teachers_classes:
+  class_types: ["Guitar","Bass","Voice","Ableton","Modular","DJ"]
+  formats: ["1:1","group<=6","workshops"]
+  payout_rules: {type: "percent", value: 60}
+  make_up_policy: "allow_within_30_days"
+
+inventory:
+  track_serials: true
+  track_location: true
+  checkin_checkout: true
+  qr_barcodes: true
+  maintenance:
+    enabled: true
+    intervals: ["quarterly","annual"]
+  consumables_stock: true
+  reorder_points: true
+
+crm_pipeline:
+  enabled: true
+  stages: ["Lead","Qualified","Proposal","Won","Lost"]
+  capture_sources: ["web_form","instagram","email"]
+
+roles_permissions:
+  roles: ["Admin","Manager","Engineer","Teacher","Reception","Accounting","ReadOnly"]
+  sensitive_data_visibility: ["Admin","Accounting"]
+
+reporting:
+  kpis: ["revenue_by_service","utilization","package_expiry","ar_aging","inventory_maintenance_due"]
+  exports: ["CSV","PDF","XLSX"]
+  scheduled_reports: ["monthly_financial","weekly_utilization"]
+
+integrations:
+  accounting: "QuickBooks"
+  payments: ["card_pos","bank_transfer"]
+  calendars: {google: true}
+  comms: {gmail: true, whatsapp: true}
+  storage: "Google Drive"
+  e_signature: "later"
+
+data_migration:
+  sources: ["google_sheets","gcal","pdf_invoices"]
+  need_importers: true
+  preserve_legacy_ids: true
+
+compliance:
+  sri_e_invoicing: "later"
+  privacy_consent_required: true
+  retention_years: 5
+
+tech_stack_preferences:
+  backend: "Servant + PostgreSQL (Persistent/Esqueleto)"
+  auth: "Google OAuth + JWT"
+  frontend: "React or HTMX"
+  hosting: "Cloud"
+  backups: "daily_7d_weekly_4w_monthly_12m"
+
+seed_data:
+  artists: ["Arkabuz","El Bloque","Skanka Fe","Quimika Soul","Juano Ledesma"]
+  teachers: ["César Galarza","Fabricio Alomía","Juan Ledesma"]
+  rooms: ["Studio A","Studio B","Rehearsal 1","Classroom"]
+  initial_gear: ["Korg SV1","Prophet 08","Moog Subsequent 37","Gibson Ripper Bass","Model 1","SVT","Tone Hammer"]
+
+priorities:
+  party_crm: "Must"
+  scheduling: "Must"
+  payments_invoices: "Must"
+  packages_credits: "Must"
+  pipelines_kanban: "Should"
+  inventory_maintenance: "Should"
+  reports_exports: "Must"
+  integrations: ["Google Calendar","Gmail"]
+  admin_panel_roles: "Must"

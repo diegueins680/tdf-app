@@ -1,0 +1,32 @@
+{
+  "name": "tdf-app",
+  "version": "0.2.0",
+  "private": true,
+  "description": "TDF Records - CRM, Scheduling, Packages & Invoicing Platform",
+  "workspaces": [
+    "tdf-hq-ui",
+    "tdf-mobile"
+  ],
+  "scripts": {
+    "dev:ui": "npm run dev --workspace=tdf-hq-ui",
+    "dev:mobile": "npm run start --workspace=tdf-mobile",
+    "build:ui": "npm run build --workspace=tdf-hq-ui",
+    "test:ui": "npm run test --workspace=tdf-hq-ui",
+    "generate:api:ui": "npm run generate:api --workspace=tdf-hq-ui",
+    "generate:api:mobile": "npm run generate:api --workspace=tdf-mobile",
+    "clean": "rm -rf node_modules tdf-hq-ui/node_modules tdf-mobile/node_modules",
+    "clean:build": "rm -rf tdf-hq-ui/dist tdf-mobile/dist tdf-hq/.stack-work"
+  },
+  "keywords": [
+    "crm",
+    "scheduling",
+    "invoicing",
+    "music-studio"
+  ],
+  "author": "TDF Records",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/diegueins680/tdf-app"
+  }
+}

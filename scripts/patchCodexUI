@@ -1,0 +1,42 @@
+diff --git a/public/docs/index.html b/public/docs/index.html
+new file mode 100644
+index 0000000..7b3a4b1
+--- /dev/null
++++ b/public/docs/index.html
+@@ -0,0 +1,41 @@
++<!doctype html>
++<html lang="en">
++  <head>
++    <meta charset="utf-8" />
++    <meta name="viewport" content="width=device-width, initial-scale=1" />
++    <title>TDF API Docs</title>
++    <link
++      rel="stylesheet"
++      href="https://unpkg.com/swagger-ui-dist/swagger-ui.css"
++    />
++    <style>
++      html, body, #swagger-ui { height: 100%; margin: 0; }
++    </style>
++  </head>
++  <body>
++    <div id="swagger-ui"></div>
++    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
++    <script>
++      window.onload = () => {
++        // Renders the spec that already exists in the backend repo
++        // If the path ever changes, update the URL below.
++        const SPEC_URL =
++          "https://raw.githubusercontent.com/diegueins680/TDF/main/docs/openapi/lessons-and-receipts.yaml";
++
++        window.ui = SwaggerUIBundle({
++          url: SPEC_URL,
++          dom_id: "#swagger-ui",
++          deepLinking: true,
++          presets: [SwaggerUIBundle.presets.apis],
++          layout: "BaseLayout",
++        });
++      };
++    </script>
++  </body>
++  </html>
+

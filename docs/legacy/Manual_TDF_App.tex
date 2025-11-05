@@ -1,0 +1,366 @@
+\documentclass[12pt,a4paper]{report}
+
+% --- Paquetes base (Overleaf/pdfLaTeX friendly) ---
+\usepackage[spanish, es-nodecimaldot]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+
+% --- Hipervínculos bonitos ---
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+  citecolor=black
+}
+
+% --- Encabezados y pies de página ---
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{TDF HQ — Manual de Usuario (v1)}
+\rhead{\leftmark}
+\cfoot{\thepage}
+
+% --- Estilo de secciones ---
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection.}{0.4em}{}
+
+% --- Listados de código (bash, JSON) ---
+\lstdefinestyle{tdfcode}{
+  basicstyle=\ttfamily\small,
+  frame=single,
+  framerule=0.4pt,
+  framesep=6pt,
+  rulecolor=\color{black!30},
+  xleftmargin=0pt,
+  xrightmargin=0pt,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+\lstdefinelanguage{bash}{
+  morekeywords={curl,cd,ls,grep,sed,awk,printf,echo,export,source,stack,createdb,psql},
+  sensitive=true
+}
+\lstdefinelanguage{json}{
+  morestring=[b]",
+  morecomment=[l]{//},
+  literate=
+   *{0}{{{\color{black}0}}}{1}
+    {1}{{{\color{black}1}}}{1}
+    {2}{{{\color{black}2}}}{1}
+    {3}{{{\color{black}3}}}{1}
+    {4}{{{\color{black}4}}}{1}
+    {5}{{{\color{black}5}}}{1}
+    {6}{{{\color{black}6}}}{1}
+    {7}{{{\color{black}7}}}{1}
+    {8}{{{\color{black}8}}}{1}
+    {9}{{{\color{black}9}}}{1}
+}
+
+% --- Portada ---
+\title{\vspace{-2cm}\textbf{Manual de Usuario}\\[2mm]\large TDF HQ — CRM, Agendamiento, Paquetes e Invoicing (v1)}
+\author{TDF Records / TDF Estudio}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introducción y alcance}
+\textbf{TDF HQ} centraliza las operaciones del estudio y sello:
+\begin{itemize}[topsep=2pt]
+  \item \textbf{CRM:} artistas, clientes, profesores, ingenieros.
+  \item \textbf{Agendamiento:} reservas básicas (sesiones, ensayos, clases).
+  \item \textbf{Paquetes de clases:} productos y compras.
+  \item \textbf{Facturación:} creación de facturas en borrador.
+\end{itemize}
+
+\noindent
+Esta versión (v1) expone un \textbf{backend API} en Haskell (Servant + Persistent + PostgreSQL) con migraciones automáticas y datos semilla para pruebas.
+\medskip
+
+\noindent
+\textit{No incluido aún:} autenticación/roles en API, detección de conflictos de recursos, deducción automática de créditos por asistencia, PDF de factura y SRI, Google Calendar. El modelo de datos ya lo contempla para siguientes versiones.
+
+\section{Requisitos del sistema}
+\begin{itemize}[topsep=2pt]
+  \item \textbf{PostgreSQL} 14–16 (recomendado 16).
+  \item \textbf{Haskell Stack} (Stack descarga GHC automáticamente).
+  \item macOS o Linux (Windows funciona con WSL/instalador).
+  \item Conexión a internet para la primera compilación.
+\end{itemize}
+
+\section{Instalación rápida}
+\subsection{macOS (Homebrew)}
+\begin{lstlisting}[style=tdfcode,language=bash]
+brew install haskell-stack postgresql@16
+brew services start postgresql@16
+echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+\end{lstlisting}
+
+\subsection{Ubuntu/Debian}
+\begin{lstlisting}[style=tdfcode,language=bash]
+sudo apt update
+sudo apt install haskell-stack postgresql postgresql-contrib
+sudo service postgresql start
+\end{lstlisting}
+
+\section{Configuración}
+\subsection{Variables de entorno}
+Desde la carpeta del proyecto:
+\begin{lstlisting}[style=tdfcode,language=bash]
+set -a; source config/default.env; set +a
+\end{lstlisting}
+
+\noindent
+Valores por defecto:
+\begin{lstlisting}[style=tdfcode,language=bash]
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=postgres
+DB_NAME=tdf_hq
+APP_PORT=8080
+\end{lstlisting}
+
+\subsection{Base de datos}
+\begin{lstlisting}[style=tdfcode,language=bash]
+createdb tdf_hq || psql -d postgres -c "CREATE DATABASE tdf_hq;"
+psql -d postgres -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+\end{lstlisting}
+
+\section{Compilación y ejecución}
+\begin{lstlisting}[style=tdfcode,language=bash]
+stack build
+stack run
+\end{lstlisting}
+
+\noindent
+Salida esperada:
+\begin{lstlisting}[style=tdfcode,language=bash]
+Running DB migrations...
+Starting server on port 8080
+\end{lstlisting}
+
+\noindent
+Prueba de salud:
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl http://localhost:8080/health
+# {"status":"ok","db":"ok"}
+\end{lstlisting}
+
+\section{Datos semilla (desarrollo)}
+\textbf{Sólo} para entorno de desarrollo (crea artistas, profesores, salas, paquete Guitar 24h y equipo inicial):
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/admin/seed
+\end{lstlisting}
+
+\section{Uso por áreas}
+\subsection{CRM (Party/Personas)}
+\paragraph{Crear persona}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/parties \
+  -H "Content-Type: application/json" \
+  -d '{"cDisplayName":"Juano Ledesma","cIsOrg":false,
+       "cPrimaryEmail":"juano@tdf.com"}'
+\end{lstlisting}
+
+\paragraph{Listar personas}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl http://localhost:8080/parties
+\end{lstlisting}
+
+\paragraph{Consultar/Actualizar}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl http://localhost:8080/parties/1
+curl -X PUT http://localhost:8080/parties/1 \
+  -H "Content-Type: application/json" \
+  -d '{"uInstagram":"@juano"}'
+\end{lstlisting}
+
+\paragraph{Asignar rol} (valores: Artist, Teacher, Engineer, Customer, etc.)
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/parties/1/roles \
+  -H "Content-Type: application/json" \
+  -d '"Artist"'
+\end{lstlisting}
+
+\subsection{Agendamiento (Bookings)}
+\paragraph{Crear reserva}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/bookings \
+  -H "Content-Type: application/json" \
+  -d '{"cbTitle":"Rehearsal Arkabuz",
+       "cbStartsAt":"2025-10-01T19:00:00Z",
+       "cbEndsAt":"2025-10-01T21:00:00Z",
+       "cbStatus":"Confirmed"}'
+\end{lstlisting}
+
+\paragraph{Listar reservas}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl http://localhost:8080/bookings
+\end{lstlisting}
+
+\subsection{Paquetes de clases}
+\paragraph{Ver productos}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl http://localhost:8080/packages/products
+\end{lstlisting}
+
+\paragraph{Registrar compra}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/packages/purchases \
+  -H "Content-Type: application/json" \
+  -d '{"buyerId":1,"productId":1}'
+\end{lstlisting}
+
+\subsection{Facturación}
+\paragraph{Crear factura (borrador)}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/invoices \
+  -H "Content-Type: application/json" \
+  -d '{"ciCustomerId":1,"ciSubtotalCents":150000,
+       "ciTaxCents":18000,"ciTotalCents":168000}'
+\end{lstlisting}
+
+\paragraph{Listar facturas}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl http://localhost:8080/invoices
+\end{lstlisting}
+
+\section{Referencia rápida de endpoints}
+\begin{longtable}{p{4.2cm}p{7.6cm}p{3.2cm}}
+\hline
+\textbf{Endpoint} & \textbf{Descripción} & \textbf{Método} \\
+\hline
+\endhead
+/health & Salud del servidor & GET \\
+/parties & Lista/creación de personas (Party) & GET, POST \\
+/parties/:id & Obtener/actualizar una persona & GET, PUT \\
+/parties/:id/roles & Asignar un rol a la persona & POST \\
+/bookings & Listar/crear reservas & GET, POST \\
+/packages/products & Ver productos de paquete & GET \\
+/packages/purchases & Registrar compra de paquete & POST \\
+/invoices & Listar/crear facturas (borrador) & GET, POST \\
+/admin/seed & Semilla de datos (dev) & POST \\
+\hline
+\end{longtable}
+
+\section{Roles y permisos recomendados (cuando se active Auth)}
+\begin{itemize}[topsep=2pt]
+  \item \textbf{Admin/Manager:} acceso total.
+  \item \textbf{Reception:} CRM básico, ventas de paquetes, reservas.
+  \item \textbf{Teacher/Engineer:} ver agenda propia, actualizar asistencia (próximo).
+  \item \textbf{Accounting:} facturas, pagos, notas de crédito, reportes.
+\end{itemize}
+
+\section{Respaldo y restauración (DB)}
+\paragraph{Backup}
+\begin{lstlisting}[style=tdfcode,language=bash]
+pg_dump -h 127.0.0.1 -U postgres -d tdf_hq -F c \
+  -f tdf_hq_$(date +%F).dump
+\end{lstlisting}
+
+\paragraph{Restore}
+\begin{lstlisting}[style=tdfcode,language=bash]
+pg_restore -h 127.0.0.1 -U postgres -d tdf_hq \
+  --clean --create tdf_hq_YYYY-MM-DD.dump
+\end{lstlisting}
+
+\section{Solución de problemas}
+\begin{itemize}[topsep=2pt]
+  \item \textbf{\texttt{stack: command not found}}: instalar Stack y añadir \texttt{\$HOME/.local/bin} al PATH.
+  \item \textbf{\texttt{createdb: command not found}}: instalar Postgres y añadir \texttt{bin} al PATH.
+  \item \textbf{Plan de Stack no resuelto (\texttt{persistent-postgresql})}:
+  relajar versión en \texttt{.cabal} a \texttt{$\ge$2.13} \textit{o} añadir \texttt{extra-deps} sugeridos en \texttt{stack.yaml}.
+  \item \textbf{Error \texttt{libpq: invalid connection option "pool"}}:
+  remover \texttt{pool=10} del connection string; el pool lo maneja Haskell.
+  \item \textbf{Warning \texttt{libpq.dylib built for newer macOS}}: es sólo advertencia.
+\end{itemize}
+
+\section{Roadmap sugerido}
+\begin{enumerate}[topsep=2pt]
+  \item Autenticación Google OAuth + RBAC.
+  \item Conflictos de recursos (salas/profesores/equipo) + buffers.
+  \item Ledger de paquetes (descuento al marcar asistencia).
+  \item Integración Google Calendar (dos vías).
+  \item Facturas PDF con marca TDF + numeración (SRI).
+  \item Inventario: check-in/out con QR y mantenimiento.
+  \item Reportes: revenue por servicio, utilización, aging, expiración de paquetes.
+\end{enumerate}
+
+\section{Glosario}
+\begin{description}[style=nextline]
+  \item[Party] Persona/organización con roles (Artist, Teacher, Engineer, Customer, Vendor).
+  \item[Booking] Reserva en calendario (ensayo, sesión, clase).
+  \item[PackageProduct / Purchase] Producto de horas/clases y su compra.
+  \item[Invoice] Factura con totales (líneas/PDF en próximas versiones).
+  \item[Resource] Recurso físico o humano (sala, profesor, ingeniero, equipo).
+\end{description}
+
+\appendix
+\section*{Apéndice A — Ejemplos listos para pegar}
+\addcontentsline{toc}{section}{Apéndice A — Ejemplos listos para pegar}
+
+\paragraph{Crear cliente}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/parties \
+  -H "Content-Type: application/json" \
+  -d '{"cDisplayName":"El Bloque (Manager)","cIsOrg":true,
+       "cPrimaryEmail":"manager@elbloque.com"}'
+\end{lstlisting}
+
+\paragraph{Asignar rol Customer}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/parties/2/roles \
+  -H "Content-Type: application/json" \
+  -d '"Customer"'
+\end{lstlisting}
+
+\paragraph{Booking de grabación}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/bookings \
+  -H "Content-Type: application/json" \
+  -d '{"cbTitle":"Recording - Live Room",
+       "cbStartsAt":"2025-10-02T15:00:00Z",
+       "cbEndsAt":"2025-10-02T18:00:00Z",
+       "cbStatus":"Confirmed"}'
+\end{lstlisting}
+
+\paragraph{Vender paquete Guitar 24h}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl http://localhost:8080/packages/products
+curl -X POST http://localhost:8080/packages/purchases \
+  -H "Content-Type: application/json" \
+  -d '{"buyerId":1,"productId":1}'
+\end{lstlisting}
+
+\paragraph{Crear factura}
+\begin{lstlisting}[style=tdfcode,language=bash]
+curl -X POST http://localhost:8080/invoices \
+  -H "Content-Type: application/json" \
+  -d '{"ciCustomerId":1,"ciSubtotalCents":50000,
+       "ciTaxCents":6000,"ciTotalCents":56000}'
+\end{lstlisting}
+
+\vfill
+\begin{center}
+\footnotesize{\textit{TDF HQ v1 — Este manual describe la versión base del backend. Las funcionalidades avanzadas se agregarán de forma incremental.}}
+\end{center}
+
+\end{document}

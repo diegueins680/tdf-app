@@ -1,0 +1,34 @@
+-- Append these entities to your Persistent models file (e.g., config/models)
+-- Adjust 'projects' foreign key name if your Project entity differs.
+ProjectStage
+    name Text
+    Primary name
+    deriving Show Eq
+
+SopRequirement
+    projectType Text
+    stage Text             -- matches ProjectStage.name
+    reqKey Text
+    label Text
+    UniqueSopRequirement projectType stage reqKey
+    deriving Show Eq
+
+SopEvidence
+    projectId Int          -- REFERENCES projects(id)
+    reqKey Text            -- must match SopRequirement.reqKey
+    value Text Maybe
+    url Text Maybe
+    checkedBy Text Maybe
+    checkedAt UTCTime default=CURRENT_TIMESTAMP
+    UniqueSopEvidence projectId reqKey
+    deriving Show Eq
+
+StageTransition
+    projectId Int          -- REFERENCES projects(id)
+    fromStage Text
+    toStage Text
+    byUser Text
+    at UTCTime default=CURRENT_TIMESTAMP
+    ok Bool
+    message Text Maybe
+    deriving Show Eq

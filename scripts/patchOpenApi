@@ -1,0 +1,34 @@
+diff --git a/.github/workflows/openapi-validate.yml b/.github/workflows/openapi-validate.yml
+new file mode 100644
+index 0000000..2c6a8b3
+--- /dev/null
++++ b/.github/workflows/openapi-validate.yml
+@@ -0,0 +1,38 @@
++name: Validate OpenAPI
++
++on:
++  push:
++    paths:
++      - 'docs/openapi/**/*.yaml'
++      - '.github/workflows/openapi-validate.yml'
++  pull_request:
++    paths:
++      - 'docs/openapi/**/*.yaml'
++
++jobs:
++  lint:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v4
++
++      - name: Set up Node
++        uses: actions/setup-node@v4
++        with:
++          node-version: '20'
++
++      - name: Install Redocly CLI
++        run: npm i -g @redocly/cli
++
++      - name: Lint OpenAPI
++        run: redocly lint docs/openapi/lessons-and-receipts.yaml

@@ -1,0 +1,68 @@
+# Secrets and credentials
+*.env
+*.env.local
+*.env.production
+*.env.development
+*secret*.json
+neon-env-vars
+*.pem
+*.key
+
+# Build artifacts - Backend (Haskell)
+.stack-work/
+.stack-root/
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+dist/
+dist-newstyle/
+
+# Build artifacts - Frontend
+node_modules/
+dist/
+build/
+.next/
+out/
+.vite/
+*.tsbuildinfo
+
+# Mobile/Expo
+.expo/
+.expo-shared/
+android/
+ios/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# Archives (move to patches/ directory)
+*.patch
+*.zip
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
