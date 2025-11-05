@@ -24,14 +24,17 @@ This is a monorepo containing three main applications:
 **Tech Stack:** React + Vite + MUI + React Query + TypeScript  
 **Purpose:** Admin/management web interface
 
-- Party (customer) management with search & filters
-- FullCalendar-based booking interface
-- Kanban pipelines for mixing/mastering workflows
-- Package & invoice management
+- **Dashboard** - Analytics overview with revenue, utilization, AR, and maintenance tracking
+- **Party Management** - Customer/contact management with search & filters
+- **Package Catalog** - Create and manage lesson/service packages with expiration tracking
+- **Invoicing** - Multi-line invoices with payment recording (cash, transfer, card)
+- **Inventory** - Equipment tracking with check-in/out and maintenance scheduling
+- **Bookings** - FullCalendar-based scheduling for studios and rooms
+- **Kanban Pipelines** - Drag-and-drop workflows for mixing/mastering/classes
 - Dark/light theme toggle with persistence
 - Type-safe API client generated from OpenAPI specs
 
-[→ Web UI Documentation](./tdf-hq-ui/README.md)
+[→ Web UI Documentation](./tdf-hq-ui/README.md) | [→ Features Guide](./FEATURES.md)
 
 ### Mobile App - `tdf-mobile/`
 **Tech Stack:** Expo + React Native + React Query + TypeScript  
@@ -227,11 +230,13 @@ EXPO_PUBLIC_API_BASE=http://localhost:8080
 
 All sensitive files are now in `.gitignore`. Review `archives/` directory for any accidentally committed secrets.
 
-## 📖 Documentation
+## 📚 Documentation
 
+- [Features Guide](./FEATURES.md) - Comprehensive feature documentation
 - [Backend API Reference](./tdf-hq/docs/api.md)
 - [OpenAPI Specs](./tdf-hq/docs/openapi/)
 - [Business Requirements](./specs.yaml)
+- [Development Guide](./DEVELOPMENT.md)
 - [Legacy Documentation](./docs/legacy/)
 
 ## 🤝 Contributing
