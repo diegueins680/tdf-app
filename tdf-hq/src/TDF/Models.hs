@@ -46,7 +46,6 @@ Party json
   name Text
   email Text Maybe
   phone Text Maybe
-  role PartyRole
   instagram Text Maybe
   whatsapp Text Maybe
   taxId Text Maybe
@@ -64,5 +63,12 @@ User json
   createdAt UTCTime default=CURRENT_TIMESTAMP
   updatedAt UTCTime default=CURRENT_TIMESTAMP
   UniqueUserParty partyId
+  deriving Show Eq Generic
+
+PartyRoleAssignment json
+  partyId PartyId
+  role PartyRole
+  createdAt UTCTime default=CURRENT_TIMESTAMP
+  UniquePartyRoleAssignment partyId role
   deriving Show Eq Generic
 |]

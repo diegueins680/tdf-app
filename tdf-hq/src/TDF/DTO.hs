@@ -15,7 +15,7 @@ data UserWithParty = UserWithParty
   { uwpUserId :: Int
   , uwpEmail :: Maybe Text
   , uwpName :: Text
-  , uwpRole :: PartyRole
+  , uwpRoles :: [PartyRole]
   , uwpIsActive :: Bool
   , uwpLastLoginAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
@@ -23,13 +23,13 @@ data UserWithParty = UserWithParty
 instance ToJSON UserWithParty
 instance FromJSON UserWithParty
 
--- | Request to update a user's role
-data UpdateRoleRequest = UpdateRoleRequest
-  { urrRole :: PartyRole
+-- | Request to update a user's roles
+data UpdateRolesRequest = UpdateRolesRequest
+  { urrRoles :: [PartyRole]
   } deriving (Show, Eq, Generic)
 
-instance ToJSON UpdateRoleRequest
-instance FromJSON UpdateRoleRequest
+instance ToJSON UpdateRolesRequest
+instance FromJSON UpdateRolesRequest
 
 -- | Response for role update
 data UpdateRoleResponse = UpdateRoleResponse

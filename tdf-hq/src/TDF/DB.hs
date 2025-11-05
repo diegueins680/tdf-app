@@ -33,33 +33,47 @@ getAllUsersWithParty = do
       maybeParty <- get (userPartyId user)
       case maybeParty of
         Nothing -> error "User without party - database integrity issue"
-        Just party -> return $ UserWithParty
-          { uwpUserId = fromIntegral $ fromSqlKey userId
-          , uwpEmail = partyEmail party
-          , uwpName = partyName party
-          , uwpRole = partyRole party
-          , uwpIsActive = userIsActive user
-          , uwpLastLoginAt = userLastLoginAt user
-          }
+        Just party -> do
+          -- Get all roles for this party
+          roleAssignments <- selectList [PartyRoleAssignmentPartyId ==. userPartyId user] []
+          let roles = map (partyRoleAssignmentRole . entityVal) roleAssignments
+          return $ UserWithParty
+            { uwpUserId = fromIntegral $ fromSqlKey userId
+            , uwpEmail = partyEmail party
+            , uwpName = partyName party
+            , uwpRoles = roles
+            , uwpIsActive = userIsActive user
+            , uwpLastLoginAt = userLastLoginAt user
+            }
 
--- | Update user's role (by updating the associated party)
-updateUserRole :: Int -> PartyRole -> DB (Maybe UserWithParty)
-updateUserRole userIdInt newRole = do
+-- | Update user's roles (by updating the associated party role assignments)
+updateUserRoles :: Int -> [PartyRole] -> DB (Maybe UserWithParty)
+updateUserRoles userIdInt newRoles = do
   let userId = toSqlKey (fromIntegral userIdInt)
   maybeUser <- get userId
   case maybeUser of
     Nothing -> return Nothing
     Just user -> do
       now <- liftIO getCurrentTime
-      update (userPartyId user) [PartyRole =. newRole, PartyUpdatedAt =. now]
-      maybeParty <- get (userPartyId user)
+      let partyId = userPartyId user
+      
+      -- Delete all existing role assignments for this party
+      deleteWhere [PartyRoleAssignmentPartyId ==. partyId]
+      
+      -- Insert new role assignments
+      mapM_ (\role -> insert_ $ PartyRoleAssignment partyId role now) newRoles
+      
+      -- Update party's updatedAt timestamp
+      update partyId [PartyUpdatedAt =. now]
+      
+      maybeParty <- get partyId
       case maybeParty of
         Nothing -> return Nothing
         Just party -> return $ Just $ UserWithParty
           { uwpUserId = userIdInt
           , uwpEmail = partyEmail party
           , uwpName = partyName party
-          , uwpRole = partyRole party
+          , uwpRoles = newRoles
           , uwpIsActive = userIsActive user
           , uwpLastLoginAt = userLastLoginAt user
           }

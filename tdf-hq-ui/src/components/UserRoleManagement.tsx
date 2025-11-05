@@ -17,8 +17,10 @@ import {
   Box,
   Chip,
   SelectChangeEvent,
+  OutlinedInput,
+  InputLabel,
 } from '@mui/material'
-import { getUsers, updateUserRole, PartyRole } from '../api/client'
+import { getUsers, updateUserRoles, PartyRole } from '../api/client'
 
 const ROLE_OPTIONS: PartyRole['role'][] = [
   'AdminRole',
@@ -69,9 +71,9 @@ export default function UserRoleManagement() {
     queryFn: getUsers,
   })
 
-  const updateRoleMutation = useMutation({
-    mutationFn: ({ userId, role }: { userId: number; role: PartyRole['role'] }) =>
-      updateUserRole(userId, role),
+  const updateRolesMutation = useMutation({
+    mutationFn: ({ userId, roles }: { userId: number; roles: PartyRole['role'][] }) =>
+      updateUserRoles(userId, roles),
     onSuccess: (response) => {
       if (response.urrSuccess) {
         setSuccessMessage(response.urrMessage)
@@ -84,14 +86,14 @@ export default function UserRoleManagement() {
       }
     },
     onError: (error: Error) => {
-      setErrorMessage(`Failed to update role: ${error.message}`)
+      setErrorMessage(`Failed to update roles: ${error.message}`)
       setSuccessMessage(null)
     },
   })
 
-  const handleRoleChange = (userId: number, event: SelectChangeEvent<PartyRole['role']>) => {
-    const newRole = event.target.value as PartyRole['role']
-    updateRoleMutation.mutate({ userId, role: newRole })
+  const handleRolesChange = (userId: number, event: SelectChangeEvent<PartyRole['role'][]>) => {
+    const newRoles = event.target.value as PartyRole['role'][]
+    updateRolesMutation.mutate({ userId, roles: newRoles })
   }
 
   if (isLoading) {
@@ -135,8 +137,8 @@ export default function UserRoleManagement() {
               <TableCell><strong>User ID</strong></TableCell>
               <TableCell><strong>Name</strong></TableCell>
               <TableCell><strong>Email</strong></TableCell>
-              <TableCell><strong>Current Role</strong></TableCell>
-              <TableCell><strong>Change Role</strong></TableCell>
+              <TableCell><strong>Current Roles</strong></TableCell>
+              <TableCell><strong>Manage Roles</strong></TableCell>
               <TableCell><strong>Status</strong></TableCell>
             </TableRow>
           </TableHead>
@@ -148,18 +150,40 @@ export default function UserRoleManagement() {
                   <TableCell>{user.uwpName}</TableCell>
                   <TableCell>{user.uwpEmail || 'N/A'}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={ROLE_DISPLAY[user.uwpRole]}
-                      color={ROLE_COLORS[user.uwpRole]}
-                      size="small"
-                    />
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                      {user.uwpRoles.length > 0 ? (
+                        user.uwpRoles.map((role) => (
+                          <Chip
+                            key={role}
+                            label={ROLE_DISPLAY[role]}
+                            color={ROLE_COLORS[role]}
+                            size="small"
+                          />
+                        ))
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          No roles assigned
+                        </Typography>
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <FormControl size="small" fullWidth>
+                      <InputLabel id={`roles-label-${user.uwpUserId}`}>Roles</InputLabel>
                       <Select
-                        value={user.uwpRole}
-                        onChange={(e) => handleRoleChange(user.uwpUserId, e)}
-                        disabled={updateRoleMutation.isPending}
+                        labelId={`roles-label-${user.uwpUserId}`}
+                        multiple
+                        value={user.uwpRoles}
+                        onChange={(e) => handleRolesChange(user.uwpUserId, e)}
+                        disabled={updateRolesMutation.isPending}
+                        input={<OutlinedInput label="Roles" />}
+                        renderValue={(selected) => (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((role) => (
+                              <Chip key={role} label={ROLE_DISPLAY[role]} size="small" />
+                            ))}
+                          </Box>
+                        )}
                       >
                         {ROLE_OPTIONS.map((role) => (
                           <MenuItem key={role} value={role}>

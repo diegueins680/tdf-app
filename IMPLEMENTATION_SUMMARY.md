@@ -2,7 +2,7 @@
 
 ## Overview
 
-This implementation provides a complete user role management system for the TDF Records Management Platform, with both backend (Haskell) and frontend (React/TypeScript) components.
+This implementation provides a complete user role management system for the TDF Records Management Platform, with both backend (Haskell) and frontend (React/TypeScript) components. **Users can have multiple roles** through a many-to-many relationship.
 
 ## Architecture
 
@@ -13,7 +13,6 @@ This implementation provides a complete user role management system for the TDF 
 - `name` (Text)
 - `email` (Text, nullable, unique)
 - `phone` (Text, nullable)
-- `role` (PartyRole enum)
 - `instagram`, `whatsapp`, `taxId`, `emergencyContact` (Text, nullable)
 - `createdAt`, `updatedAt` (UTCTime)
 
@@ -25,7 +24,17 @@ This implementation provides a complete user role management system for the TDF 
 - `lastLoginAt` (UTCTime, nullable)
 - `createdAt`, `updatedAt` (UTCTime)
 
-**Relationship**: One-to-one between User and Party. Every User must be associated with exactly one Party, and the Party contains the role information.
+**PartyRoleAssignment Table** (NEW - Junction table for many-to-many relationship)
+- `id` (Primary Key)
+- `partyId` (Foreign Key to Party)
+- `role` (PartyRole enum)
+- `createdAt` (UTCTime)
+- Unique constraint on (`partyId`, `role`) to prevent duplicate role assignments
+
+**Relationships**: 
+- One-to-one between User and Party
+- Many-to-many between Party and Roles (via PartyRoleAssignment junction table)
+- A user can have multiple roles through their associated Party
 
 ### Roles Supported
 
@@ -52,19 +61,20 @@ As per specs.yaml requirements:
 ### API Endpoints
 
 1. **GET /api/users**
-   - Returns list of all users with their party information and roles
-   - Response: `[UserWithParty]`
+   - Returns list of all users with their party information and roles (array of roles)
+   - Response: `[UserWithParty]` where each user has `uwpRoles: [PartyRole]`
 
-2. **PUT /api/users/{userId}/role**
-   - Updates a user's role (by updating the associated party)
-   - Request body: `{ "urrRole": "AdminRole" }`
+2. **PUT /api/users/{userId}/roles**
+   - Updates a user's roles (replaces all existing role assignments)
+   - Request body: `{ "urrRoles": ["AdminRole", "ManagerRole"] }`
    - Response: `UpdateRoleResponse`
+   - Note: Endpoint changed from `/role` (singular) to `/roles` (plural)
 
 ### Key Files
-- `src/TDF/Models.hs` - Database models (Party, User, PartyRole enum)
-- `src/TDF/DTO.hs` - Data Transfer Objects for API
+- `src/TDF/Models.hs` - Database models (Party, User, PartyRoleAssignment, PartyRole enum)
+- `src/TDF/DTO.hs` - Data Transfer Objects for API (supports multiple roles)
 - `src/TDF/API.hs` - Servant API type definitions
-- `src/TDF/DB.hs` - Database operations
+- `src/TDF/DB.hs` - Database operations (handles role assignment CRUD)
 - `src/TDF/Server.hs` - API handlers implementation
 - `src/TDF/OpenAPI.hs` - OpenAPI spec generation
 - `app/Main.hs` - Application entry point
@@ -96,12 +106,14 @@ The server:
 
 **User Role Management UI**
 - Displays table of all users
-- Shows: User ID, Name, Email, Current Role, Status
-- Inline role editing via dropdown
+- Shows: User ID, Name, Email, Current Roles (multiple chips), Status
+- **Multi-select dropdown** for managing multiple roles per user
+- Inline role editing with visual chips in dropdown
 - Real-time updates using React Query
 - Success/error notifications
-- Color-coded role chips
+- Color-coded role chips for easy identification
 - Active/Inactive status indicators
+- Support for users with no roles assigned
 
 ### Key Files
 - `src/components/UserRoleManagement.tsx` - Main management component

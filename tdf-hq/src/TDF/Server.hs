@@ -15,14 +15,14 @@ import Database.Persist.Postgresql (ConnectionPool)
 server :: ConnectionPool -> Server API
 server pool = userHandlers
   where
-    userHandlers = listUsers :<|> updateRole
+    userHandlers = listUsers :<|> updateRoles
     
     listUsers :: Handler [UserWithParty]
     listUsers = liftIO $ runStdoutLoggingT $ runSqlPool getAllUsersWithParty pool
     
-    updateRole :: Int -> UpdateRoleRequest -> Handler UpdateRoleResponse
-    updateRole userId req = do
-      result <- liftIO $ runStdoutLoggingT $ runSqlPool (updateUserRole userId (urrRole req)) pool
+    updateRoles :: Int -> UpdateRolesRequest -> Handler UpdateRoleResponse
+    updateRoles userId req = do
+      result <- liftIO $ runStdoutLoggingT $ runSqlPool (updateUserRoles userId (urrRoles req)) pool
       case result of
         Nothing -> return $ UpdateRoleResponse
           { urrSuccess = False
@@ -31,7 +31,7 @@ server pool = userHandlers
           }
         Just updatedUser -> return $ UpdateRoleResponse
           { urrSuccess = True
-          , urrMessage = "Role updated successfully"
+          , urrMessage = "Roles updated successfully"
           , urrUser = Just updatedUser
           }
 

@@ -37,13 +37,13 @@ export interface UserWithParty {
   uwpUserId: number
   uwpEmail?: string
   uwpName: string
-  uwpRole: PartyRole['role']
+  uwpRoles: PartyRole['role'][]
   uwpIsActive: boolean
   uwpLastLoginAt?: string
 }
 
-export interface UpdateRoleRequest {
-  urrRole: PartyRole['role']
+export interface UpdateRolesRequest {
+  urrRoles: PartyRole['role'][]
 }
 
 export interface UpdateRoleResponse {
@@ -58,13 +58,13 @@ export const getUsers = async (): Promise<UserWithParty[]> => {
   return response.data
 }
 
-export const updateUserRole = async (
+export const updateUserRoles = async (
   userId: number,
-  role: PartyRole['role']
+  roles: PartyRole['role'][]
 ): Promise<UpdateRoleResponse> => {
   const response = await apiClient.put<UpdateRoleResponse>(
-    `/api/users/${userId}/role`,
-    { urrRole: role }
+    `/api/users/${userId}/roles`,
+    { urrRoles: roles }
   )
   return response.data
 }

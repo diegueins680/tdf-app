@@ -10,16 +10,16 @@ import TDF.Models
 import TDF.DB (DB)
 
 -- | Seed sample data for development
+-- WARNING: This uses dummy password hashes and is for DEVELOPMENT ONLY
 seedData :: DB ()
 seedData = do
   now <- liftIO getCurrentTime
   
-  -- Create sample parties with different roles
+  -- Create sample parties
   party1 <- insert $ Party
     { partyName = "John Admin"
     , partyEmail = Just "admin@tdfrecords.com"
     , partyPhone = Just "+593-99-123-4567"
-    , partyRole = AdminRole
     , partyInstagram = Just "@johnadmin"
     , partyWhatsapp = Just "+593991234567"
     , partyTaxId = Nothing
@@ -32,7 +32,6 @@ seedData = do
     { partyName = "Maria Manager"
     , partyEmail = Just "maria@tdfrecords.com"
     , partyPhone = Just "+593-99-234-5678"
-    , partyRole = ManagerRole
     , partyInstagram = Just "@mariamanager"
     , partyWhatsapp = Just "+593992345678"
     , partyTaxId = Nothing
@@ -45,7 +44,6 @@ seedData = do
     { partyName = "Carlos Engineer"
     , partyEmail = Just "carlos@tdfrecords.com"
     , partyPhone = Just "+593-99-345-6789"
-    , partyRole = EngineerRole
     , partyInstagram = Just "@carlosengineer"
     , partyWhatsapp = Just "+593993456789"
     , partyTaxId = Nothing
@@ -58,7 +56,6 @@ seedData = do
     { partyName = "Ana Teacher"
     , partyEmail = Just "ana@tdfrecords.com"
     , partyPhone = Just "+593-99-456-7890"
-    , partyRole = TeacherRole
     , partyInstagram = Just "@anateacher"
     , partyWhatsapp = Just "+593994567890"
     , partyTaxId = Nothing
@@ -68,10 +65,9 @@ seedData = do
     }
   
   party5 <- insert $ Party
-    { partyName = "Luis Reception"
+    { partyName = "Luis Multi-Role"
     , partyEmail = Just "luis@tdfrecords.com"
     , partyPhone = Just "+593-99-567-8901"
-    , partyRole = ReceptionRole
     , partyInstagram = Nothing
     , partyWhatsapp = Just "+593995678901"
     , partyTaxId = Nothing
@@ -80,7 +76,27 @@ seedData = do
     , partyUpdatedAt = now
     }
   
-  -- Create corresponding users
+  -- Create role assignments for parties
+  -- John has Admin role
+  _ <- insert $ PartyRoleAssignment party1 AdminRole now
+  
+  -- Maria has Manager and Accounting roles
+  _ <- insert $ PartyRoleAssignment party2 ManagerRole now
+  _ <- insert $ PartyRoleAssignment party2 AccountingRole now
+  
+  -- Carlos has Engineer role
+  _ <- insert $ PartyRoleAssignment party3 EngineerRole now
+  
+  -- Ana has Teacher and Artist roles
+  _ <- insert $ PartyRoleAssignment party4 TeacherRole now
+  _ <- insert $ PartyRoleAssignment party4 ArtistRole now
+  
+  -- Luis has Reception, Student, and Customer roles (multi-role example)
+  _ <- insert $ PartyRoleAssignment party5 ReceptionRole now
+  _ <- insert $ PartyRoleAssignment party5 StudentRole now
+  _ <- insert $ PartyRoleAssignment party5 CustomerRole now
+  
+  -- Create corresponding users (using dummy hashes for DEVELOPMENT ONLY)
   _ <- insert $ User
     { userPartyId = party1
     , userPasswordHash = "$2b$10$dummyhashforadmin"
@@ -119,8 +135,8 @@ seedData = do
   
   _ <- insert $ User
     { userPartyId = party5
-    , userPasswordHash = "$2b$10$dummyhashforreception"
-    , userIsActive = False
+    , userPasswordHash = "$2b$10$dummyhashformultirole"
+    , userIsActive = True
     , userLastLoginAt = Nothing
     , userCreatedAt = now
     , userUpdatedAt = now

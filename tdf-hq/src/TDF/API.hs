@@ -11,7 +11,7 @@ import TDF.DTO
 -- | User management API
 type UserAPI = 
   "api" :> "users" :> Get '[JSON] [UserWithParty]
-  :<|> "api" :> "users" :> Capture "userId" Int :> "role" :> ReqBody '[JSON] UpdateRoleRequest :> Put '[JSON] UpdateRoleResponse
+  :<|> "api" :> "users" :> Capture "userId" Int :> "roles" :> ReqBody '[JSON] UpdateRolesRequest :> Put '[JSON] UpdateRoleResponse
 
 -- | Combined API
 type API = UserAPI
