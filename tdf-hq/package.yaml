@@ -1,0 +1,52 @@
+name: tdf-hq
+version: 1.0.0
+github: "diegueins680/tdf-app"
+license: MIT
+author: "TDF Records"
+maintainer: "dev@tdfrecords.com"
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - servant
+  - servant-server
+  - persistent
+  - persistent-postgresql
+  - persistent-template
+  - text
+  - time
+  - transformers
+  - mtl
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - TDF.Models
+    - TDF.API
+    - TDF.DTO
+    - TDF.DB
+    - TDF.Server
+
+executables:
+  tdf-hq:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - tdf-hq
+      - warp
+
+tests:
+  tdf-hq-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - tdf-hq
+      - hspec
