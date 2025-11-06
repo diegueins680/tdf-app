@@ -23,6 +23,7 @@ entityToUserDTO (Entity partyId party) roles = UserDTO
     , userEmail = partyEmail party
     , userPhone = partyPhone party
     , userRoles = roles
+    , userStatus = partyStatus party
     , userCreatedAt = partyCreatedAt party
     }
 

@@ -24,8 +24,7 @@ import {
   Alert,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import { User, PartyRole } from '../api/generated/types';
-import { apiClient } from '../api/generated/client';
+import { User, PartyRole, PartyStatus, apiClient } from '../api/generated/client';
 
 const ALL_ROLES: PartyRole[] = [
   'Admin',
@@ -38,6 +37,11 @@ const ALL_ROLES: PartyRole[] = [
   'Student',
   'ReadOnly',
 ];
+
+const STATUS_COLORS: Record<PartyStatus, 'success' | 'default'> = {
+  Active: 'success',
+  Inactive: 'default',
+};
 
 // Color mapping for role chips
 const ROLE_COLORS: Record<PartyRole, 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' | 'default'> = {
@@ -144,6 +148,7 @@ export const UserRoleManagement: React.FC = () => {
               <TableCell>Name</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Phone</TableCell>
+              <TableCell>Status</TableCell>
               <TableCell>Roles</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -155,6 +160,13 @@ export const UserRoleManagement: React.FC = () => {
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email || '-'}</TableCell>
                 <TableCell>{user.phone || '-'}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={user.status}
+                    color={STATUS_COLORS[user.status]}
+                    size="small"
+                  />
+                </TableCell>
                 <TableCell>
                   <Box display="flex" gap={0.5} flexWrap="wrap">
                     {user.roles.map((role) => (

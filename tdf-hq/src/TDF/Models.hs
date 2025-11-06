@@ -31,6 +31,13 @@ data PartyRole = Admin
 
 derivePersistField "PartyRole"
 
+-- Define the PartyStatus enum
+data PartyStatus = Active
+                 | Inactive
+    deriving (Show, Read, Eq, Ord, Enum, Bounded)
+
+derivePersistField "PartyStatus"
+
 -- Database schema definition
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Party
@@ -41,6 +48,7 @@ Party
     whatsapp Text Maybe
     taxId Text Maybe
     emergencyContact Text Maybe
+    status PartyStatus default='Active'
     createdAt UTCTime
     updatedAt UTCTime
     UniqueEmail email !force

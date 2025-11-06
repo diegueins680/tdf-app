@@ -7,7 +7,7 @@ import Data.Aeson
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import GHC.Generics
-import TDF.Models (PartyRole)
+import TDF.Models (PartyRole, PartyStatus)
 
 -- DTO for user information with roles
 data UserDTO = UserDTO
@@ -16,6 +16,7 @@ data UserDTO = UserDTO
     , userEmail :: Maybe Text
     , userPhone :: Maybe Text
     , userRoles :: [PartyRole]
+    , userStatus :: PartyStatus
     , userCreatedAt :: UTCTime
     } deriving (Show, Eq, Generic)
 
@@ -27,6 +28,7 @@ instance ToJSON UserDTO where
             "userEmail" -> "email"
             "userPhone" -> "phone"
             "userRoles" -> "roles"
+            "userStatus" -> "status"
             "userCreatedAt" -> "createdAt"
             _ -> s
         }
@@ -39,6 +41,7 @@ instance FromJSON UserDTO where
             "userEmail" -> "email"
             "userPhone" -> "phone"
             "userRoles" -> "roles"
+            "userStatus" -> "status"
             "userCreatedAt" -> "createdAt"
             _ -> s
         }

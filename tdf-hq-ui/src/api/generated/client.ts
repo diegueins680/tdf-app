@@ -1,5 +1,10 @@
 // API client for user role management
-import { User, PartyRole, UserRoleUpdate } from './types';
+import type { components } from './types';
+
+export type User = components['schemas']['User'];
+export type PartyRole = components['schemas']['PartyRole'];
+export type PartyStatus = components['schemas']['PartyStatus'];
+export type UserRoleUpdate = components['schemas']['UserRoleUpdate'];
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
 
