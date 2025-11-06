@@ -1,6 +1,6 @@
-import React from 'react';
-import { ThemeProvider, createTheme, CssBaseline, Container, Typography, Box } from '@mui/material';
-import UserRoleManagement from './components/UserRoleManagement';
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { BrowserRouter } from 'react-router-dom';
+import AppRoutes from './routes/AppRoutes';
 
 const theme = createTheme({
   palette: {
@@ -18,17 +18,9 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container maxWidth="lg">
-        <Box py={4}>
-          <Typography variant="h3" component="h1" gutterBottom>
-            TDF Records - User Role Management
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            Manage user roles for the TDF Records platform. Users can have multiple roles assigned.
-          </Typography>
-          <UserRoleManagement />
-        </Box>
-      </Container>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </ThemeProvider>
   );
 }
