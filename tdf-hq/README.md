@@ -1,74 +1,183 @@
-# TDF Records - Backend API
+# TDF HQ Backend
 
-This directory contains the Haskell backend for the TDF Records Platform. It provides a robust, type-safe API that serves as the backbone for the web and mobile applications.
+Haskell backend API server for the TDF Records platform with multi-role user management.
 
-## Architecture & Tech Stack
+## Features
 
--   **Language**: Haskell
--   **API Framework**: [Servant](https://docs.servant.dev/) for creating a type-safe REST API.
--   **Database**: PostgreSQL
--   **ORM**: [Persistent](http://www.yesodweb.com/book/persistent) for database interactions.
--   **Build Tool**: [Stack](https://docs.haskellstack.org/en/stable/)
--   **Containerization**: Docker and Docker Compose for development and production environments.
+- **Multi-role user management** - Users can have multiple roles simultaneously
+- **RESTful API** - Clean Servant-based API
+- **PostgreSQL database** - Persistent ORM with automatic migrations
+- **Type-safe** - Full type safety from database to API
+- **OpenAPI documentation** - Auto-generated API specification
 
-## Key Features
+## Prerequisites
 
--   **Type-Safe API**: The API, defined in `TDF.API`, ensures that handlers, routes, and clients are always in sync.
--   **Automatic OpenAPI Generation**: The backend automatically generates an OpenAPI specification (`docs/openapi/lessons-and-receipts.yaml`), which is used to create TypeScript clients for the frontend apps.
--   **Containerized Development**: Full Docker support for running the API and its PostgreSQL database, ensuring a consistent and isolated development environment.
--   **Database Seeding**: A `make seed` command is available to populate the development database with realistic sample data.
+- Stack (Haskell build tool)
+- PostgreSQL 16+
+- GHC 9.4+ (installed via Stack)
 
-## Getting Started
+## Quick Start
 
-### Prerequisites
+### Database Setup
 
--   [Haskell Stack](https://docs.haskellstack.org/en/stable/install_and_upgrade/)
--   [Docker](https://www.docker.com/products/docker-desktop/) and Docker Compose
+```bash
+# Create database
+createdb tdf_hq
 
-### Development Setup
+# Or using Docker
+docker run --name tdf-postgres \
+  -e POSTGRES_DB=tdf_hq \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -p 5432:5432 \
+  -d postgres:16
+```
 
-1.  **Navigate to the Backend Directory**:
-    ```bash
-    cd tdf-hq
-    ```
+### Build and Run
 
-2.  **Configure Environment**:
-    Copy the default environment configuration to a new `.env` file. This file stores secrets and environment-specific settings.
-    ```bash
-    cp config/default.env .env
-    ```
-    *   When running locally with `stack`, ensure `DB_HOST` is set to `127.0.0.1` or `localhost`.
-    *   When using Docker, the `docker-compose.yml` file sets `DB_HOST` to `db`, which is the service name of the PostgreSQL container.
+```bash
+# Install dependencies and build
+stack setup
+stack build
 
-3.  **Launch Services**:
-    Use the provided Makefile to build and start the API and database containers.
-    ```bash
-    make up
-    ```
-    This command will start a PostgreSQL container and the Haskell API container. The API server will be accessible at `http://localhost:8080`.
+# Run migrations
+psql -d tdf_hq -f sql/001_multi_role_migration.sql
 
-4.  **Seed the Database (Optional)**:
-    To populate the database with initial development data, run:
-    ```bash
-    make seed
-    ```
+# Start the server
+stack run
+```
 
-## Development Workflow
+The API will be available at `http://localhost:8080`.
 
-### Running the Application
--   **With Docker (Recommended)**:
-    -   `make up`: Start all services.
-    -   `make down`: Stop all services.
-    -   `make logs`: View logs from the running containers.
-    -   `make restart`: Restart the services.
-    -   `make health`: Check the health status of the database and API.
--   **Locally with Stack**:
-    -   Run `stack run` to build and start the server.
-    -   Use `stack ghci` for an interactive REPL, which is excellent for testing modules and functions interactively.
+## API Endpoints
 
-### API Development Pattern
-1.  **Define Types**: Start by updating the API types in `TDF.API`.
-2.  **Implement Handlers**: Add or modify the corresponding server logic in `TDF.Server`.
-3.  **Add DTOs**: Create or update Data Transfer Objects in `TDF.DTO`.
-4.  **Database Logic**: Implement the necessary database queries and models in `TDF.DB` and `TDF.Models`.
-5.  **Generate Clients**: After making changes to the API, navigate to the project root and run `npm run generate:api:ui` and `npm run generate:api:mobile` to update the frontend clients.
+### Users and Roles
+
+- `GET /api/users` - List all users with their roles
+- `GET /api/users/{userId}/roles` - Get roles for a specific user
+- `PUT /api/users/{userId}/roles` - Update roles for a user
+
+See `docs/openapi/user-roles.yaml` for full API specification.
+
+## Development
+
+### Interactive Development
+
+```bash
+# Start GHCi REPL
+stack ghci
+
+# Load modules
+:load TDF.Models
+:load TDF.Server
+
+# Test functions
+getUsersWithRoles
+```
+
+### Database Migrations
+
+SQL migrations are in the `sql/` directory. Apply them manually:
+
+```bash
+psql -d tdf_hq -f sql/001_multi_role_migration.sql
+```
+
+### Adding New Endpoints
+
+1. Define types in `src/TDF/API.hs`
+2. Add handler in `src/TDF/Server.hs`
+3. Add database logic in `src/TDF/DB.hs` (if needed)
+4. Update OpenAPI spec in `docs/openapi/`
+5. Regenerate frontend client
+
+## Project Structure
+
+```
+tdf-hq/
+├── app/
+│   └── Main.hs              # Application entry point
+├── src/TDF/
+│   ├── Models.hs            # Database schema (Persistent)
+│   ├── API.hs               # API type definitions (Servant)
+│   ├── DTO.hs               # Data transfer objects
+│   ├── DB.hs                # Database access layer
+│   └── Server.hs            # Request handlers
+├── docs/openapi/
+│   └── user-roles.yaml      # OpenAPI 3.0 specification
+├── sql/
+│   └── 001_multi_role_migration.sql  # Database migration
+├── package.yaml             # Package configuration
+└── stack.yaml               # Stack configuration
+```
+
+## Environment Variables
+
+Create a `.env` file (or export variables):
+
+```bash
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=postgres
+DB_NAME=tdf_hq
+APP_PORT=8080
+```
+
+## Testing
+
+### Manual API Testing
+
+```bash
+# Get all users
+curl http://localhost:8080/api/users
+
+# Get roles for user 1
+curl http://localhost:8080/api/users/1/roles
+
+# Update roles
+curl -X PUT http://localhost:8080/api/users/1/roles \
+  -H "Content-Type: application/json" \
+  -d '{"roles": ["Teacher", "Artist"]}'
+```
+
+### Automated Tests
+
+```bash
+stack test
+```
+
+## Deployment
+
+```bash
+# Build production binary
+stack build --copy-bins
+
+# Binary will be in ~/.local/bin/tdf-hq
+~/.local/bin/tdf-hq
+```
+
+## Troubleshooting
+
+### Stack build fails
+
+```bash
+stack clean
+stack setup
+stack build
+```
+
+### Database connection refused
+
+Check PostgreSQL is running:
+```bash
+pg_isready
+```
+
+### Module not found
+
+Ensure all modules are listed in `package.yaml` under `exposed-modules`.
+
+## License
+
+MIT
