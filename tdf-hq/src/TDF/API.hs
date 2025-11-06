@@ -1,18 +1,23 @@
 {-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE TypeOperators     #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeOperators     #-}
 
 module TDF.API where
 
 import Servant
-import Data.Text (Text)
 import TDF.Models (PartyRole)
-import TDF.DTO (UserDTO, UserRoleUpdateDTO)
+import TDF.DTO
+
+type VersionAPI = "version" :> Get '[JSON] VersionDTO
+type HealthAPI  = "health"  :> Get '[JSON] HealthDTO
 
 -- Main API definition
-type API = "api" :> 
-    (    UsersAPI
-    )
+type API =
+        VersionAPI
+   :<|> HealthAPI
+   :<|> PartiesAPI
+   :<|> BookingsAPI
+   :<|> ("api" :> UsersAPI)
 
 -- Users API with role management
 type UsersAPI = "users" :>
@@ -23,3 +28,29 @@ type UsersAPI = "users" :>
 
 api :: Proxy API
 api = Proxy
+
+usersApi :: Proxy UsersAPI
+usersApi = Proxy
+
+versionApi :: Proxy VersionAPI
+versionApi = Proxy
+
+healthApi :: Proxy HealthAPI
+healthApi = Proxy
+
+type PartiesAPI =
+       Get '[JSON] [PartyDTO]
+  :<|> ReqBody '[JSON] PartyCreateDTO :> PostCreated '[JSON] PartyDTO
+  :<|> Capture "partyId" Int :> Get '[JSON] PartyDTO
+  :<|> Capture "partyId" Int :> ReqBody '[JSON] PartyUpdateDTO :> Put '[JSON] PartyDTO
+  :<|> Capture "partyId" Int :> "roles" :> ReqBody '[JSON] PartyRole :> Post '[JSON] NoContent
+
+partiesApi :: Proxy PartiesAPI
+partiesApi = Proxy
+
+type BookingsAPI =
+       Get '[JSON] [BookingDTO]
+  :<|> ReqBody '[JSON] BookingCreateDTO :> PostCreated '[JSON] BookingDTO
+
+bookingsApi :: Proxy BookingsAPI
+bookingsApi = Proxy

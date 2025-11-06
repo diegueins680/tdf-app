@@ -31,6 +31,8 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , bytestring
+    , monad-logger
     , mtl
     , persistent
     , persistent-postgresql
@@ -52,6 +54,8 @@ executable tdf-hq
   build-depends:
       aeson
     , base >=4.7 && <5
+    , bytestring
+    , monad-logger
     , mtl
     , persistent
     , persistent-postgresql
@@ -76,7 +80,9 @@ test-suite tdf-hq-test
   build-depends:
       aeson
     , base >=4.7 && <5
+    , bytestring
     , hspec
+    , monad-logger
     , mtl
     , persistent
     , persistent-postgresql

@@ -17,6 +17,10 @@ dependencies:
   - time
   - transformers
   - mtl
+  - monad-logger
+  - bytestring
+  - gitrev
+  - template-haskell
 
 library:
   source-dirs: src

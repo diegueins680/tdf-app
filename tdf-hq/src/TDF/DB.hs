@@ -68,3 +68,29 @@ userHasRole partyId role = do
     return $ case mAssignment of
         Just _  -> True
         Nothing -> False
+
+-- Party operations
+listParties :: SqlPersistT IO [Entity Party]
+listParties = selectList [] [Asc PartyDisplayName]
+
+getParty :: Key Party -> SqlPersistT IO (Maybe (Entity Party))
+getParty = getEntity
+
+insertParty :: Party -> SqlPersistT IO (Entity Party)
+insertParty party = do
+    partyId <- insert party
+    pure $ Entity partyId party
+
+updateParty :: Key Party -> [Update Party] -> SqlPersistT IO (Maybe (Entity Party))
+updateParty partyId updates = do
+    update partyId updates
+    getEntity partyId
+
+-- Booking operations
+listBookings :: SqlPersistT IO [Entity Booking]
+listBookings = selectList [] [Asc BookingStartTime]
+
+insertBooking :: Booking -> SqlPersistT IO (Entity Booking)
+insertBooking booking = do
+    bookingId <- insert booking
+    pure $ Entity bookingId booking

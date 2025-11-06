@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -7,15 +8,20 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE DataKinds                  #-}
 
 module TDF.Models where
 
 import Database.Persist.TH
 import Data.Text (Text)
 import Data.Time (UTCTime)
+import Data.Aeson (FromJSON (..), ToJSON (..), Value (String), withText)
+import qualified Data.Text as T
+import Text.Read (readMaybe)
 
 -- Define the PartyRole enum
 data PartyRole = Admin
@@ -38,20 +44,57 @@ data PartyStatus = Active
 
 derivePersistField "PartyStatus"
 
+-- Define BookingStatus enum
+data BookingStatus = Confirmed
+                   | Tentative
+                   | Cancelled
+                   | Completed
+    deriving (Show, Read, Eq, Ord, Enum, Bounded)
+
+derivePersistField "BookingStatus"
+
+enumToJSON :: Show a => a -> Value
+enumToJSON = String . T.pack . show
+
+parseEnumValue :: (MonadFail m, Read a) => String -> T.Text -> m a
+parseEnumValue label t =
+    maybe (fail $ "Invalid " <> label <> ": " <> T.unpack t) pure (readMaybe $ T.unpack t)
+
+instance ToJSON PartyRole where
+    toJSON = enumToJSON
+
+instance FromJSON PartyRole where
+    parseJSON = withText "PartyRole" (parseEnumValue "PartyRole")
+
+instance ToJSON PartyStatus where
+    toJSON = enumToJSON
+
+instance FromJSON PartyStatus where
+    parseJSON = withText "PartyStatus" (parseEnumValue "PartyStatus")
+
+instance ToJSON BookingStatus where
+    toJSON = enumToJSON
+
+instance FromJSON BookingStatus where
+    parseJSON = withText "BookingStatus" (parseEnumValue "BookingStatus")
+
 -- Database schema definition
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Party
-    name Text
-    email Text Maybe
-    phone Text Maybe
-    instagram Text Maybe
+    displayName Text
+    legalName Text Maybe
+    isOrg Bool
+    primaryEmail Text Maybe
+    primaryPhone Text Maybe
     whatsapp Text Maybe
+    instagram Text Maybe
     taxId Text Maybe
     emergencyContact Text Maybe
+    notes Text Maybe
     status PartyStatus default='Active'
     createdAt UTCTime
     updatedAt UTCTime
-    UniqueEmail email !force
+    UniquePrimaryEmail primaryEmail !force
     deriving Show Eq
 
 PartyRoleAssignment
@@ -74,11 +117,14 @@ Package
     deriving Show Eq
 
 Booking
-    partyId PartyId
-    resourceId ResourceId
+    title Text
+    partyId PartyId Maybe
+    resourceId ResourceId Maybe
+    serviceType Text Maybe
     startTime UTCTime
     endTime UTCTime
     status BookingStatus
+    notes Text Maybe
     createdAt UTCTime
     deriving Show Eq
 
@@ -88,12 +134,3 @@ Resource
     capacity Int Maybe
     deriving Show Eq
 |]
-
--- Define BookingStatus enum
-data BookingStatus = Confirmed
-                   | Tentative
-                   | Cancelled
-                   | Completed
-    deriving (Show, Read, Eq, Ord, Enum, Bounded)
-
-derivePersistField "BookingStatus"

@@ -1,0 +1,66 @@
+openapi: 3.0.0
+info:
+  title: TDF Records API
+  version: 1.0.0
+  description: Full API for TDF Records platform
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /version:
+    get:
+      summary: Get API Version
+      description: Returns version and build information for the running API server.
+      operationId: getVersion
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+  /health:
+    get:
+      summary: Health Check
+      description: Checks the health of the API server and its database connection.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+
+components:
+  schemas:
+    Version:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Application name.
+        version:
+          type: string
+          description: Application version.
+        commit:
+          type: string
+          nullable: true
+          description: Git commit SHA.
+        buildTime:
+          type: string
+          nullable: true
+          description: Timestamp of the build.
+
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+          description: Service status.
+        version:
+          type: string
+          description: Application version.
