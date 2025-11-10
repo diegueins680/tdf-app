@@ -3,7 +3,14 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/topics/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: smtp-mail-0.5.0.0@sha256:e379788a4e649fa0c3233774501a103bc8c87f789ff4425c5282e4939fcc4b56,1468
+    pantry-tree:
+      sha256: 1c2b860c3fd60cf045daa7edbecbaa93523b67e283e05a991008c2dbe6ce370f
+      size: 450
+  original:
+    hackage: smtp-mail-0.5.0.0
 snapshots:
 - completed:
     sha256: 87da71cb0ae9ee1ea1bf51a8eb9812f39f779be76abc0a3c926defd8afda05d1

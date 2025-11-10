@@ -13,6 +13,7 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
+import           Data.Char              (isAlphaNum, toLower)
 import           Data.Maybe             (fromMaybe, isJust)
 import qualified Data.Set               as Set
 import           Data.Text              (Text)
@@ -52,11 +53,13 @@ import           TDF.Auth               ( AuthedUser
                                         , moduleName
                                         , modulesForRoles
                                         )
+import           TDF.Config             (AppConfig(..))
 import           TDF.DB                 (Env(..))
 import           TDF.Models
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.Seed               (seedAll)
+import qualified TDF.Email              as Email
 
 adminServer
   :: ( MonadReader Env m
@@ -194,32 +197,67 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
 
     createUser UserAccountCreate{..} = do
       ensureModule ModuleAdmin user
-      let trimmedUsername = T.strip uacUsername
-          trimmedPassword = T.strip uacPassword
-          activeValue     = fromMaybe True uacActive
-          partyKey        = toSqlKey uacPartyId :: PartyId
-      when (T.null trimmedUsername) $
-        throwError err400 { errBody = "Username is required" }
-      when (T.null trimmedPassword) $
-        throwError err400 { errBody = "Password is required" }
-      mParty <- withPool $ getEntity partyKey
-      case mParty of
-        Nothing -> throwError err404 { errBody = "Party not found" }
-        Just _  -> pure ()
-      conflict <- withPool $ getBy (UniqueCredentialUsername trimmedUsername)
-      when (isJust conflict) $
-        throwError err409 { errBody = "Username already exists" }
-      hashed <- liftIO (hashPasswordText trimmedPassword)
+      config <- asks envConfig
+      let partyKey = toSqlKey uacPartyId :: PartyId
+          activeValue = fromMaybe True uacActive
+      partyEnt <- do
+        mParty <- withPool $ getEntity partyKey
+        maybe (throwError err404 { errBody = "Party not found" }) pure mParty
+      emailAddress <- case fmap T.strip (partyPrimaryEmail (entityVal partyEnt)) of
+        Nothing -> throwError err400 { errBody = "Party must have a primary email before creating a user" }
+        Just addr | T.null addr -> throwError err400 { errBody = "Party must have a primary email before creating a user" }
+                  | otherwise -> pure addr
+      baseUsername <-
+        case normalizeUsername =<< uacUsername of
+          Just provided -> pure provided
+          Nothing       -> pure (deriveUsername partyEnt emailAddress)
+      uniqueUsername <- generateUniqueUsername baseUsername
+      tempPassword <- liftIO Email.generateTempPassword
+      hashed <- liftIO (hashPasswordText tempPassword)
       credId <- withPool $ insert UserCredential
         { userCredentialPartyId      = partyKey
-        , userCredentialUsername     = trimmedUsername
+        , userCredentialUsername     = uniqueUsername
         , userCredentialPasswordHash = hashed
         , userCredentialActive       = activeValue
         }
       for_ uacRoles $ \rolesList -> withPool $ setPartyRoles partyKey rolesList
-      withPool $ do
+      account <- withPool $ do
         credEnt <- getJustEntity credId
         loadUserAccount credEnt
+      liftIO $
+        Email.sendWelcomeEmail
+          (emailConfig config)
+          (partyDisplayName (entityVal partyEnt))
+          emailAddress
+          uniqueUsername
+          tempPassword
+          (appBaseUrl config)
+      pure account
+      where
+        normalizeUsername :: Text -> Maybe Text
+        normalizeUsername txt =
+          let lowered = T.toLower (T.strip txt)
+              cleaned = T.filter (\c -> isAlphaNum c || c `elem` (".-_" :: String)) lowered
+          in if T.null cleaned then Nothing else Just cleaned
+
+        deriveUsername :: Entity Party -> Text -> Text
+        deriveUsername (Entity pid party) emailVal
+          | not (T.null emailVal) = T.toLower emailVal
+          | otherwise =
+              let slug = T.filter (\c -> isAlphaNum c || c == '.') . T.toLower $ partyDisplayName party
+              in if T.null slug
+                   then "tdf-user-" <> T.pack (show (fromSqlKey pid))
+                   else slug
+
+        generateUniqueUsername base = go 0
+          where
+            go attempt = do
+              let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)
+                  candidate = T.take 60 (base <> suffix)
+              conflict <- withPool $ getBy (UniqueCredentialUsername candidate)
+              case conflict of
+                Nothing -> pure candidate
+                Just _  -> go (attempt + 1)
 
     getUser userId = do
       ensureModule ModuleAdmin user

@@ -32,6 +32,7 @@ data PartyDTO = PartyDTO
   , emergencyContact :: Maybe Text
   , notes            :: Maybe Text
   , band             :: Maybe BandDTO
+  , hasUserAccount   :: Bool
   } deriving (Show, Generic)
 
 instance ToJSON PartyDTO
@@ -66,11 +67,11 @@ data PartyUpdate = PartyUpdate
   } deriving (Show, Generic)
 instance FromJSON PartyUpdate
 
-toPartyDTO :: Entity Party -> PartyDTO
+toPartyDTO :: Bool -> Entity Party -> PartyDTO
 toPartyDTO = toPartyDTOWithBand Nothing
 
-toPartyDTOWithBand :: Maybe BandDTO -> Entity Party -> PartyDTO
-toPartyDTOWithBand mBand (Entity pid p) = PartyDTO
+toPartyDTOWithBand :: Maybe BandDTO -> Bool -> Entity Party -> PartyDTO
+toPartyDTOWithBand mBand hasAccount (Entity pid p) = PartyDTO
   { partyId          = fromSqlKey pid
   , legalName        = partyLegalName p
   , displayName      = M.partyDisplayName p
@@ -83,6 +84,7 @@ toPartyDTOWithBand mBand (Entity pid p) = PartyDTO
   , emergencyContact = partyEmergencyContact p
   , notes            = partyNotes p
   , band             = mBand
+  , hasUserAccount   = hasAccount
   }
 
 -- Helper

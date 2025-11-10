@@ -25,6 +25,7 @@ executable tdf-hq-exe
     TDF.Cors
     TDF.DB
     TDF.DTO
+    TDF.Email
     TDF.Handlers.InputList
     TDF.Meta
     TDF.Models
@@ -67,10 +68,12 @@ executable tdf-hq-exe
     , warp                 >=3.3
     , wai
     , wai-cors
+    , entropy
     , filepath
     , directory
     , transformers
     , mtl
+    , mime-mail
     , unordered-containers
     , uuid-types
     , scientific
@@ -82,6 +85,7 @@ executable tdf-hq-exe
     , path-pieces
     , uuid
     , template-haskell
+    , smtp-mail
 
 test-suite tdf-hq-test
   type:              exitcode-stdio-1.0
@@ -111,10 +115,12 @@ test-suite tdf-hq-test
     , wai
     , warp                 >=3.3
     , wai-cors
+    , entropy
     , filepath
     , directory
     , transformers
     , mtl
+    , mime-mail
     , unordered-containers
     , uuid-types
     , scientific
@@ -126,3 +132,4 @@ test-suite tdf-hq-test
     , uuid
     , template-haskell
     , hspec                >=2.7
+    , smtp-mail

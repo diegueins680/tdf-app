@@ -27,18 +27,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import type { User, PartyRole, PartyStatus } from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
-
-const ALL_ROLES: PartyRole[] = [
-  'Admin',
-  'Manager',
-  'Engineer',
-  'Teacher',
-  'Reception',
-  'Accounting',
-  'Artist',
-  'Student',
-  'ReadOnly',
-];
+import { ALL_ROLES } from '../constants/roles';
 
 const STATUS_COLORS: Record<PartyStatus, 'success' | 'default'> = {
   Active: 'success',

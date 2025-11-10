@@ -168,6 +168,14 @@ DB_NAME=tdf_hq
 APP_PORT=8080
 RESET_DB=false
 SEED_DB=true
+HQ_APP_URL=http://localhost:5173
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=apikey
+SMTP_PASSWORD=secret
+SMTP_FROM=ops@tdfrecords.com
+SMTP_FROM_NAME=TDF Records
+SMTP_TLS=true
 ```
 
 ### Web UI (`tdf-hq-ui/.env`)

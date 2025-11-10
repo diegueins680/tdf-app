@@ -29,7 +29,7 @@ import { loginRequest } from '../api/auth';
 type LoginTab = 'password' | 'token';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [tokenValue, setTokenValue] = useState('');
   const [tab, setTab] = useState<LoginTab>('password');
@@ -73,9 +73,9 @@ export default function LoginPage() {
     event.preventDefault();
     setFormError(null);
 
-    const normalizedUsername =
+    const normalizedIdentifier =
       tab === 'password'
-        ? username.trim()
+        ? identifier.trim()
         : (() => {
             const tokenSnippet = tokenValue.trim().slice(0, 8);
             const suffix = tokenSnippet === '' ? 'usuario' : tokenSnippet;
@@ -83,7 +83,7 @@ export default function LoginPage() {
           })();
 
     const displayName =
-      normalizedUsername.charAt(0).toUpperCase() + normalizedUsername.slice(1);
+      normalizedIdentifier.charAt(0).toUpperCase() + normalizedIdentifier.slice(1);
 
     try {
       let apiToken: string | null = null;
@@ -92,12 +92,12 @@ export default function LoginPage() {
       let partyId: number | undefined;
 
       if (tab === 'password') {
-        if (!username.trim() || !password.trim()) {
-          setFormError('Por favor completa usuario y contraseña.');
+        if (!identifier.trim() || !password.trim()) {
+          setFormError('Ingresa tu usuario o correo y la contraseña.');
           return;
         }
         const response = await loginMutation.mutateAsync({
-          username: username.trim(),
+          username: identifier.trim(),
           password: password.trim(),
         });
         apiToken = response.token;
@@ -115,9 +115,9 @@ export default function LoginPage() {
 
       login(
         {
-          username: normalizedUsername,
+          username: normalizedIdentifier,
           displayName,
-          roles: roles.length ? roles : normalizedUsername.toLowerCase().includes('admin') ? ['admin'] : ['staff'],
+          roles: roles.length ? roles : normalizedIdentifier.toLowerCase().includes('admin') ? ['admin'] : ['staff'],
           apiToken,
           modules,
           partyId,
@@ -192,12 +192,13 @@ export default function LoginPage() {
             {tab === 'password' ? (
               <Stack spacing={2}>
                 <TextField
-                  label="Usuario *"
+                  label="Usuario o correo *"
                   type="text"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
+                  value={identifier}
+                  onChange={(event) => setIdentifier(event.target.value)}
                   fullWidth
                   autoComplete="username"
+                  helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
                 />
 
                 <TextField

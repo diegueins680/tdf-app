@@ -15,6 +15,7 @@ This repo now ships with codified guardrails for both the TypeScript frontends a
 - **Compiler warnings** – Both the executable and the test suite compile with `-Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints`. Treat warning-free builds as a quality gate.
 - **Test harness** – `stack test` now runs an `hspec` suite (`test/Spec.hs`). Add real examples there as you touch backend code.
 - **Stack usage** – Run `stack test` (or `stack build`) from `tdf-hq/` before pushing backend changes. If you use Nix, keep Stack’s nix integration disabled or configure it explicitly.
+- **Email delivery** – Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, and optionally `SMTP_FROM_NAME`/`SMTP_TLS` so welcome emails go out when admins create new accounts. Set `HQ_APP_URL` to include a login link in those emails.
 
 ## Suggested Workflow
 

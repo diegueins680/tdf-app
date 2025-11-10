@@ -49,9 +49,13 @@ export default function KanbanPage() {
     if (cardsQuery.data) {
       const map: Record<string, PipelineCardDTO> = {};
       cardsQuery.data.forEach((card) => {
-        map[card.pcId] = card;
+        const normalizedId = (card.pcId ?? '').toString().trim();
+        if (!normalizedId) {
+          return;
+        }
+        map[normalizedId] = card;
         const stage = initialColumns[card.pcStage] ? card.pcStage : stagesQuery.data[0];
-        initialColumns[stage].push(card.pcId);
+        initialColumns[stage].push(normalizedId);
       });
       Object.keys(initialColumns).forEach((stage) => {
         initialColumns[stage] = initialColumns[stage].sort((a, b) => {
@@ -160,7 +164,7 @@ export default function KanbanPage() {
         <DragDropContext onDragEnd={onDragEnd}>
           <Stack direction="row" gap={2} sx={{ overflowX: 'auto', pb: 2 }}>
             {columnOrder.map((stage) => {
-              const cardIds = columns[stage] ?? [];
+              const cardIds = (columns[stage] ?? []).filter((id) => typeof id === 'string' && id.trim().length > 0);
               return (
                 <Droppable droppableId={stage} key={stage}>
                   {(provided, snapshot) => (
@@ -179,10 +183,12 @@ export default function KanbanPage() {
                       </Typography>
                       <Stack gap={1}>
                         {cardIds.map((cardId, idx) => {
-                          const card = cards[cardId];
+                          const safeId = cardId?.toString().trim();
+                          if (!safeId) return null;
+                          const card = cards[safeId];
                           if (!card) return null;
                           return (
-                            <Draggable draggableId={cardId} index={idx} key={cardId}>
+                            <Draggable draggableId={safeId} index={idx} key={`${stage}-${safeId}`}>
                               {(prov, snap) => (
                                 <Box
                                   ref={prov.innerRef}

@@ -10,6 +10,7 @@ export interface PartyDTO {
   instagram?: string | null;
   emergencyContact?: string | null;
   notes?: string | null;
+  hasUserAccount?: boolean;
 }
 
 export interface PartyCreate {

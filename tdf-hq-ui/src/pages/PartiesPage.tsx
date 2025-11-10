@@ -23,13 +23,24 @@ import {
   Tooltip,
   Alert,
   InputAdornment,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  OutlinedInput,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
 import EditIcon from '@mui/icons-material/Edit';
 import SchoolIcon from '@mui/icons-material/School';
 import AddIcon from '@mui/icons-material/Add';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import SearchIcon from '@mui/icons-material/Search';
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { useNavigate } from 'react-router-dom';
+import type { PartyRole } from '../api/generated/client';
+import { Admin } from '../api/admin';
+import { ALL_ROLES } from '../constants/roles';
 
 interface CreatePartyDialogProps {
   open: boolean;
@@ -143,6 +154,111 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
   );
 }
 
+interface CreateUserFromPartyDialogProps {
+  party: PartyDTO | null;
+  open: boolean;
+  onClose: () => void;
+}
+
+function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromPartyDialogProps) {
+  const qc = useQueryClient();
+  const [username, setUsername] = useState('');
+  const [roles, setRoles] = useState<PartyRole[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setUsername(party?.primaryEmail ?? '');
+    setRoles([]);
+    setError(null);
+    setSuccess(null);
+  }, [party, open]);
+
+  const selectRoles = (value: string | string[]) => {
+    const entries = Array.isArray(value) ? value : value.split(',');
+    return entries.filter((role): role is PartyRole => ALL_ROLES.includes(role as PartyRole));
+  };
+
+  const handleRoleChange = (event: SelectChangeEvent<PartyRole[]>) => {
+    setRoles(selectRoles(event.target.value));
+  };
+
+  const handleCreateUser = async () => {
+    if (!party) return;
+    if (!party.primaryEmail) {
+      setError('Este contacto necesita un email principal antes de crear el usuario.');
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      await Admin.createUser({
+        partyId: party.partyId,
+        username: username.trim() || undefined,
+        roles: roles.length ? roles : undefined,
+      });
+      setSuccess('Se creó la cuenta y se envió la contraseña temporal por correo.');
+      await qc.invalidateQueries({ queryKey: ['parties'] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo crear el usuario');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>Crear usuario para {party?.displayName}</DialogTitle>
+      <DialogContent>
+        <Stack gap={2} sx={{ mt: 1 }}>
+          <TextField
+            label="Usuario (opcional)"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            helperText="Si lo dejas vacío se usará el correo principal."
+            fullWidth
+          />
+          <FormControl fullWidth>
+            <InputLabel id="create-user-roles-label">Roles iniciales</InputLabel>
+            <Select<PartyRole[]>
+              labelId="create-user-roles-label"
+              multiple
+              value={roles}
+              onChange={handleRoleChange}
+              input={<OutlinedInput label="Roles iniciales" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((role) => (
+                    <Chip key={role} label={role} size="small" />
+                  ))}
+                </Box>
+              )}
+            >
+              {ALL_ROLES.map((role) => (
+                <MenuItem key={role} value={role}>
+                  {role}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {error && <Alert severity="error">{error}</Alert>}
+          {success && <Alert severity="success">{success}</Alert>}
+          <Alert severity="info">
+            El usuario recibirá un correo con una contraseña temporal y podrá iniciar sesión usando su correo o usuario.
+          </Alert>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} disabled={loading}>Cancelar</Button>
+        <Button variant="contained" onClick={() => void handleCreateUser()} disabled={loading || !!success}>
+          {loading ? 'Creando...' : success ? 'Hecho' : 'Crear usuario'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 export default function PartiesPage() {
   const navigate = useNavigate();
   const partiesQuery: UseQueryResult<PartyDTO[], Error> = useQuery<PartyDTO[], Error>({
@@ -154,6 +270,7 @@ export default function PartiesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createDialogIsOrg, setCreateDialogIsOrg] = useState(false);
   const [search, setSearch] = useState('');
+  const [userDialogParty, setUserDialogParty] = useState<PartyDTO | null>(null);
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
@@ -249,6 +366,24 @@ export default function PartiesPage() {
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
+                  <Tooltip
+                    title={
+                      party.hasUserAccount
+                        ? 'Este contacto ya tiene usuario'
+                        : party.primaryEmail
+                          ? 'Crear usuario y enviar contraseña'
+                          : 'Agrega un correo para crear acceso'
+                    }
+                  >
+                    <span>
+                      <IconButton
+                        onClick={() => setUserDialogParty(party)}
+                        disabled={Boolean(party.hasUserAccount) || !party.primaryEmail}
+                      >
+                        <PersonAddAltIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
                   <Tooltip title="Roles y accesos">
                     <IconButton onClick={() => navigate('/configuracion/roles-permisos')}>
                       <SchoolIcon fontSize="small" />
@@ -263,6 +398,11 @@ export default function PartiesPage() {
 
       <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} defaultIsOrg={createDialogIsOrg} />
       <EditPartyDialog party={editing} open={!!editing} onClose={() => setEditing(null)} />
+      <CreateUserFromPartyDialog
+        party={userDialogParty}
+        open={Boolean(userDialogParty)}
+        onClose={() => setUserDialogParty(null)}
+      />
     </Stack>
   );
 }

@@ -21,6 +21,9 @@ dependencies:
   - bytestring
   - gitrev
   - template-haskell
+  - entropy
+  - mime-mail
+  - smtp-mail
   - wai
   - wai-cors
 

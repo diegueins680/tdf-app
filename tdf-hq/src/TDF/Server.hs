@@ -235,8 +235,8 @@ login LoginRequest{..} = do
     throwAuthError msg = throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
 runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
-runLogin uname pwd = do
-  mCred <- getBy (UniqueCredentialUsername uname)
+runLogin identifier pwd = do
+  mCred <- lookupCredential identifier
   case mCred of
     Nothing -> pure (Left invalidMsg)
     Just (Entity _ cred)
@@ -244,7 +244,7 @@ runLogin uname pwd = do
       | otherwise ->
           if validatePassword (TE.encodeUtf8 (userCredentialPasswordHash cred)) (TE.encodeUtf8 pwd)
             then do
-              token <- createSessionToken (userCredentialPartyId cred) uname
+              token <- createSessionToken (userCredentialPartyId cred) (userCredentialUsername cred)
               mUser  <- loadAuthedUser token
               case mUser of
                 Nothing    -> pure (Left "Failed to load user profile")
@@ -252,6 +252,27 @@ runLogin uname pwd = do
             else pure (Left invalidMsg)
   where
     invalidMsg = "Invalid username or password"
+
+lookupCredential :: Text -> SqlPersistT IO (Maybe (Entity UserCredential))
+lookupCredential rawIdentifier = do
+  let trimmed = T.strip rawIdentifier
+  if T.null trimmed
+    then pure Nothing
+    else do
+      byUsername <- getBy (UniqueCredentialUsername trimmed)
+      case byUsername of
+        Just cred -> pure (Just cred)
+        Nothing   -> lookupByEmail trimmed
+
+lookupByEmail :: Text -> SqlPersistT IO (Maybe (Entity UserCredential))
+lookupByEmail emailAddress = do
+  let query =
+        "SELECT ?? FROM user_credential \
+        \ JOIN party ON user_credential.party_id = party.id \
+        \ WHERE lower(party.primary_email) = lower(?) \
+        \ LIMIT 1"
+  creds <- rawSql query [PersistText emailAddress]
+  pure (listToMaybe creds)
 
 data SignupDbError
   = SignupEmailExists
@@ -582,8 +603,12 @@ listParties :: AuthedUser -> AppM [PartyDTO]
 listParties user = do
   requireModule user ModuleCRM
   Env pool _ <- ask
-  entities <- liftIO $ flip runSqlPool pool $ selectList [] [Asc PartyId]
-  pure (map toPartyDTO entities)
+  (entities, accountIds) <- liftIO $ flip runSqlPool pool $ do
+    creds <- selectList [] []
+    let accountSet = Set.fromList (map (userCredentialPartyId . entityVal) creds)
+    parts <- selectList [] [Asc PartyId]
+    pure (parts, accountSet)
+  pure (map (\ent -> toPartyDTO (Set.member (entityKey ent) accountIds) ent) entities)
 
 createParty :: AuthedUser -> PartyCreate -> AppM PartyDTO
 createParty user req = do
@@ -607,7 +632,7 @@ createParty user req = do
   liftIO $ flip runSqlPool pool $ mapM_ (\role -> upsert
     (PartyRole pid role True)
     [PartyRoleActive =. True]) (fromMaybe [] (cRoles req))
-  pure $ toPartyDTO (Entity pid p)
+  pure $ toPartyDTO False (Entity pid p)
 
 getParty :: AuthedUser -> Int64 -> AppM PartyDTO
 getParty user pidI = do
@@ -619,7 +644,9 @@ getParty user pidI = do
     Nothing -> throwError err404
     Just ent -> do
       bandDetails <- liftIO $ flip runSqlPool pool $ loadBandForParty (entityKey ent)
-      pure (toPartyDTOWithBand bandDetails ent)
+      hasAccount <- liftIO $ flip runSqlPool pool $
+        fmap isJust (selectFirst [UserCredentialPartyId ==. entityKey ent] [])
+      pure (toPartyDTOWithBand bandDetails hasAccount ent)
 
 updateParty :: AuthedUser -> Int64 -> PartyUpdate -> AppM PartyDTO
 updateParty user pidI req = do
