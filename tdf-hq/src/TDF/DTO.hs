@@ -15,6 +15,7 @@ import           Database.Persist (Entity(..))
 import           Database.Persist.Sql (fromSqlKey)
 
 import           TDF.Models
+import qualified TDF.Models as M
 import           TDF.API.Types (BandDTO)
 
 -- Parties
@@ -72,7 +73,7 @@ toPartyDTOWithBand :: Maybe BandDTO -> Entity Party -> PartyDTO
 toPartyDTOWithBand mBand (Entity pid p) = PartyDTO
   { partyId          = fromSqlKey pid
   , legalName        = partyLegalName p
-  , displayName      = partyDisplayName p
+  , displayName      = M.partyDisplayName p
   , isOrg            = partyIsOrg p
   , taxId            = partyTaxId p
   , primaryEmail     = partyPrimaryEmail p
@@ -105,6 +106,10 @@ data BookingDTO = BookingDTO
   , notes       :: Maybe Text
   , partyId     :: Maybe Int64
   , serviceType :: Maybe Text
+  , serviceOrderId    :: Maybe Int64
+  , serviceOrderTitle :: Maybe Text
+  , customerName      :: Maybe Text
+  , partyDisplayName  :: Maybe Text
   , resources   :: [BookingResourceDTO]
   } deriving (Show, Generic)
 instance ToJSON BookingDTO

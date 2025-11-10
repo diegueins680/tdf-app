@@ -11,14 +11,14 @@
 module TDF.Server where
 
 import           Control.Applicative ((<|>))
-import           Control.Monad (forM, forM_, void, when)
+import           Control.Monad (forM, forM_, void, when, unless)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Data.Int (Int64)
 import           Data.List (find, foldl', nub)
 import qualified Data.Map.Strict as Map
-import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
+import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
 import           Data.Aeson (Value, object, (.=))
 import           Data.Text (Text)
@@ -42,7 +42,7 @@ import           Database.Persist.Sql
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
-import           TDF.API.Types (RolePayload(..))
+import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..))
 import qualified TDF.API      as Api
 import           TDF.Config (AppConfig(..))
 import           TDF.DB
@@ -212,6 +212,7 @@ protectedServer user =
   :<|> invoiceServer user
   :<|> receiptServer user
   :<|> adminServer user
+  :<|> userRolesServer user
   :<|> inventoryServer user
   :<|> bandsServer user
   :<|> sessionsServer user
@@ -632,8 +633,8 @@ updateParty user pidI req = do
       Just p -> do
         let p' = p
               { partyLegalName        = maybe (partyLegalName p) Just (uLegalName req)
-              , partyDisplayName      = maybe (partyDisplayName p) id   (uDisplayName req)
-              , partyIsOrg            = maybe (partyIsOrg p) id         (uIsOrg req)
+              , partyDisplayName      = fromMaybe (M.partyDisplayName p) (uDisplayName req)
+              , partyIsOrg            = fromMaybe (partyIsOrg p)         (uIsOrg req)
               , partyTaxId            = maybe (partyTaxId p) Just       (uTaxId req)
               , partyPrimaryEmail     = maybe (partyPrimaryEmail p) Just (uPrimaryEmail req)
               , partyPrimaryPhone     = maybe (partyPrimaryPhone p) Just (uPrimaryPhone req)
@@ -663,29 +664,18 @@ addRole user pidI (RolePayload roleTxt) = do
 
 -- Bookings
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
-bookingServer user = listBookings user :<|> createBooking user
+bookingServer user =
+       listBookings user
+  :<|> createBooking user
+  :<|> updateBooking user
 
 listBookings :: AuthedUser -> AppM [BookingDTO]
 listBookings user = do
   requireModule user ModuleScheduling
   Env pool _ <- ask
-  (bookings, resourceMap) <- liftIO $ flip runSqlPool pool $ do
-    bs <- selectList [] [Desc BookingId]
-    resMap <- loadBookingResourceMap (map entityKey bs)
-    pure (bs, resMap)
-  pure $ map (toDTO resourceMap) bookings
-  where
-    toDTO resMap (Entity bid b) = BookingDTO
-      { bookingId   = fromSqlKey bid
-      , title       = bookingTitle b
-      , startsAt    = bookingStartsAt b
-      , endsAt      = bookingEndsAt b
-      , status      = T.pack (show (bookingStatus b))
-      , notes       = bookingNotes b
-      , partyId     = fmap fromSqlKey (bookingPartyId b)
-      , serviceType = bookingServiceType b
-      , resources   = Map.findWithDefault [] bid resMap
-      }
+  liftIO $ flip runSqlPool pool $ do
+    bookings <- selectList [] [Desc BookingId]
+    buildBookingDTOs bookings
 
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
 createBooking user req = do
@@ -693,8 +683,8 @@ createBooking user req = do
   Env pool _ <- ask
   now <- liftIO getCurrentTime
 
-  let status'          = parseStatus (cbStatus req)
-      serviceTypeClean = cleanText (cbServiceType req)
+  let status'          = parseStatusWithDefault Confirmed (cbStatus req)
+      serviceTypeClean = normalizeOptionalInput (cbServiceType req)
       partyKey         = fmap (toSqlKey . fromIntegral) (cbPartyId req)
       requestedRooms   = fromMaybe [] (cbResourceIds req)
 
@@ -710,11 +700,11 @@ createBooking user req = do
         , bookingEndsAt         = cbEndsAt req
         , bookingStatus         = status'
         , bookingCreatedBy      = Nothing
-        , bookingNotes          = cbNotes req
+        , bookingNotes          = normalizeOptionalInput (cbNotes req)
         , bookingCreatedAt      = now
         }
 
-  (bid, resourceDtos) <- liftIO $ flip runSqlPool pool $ do
+  dto <- liftIO $ flip runSqlPool pool $ do
     bookingId <- insert bookingRecord
     let uniqueResources = nub resourceKeys
     forM_ (zip [0 :: Int ..] uniqueResources) $ \(idx, key) ->
@@ -723,30 +713,59 @@ createBooking user req = do
         , bookingResourceResourceId = key
         , bookingResourceRole = if idx == 0 then "primary" else "secondary"
         }
-    resMap <- loadBookingResourceMap [bookingId]
-    pure (bookingId, Map.findWithDefault [] bookingId resMap)
-
-  pure BookingDTO
-    { bookingId   = fromSqlKey bid
-    , title       = bookingTitle bookingRecord
-    , startsAt    = bookingStartsAt bookingRecord
-    , endsAt      = bookingEndsAt bookingRecord
-    , status      = T.pack (show (bookingStatus bookingRecord))
-    , notes       = bookingNotes bookingRecord
-    , partyId     = fmap fromSqlKey partyKey
-    , serviceType = bookingServiceType bookingRecord
-    , resources   = resourceDtos
-    }
+    created <- getJustEntity bookingId
+    dtos <- buildBookingDTOs [created]
+    let fallback = BookingDTO
+          { bookingId   = fromSqlKey bookingId
+          , title       = bookingTitle bookingRecord
+          , startsAt    = bookingStartsAt bookingRecord
+          , endsAt      = bookingEndsAt bookingRecord
+          , status      = T.pack (show (bookingStatus bookingRecord))
+          , notes       = bookingNotes bookingRecord
+          , partyId     = fmap fromSqlKey partyKey
+          , serviceType = bookingServiceType bookingRecord
+          , serviceOrderId = Nothing
+          , serviceOrderTitle = Nothing
+          , customerName = Nothing
+          , partyDisplayName = Nothing
+          , resources   = []
+          }
+    pure (headDef fallback dtos)
+  pure dto
   where
-    parseStatus t =
-      case readMaybe (T.unpack t) of
-        Just s  -> s
-        Nothing -> Confirmed
+    headDef defVal xs =
+      case xs of
+        (y:_) -> y
+        []    -> defVal
 
-    cleanText Nothing = Nothing
-    cleanText (Just raw) =
-      let trimmed = T.strip raw
-      in if T.null trimmed then Nothing else Just trimmed
+updateBooking :: AuthedUser -> Int64 -> UpdateBookingReq -> AppM BookingDTO
+updateBooking user bookingIdI req = do
+  requireModule user ModuleScheduling
+  Env pool _ <- ask
+  let bookingId = toSqlKey bookingIdI :: Key Booking
+  result <- liftIO $ flip runSqlPool pool $ do
+    mBooking <- getEntity bookingId
+    case mBooking of
+      Nothing -> pure Nothing
+      Just (Entity _ current) -> do
+        let applyText fallback Nothing = fallback
+            applyText fallback (Just val) =
+              let trimmed = T.strip val
+              in if T.null trimmed then fallback else trimmed
+            applyMaybeText fallback Nothing = fallback
+            applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
+            updated = current
+              { bookingTitle       = applyText (bookingTitle current) (ubTitle req)
+              , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
+              , bookingNotes       = applyMaybeText (bookingNotes current) (ubNotes req)
+              , bookingStatus      = maybe (bookingStatus current) (parseStatusWithDefault (bookingStatus current)) (ubStatus req)
+              , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
+              , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
+              }
+        replace bookingId updated
+        dtos <- buildBookingDTOs [Entity bookingId updated]
+        pure (listToMaybe dtos)
+  maybe (throwError err404) pure result
 
 
 loadBookingResourceMap :: [Key Booking] -> SqlPersistT IO (Map.Map (Key Booking) [BookingResourceDTO])
@@ -771,6 +790,72 @@ loadBookingResourceMap bookingIds = do
                       }
                 in Map.insertWith (++) bookingKey [dto] acc
       pure (foldl' accumulate Map.empty bookingResources)
+
+buildBookingDTOs :: [Entity Booking] -> SqlPersistT IO [BookingDTO]
+buildBookingDTOs [] = pure []
+buildBookingDTOs bookings = do
+  let bookingIds       = map entityKey bookings
+      bookingPartyIds  = catMaybes $ map (bookingPartyId . entityVal) bookings
+      serviceOrderKeys = catMaybes $ map (bookingServiceOrderId . entityVal) bookings
+  resMap <- loadBookingResourceMap bookingIds
+  serviceOrderMap <- loadServiceOrderMap serviceOrderKeys
+  let servicePartyIds = map (M.serviceOrderCustomerId . entityVal) (Map.elems serviceOrderMap)
+      partyIds = nub (bookingPartyIds ++ servicePartyIds)
+  partyMap <- loadPartyDisplayMap partyIds
+  pure $ map (toDTO resMap partyMap serviceOrderMap) bookings
+  where
+    toDTO resMap partyMap soMap (Entity bid b) =
+      let resources = Map.findWithDefault [] bid resMap
+          partyDisplay = bookingPartyId b >>= (`Map.lookup` partyMap)
+          serviceOrderEnt = bookingServiceOrderId b >>= (`Map.lookup` soMap)
+          serviceOrderTitleText = serviceOrderEnt >>= (M.serviceOrderTitle . entityVal)
+          customerNameText = serviceOrderEnt >>= \soEnt ->
+            Map.lookup (M.serviceOrderCustomerId (entityVal soEnt)) partyMap
+          fallbackOrderTitle = normalizeOptionalInput (Just (bookingTitle b))
+          fallbackCustomer = partyDisplay
+      in BookingDTO
+        { bookingId   = fromSqlKey bid
+        , title       = bookingTitle b
+        , startsAt    = bookingStartsAt b
+        , endsAt      = bookingEndsAt b
+        , status      = T.pack (show (bookingStatus b))
+        , notes       = bookingNotes b
+        , partyId     = fmap fromSqlKey (bookingPartyId b)
+        , serviceType = bookingServiceType b
+        , serviceOrderId    = fmap fromSqlKey (bookingServiceOrderId b)
+        , serviceOrderTitle = serviceOrderTitleText <|> fallbackOrderTitle
+        , customerName      = customerNameText <|> fallbackCustomer
+        , partyDisplayName  = partyDisplay
+        , resources   = resources
+        }
+
+loadPartyDisplayMap :: [Key Party] -> SqlPersistT IO (Map.Map (Key Party) Text)
+loadPartyDisplayMap [] = pure Map.empty
+loadPartyDisplayMap partyIds = do
+  parties <- selectList [PartyId <-. partyIds] []
+  pure $ Map.fromList
+    [ (entityKey ent, M.partyDisplayName (entityVal ent))
+    | ent <- parties
+    ]
+
+loadServiceOrderMap :: [Key ServiceOrder] -> SqlPersistT IO (Map.Map (Key ServiceOrder) (Entity ServiceOrder))
+loadServiceOrderMap [] = pure Map.empty
+loadServiceOrderMap serviceOrderIds = do
+  serviceOrders <- selectList [ServiceOrderId <-. serviceOrderIds] []
+  pure $ Map.fromList [ (entityKey ent, ent) | ent <- serviceOrders ]
+
+normalizeOptionalInput :: Maybe Text -> Maybe Text
+normalizeOptionalInput Nothing = Nothing
+normalizeOptionalInput (Just raw) =
+  let trimmed = T.strip raw
+  in if T.null trimmed then Nothing else Just trimmed
+
+parseStatusWithDefault :: BookingStatus -> Text -> BookingStatus
+parseStatusWithDefault fallback raw =
+  let cleaned = T.strip raw
+  in case readMaybe (T.unpack cleaned) of
+       Just s  -> s
+       Nothing -> fallback
 
 resolveResourcesForBooking :: Maybe Text -> [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
 resolveResourcesForBooking service requested start end = do
@@ -1194,7 +1279,7 @@ issueReceipt
 issueReceipt now mBuyerName mBuyerEmail mNotes mCurrency (Entity iid inv) lineEntities = do
   let customerId = invoiceCustomerId inv
   party <- get customerId
-  let defaultName  = maybe "Cliente" partyDisplayName party
+  let defaultName  = maybe "Cliente" M.partyDisplayName party
       defaultEmail = party >>= partyPrimaryEmail
       buyerName    = fromMaybe defaultName mBuyerName
       buyerEmail   = mBuyerEmail <|> defaultEmail
@@ -1260,3 +1345,80 @@ requireModule user moduleTag
       { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
   where
     msg = "Missing access to module: " <> moduleName moduleTag
+-- User roles API
+userRolesServer :: AuthedUser -> ServerT UserRolesAPI AppM
+userRolesServer user =
+       listUsers
+  :<|> userRoutes
+  where
+    listUsers = do
+      requireModule user ModuleAdmin
+      Env pool _ <- ask
+      liftIO $ flip runSqlPool pool loadUserRoleSummaries
+
+    userRoutes userId =
+           getUserRolesH userId
+      :<|> updateUserRolesH userId
+
+    getUserRolesH userId = do
+      requireModule user ModuleAdmin
+      Env pool _ <- ask
+      let credKey = toSqlKey userId :: Key UserCredential
+      mRoles <- liftIO $ flip runSqlPool pool $ do
+        mCred <- getEntity credKey
+        case mCred of
+          Nothing -> pure Nothing
+          Just (Entity _ cred) -> do
+            rows <- selectList
+              [ PartyRolePartyId ==. userCredentialPartyId cred
+              , PartyRoleActive ==. True
+              ]
+              [Asc PartyRoleRole]
+            pure $ Just (map (partyRoleRole . entityVal) rows)
+      maybe (throwError err404) pure mRoles
+
+    updateUserRolesH userId UserRoleUpdatePayload{roles = payloadRoles} = do
+      requireModule user ModuleAdmin
+      Env pool _ <- ask
+      let credKey = toSqlKey userId :: Key UserCredential
+      updated <- liftIO $ flip runSqlPool pool $ do
+        mCred <- getEntity credKey
+        case mCred of
+          Nothing -> pure False
+          Just (Entity _ cred) -> do
+            applyRoles (userCredentialPartyId cred) payloadRoles
+            pure True
+      unless updated $ throwError err404
+      pure NoContent
+
+loadUserRoleSummaries :: SqlPersistT IO [UserRoleSummaryDTO]
+loadUserRoleSummaries = do
+  creds <- selectList [] [Asc UserCredentialId]
+  mapM summarize creds
+  where
+    summarize (Entity credId cred) = do
+      party <- getJustEntity (userCredentialPartyId cred)
+      roles <- selectList
+        [ PartyRolePartyId ==. userCredentialPartyId cred
+        , PartyRoleActive ==. True
+        ]
+        [Asc PartyRoleRole]
+      pure UserRoleSummaryDTO
+        { id        = fromSqlKey credId
+        , name      = M.partyDisplayName (entityVal party)
+        , email     = M.partyPrimaryEmail (entityVal party)
+        , phone     = M.partyPrimaryPhone (entityVal party)
+        , roles     = map (partyRoleRole . entityVal) roles
+        , status    = if userCredentialActive cred then AccountStatusActive else AccountStatusInactive
+        , createdAt = M.partyCreatedAt (entityVal party)
+        }
+
+applyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
+applyRoles partyKey rolesList = do
+  existing <- selectList [PartyRolePartyId ==. partyKey] []
+  let desired = Set.fromList rolesList
+  forM_ (Set.toList desired) $ \role ->
+    void $ upsert (PartyRole partyKey role True) [PartyRoleActive =. True]
+  forM_ existing $ \(Entity roleId record) ->
+    when (partyRoleActive record && Set.notMember (partyRoleRole record) desired) $
+      update roleId [PartyRoleActive =. False]

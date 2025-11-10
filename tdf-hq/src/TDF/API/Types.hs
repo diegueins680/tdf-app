@@ -105,6 +105,32 @@ data UserAccountUpdate = UserAccountUpdate
 instance ToJSON UserAccountUpdate
 instance FromJSON UserAccountUpdate
 
+data AccountStatusDTO = AccountStatusActive | AccountStatusInactive
+  deriving (Show, Read, Eq, Enum, Bounded, Generic)
+
+instance ToJSON AccountStatusDTO
+instance FromJSON AccountStatusDTO
+
+data UserRoleSummaryDTO = UserRoleSummaryDTO
+  { id        :: Int64
+  , name      :: Text
+  , email     :: Maybe Text
+  , phone     :: Maybe Text
+  , roles     :: [RoleEnum]
+  , status    :: AccountStatusDTO
+  , createdAt :: UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON UserRoleSummaryDTO
+instance FromJSON UserRoleSummaryDTO
+
+data UserRoleUpdatePayload = UserRoleUpdatePayload
+  { roles :: [RoleEnum]
+  } deriving (Show, Generic)
+
+instance ToJSON UserRoleUpdatePayload
+instance FromJSON UserRoleUpdatePayload
+
 data BandOptionsDTO = BandOptionsDTO
   { roles  :: [DropdownOptionDTO]
   , genres :: [DropdownOptionDTO]

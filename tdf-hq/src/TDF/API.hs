@@ -22,7 +22,8 @@ import           TDF.API.Inventory (InventoryAPI)
 import           TDF.API.Pipelines (PipelinesAPI)
 import           TDF.API.Rooms     (RoomsAPI)
 import           TDF.API.Sessions  (SessionsAPI)
-import           TDF.API.Types     (LooseJSON, RolePayload)
+import           TDF.API.Types     (LooseJSON, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
+import           TDF.Models        (RoleEnum)
 import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
@@ -60,6 +61,7 @@ type PartyAPI =
 type BookingAPI =
        Get '[JSON] [BookingDTO]
   :<|> ReqBody '[JSON] CreateBookingReq :> Post '[JSON] BookingDTO
+  :<|> Capture "bookingId" Int64 :> ReqBody '[JSON] UpdateBookingReq :> Put '[JSON] BookingDTO
 
 type PackageAPI =
        "products" :> Get '[JSON] [PackageProductDTO]
@@ -89,6 +91,13 @@ type PasswordResetConfirmAPI = ReqBody '[JSON] PasswordResetConfirmRequest :> Po
 
 type PasswordAPI = Header "Authorization" Text :> "change" :> ReqBody '[JSON] ChangePasswordRequest :> Post '[JSON] LoginResponse
 
+type UserRolesAPI =
+       "users" :> Get '[JSON] [UserRoleSummaryDTO]
+  :<|> "users" :> Capture "userId" Int64 :> "roles" :>
+        ( Get '[JSON] [RoleEnum]
+     :<|> ReqBody '[JSON] UserRoleUpdatePayload :> Put '[JSON] NoContent
+        )
+
 type AuthV1API =
        "signup" :> SignupAPI
   :<|> "password-reset" :> PasswordResetAPI
@@ -104,6 +113,7 @@ type ProtectedAPI =
   :<|> "invoices" :> InvoiceAPI
   :<|> "receipts" :> ReceiptAPI
   :<|> "admin"    :> AdminAPI
+  :<|> "api"      :> UserRolesAPI
   :<|> InventoryAPI
   :<|> BandsAPI
   :<|> SessionsAPI
@@ -139,3 +149,13 @@ data CreateBookingReq = CreateBookingReq
   , cbResourceIds :: Maybe [Text]
   } deriving (Show, Generic)
 instance FromJSON CreateBookingReq
+
+data UpdateBookingReq = UpdateBookingReq
+  { ubTitle       :: Maybe Text
+  , ubServiceType :: Maybe Text
+  , ubStatus      :: Maybe Text
+  , ubNotes       :: Maybe Text
+  , ubStartsAt    :: Maybe UTCTime
+  , ubEndsAt      :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance FromJSON UpdateBookingReq
