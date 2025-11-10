@@ -250,10 +250,20 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>Cancelar</Button>
-        <Button variant="contained" onClick={() => void handleCreateUser()} disabled={loading || !!success}>
-          {loading ? 'Creando...' : success ? 'Hecho' : 'Crear usuario'}
-        </Button>
+        {success ? (
+          <Button variant="contained" onClick={onClose}>
+            Cerrar
+          </Button>
+        ) : (
+          <>
+            <Button onClick={onClose} disabled={loading}>
+              Cancelar
+            </Button>
+            <Button variant="contained" onClick={() => void handleCreateUser()} disabled={loading}>
+              {loading ? 'Creando...' : 'Crear usuario'}
+            </Button>
+          </>
+        )}
       </DialogActions>
     </Dialog>
   );
