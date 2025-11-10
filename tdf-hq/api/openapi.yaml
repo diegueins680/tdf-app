@@ -1,0 +1,45 @@
+openapi: 3.0.3
+info:
+  title: TDF API
+  description: API v1 para TDF (CRM, Estudio, Label, Eventos, Escuela, Finanzas, Operación).
+  version: "1.0.0"
+servers:
+  - url: https://api.tdf.local/v1
+    description: Desarrollo local
+  - url: https://api.tdf.app/v1
+    description: Producción
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  /crm/contacts:
+    get:
+      summary: Listar contactos
+      responses: { "200": { description: OK } }
+  /estudio/bookings:
+    get:
+      summary: Listar bookings
+      responses: { "200": { description: OK } }
+  /label/artists:
+    get:
+      summary: Listar artistas
+      responses: { "200": { description: OK } }
+  /eventos/events:
+    get:
+      summary: Listar eventos
+      responses: { "200": { description: OK } }
+  /escuela/courses:
+    get:
+      summary: Listar cursos
+      responses: { "200": { description: OK } }
+  /finanzas/invoices:
+    get:
+      summary: Listar facturas
+      responses: { "200": { description: OK } }
+  /operacion/equipment:
+    get:
+      summary: Listar equipo
+      responses: { "200": { description: OK } }

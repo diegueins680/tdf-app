@@ -1,191 +1,256 @@
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 module TDF.DTO where
 
-import Data.Aeson
-import Data.Text (Text)
-import Data.Time (UTCTime)
-import GHC.Generics
-import TDF.Models (PartyRole, PartyStatus)
-import Data.Char (toLower)
-import Data.List (stripPrefix)
+import           GHC.Generics (Generic)
+import           Data.Aeson (ToJSON, FromJSON)
+import           Data.Text (Text)
+import qualified Data.Text as T
+import           Data.Int (Int64)
+import           Data.Time (UTCTime, Day)
 
--- DTO for user information with roles
-data UserDTO = UserDTO
-    { userId :: Int
-    , userName :: Text
-    , userEmail :: Maybe Text
-    , userPhone :: Maybe Text
-    , userRoles :: [PartyRole]
-    , userStatus :: PartyStatus
-    , userCreatedAt :: UTCTime
-    } deriving (Show, Eq, Generic)
+import           Database.Persist (Entity(..))
+import           Database.Persist.Sql (fromSqlKey)
 
-instance ToJSON UserDTO where
-    toJSON = genericToJSON defaultOptions
-        { fieldLabelModifier = \s -> case s of
-            "userId" -> "id"
-            "userName" -> "name"
-            "userEmail" -> "email"
-            "userPhone" -> "phone"
-            "userRoles" -> "roles"
-            "userStatus" -> "status"
-            "userCreatedAt" -> "createdAt"
-            _ -> s
-        }
+import           TDF.Models
+import           TDF.API.Types (BandDTO)
 
-instance FromJSON UserDTO where
-    parseJSON = genericParseJSON defaultOptions
-        { fieldLabelModifier = \s -> case s of
-            "userId" -> "id"
-            "userName" -> "name"
-            "userEmail" -> "email"
-            "userPhone" -> "phone"
-            "userRoles" -> "roles"
-            "userStatus" -> "status"
-            "userCreatedAt" -> "createdAt"
-            _ -> s
-        }
-
--- DTO for updating user roles
-data UserRoleUpdateDTO = UserRoleUpdateDTO
-    { roles :: [PartyRole]
-    } deriving (Show, Eq, Generic)
-
-instance ToJSON UserRoleUpdateDTO
-instance FromJSON UserRoleUpdateDTO
-
--- Party DTOs
-dropPrefixLower :: String -> String -> String
-dropPrefixLower prefix str =
-    case stripPrefix prefix str of
-        Just (c:cs) -> toLower c : cs
-        _ -> str
-
+-- Parties
 data PartyDTO = PartyDTO
-    { partyId :: Int
-    , partyLegalName :: Maybe Text
-    , partyDisplayName :: Text
-    , partyIsOrg :: Bool
-    , partyTaxId :: Maybe Text
-    , partyPrimaryEmail :: Maybe Text
-    , partyPrimaryPhone :: Maybe Text
-    , partyWhatsapp :: Maybe Text
-    , partyInstagram :: Maybe Text
-    , partyEmergencyContact :: Maybe Text
-    , partyNotes :: Maybe Text
-    } deriving (Show, Eq, Generic)
+  { partyId          :: Int64
+  , legalName        :: Maybe Text
+  , displayName      :: Text
+  , isOrg            :: Bool
+  , taxId            :: Maybe Text
+  , primaryEmail     :: Maybe Text
+  , primaryPhone     :: Maybe Text
+  , whatsapp         :: Maybe Text
+  , instagram        :: Maybe Text
+  , emergencyContact :: Maybe Text
+  , notes            :: Maybe Text
+  , band             :: Maybe BandDTO
+  } deriving (Show, Generic)
 
-instance ToJSON PartyDTO where
-    toJSON = genericToJSON defaultOptions
-        { fieldLabelModifier = dropPrefixLower "party" }
-instance FromJSON PartyDTO where
-    parseJSON = genericParseJSON defaultOptions
-        { fieldLabelModifier = dropPrefixLower "party" }
+instance ToJSON PartyDTO
+instance FromJSON PartyDTO
 
-data PartyCreateDTO = PartyCreateDTO
-    { cDisplayName :: Text
-    , cIsOrg :: Bool
-    , cLegalName :: Maybe Text
-    , cPrimaryEmail :: Maybe Text
-    , cPrimaryPhone :: Maybe Text
-    , cWhatsapp :: Maybe Text
-    , cInstagram :: Maybe Text
-    , cTaxId :: Maybe Text
-    , cEmergencyContact :: Maybe Text
-    , cNotes :: Maybe Text
-    } deriving (Show, Eq, Generic)
+data PartyCreate = PartyCreate
+  { cLegalName        :: Maybe Text
+  , cDisplayName      :: Text
+  , cIsOrg            :: Bool
+  , cTaxId            :: Maybe Text
+  , cPrimaryEmail     :: Maybe Text
+  , cPrimaryPhone     :: Maybe Text
+  , cWhatsapp         :: Maybe Text
+  , cInstagram        :: Maybe Text
+  , cEmergencyContact :: Maybe Text
+  , cNotes            :: Maybe Text
+  , cRoles            :: Maybe [RoleEnum]
+  } deriving (Show, Generic)
+instance FromJSON PartyCreate
 
-instance FromJSON PartyCreateDTO where
-    parseJSON = genericParseJSON defaultOptions
+data PartyUpdate = PartyUpdate
+  { uLegalName        :: Maybe Text
+  , uDisplayName      :: Maybe Text
+  , uIsOrg            :: Maybe Bool
+  , uTaxId            :: Maybe Text
+  , uPrimaryEmail     :: Maybe Text
+  , uPrimaryPhone     :: Maybe Text
+  , uWhatsapp         :: Maybe Text
+  , uInstagram        :: Maybe Text
+  , uEmergencyContact :: Maybe Text
+  , uNotes            :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON PartyUpdate
 
-instance ToJSON PartyCreateDTO where
-    toJSON = genericToJSON defaultOptions
+toPartyDTO :: Entity Party -> PartyDTO
+toPartyDTO = toPartyDTOWithBand Nothing
 
-data PartyUpdateDTO = PartyUpdateDTO
-    { uDisplayName :: Maybe Text
-    , uIsOrg :: Maybe Bool
-    , uLegalName :: Maybe Text
-    , uPrimaryEmail :: Maybe Text
-    , uPrimaryPhone :: Maybe Text
-    , uWhatsapp :: Maybe Text
-    , uInstagram :: Maybe Text
-    , uTaxId :: Maybe Text
-    , uEmergencyContact :: Maybe Text
-    , uNotes :: Maybe Text
-    } deriving (Show, Eq, Generic)
+toPartyDTOWithBand :: Maybe BandDTO -> Entity Party -> PartyDTO
+toPartyDTOWithBand mBand (Entity pid p) = PartyDTO
+  { partyId          = fromSqlKey pid
+  , legalName        = partyLegalName p
+  , displayName      = partyDisplayName p
+  , isOrg            = partyIsOrg p
+  , taxId            = partyTaxId p
+  , primaryEmail     = partyPrimaryEmail p
+  , primaryPhone     = partyPrimaryPhone p
+  , whatsapp         = partyWhatsapp p
+  , instagram        = partyInstagram p
+  , emergencyContact = partyEmergencyContact p
+  , notes            = partyNotes p
+  , band             = mBand
+  }
 
-instance FromJSON PartyUpdateDTO where
-    parseJSON = genericParseJSON defaultOptions
+-- Helper
+tshow :: Show a => a -> Text
+tshow = T.pack . show
 
-instance ToJSON PartyUpdateDTO where
-    toJSON = genericToJSON defaultOptions
+-- Bookings
+data BookingResourceDTO = BookingResourceDTO
+  { brRoomId   :: Text
+  , brRoomName :: Text
+  , brRole     :: Text
+  } deriving (Show, Generic)
+instance ToJSON BookingResourceDTO
 
--- Booking DTOs
 data BookingDTO = BookingDTO
-    { bookingId :: Int
-    , bookingTitle :: Text
-    , bookingStartsAt :: Text
-    , bookingEndsAt :: Text
-    , bookingStatusText :: Text
-    , bookingNotes :: Maybe Text
-    } deriving (Show, Eq, Generic)
+  { bookingId   :: Int64
+  , title       :: Text
+  , startsAt    :: UTCTime
+  , endsAt      :: UTCTime
+  , status      :: Text
+  , notes       :: Maybe Text
+  , partyId     :: Maybe Int64
+  , serviceType :: Maybe Text
+  , resources   :: [BookingResourceDTO]
+  } deriving (Show, Generic)
+instance ToJSON BookingDTO
 
-instance ToJSON BookingDTO where
-    toJSON = genericToJSON defaultOptions
-        { fieldLabelModifier = bookingFieldModifier }
+-- Packages
+data PackageProductDTO = PackageProductDTO
+  { ppId         :: Int64
+  , ppName       :: Text
+  , ppService    :: Text
+  , ppUnitsKind  :: Text
+  , ppUnitsQty   :: Int
+  , ppPriceCents :: Int
+  } deriving (Show, Generic)
+instance ToJSON PackageProductDTO
 
-instance FromJSON BookingDTO where
-    parseJSON = genericParseJSON defaultOptions
-        { fieldLabelModifier = bookingFieldModifier }
+data PackagePurchaseReq = PackagePurchaseReq
+  { buyerId   :: Int64
+  , productId :: Int64
+  } deriving (Show, Generic)
+instance FromJSON PackagePurchaseReq
 
-data BookingCreateDTO = BookingCreateDTO
-    { cbTitle :: Text
-    , cbStartsAt :: Text
-    , cbEndsAt :: Text
-    , cbStatus :: Text
-    , cbNotes :: Maybe Text
-    } deriving (Show, Eq, Generic)
+-- Invoices
+data InvoiceLineDTO = InvoiceLineDTO
+  { lineId             :: Int64
+  , description        :: Text
+  , quantity           :: Int
+  , unitCents          :: Int
+  , taxBps             :: Int
+  , totalCents         :: Int
+  , serviceOrderId     :: Maybe Int64
+  , packagePurchaseId  :: Maybe Int64
+  } deriving (Show, Generic)
+instance ToJSON InvoiceLineDTO
 
-instance FromJSON BookingCreateDTO where
-    parseJSON = genericParseJSON defaultOptions
+data InvoiceDTO = InvoiceDTO
+  { invId        :: Int64
+  , number       :: Maybe Text
+  , statusI      :: Text
+  , subtotalC    :: Int
+  , taxC         :: Int
+  , totalC       :: Int
+  , currency     :: Text
+  , customerId   :: Maybe Int64
+  , notes        :: Maybe Text
+  , receiptId    :: Maybe Int64
+  , lineItems    :: [InvoiceLineDTO]
+  } deriving (Show, Generic)
+instance ToJSON InvoiceDTO
 
-instance ToJSON BookingCreateDTO where
-    toJSON = genericToJSON defaultOptions
+data CreateInvoiceLineReq = CreateInvoiceLineReq
+  { cilDescription       :: Text
+  , cilQuantity          :: Int
+  , cilUnitCents         :: Int
+  , cilTaxBps            :: Maybe Int
+  , cilServiceOrderId    :: Maybe Int64
+  , cilPackagePurchaseId :: Maybe Int64
+  } deriving (Show, Generic)
+instance FromJSON CreateInvoiceLineReq
 
-bookingFieldModifier :: String -> String
-bookingFieldModifier "bookingStatusText" = "status"
-bookingFieldModifier field = dropPrefixLower "booking" field
+data CreateInvoiceReq = CreateInvoiceReq
+  { ciCustomerId      :: Int64
+  , ciCurrency        :: Maybe Text
+  , ciNumber          :: Maybe Text
+  , ciNotes           :: Maybe Text
+  , ciLineItems       :: [CreateInvoiceLineReq]
+  , ciGenerateReceipt :: Maybe Bool
+  } deriving (Show, Generic)
+instance FromJSON CreateInvoiceReq
 
--- Health check DTO
-data HealthDTO = HealthDTO
-    { status :: Text
-    , version :: Maybe Text
-    } deriving (Show, Eq, Generic)
+-- Receipts
+data ReceiptLineDTO = ReceiptLineDTO
+  { receiptLineId :: Int64
+  , rlDescription :: Text
+  , rlQuantity    :: Int
+  , rlUnitCents   :: Int
+  , rlTaxBps      :: Maybe Int
+  , rlTotalCents  :: Int
+  } deriving (Show, Generic)
+instance ToJSON ReceiptLineDTO
 
-instance ToJSON HealthDTO
-instance FromJSON HealthDTO
+data ReceiptDTO = ReceiptDTO
+  { receiptId    :: Int64
+  , receiptNumber :: Text
+  , issuedAt     :: UTCTime
+  , issueDate    :: Day
+  , buyerName    :: Text
+  , buyerEmail   :: Maybe Text
+  , currency     :: Text
+  , subtotalCents :: Int
+  , taxCents     :: Int
+  , totalCents   :: Int
+  , notes        :: Maybe Text
+  , invoiceId    :: Int64
+  , lineItems    :: [ReceiptLineDTO]
+  } deriving (Show, Generic)
+instance ToJSON ReceiptDTO
 
--- Version information DTO
-data VersionDTO = VersionDTO
-    { name :: Text
-    , versionField :: Text
-    , commit :: Maybe Text
-    , buildTime :: Maybe Text
-    } deriving (Show, Eq, Generic)
+data CreateReceiptReq = CreateReceiptReq
+  { crInvoiceId  :: Int64
+  , crBuyerName  :: Maybe Text
+  , crBuyerEmail :: Maybe Text
+  , crNotes      :: Maybe Text
+  , crCurrency   :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON CreateReceiptReq
 
-instance ToJSON VersionDTO where
-    toJSON = genericToJSON defaultOptions
-        { fieldLabelModifier = \s -> case s of
-            "versionField" -> "version"
-            _ -> s
-        }
+-- Auth
+data LoginRequest = LoginRequest
+  { username :: Text
+  , password :: Text
+  } deriving (Show, Generic)
+instance FromJSON LoginRequest
 
-instance FromJSON VersionDTO where
-    parseJSON = genericParseJSON defaultOptions
-        { fieldLabelModifier = \s -> case s of
-            "versionField" -> "version"
-            _ -> s
-        }
+data SignupRequest = SignupRequest
+  { firstName       :: Text
+  , lastName        :: Text
+  , email           :: Text
+  , phone           :: Maybe Text
+  , password        :: Text
+  , googleIdToken   :: Maybe Text
+  , marketingOptIn  :: Maybe Bool
+  } deriving (Show, Generic)
+instance FromJSON SignupRequest
+
+data ChangePasswordRequest = ChangePasswordRequest
+  { username        :: Maybe Text
+  , currentPassword :: Text
+  , newPassword     :: Text
+  } deriving (Show, Generic)
+instance FromJSON ChangePasswordRequest
+
+data PasswordResetRequest = PasswordResetRequest
+  { email :: Text
+  } deriving (Show, Generic)
+instance FromJSON PasswordResetRequest
+
+data PasswordResetConfirmRequest = PasswordResetConfirmRequest
+  { token       :: Text
+  , newPassword :: Text
+  } deriving (Show, Generic)
+instance FromJSON PasswordResetConfirmRequest
+
+data LoginResponse = LoginResponse
+  { token   :: Text
+  , partyId :: Int64
+  , roles   :: [RoleEnum]
+  , modules :: [Text]
+  } deriving (Show, Generic)
+instance ToJSON LoginResponse

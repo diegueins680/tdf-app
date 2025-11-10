@@ -1,96 +1,128 @@
-cabal-version: 1.12
+cabal-version:      2.4
+name:               tdf-hq
+version:            0.1.0.0
+synopsis:           TDF HQ - CRM, Scheduling, Packages, Invoicing, Inventory (skeleton)
+license:            MIT
+author:             TDF Records (Diego Saá)
+maintainer:         tdf@example.com
+build-type:         Simple
 
--- This file has been generated from package.yaml by hpack version 0.38.1.
---
--- see: https://github.com/sol/hpack
-
-name:           tdf-hq
-version:        1.0.0
-homepage:       https://github.com/diegueins680/tdf-app#readme
-bug-reports:    https://github.com/diegueins680/tdf-app/issues
-author:         TDF Records
-maintainer:     dev@tdfrecords.com
-license:        MIT
-build-type:     Simple
-
-source-repository head
-  type: git
-  location: https://github.com/diegueins680/tdf-app
-
-library
-  exposed-modules:
-      TDF.Models
-      TDF.API
-      TDF.DTO
-      TDF.DB
-      TDF.Server
+executable tdf-hq-exe
+  main-is:          Main.hs
+  hs-source-dirs:   app, src
   other-modules:
-      Paths_tdf_hq
-  hs-source-dirs:
-      src
+    TDF.API.Admin
+    TDF.API
+    TDF.API.Bands
+    TDF.API.Future
+    TDF.API.Inventory
+    TDF.API.Pipelines
+    TDF.API.Rooms
+    TDF.API.Sessions
+    TDF.API.Types
+    TDF.Auth
+    TDF.Config
+    TDF.Cors
+    TDF.DB
+    TDF.DTO
+    TDF.Handlers.InputList
+    TDF.Meta
+    TDF.Models
+    TDF.ModelsExtra
+    TDF.Pipelines
+    TDF.Routes.Academy
+    TDF.Seed
+    TDF.Server
+    TDF.ServerAdmin
+    TDF.ServerExtra
+    TDF.ServerFuture
+    TDF.Trials.API
+    TDF.Trials.DTO
+    TDF.Trials.Models
+    TDF.Trials.Seed
+    TDF.Trials.Server
+    TDF.Version
+    Paths_tdf_hq
+  default-language: Haskell2010
+  ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
-    , base >=4.7 && <5
+      base                 >=4.14 && <5
+    , aeson                >=2.0
     , bytestring
-    , monad-logger
-    , mtl
-    , persistent
-    , persistent-postgresql
-    , persistent-template
-    , servant
-    , servant-server
     , text
     , time
-    , transformers
-  default-language: Haskell2010
-
-executable tdf-hq
-  main-is: Main.hs
-  other-modules:
-      Paths_tdf_hq
-  hs-source-dirs:
-      app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      aeson
-    , base >=4.7 && <5
-    , bytestring
+    , containers
+    , gitrev
+    , persistent           >=2.14
+    , persistent-template  >=2.12
+    , persistent-postgresql >=2.13
+    , resource-pool
     , monad-logger
-    , mtl
-    , persistent
-    , persistent-postgresql
-    , persistent-template
-    , servant
-    , servant-server
-    , tdf-hq
-    , text
-    , time
+    , resourcet
+    , conduit
+    , servant              >=0.19
+    , servant-server       >=0.19
+    , http-types
+    , http-media
+    , warp                 >=3.3
+    , wai
+    , wai-cors
+    , filepath
+    , directory
     , transformers
-    , warp
-  default-language: Haskell2010
+    , mtl
+    , unordered-containers
+    , uuid-types
+    , scientific
+    , safe-exceptions
+    , base64-bytestring
+    , directory
+    , process
+    , bcrypt
+    , path-pieces
+    , uuid
+    , template-haskell
 
 test-suite tdf-hq-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_tdf_hq
-  hs-source-dirs:
-      test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  type:              exitcode-stdio-1.0
+  hs-source-dirs:    test, src
+  main-is:           Spec.hs
+  ghc-options:       -Wall
+  default-language:  Haskell2010
   build-depends:
-      aeson
-    , base >=4.7 && <5
+      base                 >=4.14 && <5
+    , aeson                >=2.0
     , bytestring
-    , hspec
-    , monad-logger
-    , mtl
-    , persistent
-    , persistent-postgresql
-    , persistent-template
-    , servant
-    , servant-server
-    , tdf-hq
     , text
     , time
+    , containers
+    , gitrev
+    , persistent           >=2.14
+    , persistent-template  >=2.12
+    , persistent-postgresql >=2.13
+    , resource-pool
+    , monad-logger
+    , resourcet
+    , conduit
+    , servant              >=0.19
+    , servant-server       >=0.19
+    , http-types
+    , http-media
+    , wai
+    , warp                 >=3.3
+    , wai-cors
+    , filepath
+    , directory
     , transformers
-  default-language: Haskell2010
+    , mtl
+    , unordered-containers
+    , uuid-types
+    , scientific
+    , safe-exceptions
+    , base64-bytestring
+    , process
+    , bcrypt
+    , path-pieces
+    , uuid
+    , template-haskell
+    , hspec                >=2.7

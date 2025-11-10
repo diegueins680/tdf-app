@@ -1,189 +1,50 @@
-# TDF HQ UI
+# TDF HQ UI (React + Vite + MUI + React Query + FullCalendar + DnD)
 
-React web interface for managing user roles in the TDF Records platform.
+Front-end for the TDF HQ backend (Servant + PostgreSQL). It includes:
+- Parties screen (list, create, edit Instagram/phone).
+- Bookings screen with FullCalendar (wired to `/bookings`).
+- Basic Kanban for Mixing/Mastering (client-side demo, ready to POST when endpoints exist).
+- System status page hitting `/version` + `/health` for build diagnostics.
+- Session dropdown with avatar + logout to simulate authentication flow.
 
-## Features
-
-- **Multi-role management** - Assign multiple roles to users via intuitive UI
-- **Material-UI** - Modern, responsive design with MUI components
-- **Type-safe** - Full TypeScript with generated API types
-- **Real-time updates** - Immediate UI feedback on role changes
-- **Color-coded roles** - Visual distinction between different role types
-
-## Prerequisites
-
-- Node.js 18+
-- npm 9+
-
-## Quick Start
+## Quick start (local)
 
 ```bash
-# Install dependencies
-npm install
-
-# Copy environment file
+npm i
 cp .env.example .env
-
-# Start development server
+# set VITE_API_BASE to your backend; for local dev it's usually http://localhost:8080
 npm run dev
 ```
 
-The UI will be available at `http://localhost:5173`.
+Open http://localhost:5173.
 
-## Environment Variables
+## Environment
 
-Create a `.env` file:
+Create `.env` with:
 
-```env
+```
 VITE_API_BASE=http://localhost:8080
 VITE_TZ=America/Guayaquil
 ```
 
-## Development
+## Deploy to Render (Static Site)
 
-### Generate API Client
+1. Push this repo to GitHub.
+2. In Render → New → Static Site → pick this repo.
+3. Build command: `npm ci && npm run build`
+4. Publish directory: `dist`
+5. Environment variables:
+   - `VITE_API_BASE=https://<your-api>.onrender.com`
+   - `VITE_TZ=America/Guayaquil`
+6. Create the site. After build, open the URL Render gives you.
 
-After updating the OpenAPI specification:
+> Ensure your backend allows CORS from the static site origin. For dev you can use permissive CORS and later restrict to your static URL.
 
-```bash
-npm run generate:api
-```
+## Notes
 
-This generates TypeScript types from `../tdf-hq/docs/openapi/user-roles.yaml`.
+- The calendar reads from `/bookings` and expects items with `{ bookingId, title, startsAt, endsAt }`.
+- The Kanban is client-side only for now; when backend endpoints for pipelines exist, wire `onDragEnd` to POST changes.
+- UI built with MUI v6 and a minimal custom theme.
 
-### Project Structure
 
-```
-tdf-hq-ui/
-├── src/
-│   ├── components/
-│   │   └── UserRoleManagement.tsx  # Main role management UI
-│   ├── api/generated/
-│   │   ├── types.ts                # Generated TypeScript types
-│   │   └── client.ts               # API client
-│   ├── App.tsx                     # Root component
-│   └── main.tsx                    # Entry point
-├── index.html
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
-```
-
-## Components
-
-### UserRoleManagement
-
-Main component for managing user roles.
-
-**Features:**
-- Table view of all users with their roles
-- Edit button to open role assignment dialog
-- Multi-select dropdown for role selection
-- Color-coded role chips for visual clarity
-- Real-time updates when roles change
-
-**Usage:**
-```tsx
-import UserRoleManagement from './components/UserRoleManagement';
-
-function App() {
-  return <UserRoleManagement />;
-}
-```
-
-### Role Colors
-
-Roles are displayed with distinct colors:
-
-- `Admin` - Red (error)
-- `Manager` - Blue (primary)
-- `Engineer` - Light blue (info)
-- `Teacher` - Green (success)
-- `Reception` - Purple (secondary)
-- `Accounting` - Orange (warning)
-- `Artist` - Blue (primary)
-- `Student` - Gray (default)
-- `ReadOnly` - Gray (default)
-
-## Building for Production
-
-```bash
-# Build optimized production bundle
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-Build output will be in the `dist/` directory.
-
-## API Integration
-
-The app uses a generated TypeScript client that communicates with the backend API.
-
-### API Client Usage
-
-```typescript
-import { apiClient } from './api/generated/client';
-
-// Get all users
-const users = await apiClient.getUsers();
-
-// Get roles for a user
-const roles = await apiClient.getUserRoles(userId);
-
-// Update roles
-await apiClient.updateUserRoles(userId, ['Teacher', 'Artist']);
-```
-
-## Testing
-
-```bash
-# Run tests (when implemented)
-npm test
-
-# Run tests in watch mode
-npm test -- --watch
-```
-
-## Linting and Formatting
-
-```bash
-# Type check
-npm run build
-
-# The Vite build includes TypeScript checking
-```
-
-## Troubleshooting
-
-### Cannot connect to API
-
-1. Ensure backend is running on `http://localhost:8080`
-2. Check `VITE_API_BASE` in `.env` matches backend URL
-3. Check browser console for CORS errors
-
-### TypeScript errors after API changes
-
-Regenerate the API client:
-```bash
-npm run generate:api
-```
-
-### Build fails
-
-Clear node_modules and reinstall:
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-
-## Browser Support
-
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (latest)
-
-## License
-
-MIT
+**Note:** If you cloned without a lockfile, run `npm install` (not `npm ci`).

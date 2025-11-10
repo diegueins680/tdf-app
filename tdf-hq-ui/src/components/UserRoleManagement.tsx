@@ -24,6 +24,7 @@ import {
   Alert,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import type { SelectChangeEvent } from '@mui/material/Select';
 import { User, PartyRole, PartyStatus, apiClient } from '../api/generated/client';
 
 const ALL_ROLES: PartyRole[] = [
@@ -43,7 +44,6 @@ const STATUS_COLORS: Record<PartyStatus, 'success' | 'default'> = {
   Inactive: 'default',
 };
 
-// Color mapping for role chips
 const ROLE_COLORS: Record<PartyRole, 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' | 'default'> = {
   Admin: 'error',
   Manager: 'primary',
@@ -56,7 +56,7 @@ const ROLE_COLORS: Record<PartyRole, 'primary' | 'secondary' | 'success' | 'erro
   ReadOnly: 'default',
 };
 
-export const UserRoleManagement: React.FC = () => {
+export default function UserRoleManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +65,6 @@ export const UserRoleManagement: React.FC = () => {
   const [selectedRoles, setSelectedRoles] = useState<PartyRole[]>([]);
   const [saving, setSaving] = useState(false);
 
-  // Load users on component mount
   useEffect(() => {
     loadUsers();
   }, []);
@@ -95,9 +94,9 @@ export const UserRoleManagement: React.FC = () => {
     setSelectedRoles([]);
   };
 
-  const handleRoleChange = (event: any) => {
+  const handleRoleChange = (event: SelectChangeEvent<PartyRole[]>) => {
     const value = event.target.value;
-    setSelectedRoles(typeof value === 'string' ? value.split(',') : value);
+    setSelectedRoles(typeof value === 'string' ? (value.split(',') as PartyRole[]) : (value as PartyRole[]));
   };
 
   const handleSaveRoles = async () => {
@@ -106,14 +105,7 @@ export const UserRoleManagement: React.FC = () => {
     try {
       setSaving(true);
       await apiClient.updateUserRoles(selectedUser.id, selectedRoles);
-      
-      // Update local state
-      setUsers(users.map(u => 
-        u.id === selectedUser.id 
-          ? { ...u, roles: selectedRoles }
-          : u
-      ));
-      
+      setUsers(users.map((u) => (u.id === selectedUser.id ? { ...u, roles: selectedRoles } : u)));
       handleCloseDialog();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update roles');
@@ -161,34 +153,18 @@ export const UserRoleManagement: React.FC = () => {
                 <TableCell>{user.email || '-'}</TableCell>
                 <TableCell>{user.phone || '-'}</TableCell>
                 <TableCell>
-                  <Chip
-                    label={user.status}
-                    color={STATUS_COLORS[user.status]}
-                    size="small"
-                  />
+                  <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
                 </TableCell>
                 <TableCell>
                   <Box display="flex" gap={0.5} flexWrap="wrap">
                     {user.roles.map((role) => (
-                      <Chip
-                        key={role}
-                        label={role}
-                        color={ROLE_COLORS[role]}
-                        size="small"
-                      />
+                      <Chip key={role} label={role} color={ROLE_COLORS[role]} size="small" />
                     ))}
-                    {user.roles.length === 0 && (
-                      <Chip label="No roles" size="small" variant="outlined" />
-                    )}
+                    {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => handleEditClick(user)}
-                    aria-label="edit roles"
-                  >
+                  <IconButton size="small" color="primary" onClick={() => handleEditClick(user)} aria-label="edit roles">
                     <EditIcon />
                   </IconButton>
                 </TableCell>
@@ -198,11 +174,8 @@ export const UserRoleManagement: React.FC = () => {
         </Table>
       </TableContainer>
 
-      {/* Edit Roles Dialog */}
       <Dialog open={editDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Edit Roles for {selectedUser?.name}
-        </DialogTitle>
+        <DialogTitle>Edit Roles for {selectedUser?.name}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel id="roles-label">Roles</InputLabel>
@@ -214,13 +187,8 @@ export const UserRoleManagement: React.FC = () => {
               input={<OutlinedInput label="Roles" />}
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((role) => (
-                    <Chip 
-                      key={role} 
-                      label={role} 
-                      size="small"
-                      color={ROLE_COLORS[role]}
-                    />
+                  {(selected as PartyRole[]).map((role) => (
+                    <Chip key={role} label={role} size="small" color={ROLE_COLORS[role]} />
                   ))}
                 </Box>
               )}
@@ -237,17 +205,11 @@ export const UserRoleManagement: React.FC = () => {
           <Button onClick={handleCloseDialog} disabled={saving}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSaveRoles} 
-            variant="contained" 
-            disabled={saving}
-          >
+          <Button onClick={handleSaveRoles} variant="contained" disabled={saving}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
-};
-
-export default UserRoleManagement;
+}

@@ -1,250 +1,1262 @@
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module TDF.Server where
 
-import Servant
-import Database.Persist
-import Database.Persist.Postgresql (ConnectionPool, runSqlPool)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (ReaderT, ask, runReaderT)
-import Control.Exception (SomeException, try, displayException)
-import Data.Maybe (catMaybes)
-import Data.Time (UTCTime, getCurrentTime)
-import Data.Time.Format.ISO8601 (iso8601ParseM, iso8601Show)
-import qualified Data.ByteString.Lazy.Char8 as BL
+import           Control.Applicative ((<|>))
+import           Control.Monad (forM, forM_, void, when)
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Reader (ReaderT, ask, runReaderT)
+import           Control.Monad.Trans.Class (lift)
+import           Data.Int (Int64)
+import           Data.List (find, foldl', nub)
+import qualified Data.Map.Strict as Map
+import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
+import qualified Data.Set as Set
+import           Data.Aeson (Value, object, (.=))
+import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Version (showVersion)
-import Development.GitRev (gitHash, gitCommitDate)
-import System.Environment (lookupEnv)
-import Text.Read (readMaybe)
-import Database.Persist.Sql (rawExecute, rawSql, toSqlKey, fromSqlKey, Single (..), SqlPersistT)
-import qualified TDF.Models as Models
-import qualified TDF.DTO as DTO
-import TDF.DB
-import qualified TDF.API as API
-import qualified Paths_tdf_hq as Paths
-import Control.Monad (when)
+import qualified Data.ByteString.Lazy as BL
+import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay)
+import           Data.UUID (toText)
+import           Data.UUID.V4 (nextRandom)
+import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
+import           Network.Wai (Request)
+import           Servant
+import           Servant.Server.Experimental.Auth (AuthHandler)
+import           Text.Printf (printf)
+import           Text.Read (readMaybe)
+import           Web.PathPieces (fromPathPiece, toPathPiece)
+import           Data.Proxy (Proxy (..))
 
-currentVersionText :: T.Text
-currentVersionText = T.pack $ showVersion Paths.version
+import           Database.Persist
+import           Database.Persist.Sql
+import           Database.Persist.Postgresql ()
 
--- Application monad that carries database connection pool
-type AppM = ReaderT ConnectionPool Handler
+import           TDF.API
+import           TDF.API.Types (RolePayload(..))
+import qualified TDF.API      as Api
+import           TDF.Config (AppConfig(..))
+import           TDF.DB
+import           TDF.Models
+import qualified TDF.Models as M
+import qualified TDF.ModelsExtra as ME
+import           TDF.DTO
+import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, lookupUsernameFromToken, moduleName, loadAuthedUser)
+import           TDF.Seed       (seedAll)
+import           TDF.ServerAdmin (adminServer)
+import           TDF.ServerExtra (bandsServer, inventoryServer, loadBandForParty, pipelinesServer, roomsServer, sessionsServer)
+import           TDF.ServerFuture (futureServer)
+import           TDF.Trials.API (TrialsAPI)
+import           TDF.Trials.Server (trialsServer)
+import qualified TDF.Meta as Meta
+import           TDF.Version      (getVersionInfo)
+import qualified TDF.Handlers.InputList as InputList
 
--- Convert database entities to DTOs
-entityToUserDTO :: Entity Models.Party -> [Models.PartyRole] -> DTO.UserDTO
-entityToUserDTO (Entity partyId party) roles = DTO.UserDTO
-    { DTO.userId = fromIntegral $ fromSqlKey partyId
-    , DTO.userName = Models.partyDisplayName party
-    , DTO.userEmail = Models.partyPrimaryEmail party
-    , DTO.userPhone = Models.partyPrimaryPhone party
-    , DTO.userRoles = roles
-    , DTO.userStatus = Models.partyStatus party
-    , DTO.userCreatedAt = Models.partyCreatedAt party
-    }
+type AppM = ReaderT Env Handler
 
--- Server implementation
-usersServer :: ServerT API.UsersAPI AppM
-usersServer = getUsers
-         :<|> getUserRoles'
-         :<|> updateUserRoles'
+type CombinedAPI = TrialsAPI :<|> API
 
-partyEntityToDTO :: Entity Models.Party -> DTO.PartyDTO
-partyEntityToDTO (Entity pid party) = DTO.PartyDTO
-    { DTO.partyId = fromIntegral $ fromSqlKey pid
-    , DTO.partyLegalName = Models.partyLegalName party
-    , DTO.partyDisplayName = Models.partyDisplayName party
-    , DTO.partyIsOrg = Models.partyIsOrg party
-    , DTO.partyTaxId = Models.partyTaxId party
-    , DTO.partyPrimaryEmail = Models.partyPrimaryEmail party
-    , DTO.partyPrimaryPhone = Models.partyPrimaryPhone party
-    , DTO.partyWhatsapp = Models.partyWhatsapp party
-    , DTO.partyInstagram = Models.partyInstagram party
-    , DTO.partyEmergencyContact = Models.partyEmergencyContact party
-    , DTO.partyNotes = Models.partyNotes party
-    }
+mkApp :: Env -> Application
+mkApp env =
+  let apiProxy = Proxy :: Proxy API
+      combinedProxy = Proxy :: Proxy CombinedAPI
+      ctxProxy = Proxy :: Proxy '[AuthHandler Request AuthedUser]
+      ctx      = authContext env
+      trials   = trialsServer (envPool env)
+      apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) server
+  in serveWithContext combinedProxy ctx (trials :<|> apiSrv)
 
-bookingEntityToDTO :: Entity Models.Booking -> DTO.BookingDTO
-bookingEntityToDTO (Entity bid booking) = DTO.BookingDTO
-    { DTO.bookingId = fromIntegral $ fromSqlKey bid
-    , DTO.bookingTitle = Models.bookingTitle booking
-    , DTO.bookingStartsAt = T.pack $ iso8601Show $ Models.bookingStartTime booking
-    , DTO.bookingEndsAt = T.pack $ iso8601Show $ Models.bookingEndTime booking
-    , DTO.bookingStatusText = T.pack $ show $ Models.bookingStatus booking
-    , DTO.bookingNotes = Models.bookingNotes booking
-    }
+nt :: Env -> AppM a -> Handler a
+nt env x = runReaderT x env
 
-parseIsoTime :: T.Text -> Either T.Text UTCTime
-parseIsoTime txt = case iso8601ParseM (T.unpack txt) :: Maybe UTCTime of
-    Just t  -> Right t
-    Nothing -> Left $ "Invalid ISO8601 timestamp: " <> txt
+server :: ServerT API AppM
+server =
+       versionServer
+  :<|> health
+  :<|> login
+  :<|> signup
+  :<|> changePassword
+  :<|> authV1Server
+  :<|> metaServer
+  :<|> seedTrigger
+  :<|> inputListServer
+  :<|> protectedServer
 
-parseBookingStatus :: T.Text -> Either T.Text Models.BookingStatus
-parseBookingStatus txt = maybe (Left $ "Invalid booking status: " <> txt) Right (readMaybe $ T.unpack txt)
+authV1Server :: ServerT Api.AuthV1API AppM
+authV1Server = signup :<|> passwordReset :<|> passwordResetConfirm :<|> changePassword
 
--- Get all users with their roles
-getUsers :: AppM [DTO.UserDTO]
-getUsers = do
-    pool <- ask
-    users <- liftIO $ runSqlPool getUsersWithRoles pool
-    return $ map (uncurry entityToUserDTO) users
+versionServer :: ServerT Api.VersionAPI AppM
+versionServer = liftIO getVersionInfo
 
--- Get roles for a specific user
-getUserRoles' :: Int -> AppM [Models.PartyRole]
-getUserRoles' userId = do
-    pool <- ask
-    let partyId = toSqlKey $ fromIntegral userId
-    liftIO $ runSqlPool (getUserRoles partyId) pool
-
--- Update roles for a user
-updateUserRoles' :: Int -> DTO.UserRoleUpdateDTO -> AppM ()
-updateUserRoles' userId roleUpdate = do
-    pool <- ask
-    let partyId = toSqlKey $ fromIntegral userId
-    liftIO $ runSqlPool (updateUserRoles partyId (DTO.roles roleUpdate) Nothing) pool
-
--- Version information handler
-versionHandler :: Handler DTO.VersionDTO
-versionHandler = pure buildVersionInfo
-
-buildVersionInfo :: DTO.VersionDTO
-buildVersionInfo = DTO.VersionDTO
-    { DTO.name = "tdf-hq"
-    , DTO.versionField = currentVersionText
-    , DTO.commit = Just (T.pack $(gitHash))
-    , DTO.buildTime = Just (T.pack $(gitCommitDate))
-    }
-
--- Health check handler
-healthHandler :: ConnectionPool -> Handler DTO.HealthDTO
-healthHandler pool = do
-    liftIO $ appendFile "health.log" "[health] probe invoked\n"
-    dbStatus <- liftIO $ try (runSqlPool pingDatabase pool) :: Handler (Either SomeException [Single Int])
-    case dbStatus of
-        Left err -> do
-            liftIO $ appendFile "health.log" $ "[health] database check failed: " <> displayException err <> "\n"
-            pure degraded
-        Right [Single 1] -> do
-            liftIO $ appendFile "health.log" "[health] database check succeeded\n"
-            pure ok
-        Right unexpected -> do
-            liftIO $ appendFile "health.log" $ "[health] unexpected DB response: " <> show unexpected <> "\n"
-            pure degraded
+inputListServer :: ServerT Api.InputListAPI AppM
+inputListServer = publicRoutes :<|> seedRoutes
   where
-    pingDatabase =
-        rawSql "SELECT 1" [] :: SqlPersistT IO [Single Int]
-    ok = DTO.HealthDTO { DTO.status = "ok", DTO.version = Just currentVersionText }
-    degraded = DTO.HealthDTO { DTO.status = "degraded", DTO.version = Just currentVersionText }
+    publicRoutes =
+           listInventory
+      :<|> getSessionInputList
+      :<|> getSessionInputListPdf
 
--- Main server
-server :: ConnectionPool -> Server API.API
-server pool =
-    versionHandler
-    :<|> healthHandler pool
-    :<|> partiesServer
-    :<|> bookingsServer
-    :<|> hoistServer API.usersApi (`runReaderT` pool) usersServer
+    seedRoutes =
+           seedInventory
+      :<|> seedHQ
+
+listInventory
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Int
+  -> AppM [Entity InputList.InventoryItem]
+listInventory mFieldParam mSessionParam mChannelParam = do
+  parsedField <- case mFieldParam of
+    Nothing -> pure Nothing
+    Just rawField ->
+      case InputList.parseAssetField rawField of
+        Nothing    -> throwBadRequest "Unsupported field"
+        Just field -> pure (Just field)
+  sessionKey <- case mSessionParam of
+    Nothing   -> pure Nothing
+    Just raw  ->
+      case fromPathPiece raw of
+        Nothing -> throwBadRequest "Invalid sessionId"
+        Just k  -> pure (Just k)
+  when (isJust mChannelParam && isNothing sessionKey) $
+    throwBadRequest "channel requires sessionId"
+  when (maybe False (< 1) mChannelParam) $
+    throwBadRequest "channel must be greater than or equal to 1"
+  Env{..} <- ask
+  liftIO $ flip runSqlPool envPool (InputList.listInventoryDB parsedField sessionKey mChannelParam)
+
+seedInventory :: Maybe Text -> AppM NoContent
+seedInventory rawToken = do
+  requireSeedToken rawToken
+  Env{..} <- ask
+  liftIO $ flip runSqlPool envPool InputList.seedInventoryDB
+  pure NoContent
+
+seedHQ :: Maybe Text -> AppM NoContent
+seedHQ rawToken = do
+  requireSeedToken rawToken
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool envPool (InputList.seedHQDB now)
+  pure NoContent
+
+requireSeedToken :: Maybe Text -> AppM ()
+requireSeedToken rawToken = do
+  Env{..} <- ask
+  let encode = BL.fromStrict . TE.encodeUtf8
+      missingHeader = throwError err401 { errBody = encode "Missing X-Seed-Token header" }
+      disabled = throwError err403 { errBody = encode "Seeding endpoint disabled" }
+      invalid = throwError err403 { errBody = encode "Invalid seed token" }
+  secret <- maybe disabled pure (seedTriggerToken envConfig)
+  token  <- maybe missingHeader (pure . T.strip) rawToken
+  when (T.null token) missingHeader
+  when (token /= secret) invalid
+  pure ()
+
+getSessionInputList :: Maybe Int -> Maybe Text -> AppM [Entity InputList.InputListEntry]
+getSessionInputList mIndex mSessionId = do
+  (_session, rows) <- resolveSessionInputData mIndex mSessionId
+  pure rows
+
+getSessionInputListPdf
+  :: Maybe Int
+  -> Maybe Text
+  -> AppM (Headers '[Header "Content-Disposition" Text] BL.ByteString)
+getSessionInputListPdf mIndex mSessionId = do
+  (Entity _ session, rows) <- resolveSessionInputData mIndex mSessionId
+  let title = fromMaybe (ME.sessionService session <> " session") (ME.sessionClientPartyRef session)
+      latex = InputList.renderInputListLatex title rows
+  pdfResult <- liftIO (InputList.generateInputListPdf latex)
+  case pdfResult of
+    Left errMsg -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
+    Right pdf -> do
+      let fileName    = InputList.sanitizeFileName title <> ".pdf"
+          disposition = T.concat ["attachment; filename=\"", fileName, "\""]
+      pure (addHeader disposition pdf)
+
+resolveSessionInputData
+  :: Maybe Int
+  -> Maybe Text
+  -> AppM (Entity ME.Session, [Entity InputList.InputListEntry])
+resolveSessionInputData mIndex mSessionId = do
+  Env{..} <- ask
+  action <- case mSessionId of
+    Just rawId ->
+      case fromPathPiece rawId of
+        Nothing     -> throwBadRequest "Invalid sessionId"
+        Just keyVal -> pure (InputList.fetchSessionInputRowsByKey keyVal)
+    Nothing -> do
+      idx <- case mIndex of
+        Nothing     -> pure 1
+        Just n
+          | n >= 1    -> pure n
+          | otherwise -> throwBadRequest "index must be greater than or equal to 1"
+      pure (InputList.fetchSessionInputRowsByIndex idx)
+  result <- liftIO $ flip runSqlPool envPool action
+  maybe (throwError err404) pure result
+
+protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
+protectedServer user =
+       partyServer user
+  :<|> bookingServer user
+  :<|> packageServer user
+  :<|> invoiceServer user
+  :<|> receiptServer user
+  :<|> adminServer user
+  :<|> inventoryServer user
+  :<|> bandsServer user
+  :<|> sessionsServer user
+  :<|> pipelinesServer user
+  :<|> roomsServer user
+  :<|> futureServer
+
+-- Health
+health :: AppM TDF.API.HealthStatus
+health = pure (HealthStatus "ok" "ok")
+
+login :: LoginRequest -> AppM LoginResponse
+login LoginRequest{..} = do
+  Env pool _ <- ask
+  result <- liftIO $ flip runSqlPool pool (runLogin username password)
+  case result of
+    Left msg  -> throwAuthError msg
+    Right res -> pure res
   where
-    partiesServer =
-           listPartiesH
-      :<|> createPartyH
-      :<|> getPartyH
-      :<|> updatePartyH
-      :<|> addRoleH
+    throwAuthError msg = throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
-    bookingsServer =
-           listBookingsH
-      :<|> createBookingH
+runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
+runLogin uname pwd = do
+  mCred <- getBy (UniqueCredentialUsername uname)
+  case mCred of
+    Nothing -> pure (Left invalidMsg)
+    Just (Entity _ cred)
+      | not (userCredentialActive cred) -> pure (Left "Account disabled")
+      | otherwise ->
+          if validatePassword (TE.encodeUtf8 (userCredentialPasswordHash cred)) (TE.encodeUtf8 pwd)
+            then do
+              token <- createSessionToken (userCredentialPartyId cred) uname
+              mUser  <- loadAuthedUser token
+              case mUser of
+                Nothing    -> pure (Left "Failed to load user profile")
+                Just user  -> pure (Right (toLoginResponse token user))
+            else pure (Left invalidMsg)
+  where
+    invalidMsg = "Invalid username or password"
 
-    listPartiesH :: Handler [DTO.PartyDTO]
-    listPartiesH = do
-        parties <- liftIO $ runSqlPool TDF.DB.listParties pool
-        pure $ map partyEntityToDTO parties
+data SignupDbError
+  = SignupEmailExists
+  | SignupProfileError
+  deriving (Eq, Show)
 
-    createPartyH :: DTO.PartyCreateDTO -> Handler DTO.PartyDTO
-    createPartyH body = do
-        now <- liftIO getCurrentTime
-        let party = Models.Party
-                { Models.partyDisplayName = DTO.cDisplayName body
-                , Models.partyLegalName = DTO.cLegalName body
-                , Models.partyIsOrg = DTO.cIsOrg body
-                , Models.partyPrimaryEmail = DTO.cPrimaryEmail body
-                , Models.partyPrimaryPhone = DTO.cPrimaryPhone body
-                , Models.partyWhatsapp = DTO.cWhatsapp body
-                , Models.partyInstagram = DTO.cInstagram body
-                , Models.partyTaxId = DTO.cTaxId body
-                , Models.partyEmergencyContact = DTO.cEmergencyContact body
-                , Models.partyNotes = DTO.cNotes body
-                , Models.partyStatus = Models.Active
-                , Models.partyCreatedAt = now
-                , Models.partyUpdatedAt = now
+signup :: SignupRequest -> AppM LoginResponse
+signup SignupRequest
+  { firstName = rawFirst
+  , lastName = rawLast
+  , email = rawEmail
+  , phone = rawPhone
+  , password = rawPassword
+  } = do
+  let emailClean    = T.strip rawEmail
+      passwordClean = T.strip rawPassword
+      firstClean    = T.strip rawFirst
+      lastClean     = T.strip rawLast
+      phoneClean    = fmap T.strip rawPhone
+  when (T.null emailClean) $ throwBadRequest "Email is required"
+  when (T.null passwordClean) $ throwBadRequest "Password is required"
+  when (T.length passwordClean < 8) $ throwBadRequest "Password must be at least 8 characters"
+  when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
+  now <- liftIO getCurrentTime
+  Env pool _ <- ask
+  result <- liftIO $ flip runSqlPool pool $
+    runSignupDb emailClean passwordClean firstClean lastClean phoneClean now
+  case result of
+    Left SignupEmailExists ->
+      throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 "Account already exists for this email") }
+    Left SignupProfileError ->
+      throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
+    Right resp -> pure resp
+  where
+    runSignupDb
+      :: Text
+      -> Text
+      -> Text
+      -> Text
+      -> Maybe Text
+      -> UTCTime
+      -> SqlPersistT IO (Either SignupDbError LoginResponse)
+    runSignupDb emailVal passwordVal firstVal lastVal phoneVal nowVal = do
+      existing <- getBy (UniqueCredentialUsername emailVal)
+      case existing of
+        Just _  -> pure (Left SignupEmailExists)
+        Nothing -> do
+          let displayName =
+                case filter (not . T.null) [firstVal, lastVal] of
+                  [] -> emailVal
+                  xs -> T.unwords xs
+              partyRecord = Party
+                { partyLegalName        = Nothing
+                , partyDisplayName      = displayName
+                , partyIsOrg            = False
+                , partyTaxId            = Nothing
+                , partyPrimaryEmail     = Just emailVal
+                , partyPrimaryPhone     = phoneVal
+                , partyWhatsapp         = Nothing
+                , partyInstagram        = Nothing
+                , partyEmergencyContact = Nothing
+                , partyNotes            = Nothing
+                , partyCreatedAt        = nowVal
                 }
-        entity <- liftIO $ runSqlPool (insertParty party) pool
-        pure $ partyEntityToDTO entity
+          pid <- insert partyRecord
+          _ <- upsert (PartyRole pid Customer True) [PartyRoleActive =. True]
+          hashed <- liftIO (hashPasswordText passwordVal)
+          _ <- insert UserCredential
+            { userCredentialPartyId      = pid
+            , userCredentialUsername     = emailVal
+            , userCredentialPasswordHash = hashed
+            , userCredentialActive       = True
+            }
+          token <- createSessionToken pid emailVal
+          mUser <- loadAuthedUser token
+          case mUser of
+            Nothing   -> pure (Left SignupProfileError)
+            Just user -> pure (Right (toLoginResponse token user))
 
-    getPartyH :: Int -> Handler DTO.PartyDTO
-    getPartyH pid = do
-        mParty <- liftIO $ runSqlPool (TDF.DB.getParty partyKey) pool
-        maybe (throwError err404) (pure . partyEntityToDTO) mParty
-      where
-        partyKey = toSqlKey (fromIntegral pid)
+data PasswordChangeError
+  = PasswordInvalid
+  | PasswordAccountDisabled
+  | PasswordProfileError
+  deriving (Eq, Show)
 
-    updatePartyH :: Int -> DTO.PartyUpdateDTO -> Handler DTO.PartyDTO
-    updatePartyH pid body = do
-        now <- liftIO getCurrentTime
-        let updates = catMaybes
-                [ fmap (Models.PartyDisplayName =.) (DTO.uDisplayName body)
-                , fmap (Models.PartyIsOrg =.) (DTO.uIsOrg body)
-                , fmap (\v -> Models.PartyLegalName =. Just v) (DTO.uLegalName body)
-                , fmap (\v -> Models.PartyPrimaryEmail =. Just v) (DTO.uPrimaryEmail body)
-                , fmap (\v -> Models.PartyPrimaryPhone =. Just v) (DTO.uPrimaryPhone body)
-                , fmap (\v -> Models.PartyWhatsapp =. Just v) (DTO.uWhatsapp body)
-                , fmap (\v -> Models.PartyInstagram =. Just v) (DTO.uInstagram body)
-                , fmap (\v -> Models.PartyTaxId =. Just v) (DTO.uTaxId body)
-                , fmap (\v -> Models.PartyEmergencyContact =. Just v) (DTO.uEmergencyContact body)
-                , fmap (\v -> Models.PartyNotes =. Just v) (DTO.uNotes body)
-                ]
-            allUpdates = updates ++ [Models.PartyUpdatedAt =. now]
-        mUpdated <- liftIO $ runSqlPool (updateParty partyKey allUpdates) pool
-        maybe (throwError err404) (pure . partyEntityToDTO) mUpdated
-      where
-        partyKey = toSqlKey (fromIntegral pid)
+changePassword :: Maybe Text -> ChangePasswordRequest -> AppM LoginResponse
+changePassword mAuthHeader ChangePasswordRequest{..} = do
+  let currentPasswordClean = T.strip currentPassword
+      newPasswordClean     = T.strip newPassword
+      maybeUsernameClean   = T.strip <$> username
+  when (T.null currentPasswordClean) $ throwBadRequest "Current password is required"
+  when (T.null newPasswordClean) $ throwBadRequest "New password is required"
+  when (T.length newPasswordClean < 8) $
+    throwBadRequest "New password must be at least 8 characters"
+  Env pool _ <- ask
+  usernameClean <- resolveUsername pool maybeUsernameClean mAuthHeader
+  when (T.null usernameClean) $ throwBadRequest "Username is required"
+  result <- liftIO $ flip runSqlPool pool $
+    runChangePassword usernameClean currentPasswordClean newPasswordClean
+  case result of
+    Left PasswordInvalid ->
+      throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 "Invalid username or password") }
+    Left PasswordAccountDisabled ->
+      throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Account disabled") }
+    Left PasswordProfileError ->
+      throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
+    Right resp -> pure resp
+  where
+    resolveUsername pool mUsername header =
+      case mUsername of
+        Just uname | not (T.null uname) -> pure uname
+        _ -> do
+          token <- case header >>= parseBearer . T.strip of
+            Nothing  -> throwBadRequest "Username is required"
+            Just tok -> pure tok
+          mResolved <- liftIO $ flip runSqlPool pool (lookupUsernameFromToken token)
+          case fmap T.strip mResolved of
+            Nothing     -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 "Invalid or inactive session token") }
+            Just uname' -> pure uname'
 
-    addRoleH :: Int -> Models.PartyRole -> Handler NoContent
-    addRoleH pid role = do
-        liftIO $ runSqlPool (addUserRole partyKey role Nothing) pool
-        pure NoContent
-      where
-        partyKey = toSqlKey (fromIntegral pid)
+    parseBearer headerText =
+      case T.words headerText of
+        [scheme, value]
+          | T.toLower scheme == "bearer" -> Just value
+        [value] -> Just value
+        _       -> Nothing
 
-    listBookingsH :: Handler [DTO.BookingDTO]
-    listBookingsH = do
-        bookings <- liftIO $ runSqlPool TDF.DB.listBookings pool
-        pure $ map bookingEntityToDTO bookings
+    lookupUsernameFromToken token = do
+      mUser <- loadAuthedUser token
+      case mUser of
+        Nothing -> pure Nothing
+        Just AuthedUser{..} -> do
+          mCred <- selectFirst [UserCredentialPartyId ==. auPartyId, UserCredentialActive ==. True] []
+          pure (fmap (userCredentialUsername . entityVal) mCred)
 
-    createBookingH :: DTO.BookingCreateDTO -> Handler DTO.BookingDTO
-    createBookingH body = do
-        start <- either throwIsoError pure $ parseIsoTime (DTO.cbStartsAt body)
-        end <- either throwIsoError pure $ parseIsoTime (DTO.cbEndsAt body)
-        status' <- either throwStatusError pure $ parseBookingStatus (DTO.cbStatus body)
-        now <- liftIO getCurrentTime
-        let booking = Models.Booking
-                { Models.bookingTitle = DTO.cbTitle body
-                , Models.bookingPartyId = Nothing
-                , Models.bookingResourceId = Nothing
-                , Models.bookingServiceType = Nothing
-                , Models.bookingStartTime = start
-                , Models.bookingEndTime = end
-                , Models.bookingStatus = status'
-                , Models.bookingNotes = DTO.cbNotes body
-                , Models.bookingCreatedAt = now
-                }
-        entity <- liftIO $ runSqlPool (insertBooking booking) pool
-        pure $ bookingEntityToDTO entity
-      where
-        throwIsoError :: T.Text -> Handler a
-        throwIsoError msg = throwError err400 { errBody = BL.fromStrict $ TE.encodeUtf8 msg }
-        throwStatusError :: T.Text -> Handler a
-        throwStatusError msg = throwError err400 { errBody = BL.fromStrict $ TE.encodeUtf8 msg }
+    runChangePassword
+      :: Text
+      -> Text
+      -> Text
+      -> SqlPersistT IO (Either PasswordChangeError LoginResponse)
+    runChangePassword uname currentPwd newPwd = do
+      mCred <- getBy (UniqueCredentialUsername uname)
+      case mCred of
+        Nothing -> pure (Left PasswordInvalid)
+        Just (Entity credId cred)
+          | not (userCredentialActive cred) -> pure (Left PasswordAccountDisabled)
+          | not (validatePassword (TE.encodeUtf8 (userCredentialPasswordHash cred)) (TE.encodeUtf8 currentPwd)) ->
+              pure (Left PasswordInvalid)
+          | otherwise -> do
+              hashed <- liftIO (hashPasswordText newPwd)
+              update credId [UserCredentialPasswordHash =. hashed]
+              deactivatePasswordTokens (userCredentialPartyId cred)
+              token <- createSessionToken (userCredentialPartyId cred) uname
+              mResolved <- lookupUsernameFromToken token
+              case mResolved of
+                Nothing -> pure (Left PasswordProfileError)
+                Just _  -> do
+                  mUser <- loadAuthedUser token
+                  case mUser of
+                    Nothing   -> pure (Left PasswordProfileError)
+                    Just user -> pure (Right (toLoginResponse token user))
+
+data PasswordResetError
+  = PasswordResetInvalidToken
+  | PasswordResetAccountDisabled
+  | PasswordResetProfileError
+  deriving (Eq, Show)
+
+passwordReset :: PasswordResetRequest -> AppM NoContent
+passwordReset PasswordResetRequest{..} = do
+  let emailClean = T.strip email
+  when (T.null emailClean) $ throwBadRequest "Email is required"
+  Env pool _ <- ask
+  _ <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
+  pure NoContent
+  where
+    runPasswordReset :: Text -> SqlPersistT IO (Maybe Text)
+    runPasswordReset emailVal = do
+      mCred <- getBy (UniqueCredentialUsername emailVal)
+      case mCred of
+        Nothing -> pure Nothing
+        Just (Entity _ cred)
+          | not (userCredentialActive cred) -> pure Nothing
+          | otherwise -> do
+              deactivatePasswordResetTokens (userCredentialPartyId cred)
+              token <- createPasswordResetToken (userCredentialPartyId cred) emailVal
+              pure (Just token)
+
+passwordResetConfirm :: PasswordResetConfirmRequest -> AppM LoginResponse
+passwordResetConfirm PasswordResetConfirmRequest{..} = do
+  let tokenClean       = T.strip token
+      newPasswordClean = T.strip newPassword
+  when (T.null tokenClean) $ throwBadRequest "Token is required"
+  when (T.null newPasswordClean) $ throwBadRequest "New password is required"
+  when (T.length newPasswordClean < 8) $
+    throwBadRequest "New password must be at least 8 characters"
+  Env pool _ <- ask
+  result <- liftIO $ flip runSqlPool pool (runPasswordResetConfirm tokenClean newPasswordClean)
+  case result of
+    Left PasswordResetInvalidToken ->
+      throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Invalid or expired token") }
+    Left PasswordResetAccountDisabled ->
+      throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Account disabled") }
+    Left PasswordResetProfileError ->
+      throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
+    Right resp -> pure resp
+  where
+    runPasswordResetConfirm
+      :: Text
+      -> Text
+      -> SqlPersistT IO (Either PasswordResetError LoginResponse)
+    runPasswordResetConfirm tokenVal passwordVal = do
+      mToken <- getBy (UniqueApiToken tokenVal)
+      case mToken of
+        Nothing -> pure (Left PasswordResetInvalidToken)
+        Just (Entity tokenId apiToken)
+          | not (apiTokenActive apiToken) -> pure (Left PasswordResetInvalidToken)
+          | not (isResetToken (apiTokenLabel apiToken)) -> pure (Left PasswordResetInvalidToken)
+          | otherwise -> do
+              let mResetUsername = do
+                    labelText <- apiTokenLabel apiToken
+                    resetTokenUsername labelText
+              case mResetUsername of
+                Nothing -> pure (Left PasswordResetInvalidToken)
+                Just resetUsername -> do
+                  mCred <- getBy (UniqueCredentialUsername resetUsername)
+                  case mCred of
+                    Nothing -> pure (Left PasswordResetInvalidToken)
+                    Just (Entity credId cred)
+                      | userCredentialPartyId cred /= apiTokenPartyId apiToken ->
+                          pure (Left PasswordResetInvalidToken)
+                      | not (userCredentialActive cred) -> pure (Left PasswordResetAccountDisabled)
+                      | otherwise -> do
+                          hashed <- liftIO (hashPasswordText passwordVal)
+                          update credId [UserCredentialPasswordHash =. hashed]
+                          update tokenId [ApiTokenActive =. False]
+                          deactivatePasswordTokens (userCredentialPartyId cred)
+                          deactivatePasswordResetTokens (userCredentialPartyId cred)
+                          sessionToken <- createSessionToken (userCredentialPartyId cred) (userCredentialUsername cred)
+                          mUser <- loadAuthedUser sessionToken
+                          case mUser of
+                            Nothing   -> pure (Left PasswordResetProfileError)
+                            Just user -> pure (Right (toLoginResponse sessionToken user))
+
+    isResetToken :: Maybe Text -> Bool
+    isResetToken Nothing = False
+    isResetToken (Just lbl) = "password-reset:" `T.isPrefixOf` lbl
+
+    resetTokenUsername :: Text -> Maybe Text
+    resetTokenUsername lbl =
+      let prefix = "password-reset:"
+      in T.stripPrefix prefix lbl >>= nonEmptyText
+
+    nonEmptyText :: Text -> Maybe Text
+    nonEmptyText txt
+      | T.null (T.strip txt) = Nothing
+      | otherwise = Just (T.strip txt)
+
+toLoginResponse :: Text -> AuthedUser -> LoginResponse
+toLoginResponse token AuthedUser{..} = LoginResponse
+  { token   = token
+  , partyId = fromSqlKey auPartyId
+  , roles   = auRoles
+  , modules = map moduleName (Set.toList auModules)
+  }
+
+createSessionToken :: PartyId -> Text -> SqlPersistT IO Text
+createSessionToken pid uname =
+  createTokenWithLabel pid (Just ("password-login:" <> uname))
+
+createPasswordResetToken :: PartyId -> Text -> SqlPersistT IO Text
+createPasswordResetToken pid emailVal =
+  createTokenWithLabel pid (Just ("password-reset:" <> emailVal))
+
+createTokenWithLabel :: PartyId -> Maybe Text -> SqlPersistT IO Text
+createTokenWithLabel pid label = do
+  token <- liftIO (toText <$> nextRandom)
+  inserted <- insertUnique (ApiToken token pid label True)
+  case inserted of
+    Nothing -> createTokenWithLabel pid label
+    Just _  -> pure token
+
+deactivatePasswordTokens :: PartyId -> SqlPersistT IO ()
+deactivatePasswordTokens pid = do
+  tokens <- selectList [ApiTokenPartyId ==. pid, ApiTokenActive ==. True] []
+  forM_ tokens $ \(Entity tokenId tok) ->
+    case apiTokenLabel tok of
+      Just lbl | "password-login:" `T.isPrefixOf` lbl ->
+        update tokenId [ApiTokenActive =. False]
+      _ -> pure ()
+
+deactivatePasswordResetTokens :: PartyId -> SqlPersistT IO ()
+deactivatePasswordResetTokens pid = do
+  tokens <- selectList [ApiTokenPartyId ==. pid, ApiTokenActive ==. True] []
+  forM_ tokens $ \(Entity tokenId tok) ->
+    case apiTokenLabel tok of
+      Just lbl | "password-reset:" `T.isPrefixOf` lbl ->
+        update tokenId [ApiTokenActive =. False]
+      _ -> pure ()
+
+hashPasswordText :: Text -> IO Text
+hashPasswordText pwd = do
+  let raw = TE.encodeUtf8 pwd
+  mHash <- hashPasswordUsingPolicy slowerBcryptHashingPolicy raw
+  case mHash of
+    Nothing   -> fail "Failed to hash password"
+    Just hash -> pure (TE.decodeUtf8 hash)
+
+metaServer :: ServerT Meta.MetaAPI AppM
+metaServer = hoistServer metaProxy lift Meta.metaServer
+  where
+    metaProxy = Proxy :: Proxy Meta.MetaAPI
+
+seedTrigger :: Maybe Text -> AppM NoContent
+seedTrigger rawToken = do
+  requireSeedToken rawToken
+  Env{..} <- ask
+  liftIO $ flip runSqlPool envPool seedAll
+  pure NoContent
+
+-- Parties
+partyServer :: AuthedUser -> ServerT PartyAPI AppM
+partyServer user = listParties user :<|> createParty user :<|> partyById
+  where
+    partyById pid = getParty user pid :<|> updateParty user pid :<|> addRole user pid
+
+listParties :: AuthedUser -> AppM [PartyDTO]
+listParties user = do
+  requireModule user ModuleCRM
+  Env pool _ <- ask
+  entities <- liftIO $ flip runSqlPool pool $ selectList [] [Asc PartyId]
+  pure (map toPartyDTO entities)
+
+createParty :: AuthedUser -> PartyCreate -> AppM PartyDTO
+createParty user req = do
+  requireModule user ModuleCRM
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+  let p = Party
+          { partyLegalName = cLegalName req
+          , partyDisplayName = cDisplayName req
+          , partyIsOrg = cIsOrg req
+          , partyTaxId = cTaxId req
+          , partyPrimaryEmail = cPrimaryEmail req
+          , partyPrimaryPhone = cPrimaryPhone req
+          , partyWhatsapp = cWhatsapp req
+          , partyInstagram = cInstagram req
+          , partyEmergencyContact = cEmergencyContact req
+          , partyNotes = cNotes req
+          , partyCreatedAt = now
+          }
+  pid <- liftIO $ flip runSqlPool pool $ insert p
+  liftIO $ flip runSqlPool pool $ mapM_ (\role -> upsert
+    (PartyRole pid role True)
+    [PartyRoleActive =. True]) (fromMaybe [] (cRoles req))
+  pure $ toPartyDTO (Entity pid p)
+
+getParty :: AuthedUser -> Int64 -> AppM PartyDTO
+getParty user pidI = do
+  requireModule user ModuleCRM
+  Env pool _ <- ask
+  let pid = toSqlKey pidI :: Key Party
+  mp <- liftIO $ flip runSqlPool pool $ getEntity pid
+  case mp of
+    Nothing -> throwError err404
+    Just ent -> do
+      bandDetails <- liftIO $ flip runSqlPool pool $ loadBandForParty (entityKey ent)
+      pure (toPartyDTOWithBand bandDetails ent)
+
+updateParty :: AuthedUser -> Int64 -> PartyUpdate -> AppM PartyDTO
+updateParty user pidI req = do
+  requireModule user ModuleCRM
+  Env pool _ <- ask
+  let pid = toSqlKey pidI :: Key Party
+  liftIO $ flip runSqlPool pool $ do
+    mp <- get pid
+    case mp of
+      Nothing -> pure ()
+      Just p -> do
+        let p' = p
+              { partyLegalName        = maybe (partyLegalName p) Just (uLegalName req)
+              , partyDisplayName      = maybe (partyDisplayName p) id   (uDisplayName req)
+              , partyIsOrg            = maybe (partyIsOrg p) id         (uIsOrg req)
+              , partyTaxId            = maybe (partyTaxId p) Just       (uTaxId req)
+              , partyPrimaryEmail     = maybe (partyPrimaryEmail p) Just (uPrimaryEmail req)
+              , partyPrimaryPhone     = maybe (partyPrimaryPhone p) Just (uPrimaryPhone req)
+              , partyWhatsapp         = maybe (partyWhatsapp p) Just    (uWhatsapp req)
+              , partyInstagram        = maybe (partyInstagram p) Just   (uInstagram req)
+              , partyEmergencyContact = maybe (partyEmergencyContact p) Just (uEmergencyContact req)
+              , partyNotes            = maybe (partyNotes p) Just       (uNotes req)
+              }
+        replace pid p'
+  getParty user pidI
+
+addRole :: AuthedUser -> Int64 -> RolePayload -> AppM NoContent
+addRole user pidI (RolePayload roleTxt) = do
+  requireModule user ModuleAdmin
+  Env pool _ <- ask
+  let pid  = toSqlKey pidI :: Key Party
+      role = parseRole roleTxt
+  liftIO $ flip runSqlPool pool $ void $ upsert
+    (PartyRole pid role True)
+    [ PartyRoleActive =. True ]
+  pure NoContent
+  where
+    parseRole t =
+      case readMaybe (T.unpack (T.strip t)) of
+        Just r  -> r
+        Nothing -> ReadOnly
+
+-- Bookings
+bookingServer :: AuthedUser -> ServerT BookingAPI AppM
+bookingServer user = listBookings user :<|> createBooking user
+
+listBookings :: AuthedUser -> AppM [BookingDTO]
+listBookings user = do
+  requireModule user ModuleScheduling
+  Env pool _ <- ask
+  (bookings, resourceMap) <- liftIO $ flip runSqlPool pool $ do
+    bs <- selectList [] [Desc BookingId]
+    resMap <- loadBookingResourceMap (map entityKey bs)
+    pure (bs, resMap)
+  pure $ map (toDTO resourceMap) bookings
+  where
+    toDTO resMap (Entity bid b) = BookingDTO
+      { bookingId   = fromSqlKey bid
+      , title       = bookingTitle b
+      , startsAt    = bookingStartsAt b
+      , endsAt      = bookingEndsAt b
+      , status      = T.pack (show (bookingStatus b))
+      , notes       = bookingNotes b
+      , partyId     = fmap fromSqlKey (bookingPartyId b)
+      , serviceType = bookingServiceType b
+      , resources   = Map.findWithDefault [] bid resMap
+      }
+
+createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
+createBooking user req = do
+  requireModule user ModuleScheduling
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+
+  let status'          = parseStatus (cbStatus req)
+      serviceTypeClean = cleanText (cbServiceType req)
+      partyKey         = fmap (toSqlKey . fromIntegral) (cbPartyId req)
+      requestedRooms   = fromMaybe [] (cbResourceIds req)
+
+  resourceKeys <- liftIO $ flip runSqlPool pool $
+    resolveResourcesForBooking serviceTypeClean requestedRooms (cbStartsAt req) (cbEndsAt req)
+
+  let bookingRecord = Booking
+        { bookingTitle          = cbTitle req
+        , bookingServiceOrderId = Nothing
+        , bookingPartyId        = partyKey
+        , bookingServiceType    = serviceTypeClean
+        , bookingStartsAt       = cbStartsAt req
+        , bookingEndsAt         = cbEndsAt req
+        , bookingStatus         = status'
+        , bookingCreatedBy      = Nothing
+        , bookingNotes          = cbNotes req
+        , bookingCreatedAt      = now
+        }
+
+  (bid, resourceDtos) <- liftIO $ flip runSqlPool pool $ do
+    bookingId <- insert bookingRecord
+    let uniqueResources = nub resourceKeys
+    forM_ (zip [0 :: Int ..] uniqueResources) $ \(idx, key) ->
+      insert_ BookingResource
+        { bookingResourceBookingId = bookingId
+        , bookingResourceResourceId = key
+        , bookingResourceRole = if idx == 0 then "primary" else "secondary"
+        }
+    resMap <- loadBookingResourceMap [bookingId]
+    pure (bookingId, Map.findWithDefault [] bookingId resMap)
+
+  pure BookingDTO
+    { bookingId   = fromSqlKey bid
+    , title       = bookingTitle bookingRecord
+    , startsAt    = bookingStartsAt bookingRecord
+    , endsAt      = bookingEndsAt bookingRecord
+    , status      = T.pack (show (bookingStatus bookingRecord))
+    , notes       = bookingNotes bookingRecord
+    , partyId     = fmap fromSqlKey partyKey
+    , serviceType = bookingServiceType bookingRecord
+    , resources   = resourceDtos
+    }
+  where
+    parseStatus t =
+      case readMaybe (T.unpack t) of
+        Just s  -> s
+        Nothing -> Confirmed
+
+    cleanText Nothing = Nothing
+    cleanText (Just raw) =
+      let trimmed = T.strip raw
+      in if T.null trimmed then Nothing else Just trimmed
+
+
+loadBookingResourceMap :: [Key Booking] -> SqlPersistT IO (Map.Map (Key Booking) [BookingResourceDTO])
+loadBookingResourceMap [] = pure Map.empty
+loadBookingResourceMap bookingIds = do
+  bookingResources <- selectList [BookingResourceBookingId <-. bookingIds] []
+  if null bookingResources
+    then pure Map.empty
+    else do
+      let resourceIds = map (bookingResourceResourceId . entityVal) bookingResources
+      resources <- selectList [ResourceId <-. resourceIds] []
+      let resourceMap = Map.fromList [ (entityKey resEnt, resEnt) | resEnt <- resources ]
+          accumulate acc (Entity _ br) =
+            case Map.lookup (bookingResourceResourceId br) resourceMap of
+              Nothing      -> acc
+              Just resEnt  ->
+                let bookingKey = bookingResourceBookingId br
+                    dto = BookingResourceDTO
+                      { brRoomId   = toPathPiece (bookingResourceResourceId br)
+                      , brRoomName = resourceName (entityVal resEnt)
+                      , brRole     = bookingResourceRole br
+                      }
+                in Map.insertWith (++) bookingKey [dto] acc
+      pure (foldl' accumulate Map.empty bookingResources)
+
+resolveResourcesForBooking :: Maybe Text -> [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
+resolveResourcesForBooking service requested start end = do
+  explicit <- resolveRequestedResources requested
+  if not (null explicit)
+    then pure explicit
+    else defaultResourcesForService service start end
+
+resolveRequestedResources :: [Text] -> SqlPersistT IO [Key Resource]
+resolveRequestedResources ids = fmap catMaybes $ mapM lookupResource ids
+  where
+    lookupResource :: Text -> SqlPersistT IO (Maybe (Key Resource))
+    lookupResource rid =
+      case fromPathPiece rid of
+        Nothing  -> pure Nothing
+        Just key -> do
+          mRes <- get key
+          case mRes of
+            Just res | resourceResourceType res == Room && resourceActive res -> pure (Just key)
+            _        -> pure Nothing
+
+defaultResourcesForService :: Maybe Text -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
+defaultResourcesForService Nothing _ _ = pure []
+defaultResourcesForService (Just service) start end = do
+  let normalized = T.toLower (T.strip service)
+  rooms <- selectList [ResourceResourceType ==. Room, ResourceActive ==. True] [Asc ResourceId]
+  let findByName name = find (\(Entity _ room) -> T.toLower (resourceName room) == T.toLower name) rooms
+      boothPredicate (Entity _ room) = "booth" `T.isInfixOf` T.toLower (resourceName room)
+  case normalized of
+    "band recording" ->
+      pure $ map entityKey $ catMaybes (map findByName ["Live Room", "Control Room"])
+    "vocal recording" ->
+      let vocal = findByName "Vocal Booth" <|> find (\(Entity _ room) -> let lower = T.toLower (resourceName room) in "vocal" `T.isInfixOf` lower || "booth" `T.isInfixOf` lower) rooms
+          control = findByName "Control Room"
+      in pure $ map entityKey $ catMaybes [vocal, control]
+    "band rehearsal" ->
+      pure $ maybe [] (pure . entityKey) (findByName "Live Room")
+    "dj booth rental" -> do
+      let candidateNames = ["Booth 1","Booth 2","Booth A","Booth B","DJ Booth 1","DJ Booth 2"]
+          nameMatches = mapMaybe findByName candidateNames
+          boothMatches = filter boothPredicate rooms
+          candidates = dedupeEntities (nameMatches ++ boothMatches)
+      pickBooth candidates
+    _ -> pure []
+  where
+    pickBooth [] = pure []
+    pickBooth (Entity key room : rest) = do
+      available <- isResourceAvailableDB key start end
+      if available
+        then pure [key]
+        else do
+          remaining <- pickBooth rest
+          pure (if null remaining then [key] else remaining)
+
+dedupeEntities :: [Entity Resource] -> [Entity Resource]
+dedupeEntities = go Set.empty []
+  where
+    go _ acc [] = reverse acc
+    go seen acc (e:es) =
+      let key = entityKey e
+      in if Set.member key seen
+           then go seen acc es
+           else go (Set.insert key seen) (e:acc) es
+
+isResourceAvailableDB :: Key Resource -> UTCTime -> UTCTime -> SqlPersistT IO Bool
+isResourceAvailableDB resourceKey start end = do
+  bookingResources <- selectList [BookingResourceResourceId ==. resourceKey] []
+  let bookingIds = map (bookingResourceBookingId . entityVal) bookingResources
+  if null bookingIds
+    then pure True
+    else do
+      bookings <- selectList [BookingId <-. bookingIds] []
+      let activeBookings = filter (\(Entity _ b) -> bookingStatus b `notElem` [Cancelled, NoShow]) bookings
+      pure $ all (noOverlap . entityVal) activeBookings
+  where
+    noOverlap booking =
+      bookingEndsAt booking <= start || bookingStartsAt booking >= end
+
+-- Packages
+packageServer :: AuthedUser -> ServerT PackageAPI AppM
+packageServer user = listProducts user :<|> createPurchase user
+
+listProducts :: AuthedUser -> AppM [PackageProductDTO]
+listProducts user = do
+  requireModule user ModulePackages
+  Env pool _ <- ask
+  ps <- liftIO $ flip runSqlPool pool $ selectList [PackageProductActive ==. True] [Asc PackageProductId]
+  pure $ map toDTO ps
+  where
+    toDTO (Entity pid p) = PackageProductDTO
+      { ppId         = fromSqlKey pid
+      , ppName       = packageProductName p
+      , ppService    = T.pack (show (packageProductServiceKind p))
+      , ppUnitsKind  = T.pack (show (packageProductUnitsKind p))
+      , ppUnitsQty   = packageProductUnitsQty p
+      , ppPriceCents = packageProductPriceCents p
+      }
+
+createPurchase :: AuthedUser -> PackagePurchaseReq -> AppM NoContent
+createPurchase user req = do
+  requireModule user ModulePackages
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+  let buyer = toSqlKey (buyerId req)   :: Key Party
+      prodK = toSqlKey (productId req) :: Key PackageProduct
+  liftIO $ flip runSqlPool pool $ do
+    mp <- get prodK
+    case mp of
+      Nothing -> pure ()
+      Just p -> do
+        let qty    = packageProductUnitsQty p
+            priceC = packageProductPriceCents p
+        _ <- insert PackagePurchase
+              { packagePurchaseBuyerId        = buyer
+              , packagePurchaseProductId      = prodK
+              , packagePurchasePurchasedAt    = now
+              , packagePurchasePriceCents     = priceC
+              , packagePurchaseExpiresAt      = Nothing
+              , packagePurchaseRemainingUnits = qty
+              , packagePurchaseStatus         = "Active"
+              }
+        pure ()
+  pure NoContent
+
+-- Invoices
+invoiceServer :: AuthedUser -> ServerT InvoiceAPI AppM
+invoiceServer user =
+       listInvoices user
+  :<|> createInvoice user
+  :<|> generateInvoiceForSession user
+  :<|> getInvoicesBySession user
+  :<|> getInvoiceById user
+
+generateInvoiceForSession :: AuthedUser -> Text -> Value -> AppM Value
+generateInvoiceForSession user sessionId _payload = do
+  requireModule user ModuleInvoicing
+  pure (object ["ok" .= True, "sessionId" .= sessionId])
+
+getInvoicesBySession :: AuthedUser -> Text -> AppM Value
+getInvoicesBySession user sessionId = do
+  requireModule user ModuleInvoicing
+  pure (object ["ok" .= True, "sessionId" .= sessionId])
+
+getInvoiceById :: AuthedUser -> Int64 -> AppM Value
+getInvoiceById user invoiceId = do
+  requireModule user ModuleInvoicing
+  pure (object ["ok" .= True, "invoiceId" .= invoiceId])
+
+listInvoices :: AuthedUser -> AppM [InvoiceDTO]
+listInvoices user = do
+  requireModule user ModuleInvoicing
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    invoices <- selectList [] [Desc InvoiceId]
+    let invoiceIds = map entityKey invoices
+    lineEntities <-
+      if null invoiceIds
+        then pure []
+        else selectList [InvoiceLineInvoiceId <-. invoiceIds] [Asc InvoiceLineId]
+    receiptEntities <-
+      if null invoiceIds
+        then pure []
+        else selectList [ReceiptInvoiceId <-. invoiceIds] []
+    let lineMap = foldr (\ent@(Entity _ line) acc ->
+                      Map.insertWith (++) (invoiceLineInvoiceId line) [ent] acc)
+                    Map.empty
+                    lineEntities
+        receiptMap = Map.fromList
+          [ (receiptInvoiceId rec, entityKey ent)
+          | ent@(Entity _ rec) <- receiptEntities
+          ]
+    pure
+      [ invoiceToDTO invEnt
+          (Map.findWithDefault [] (entityKey invEnt) lineMap)
+          (Map.lookup (entityKey invEnt) receiptMap)
+      | invEnt <- invoices
+      ]
+
+createInvoice :: AuthedUser -> CreateInvoiceReq -> AppM InvoiceDTO
+createInvoice user CreateInvoiceReq{..} = do
+  requireModule user ModuleInvoicing
+  Env pool _ <- ask
+  when (null ciLineItems) $ throwBadRequest "Invoice requires at least one line item"
+  preparedLines <- case traverse prepareLine ciLineItems of
+    Left msg   -> throwBadRequest msg
+    Right vals -> pure vals
+  now <- liftIO getCurrentTime
+  let day      = utctDay now
+      cid      = toSqlKey ciCustomerId :: Key Party
+      currency = normalizeCurrency ciCurrency
+      notes    = normalizeOptionalText ciNotes
+      number   = normalizeOptionalText ciNumber
+      subtotal = sum (map plSubtotal preparedLines)
+      taxTotal = sum (map plTax preparedLines)
+      grand    = sum (map plTotal preparedLines)
+      invoiceRecord = Invoice
+        { invoiceCustomerId    = cid
+        , invoiceIssueDate     = day
+        , invoiceDueDate       = day
+        , invoiceNumber        = number
+        , invoiceStatus        = Draft
+        , invoiceCurrency      = currency
+        , invoiceSubtotalCents = subtotal
+        , invoiceTaxCents      = taxTotal
+        , invoiceTotalCents    = grand
+        , invoiceSriDocumentId = Nothing
+        , invoiceNotes         = notes
+        , invoiceCreatedAt     = now
+        }
+  (invoiceEnt, lineEntities, maybeReceiptKey) <- liftIO $ flip runSqlPool pool $ do
+    iid <- insert invoiceRecord
+    let invEntity = Entity iid invoiceRecord
+    invoiceLines <- forM preparedLines $ \pl -> do
+      let line = invoiceLineFromPrepared iid pl
+      lid <- insert line
+      pure (Entity lid line)
+    receiptKey <-
+      if fromMaybe False ciGenerateReceipt
+        then do
+          (receiptEnt, _) <- issueReceipt now Nothing Nothing notes Nothing invEntity invoiceLines
+          pure (Just (entityKey receiptEnt))
+        else pure Nothing
+    pure (invEntity, invoiceLines, receiptKey)
+  pure $ invoiceToDTO invoiceEnt lineEntities maybeReceiptKey
+
+-- Receipts
+receiptServer :: AuthedUser -> ServerT ReceiptAPI AppM
+receiptServer user = listReceipts user :<|> createReceipt user :<|> getReceipt user
+
+listReceipts :: AuthedUser -> AppM [ReceiptDTO]
+listReceipts user = do
+  requireModule user ModuleInvoicing
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    receipts <- selectList [] [Desc ReceiptId]
+    let receiptIds = map entityKey receipts
+    lineEntities <-
+      if null receiptIds
+        then pure []
+        else selectList [ReceiptLineReceiptId <-. receiptIds] [Asc ReceiptLineId]
+    let lineMap = foldr (\ent@(Entity _ line) acc ->
+                      Map.insertWith (++) (receiptLineReceiptId line) [ent] acc)
+                    Map.empty
+                    lineEntities
+    pure
+      [ receiptToDTO recEnt (Map.findWithDefault [] (entityKey recEnt) lineMap)
+      | recEnt <- receipts
+      ]
+
+createReceipt :: AuthedUser -> CreateReceiptReq -> AppM ReceiptDTO
+createReceipt user CreateReceiptReq{..} = do
+  requireModule user ModuleInvoicing
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+  let iid = toSqlKey crInvoiceId :: Key Invoice
+  result <- liftIO $ flip runSqlPool pool $ do
+    mInvoice <- getEntity iid
+    case mInvoice of
+      Nothing      -> pure (Left "invoice-not-found")
+      Just invEnt -> do
+        existing <- selectFirst [ReceiptInvoiceId ==. iid] []
+        case existing of
+          Just receiptEnt -> do
+            lines <- selectList [ReceiptLineReceiptId ==. entityKey receiptEnt] [Asc ReceiptLineId]
+            pure (Right (receiptToDTO receiptEnt lines))
+          Nothing -> do
+            invoiceLines <- selectList [InvoiceLineInvoiceId ==. iid] [Asc InvoiceLineId]
+            if null invoiceLines
+              then pure (Left "invoice-empty")
+              else do
+                (receiptEnt, receiptLines) <-
+                  issueReceipt now (normalizeOptionalText crBuyerName) (normalizeOptionalText crBuyerEmail)
+                               (normalizeOptionalText crNotes) (normalizeOptionalText crCurrency)
+                               invEnt invoiceLines
+                pure (Right (receiptToDTO receiptEnt receiptLines))
+  case result of
+    Left "invoice-not-found" -> throwError err404 { errBody = BL.fromStrict (TE.encodeUtf8 "Invoice not found") }
+    Left "invoice-empty"     -> throwBadRequest "Invoice has no line items to receipt"
+    Left otherMsg             -> throwBadRequest otherMsg
+    Right dto                 -> pure dto
+
+getReceipt :: AuthedUser -> Int64 -> AppM ReceiptDTO
+getReceipt user ridParam = do
+  requireModule user ModuleInvoicing
+  Env pool _ <- ask
+  let rid = toSqlKey ridParam :: Key Receipt
+  result <- liftIO $ flip runSqlPool pool $ do
+    mReceipt <- getEntity rid
+    case mReceipt of
+      Nothing -> pure Nothing
+      Just rec -> do
+        lines <- selectList [ReceiptLineReceiptId ==. rid] [Asc ReceiptLineId]
+        pure (Just (receiptToDTO rec lines))
+  maybe (throwError err404) pure result
+
+data PreparedLine = PreparedLine
+  { plDescription       :: Text
+  , plQuantity          :: Int
+  , plUnitCents         :: Int
+  , plTaxBps            :: Int
+  , plServiceOrderId    :: Maybe (Key ServiceOrder)
+  , plPackagePurchaseId :: Maybe (Key PackagePurchase)
+  , plSubtotal          :: Int
+  , plTax               :: Int
+  , plTotal             :: Int
+  }
+
+prepareLine :: CreateInvoiceLineReq -> Either Text PreparedLine
+prepareLine CreateInvoiceLineReq{..} = do
+  let desc = T.strip cilDescription
+  if T.null desc then Left "Line item description is required" else pure ()
+  when (cilQuantity <= 0) $ Left "Line item quantity must be greater than zero"
+  when (cilUnitCents < 0) $ Left "Line item unit amount must be zero or greater"
+  let taxBpsVal = fromMaybe 0 cilTaxBps
+  when (taxBpsVal < 0) $ Left "Line item tax basis points must be zero or greater"
+  let subtotal = cilQuantity * cilUnitCents
+      tax      = (subtotal * taxBpsVal) `div` 10000
+      total    = subtotal + tax
+      serviceOrderKey = (toSqlKey <$> cilServiceOrderId) :: Maybe (Key ServiceOrder)
+      packagePurchaseKey = (toSqlKey <$> cilPackagePurchaseId) :: Maybe (Key PackagePurchase)
+  pure PreparedLine
+    { plDescription       = desc
+    , plQuantity          = cilQuantity
+    , plUnitCents         = cilUnitCents
+    , plTaxBps            = taxBpsVal
+    , plServiceOrderId    = serviceOrderKey
+    , plPackagePurchaseId = packagePurchaseKey
+    , plSubtotal          = subtotal
+    , plTax               = tax
+    , plTotal             = total
+    }
+
+invoiceLineFromPrepared :: Key Invoice -> PreparedLine -> InvoiceLine
+invoiceLineFromPrepared iid PreparedLine{..} = InvoiceLine
+  { invoiceLineInvoiceId         = iid
+  , invoiceLineServiceOrderId    = plServiceOrderId
+  , invoiceLinePackagePurchaseId = plPackagePurchaseId
+  , invoiceLineDescription       = plDescription
+  , invoiceLineQuantity          = plQuantity
+  , invoiceLineUnitCents         = plUnitCents
+  , invoiceLineTaxBps            = plTaxBps
+  , invoiceLineTotalCents        = plTotal
+  }
+
+normalizeCurrency :: Maybe Text -> Text
+normalizeCurrency mCur =
+  case fmap T.strip mCur of
+    Just cur | not (T.null cur) -> T.toUpper cur
+    _                           -> "USD"
+
+normalizeOptionalText :: Maybe Text -> Maybe Text
+normalizeOptionalText =
+  let clean t =
+        let trimmed = T.strip t
+        in if T.null trimmed then Nothing else Just trimmed
+  in (>>= clean)
+
+invoiceToDTO :: Entity Invoice -> [Entity InvoiceLine] -> Maybe (Key Receipt) -> InvoiceDTO
+invoiceToDTO (Entity iid inv) lines mReceiptKey = InvoiceDTO
+  { invId      = fromSqlKey iid
+  , number     = invoiceNumber inv
+  , statusI    = T.pack (show (invoiceStatus inv))
+  , subtotalC  = invoiceSubtotalCents inv
+  , taxC       = invoiceTaxCents inv
+  , totalC     = invoiceTotalCents inv
+  , currency   = invoiceCurrency inv
+  , customerId = Just (fromSqlKey (invoiceCustomerId inv))
+  , notes      = invoiceNotes inv
+  , receiptId  = fmap fromSqlKey mReceiptKey
+  , lineItems  = map invoiceLineToDTO lines
+  }
+
+invoiceLineToDTO :: Entity InvoiceLine -> InvoiceLineDTO
+invoiceLineToDTO (Entity lid line) = InvoiceLineDTO
+  { lineId            = fromSqlKey lid
+  , description       = invoiceLineDescription line
+  , quantity          = invoiceLineQuantity line
+  , unitCents         = invoiceLineUnitCents line
+  , taxBps            = invoiceLineTaxBps line
+  , totalCents        = invoiceLineTotalCents line
+  , serviceOrderId    = fromSqlKey <$> invoiceLineServiceOrderId line
+  , packagePurchaseId = fromSqlKey <$> invoiceLinePackagePurchaseId line
+  }
+
+receiptToDTO :: Entity Receipt -> [Entity ReceiptLine] -> ReceiptDTO
+receiptToDTO (Entity rid rec) lines = ReceiptDTO
+  { receiptId     = fromSqlKey rid
+  , receiptNumber = M.receiptNumber rec
+  , issuedAt      = M.receiptIssuedAt rec
+  , issueDate     = M.receiptIssueDate rec
+  , buyerName     = M.receiptBuyerName rec
+  , buyerEmail    = M.receiptBuyerEmail rec
+  , currency      = M.receiptCurrency rec
+  , subtotalCents = M.receiptSubtotalCents rec
+  , taxCents      = M.receiptTaxCents rec
+  , totalCents    = M.receiptTotalCents rec
+  , notes         = M.receiptNotes rec
+  , invoiceId     = fromSqlKey (M.receiptInvoiceId rec)
+  , lineItems     = map receiptLineToDTO lines
+  }
+
+receiptLineToDTO :: Entity ReceiptLine -> ReceiptLineDTO
+receiptLineToDTO (Entity lid line) = ReceiptLineDTO
+  { receiptLineId = fromSqlKey lid
+  , rlDescription = receiptLineDescription line
+  , rlQuantity    = receiptLineQuantity line
+  , rlUnitCents   = receiptLineUnitCents line
+  , rlTaxBps      = receiptLineTaxBps line
+  , rlTotalCents  = receiptLineTotalCents line
+  }
+
+issueReceipt
+  :: UTCTime
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Entity Invoice
+  -> [Entity InvoiceLine]
+  -> SqlPersistT IO (Entity Receipt, [Entity ReceiptLine])
+issueReceipt now mBuyerName mBuyerEmail mNotes mCurrency (Entity iid inv) lineEntities = do
+  let customerId = invoiceCustomerId inv
+  party <- get customerId
+  let defaultName  = maybe "Cliente" partyDisplayName party
+      defaultEmail = party >>= partyPrimaryEmail
+      buyerName    = fromMaybe defaultName mBuyerName
+      buyerEmail   = mBuyerEmail <|> defaultEmail
+      currency     = maybe (invoiceCurrency inv) (normalizeCurrency . Just) mCurrency
+      notes        = mNotes <|> invoiceNotes inv
+      calcTotals (Entity _ line) =
+        let lineSubtotal = invoiceLineQuantity line * invoiceLineUnitCents line
+            lineTotal    = invoiceLineTotalCents line
+        in (lineSubtotal, lineTotal - lineSubtotal, lineTotal)
+      subtotals = [ s | ent <- lineEntities, let (s, _, _) = calcTotals ent ]
+      taxPieces = [ t | ent <- lineEntities, let (_, t, _) = calcTotals ent ]
+      totals    = [ tot | ent <- lineEntities, let (_, _, tot) = calcTotals ent ]
+      subtotal  = sum subtotals
+      taxTotal  = sum taxPieces
+      total     = sum totals
+  number <- generateReceiptNumber (utctDay now)
+  let receiptRecord = Receipt
+        { receiptInvoiceId    = iid
+        , receiptNumber       = number
+        , receiptIssueDate    = utctDay now
+        , receiptIssuedAt     = now
+        , receiptBuyerPartyId = Just customerId
+        , receiptBuyerName    = buyerName
+        , receiptBuyerEmail   = buyerEmail
+        , receiptCurrency     = currency
+        , receiptSubtotalCents = subtotal
+        , receiptTaxCents     = taxTotal
+        , receiptTotalCents   = total
+        , receiptNotes        = notes
+        , receiptCreatedAt    = now
+        }
+  rid <- insert receiptRecord
+  receiptLines <- forM lineEntities $ \(Entity _ line) -> do
+    let lineRecord = ReceiptLine
+          { receiptLineReceiptId = rid
+          , receiptLineDescription = invoiceLineDescription line
+          , receiptLineQuantity    = invoiceLineQuantity line
+          , receiptLineUnitCents   = invoiceLineUnitCents line
+          , receiptLineTaxBps      = Just (invoiceLineTaxBps line)
+          , receiptLineTotalCents  = invoiceLineTotalCents line
+          }
+    rlId <- insert lineRecord
+    pure (Entity rlId lineRecord)
+  pure (Entity rid receiptRecord, receiptLines)
+
+generateReceiptNumber :: Day -> SqlPersistT IO Text
+generateReceiptNumber day = do
+  let (year, _, _) = toGregorian day
+      start = fromGregorian year 1 1
+      next  = fromGregorian (year + 1) 1 1
+  countForYear <- count [ReceiptIssueDate >=. start, ReceiptIssueDate <. next]
+  let sequenceNumber = countForYear + 1
+  pure (T.pack (printf "R-%04d-%04d" year sequenceNumber))
+
+throwBadRequest :: Text -> AppM a
+throwBadRequest msg = throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+
+requireModule :: AuthedUser -> ModuleAccess -> AppM ()
+requireModule user moduleTag
+  | hasModuleAccess moduleTag user = pure ()
+  | otherwise = throwError err403
+      { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+  where
+    msg = "Missing access to module: " <> moduleName moduleTag

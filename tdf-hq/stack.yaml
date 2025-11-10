@@ -1,10 +1,2 @@
-resolver: lts-21.25
-
-packages:
-  - .
-
-extra-deps: []
-
-flags: {}
-
-extra-package-dbs: []
+resolver: lts-22.28
+packages: [ . ]

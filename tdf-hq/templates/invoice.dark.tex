@@ -1,0 +1,47 @@
+%========================================================
+% TDF Records - Factura PDF Template (Dark)
+%========================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2cm]{geometry}
+\usepackage{xcolor,graphicx,booktabs,lastpage,fancyhdr}
+\usepackage{array}
+\usepackage{siunitx}
+\usepackage{helvet}
+\usepackage{pagecolor}
+\renewcommand{\familydefault}{\sfdefault}
+\pagecolor[rgb]{0.05,0.05,0.06}
+\color[rgb]{0.92,0.94,0.96}
+\definecolor{RowDark}{RGB}{25,25,28}
+\definecolor{Accent}{RGB}{0,200,180}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\includegraphics[height=16mm]{./tdf-logo.pdf}}
+\lhead{\textbf{TDF Records S.A.S.}}
+\cfoot{\textcolor{gray}{Página \thepage\ de \pageref{LastPage}}}
+\begin{document}
+{\Huge\bfseries Factura} \hfill {\Large \#{{invoice.number}}}\\
+Fecha: {{invoice.date}}\\
+\noindent\rule{\textwidth}{0.4pt}
+\rowcolors{2}{RowDark}{black}
+\begin{tabular}{p{8.5cm} S[table-format=2.2] S[table-format=2.2] S[table-format=2.2]}
+\toprule
+\textbf{Descripción} & \textbf{Cant.} & \textbf{Unit.} & \textbf{Total}\\
+\midrule
+{{#items}}
+{{desc}} & {{qty}} & {{unit_price}} & {{total}}\\
+{{/items}}
+\bottomrule
+\end{tabular}
+\noindent\rule{\textwidth}{0.4pt}
+\begin{flushright}
+\begin{tabular}{lr}
+Subtotal: & \textbf{\$ {{summary.subtotal}}}\\
+IVA ({{summary.tax_rate}}): & \textbf{\$ {{summary.tax}}}\\
+\textbf{Total:} & \textbf{\$ {{summary.total}}}\\
+\end{tabular}
+\end{flushright}
+\vfill
+\textcolor{gray}{Gracias por confiar en TDF Records.}
+\end{document}
