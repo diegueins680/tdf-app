@@ -26,6 +26,12 @@ dependencies:
 
 library:
   source-dirs: src
+  ghc-options:
+    - -Wall
+    - -Wcompat
+    - -Wincomplete-uni-patterns
+    - -Wincomplete-record-updates
+    - -Wredundant-constraints
   exposed-modules:
     - TDF.Models
     - TDF.API
@@ -38,6 +44,11 @@ executables:
     main: Main.hs
     source-dirs: app
     ghc-options:
+      - -Wall
+      - -Wcompat
+      - -Wincomplete-uni-patterns
+      - -Wincomplete-record-updates
+      - -Wredundant-constraints
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
@@ -46,3 +57,17 @@ executables:
       - warp
       - wai
       - wai-cors
+
+tests:
+  tdf-hq-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+      - -Wall
+      - -Wcompat
+      - -Wincomplete-uni-patterns
+      - -Wincomplete-record-updates
+      - -Wredundant-constraints
+    dependencies:
+      - tdf-hq
+      - hspec

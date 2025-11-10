@@ -1,27 +1,27 @@
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-export type SessionUser = {
+export interface SessionUser {
   username: string;
   displayName: string;
   roles: string[];
   apiToken?: string | null;
   modules?: string[];
   partyId?: number;
-};
+}
 
-export type LoginOptions = {
+export interface LoginOptions {
   remember?: boolean;
-};
+}
 
 let currentSession: SessionUser | null = null;
 
-export type SessionContextValue = {
+export interface SessionContextValue {
   session: SessionUser | null;
   login: (user: SessionUser, options?: LoginOptions) => void;
   logout: () => void;
   setApiToken: (token: string | null) => void;
-};
+}
 
 export const SESSION_STORAGE_KEY = 'tdf-hq-ui/session';
 export const DEFAULT_DEMO_TOKEN = import.meta.env.VITE_API_DEMO_TOKEN ?? '';
@@ -54,7 +54,11 @@ function persistSession(value: SessionUser | null) {
   }
 }
 
-export function SessionProvider({ children }: { children: ReactNode }) {
+interface SessionProviderProps {
+  children: ReactNode;
+}
+
+export function SessionProvider({ children }: SessionProviderProps) {
   const [session, setSession] = useState<SessionUser | null>(() => readStoredSession());
   const [persistSessionEnabled, setPersistSessionEnabled] = useState<boolean>(true);
 
@@ -78,8 +82,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setApiToken = useCallback((token: string | null) => {
-    setSession((prev) => (prev ? { ...prev, apiToken: token || undefined } : prev));
-    currentSession = currentSession ? { ...currentSession, apiToken: token || undefined } : currentSession;
+    const normalized = token?.trim();
+    const nextToken = normalized && normalized.length > 0 ? normalized : undefined;
+
+    setSession((prev) => {
+      if (!prev) {
+        currentSession = prev;
+        return prev;
+      }
+      const updatedSession = { ...prev, apiToken: nextToken ?? undefined };
+      currentSession = updatedSession;
+      return updatedSession;
+    });
   }, []);
 
   const value = useMemo<SessionContextValue>(

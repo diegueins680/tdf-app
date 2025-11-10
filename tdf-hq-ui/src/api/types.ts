@@ -1,4 +1,4 @@
-export type PartyDTO = {
+export interface PartyDTO {
   partyId: number;
   legalName?: string | null;
   displayName: string;
@@ -10,9 +10,9 @@ export type PartyDTO = {
   instagram?: string | null;
   emergencyContact?: string | null;
   notes?: string | null;
-};
+}
 
-export type PartyCreate = {
+export interface PartyCreate {
   cDisplayName: string;
   cIsOrg: boolean;
   cLegalName?: string | null;
@@ -23,28 +23,28 @@ export type PartyCreate = {
   cTaxId?: string | null;
   cEmergencyContact?: string | null;
   cNotes?: string | null;
-};
+}
 
-export type PartyUpdate = Partial<{
-  uDisplayName: string;
-  uIsOrg: boolean;
-  uLegalName: string | null;
-  uPrimaryEmail: string | null;
-  uPrimaryPhone: string | null;
-  uWhatsapp: string | null;
-  uInstagram: string | null;
-  uTaxId: string | null;
-  uEmergencyContact: string | null;
-  uNotes: string | null;
-}>;
+export interface PartyUpdate {
+  uDisplayName?: string;
+  uIsOrg?: boolean;
+  uLegalName?: string | null;
+  uPrimaryEmail?: string | null;
+  uPrimaryPhone?: string | null;
+  uWhatsapp?: string | null;
+  uInstagram?: string | null;
+  uTaxId?: string | null;
+  uEmergencyContact?: string | null;
+  uNotes?: string | null;
+}
 
-export type BookingResourceDTO = {
+export interface BookingResourceDTO {
   brRoomId: string;
   brRoomName: string;
   brRole: string;
-};
+}
 
-export type BookingDTO = {
+export interface BookingDTO {
   bookingId: number;
   title: string;
   startsAt: string; // ISO
@@ -58,36 +58,38 @@ export type BookingDTO = {
   customerName?: string | null;
   partyDisplayName?: string | null;
   resources: BookingResourceDTO[];
-};
+}
 
-export type VersionInfo = {
+export interface VersionInfo {
   name: string;
   version: string;
   commit?: string | null;
   buildTime?: string | null;
-};
+}
 
-export type HealthStatus = {
-  status: 'ok' | 'degraded' | string;
+type HealthState = 'ok' | 'degraded' | (string & Record<never, never>);
+
+export interface HealthStatus {
+  status: HealthState;
   version?: string | null;
-};
+}
 
-export type RoomDTO = {
+export interface RoomDTO {
   roomId: string;
   rName: string;
   rBookable: boolean;
-};
+}
 
-export type RoomCreate = {
+export interface RoomCreate {
   rcName: string;
-};
+}
 
-export type RoomUpdate = Partial<{
-  ruName: string;
-  ruIsBookable: boolean;
-}>;
+export interface RoomUpdate {
+  ruName?: string;
+  ruIsBookable?: boolean;
+}
 
-export type PipelineCardDTO = {
+export interface PipelineCardDTO {
   pcId: string;
   pcTitle: string;
   pcArtist?: string | null;
@@ -95,12 +97,12 @@ export type PipelineCardDTO = {
   pcStage: string;
   pcSortOrder: number;
   pcNotes?: string | null;
-};
+}
 
-export type PipelineCardUpdate = Partial<{
-  pcuTitle: string;
-  pcuArtist: string | null;
-  pcuStage: string;
-  pcuSortOrder: number;
-  pcuNotes: string | null;
-}>;
+export interface PipelineCardUpdate {
+  pcuTitle?: string;
+  pcuArtist?: string | null;
+  pcuStage?: string;
+  pcuSortOrder?: number;
+  pcuNotes?: string | null;
+}

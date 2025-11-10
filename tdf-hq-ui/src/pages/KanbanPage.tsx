@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { useEffect, useMemo, useState, type SyntheticEvent } from 'react';
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import {
   Alert,
   Box,
@@ -29,12 +29,12 @@ export default function KanbanPage() {
   const [cards, setCards] = useState<Record<string, PipelineCardDTO>>({});
   const qc = useQueryClient();
 
-  const stagesQuery = useQuery({
+  const stagesQuery = useQuery<string[], Error>({
     queryKey: ['pipelines', activeType, 'stages'],
     queryFn: () => Pipelines.stages(activeType),
   });
 
-  const cardsQuery = useQuery({
+  const cardsQuery = useQuery<PipelineCardDTO[], Error>({
     queryKey: ['pipelines', activeType, 'cards'],
     queryFn: () => Pipelines.list(activeType),
     enabled: !!stagesQuery.data?.length,
@@ -67,11 +67,11 @@ export default function KanbanPage() {
     setColumns(initialColumns);
   }, [stagesQuery.data, cardsQuery.data]);
 
-  const updateMutation = useMutation({
+  const updateMutation = useMutation<void, Error, { cardId: string; stage: string; sortOrder: number }>({
     mutationFn: ({ cardId, stage, sortOrder }: { cardId: string; stage: string; sortOrder: number }) =>
       Pipelines.update(activeType, cardId, { pcuStage: stage, pcuSortOrder: sortOrder }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['pipelines', activeType, 'cards'] });
+      void qc.invalidateQueries({ queryKey: ['pipelines', activeType, 'cards'] });
     },
   });
 
@@ -121,7 +121,7 @@ export default function KanbanPage() {
   };
 
   const columnOrder = useMemo(() => stagesQuery.data ?? [], [stagesQuery.data]);
-  const loadError = stagesQuery.error || cardsQuery.error;
+  const loadError = stagesQuery.error ?? cardsQuery.error;
   const isLoading = stagesQuery.isLoading || cardsQuery.isLoading;
   const activeLabel = PIPELINE_TYPES.find((type) => type.slug === activeType)?.label ?? 'Pipeline';
 
@@ -133,7 +133,7 @@ export default function KanbanPage() {
         </Typography>
         <Tabs
           value={activeType}
-          onChange={(_, value) => setActiveType(value)}
+          onChange={(_: SyntheticEvent, value: string) => setActiveType(value)}
           variant="scrollable"
           allowScrollButtonsMobile
         >
@@ -143,10 +143,10 @@ export default function KanbanPage() {
         </Tabs>
       </Stack>
 
-      {loadError && <Alert severity="error">{(loadError as Error).message}</Alert>}
-      {updateMutation.isError && (
+      {loadError && <Alert severity="error">{loadError.message}</Alert>}
+      {updateMutation.isError && updateMutation.error && (
         <Alert severity="warning">
-          {(updateMutation.error as Error).message}
+          {updateMutation.error.message}
         </Alert>
       )}
 

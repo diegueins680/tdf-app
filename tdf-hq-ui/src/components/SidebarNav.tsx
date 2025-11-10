@@ -5,8 +5,15 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 
-export type NavItem = { label: string; path: string };
-export type NavGroup = { title: string; items: NavItem[] };
+export interface NavItem {
+  label: string;
+  path: string;
+}
+
+export interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
 
 export const NAV_GROUPS: NavGroup[] = [
   { title: 'INICIO', items: [{ label: 'Inicio', path: '/inicio' }] },
@@ -113,14 +120,14 @@ export const NAV_GROUPS: NavGroup[] = [
   { title: 'INSIGHTS', items: [{ label: 'Insights', path: '/insights' }] },
 ];
 
-type SidebarNavProps = {
+interface SidebarNavProps {
   open: boolean;
   onNavigate?: () => void;
-};
+}
 
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
-  const [expandedGroups, setExpandedGroups] = useState(() => new Set(NAV_GROUPS.map((g) => g.title)));
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set(NAV_GROUPS.map((g) => g.title)));
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) => {

@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { CssBaseline, ThemeProvider, createTheme, type PaletteMode } from '@mui/material';
 
-type ThemeModeContextValue = {
+interface ThemeModeContextValue {
   mode: PaletteMode;
   toggleMode: () => void;
   setMode: (mode: PaletteMode) => void;
-};
+}
 
 const ThemeModeContext = createContext<ThemeModeContextValue | undefined>(undefined);
 const STORAGE_KEY = 'tdf-hq-ui/theme-mode';
@@ -19,7 +19,11 @@ function readStoredMode(): PaletteMode {
   return 'dark';
 }
 
-export function AppThemeProvider({ children }: { children: ReactNode }) {
+interface AppThemeProviderProps {
+  children: ReactNode;
+}
+
+export function AppThemeProvider({ children }: AppThemeProviderProps) {
   const [mode, setMode] = useState<PaletteMode>(() => readStoredMode());
 
   useEffect(() => {

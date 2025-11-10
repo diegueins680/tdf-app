@@ -1,15 +1,15 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { useState } from 'react';
-import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Typography } from '@mui/material';
+import { AppBar, Button, Chip, IconButton, Stack, Toolbar, Typography } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import ApiTokenDialog from './ApiTokenDialog';
 
-type TopBarProps = {
+interface TopBarProps {
   onToggleSidebar?: () => void;
-};
+}
 
 export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const { session, logout } = useSession();

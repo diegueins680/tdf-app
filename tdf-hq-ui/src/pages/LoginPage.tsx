@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import {
   Alert,
   Box,
@@ -60,7 +60,7 @@ export default function LoginPage() {
       return { label: 'API: verificando...', color: 'default' };
     }
     if (health) {
-      const healthy = (health.status || '').toLowerCase() === 'ok';
+      const healthy = (health.status ?? '').toLowerCase() === 'ok';
       return { label: `API: ${health.status}`, color: healthy ? 'success' : 'warning' };
     }
     if (healthError) {
@@ -69,14 +69,18 @@ export default function LoginPage() {
     return { label: 'API: offline', color: 'error' };
   }, [health, healthError, healthLoading]);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
 
     const normalizedUsername =
       tab === 'password'
         ? username.trim()
-        : `token:${tokenValue.trim().slice(0, 8) || 'usuario'}`;
+        : (() => {
+            const tokenSnippet = tokenValue.trim().slice(0, 8);
+            const suffix = tokenSnippet === '' ? 'usuario' : tokenSnippet;
+            return `token:${suffix}`;
+          })();
 
     const displayName =
       normalizedUsername.charAt(0).toUpperCase() + normalizedUsername.slice(1);
@@ -123,7 +127,7 @@ export default function LoginPage() {
       navigate('/crm/contactos', { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
-      setFormError(message || 'No se pudo iniciar sesión.');
+      setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
     }
   };
 
@@ -147,7 +151,9 @@ export default function LoginPage() {
         <Paper
           component="form"
           elevation={6}
-          onSubmit={handleSubmit}
+          onSubmit={(event) => {
+            void handleSubmit(event);
+          }}
           sx={{
             width: '100%',
             maxWidth: 420,

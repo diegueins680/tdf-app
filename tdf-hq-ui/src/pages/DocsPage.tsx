@@ -6,7 +6,7 @@ import MapIcon from '@mui/icons-material/Map';
 import { useQuery } from '@tanstack/react-query';
 import { Meta } from '../api/meta';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
 export default function DocsPage() {
   const docsUrl = `${API_BASE}/docs`;

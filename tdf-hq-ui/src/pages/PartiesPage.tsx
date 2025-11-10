@@ -1,5 +1,6 @@
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import {
@@ -14,7 +15,6 @@ import {
   DialogActions,
   IconButton,
   Chip,
-  Box,
   Table,
   TableHead,
   TableRow,
@@ -31,7 +31,13 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 
-function CreatePartyDialog({ open, onClose, defaultIsOrg }: { open: boolean; onClose: () => void; defaultIsOrg: boolean }) {
+interface CreatePartyDialogProps {
+  open: boolean;
+  onClose: () => void;
+  defaultIsOrg: boolean;
+}
+
+function CreatePartyDialog({ open, onClose, defaultIsOrg }: CreatePartyDialogProps) {
   const qc = useQueryClient();
   const [name, setName] = useState('');
   const [isOrg, setIsOrg] = useState(defaultIsOrg);
@@ -40,10 +46,10 @@ function CreatePartyDialog({ open, onClose, defaultIsOrg }: { open: boolean; onC
     setIsOrg(defaultIsOrg);
   }, [defaultIsOrg, open]);
 
-  const mutation = useMutation({
-    mutationFn: (body: PartyCreate) => Parties.create(body),
+  const mutation = useMutation<PartyDTO, Error, PartyCreate>({
+    mutationFn: (body) => Parties.create(body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['parties'] });
+      void qc.invalidateQueries({ queryKey: ['parties'] });
       setName('');
       onClose();
     },
@@ -67,8 +73,8 @@ function CreatePartyDialog({ open, onClose, defaultIsOrg }: { open: boolean; onC
           >
             {isOrg ? 'Empresa' : 'Persona'}
           </Button>
-          {mutation.isError && (
-            <Alert severity="error">{(mutation.error as Error).message}</Alert>
+          {mutation.isError && mutation.error && (
+            <Alert severity="error">{mutation.error.message}</Alert>
           )}
         </Stack>
       </DialogContent>
@@ -82,16 +88,27 @@ function CreatePartyDialog({ open, onClose, defaultIsOrg }: { open: boolean; onC
   );
 }
 
-function EditPartyDialog({ party, open, onClose }: { party: PartyDTO | null; open: boolean; onClose: () => void }) {
+interface EditPartyDialogProps {
+  party: PartyDTO | null;
+  open: boolean;
+  onClose: () => void;
+}
+
+function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
   const qc = useQueryClient();
   const [instagram, setInstagram] = useState(party?.instagram ?? '');
   const [phone, setPhone] = useState(party?.primaryPhone ?? '');
   const [displayName, setDisplayName] = useState(party?.displayName ?? '');
 
-  const mutation = useMutation({
-    mutationFn: (body: PartyUpdate) => Parties.update(party!.partyId, body),
+  const mutation = useMutation<PartyDTO, Error, PartyUpdate>({
+    mutationFn: (body) => {
+      if (!party) {
+        return Promise.reject(new Error('Contacto no disponible'));
+      }
+      return Parties.update(party.partyId, body);
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['parties'] });
+      void qc.invalidateQueries({ queryKey: ['parties'] });
       onClose();
     },
   });
@@ -128,17 +145,20 @@ function EditPartyDialog({ party, open, onClose }: { party: PartyDTO | null; ope
 
 export default function PartiesPage() {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useQuery({ queryKey: ['parties'], queryFn: Parties.list });
+  const partiesQuery: UseQueryResult<PartyDTO[], Error> = useQuery<PartyDTO[], Error>({
+    queryKey: ['parties'],
+    queryFn: Parties.list,
+  });
+  const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const [editing, setEditing] = useState<PartyDTO | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createDialogIsOrg, setCreateDialogIsOrg] = useState(false);
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
-    if (!data) return [];
     const term = search.toLowerCase();
-    return data.filter((p) => p.displayName.toLowerCase().includes(term));
-  }, [data, search]);
+    return parties.filter((p) => p.displayName.toLowerCase().includes(term));
+  }, [parties, search]);
 
   return (
     <Stack gap={3}>
@@ -194,7 +214,7 @@ export default function PartiesPage() {
           </Stack>
         </Stack>
 
-        {error && <Alert severity="error">{(error as Error).message}</Alert>}
+        {partiesQuery.error && <Alert severity="error">{partiesQuery.error.message}</Alert>}
 
         <Table size="small">
           <TableHead>
@@ -207,12 +227,12 @@ export default function PartiesPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {isLoading && (
+            {partiesQuery.isLoading && (
               <TableRow>
                 <TableCell colSpan={5}>Cargando...</TableCell>
               </TableRow>
             )}
-            {!isLoading && filtered.map((party) => (
+            {!partiesQuery.isLoading && filtered.map((party) => (
               <TableRow key={party.partyId} hover>
                 <TableCell>
                   <Stack direction="row" spacing={1} alignItems="center">

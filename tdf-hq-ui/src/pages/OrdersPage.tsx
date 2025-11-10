@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import {
   Alert,
   Box,
@@ -39,7 +39,7 @@ import type { BookingDTO, BookingResourceDTO, PartyDTO } from '../api/types';
 
 type StatusValue = 'Tentative' | 'Confirmed' | 'InProgress' | 'Completed' | 'Cancelled' | 'NoShow';
 
-const STATUS_VARIANTS: Array<{ value: StatusValue; label: string; color: ChipProps['color'] }> = [
+const STATUS_VARIANTS: { value: StatusValue; label: string; color: ChipProps['color'] }[] = [
   { value: 'Tentative', label: 'Tentativa', color: 'default' },
   { value: 'Confirmed', label: 'Confirmada', color: 'primary' },
   { value: 'InProgress', label: 'En preparación', color: 'info' },
@@ -53,7 +53,7 @@ const STATUS_LOOKUP = STATUS_VARIANTS.reduce<Record<string, { label: string; col
   return acc;
 }, {});
 
-const TZ = import.meta.env.VITE_TZ || 'America/Guayaquil';
+const TZ = import.meta.env.VITE_TZ ?? 'America/Guayaquil';
 
 function formatScheduleRange(start: string, end: string) {
   const s = DateTime.fromISO(start, { zone: TZ });
@@ -71,7 +71,7 @@ function filterResources(resources: BookingResourceDTO[] | undefined, predicate:
     .map((resource) => resource.brRoomName);
 }
 
-function dedupeStrings(values: Array<string | null | undefined>) {
+function dedupeStrings(values: (string | null | undefined)[]) {
   const seen = new Set<string>();
   const result: string[] = [];
   values.forEach((value) => {
@@ -91,29 +91,30 @@ export default function OrdersPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
 
-  const {
-    data: bookings,
-    isLoading,
-    isFetching,
-    error,
-    refetch,
-  } = useQuery({ queryKey: ['bookings'], queryFn: Bookings.list });
-
-  const { data: parties } = useQuery({ queryKey: ['parties'], queryFn: Parties.list });
+  const bookingsQuery: UseQueryResult<BookingDTO[], Error> = useQuery<BookingDTO[], Error>({
+    queryKey: ['bookings'],
+    queryFn: Bookings.list,
+  });
+  const partiesQuery: UseQueryResult<PartyDTO[], Error> = useQuery<PartyDTO[], Error>({
+    queryKey: ['parties'],
+    queryFn: Parties.list,
+  });
+  const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
+  const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
 
   const partyLookup = useMemo(() => {
     const map = new Map<number, PartyDTO>();
-    (parties ?? []).forEach((party) => map.set(party.partyId, party));
+    parties.forEach((party) => map.set(party.partyId, party));
     return map;
   }, [parties]);
 
   const selectedBooking = useMemo(
-    () => (bookings ?? []).find((booking) => booking.bookingId === selectedBookingId) ?? null,
-    [bookings, selectedBookingId]
+    () => bookings.find((booking) => booking.bookingId === selectedBookingId) ?? null,
+    [bookings, selectedBookingId],
   );
 
   const rows = useMemo(() => {
-    return (bookings ?? []).map((booking) => {
+    return bookings.map((booking) => {
       const engineers = filterResources(booking.resources, (role) => role.includes('engineer') || role.includes('ing'));
       const rooms = filterResources(booking.resources, (role) => role.includes('room') || role.includes('sala'));
       const party = booking.partyId ? partyLookup.get(booking.partyId) : undefined;
@@ -122,17 +123,21 @@ export default function OrdersPage() {
       if (booking.serviceOrderId) {
         bookingSecondaryParts.push(`SO #${booking.serviceOrderId}`);
       }
+      const serviceTitle = booking.serviceType ?? booking.title ?? '—';
+      const bookingPrimary =
+        booking.serviceOrderTitle ??
+        booking.customerName ??
+        booking.partyDisplayName ??
+        party?.displayName ??
+        `Booking #${booking.bookingId}`;
+      const bookingSecondaryJoined = bookingSecondaryParts.join(' · ');
+
       return {
         bookingId: booking.bookingId,
         schedule: formatScheduleRange(booking.startsAt, booking.endsAt),
-        service: booking.serviceType ?? booking.title ?? '—',
-        bookingPrimary:
-          booking.serviceOrderTitle ??
-          booking.customerName ??
-          booking.partyDisplayName ??
-          party?.displayName ??
-          `Booking #${booking.bookingId}`,
-        bookingSecondary: bookingSecondaryParts.join(' · ') || null,
+        service: serviceTitle,
+        bookingPrimary,
+        bookingSecondary: bookingSecondaryJoined.length > 0 ? bookingSecondaryJoined : null,
         engineers: engineers.length ? engineers.join(', ') : '—',
         rooms: rooms.length ? rooms.join(', ') : '—',
         status: booking.status,
@@ -165,10 +170,10 @@ export default function OrdersPage() {
     navigate('/estudio/calendario');
   };
 
-  const updateMutation = useMutation({
+  const updateMutation = useMutation<BookingDTO, Error, { id: number; payload: BookingUpdatePayload }>({
     mutationFn: ({ id, payload }: { id: number; payload: BookingUpdatePayload }) => Bookings.update(id, payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['bookings'] });
+      void qc.invalidateQueries({ queryKey: ['bookings'] });
       setSelectedBookingId(null);
     },
   });
@@ -187,10 +192,12 @@ export default function OrdersPage() {
     await updateMutation.mutateAsync({ id: selectedBooking.bookingId, payload });
   };
 
-  const mutationError = updateMutation.error instanceof Error ? updateMutation.error.message : null;
+  const mutationError = updateMutation.error?.message ?? null;
 
   const renderStatus = (status: string) => {
-    const config = STATUS_LOOKUP[status] ?? { label: status || 'Desconocido', color: 'default' as ChipProps['color'] };
+    const trimmedStatus = status.trim();
+    const fallbackLabel = trimmedStatus === '' ? 'Desconocido' : trimmedStatus;
+    const config = STATUS_LOOKUP[status] ?? { label: fallbackLabel, color: 'default' as ChipProps['color'] };
     return <Chip label={config.label} color={config.color} size="small" />;
   };
 
@@ -206,7 +213,13 @@ export default function OrdersPage() {
         <Stack direction="row" gap={1} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
           <Tooltip title="Actualizar lista">
             <span>
-              <IconButton onClick={() => refetch()} disabled={isFetching} color="primary">
+              <IconButton
+                onClick={() => {
+                  void bookingsQuery.refetch();
+                }}
+                disabled={bookingsQuery.isFetching}
+                color="primary"
+              >
                 <RefreshIcon />
               </IconButton>
             </span>
@@ -217,8 +230,8 @@ export default function OrdersPage() {
         </Stack>
       </Stack>
 
-      {error instanceof Error && (
-        <Alert severity="error">{error.message}</Alert>
+      {bookingsQuery.error && (
+        <Alert severity="error">{bookingsQuery.error.message}</Alert>
       )}
 
       <Paper variant="outlined">
@@ -236,7 +249,7 @@ export default function OrdersPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {isLoading && (
+              {bookingsQuery.isLoading && (
                 <TableRow>
                   <TableCell colSpan={7} align="center">
                     Cargando sesiones…
@@ -244,7 +257,7 @@ export default function OrdersPage() {
                 </TableRow>
               )}
 
-              {!isLoading && paginatedRows.length === 0 && (
+              {!bookingsQuery.isLoading && paginatedRows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} align="center">
                     No hay sesiones registradas todavía.
@@ -252,7 +265,7 @@ export default function OrdersPage() {
                 </TableRow>
               )}
 
-              {!isLoading && paginatedRows.map((row) => (
+              {!bookingsQuery.isLoading && paginatedRows.map((row) => (
                 <TableRow hover key={row.bookingId}>
                   <TableCell sx={{ minWidth: 240 }}>
                     <Typography variant="body2" fontWeight={600}>
@@ -306,14 +319,14 @@ export default function OrdersPage() {
   );
 }
 
-type OrderEditDialogProps = {
+interface OrderEditDialogProps {
   booking: BookingDTO | null;
   open: boolean;
   onClose: () => void;
   onSubmit: (payload: BookingUpdatePayload) => Promise<void>;
   saving: boolean;
   errorMessage: string | null;
-};
+}
 
 function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessage }: OrderEditDialogProps) {
   const [form, setForm] = useState({
@@ -363,7 +376,11 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={(event) => {
+          void handleSubmit(event);
+        }}
+      >
         <DialogTitle>Editar sesión #{booking.bookingId}</DialogTitle>
         <DialogContent>
           <Stack gap={2} sx={{ mt: 1 }}>

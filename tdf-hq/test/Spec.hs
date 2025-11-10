@@ -1,6 +1,9 @@
 module Main (main) where
 
-import System.Exit (exitSuccess)
+import Test.Hspec
 
 main :: IO ()
-main = putStrLn "No tests yet." >> exitSuccess
+main = hspec $
+  describe "Sanity" $
+    it "keeps the test harness wired" $
+      True `shouldBe` True

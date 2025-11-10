@@ -1,6 +1,6 @@
 import { getStoredSessionToken } from '../session/SessionContext';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
 function buildAuthHeader(): string | undefined {
   const token = getStoredSessionToken();
@@ -14,13 +14,16 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers: {
       'Content-Type': 'application/json',
       ...(authHeader ? { Authorization: authHeader } : {}),
-      ...(init.headers || {}),
+      ...(init.headers ?? {}),
     },
     ...init,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(text || `HTTP ${res.status}`);
+    const trimmed = text.trim();
+    const statusText = res.statusText.trim();
+    const details = trimmed !== '' ? trimmed : statusText !== '' ? statusText : `HTTP ${res.status}`;
+    throw new Error(details);
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

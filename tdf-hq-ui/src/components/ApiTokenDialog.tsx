@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, Stack, Typography } from '@mui/material';
 import { useSession, DEFAULT_DEMO_TOKEN } from '../session/SessionContext';
 
-type ApiTokenDialogProps = {
+interface ApiTokenDialogProps {
   open: boolean;
   onClose: () => void;
-};
+}
 
 export default function ApiTokenDialog({ open, onClose }: ApiTokenDialogProps) {
   const { session, setApiToken } = useSession();
@@ -18,7 +18,8 @@ export default function ApiTokenDialog({ open, onClose }: ApiTokenDialogProps) {
   }, [open, session]);
 
   const handleSave = () => {
-    setApiToken(token.trim() || null);
+    const trimmedToken = token.trim();
+    setApiToken(trimmedToken === '' ? null : trimmedToken);
     onClose();
   };
 

@@ -21,7 +21,7 @@ export default function ApiStatusChip() {
     );
   }
 
-  const healthy = (data?.status || '').toLowerCase() === 'ok';
+  const healthy = (data?.status ?? '').toLowerCase() === 'ok';
   return (
     <Chip
       icon={healthy ? <CheckCircleIcon fontSize="small" /> : <ErrorOutlineIcon fontSize="small" />}

@@ -1,14 +1,14 @@
 import { get, post, put } from './client';
 import type { BookingDTO } from './types';
 
-export type BookingUpdatePayload = Partial<{
-  ubTitle: string;
-  ubServiceType: string;
-  ubStatus: string;
-  ubNotes: string;
-  ubStartsAt: string;
-  ubEndsAt: string;
-}>;
+export interface BookingUpdatePayload {
+  ubTitle?: string;
+  ubServiceType?: string;
+  ubStatus?: string;
+  ubNotes?: string;
+  ubStartsAt?: string;
+  ubEndsAt?: string;
+}
 
 export const Bookings = {
   list: () => get<BookingDTO[]>('/bookings'),

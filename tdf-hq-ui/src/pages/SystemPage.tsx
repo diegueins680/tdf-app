@@ -48,7 +48,7 @@ export default function SystemPage() {
     return version.commit.slice(0, 7);
   }, [version]);
 
-  const healthColor = (health?.status || '').toLowerCase() === 'ok' ? 'success' : 'warning';
+  const healthColor = (health?.status ?? '').toLowerCase() === 'ok' ? 'success' : 'warning';
 
   return (
     <Stack gap={3}>

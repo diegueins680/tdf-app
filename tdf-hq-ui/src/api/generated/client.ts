@@ -7,7 +7,7 @@ export type PartyRole = components['schemas']['PartyRole'];
 export type PartyStatus = components['schemas']['PartyStatus'];
 export type UserRoleUpdate = components['schemas']['UserRoleUpdate'];
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
 
 export class ApiClient {
   private baseUrl: string;
@@ -33,7 +33,9 @@ export class ApiClient {
 
     if (!response.ok) {
       const message = await response.text().catch(() => '');
-      const details = message || response.statusText || 'Request failed';
+      const trimmedMessage = message.trim();
+      const trimmedStatus = response.statusText.trim();
+      const details = trimmedMessage !== '' ? trimmedMessage : trimmedStatus !== '' ? trimmedStatus : 'Request failed';
       throw new Error(`API error: ${response.status} ${details}`);
     }
 

@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Alert,
-  Box,
   Button,
   Chip,
   IconButton,
@@ -20,7 +19,7 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
 
@@ -30,28 +29,27 @@ export default function RoomsPage() {
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  const {
-    data: rooms,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({ queryKey: ['rooms'], queryFn: Rooms.list });
+  const roomsQuery: UseQueryResult<RoomDTO[], Error> = useQuery<RoomDTO[], Error>({
+    queryKey: ['rooms'],
+    queryFn: Rooms.list,
+  });
+  const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
 
-  const createMutation = useMutation({
-    mutationFn: () => Rooms.create({ rcName: name.trim() }),
+  const createMutation = useMutation<RoomDTO, Error, { rcName: string }>({
+    mutationFn: (body) => Rooms.create(body),
     onSuccess: () => {
       setName('');
-      qc.invalidateQueries({ queryKey: ['rooms'] });
+      void qc.invalidateQueries({ queryKey: ['rooms'] });
     },
   });
 
-  const updateMutation = useMutation({
+  const updateMutation = useMutation<RoomDTO, Error, { roomId: string; payload: Record<string, unknown> }>({
     mutationFn: ({ roomId, payload }: { roomId: string; payload: Record<string, unknown> }) =>
       Rooms.update(roomId, payload),
     onSuccess: () => {
       setRenameId(null);
       setRenameValue('');
-      qc.invalidateQueries({ queryKey: ['rooms'] });
+      void qc.invalidateQueries({ queryKey: ['rooms'] });
     },
   });
 
@@ -85,23 +83,27 @@ export default function RoomsPage() {
             variant="contained"
             startIcon={<AddIcon />}
             disabled={!name.trim() || createMutation.isPending}
-            onClick={() => createMutation.mutate()}
+            onClick={() => createMutation.mutate({ rcName: name.trim() })}
           >
             Agregar
           </Button>
-          <IconButton onClick={() => refetch()}>
+          <IconButton
+            onClick={() => {
+              void roomsQuery.refetch();
+            }}
+          >
             <RefreshIcon />
           </IconButton>
         </Stack>
         {createMutation.isError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {(createMutation.error as Error).message}
+            {createMutation.error?.message}
           </Alert>
         )}
       </Paper>
 
-      {error && (
-        <Alert severity="error">{(error as Error).message}</Alert>
+      {roomsQuery.error && (
+        <Alert severity="error">{roomsQuery.error.message}</Alert>
       )}
 
       <TableContainer component={Paper}>
@@ -114,17 +116,17 @@ export default function RoomsPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {isLoading && (
+            {roomsQuery.isLoading && (
               <TableRow>
                 <TableCell colSpan={3}>Cargando salas...</TableCell>
               </TableRow>
             )}
-            {!isLoading && rooms?.length === 0 && (
+            {!roomsQuery.isLoading && rooms.length === 0 && (
               <TableRow>
                 <TableCell colSpan={3}>No hay salas registradas.</TableCell>
               </TableRow>
             )}
-            {rooms?.map((room) => (
+            {rooms.map((room) => (
               <TableRow key={room.roomId}>
                 <TableCell>
                   {renameId === room.roomId ? (

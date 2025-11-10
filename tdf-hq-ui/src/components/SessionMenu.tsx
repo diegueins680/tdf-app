@@ -28,7 +28,8 @@ export default function SessionMenu() {
     navigate('/login', { replace: true });
   };
 
-  const initials = session.displayName?.charAt(0).toUpperCase() || session.username.charAt(0).toUpperCase();
+  const preferredInitial = session.displayName?.charAt(0).toUpperCase();
+  const initials = preferredInitial && preferredInitial.trim() !== '' ? preferredInitial : session.username.charAt(0).toUpperCase();
   const rolesLabel = session.roles.length ? session.roles.join(', ') : 'Sin roles asignados';
 
   return (

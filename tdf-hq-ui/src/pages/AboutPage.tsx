@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
-  Box,
   Button,
   Chip,
   Grid,
@@ -46,6 +45,7 @@ export default function AboutPage() {
   } = useQuery({ queryKey: ['meta', 'health'], queryFn: Meta.health });
 
   const loading = versionLoading || healthLoading;
+  const hasMetaError = Boolean(versionError ?? healthError);
 
   const buildDate = useMemo(() => {
     if (!version?.buildTime) return '—';
@@ -91,7 +91,7 @@ export default function AboutPage() {
         </Stack>
       </Paper>
 
-      {(versionError || healthError) && (
+      {hasMetaError && (
         <Alert severity="error">
           {versionError instanceof Error ? versionError.message : ''}
           {healthError instanceof Error ? ` · ${healthError.message}` : ''}
@@ -134,7 +134,7 @@ export default function AboutPage() {
                     label="API meta"
                     size="small"
                     sx={{ alignSelf: 'flex-start', mt: 1 }}
-                    color={health && String(health.status).toLowerCase() === 'ok' ? 'success' : 'warning'}
+                    color={(health?.status ?? '').toLowerCase() === 'ok' ? 'success' : 'warning'}
                   />
                 </>
               )}
