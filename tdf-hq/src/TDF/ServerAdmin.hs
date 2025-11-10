@@ -212,7 +212,9 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
           Just provided -> pure provided
           Nothing       -> pure (deriveUsername partyEnt emailAddress)
       uniqueUsername <- generateUniqueUsername baseUsername
-      tempPassword <- liftIO Email.generateTempPassword
+      let providedPassword =
+            uacPassword >>= (\txt -> let trimmed = T.strip txt in if T.null trimmed then Nothing else Just trimmed)
+      tempPassword <- maybe (liftIO Email.generateTempPassword) pure providedPassword
       hashed <- liftIO (hashPasswordText tempPassword)
       credId <- withPool $ insert UserCredential
         { userCredentialPartyId      = partyKey

@@ -87,6 +87,7 @@ instance FromJSON UserAccountDTO
 data UserAccountCreate = UserAccountCreate
   { uacPartyId  :: Int64
   , uacUsername :: Maybe Text
+  , uacPassword :: Maybe Text
   , uacActive   :: Maybe Bool
   , uacRoles    :: Maybe [RoleEnum]
   } deriving (Show, Generic)
