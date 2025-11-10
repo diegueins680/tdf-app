@@ -46,6 +46,16 @@ export default function AboutPage() {
 
   const loading = versionLoading || healthLoading;
   const hasMetaError = Boolean(versionError ?? healthError);
+  const uiCommit = useMemo(() => {
+    if (!__APP_COMMIT__ || __APP_COMMIT__.trim().length === 0) {
+      return null;
+    }
+    const value = __APP_COMMIT__.trim();
+    return {
+      display: value.slice(0, 7),
+      link: value === 'dev' ? null : `https://github.com/diegueins680/tdf-app/commit/${value}`,
+    };
+  }, []);
 
   const buildDate = useMemo(() => {
     if (!version?.buildTime) return '—';
@@ -111,6 +121,20 @@ export default function AboutPage() {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Compilado: {buildDate}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                UI commit:{' '}
+                {uiCommit ? (
+                  uiCommit.link ? (
+                    <Link href={uiCommit.link} target="_blank" rel="noreferrer">
+                      {uiCommit.display}
+                    </Link>
+                  ) : (
+                    uiCommit.display
+                  )
+                ) : (
+                  '—'
+                )}
               </Typography>
             </Stack>
           </Paper>
