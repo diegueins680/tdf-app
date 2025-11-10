@@ -4,7 +4,7 @@ module Main where
 import qualified Network.Wai.Handler.Warp as Warp
 import           Control.Monad            (forM_, when)
 import           Data.ByteString.Char8    (pack)
-import           Data.Char                (isSpace)
+import           Data.Char                (isSpace, toLower)
 import           Data.Int                (Int64)
 import           Data.List               (dropWhileEnd)
 import           Data.Maybe               (mapMaybe)
@@ -31,9 +31,6 @@ import           TDF.ModelsExtra (migrateExtra)
 import           TDF.Trials.Models (migrateTrials)
 import           TDF.Server     (mkApp)
 import           TDF.Seed       (seedAll)
-import qualified TDF.Cors as C
-import qualified TDF.Routes.Academy as Academy
-
 main :: IO ()
 main = do
   cfg  <- loadConfig
@@ -64,12 +61,13 @@ main = do
         , "https://tdf-7t2qa.onrender.com"
         , "https://tdfui.pages.dev"
         ]
-  envOrigins <- lookupEnv "ALLOW_ORIGINS"
-  envOrigin  <- lookupEnv "ALLOW_ORIGIN"
+  listEnvs <- mapM lookupEnv ["ALLOW_ORIGINS", "ALLOWED_ORIGINS", "CORS_ALLOW_ORIGINS"]
+  singleEnvs <- mapM lookupEnv ["ALLOW_ORIGIN", "ALLOWED_ORIGIN", "CORS_ALLOW_ORIGIN"]
+  allowAllFlag <- anyTrue ["ALLOW_ALL_ORIGINS", "ALLOWED_ORIGINS_ALL", "CORS_ALLOW_ALL"]
   let fromListEnv =
-        maybe [] (map pack . splitComma) envOrigins
+        concatMap (maybe [] (map pack . splitComma)) listEnvs
       fromOneEnv =
-        maybe [] (\origin -> [pack origin]) envOrigin
+        concatMap (maybe [] (\origin -> [pack origin])) singleEnvs
       allowedOrigins = allowedOriginsBase <> fromListEnv <> fromOneEnv
       allowedHeaders =
         "Authorization"
@@ -80,7 +78,7 @@ main = do
         simpleCorsResourcePolicy
           { corsRequestHeaders = allowedHeaders
           , corsMethods        = ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
-          , corsOrigins        = Just (allowedOrigins, True)
+          , corsOrigins        = if allowAllFlag then Nothing else Just (allowedOrigins, True)
           }
       app = mkApp Env{ envPool = pool, envConfig = cfg }
 
@@ -98,6 +96,21 @@ splitComma = go . dropWhile isSpace
            then [h']
            else h' : go (drop 1 t)
     trim = dropWhileEnd isSpace . dropWhile isSpace
+
+anyTrue :: [String] -> IO Bool
+anyTrue names = do
+  vals <- mapM lookupEnv names
+  pure (any (maybe False parseBool) vals)
+
+parseBool :: String -> Bool
+parseBool val =
+  case map toLower (dropWhile isSpace val) of
+    ""      -> False
+    "true"  -> True
+    "1"     -> True
+    "yes"   -> True
+    "on"    -> True
+    _       -> False
 
 resetSchema :: SqlPersistT IO ()
 resetSchema = do
