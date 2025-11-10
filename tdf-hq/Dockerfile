@@ -24,6 +24,8 @@ RUN stack --no-terminal --install-ghc setup && \
 COPY app app
 COPY src src
 COPY config config
+COPY docs docs
+COPY .git .git
 
 
 # Build and export the binary
@@ -41,6 +43,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ARG SOURCE_COMMIT=UNKNOWN
 ENV GIT_SHA=${SOURCE_COMMIT}
 COPY --from=builder /out/tdf-hq-exe /app/tdf-hq-exe
+COPY --from=builder /app/docs /app/docs
 
 # Render provides PORT; map it to the app's APP_PORT
 ENV APP_PORT=8080

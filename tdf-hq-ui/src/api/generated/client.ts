@@ -1,5 +1,6 @@
 // API client for user role management
 import type { components } from './types';
+import { getStoredSessionToken } from '../../session/SessionContext';
 
 export type User = components['schemas']['User'];
 export type PartyRole = components['schemas']['PartyRole'];
@@ -17,19 +18,27 @@ export class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options?: RequestInit
+    options?: RequestInit,
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+    const token = getStoredSessionToken();
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}` } : {}),
         ...options?.headers,
       },
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
+      const message = await response.text().catch(() => '');
+      const details = message || response.statusText || 'Request failed';
+      throw new Error(`API error: ${response.status} ${details}`);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
     }
 
     return response.json();

@@ -47,7 +47,7 @@ metaServer = versionH :<|> openapiH :<|> docsH
         , version = T.pack (showVersion Paths.version)
         , builtAt = now
         }
-    openapiH = liftIO $ TIO.readFile "docs/openapi/lessons-and-receipts.yaml"
+    openapiH = liftIO $ TIO.readFile "docs/openapi/api.yaml"
     docsH    = pure (T.pack redocIndex)
 
 -- | Minimal content type to serve HTML documents encoded as UTF-8.

@@ -76,11 +76,21 @@ compiledBuildTime = T.pack $(do
 commitEnvVars :: [String]
 commitEnvVars =
   [ "GIT_SHA"
+  , "GIT_COMMIT"
+  , "GIT_COMMIT_SHA"
+  , "COMMIT_SHA"
   , "SOURCE_COMMIT"
   , "SOURCE_VERSION"
+  , "SOURCE_SHA"
+  , "GITHUB_SHA"
   , "RENDER_GIT_COMMIT"
   , "RENDER_GIT_COMMIT_SHA"
   , "VERCEL_GIT_COMMIT_SHA"
+  , "KOYEB_GIT_SHA"
+  , "KOYEB_GIT_COMMIT"
+  , "KOYEB_GIT_COMMIT_SHA"
+  , "KOYEB_DEPLOYMENT_GIT_SHA"
+  , "KOYEB_DEPLOYMENT_GIT_COMMIT"
   ]
 
 buildTimeEnvVars :: [String]
