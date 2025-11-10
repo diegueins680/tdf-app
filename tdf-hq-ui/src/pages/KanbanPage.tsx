@@ -55,7 +55,9 @@ export default function KanbanPage() {
         }
         map[normalizedId] = card;
         const stage = initialColumns[card.pcStage] ? card.pcStage : stagesQuery.data[0];
-        initialColumns[stage].push(normalizedId);
+        if (!initialColumns[stage].includes(normalizedId)) {
+          initialColumns[stage].push(normalizedId);
+        }
       });
       Object.keys(initialColumns).forEach((stage) => {
         initialColumns[stage] = initialColumns[stage].sort((a, b) => {
