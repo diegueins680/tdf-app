@@ -1,0 +1,396 @@
+openapi: 3.0.3
+info:
+  title: TDF HQ – Lessons, Packages, Payments & Receipts API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+security:
+  - bearerAuth: []
+paths:
+  /api/teachers:
+    get:
+      summary: List teachers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Teacher'
+    post:
+      summary: Create teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TeacherInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Teacher' }
+  /api/teachers/{id}:
+    get:
+      summary: Get a teacher
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Teacher' } } } }
+    patch:
+      summary: Update a teacher
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TeacherInput' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Teacher' } } } }
+    delete:
+      summary: Delete a teacher
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses: { '204': { description: No Content } }
+
+  /api/students:
+    get: { summary: List students, responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Student' } } } } } } }
+    post:
+      summary: Create student
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StudentInput' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Student' } } } } }
+  /api/students/{id}:
+    get: { summary: Get a student, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Student' } } } } } }
+    patch: { summary: Update a student, parameters: [ { $ref: '#/components/parameters/Id' } ], requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StudentInput' } } } }, responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Student' } } } } } }
+    delete: { summary: Delete a student, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '204': { description: No Content } } }
+
+  /api/packages:
+    get: { summary: List lesson packages, responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/LessonPackage' } } } } } } }
+    post:
+      summary: Create lesson package
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LessonPackageInput' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/LessonPackage' } } } } }
+  /api/packages/{id}:
+    get: { summary: Get package, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/LessonPackage' } } } } } }
+    patch: { summary: Update package, parameters: [ { $ref: '#/components/parameters/Id' } ], requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LessonPackageInput' } } } }, responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/LessonPackage' } } } } } }
+    delete: { summary: Archive package, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '204': { description: No Content } } }
+
+  /api/enrollments:
+    get: { summary: List enrollments, responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Enrollment' } } } } } } }
+    post:
+      summary: Purchase a package (create enrollment)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/EnrollmentInput' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Enrollment' } } } } }
+  /api/enrollments/{id}:
+    get: { summary: Get enrollment, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Enrollment' } } } } } }
+    patch:
+      summary: "Update enrollment (e.g., notes/status)"
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EnrollmentUpdate' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Enrollment' }
+    delete: { summary: Cancel enrollment, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '204': { description: No Content } } }
+
+  /api/lessons:
+    get: { summary: List lessons (optionally by teacher_id or student_id), parameters: [ { name: teacher_id, in: query, schema: { type: string, format: uuid } }, { name: student_id, in: query, schema: { type: string, format: uuid } } ], responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Lesson' } } } } } } }
+    post:
+      summary: Schedule a lesson
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LessonInput' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Lesson' } } } } }
+  /api/lessons/{id}:
+    get: { summary: Get a lesson, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Lesson' } } } } } }
+    patch:
+      summary: "Update a lesson (status, times, notes)"
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LessonUpdate' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Lesson' }
+    delete: { summary: Cancel lesson, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '204': { description: No Content } } }
+
+  /api/lessons/{id}/materials:
+    get: { summary: List lesson materials, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/LessonMaterial' } } } } } } }
+    post:
+      summary: Add a material to the lesson
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LessonMaterialInput' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/LessonMaterial' } } } } }
+
+  /api/payments:
+    get: { summary: List payments (optionally by enrollment_id), parameters: [ { name: enrollment_id, in: query, schema: { type: string, format: uuid } } ], responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Payment' } } } } } } }
+    post:
+      summary: Record a payment for an enrollment
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PaymentInput' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Payment' } } } } }
+  /api/payments/{id}:
+    get: { summary: Get a payment, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Payment' } } } } } }
+    patch: { summary: Update a payment (status/reference), parameters: [ { $ref: '#/components/parameters/Id' } ], requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PaymentUpdate' } } } }, responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Payment' } } } } } }
+    delete: { summary: Void payment, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '204': { description: No Content } } }
+
+  /api/receipts:
+    get: { summary: List receipts (optionally by payment_id or enrollment_id), parameters: [ { name: payment_id, in: query, schema: { type: string, format: uuid } }, { name: enrollment_id, in: query, schema: { type: string, format: uuid } } ], responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Receipt' } } } } } } }
+    post:
+      summary: Issue a receipt for a payment
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ReceiptInput' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Receipt' } } } } }
+  /api/receipts/{id}:
+    get: { summary: Get a receipt, parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Receipt' } } } } } }
+  /api/receipts/{id}/pdf:
+    get: { summary: Get a PDF for a receipt (client-side can also render), parameters: [ { $ref: '#/components/parameters/Id' } ], responses: { '200': { description: PDF, content: { application/pdf: { schema: { type: string, format: binary } } } } } }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    UUID:
+      type: string
+      format: uuid
+    Timestamp:
+      type: string
+      format: date-time
+    Money:
+      type: object
+      properties:
+        amount_cents: { type: integer }
+        currency: { type: string, example: "USD" }
+      required: [amount_cents, currency]
+
+    Teacher:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        updated_at: { $ref: '#/components/schemas/Timestamp' }
+      required: [id, name]
+    TeacherInput:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+      required: [name]
+
+    Student:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        updated_at: { $ref: '#/components/schemas/Timestamp' }
+      required: [id, name]
+    StudentInput:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+      required: [name]
+
+    LessonPackage:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        name: { type: string }
+        description: { type: string }
+        total_lessons: { type: integer }
+        price: { $ref: '#/components/schemas/Money' }
+        valid_from: { $ref: '#/components/schemas/Timestamp' }
+        valid_to: { $ref: '#/components/schemas/Timestamp' }
+        is_active: { type: boolean }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        updated_at: { $ref: '#/components/schemas/Timestamp' }
+      required: [id, name, total_lessons, price, is_active]
+    LessonPackageInput:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        total_lessons: { type: integer }
+        price_cents: { type: integer }
+        currency: { type: string }
+        valid_from: { $ref: '#/components/schemas/Timestamp' }
+        valid_to: { $ref: '#/components/schemas/Timestamp' }
+        is_active: { type: boolean }
+      required: [name, total_lessons, price_cents, currency, is_active]
+
+    Enrollment:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        student_id: { $ref: '#/components/schemas/UUID' }
+        package_id: { $ref: '#/components/schemas/UUID' }
+        purchase_date: { $ref: '#/components/schemas/Timestamp' }
+        lessons_remaining: { type: integer }
+        status: { type: string, enum: [active, completed, cancelled] }
+        notes: { type: string }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        updated_at: { $ref: '#/components/schemas/Timestamp' }
+      required: [id, student_id, package_id, lessons_remaining, status]
+    EnrollmentInput:
+      type: object
+      properties:
+        student_id: { $ref: '#/components/schemas/UUID' }
+        package_id: { $ref: '#/components/schemas/UUID' }
+        purchase_date: { $ref: '#/components/schemas/Timestamp' }
+        notes: { type: string }
+      required: [student_id, package_id]
+    EnrollmentUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [active, completed, cancelled] }
+        notes: { type: string }
+
+    Lesson:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        teacher_id: { $ref: '#/components/schemas/UUID' }
+        student_id: { $ref: '#/components/schemas/UUID' }
+        start_at: { $ref: '#/components/schemas/Timestamp' }
+        end_at: { $ref: '#/components/schemas/Timestamp' }
+        location: { type: string }
+        status: { type: string, enum: [scheduled, completed, cancelled] }
+        notes: { type: string }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        updated_at: { $ref: '#/components/schemas/Timestamp' }
+      required: [id, teacher_id, student_id, start_at, end_at, status]
+    LessonInput:
+      type: object
+      properties:
+        teacher_id: { $ref: '#/components/schemas/UUID' }
+        student_id: { $ref: '#/components/schemas/UUID' }
+        start_at: { $ref: '#/components/schemas/Timestamp' }
+        end_at: { $ref: '#/components/schemas/Timestamp' }
+        location: { type: string }
+        notes: { type: string }
+      required: [teacher_id, student_id, start_at, end_at]
+    LessonUpdate:
+      type: object
+      properties:
+        start_at: { $ref: '#/components/schemas/Timestamp' }
+        end_at: { $ref: '#/components/schemas/Timestamp' }
+        location: { type: string }
+        status: { type: string, enum: [scheduled, completed, cancelled] }
+        notes: { type: string }
+
+    LessonMaterial:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        lesson_id: { $ref: '#/components/schemas/UUID' }
+        title: { type: string }
+        url: { type: string }
+        notes: { type: string }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+      required: [id, lesson_id, title, url]
+    LessonMaterialInput:
+      type: object
+      properties:
+        title: { type: string }
+        url: { type: string }
+        notes: { type: string }
+      required: [title, url]
+
+    Payment:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        enrollment_id: { $ref: '#/components/schemas/UUID' }
+        amount_cents: { type: integer }
+        currency: { type: string }
+        method: { type: string, enum: [cash, card, bank_transfer, other] }
+        reference: { type: string }
+        status: { type: string, enum: [pending, paid, void] }
+        paid_at: { $ref: '#/components/schemas/Timestamp' }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+        updated_at: { $ref: '#/components/schemas/Timestamp' }
+      required: [id, enrollment_id, amount_cents, currency, status]
+    PaymentInput:
+      type: object
+      properties:
+        enrollment_id: { $ref: '#/components/schemas/UUID' }
+        amount_cents: { type: integer }
+        currency: { type: string }
+        method: { type: string }
+        reference: { type: string }
+        paid_at: { $ref: '#/components/schemas/Timestamp' }
+      required: [enrollment_id, amount_cents, currency]
+    PaymentUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [pending, paid, void] }
+        reference: { type: string }
+
+    Receipt:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/UUID' }
+        payment_id: { $ref: '#/components/schemas/UUID' }
+        receipt_number: { type: string }
+        issued_at: { $ref: '#/components/schemas/Timestamp' }
+        buyer_name: { type: string }
+        buyer_email: { type: string }
+        line_items:
+          type: array
+          items:
+            type: object
+            properties:
+              description: { type: string }
+              qty: { type: integer }
+              unit_price_cents: { type: integer }
+              total_cents: { type: integer }
+            required: [description, qty, unit_price_cents, total_cents]
+        subtotal_cents: { type: integer }
+        tax_cents: { type: integer }
+        total_cents: { type: integer }
+        currency: { type: string }
+        created_at: { $ref: '#/components/schemas/Timestamp' }
+      required: [id, payment_id, receipt_number, issued_at, total_cents, currency]
+    ReceiptInput:
+      type: object
+      properties:
+        payment_id: { $ref: '#/components/schemas/UUID' }
+        buyer_name: { type: string }
+        buyer_email: { type: string }
+        line_items:
+          type: array
+          items:
+            type: object
+            properties:
+              description: { type: string }
+              qty: { type: integer }
+              unit_price_cents: { type: integer }
+            required: [description, qty, unit_price_cents]
+        tax_cents: { type: integer }
+      required: [payment_id, buyer_name, line_items]

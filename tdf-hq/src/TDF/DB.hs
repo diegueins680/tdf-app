@@ -1,70 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module TDF.DB where
 
-import Database.Persist
-import Database.Persist.Sql
-import Control.Monad.IO.Class (liftIO)
-import Data.Time (getCurrentTime)
-import TDF.Models
+import           Control.Monad.Logger (runStdoutLoggingT)
+import           Database.Persist.Postgresql (createPostgresqlPool)
+import           Database.Persist.Sql (SqlPersistT, ConnectionPool, runMigration)
+import           Data.ByteString (ByteString)
 
--- Get all users with their roles
-getUsersWithRoles :: SqlPersistT IO [(Entity Party, [PartyRole])]
-getUsersWithRoles = do
-    parties <- selectList [] []
-    mapM attachRoles parties
-  where
-    attachRoles party = do
-        roleAssignments <- selectList [PartyRoleAssignmentPartyId ==. entityKey party] []
-        let roles = map (partyRoleAssignmentRole . entityVal) roleAssignments
-        return (party, roles)
+import           TDF.Config
+import           TDF.Trials.Models (migrateTrials)
 
--- Get roles for a specific user
-getUserRoles :: Key Party -> SqlPersistT IO [PartyRole]
-getUserRoles partyId = do
-    roleAssignments <- selectList [PartyRoleAssignmentPartyId ==. partyId] []
-    return $ map (partyRoleAssignmentRole . entityVal) roleAssignments
+data Env = Env
+  { envPool   :: ConnectionPool
+  , envConfig :: AppConfig
+  }
 
--- Update roles for a user (replaces all existing roles)
-updateUserRoles :: Key Party -> [PartyRole] -> Maybe (Key Party) -> SqlPersistT IO ()
-updateUserRoles partyId newRoles assignedBy = do
-    -- Delete all existing role assignments for this user
-    deleteWhere [PartyRoleAssignmentPartyId ==. partyId]
-    
-    -- Insert new role assignments
-    now <- liftIO getCurrentTime
-    mapM_ (insertRoleAssignment now) newRoles
-  where
-    insertRoleAssignment timestamp role = insert_ $ PartyRoleAssignment
-        { partyRoleAssignmentPartyId = partyId
-        , partyRoleAssignmentRole = role
-        , partyRoleAssignmentAssignedAt = timestamp
-        , partyRoleAssignmentAssignedBy = assignedBy
-        }
+makePool :: ByteString -> IO ConnectionPool
+makePool conn = runStdoutLoggingT $ createPostgresqlPool conn 10
 
--- Add a single role to a user
-addUserRole :: Key Party -> PartyRole -> Maybe (Key Party) -> SqlPersistT IO ()
-addUserRole partyId role assignedBy = do
-    now <- liftIO getCurrentTime
-    insert_ $ PartyRoleAssignment
-        { partyRoleAssignmentPartyId = partyId
-        , partyRoleAssignmentRole = role
-        , partyRoleAssignmentAssignedAt = now
-        , partyRoleAssignmentAssignedBy = assignedBy
-        }
-
--- Remove a single role from a user
-removeUserRole :: Key Party -> PartyRole -> SqlPersistT IO ()
-removeUserRole partyId role = do
-    deleteWhere 
-        [ PartyRoleAssignmentPartyId ==. partyId
-        , PartyRoleAssignmentRole ==. role
-        ]
-
--- Check if a user has a specific role
-userHasRole :: Key Party -> PartyRole -> SqlPersistT IO Bool
-userHasRole partyId role = do
-    mAssignment <- getBy $ UniquePartyRole partyId role
-    return $ case mAssignment of
-        Just _  -> True
-        Nothing -> False
+runMigrations :: SqlPersistT IO () -> SqlPersistT IO ()
+runMigrations base = base >> runMigration migrateTrials
