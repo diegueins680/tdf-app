@@ -25,6 +25,7 @@ import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
 import { useThemeMode } from '../theme/AppThemeProvider';
 import { loginRequest } from '../api/auth';
+import BrandLogo from '../components/BrandLogo';
 
 type LoginTab = 'password' | 'token';
 
@@ -162,10 +163,8 @@ export default function LoginPage() {
           }}
         >
           <Stack spacing={3}>
-            <Stack spacing={1} textAlign="center">
-              <Typography variant="overline" fontWeight={700} letterSpacing={6}>
-                TDF RECORDS
-              </Typography>
+            <Stack spacing={1} alignItems="center">
+              <BrandLogo size={64} aria-label="TDF Records" />
               <Typography variant="caption" color="text.secondary">
                 RECORDS & STUDIO
               </Typography>
