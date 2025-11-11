@@ -1,11 +1,12 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { useState } from 'react';
-import { AppBar, Button, Chip, IconButton, Stack, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import ApiTokenDialog from './ApiTokenDialog';
+import BrandLogo from './BrandLogo';
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
@@ -38,16 +39,19 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         >
           <MenuIcon />
         </IconButton>
-        <Typography
-          variant="h6"
+        <Box
+          component={RouterLink}
+          to="/inicio"
           sx={{
-            letterSpacing: 6,
-            fontWeight: 600,
+            display: 'inline-flex',
+            alignItems: 'center',
             flexGrow: { xs: 0, lg: 1 },
+            mr: { xs: 1.5, lg: 0 },
           }}
+          aria-label="Ir al inicio"
         >
-          TDF RECORDS
-        </Typography>
+          <BrandLogo size={32} />
+        </Box>
 
         <Stack
           direction="row"
