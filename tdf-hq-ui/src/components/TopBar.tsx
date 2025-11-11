@@ -50,7 +50,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           }}
           aria-label="Ir al inicio"
         >
-          <BrandLogo size={32} />
+          <BrandLogo size={36} variant="alt" />
         </Box>
 
         <Stack
