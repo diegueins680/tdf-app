@@ -176,6 +176,10 @@ SMTP_PASSWORD=secret
 SMTP_FROM=ops@tdfrecords.com
 SMTP_FROM_NAME=TDF Records
 SMTP_TLS=true
+# Optional CORS overrides (comma-separated lists accepted)
+ALLOW_ORIGINS=https://tdfui.pages.dev,https://your-admin.app
+ALLOW_ORIGIN=
+ALLOW_ALL_ORIGINS=false
 ```
 
 ### Web UI (`tdf-hq-ui/.env`)
