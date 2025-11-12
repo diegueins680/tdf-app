@@ -110,6 +110,14 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
   const [instagram, setInstagram] = useState(party?.instagram ?? '');
   const [phone, setPhone] = useState(party?.primaryPhone ?? '');
   const [displayName, setDisplayName] = useState(party?.displayName ?? '');
+  const [email, setEmail] = useState(party?.primaryEmail ?? '');
+
+  useEffect(() => {
+    setInstagram(party?.instagram ?? '');
+    setPhone(party?.primaryPhone ?? '');
+    setDisplayName(party?.displayName ?? '');
+    setEmail(party?.primaryEmail ?? '');
+  }, [party, open]);
 
   const mutation = useMutation<PartyDTO, Error, PartyUpdate>({
     mutationFn: (body) => {
@@ -130,6 +138,13 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
           <TextField label="Display" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+          <TextField
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            helperText="Se usa como contacto principal y para crear accesos de usuario."
+          />
           <TextField label="Instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
           <TextField label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Stack>
@@ -142,6 +157,7 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
               uDisplayName: displayName,
               uInstagram: instagram,
               uPrimaryPhone: phone,
+              uPrimaryEmail: email.trim() || null,
             })
           }
           variant="contained"
