@@ -28,7 +28,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
 import { useThemeMode } from '../theme/AppThemeProvider';
-import { loginRequest, requestPasswordReset } from '../api/auth';
+import { loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
 import BrandLogo from '../components/BrandLogo';
 
 type LoginTab = 'password' | 'token';
@@ -43,6 +43,15 @@ export default function LoginPage() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [signupDialogOpen, setSignupDialogOpen] = useState(false);
+  const [signupForm, setSignupForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+  });
+  const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { session, login } = useSession();
   const navigate = useNavigate();
@@ -52,6 +61,9 @@ export default function LoginPage() {
   });
   const resetMutation = useMutation({
     mutationFn: (email: string) => requestPasswordReset(email),
+  });
+  const signupMutation = useMutation({
+    mutationFn: signupRequest,
   });
 
   const {
@@ -172,6 +184,64 @@ export default function LoginPage() {
       setResetFeedback({
         type: 'error',
         message: err instanceof Error ? err.message : 'No pudimos procesar tu solicitud.',
+      });
+    }
+  };
+
+  const openSignupDialog = () => {
+    setSignupDialogOpen(true);
+    setSignupFeedback(null);
+    setSignupForm({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      password: '',
+    });
+    signupMutation.reset();
+  };
+
+  const closeSignupDialog = () => {
+    setSignupDialogOpen(false);
+    setSignupFeedback(null);
+    signupMutation.reset();
+  };
+
+  const handleSignupSubmit = async () => {
+    const payload = {
+      firstName: signupForm.firstName.trim(),
+      lastName: signupForm.lastName.trim(),
+      email: signupForm.email.trim(),
+      phone: signupForm.phone.trim() || undefined,
+      password: signupForm.password,
+    };
+    if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
+      setSignupFeedback({ type: 'error', message: 'Completa nombre, correo y una contraseña segura (8+ caracteres).' });
+      return;
+    }
+    if (payload.password.length < 8) {
+      setSignupFeedback({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres.' });
+      return;
+    }
+    setSignupFeedback(null);
+    try {
+      const response = await signupMutation.mutateAsync(payload);
+      login(
+        {
+          username: payload.email,
+          displayName: `${payload.firstName} ${payload.lastName}`.trim() || payload.email,
+          roles: response.roles?.map((role) => role.toLowerCase()) ?? ['customer'],
+          apiToken: response.token,
+          modules: response.modules,
+          partyId: response.partyId,
+        },
+        { remember: true },
+      );
+      navigate('/crm/contactos', { replace: true });
+    } catch (err) {
+      setSignupFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'No pudimos crear la cuenta. Intenta de nuevo.',
       });
     }
   };
@@ -299,7 +369,13 @@ export default function LoginPage() {
               </Typography>
               <Typography variant="body2">
                 ¿No tienes cuenta?{' '}
-                <Link href="#" underline="hover">
+                <Link
+                  component="button"
+                  type="button"
+                  underline="hover"
+                  onClick={openSignupDialog}
+                  sx={{ cursor: 'pointer', p: 0 }}
+                >
                   Crear cuenta
                 </Link>
               </Typography>
@@ -339,6 +415,63 @@ export default function LoginPage() {
           <Button onClick={closeResetDialog}>Cerrar</Button>
           <Button onClick={() => { void handleResetSubmit(); }} disabled={resetMutation.isPending}>
             {resetMutation.isPending ? 'Enviando…' : 'Enviar enlace'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={signupDialogOpen} onClose={closeSignupDialog} fullWidth maxWidth="sm">
+        <DialogTitle>Crear cuenta</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                label="Nombre"
+                value={signupForm.firstName}
+                onChange={(event) => setSignupForm((prev) => ({ ...prev, firstName: event.target.value }))}
+                fullWidth
+              />
+              <TextField
+                label="Apellido"
+                value={signupForm.lastName}
+                onChange={(event) => setSignupForm((prev) => ({ ...prev, lastName: event.target.value }))}
+                fullWidth
+              />
+            </Stack>
+            <TextField
+              label="Correo *"
+              type="email"
+              value={signupForm.email}
+              onChange={(event) => setSignupForm((prev) => ({ ...prev, email: event.target.value }))}
+              fullWidth
+              placeholder="tu.correo@tdf.com"
+            />
+            <TextField
+              label="Celular (opcional)"
+              value={signupForm.phone}
+              onChange={(event) => setSignupForm((prev) => ({ ...prev, phone: event.target.value }))}
+              fullWidth
+            />
+            <TextField
+              label="Contraseña *"
+              type="password"
+              value={signupForm.password}
+              onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
+              fullWidth
+              helperText="Mínimo 8 caracteres."
+            />
+            {signupFeedback && (
+              <Alert severity={signupFeedback.type === 'success' ? 'success' : 'error'}>
+                {signupFeedback.message}
+              </Alert>
+            )}
+            <Typography variant="body2" color="text.secondary">
+              Al crear la cuenta aceptas los términos de servicio de TDF Records y recibes acceso inmediato al panel.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeSignupDialog}>Cancelar</Button>
+          <Button onClick={() => { void handleSignupSubmit(); }} disabled={signupMutation.isPending}>
+            {signupMutation.isPending ? 'Creando…' : 'Crear e ingresar'}
           </Button>
         </DialogActions>
       </Dialog>

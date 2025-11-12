@@ -33,3 +33,25 @@ export async function requestPasswordReset(email: string): Promise<void> {
     throw new Error(trimmed === '' ? 'No pudimos iniciar el reset. Verifica el correo.' : trimmed);
   }
 }
+
+export interface SignupPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  password: string;
+}
+
+export async function signupRequest(payload: SignupPayload): Promise<LoginResponseDTO> {
+  const res = await fetch(`${API_BASE}/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const trimmed = text.trim();
+    throw new Error(trimmed === '' ? 'No pudimos crear la cuenta. Revisa los campos.' : trimmed);
+  }
+  return res.json() as Promise<LoginResponseDTO>;
+}
