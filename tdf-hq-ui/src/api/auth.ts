@@ -1,0 +1,22 @@
+const API_BASE = import.meta.env.VITE_API_BASE ?? '';
+
+export interface LoginResponseDTO {
+  token: string;
+  partyId: number;
+  roles: string[];
+  modules: string[];
+}
+
+export async function loginRequest(payload: { username: string; password: string }): Promise<LoginResponseDTO> {
+  const res = await fetch(`${API_BASE}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const trimmed = text.trim();
+    throw new Error(trimmed === '' ? 'Credenciales inválidas' : trimmed);
+  }
+  return res.json() as Promise<LoginResponseDTO>;
+}

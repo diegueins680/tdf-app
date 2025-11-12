@@ -81,6 +81,7 @@ components:
         - id
         - name
         - roles
+        - status
         - createdAt
       properties:
         id:
@@ -103,10 +104,20 @@ components:
           items:
             $ref: '#/components/schemas/PartyRole'
           description: List of roles assigned to the user
+        status:
+          $ref: '#/components/schemas/PartyStatus'
+          description: Current status of the user
         createdAt:
           type: string
           format: date-time
           description: Timestamp when the user was created
+
+    PartyStatus:
+      type: string
+      enum:
+        - Active
+        - Inactive
+      description: User account status
 
     PartyRole:
       type: string

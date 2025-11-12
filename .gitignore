@@ -66,3 +66,6 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# Local snapshots/backups
+tdf-hq-ui.backup.*/
