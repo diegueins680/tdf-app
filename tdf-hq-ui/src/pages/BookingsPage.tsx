@@ -17,7 +17,7 @@ export default function BookingsPage() {
     queryKey: ['bookings'],
     queryFn: Bookings.list,
   });
-  const zone = import.meta.env.VITE_TZ ?? 'America/Guayaquil';
+  const zone = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
   const toIsoDate = (value: string): string => {
     const parsed = DateTime.fromISO(value);

@@ -53,7 +53,7 @@ const STATUS_LOOKUP = STATUS_VARIANTS.reduce<Record<string, { label: string; col
   return acc;
 }, {});
 
-const TZ = import.meta.env.VITE_TZ ?? 'America/Guayaquil';
+const TZ = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
 
 function formatScheduleRange(start: string, end: string) {
   const s = DateTime.fromISO(start, { zone: TZ });

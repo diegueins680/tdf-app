@@ -22,9 +22,10 @@ const PIPELINE_TYPES = [
 ];
 
 type ColumnsState = Record<string, string[]>;
+const DEFAULT_PIPELINE_TYPE = PIPELINE_TYPES[0]?.slug ?? 'mixing';
 
 export default function KanbanPage() {
-  const [activeType, setActiveType] = useState(PIPELINE_TYPES[0].slug);
+  const [activeType, setActiveType] = useState<string>(DEFAULT_PIPELINE_TYPE);
   const [columns, setColumns] = useState<ColumnsState>({});
   const [cards, setCards] = useState<Record<string, PipelineCardDTO>>({});
   const qc = useQueryClient();
@@ -48,19 +49,34 @@ export default function KanbanPage() {
     });
     if (cardsQuery.data) {
       const map: Record<string, PipelineCardDTO> = {};
+      const fallbackStage = stagesQuery.data[0];
       cardsQuery.data.forEach((card) => {
         const normalizedId = (card.pcId ?? '').toString().trim();
         if (!normalizedId) {
           return;
         }
         map[normalizedId] = card;
-        const stage = initialColumns[card.pcStage] ? card.pcStage : stagesQuery.data[0];
-        if (!initialColumns[stage].includes(normalizedId)) {
-          initialColumns[stage].push(normalizedId);
+        const stageKey = initialColumns[card.pcStage] ? card.pcStage : fallbackStage;
+        if (!stageKey) {
+          return;
+        }
+        if (!initialColumns[stageKey]) {
+          initialColumns[stageKey] = [];
+        }
+        const columnEntries = initialColumns[stageKey];
+        if (!columnEntries) {
+          return;
+        }
+        if (!columnEntries.includes(normalizedId)) {
+          columnEntries.push(normalizedId);
         }
       });
       Object.keys(initialColumns).forEach((stage) => {
-        initialColumns[stage] = initialColumns[stage].sort((a, b) => {
+        const stageEntries = initialColumns[stage];
+        if (!stageEntries) {
+          return;
+        }
+        initialColumns[stage] = stageEntries.sort((a, b) => {
           const cardA = map[a];
           const cardB = map[b];
           return (cardA?.pcSortOrder ?? 0) - (cardB?.pcSortOrder ?? 0);
@@ -93,11 +109,13 @@ export default function KanbanPage() {
 
     const startStage = source.droppableId;
     const finishStage = destination.droppableId;
-    if (!columns[startStage] || !columns[finishStage]) return;
+    const startColumn = columns[startStage];
+    const finishColumn = columns[finishStage];
+    if (!startColumn || !finishColumn) return;
 
-    const startIds = Array.from(columns[startStage]);
+    const startIds = Array.from(startColumn);
     startIds.splice(source.index, 1);
-    const finishIds = Array.from(columns[finishStage]);
+    const finishIds = Array.from(finishColumn);
     finishIds.splice(destination.index, 0, draggableId);
 
     setColumns((prev) => ({
