@@ -1,95 +1,50 @@
-# TDF HQ UI - Frontend
+# TDF HQ UI (React + Vite + MUI + React Query + FullCalendar + DnD)
 
-React + TypeScript web UI for TDF Records Management Platform.
+Front-end for the TDF HQ backend (Servant + PostgreSQL). It includes:
+- Parties screen (list, create, edit Instagram/phone).
+- Bookings screen with FullCalendar (wired to `/bookings`).
+- Basic Kanban for Mixing/Mastering (client-side demo, ready to POST when endpoints exist).
+- System status page hitting `/version` + `/health` for build diagnostics.
+- Session dropdown with avatar + logout to simulate authentication flow.
 
-## Tech Stack
+## Quick start (local)
 
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **Material-UI (MUI)** - Component library
-- **React Query** - Data fetching and state management
-- **Axios** - HTTP client
-
-## Project Structure
-
-```
-tdf-hq-ui/
-├── src/
-│   ├── components/
-│   │   └── UserRoleManagement.tsx  # User role management component
-│   ├── api/
-│   │   ├── client.ts               # API client & types
-│   │   └── generated/              # Auto-generated API clients
-│   ├── App.tsx                     # Main app component
-│   └── main.tsx                    # Entry point
-├── public/                         # Static assets
-├── index.html                      # HTML template
-├── vite.config.ts                  # Vite configuration
-└── package.json                    # Dependencies
-```
-
-## Development
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-
-### Setup
-
-1. Install dependencies:
 ```bash
-npm install
-```
-
-2. Set up environment variables:
-```bash
+npm i
 cp .env.example .env
-```
-
-Edit `.env` and set:
-```
-VITE_API_BASE=http://localhost:8080
-```
-
-3. Start development server:
-```bash
+# set VITE_API_BASE to your backend; for local dev it's usually http://localhost:8080
 npm run dev
 ```
 
-The UI will be available at http://localhost:3000
+Open http://localhost:5173.
 
-### Generate API Client
+## Environment
 
-After updating the backend OpenAPI spec:
+Create `.env` with:
 
-```bash
-npm run generate:api
+```
+VITE_API_BASE=http://localhost:8080
+VITE_TZ=America/Guayaquil
 ```
 
-This generates TypeScript types from `../../tdf-hq/openapi.json`.
+## Deploy to Render (Static Site)
 
-## Features
+1. Push this repo to GitHub.
+2. In Render → New → Static Site → pick this repo.
+3. Build command: `npm ci && npm run build`
+4. Publish directory: `dist`
+5. Environment variables:
+   - `VITE_API_BASE=https://<your-api>.onrender.com`
+   - `VITE_TZ=America/Guayaquil`
+6. Create the site. After build, open the URL Render gives you.
 
-### User Role Management
+> Ensure your backend allows CORS from the static site origin. For dev you can use permissive CORS and later restrict to your static URL.
 
-- View all users with their current roles
-- Update user roles via dropdown selection
-- Real-time feedback on role changes
-- Color-coded role chips for easy identification
-- Active/Inactive status display
+## Notes
 
-## Building
+- The calendar reads from `/bookings` and expects items with `{ bookingId, title, startsAt, endsAt }`.
+- The Kanban is client-side only for now; when backend endpoints for pipelines exist, wire `onDragEnd` to POST changes.
+- UI built with MUI v6 and a minimal custom theme.
 
-```bash
-npm run build
-```
 
-Build output will be in the `dist/` directory.
-
-## Testing
-
-```bash
-npm run test
-```
+**Note:** If you cloned without a lockfile, run `npm install` (not `npm ci`).

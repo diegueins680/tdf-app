@@ -1,0 +1,145 @@
+openapi: 3.0.0
+info:
+  title: TDF Records API - User Role Management
+  version: 1.0.0
+  description: API for managing user roles in TDF Records platform
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /api/users:
+    get:
+      summary: Get all users
+      description: Returns a list of all users with their assigned roles
+      operationId: getUsers
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /api/users/{userId}/roles:
+    get:
+      summary: Get user roles
+      description: Returns all roles assigned to a specific user
+      operationId: getUserRoles
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The user ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PartyRole'
+        '404':
+          description: User not found
+
+    put:
+      summary: Update user roles
+      description: Replace all roles for a user with the provided list
+      operationId: updateUserRoles
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The user ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleUpdate'
+      responses:
+        '200':
+          description: Roles updated successfully
+        '404':
+          description: User not found
+        '400':
+          description: Invalid request
+
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - roles
+        - status
+        - createdAt
+      properties:
+        id:
+          type: integer
+          description: Unique user identifier
+        name:
+          type: string
+          description: User's full name
+        email:
+          type: string
+          format: email
+          nullable: true
+          description: User's email address
+        phone:
+          type: string
+          nullable: true
+          description: User's phone number
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartyRole'
+          description: List of roles assigned to the user
+        status:
+          $ref: '#/components/schemas/PartyStatus'
+          description: Current status of the user
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
+
+    PartyStatus:
+      type: string
+      enum:
+        - Active
+        - Inactive
+      description: User account status
+
+    PartyRole:
+      type: string
+      enum:
+        - Admin
+        - Manager
+        - Engineer
+        - Teacher
+        - Reception
+        - Accounting
+        - Artist
+        - Student
+        - ReadOnly
+      description: Available user roles in the system
+
+    UserRoleUpdate:
+      type: object
+      required:
+        - roles
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartyRole'
+          description: New list of roles to assign to the user

@@ -1,10 +1,4 @@
-resolver: lts-20.26
-
-packages:
-- .
-
-extra-deps: []
-
-flags: {}
-
-extra-package-dbs: []
+resolver: lts-22.28
+packages: [ . ]
+extra-deps:
+  - smtp-mail-0.5.0.0

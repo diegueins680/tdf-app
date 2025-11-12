@@ -1,0 +1,361 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeOperators #-}
+
+module TDF.ModelsExtra where
+
+-- Relax orphan warnings; we need Persist instances for UUID from an external package.
+
+import           Data.Text          (Text, pack)
+import           Data.Time          (Day, UTCTime)
+import           Data.UUID          (UUID)
+import qualified Data.UUID          as UUID
+import           Database.Persist
+import           Database.Persist.Postgresql ()
+import           Database.Persist.Sql
+import           Database.Persist.TH
+import           GHC.Generics       (Generic)
+import           Web.PathPieces     (PathPiece(..))
+
+import           TDF.Models         (PartyId, ServiceKind)
+
+-- Enumerations
+instance PersistField UUID where
+  toPersistValue = PersistLiteralEscaped . UUID.toASCIIBytes
+  fromPersistValue value =
+    case value of
+      PersistText t       -> noteText (UUID.fromText t)
+      PersistByteString b -> noteBytes (UUID.fromASCIIBytes b)
+      PersistLiteral_ _ b -> noteBytes (UUID.fromASCIIBytes b)
+      PersistNull         -> Left "Unexpected NULL for UUID column"
+      other               -> Left ("Unable to parse UUID from " <> pack (show other))
+    where
+      noteText = maybe (Left "Failed to parse UUID from text value") Right
+      noteBytes = maybe (Left "Failed to parse UUID from raw bytes") Right
+
+instance PersistFieldSql UUID where
+  sqlType _ = SqlOther "uuid"
+
+instance PathPiece UUID where
+  toPathPiece   = UUID.toText
+  fromPathPiece = UUID.fromText
+
+data AssetStatus = Active | Booked | OutForMaintenance | Retired
+  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
+derivePersistField "AssetStatus"
+
+data AssetCondition = NewC | Good | Fair | Poor
+  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
+derivePersistField "AssetCondition"
+
+data MaintenancePolicy = Quarterly | Annual | None
+  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
+derivePersistField "MaintenancePolicy"
+
+data CheckoutTarget = TargetSession | TargetParty | TargetRoom
+  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
+derivePersistField "CheckoutTarget"
+
+data StockUnit = Pcs | Set | Roll | Pack | Bottle | OtherUnit
+  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
+derivePersistField "StockUnit"
+
+data StockMoveReason = Consume | Recount | Receive | Return | Damage | Loss | OtherMove
+  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
+derivePersistField "StockMoveReason"
+
+data SessionStatus = InPrep | InSession | Break | Editing | Approved | Delivered | Closed
+  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
+derivePersistField "SessionStatus"
+
+data DeliverableKind = Mix | Master | Stems | DDP | OtherDeliverable
+  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
+derivePersistField "DeliverableKind"
+
+share [mkPersist sqlSettings, mkMigrate "migrateExtra"] [persistLowerCase|
+
+DropdownOption
+    Id         UUID default=gen_random_uuid()
+    category   Text
+    value      Text
+    label      Text Maybe
+    active     Bool default=True
+    sortOrder  Int Maybe
+    createdAt  UTCTime default=now()
+    updatedAt  UTCTime default=now()
+    UniqueDropdownOption category value
+    deriving Show Generic
+
+Room
+    Id                UUID default=gen_random_uuid()
+    name              Text
+    isBookable        Bool default=True
+    capacity          Int Maybe
+    channelCount      Int Maybe
+    defaultSampleRate Int Maybe
+    patchbayNotes     Text Maybe
+    UniqueRoomName name
+    deriving Show Generic
+
+RoomFeature
+    Id        UUID default=gen_random_uuid()
+    roomId    RoomId
+    key       Text
+    value     Text
+    UniqueRoomFeature roomId key
+    deriving Show Generic
+
+Asset
+    Id                   UUID default=gen_random_uuid()
+    name                 Text
+    category             Text
+    brand                Text Maybe
+    model                Text Maybe
+    serialNumber         Text Maybe
+    purchaseDate         Day  Maybe
+    purchasePriceUsdCents Int Maybe
+    condition            AssetCondition default='Good'
+    status               AssetStatus    default='Active'
+    locationId           RoomId Maybe
+    owner                Text default='TDF'
+    qrCode               Text Maybe
+    photoUrl             Text Maybe
+    notes                Text Maybe
+    warrantyExpires      Day  Maybe
+    maintenancePolicy    MaintenancePolicy default='None'
+    nextMaintenanceDue   Day  Maybe
+    UniqueAssetSerial serialNumber !force
+    UniqueAssetQr     qrCode       !force
+    deriving Show Generic
+
+RoomDefaultGear
+    Id        UUID default=gen_random_uuid()
+    roomId    RoomId
+    assetId   AssetId
+    UniqueRoomDefaultGear roomId assetId
+    deriving Show Generic
+
+AssetKitMember
+    Id         UUID default=gen_random_uuid()
+    kitId      AssetId
+    memberId   AssetId
+    qty        Int default=1
+    UniqueKitMember kitId memberId
+    deriving Show Generic
+
+PipelineCard
+    Id          UUID default=gen_random_uuid()
+    serviceKind ServiceKind
+    title       Text
+    artist      Text Maybe
+    stage       Text
+    sortOrder   Int default=0
+    notes       Text Maybe
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    deriving Show Generic
+
+-- Party/Booking references use free-text refs to avoid coupling to existing tables
+StockItem
+    Id           UUID default=gen_random_uuid()
+    name         Text
+    sku          Text
+    unit         StockUnit default='Pcs'
+    binLocation  Text Maybe
+    onHand       Int default=0
+    reorderPoint Int Maybe
+    vendorPartyRef Text Maybe
+    notes        Text Maybe
+    UniqueStockSku sku
+    deriving Show Generic
+
+Band
+    Id           UUID default=gen_random_uuid()
+    partyId      PartyId
+    name         Text
+    labelArtist  Bool default=False
+    primaryGenre Text Maybe
+    homeCity     Text Maybe
+    photoUrl     Text Maybe
+    contractFlags Text Maybe
+    UniqueBandName name
+    UniqueBandParty partyId
+    deriving Show Generic
+
+BandMember
+    Id         UUID default=gen_random_uuid()
+    bandId     BandId
+    partyId    PartyId
+    roleInBand Text Maybe
+    UniqueBandMember bandId partyId
+    deriving Show Generic
+
+Session
+    Id               UUID default=gen_random_uuid()
+    bookingRef       Text Maybe
+    bandId           BandId   Maybe
+    clientPartyRef   Text     Maybe
+    service          Text
+    startAt          UTCTime
+    endAt            UTCTime
+    engineerRef      Text
+    assistantRef     Text     Maybe
+    status           SessionStatus default='InPrep'
+    sampleRate       Int Maybe
+    bitDepth         Int Maybe
+    daw              Text Maybe
+    sessionFolderDriveId Text Maybe
+    notes            Text Maybe
+    deriving Show Generic
+
+SessionRoom
+    Id        UUID default=gen_random_uuid()
+    sessionId SessionId
+    roomId    RoomId
+    UniqueSessionRoom sessionId roomId
+    deriving Show Generic
+
+SessionDeliverable
+    Id          UUID default=gen_random_uuid()
+    sessionId   SessionId
+    kind        DeliverableKind
+    name        Text
+    driveFileId Text Maybe
+    externalUrl Text Maybe
+    deliveredAt UTCTime Maybe
+    approvedAt  UTCTime Maybe
+    notes       Text Maybe
+    deriving Show Generic
+
+InputListTemplate
+    Id           UUID default=gen_random_uuid()
+    name         Text
+    genre        Text Maybe
+    channelCount Int Maybe
+    notes        Text Maybe
+    deriving Show Generic
+
+InputListTemplateRow
+    Id                UUID default=gen_random_uuid()
+    templateId        InputListTemplateId
+    channelNumber     Int
+    trackName         Text Maybe
+    instrument        Text Maybe
+    micId             AssetId Maybe
+    standId           AssetId Maybe
+    cableId           AssetId Maybe
+    preampId          AssetId Maybe
+    insertOutboardId  AssetId Maybe
+    converterChannel  Text Maybe
+    phantom           Bool Maybe
+    polarity          Bool Maybe
+    hpf               Bool Maybe
+    pad               Bool Maybe
+    notes             Text Maybe
+    UniqueTemplateChannel templateId channelNumber
+    deriving Show Generic
+
+InputList
+    Id         UUID default=gen_random_uuid()
+    sessionId  SessionId
+    createdAt  UTCTime default=now()
+    deriving Show Generic
+
+InputListVersion
+    Id           UUID default=gen_random_uuid()
+    inputListId  InputListId
+    version      Int
+    createdAt    UTCTime default=now()
+    createdByRef Text Maybe
+    notes        Text Maybe
+    UniqueListVersion inputListId version
+    deriving Show Generic
+
+InputRow
+    Id                UUID default=gen_random_uuid()
+    versionId         InputListVersionId
+    channelNumber     Int
+    trackName         Text Maybe
+    instrument        Text Maybe
+    micId             AssetId Maybe
+    standId           AssetId Maybe
+    cableId           AssetId Maybe
+    preampId          AssetId Maybe
+    insertOutboardId  AssetId Maybe
+    converterChannel  Text Maybe
+    phantom           Bool Maybe
+    polarity          Bool Maybe
+    hpf               Bool Maybe
+    pad               Bool Maybe
+    notes             Text Maybe
+    UniqueRowPerChannel versionId channelNumber
+    deriving Show Generic
+
+-- Party/Booking references use free-text refs to avoid coupling to existing tables
+AssetCheckout
+    Id               UUID default=gen_random_uuid()
+    assetId          AssetId
+    targetKind       CheckoutTarget
+    targetSessionId  SessionId   Maybe
+    targetPartyRef   Text        Maybe
+    targetRoomId     RoomId      Maybe
+    checkedOutByRef  Text
+    checkedOutAt     UTCTime default=now()
+    dueAt            UTCTime Maybe
+    conditionOut     Text Maybe
+    photoDriveFileId Text Maybe
+    returnedAt       UTCTime Maybe
+    conditionIn      Text Maybe
+    notes            Text Maybe
+    deriving Show Generic
+
+AssetAudit
+    Id        UUID default=gen_random_uuid()
+    assetId   AssetId
+    at        UTCTime default=now()
+    event     Text
+    detail    Text Maybe
+    deriving Show Generic
+
+MaintenanceTicket
+    Id            UUID default=gen_random_uuid()
+    assetId       AssetId
+    status        Text
+    openedAt      UTCTime default=now()
+    closedAt      UTCTime Maybe
+    vendorPartyRef Text Maybe
+    summary       Text
+    details       Text Maybe
+    deriving Show Generic
+
+MaintenanceAttachment
+    Id          UUID default=gen_random_uuid()
+    ticketId    MaintenanceTicketId
+    driveFileId Text
+    label       Text Maybe
+    deriving Show Generic
+
+StockMovement
+    Id            UUID default=gen_random_uuid()
+    stockItemId   StockItemId
+    changeQty     Int
+    reason        StockMoveReason default='OtherMove'
+    at            UTCTime default=now()
+    refCheckoutId AssetCheckoutId Maybe
+    refSessionId  SessionId      Maybe
+    notes         Text Maybe
+    deriving Show Generic
+
+|]

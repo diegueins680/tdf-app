@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react';
 import {
+  Box,
   Table,
   TableBody,
   TableCell,
@@ -8,210 +8,202 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Chip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
   Select,
   MenuItem,
   FormControl,
+  InputLabel,
+  OutlinedInput,
   CircularProgress,
   Alert,
-  Typography,
-  Box,
-  Chip,
-  SelectChangeEvent,
-  OutlinedInput,
-  InputLabel,
-} from '@mui/material'
-import { getUsers, updateUserRoles, PartyRole } from '../api/client'
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import type { User, PartyRole, PartyStatus } from '../api/generated/client';
+import { apiClient } from '../api/generated/client';
+import { ALL_ROLES } from '../constants/roles';
 
-const ROLE_OPTIONS: PartyRole['role'][] = [
-  'AdminRole',
-  'ManagerRole',
-  'EngineerRole',
-  'TeacherRole',
-  'ReceptionRole',
-  'AccountingRole',
-  'ReadOnlyRole',
-  'CustomerRole',
-  'ArtistRole',
-  'StudentRole',
-]
+const STATUS_COLORS: Record<PartyStatus, 'success' | 'default'> = {
+  Active: 'success',
+  Inactive: 'default',
+};
 
-const ROLE_DISPLAY: Record<PartyRole['role'], string> = {
-  AdminRole: 'Admin',
-  ManagerRole: 'Manager',
-  EngineerRole: 'Engineer',
-  TeacherRole: 'Teacher',
-  ReceptionRole: 'Reception',
-  AccountingRole: 'Accounting',
-  ReadOnlyRole: 'Read Only',
-  CustomerRole: 'Customer',
-  ArtistRole: 'Artist',
-  StudentRole: 'Student',
-}
-
-const ROLE_COLORS: Record<PartyRole['role'], 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' | 'default'> = {
-  AdminRole: 'error',
-  ManagerRole: 'primary',
-  EngineerRole: 'info',
-  TeacherRole: 'success',
-  ReceptionRole: 'secondary',
-  AccountingRole: 'warning',
-  ReadOnlyRole: 'default',
-  CustomerRole: 'default',
-  ArtistRole: 'secondary',
-  StudentRole: 'info',
-}
+const ROLE_COLORS: Record<PartyRole, 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' | 'default'> = {
+  Admin: 'error',
+  Manager: 'primary',
+  Engineer: 'info',
+  Teacher: 'success',
+  Reception: 'secondary',
+  Accounting: 'warning',
+  Artist: 'primary',
+  Student: 'default',
+  ReadOnly: 'default',
+};
 
 export default function UserRoleManagement() {
-  const queryClient = useQueryClient()
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<PartyRole[]>([]);
+  const [saving, setSaving] = useState(false);
 
-  const { data: users, isLoading, error } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-  })
+  useEffect(() => {
+    void loadUsers();
+  }, []);
 
-  const updateRolesMutation = useMutation({
-    mutationFn: ({ userId, roles }: { userId: number; roles: PartyRole['role'][] }) =>
-      updateUserRoles(userId, roles),
-    onSuccess: (response) => {
-      if (response.urrSuccess) {
-        setSuccessMessage(response.urrMessage)
-        setErrorMessage(null)
-        queryClient.invalidateQueries({ queryKey: ['users'] })
-        setTimeout(() => setSuccessMessage(null), 3000)
-      } else {
-        setErrorMessage(response.urrMessage)
-        setSuccessMessage(null)
-      }
-    },
-    onError: (error: Error) => {
-      setErrorMessage(`Failed to update roles: ${error.message}`)
-      setSuccessMessage(null)
-    },
-  })
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await apiClient.getUsers();
+      setUsers(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleRolesChange = (userId: number, event: SelectChangeEvent<PartyRole['role'][]>) => {
-    const newRoles = event.target.value as PartyRole['role'][]
-    updateRolesMutation.mutate({ userId, roles: newRoles })
-  }
+  const handleEditClick = (user: User) => {
+    setSelectedUser(user);
+    setSelectedRoles(user.roles);
+    setEditDialogOpen(true);
+  };
 
-  if (isLoading) {
+  const handleCloseDialog = () => {
+    setEditDialogOpen(false);
+    setSelectedUser(null);
+    setSelectedRoles([]);
+  };
+
+  const normalizeRoles = (value: string | string[]): PartyRole[] => {
+    const values = Array.isArray(value) ? value : value.split(',');
+    return values.filter((role): role is PartyRole => ALL_ROLES.includes(role as PartyRole));
+  };
+
+  const handleRoleChange = (event: SelectChangeEvent<PartyRole[]>) => {
+    setSelectedRoles(normalizeRoles(event.target.value));
+  };
+
+  const handleSaveRoles = async () => {
+    if (!selectedUser) return;
+
+    try {
+      setSaving(true);
+      await apiClient.updateUserRoles(selectedUser.id, selectedRoles);
+      setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, roles: selectedRoles } : u)));
+      handleCloseDialog();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update roles');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
       </Box>
-    )
+    );
   }
 
   if (error) {
     return (
-      <Alert severity="error">
-        Error loading users: {error instanceof Error ? error.message : 'Unknown error'}
-      </Alert>
-    )
+      <Box p={2}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
   }
 
   return (
-    <Box>
-      <Typography variant="h5" component="h2" gutterBottom>
-        User Role Management
-      </Typography>
-
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {successMessage}
-        </Alert>
-      )}
-
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
-
+    <Box p={3}>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell><strong>User ID</strong></TableCell>
-              <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>Email</strong></TableCell>
-              <TableCell><strong>Current Roles</strong></TableCell>
-              <TableCell><strong>Manage Roles</strong></TableCell>
-              <TableCell><strong>Status</strong></TableCell>
+              <TableCell>ID</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Phone</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Roles</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users && users.length > 0 ? (
-              users.map((user) => (
-                <TableRow key={user.uwpUserId}>
-                  <TableCell>{user.uwpUserId}</TableCell>
-                  <TableCell>{user.uwpName}</TableCell>
-                  <TableCell>{user.uwpEmail || 'N/A'}</TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                      {user.uwpRoles.length > 0 ? (
-                        user.uwpRoles.map((role) => (
-                          <Chip
-                            key={role}
-                            label={ROLE_DISPLAY[role]}
-                            color={ROLE_COLORS[role]}
-                            size="small"
-                          />
-                        ))
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          No roles assigned
-                        </Typography>
-                      )}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <FormControl size="small" fullWidth>
-                      <InputLabel id={`roles-label-${user.uwpUserId}`}>Roles</InputLabel>
-                      <Select
-                        labelId={`roles-label-${user.uwpUserId}`}
-                        multiple
-                        value={user.uwpRoles}
-                        onChange={(e) => handleRolesChange(user.uwpUserId, e)}
-                        disabled={updateRolesMutation.isPending}
-                        input={<OutlinedInput label="Roles" />}
-                        renderValue={(selected) => (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {selected.map((role) => (
-                              <Chip key={role} label={ROLE_DISPLAY[role]} size="small" />
-                            ))}
-                          </Box>
-                        )}
-                      >
-                        {ROLE_OPTIONS.map((role) => (
-                          <MenuItem key={role} value={role}>
-                            {ROLE_DISPLAY[role]}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={user.uwpIsActive ? 'Active' : 'Inactive'}
-                      color={user.uwpIsActive ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No users found
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.id}</TableCell>
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.email ?? '-'}</TableCell>
+                <TableCell>{user.phone ?? '-'}</TableCell>
+                <TableCell>
+                  <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
+                </TableCell>
+                <TableCell>
+                  <Box display="flex" gap={0.5} flexWrap="wrap">
+                    {user.roles.map((role) => (
+                      <Chip key={role} label={role} color={ROLE_COLORS[role]} size="small" />
+                    ))}
+                    {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <IconButton size="small" color="primary" onClick={() => handleEditClick(user)} aria-label="edit roles">
+                    <EditIcon />
+                  </IconButton>
                 </TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Dialog open={editDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Roles for {selectedUser?.name}</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel id="roles-label">Roles</InputLabel>
+            <Select<PartyRole[]>
+              labelId="roles-label"
+              multiple
+              value={selectedRoles}
+              onChange={handleRoleChange}
+              input={<OutlinedInput label="Roles" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((role) => (
+                    <Chip key={role} label={role} size="small" color={ROLE_COLORS[role]} />
+                  ))}
+                </Box>
+              )}
+            >
+              {ALL_ROLES.map((role) => (
+                <MenuItem key={role} value={role}>
+                  {role}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} disabled={saving}>
+            Cancel
+          </Button>
+          <Button onClick={() => void handleSaveRoles()} variant="contained" disabled={saving}>
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
-  )
+  );
 }

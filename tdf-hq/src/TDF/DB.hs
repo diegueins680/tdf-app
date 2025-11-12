@@ -1,79 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module TDF.DB where
 
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Logger (runStdoutLoggingT, LoggingT)
-import Database.Persist
-import Database.Persist.Postgresql
-import Data.Text (Text)
-import qualified Data.Text as T
-import TDF.Models
-import TDF.DTO
-import Data.Time (getCurrentTime)
+import           Control.Monad.Logger (runStdoutLoggingT)
+import           Database.Persist.Postgresql (createPostgresqlPool)
+import           Database.Persist.Sql (SqlPersistT, ConnectionPool, runMigration)
+import           Data.ByteString (ByteString)
 
--- | Database configuration
-type DB a = SqlPersistT (LoggingT IO) a
+import           TDF.Config
+import           TDF.Trials.Models (migrateTrials)
 
--- | Create connection pool
-createPool :: Text -> IO ConnectionPool
-createPool connStr = runStdoutLoggingT $ createPostgresqlPool connStr 10
+data Env = Env
+  { envPool   :: ConnectionPool
+  , envConfig :: AppConfig
+  }
 
--- | Run migrations
-runMigrations :: ConnectionPool -> IO ()
-runMigrations pool = runSqlPool (runMigration migrateAll) pool
+makePool :: ByteString -> IO ConnectionPool
+makePool conn = runStdoutLoggingT $ createPostgresqlPool conn 10
 
--- | Get all users with their party information
-getAllUsersWithParty :: DB [UserWithParty]
-getAllUsersWithParty = do
-  usersWithParties <- selectList [] []
-  mapM toUserWithParty usersWithParties
-  where
-    toUserWithParty (Entity userId user) = do
-      maybeParty <- get (userPartyId user)
-      case maybeParty of
-        Nothing -> error "User without party - database integrity issue"
-        Just party -> do
-          -- Get all roles for this party
-          roleAssignments <- selectList [PartyRoleAssignmentPartyId ==. userPartyId user] []
-          let roles = map (partyRoleAssignmentRole . entityVal) roleAssignments
-          return $ UserWithParty
-            { uwpUserId = fromIntegral $ fromSqlKey userId
-            , uwpEmail = partyEmail party
-            , uwpName = partyName party
-            , uwpRoles = roles
-            , uwpIsActive = userIsActive user
-            , uwpLastLoginAt = userLastLoginAt user
-            }
-
--- | Update user's roles (by updating the associated party role assignments)
-updateUserRoles :: Int -> [PartyRole] -> DB (Maybe UserWithParty)
-updateUserRoles userIdInt newRoles = do
-  let userId = toSqlKey (fromIntegral userIdInt)
-  maybeUser <- get userId
-  case maybeUser of
-    Nothing -> return Nothing
-    Just user -> do
-      now <- liftIO getCurrentTime
-      let partyId = userPartyId user
-      
-      -- Delete all existing role assignments for this party
-      deleteWhere [PartyRoleAssignmentPartyId ==. partyId]
-      
-      -- Insert new role assignments
-      mapM_ (\role -> insert_ $ PartyRoleAssignment partyId role now) newRoles
-      
-      -- Update party's updatedAt timestamp
-      update partyId [PartyUpdatedAt =. now]
-      
-      maybeParty <- get partyId
-      case maybeParty of
-        Nothing -> return Nothing
-        Just party -> return $ Just $ UserWithParty
-          { uwpUserId = userIdInt
-          , uwpEmail = partyEmail party
-          , uwpName = partyName party
-          , uwpRoles = newRoles
-          , uwpIsActive = userIsActive user
-          , uwpLastLoginAt = userLastLoginAt user
-          }
+runMigrations :: SqlPersistT IO () -> SqlPersistT IO ()
+runMigrations base = base >> runMigration migrateTrials

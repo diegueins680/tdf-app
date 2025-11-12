@@ -1,0 +1,135 @@
+cabal-version:      2.4
+name:               tdf-hq
+version:            0.1.0.0
+synopsis:           TDF HQ - CRM, Scheduling, Packages, Invoicing, Inventory (skeleton)
+license:            MIT
+author:             TDF Records (Diego Saá)
+maintainer:         tdf@example.com
+build-type:         Simple
+
+executable tdf-hq-exe
+  main-is:          Main.hs
+  hs-source-dirs:   app, src
+  other-modules:
+    TDF.API.Admin
+    TDF.API
+    TDF.API.Bands
+    TDF.API.Future
+    TDF.API.Inventory
+    TDF.API.Pipelines
+    TDF.API.Rooms
+    TDF.API.Sessions
+    TDF.API.Types
+    TDF.Auth
+    TDF.Config
+    TDF.Cors
+    TDF.DB
+    TDF.DTO
+    TDF.Email
+    TDF.Handlers.InputList
+    TDF.Meta
+    TDF.Models
+    TDF.ModelsExtra
+    TDF.Pipelines
+    TDF.Routes.Academy
+    TDF.Seed
+    TDF.Server
+    TDF.ServerAdmin
+    TDF.ServerExtra
+    TDF.ServerFuture
+    TDF.Trials.API
+    TDF.Trials.DTO
+    TDF.Trials.Models
+    TDF.Trials.Seed
+    TDF.Trials.Server
+    TDF.Version
+    Paths_tdf_hq
+  default-language: Haskell2010
+  ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base                 >=4.14 && <5
+    , aeson                >=2.0
+    , bytestring
+    , text
+    , time
+    , containers
+    , gitrev
+    , persistent           >=2.14
+    , persistent-template  >=2.12
+    , persistent-postgresql >=2.13
+    , resource-pool
+    , monad-logger
+    , resourcet
+    , conduit
+    , servant              >=0.19
+    , servant-server       >=0.19
+    , http-types
+    , http-media
+    , warp                 >=3.3
+    , wai
+    , wai-cors
+    , entropy
+    , filepath
+    , directory
+    , transformers
+    , mtl
+    , mime-mail
+    , unordered-containers
+    , uuid-types
+    , scientific
+    , safe-exceptions
+    , base64-bytestring
+    , directory
+    , process
+    , bcrypt
+    , path-pieces
+    , uuid
+    , template-haskell
+    , smtp-mail
+
+test-suite tdf-hq-test
+  type:              exitcode-stdio-1.0
+  hs-source-dirs:    test, src
+  main-is:           Spec.hs
+  ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
+  default-language:  Haskell2010
+  build-depends:
+      base                 >=4.14 && <5
+    , aeson                >=2.0
+    , bytestring
+    , text
+    , time
+    , containers
+    , gitrev
+    , persistent           >=2.14
+    , persistent-template  >=2.12
+    , persistent-postgresql >=2.13
+    , resource-pool
+    , monad-logger
+    , resourcet
+    , conduit
+    , servant              >=0.19
+    , servant-server       >=0.19
+    , http-types
+    , http-media
+    , wai
+    , warp                 >=3.3
+    , wai-cors
+    , entropy
+    , filepath
+    , directory
+    , transformers
+    , mtl
+    , mime-mail
+    , unordered-containers
+    , uuid-types
+    , scientific
+    , safe-exceptions
+    , base64-bytestring
+    , process
+    , bcrypt
+    , path-pieces
+    , uuid
+    , template-haskell
+    , hspec                >=2.7
+    , smtp-mail

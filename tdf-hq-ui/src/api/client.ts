@@ -1,70 +1,38 @@
-import axios from 'axios'
+import { getStoredSessionToken } from '../session/SessionContext';
 
-export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:8080',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000, // 10 second timeout
-})
+const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
-// Add response interceptor for error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response) {
-      // Server responded with error status
-      console.error('API Error:', error.response.status, error.response.data)
-    } else if (error.request) {
-      // Request was made but no response received
-      console.error('Network Error: No response from server')
-    } else {
-      // Error in request setup
-      console.error('Request Error:', error.message)
-    }
-    return Promise.reject(error)
+function buildAuthHeader(): string | undefined {
+  const token = getStoredSessionToken();
+  if (!token) return undefined;
+  return token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`;
+}
+
+async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const authHeader = buildAuthHeader();
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(authHeader ? { Authorization: authHeader } : {}),
+      ...(init.headers ?? {}),
+    },
+    ...init,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const trimmed = text.trim();
+    const statusText = res.statusText.trim();
+    const details = trimmed !== '' ? trimmed : statusText !== '' ? statusText : `HTTP ${res.status}`;
+    throw new Error(details);
   }
-)
-
-// Types for API responses
-export interface PartyRole {
-  role: 'AdminRole' | 'ManagerRole' | 'EngineerRole' | 'TeacherRole' | 
-        'ReceptionRole' | 'AccountingRole' | 'ReadOnlyRole' | 
-        'CustomerRole' | 'ArtistRole' | 'StudentRole'
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
 }
 
-export interface UserWithParty {
-  uwpUserId: number
-  uwpEmail?: string
-  uwpName: string
-  uwpRoles: PartyRole['role'][]
-  uwpIsActive: boolean
-  uwpLastLoginAt?: string
-}
-
-export interface UpdateRolesRequest {
-  urrRoles: PartyRole['role'][]
-}
-
-export interface UpdateRoleResponse {
-  urrSuccess: boolean
-  urrMessage: string
-  urrUser?: UserWithParty
-}
-
-// API functions
-export const getUsers = async (): Promise<UserWithParty[]> => {
-  const response = await apiClient.get<UserWithParty[]>('/api/users')
-  return response.data
-}
-
-export const updateUserRoles = async (
-  userId: number,
-  roles: PartyRole['role'][]
-): Promise<UpdateRoleResponse> => {
-  const response = await apiClient.put<UpdateRoleResponse>(
-    `/api/users/${userId}/roles`,
-    { urrRoles: roles }
-  )
-  return response.data
-}
+export const get = <T>(p: string) => api<T>(p, { method: 'GET' });
+export const post = <T>(p: string, body: unknown) =>
+  api<T>(p, { method: 'POST', body: JSON.stringify(body) });
+export const put = <T>(p: string, body: unknown) =>
+  api<T>(p, { method: 'PUT', body: JSON.stringify(body) });
+export const patch = <T>(p: string, body: unknown) =>
+  api<T>(p, { method: 'PATCH', body: JSON.stringify(body) });
