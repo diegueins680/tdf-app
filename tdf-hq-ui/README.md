@@ -4,6 +4,8 @@ Front-end for the TDF HQ backend (Servant + PostgreSQL). It includes:
 - Parties screen (list, create, edit Instagram/phone).
 - Bookings screen with FullCalendar (wired to `/bookings`).
 - Basic Kanban for Mixing/Mastering (client-side demo, ready to POST when endpoints exist).
+- System status page hitting `/version` + `/health` for build diagnostics.
+- Session dropdown with avatar + logout to simulate authentication flow.
 
 ## Quick start (local)
 

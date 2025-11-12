@@ -18,23 +18,20 @@ This is a monorepo containing three main applications:
 - Trial lesson workflows
 - Pipeline/Kanban management for services
 
-[→ Backend Documentation](./tdf-hq/README.md)
+[→ Backend Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq/README.md)
 
 ### Web UI - `tdf-hq-ui/`
 **Tech Stack:** React + Vite + MUI + React Query + TypeScript  
 **Purpose:** Admin/management web interface
 
-- **Dashboard** - Analytics overview with revenue, utilization, AR, and maintenance tracking
-- **Party Management** - Customer/contact management with search & filters
-- **Package Catalog** - Create and manage lesson/service packages with expiration tracking
-- **Invoicing** - Multi-line invoices with payment recording (cash, transfer, card)
-- **Inventory** - Equipment tracking with check-in/out and maintenance scheduling
-- **Bookings** - FullCalendar-based scheduling for studios and rooms
-- **Kanban Pipelines** - Drag-and-drop workflows for mixing/mastering/classes
+- Party (customer) management with search & filters
+- FullCalendar-based booking interface
+- Kanban pipelines for mixing/mastering workflows
+- Package & invoice management
 - Dark/light theme toggle with persistence
 - Type-safe API client generated from OpenAPI specs
 
-[→ Web UI Documentation](./tdf-hq-ui/README.md) | [→ Features Guide](./FEATURES.md)
+[→ Web UI Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq-ui/README.md)
 
 ### Mobile App - `tdf-mobile/`
 **Tech Stack:** Expo + React Native + React Query + TypeScript  
@@ -45,7 +42,7 @@ This is a monorepo containing three main applications:
 - Calendar integration
 - Offline support (planned)
 
-[→ Mobile Documentation](./tdf-mobile/README.md)
+[→ Mobile Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-mobile/README.md)
 
 ## 🚀 Quick Start
 
@@ -92,6 +89,12 @@ make up      # Start PostgreSQL + API
 make seed    # Seed initial data
 make logs    # View logs
 ```
+
+## 📦 Submodules & Backups
+
+- `tdf-mobile/` is tracked as a Git submodule (Expo app). After cloning, run `git submodule update --init --recursive` (or clone with `--recursive`) so `tdf-mobile` pulls the correct commit.
+- Local UI snapshots live under `tdf-hq-ui.backup.*` and are ignored by Git. They are useful for experimentation but should never be committed or referenced by CI.
+- Any time the root repo is moved to a new machine or CI provider, repeat the submodule init step; otherwise builds that traverse the tree (Cloudflare/Vercel) will fail looking for `tdf-mobile`.
 
 ## 📋 Project Structure
 
@@ -159,6 +162,16 @@ npm run build:ui
 cd tdf-hq && stack build --copy-bins
 ```
 
+## ☁️ Deployments
+
+| Target | Root Directory | Install Command | Build Command | Output | Notes |
+| --- | --- | --- | --- | --- | --- |
+| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=18`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil` (optional `VITE_API_DEMO_TOKEN`). |
+| **Vercel** | `tdf-hq-ui` | `npm install` | `npm run build` | `dist` | Framework preset: Vite. Same env vars as above. |
+| **Koyeb (API)** | `tdf-hq` Docker | `stack build` via Dockerfile | – | – | Configure `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`) in the service settings. |
+
+> Tip: when deploying the UI, match the backend URL (`VITE_API_BASE`) with the Koyeb app URL so CORS succeeds. For Cloudflare, the repo root stays `.` and the build script (`npm run build:ui`) emits the UI in `tdf-hq-ui/dist`.
+
 ## 🔐 Environment Variables
 
 ### Backend (`tdf-hq/.env`)
@@ -171,6 +184,18 @@ DB_NAME=tdf_hq
 APP_PORT=8080
 RESET_DB=false
 SEED_DB=true
+HQ_APP_URL=http://localhost:5173
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=apikey
+SMTP_PASSWORD=secret
+SMTP_FROM=ops@tdfrecords.com
+SMTP_FROM_NAME=TDF Records
+SMTP_TLS=true
+# Optional CORS overrides (comma-separated lists accepted)
+ALLOW_ORIGINS=https://tdfui.pages.dev,https://your-admin.app
+ALLOW_ORIGIN=
+ALLOW_ALL_ORIGINS=false
 ```
 
 ### Web UI (`tdf-hq-ui/.env`)
@@ -230,14 +255,12 @@ EXPO_PUBLIC_API_BASE=http://localhost:8080
 
 All sensitive files are now in `.gitignore`. Review `archives/` directory for any accidentally committed secrets.
 
-## 📚 Documentation
+## 📖 Documentation
 
-- [Features Guide](./FEATURES.md) - Comprehensive feature documentation
-- [Backend API Reference](./tdf-hq/docs/api.md)
-- [OpenAPI Specs](./tdf-hq/docs/openapi/)
-- [Business Requirements](./specs.yaml)
-- [Development Guide](./DEVELOPMENT.md)
-- [Legacy Documentation](./docs/legacy/)
+- [Backend API Reference](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq/docs/api.md)
+- [OpenAPI Specs](https://github.com/diegueins680/tdf-app/tree/main/tdf-hq/docs/openapi/)
+- [Business Requirements](https://github.com/diegueins680/tdf-app/blob/main/specs.yaml)
+- [Legacy Documentation](https://github.com/diegueins680/tdf-app/tree/main/docs/legacy/)
 
 ## 🤝 Contributing
 

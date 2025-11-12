@@ -1,4 +1,4 @@
-export type PartyDTO = {
+export interface PartyDTO {
   partyId: number;
   legalName?: string | null;
   displayName: string;
@@ -10,9 +10,10 @@ export type PartyDTO = {
   instagram?: string | null;
   emergencyContact?: string | null;
   notes?: string | null;
-};
+  hasUserAccount?: boolean;
+}
 
-export type PartyCreate = {
+export interface PartyCreate {
   cDisplayName: string;
   cIsOrg: boolean;
   cLegalName?: string | null;
@@ -23,180 +24,86 @@ export type PartyCreate = {
   cTaxId?: string | null;
   cEmergencyContact?: string | null;
   cNotes?: string | null;
-};
+}
 
-export type PartyUpdate = Partial<{
-  uDisplayName: string;
-  uIsOrg: boolean;
-  uLegalName: string | null;
-  uPrimaryEmail: string | null;
-  uPrimaryPhone: string | null;
-  uWhatsapp: string | null;
-  uInstagram: string | null;
-  uTaxId: string | null;
-  uEmergencyContact: string | null;
-  uNotes: string | null;
-}>;
+export interface PartyUpdate {
+  uDisplayName?: string;
+  uIsOrg?: boolean;
+  uLegalName?: string | null;
+  uPrimaryEmail?: string | null;
+  uPrimaryPhone?: string | null;
+  uWhatsapp?: string | null;
+  uInstagram?: string | null;
+  uTaxId?: string | null;
+  uEmergencyContact?: string | null;
+  uNotes?: string | null;
+}
 
-export type BookingDTO = {
+export interface BookingResourceDTO {
+  brRoomId: string;
+  brRoomName: string;
+  brRole: string;
+}
+
+export interface BookingDTO {
   bookingId: number;
   title: string;
   startsAt: string; // ISO
   endsAt: string;   // ISO
   status: string;
   notes?: string | null;
-};
+  partyId?: number | null;
+  serviceType?: string | null;
+  serviceOrderId?: number | null;
+  serviceOrderTitle?: string | null;
+  customerName?: string | null;
+  partyDisplayName?: string | null;
+  resources: BookingResourceDTO[];
+}
 
-// Package Management Types
-export type PackageDTO = {
-  packageId: number;
+export interface VersionInfo {
   name: string;
-  service: string;
-  priceUsd: number;
-  unitsKind: 'hours' | 'sessions' | 'songs';
-  unitsQty: number;
-  expiresDays: number;
-  transferable: boolean;
-  refundPolicy: 'credit_only' | 'full' | 'none';
-  description?: string | null;
-};
+  version: string;
+  commit?: string | null;
+  buildTime?: string | null;
+}
 
-export type PackageCreate = {
-  cName: string;
-  cService: string;
-  cPriceUsd: number;
-  cUnitsKind: 'hours' | 'sessions' | 'songs';
-  cUnitsQty: number;
-  cExpiresDays: number;
-  cTransferable: boolean;
-  cRefundPolicy: 'credit_only' | 'full' | 'none';
-  cDescription?: string | null;
-};
+type HealthState = 'ok' | 'degraded' | (string & Record<never, never>);
 
-export type PackageUpdate = Partial<{
-  uName: string;
-  uPriceUsd: number;
-  uDescription: string | null;
-}>;
+export interface HealthStatus {
+  status: HealthState;
+  version?: string | null;
+}
 
-export type PurchaseDTO = {
-  purchaseId: number;
-  partyId: number;
-  packageId: number;
-  packageName: string;
-  purchasedAt: string;
-  expiresAt: string;
-  unitsTotal: number;
-  unitsUsed: number;
-  unitsRemaining: number;
-  status: 'active' | 'expired' | 'depleted';
-};
+export interface RoomDTO {
+  roomId: string;
+  rName: string;
+  rBookable: boolean;
+}
 
-export type PurchaseCreate = {
-  cPartyId: number;
-  cPackageId: number;
-};
+export interface RoomCreate {
+  rcName: string;
+}
 
-// Invoice & Payment Types
-export type InvoiceDTO = {
-  invoiceId: number;
-  partyId: number;
-  partyName: string;
-  invoiceNumber: string;
-  issuedAt: string;
-  dueAt: string;
-  subtotalUsd: number;
-  taxUsd: number;
-  totalUsd: number;
-  paidUsd: number;
-  status: 'draft' | 'issued' | 'paid' | 'overdue' | 'cancelled';
-  items: InvoiceItemDTO[];
-};
+export interface RoomUpdate {
+  ruName?: string;
+  ruIsBookable?: boolean;
+}
 
-export type InvoiceItemDTO = {
-  description: string;
-  quantity: number;
-  unitPriceUsd: number;
-  totalUsd: number;
-};
+export interface PipelineCardDTO {
+  pcId: string;
+  pcTitle: string;
+  pcArtist?: string | null;
+  pcType: string;
+  pcStage: string;
+  pcSortOrder: number;
+  pcNotes?: string | null;
+}
 
-export type InvoiceCreate = {
-  cPartyId: number;
-  cDueAt: string;
-  cItems: Array<{
-    description: string;
-    quantity: number;
-    unitPriceUsd: number;
-  }>;
-  cNotes?: string | null;
-};
-
-export type PaymentDTO = {
-  paymentId: number;
-  invoiceId: number;
-  amountUsd: number;
-  method: 'cash' | 'bank_transfer' | 'card_pos';
-  paidAt: string;
-  reference?: string | null;
-  notes?: string | null;
-};
-
-export type PaymentCreate = {
-  cInvoiceId: number;
-  cAmountUsd: number;
-  cMethod: 'cash' | 'bank_transfer' | 'card_pos';
-  cReference?: string | null;
-  cNotes?: string | null;
-};
-
-// Inventory Types
-export type InventoryItemDTO = {
-  itemId: number;
-  name: string;
-  category: string;
-  serialNumber?: string | null;
-  location: string;
-  status: 'available' | 'checked_out' | 'maintenance' | 'retired';
-  condition: 'excellent' | 'good' | 'fair' | 'poor';
-  purchasedAt?: string | null;
-  lastMaintenanceAt?: string | null;
-  nextMaintenanceAt?: string | null;
-  notes?: string | null;
-};
-
-export type InventoryItemCreate = {
-  cName: string;
-  cCategory: string;
-  cSerialNumber?: string | null;
-  cLocation: string;
-  cCondition: 'excellent' | 'good' | 'fair' | 'poor';
-  cPurchasedAt?: string | null;
-  cNotes?: string | null;
-};
-
-export type InventoryItemUpdate = Partial<{
-  uName: string;
-  uLocation: string;
-  uStatus: 'available' | 'checked_out' | 'maintenance' | 'retired';
-  uCondition: 'excellent' | 'good' | 'fair' | 'poor';
-  uNotes: string | null;
-}>;
-
-export type CheckoutDTO = {
-  checkoutId: number;
-  itemId: number;
-  itemName: string;
-  partyId: number;
-  partyName: string;
-  checkedOutAt: string;
-  expectedReturnAt: string;
-  returnedAt?: string | null;
-  notes?: string | null;
-};
-
-export type CheckoutCreate = {
-  cItemId: number;
-  cPartyId: number;
-  cExpectedReturnAt: string;
-  cNotes?: string | null;
-};
+export interface PipelineCardUpdate {
+  pcuTitle?: string;
+  pcuArtist?: string | null;
+  pcuStage?: string;
+  pcuSortOrder?: number;
+  pcuNotes?: string | null;
+}

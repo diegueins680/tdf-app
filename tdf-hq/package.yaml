@@ -1,0 +1,76 @@
+name: tdf-hq
+version: 1.0.0
+github: "diegueins680/tdf-app"
+license: MIT
+author: "TDF Records"
+maintainer: "dev@tdfrecords.com"
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - servant
+  - servant-server
+  - persistent
+  - persistent-postgresql
+  - persistent-template
+  - text
+  - time
+  - transformers
+  - mtl
+  - monad-logger
+  - bytestring
+  - gitrev
+  - template-haskell
+  - entropy
+  - mime-mail
+  - smtp-mail
+  - wai
+  - wai-cors
+
+library:
+  source-dirs: src
+  ghc-options:
+    - -Wall
+    - -Wcompat
+    - -Wincomplete-uni-patterns
+    - -Wincomplete-record-updates
+    - -Wredundant-constraints
+  exposed-modules:
+    - TDF.Models
+    - TDF.API
+    - TDF.DTO
+    - TDF.DB
+    - TDF.Server
+
+executables:
+  tdf-hq:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -Wall
+      - -Wcompat
+      - -Wincomplete-uni-patterns
+      - -Wincomplete-record-updates
+      - -Wredundant-constraints
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - tdf-hq
+      - warp
+      - wai
+      - wai-cors
+
+tests:
+  tdf-hq-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+      - -Wall
+      - -Wcompat
+      - -Wincomplete-uni-patterns
+      - -Wincomplete-record-updates
+      - -Wredundant-constraints
+    dependencies:
+      - tdf-hq
+      - hspec
