@@ -20,3 +20,16 @@ export async function loginRequest(payload: { username: string; password: string
   }
   return res.json() as Promise<LoginResponseDTO>;
 }
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/password-reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const trimmed = text.trim();
+    throw new Error(trimmed === '' ? 'No pudimos iniciar el reset. Verifica el correo.' : trimmed);
+  }
+}

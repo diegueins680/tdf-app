@@ -6,6 +6,10 @@ import {
   Checkbox,
   Chip,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Fab,
   FormControlLabel,
   Link,
@@ -24,7 +28,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
 import { useThemeMode } from '../theme/AppThemeProvider';
-import { loginRequest } from '../api/auth';
+import { loginRequest, requestPasswordReset } from '../api/auth';
 import BrandLogo from '../components/BrandLogo';
 
 type LoginTab = 'password' | 'token';
@@ -36,12 +40,18 @@ export default function LoginPage() {
   const [tab, setTab] = useState<LoginTab>('password');
   const [rememberDevice, setRememberDevice] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { session, login } = useSession();
   const navigate = useNavigate();
   const { mode, toggleMode } = useThemeMode();
   const loginMutation = useMutation({
     mutationFn: (payload: { username: string; password: string }) => loginRequest(payload),
+  });
+  const resetMutation = useMutation({
+    mutationFn: (email: string) => requestPasswordReset(email),
   });
 
   const {
@@ -129,6 +139,40 @@ export default function LoginPage() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
       setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
+    }
+  };
+
+  const openResetDialog = () => {
+    setResetDialogOpen(true);
+    setResetEmail(identifier.includes('@') ? identifier.trim() : '');
+    setResetFeedback(null);
+    resetMutation.reset();
+  };
+
+  const closeResetDialog = () => {
+    setResetDialogOpen(false);
+    setResetFeedback(null);
+    resetMutation.reset();
+  };
+
+  const handleResetSubmit = async () => {
+    const emailValue = resetEmail.trim();
+    if (!emailValue) {
+      setResetFeedback({ type: 'error', message: 'Ingresa el correo asociado a tu cuenta.' });
+      return;
+    }
+    setResetFeedback(null);
+    try {
+      await resetMutation.mutateAsync(emailValue);
+      setResetFeedback({
+        type: 'success',
+        message: 'Si el correo existe en TDF Records, te enviaremos un enlace para restablecer la contraseña.',
+      });
+    } catch (err) {
+      setResetFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'No pudimos procesar tu solicitud.',
+      });
     }
   };
 
@@ -243,7 +287,13 @@ export default function LoginPage() {
             <Stack spacing={0.5} textAlign="center">
               <Typography variant="body2">
                 ¿Olvidaste tu contraseña?{' '}
-                <Link href="#" underline="hover">
+                <Link
+                  component="button"
+                  type="button"
+                  underline="hover"
+                  onClick={openResetDialog}
+                  sx={{ cursor: 'pointer', p: 0 }}
+                >
                   Recuperar acceso
                 </Link>
               </Typography>
@@ -263,6 +313,35 @@ export default function LoginPage() {
           </Stack>
         </Paper>
       </Container>
+      <Dialog open={resetDialogOpen} onClose={closeResetDialog} fullWidth maxWidth="xs">
+        <DialogTitle>Recuperar acceso</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <TextField
+              label="Correo asociado a tu cuenta"
+              type="email"
+              value={resetEmail}
+              onChange={(event) => setResetEmail(event.target.value)}
+              fullWidth
+              placeholder="tu.correo@tdf.com"
+            />
+            {resetFeedback && (
+              <Alert severity={resetFeedback.type === 'success' ? 'success' : 'error'}>
+                {resetFeedback.message}
+              </Alert>
+            )}
+            <Typography variant="body2" color="text.secondary">
+              Te enviaremos un enlace temporal para que puedas definir una nueva contraseña.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeResetDialog}>Cerrar</Button>
+          <Button onClick={() => { void handleResetSubmit(); }} disabled={resetMutation.isPending}>
+            {resetMutation.isPending ? 'Enviando…' : 'Enviar enlace'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Box
         sx={{
