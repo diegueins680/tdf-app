@@ -33,8 +33,98 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
+  /login:
+    post:
+      summary: Login with username or email
+      description: Authenticates a user and returns a bearer token plus role metadata.
+      operationId: login
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+  /signup:
+    post:
+      summary: Create an account
+      description: Registers a new party + credential pair and returns a ready-to-use token.
+      operationId: signup
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '409':
+          description: Email already registered
+  /api/users:
+    get:
+      summary: List user accounts
+      description: Returns the parties that have credentials plus their active roles.
+      operationId: listUsers
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Users fetched successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserRoleSummary'
+  /api/users/{userId}/roles:
+    put:
+      summary: Replace roles for a user
+      description: Assigns the provided set of roles to the credential identified by `userId`.
+      operationId: updateUserRoles
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleUpdate'
+      responses:
+        '204':
+          description: Roles replaced
+        '404':
+          description: User not found
+security:
+  - bearerAuth: [ ]
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     Version:
       type: object
@@ -64,3 +154,102 @@ components:
         version:
           type: string
           description: Application version.
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          description: Username or primary email.
+          example: admin@tdf.com
+        password:
+          type: string
+          format: password
+          example: changeme123
+    SignupRequest:
+      type: object
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+          example: Diego
+        lastName:
+          type: string
+          example: Saá
+        email:
+          type: string
+          format: email
+          example: ops@tdfrecords.com
+        phone:
+          type: string
+          nullable: true
+          example: "+593 99 555 1122"
+        password:
+          type: string
+          format: password
+          example: changeme123
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Bearer token for authenticated requests.
+        partyId:
+          type: integer
+          format: int64
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        modules:
+          type: array
+          items:
+            type: string
+            description: Enabled modules for the user.
+    Role:
+      type: string
+      description: Assigned platform role.
+      enum:
+        - Admin
+        - Manager
+        - Engineer
+        - Teacher
+        - Reception
+        - Accounting
+        - Artist
+        - Student
+        - ReadOnly
+    UserRoleSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        status:
+          type: string
+          enum: [Active, Inactive]
+        createdAt:
+          type: string
+          format: date-time
+    UserRoleUpdate:
+      type: object
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          description: Complete list of roles that should remain active.
+          items:
+            $ref: '#/components/schemas/Role'

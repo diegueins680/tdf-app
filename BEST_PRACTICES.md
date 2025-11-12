@@ -16,6 +16,13 @@ This repo now ships with codified guardrails for both the TypeScript frontends a
 - **Test harness** – `stack test` now runs an `hspec` suite (`test/Spec.hs`). Add real examples there as you touch backend code.
 - **Stack usage** – Run `stack test` (or `stack build`) from `tdf-hq/` before pushing backend changes. If you use Nix, keep Stack’s nix integration disabled or configure it explicitly.
 - **Email delivery** – Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, and optionally `SMTP_FROM_NAME`/`SMTP_TLS` so welcome emails go out when admins create new accounts. Set `HQ_APP_URL` to include a login link in those emails.
+- **CORS configuration** – Production instances read `ALLOW_ORIGINS`, `ALLOWED_ORIGINS`, or `CORS_ALLOW_ORIGINS` (plus the `*_ALL` variants). Always set these in Koyeb/Render so Cloudflare/Vercel deployments can reach the API.
+
+## Submodules, Assets, and Backups
+
+- **Submodule init** – `tdf-mobile/` is a Git submodule. Run `git submodule update --init --recursive` after cloning or pulling commits that touch the mobile app. Pushes from CI/Cloudflare will fail if the submodule isn’t initialized.
+- **UI backups** – Any `tdf-hq-ui.backup.*` directories are developer snapshots and intentionally ignored by `.gitignore`. Never reference them from production builds.
+- **Brand assets** – The React shell uses the `BrandLogo` component with SVG glyphs (`src/assets/tdf-*.svg`). When updating the wordmark, swap the SVGs rather than re-introducing inline text so dark/light themes stay legible.
 
 ## Suggested Workflow
 

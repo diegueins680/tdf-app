@@ -36,3 +36,16 @@
 - CORS is permissive for dev; restrict `corsOrigins` in `app/Main.hs` for production.
 - Seeding endpoint is for development only; remove/guard before release.
 
+## Submodules & Backups
+- `tdf-mobile/` is a Git submodule. When cloning or pulling, run `git submodule update --init --recursive` so the Expo app is available locally and for CI. Deployments that inspect the tree (Cloudflare Pages, Vercel) will fail if the submodule isn’t initialized.
+- UI snapshots such as `tdf-hq-ui.backup.*` are intentionally ignored in `.gitignore`. Treat them as personal sandboxes—never reference them from build scripts or CI.
+
+## Deployment Runbooks
+- **Cloudflare Pages** – build from repo root with `npm run build:ui`, output `tdf-hq-ui/dist`. Set `NODE_VERSION=18`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil`, and optional `VITE_API_DEMO_TOKEN`.
+- **Vercel** – set the root directory to `tdf-hq-ui`, install via `npm install`, build with `npm run build`, output `dist`.
+- **Koyeb (API)** – configure all `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`). Without the CORS envs Cloudflare/Vercel frontends cannot talk to the API.
+- Whenever you need to test end-to-end, ensure the frontend env vars point at the deployed API and that the API allows the frontend’s origin.
+
+## Branding
+- The React shell renders SVG logos through `BrandLogo`. Swap SVG assets (`tdf-hq-ui/src/assets/tdf-*.svg`) rather than hardcoding text to maintain contrast in both themes.
+- The TopBar uses the white “alt” wordmark; keep that variant for dark surfaces and reserve the glyph/isotype for light backgrounds or iconography.
