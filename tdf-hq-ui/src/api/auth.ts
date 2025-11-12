@@ -22,7 +22,7 @@ export async function loginRequest(payload: { username: string; password: string
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/password-reset`, {
+  const res = await fetch(`${API_BASE}/v1/password-reset`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),

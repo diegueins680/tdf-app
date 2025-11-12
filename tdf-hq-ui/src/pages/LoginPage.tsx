@@ -176,14 +176,12 @@ export default function LoginPage() {
     setResetFeedback(null);
     try {
       await resetMutation.mutateAsync(emailValue);
+    } catch (err) {
+      console.warn('Password reset request failed (silently returning success)', err);
+    } finally {
       setResetFeedback({
         type: 'success',
         message: 'Si el correo existe en TDF Records, te enviaremos un enlace para restablecer la contraseña.',
-      });
-    } catch (err) {
-      setResetFeedback({
-        type: 'error',
-        message: err instanceof Error ? err.message : 'No pudimos procesar tu solicitud.',
       });
     }
   };
