@@ -17,9 +17,24 @@ dependencies:
   - time
   - transformers
   - mtl
+  - monad-logger
+  - bytestring
+  - gitrev
+  - template-haskell
+  - entropy
+  - mime-mail
+  - smtp-mail
+  - wai
+  - wai-cors
 
 library:
   source-dirs: src
+  ghc-options:
+    - -Wall
+    - -Wcompat
+    - -Wincomplete-uni-patterns
+    - -Wincomplete-record-updates
+    - -Wredundant-constraints
   exposed-modules:
     - TDF.Models
     - TDF.API
@@ -32,21 +47,30 @@ executables:
     main: Main.hs
     source-dirs: app
     ghc-options:
+      - -Wall
+      - -Wcompat
+      - -Wincomplete-uni-patterns
+      - -Wincomplete-record-updates
+      - -Wredundant-constraints
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
       - tdf-hq
       - warp
+      - wai
+      - wai-cors
 
 tests:
   tdf-hq-test:
     main: Spec.hs
     source-dirs: test
     ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
+      - -Wall
+      - -Wcompat
+      - -Wincomplete-uni-patterns
+      - -Wincomplete-record-updates
+      - -Wredundant-constraints
     dependencies:
       - tdf-hq
       - hspec

@@ -90,6 +90,12 @@ make seed    # Seed initial data
 make logs    # View logs
 ```
 
+## 📦 Submodules & Backups
+
+- `tdf-mobile/` is tracked as a Git submodule (Expo app). After cloning, run `git submodule update --init --recursive` (or clone with `--recursive`) so `tdf-mobile` pulls the correct commit.
+- Local UI snapshots live under `tdf-hq-ui.backup.*` and are ignored by Git. They are useful for experimentation but should never be committed or referenced by CI.
+- Any time the root repo is moved to a new machine or CI provider, repeat the submodule init step; otherwise builds that traverse the tree (Cloudflare/Vercel) will fail looking for `tdf-mobile`.
+
 ## 📋 Project Structure
 
 ```
@@ -156,6 +162,16 @@ npm run build:ui
 cd tdf-hq && stack build --copy-bins
 ```
 
+## ☁️ Deployments
+
+| Target | Root Directory | Install Command | Build Command | Output | Notes |
+| --- | --- | --- | --- | --- | --- |
+| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=18`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil` (optional `VITE_API_DEMO_TOKEN`). |
+| **Vercel** | `tdf-hq-ui` | `npm install` | `npm run build` | `dist` | Framework preset: Vite. Same env vars as above. |
+| **Koyeb (API)** | `tdf-hq` Docker | `stack build` via Dockerfile | – | – | Configure `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`) in the service settings. |
+
+> Tip: when deploying the UI, match the backend URL (`VITE_API_BASE`) with the Koyeb app URL so CORS succeeds. For Cloudflare, the repo root stays `.` and the build script (`npm run build:ui`) emits the UI in `tdf-hq-ui/dist`.
+
 ## 🔐 Environment Variables
 
 ### Backend (`tdf-hq/.env`)
@@ -168,6 +184,18 @@ DB_NAME=tdf_hq
 APP_PORT=8080
 RESET_DB=false
 SEED_DB=true
+HQ_APP_URL=http://localhost:5173
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=apikey
+SMTP_PASSWORD=secret
+SMTP_FROM=ops@tdfrecords.com
+SMTP_FROM_NAME=TDF Records
+SMTP_TLS=true
+# Optional CORS overrides (comma-separated lists accepted)
+ALLOW_ORIGINS=https://tdfui.pages.dev,https://your-admin.app
+ALLOW_ORIGIN=
+ALLOW_ALL_ORIGINS=false
 ```
 
 ### Web UI (`tdf-hq-ui/.env`)

@@ -1,0 +1,19 @@
+name: Validate OpenAPI
+on:
+  push:
+    paths:
+      - 'docs/openapi/**/*.yaml'
+      - '.github/workflows/openapi-validate.yml'
+  pull_request:
+    paths:
+      - 'docs/openapi/**/*.yaml'
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm i -g @redocly/cli
+      - run: redocly lint docs/openapi/lessons-and-receipts.yaml
