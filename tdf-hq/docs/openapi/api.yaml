@@ -75,6 +75,115 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '409':
           description: Email already registered
+  /parties:
+    get:
+      tags: [CRM]
+      summary: List parties
+      description: Returns every party/contact stored in the CRM module. Requires CRM access.
+      operationId: listParties
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Parties fetched
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Party'
+    post:
+      tags: [CRM]
+      summary: Create party
+      description: Creates a person or organization in the CRM.
+      operationId: createParty
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePartyRequest'
+      responses:
+        '200':
+          description: Party created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+  /parties/{partyId}:
+    parameters:
+      - name: partyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags: [CRM]
+      summary: Get party
+      description: Returns the detailed record for a party, including whether it already has user access.
+      operationId: getParty
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Party found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+        '404':
+          description: Party not found
+    put:
+      tags: [CRM]
+      summary: Update party
+      description: Updates mutable fields such as contact info, notes, or flags.
+      operationId: updateParty
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePartyRequest'
+      responses:
+        '200':
+          description: Party updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+        '404':
+          description: Party not found
+  /parties/{partyId}/roles:
+    post:
+      tags: [CRM]
+      summary: Add party role
+      description: Activates a single role for the provided party id. Useful to grant extra capabilities (Artist, Student, etc.).
+      operationId: addPartyRole
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: partyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleAssignmentRequest'
+      responses:
+        '204':
+          description: Role assigned
+        '404':
+          description: Party not found
   /api/users:
     get:
       summary: List user accounts
@@ -116,6 +225,101 @@ paths:
           description: Roles replaced
         '404':
           description: User not found
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List user credentials
+      description: Returns the full admin view of user accounts, including modules and status.
+      operationId: adminListUsers
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: includeInactive
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Accounts fetched
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserAccount'
+    post:
+      tags: [Admin]
+      summary: Create user for an existing party
+      description: |
+        Generates credentials for a party. If no password is provided the system creates a strong temporary password,
+        stores the hash, and emails the welcome message with username + password.
+      operationId: adminCreateUser
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserAccountRequest'
+      responses:
+        '201':
+          description: User created and welcome email dispatched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccount'
+        '400':
+          description: Missing party email or invalid payload
+        '404':
+          description: Party not found
+  /admin/users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags: [Admin]
+      summary: Get user account
+      description: Returns the credential, linked party, active flag, and derived modules.
+      operationId: adminGetUser
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccount'
+        '404':
+          description: Not found
+    patch:
+      tags: [Admin]
+      summary: Update user account
+      description: Update username, active flag, roles, or force a password reset for a specific user.
+      operationId: adminUpdateUser
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserAccountRequest'
+      responses:
+        '200':
+          description: Account updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccount'
+        '404':
+          description: Not found
 security:
   - bearerAuth: [ ]
 
@@ -251,5 +455,191 @@ components:
         roles:
           type: array
           description: Complete list of roles that should remain active.
+          items:
+            $ref: '#/components/schemas/Role'
+    Party:
+      type: object
+      properties:
+        partyId:
+          type: integer
+          format: int64
+        legalName:
+          type: string
+          nullable: true
+        displayName:
+          type: string
+        isOrg:
+          type: boolean
+        taxId:
+          type: string
+          nullable: true
+        primaryEmail:
+          type: string
+          format: email
+          nullable: true
+        primaryPhone:
+          type: string
+          nullable: true
+        whatsapp:
+          type: string
+          nullable: true
+        instagram:
+          type: string
+          nullable: true
+        emergencyContact:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        hasUserAccount:
+          type: boolean
+          description: True if a credential exists for this party.
+        band:
+          type: object
+          nullable: true
+          description: Present when the party is linked to a band/project.
+    CreatePartyRequest:
+      type: object
+      required: [cDisplayName, cIsOrg]
+      properties:
+        cDisplayName:
+          type: string
+          description: Display name shown in listings.
+        cIsOrg:
+          type: boolean
+          description: True for organizations/bands, false for individual contacts.
+        cLegalName:
+          type: string
+          nullable: true
+        cPrimaryEmail:
+          type: string
+          format: email
+          nullable: true
+        cPrimaryPhone:
+          type: string
+          nullable: true
+        cWhatsapp:
+          type: string
+          nullable: true
+        cInstagram:
+          type: string
+          nullable: true
+        cTaxId:
+          type: string
+          nullable: true
+        cEmergencyContact:
+          type: string
+          nullable: true
+        cNotes:
+          type: string
+          nullable: true
+        cRoles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+          nullable: true
+    UpdatePartyRequest:
+      type: object
+      properties:
+        uDisplayName:
+          type: string
+        uIsOrg:
+          type: boolean
+        uLegalName:
+          type: string
+          nullable: true
+        uPrimaryEmail:
+          type: string
+          format: email
+          nullable: true
+        uPrimaryPhone:
+          type: string
+          nullable: true
+        uWhatsapp:
+          type: string
+          nullable: true
+        uInstagram:
+          type: string
+          nullable: true
+        uTaxId:
+          type: string
+          nullable: true
+        uEmergencyContact:
+          type: string
+          nullable: true
+        uNotes:
+          type: string
+          nullable: true
+    RoleAssignmentRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: '#/components/schemas/Role'
+    UserAccount:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        partyId:
+          type: integer
+          format: int64
+        partyName:
+          type: string
+        username:
+          type: string
+        active:
+          type: boolean
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        modules:
+          type: array
+          items:
+            type: string
+    CreateUserAccountRequest:
+      type: object
+      required: [uacPartyId]
+      properties:
+        uacPartyId:
+          type: integer
+          format: int64
+          description: Party id that will receive login access.
+        uacUsername:
+          type: string
+          nullable: true
+          description: Optional custom username; defaults to the primary email.
+        uacPassword:
+          type: string
+          format: password
+          nullable: true
+          description: Optional password override. Leave empty to auto-generate and email one.
+        uacActive:
+          type: boolean
+          nullable: true
+        uacRoles:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/Role'
+    UpdateUserAccountRequest:
+      type: object
+      properties:
+        uauUsername:
+          type: string
+          nullable: true
+        uauPassword:
+          type: string
+          format: password
+          nullable: true
+        uauActive:
+          type: boolean
+          nullable: true
+        uauRoles:
+          type: array
+          nullable: true
           items:
             $ref: '#/components/schemas/Role'

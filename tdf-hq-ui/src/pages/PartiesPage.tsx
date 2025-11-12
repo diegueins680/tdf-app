@@ -413,13 +413,13 @@ export default function PartiesPage() {
                         ? 'Este contacto ya tiene usuario'
                         : party.primaryEmail
                           ? 'Crear usuario y enviar contraseña'
-                          : 'Agrega un correo para crear acceso'
+                          : 'Agrega o corrige el correo antes de crear la cuenta'
                     }
                   >
                     <span>
                       <IconButton
                         onClick={() => setUserDialogParty(party)}
-                        disabled={Boolean(party.hasUserAccount) || !party.primaryEmail}
+                        disabled={Boolean(party.hasUserAccount)}
                       >
                         <PersonAddAltIcon fontSize="small" />
                       </IconButton>
