@@ -17,6 +17,7 @@ import           Control.Monad.Reader (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Data.Int (Int64)
 import           Data.List (find, foldl', nub)
+import           Data.Foldable (for_)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
@@ -60,6 +61,7 @@ import           TDF.Trials.Server (trialsServer)
 import qualified TDF.Meta as Meta
 import           TDF.Version      (getVersionInfo)
 import qualified TDF.Handlers.InputList as InputList
+import qualified TDF.Email as Email
 
 type AppM = ReaderT Env Handler
 
@@ -445,11 +447,18 @@ passwordReset :: PasswordResetRequest -> AppM NoContent
 passwordReset PasswordResetRequest{..} = do
   let emailClean = T.strip email
   when (T.null emailClean) $ throwBadRequest "Email is required"
-  Env pool _ <- ask
-  _ <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
+  Env pool cfg <- ask
+  mPayload <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
+  for_ mPayload $ \(token, displayName) -> liftIO $
+    Email.sendPasswordResetEmail
+      (emailConfig cfg)
+      displayName
+      emailClean
+      token
+      (appBaseUrl cfg)
   pure NoContent
   where
-    runPasswordReset :: Text -> SqlPersistT IO (Maybe Text)
+    runPasswordReset :: Text -> SqlPersistT IO (Maybe (Text, Text))
     runPasswordReset emailVal = do
       mCred <- getBy (UniqueCredentialUsername emailVal)
       case mCred of
@@ -459,7 +468,10 @@ passwordReset PasswordResetRequest{..} = do
           | otherwise -> do
               deactivatePasswordResetTokens (userCredentialPartyId cred)
               token <- createPasswordResetToken (userCredentialPartyId cred) emailVal
-              pure (Just token)
+              mParty <- get (userCredentialPartyId cred)
+              let displayName =
+                    maybe emailVal M.partyDisplayName mParty
+              pure (Just (token, displayName))
 
 passwordResetConfirm :: PasswordResetConfirmRequest -> AppM LoginResponse
 passwordResetConfirm PasswordResetConfirmRequest{..} = do
