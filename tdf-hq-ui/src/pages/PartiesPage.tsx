@@ -180,12 +180,14 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
   const qc = useQueryClient();
   const [username, setUsername] = useState('');
   const [roles, setRoles] = useState<PartyRole[]>([]);
+  const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setUsername(party?.primaryEmail ?? '');
+    setEmail(party?.primaryEmail ?? '');
     setRoles([]);
     setError(null);
     setSuccess(null);
@@ -202,13 +204,17 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
 
   const handleCreateUser = async () => {
     if (!party) return;
-    if (!party.primaryEmail) {
-      setError('Este contacto necesita un email principal antes de crear el usuario.');
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setError('Necesitas ingresar un correo principal para crear el usuario.');
       return;
     }
     try {
       setLoading(true);
       setError(null);
+      if (trimmedEmail !== (party.primaryEmail ?? '')) {
+        await Parties.update(party.partyId, { uPrimaryEmail: trimmedEmail });
+      }
       await Admin.createUser({
         partyId: party.partyId,
         username: username.trim() || undefined,
@@ -228,6 +234,15 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
       <DialogTitle>Crear usuario para {party?.displayName}</DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
+          <TextField
+            label="Correo del contacto"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            helperText="Se actualiza en el contacto antes de crear la cuenta."
+            required
+            fullWidth
+          />
           <TextField
             label="Usuario (opcional)"
             value={username}
