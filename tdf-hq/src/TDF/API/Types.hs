@@ -363,7 +363,7 @@ instance ToJSON SessionUpdate
 instance FromJSON SessionUpdate
 
 newtype RolePayload = RolePayload { rolePayloadValue :: Text }
-  deriving (Show, Generic)
+  deriving (Show, Eq, Generic)
 
 instance FromJSON RolePayload where
   parseJSON v =

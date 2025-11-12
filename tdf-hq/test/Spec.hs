@@ -1,9 +1,11 @@
 module Main (main) where
 
-import Test.Hspec
+import           Test.Hspec
+
+import qualified TDF.ServerSpec as ServerSpec
+import qualified TDF.APITypesSpec as APITypesSpec
 
 main :: IO ()
-main = hspec $
-  describe "Sanity" $
-    it "keeps the test harness wired" $
-      True `shouldBe` True
+main = hspec $ do
+  ServerSpec.spec
+  APITypesSpec.spec
