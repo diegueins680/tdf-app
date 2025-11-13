@@ -24,7 +24,7 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
 import { useThemeMode } from '../theme/AppThemeProvider';
@@ -228,7 +228,7 @@ export default function LoginPage() {
         {
           username: payload.email,
           displayName: `${payload.firstName} ${payload.lastName}`.trim() || payload.email,
-          roles: response.roles?.map((role) => role.toLowerCase()) ?? ['customer'],
+          roles: response.roles?.map((role) => role.toLowerCase()) ?? ['fan'],
           apiToken: response.token,
           modules: response.modules,
           partyId: response.partyId,
@@ -381,6 +381,12 @@ export default function LoginPage() {
                 ¿Buscas una clase de prueba?{' '}
                 <Link href="#" underline="hover">
                   Solicitar trial
+                </Link>
+              </Typography>
+              <Typography variant="body2">
+                ¿Quieres explorar la música?{' '}
+                <Link component={RouterLink} to="/fans" underline="hover">
+                  Ir al Fan Hub
                 </Link>
               </Typography>
             </Stack>

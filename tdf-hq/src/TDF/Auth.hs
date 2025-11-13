@@ -129,6 +129,7 @@ modulesForRole Student    = Set.singleton ModuleScheduling
 modulesForRole Vendor     = Set.singleton ModulePackages
 modulesForRole Customer   = Set.singleton ModulePackages
 modulesForRole ReadOnly   = Set.singleton ModuleCRM
+modulesForRole Fan        = Set.empty
 
 extractToken :: Request -> Either Text Text
 extractToken req =

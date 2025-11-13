@@ -88,6 +88,7 @@ server =
   :<|> signup
   :<|> changePassword
   :<|> authV1Server
+  :<|> fanPublicServer
   :<|> metaServer
   :<|> seedTrigger
   :<|> inputListServer
@@ -206,6 +207,35 @@ resolveSessionInputData mIndex mSessionId = do
   result <- liftIO $ flip runSqlPool envPool action
   maybe (throwError err404) pure result
 
+fanPublicServer :: ServerT FanPublicAPI AppM
+fanPublicServer =
+       listFanArtists
+  :<|> fanArtistProfile
+  :<|> fanArtistReleases
+  where
+    listFanArtists :: AppM [ArtistProfileDTO]
+    listFanArtists = do
+      Env pool _ <- ask
+      liftIO $ flip runSqlPool pool loadAllArtistProfiles
+
+    fanArtistProfile :: Int64 -> AppM ArtistProfileDTO
+    fanArtistProfile artistId = do
+      Env pool _ <- ask
+      mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfile (toSqlKey artistId)
+      maybe (throwError err404) pure mDto
+
+    fanArtistReleases :: Int64 -> AppM [ArtistReleaseDTO]
+    fanArtistReleases artistId = do
+      Env pool _ <- ask
+      liftIO $ flip runSqlPool pool $ do
+        releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistId] [Desc ArtistReleaseCreatedAt]
+        pure (map toArtistReleaseDTO releases)
+
+fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
+fanSecureServer user =
+       (fanGetProfile user :<|> fanUpdateProfile user)
+  :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
+
 protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
        partyServer user
@@ -215,6 +245,7 @@ protectedServer user =
   :<|> receiptServer user
   :<|> adminServer user
   :<|> userRolesServer user
+  :<|> fanSecureServer user
   :<|> inventoryServer user
   :<|> bandsServer user
   :<|> sessionsServer user
@@ -341,12 +372,23 @@ signup SignupRequest
                 }
           pid <- insert partyRecord
           _ <- upsert (PartyRole pid Customer True) [PartyRoleActive =. True]
+          _ <- upsert (PartyRole pid Fan True) [PartyRoleActive =. True]
           hashed <- liftIO (hashPasswordText passwordVal)
           _ <- insert UserCredential
             { userCredentialPartyId      = pid
             , userCredentialUsername     = emailVal
             , userCredentialPasswordHash = hashed
             , userCredentialActive       = True
+            }
+          insert_ FanProfile
+            { fanProfileFanPartyId     = pid
+            , fanProfileDisplayName    = Just displayName
+            , fanProfileAvatarUrl      = Nothing
+            , fanProfileFavoriteGenres = Nothing
+            , fanProfileBio            = Nothing
+            , fanProfileCity           = Nothing
+            , fanProfileCreatedAt      = nowVal
+            , fanProfileUpdatedAt      = Nothing
             }
           token <- createSessionToken pid emailVal
           mUser <- loadAuthedUser token
@@ -542,6 +584,227 @@ passwordResetConfirm PasswordResetConfirmRequest{..} = do
     nonEmptyText txt
       | T.null (T.strip txt) = Nothing
       | otherwise = Just (T.strip txt)
+
+fanGetProfile :: AuthedUser -> AppM FanProfileDTO
+fanGetProfile user = do
+  requireFanAccess user
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ loadFanProfileDTO (auPartyId user)
+
+fanUpdateProfile :: AuthedUser -> FanProfileUpdate -> AppM FanProfileDTO
+fanUpdateProfile user FanProfileUpdate{..} = do
+  requireFanAccess user
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool pool $ do
+    let fanId = auPartyId user
+    _ <- upsert FanProfile
+      { fanProfileFanPartyId     = fanId
+      , fanProfileDisplayName    = fpuDisplayName
+      , fanProfileAvatarUrl      = fpuAvatarUrl
+      , fanProfileFavoriteGenres = fpuFavoriteGenres
+      , fanProfileBio            = fpuBio
+      , fanProfileCity           = fpuCity
+      , fanProfileCreatedAt      = now
+      , fanProfileUpdatedAt      = Just now
+      }
+      [ FanProfileDisplayName    =. fpuDisplayName
+      , FanProfileAvatarUrl      =. fpuAvatarUrl
+      , FanProfileFavoriteGenres =. fpuFavoriteGenres
+      , FanProfileBio            =. fpuBio
+      , FanProfileCity           =. fpuCity
+      , FanProfileUpdatedAt      =. Just now
+      ]
+    loadFanProfileDTO fanId
+
+fanListFollows :: AuthedUser -> AppM [FanFollowDTO]
+fanListFollows user = do
+  requireFanAccess user
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    follows <- selectList [FanFollowFanPartyId ==. auPartyId user] [Desc FanFollowCreatedAt]
+    let artistIds = map (fanFollowArtistPartyId . entityVal) follows
+    nameMap <- fetchPartyNameMap artistIds
+    profileMap <- fetchArtistProfileMap artistIds
+    pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
+
+fanFollowArtist :: AuthedUser -> Int64 -> AppM FanFollowDTO
+fanFollowArtist user artistId = do
+  requireFanAccess user
+  when (artistId <= 0) $ throwBadRequest "Invalid artist id"
+  let artistKey = toSqlKey artistId :: PartyId
+      fanKey    = auPartyId user
+  when (artistKey == fanKey) $
+    throwBadRequest "No puedes seguirte a ti mismo"
+  Env pool _ <- ask
+  mDto <- liftIO $ flip runSqlPool pool $ do
+    mArtist <- get artistKey
+    case mArtist of
+      Nothing -> pure Nothing
+      Just _ -> do
+        now <- liftIO getCurrentTime
+        _ <- insertUnique FanFollow
+          { fanFollowFanPartyId    = fanKey
+          , fanFollowArtistPartyId = artistKey
+          , fanFollowCreatedAt     = now
+          }
+        loadFanFollowDTO fanKey artistKey
+  maybe (throwError err404) pure mDto
+
+fanUnfollowArtist :: AuthedUser -> Int64 -> AppM NoContent
+fanUnfollowArtist user artistId = do
+  requireFanAccess user
+  let artistKey = toSqlKey artistId :: PartyId
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $
+    deleteBy (UniqueFanFollow (auPartyId user) artistKey)
+  pure NoContent
+
+requireFanAccess :: AuthedUser -> AppM ()
+requireFanAccess AuthedUser{..} =
+  unless (Fan `elem` auRoles || Customer `elem` auRoles) $
+    throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Fan access required") }
+
+loadFanProfileDTO :: PartyId -> SqlPersistT IO FanProfileDTO
+loadFanProfileDTO fanId = do
+  mProfile <- getBy (UniqueFanProfile fanId)
+  party <- get fanId
+  now <- liftIO getCurrentTime
+  profileEntity <- case mProfile of
+    Nothing -> do
+      let displayName = M.partyDisplayName <$> party
+          record = FanProfile
+            { fanProfileFanPartyId     = fanId
+            , fanProfileDisplayName    = displayName
+            , fanProfileAvatarUrl      = Nothing
+            , fanProfileFavoriteGenres = Nothing
+            , fanProfileBio            = Nothing
+            , fanProfileCity           = Nothing
+            , fanProfileCreatedAt      = now
+            , fanProfileUpdatedAt      = Nothing
+            }
+      key <- insert record
+      pure (Entity key record)
+    Just ent -> pure ent
+  let fallbackName = maybe Nothing (Just . M.partyDisplayName) party
+  pure (fanProfileToDTO fallbackName (entityVal profileEntity))
+
+loadAllArtistProfiles :: SqlPersistT IO [ArtistProfileDTO]
+loadAllArtistProfiles = do
+  profiles <- selectList [] [Asc ArtistProfileArtistPartyId]
+  buildArtistProfileDTOs profiles
+
+loadArtistProfile :: PartyId -> SqlPersistT IO (Maybe ArtistProfileDTO)
+loadArtistProfile artistId = do
+  mProfile <- getBy (UniqueArtistProfile artistId)
+  case mProfile of
+    Nothing -> pure Nothing
+    Just prof -> do
+      dtos <- buildArtistProfileDTOs [prof]
+      pure (listToMaybe dtos)
+
+buildArtistProfileDTOs :: [Entity ArtistProfile] -> SqlPersistT IO [ArtistProfileDTO]
+buildArtistProfileDTOs profiles = do
+  let artistIds = map (artistProfileArtistPartyId . entityVal) profiles
+  nameMap <- fetchPartyNameMap artistIds
+  followCounts <- fetchFollowerCounts artistIds
+  pure (map (artistProfileEntityToDTO nameMap followCounts) profiles)
+
+fetchPartyNameMap :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Text)
+fetchPartyNameMap partyIds = do
+  parties <- if null partyIds then pure [] else selectList [PartyId <-. partyIds] []
+  pure $ Map.fromList [ (entityKey p, M.partyDisplayName (entityVal p)) | p <- parties ]
+
+fetchFollowerCounts :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Int)
+fetchFollowerCounts ids
+  | null ids  = pure Map.empty
+  | otherwise = do
+      follows <- selectList [FanFollowArtistPartyId <-. ids] []
+      pure $ foldl' (\acc (Entity _ fol) -> Map.insertWith (+) (fanFollowArtistPartyId fol) 1 acc) Map.empty follows
+
+fetchArtistProfileMap :: [PartyId] -> SqlPersistT IO (Map.Map PartyId ArtistProfile)
+fetchArtistProfileMap ids
+  | null ids  = pure Map.empty
+  | otherwise = do
+      profiles <- selectList [ArtistProfileArtistPartyId <-. ids] []
+      pure $ Map.fromList [ (artistProfileArtistPartyId (entityVal ap), entityVal ap) | ap <- profiles ]
+
+artistProfileEntityToDTO
+  :: Map.Map PartyId Text
+  -> Map.Map PartyId Int
+  -> Entity ArtistProfile
+  -> ArtistProfileDTO
+artistProfileEntityToDTO nameMap followMap (Entity _ prof) =
+  let artistId = artistProfileArtistPartyId prof
+      displayName = Map.findWithDefault "Artista" artistId nameMap
+      followerCount = Map.findWithDefault 0 artistId followMap
+  in ArtistProfileDTO
+      { apArtistId         = fromSqlKey artistId
+      , apDisplayName      = displayName
+      , apSlug             = artistProfileSlug prof
+      , apBio              = artistProfileBio prof
+      , apCity             = artistProfileCity prof
+      , apHeroImageUrl     = artistProfileHeroImageUrl prof
+      , apSpotifyArtistId  = artistProfileSpotifyArtistId prof
+      , apSpotifyUrl       = artistProfileSpotifyUrl prof
+      , apYoutubeChannelId = artistProfileYoutubeChannelId prof
+      , apYoutubeUrl       = artistProfileYoutubeUrl prof
+      , apWebsiteUrl       = artistProfileWebsiteUrl prof
+      , apFeaturedVideoUrl = artistProfileFeaturedVideoUrl prof
+      , apGenres           = artistProfileGenres prof
+      , apHighlights       = artistProfileHighlights prof
+      , apFollowerCount    = followerCount
+      }
+
+toArtistReleaseDTO :: Entity ArtistRelease -> ArtistReleaseDTO
+toArtistReleaseDTO (Entity releaseId release) =
+  ArtistReleaseDTO
+    { arArtistId      = fromSqlKey (artistReleaseArtistPartyId release)
+    , arReleaseId     = fromSqlKey releaseId
+    , arTitle         = artistReleaseTitle release
+    , arReleaseDate   = artistReleaseReleaseDate release
+    , arDescription   = artistReleaseDescription release
+    , arCoverImageUrl = artistReleaseCoverImageUrl release
+    , arSpotifyUrl    = artistReleaseSpotifyUrl release
+    , arYoutubeUrl    = artistReleaseYoutubeUrl release
+    }
+
+fanProfileToDTO :: Maybe Text -> FanProfile -> FanProfileDTO
+fanProfileToDTO fallback FanProfile{..} = FanProfileDTO
+  { fpArtistId      = fromSqlKey fanProfileFanPartyId
+  , fpDisplayName   = fanProfileDisplayName <|> fallback
+  , fpAvatarUrl     = fanProfileAvatarUrl
+  , fpFavoriteGenres = fanProfileFavoriteGenres
+  , fpBio           = fanProfileBio
+  , fpCity          = fanProfileCity
+  }
+
+fanFollowEntityToDTO
+  :: Map.Map PartyId Text
+  -> Map.Map PartyId ArtistProfile
+  -> Entity FanFollow
+  -> FanFollowDTO
+fanFollowEntityToDTO nameMap profileMap (Entity _ follow) =
+  let artistId = fanFollowArtistPartyId follow
+      profile = Map.lookup artistId profileMap
+  in FanFollowDTO
+      { ffArtistId     = fromSqlKey artistId
+      , ffArtistName   = Map.findWithDefault "Artista" artistId nameMap
+      , ffHeroImageUrl = profile >>= artistProfileHeroImageUrl
+      , ffSpotifyUrl   = profile >>= artistProfileSpotifyUrl
+      , ffYoutubeUrl   = profile >>= artistProfileYoutubeUrl
+      , ffStartedAt    = utctDay (fanFollowCreatedAt follow)
+      }
+
+loadFanFollowDTO :: PartyId -> PartyId -> SqlPersistT IO (Maybe FanFollowDTO)
+loadFanFollowDTO fanId artistId = do
+  mFollow <- selectFirst [FanFollowFanPartyId ==. fanId, FanFollowArtistPartyId ==. artistId] []
+  case mFollow of
+    Nothing -> pure Nothing
+    Just followEnt -> do
+      nameMap <- fetchPartyNameMap [artistId]
+      profileMap <- fetchArtistProfileMap [artistId]
+      pure $ Just (fanFollowEntityToDTO nameMap profileMap followEnt)
 
 toLoginResponse :: Text -> AuthedUser -> LoginResponse
 toLoginResponse token AuthedUser{..} = LoginResponse

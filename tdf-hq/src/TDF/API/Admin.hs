@@ -16,6 +16,7 @@ import           TDF.API.Types ( DropdownOptionCreate
                                 )
 
 import           Data.Int      (Int64)
+import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert)
 
 type DropdownCategoryAPI =
        QueryParam "includeInactive" Bool :> Get '[JSON] [DropdownOptionDTO]
@@ -32,8 +33,17 @@ type UsersAPI =
 
 type RolesAPI = Get '[JSON] [RoleDetailDTO]
 
+type ArtistAdminAPI =
+       "profiles" :>
+         ( Get '[JSON] [ArtistProfileDTO]
+       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Post '[JSON] ArtistProfileDTO
+         )
+  :<|> "releases" :>
+         ( ReqBody '[JSON] ArtistReleaseUpsert :> Post '[JSON] ArtistReleaseDTO )
+
 type AdminAPI =
        "seed" :> Post '[JSON] NoContent
   :<|> "dropdowns" :> Capture "category" Text :> DropdownCategoryAPI
   :<|> "users" :> UsersAPI
   :<|> "roles" :> RolesAPI
+  :<|> "artists" :> ArtistAdminAPI

@@ -107,3 +107,58 @@ export interface PipelineCardUpdate {
   pcuSortOrder?: number;
   pcuNotes?: string | null;
 }
+
+export interface ArtistProfileDTO {
+  apArtistId: number;
+  apDisplayName: string;
+  apSlug?: string | null;
+  apBio?: string | null;
+  apCity?: string | null;
+  apHeroImageUrl?: string | null;
+  apSpotifyArtistId?: string | null;
+  apSpotifyUrl?: string | null;
+  apYoutubeChannelId?: string | null;
+  apYoutubeUrl?: string | null;
+  apWebsiteUrl?: string | null;
+  apFeaturedVideoUrl?: string | null;
+  apGenres?: string | null;
+  apHighlights?: string | null;
+  apFollowerCount: number;
+}
+
+export interface ArtistReleaseDTO {
+  arArtistId: number;
+  arReleaseId: number;
+  arTitle: string;
+  arReleaseDate?: string | null;
+  arDescription?: string | null;
+  arCoverImageUrl?: string | null;
+  arSpotifyUrl?: string | null;
+  arYoutubeUrl?: string | null;
+}
+
+export interface FanProfileDTO {
+  fpArtistId: number;
+  fpDisplayName?: string | null;
+  fpAvatarUrl?: string | null;
+  fpFavoriteGenres?: string | null;
+  fpBio?: string | null;
+  fpCity?: string | null;
+}
+
+export interface FanProfileUpdate {
+  fpuDisplayName?: string | null;
+  fpuAvatarUrl?: string | null;
+  fpuFavoriteGenres?: string | null;
+  fpuBio?: string | null;
+  fpuCity?: string | null;
+}
+
+export interface FanFollowDTO {
+  ffArtistId: number;
+  ffArtistName: string;
+  ffHeroImageUrl?: string | null;
+  ffSpotifyUrl?: string | null;
+  ffYoutubeUrl?: string | null;
+  ffStartedAt: string;
+}

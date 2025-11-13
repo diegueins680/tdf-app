@@ -30,6 +30,7 @@ This is a monorepo containing three main applications:
 - Package & invoice management
 - Dark/light theme toggle with persistence
 - Type-safe API client generated from OpenAPI specs
+- Public Fan Hub (`/fans`) where fans can create accounts, follow artists, and jump directly to their Spotify/YouTube presences.
 
 [→ Web UI Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq-ui/README.md)
 

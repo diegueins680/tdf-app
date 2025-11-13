@@ -37,6 +37,94 @@ data PartyDTO = PartyDTO
 
 instance ToJSON PartyDTO
 instance FromJSON PartyDTO
+ 
+data ArtistProfileDTO = ArtistProfileDTO
+  { apArtistId        :: Int64
+  , apDisplayName     :: Text
+  , apSlug            :: Maybe Text
+  , apBio             :: Maybe Text
+  , apCity            :: Maybe Text
+  , apHeroImageUrl    :: Maybe Text
+  , apSpotifyArtistId :: Maybe Text
+  , apSpotifyUrl      :: Maybe Text
+  , apYoutubeChannelId :: Maybe Text
+  , apYoutubeUrl      :: Maybe Text
+  , apWebsiteUrl      :: Maybe Text
+  , apFeaturedVideoUrl :: Maybe Text
+  , apGenres          :: Maybe Text
+  , apHighlights      :: Maybe Text
+  , apFollowerCount   :: Int
+  } deriving (Show, Generic)
+instance ToJSON ArtistProfileDTO
+
+data ArtistProfileUpsert = ArtistProfileUpsert
+  { apuArtistId        :: Int64
+  , apuSlug            :: Maybe Text
+  , apuBio             :: Maybe Text
+  , apuCity            :: Maybe Text
+  , apuHeroImageUrl    :: Maybe Text
+  , apuSpotifyArtistId :: Maybe Text
+  , apuSpotifyUrl      :: Maybe Text
+  , apuYoutubeChannelId :: Maybe Text
+  , apuYoutubeUrl      :: Maybe Text
+  , apuWebsiteUrl      :: Maybe Text
+  , apuFeaturedVideoUrl :: Maybe Text
+  , apuGenres          :: Maybe Text
+  , apuHighlights      :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON ArtistProfileUpsert
+
+data ArtistReleaseDTO = ArtistReleaseDTO
+  { arArtistId     :: Int64
+  , arReleaseId    :: Int64
+  , arTitle        :: Text
+  , arReleaseDate  :: Maybe Day
+  , arDescription  :: Maybe Text
+  , arCoverImageUrl :: Maybe Text
+  , arSpotifyUrl   :: Maybe Text
+  , arYoutubeUrl   :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON ArtistReleaseDTO
+
+data ArtistReleaseUpsert = ArtistReleaseUpsert
+  { aruArtistId    :: Int64
+  , aruTitle       :: Text
+  , aruReleaseDate :: Maybe Day
+  , aruDescription :: Maybe Text
+  , aruCoverImageUrl :: Maybe Text
+  , aruSpotifyUrl  :: Maybe Text
+  , aruYoutubeUrl  :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON ArtistReleaseUpsert
+
+data FanProfileDTO = FanProfileDTO
+  { fpArtistId      :: Int64
+  , fpDisplayName   :: Maybe Text
+  , fpAvatarUrl     :: Maybe Text
+  , fpFavoriteGenres :: Maybe Text
+  , fpBio           :: Maybe Text
+  , fpCity          :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON FanProfileDTO
+
+data FanProfileUpdate = FanProfileUpdate
+  { fpuDisplayName   :: Maybe Text
+  , fpuAvatarUrl     :: Maybe Text
+  , fpuFavoriteGenres :: Maybe Text
+  , fpuBio           :: Maybe Text
+  , fpuCity          :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON FanProfileUpdate
+
+data FanFollowDTO = FanFollowDTO
+  { ffArtistId      :: Int64
+  , ffArtistName    :: Text
+  , ffHeroImageUrl  :: Maybe Text
+  , ffSpotifyUrl    :: Maybe Text
+  , ffYoutubeUrl    :: Maybe Text
+  , ffStartedAt     :: Day
+  } deriving (Show, Generic)
+instance ToJSON FanFollowDTO
 
 data PartyCreate = PartyCreate
   { cLegalName        :: Maybe Text

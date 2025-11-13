@@ -13,6 +13,7 @@ import SystemPage from './pages/SystemPage';
 import PlaceholderPage from './components/PlaceholderPage';
 import AboutPage from './pages/AboutPage';
 import DocsPage from './pages/DocsPage';
+import FanHubPage from './pages/FanHubPage';
 import { useSession } from './session/SessionContext';
 import SidebarNav from './components/SidebarNav';
 import ApiStatusChip from './components/ApiStatusChip';
@@ -85,6 +86,7 @@ function Shell() {
 export default function App() {
   return (
     <Routes>
+      <Route path="/fans" element={<FanHubPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>
         <Route path="/" element={<Navigate to="/inicio" replace />} />

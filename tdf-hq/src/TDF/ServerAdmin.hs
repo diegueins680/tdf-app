@@ -7,14 +7,16 @@ module TDF.ServerAdmin
   ( adminServer
   ) where
 
-import           Control.Monad          (unless, when)
+import           Control.Monad          (unless, when, void)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
 import           Data.Char              (isAlphaNum, toLower)
-import           Data.Maybe             (fromMaybe, isJust)
+import           Data.Maybe             (fromMaybe, isJust, listToMaybe)
+import           Data.List              (foldl')
+import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 import           Data.Text              (Text)
 import qualified Data.Text              as T
@@ -27,6 +29,8 @@ import           Database.Persist       ( (==.), (!=.)
                                         , SelectOpt(..)
                                         , selectFirst
                                         , selectList
+                                        , (<-.)
+                                        , get
                                         , getBy
                                         , update
                                         , getEntity
@@ -46,6 +50,11 @@ import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , UserAccountCreate(..)
                                         , UserAccountDTO(..)
                                         , UserAccountUpdate(..)
+                                        )
+import           TDF.DTO                ( ArtistProfileDTO(..)
+                                        , ArtistProfileUpsert(..)
+                                        , ArtistReleaseDTO(..)
+                                        , ArtistReleaseUpsert(..)
                                         )
 import           TDF.Auth               ( AuthedUser
                                         , ModuleAccess(..)
@@ -68,7 +77,7 @@ adminServer
      )
   => AuthedUser
   -> ServerT AdminAPI m
-adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHandler
+adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHandler :<|> artistsRouter
   where
     seedHandler = do
       ensureModule ModuleAdmin user
@@ -93,11 +102,86 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
       ensureModule ModuleAdmin user
       pure (map roleDetail [minBound .. maxBound])
 
+    artistsRouter =
+      (listArtistProfilesAdmin :<|> upsertArtistProfileAdmin)
+      :<|> createArtistReleaseAdmin
+
     roleDetail role = RoleDetailDTO
       { role    = role
       , label   = T.pack (show role)
       , modules = map moduleName (Set.toList (modulesForRoles [role]))
       }
+
+    listArtistProfilesAdmin = do
+      ensureModule ModuleAdmin user
+      withPool loadAllArtistProfilesAdmin
+
+    upsertArtistProfileAdmin payload@ArtistProfileUpsert{..} = do
+      ensureModule ModuleAdmin user
+      now <- liftIO getCurrentTime
+      let artistKey = toSqlKey apuArtistId
+      dto <- withPool $ do
+        mParty <- get artistKey
+        case mParty of
+          Nothing -> pure Nothing
+          Just _ -> do
+            _ <- upsert
+              ArtistProfile
+                { artistProfileArtistPartyId    = artistKey
+                , artistProfileSlug             = apuSlug
+                , artistProfileBio              = apuBio
+                , artistProfileCity             = apuCity
+                , artistProfileHeroImageUrl     = apuHeroImageUrl
+                , artistProfileSpotifyArtistId  = apuSpotifyArtistId
+                , artistProfileSpotifyUrl       = apuSpotifyUrl
+                , artistProfileYoutubeChannelId = apuYoutubeChannelId
+                , artistProfileYoutubeUrl       = apuYoutubeUrl
+                , artistProfileWebsiteUrl       = apuWebsiteUrl
+                , artistProfileFeaturedVideoUrl = apuFeaturedVideoUrl
+                , artistProfileGenres           = apuGenres
+                , artistProfileHighlights       = apuHighlights
+                , artistProfileCreatedAt        = now
+                , artistProfileUpdatedAt        = Just now
+                }
+              [ ArtistProfileSlug             =. apuSlug
+              , ArtistProfileBio              =. apuBio
+              , ArtistProfileCity             =. apuCity
+              , ArtistProfileHeroImageUrl     =. apuHeroImageUrl
+              , ArtistProfileSpotifyArtistId  =. apuSpotifyArtistId
+              , ArtistProfileSpotifyUrl       =. apuSpotifyUrl
+              , ArtistProfileYoutubeChannelId =. apuYoutubeChannelId
+              , ArtistProfileYoutubeUrl       =. apuYoutubeUrl
+              , ArtistProfileWebsiteUrl       =. apuWebsiteUrl
+              , ArtistProfileFeaturedVideoUrl =. apuFeaturedVideoUrl
+              , ArtistProfileGenres           =. apuGenres
+              , ArtistProfileHighlights       =. apuHighlights
+              , ArtistProfileUpdatedAt        =. Just now
+              ]
+            loadArtistProfileAdmin artistKey
+      maybe (throwError err404) pure dto
+
+    createArtistReleaseAdmin ArtistReleaseUpsert{..} = do
+      ensureModule ModuleAdmin user
+      now <- liftIO getCurrentTime
+      let artistKey = toSqlKey aruArtistId
+      dto <- withPool $ do
+        mProfile <- getBy (UniqueArtistProfile artistKey)
+        case mProfile of
+          Nothing -> pure Nothing
+          Just _ -> do
+            releaseId <- insert ArtistRelease
+              { artistReleaseArtistPartyId = artistKey
+              , artistReleaseTitle         = aruTitle
+              , artistReleaseReleaseDate   = aruReleaseDate
+              , artistReleaseDescription   = aruDescription
+              , artistReleaseCoverImageUrl = aruCoverImageUrl
+              , artistReleaseSpotifyUrl    = aruSpotifyUrl
+              , artistReleaseYoutubeUrl    = aruYoutubeUrl
+              , artistReleaseCreatedAt     = now
+              }
+            entity <- getJustEntity releaseId
+            pure (Just (artistReleaseEntityToDTOAdmin entity))
+      maybe (throwError err404) pure dto
 
     listOptions rawCategory mIncludeInactive = do
       ensureModule ModuleAdmin user
@@ -371,6 +455,79 @@ setPartyRoles partyKey rolesList = do
   for_ existing $ \(Entity roleId partyRole) ->
     when (partyRoleActive partyRole && Set.notMember (partyRoleRole partyRole) desired) $
       update roleId [PartyRoleActive =. False]
+
+loadAllArtistProfilesAdmin :: SqlPersistT IO [ArtistProfileDTO]
+loadAllArtistProfilesAdmin = do
+  profiles <- selectList [] [Asc ArtistProfileArtistPartyId]
+  buildArtistProfileDTOsAdmin profiles
+
+loadArtistProfileAdmin :: PartyId -> SqlPersistT IO (Maybe ArtistProfileDTO)
+loadArtistProfileAdmin artistId = do
+  mProfile <- getBy (UniqueArtistProfile artistId)
+  case mProfile of
+    Nothing -> pure Nothing
+    Just prof -> do
+      dtos <- buildArtistProfileDTOsAdmin [prof]
+      pure (listToMaybe dtos)
+
+buildArtistProfileDTOsAdmin :: [Entity ArtistProfile] -> SqlPersistT IO [ArtistProfileDTO]
+buildArtistProfileDTOsAdmin profiles = do
+  let artistIds = map (artistProfileArtistPartyId . entityVal) profiles
+  nameMap <- fetchPartyNameMapAdmin artistIds
+  followerMap <- fetchFollowerCountsAdmin artistIds
+  pure (map (artistProfileEntityToDTOAdmin nameMap followerMap) profiles)
+
+fetchPartyNameMapAdmin :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Text)
+fetchPartyNameMapAdmin ids
+  | null ids  = pure Map.empty
+  | otherwise = do
+      parties <- selectList [PartyId <-. ids] []
+      pure $ Map.fromList [ (entityKey p, partyDisplayName (entityVal p)) | p <- parties ]
+
+fetchFollowerCountsAdmin :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Int)
+fetchFollowerCountsAdmin ids
+  | null ids  = pure Map.empty
+  | otherwise = do
+      follows <- selectList [FanFollowArtistPartyId <-. ids] []
+      pure $ foldl' (\acc (Entity _ fol) -> Map.insertWith (+) (fanFollowArtistPartyId fol) 1 acc) Map.empty follows
+
+artistProfileEntityToDTOAdmin
+  :: Map.Map PartyId Text
+  -> Map.Map PartyId Int
+  -> Entity ArtistProfile
+  -> ArtistProfileDTO
+artistProfileEntityToDTOAdmin nameMap followerMap (Entity _ prof) =
+  let artistId = artistProfileArtistPartyId prof
+  in ArtistProfileDTO
+      { apArtistId         = fromSqlKey artistId
+      , apDisplayName      = Map.findWithDefault "Artista" artistId nameMap
+      , apSlug             = artistProfileSlug prof
+      , apBio              = artistProfileBio prof
+      , apCity             = artistProfileCity prof
+      , apHeroImageUrl     = artistProfileHeroImageUrl prof
+      , apSpotifyArtistId  = artistProfileSpotifyArtistId prof
+      , apSpotifyUrl       = artistProfileSpotifyUrl prof
+      , apYoutubeChannelId = artistProfileYoutubeChannelId prof
+      , apYoutubeUrl       = artistProfileYoutubeUrl prof
+      , apWebsiteUrl       = artistProfileWebsiteUrl prof
+      , apFeaturedVideoUrl = artistProfileFeaturedVideoUrl prof
+      , apGenres           = artistProfileGenres prof
+      , apHighlights       = artistProfileHighlights prof
+      , apFollowerCount    = Map.findWithDefault 0 artistId followerMap
+      }
+
+artistReleaseEntityToDTOAdmin :: Entity ArtistRelease -> ArtistReleaseDTO
+artistReleaseEntityToDTOAdmin (Entity releaseId release) =
+  ArtistReleaseDTO
+    { arArtistId      = fromSqlKey (artistReleaseArtistPartyId release)
+    , arReleaseId     = fromSqlKey releaseId
+    , arTitle         = artistReleaseTitle release
+    , arReleaseDate   = artistReleaseReleaseDate release
+    , arDescription   = artistReleaseDescription release
+    , arCoverImageUrl = artistReleaseCoverImageUrl release
+    , arSpotifyUrl    = artistReleaseSpotifyUrl release
+    , arYoutubeUrl    = artistReleaseYoutubeUrl release
+    }
 
 hashPasswordText :: Text -> IO Text
 hashPasswordText pwd = do

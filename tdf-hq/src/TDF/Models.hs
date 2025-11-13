@@ -30,7 +30,7 @@ data PricingModel = Hourly | PerSong | Package | Quote | Retainer
   deriving (Show, Read, Eq, Enum, Bounded, Generic)
 derivePersistField "PricingModel"
 
-data RoleEnum = Admin | Manager | Engineer | Teacher | Reception | Accounting | Artist | Student | Vendor | ReadOnly | Customer
+data RoleEnum = Admin | Manager | Engineer | Teacher | Reception | Accounting | Artist | Student | Vendor | ReadOnly | Customer | Fan
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
 derivePersistField "RoleEnum"
 
@@ -129,6 +129,51 @@ PartyRole
     role             RoleEnum
     active           Bool
     UniquePartyRole  partyId role
+    deriving Show Generic
+ArtistProfile
+    artistPartyId    PartyId
+    slug             Text Maybe
+    bio              Text Maybe
+    city             Text Maybe
+    heroImageUrl     Text Maybe
+    spotifyArtistId  Text Maybe
+    spotifyUrl       Text Maybe
+    youtubeChannelId Text Maybe
+    youtubeUrl       Text Maybe
+    websiteUrl       Text Maybe
+    featuredVideoUrl Text Maybe
+    genres           Text Maybe
+    highlights       Text Maybe
+    createdAt        UTCTime
+    updatedAt        UTCTime Maybe
+    UniqueArtistProfile artistPartyId
+    deriving Show Generic
+ArtistRelease
+    artistPartyId    PartyId
+    title            Text
+    releaseDate      Day Maybe
+    description      Text Maybe
+    coverImageUrl    Text Maybe
+    spotifyUrl       Text Maybe
+    youtubeUrl       Text Maybe
+    createdAt        UTCTime
+    deriving Show Generic
+FanProfile
+    fanPartyId       PartyId
+    displayName      Text Maybe
+    avatarUrl        Text Maybe
+    favoriteGenres   Text Maybe
+    bio              Text Maybe
+    city             Text Maybe
+    createdAt        UTCTime
+    updatedAt        UTCTime Maybe
+    UniqueFanProfile fanPartyId
+    deriving Show Generic
+FanFollow
+    fanPartyId       PartyId
+    artistPartyId    PartyId
+    createdAt        UTCTime
+    UniqueFanFollow  fanPartyId artistPartyId
     deriving Show Generic
 ServiceCatalog
     name             Text

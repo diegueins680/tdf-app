@@ -28,6 +28,7 @@ import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
+import           Data.Int (Int64)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -104,6 +105,22 @@ type AuthV1API =
   :<|> "password-reset" :> "confirm" :> PasswordResetConfirmAPI
   :<|> "password" :> PasswordAPI
 
+type FanPublicAPI =
+       "artists" :> Get '[JSON] [ArtistProfileDTO]
+  :<|> "artists" :> Capture "artistId" Int64 :> Get '[JSON] ArtistProfileDTO
+  :<|> "artists" :> Capture "artistId" Int64 :> "releases" :> Get '[JSON] [ArtistReleaseDTO]
+
+type FanSecureAPI =
+       "me" :> "profile" :>
+         ( Get '[JSON] FanProfileDTO
+       :<|> ReqBody '[JSON] FanProfileUpdate :> Put '[JSON] FanProfileDTO
+         )
+  :<|> "me" :> "follows" :>
+         ( Get '[JSON] [FanFollowDTO]
+       :<|> Capture "artistId" Int64 :> Post '[JSON] FanFollowDTO
+       :<|> Capture "artistId" Int64 :> Delete '[JSON] NoContent
+         )
+
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
 
 type ProtectedAPI =
@@ -114,6 +131,7 @@ type ProtectedAPI =
   :<|> "receipts" :> ReceiptAPI
   :<|> "admin"    :> AdminAPI
   :<|> "api"      :> UserRolesAPI
+  :<|> "fans"     :> FanSecureAPI
   :<|> InventoryAPI
   :<|> BandsAPI
   :<|> SessionsAPI
@@ -128,6 +146,7 @@ type API =
   :<|> "signup" :> SignupAPI
   :<|> "password" :> PasswordAPI
   :<|> "v1" :> AuthV1API
+  :<|> "fans" :> FanPublicAPI
   :<|> MetaAPI
   :<|> "seed"   :> SeedAPI
   :<|> "input-list" :> InputListAPI
