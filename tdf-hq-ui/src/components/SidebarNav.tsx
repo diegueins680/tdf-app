@@ -118,6 +118,15 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   { title: 'INSIGHTS', items: [{ label: 'Insights', path: '/insights' }] },
+  {
+    title: 'RECURSOS',
+    items: [
+      { label: 'Documentación', path: '/docs' },
+      { label: 'Acerca de', path: '/acerca' },
+      { label: 'Seguridad', path: '/seguridad' },
+      { label: 'Fan Hub', path: '/fans' },
+    ],
+  },
 ];
 
 interface SidebarNavProps {
