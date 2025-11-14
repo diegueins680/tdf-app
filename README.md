@@ -2,6 +2,8 @@
 
 Comprehensive business management system for TDF Records, featuring CRM, scheduling, lesson packages, invoicing, inventory tracking, and trial lesson management.
 
+> **📚 New to the project?** Check out [DOCUMENTATION.md](DOCUMENTATION.md) for a complete guide to all available documentation.
+
 ## 🏗️ Architecture
 
 This is a monorepo containing three main applications:
@@ -18,7 +20,7 @@ This is a monorepo containing three main applications:
 - Trial lesson workflows
 - Pipeline/Kanban management for services
 
-[→ Backend Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq/README.md)
+[→ Backend Documentation](tdf-hq/README.md)
 
 ### Web UI - `tdf-hq-ui/`
 **Tech Stack:** React + Vite + MUI + React Query + TypeScript  
@@ -30,9 +32,9 @@ This is a monorepo containing three main applications:
 - Package & invoice management
 - Dark/light theme toggle with persistence
 - Type-safe API client generated from OpenAPI specs
-- Public Fan Hub (`/fans`) where fans can create accounts, follow artists, and jump directly to their Spotify/YouTube presences.
+- Public Fan Hub (`/fans`) where fans can create accounts, follow artists, and jump directly to their Spotify/YouTube presences
 
-[→ Web UI Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq-ui/README.md)
+[→ Web UI Documentation](tdf-hq-ui/README.md)
 
 ### Mobile App - `tdf-mobile/`
 **Tech Stack:** Expo + React Native + React Query + TypeScript  
@@ -43,7 +45,9 @@ This is a monorepo containing three main applications:
 - Calendar integration
 - Offline support (planned)
 
-[→ Mobile Documentation](https://github.com/diegueins680/tdf-app/blob/main/tdf-mobile/README.md)
+**Note:** This is a Git submodule. Run `git submodule update --init --recursive` after cloning.
+
+[→ Mobile Documentation](MOBILE_APP.md)
 
 ## 🚀 Quick Start
 
@@ -266,18 +270,46 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 
 ## 📖 Documentation
 
-- [Backend API Reference](https://github.com/diegueins680/tdf-app/blob/main/tdf-hq/docs/api.md)
-- [OpenAPI Specs](https://github.com/diegueins680/tdf-app/tree/main/tdf-hq/docs/openapi/)
-- [Business Requirements](https://github.com/diegueins680/tdf-app/blob/main/specs.yaml)
-- [Legacy Documentation](https://github.com/diegueins680/tdf-app/tree/main/docs/legacy/)
+### 📚 Documentation Hub
+**[→ Complete Documentation Index](DOCUMENTATION.md)** - Your starting point for all documentation
+
+### Essential Guides
+- **[QUICKSTART.md](QUICKSTART.md)** - Get up and running in minutes
+- **[QUICK_START_REFERENCE.md](QUICK_START_REFERENCE.md)** - Command cheat sheet
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Detailed development workflows
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
+- **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - Code quality and standards
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment procedures
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
+
+### Technical Documentation
+- **[Backend (Haskell)](tdf-hq/README.md)** - API architecture and patterns
+- **[Frontend (React)](tdf-hq-ui/README.md)** - Web UI structure and components
+- **[Mobile App (React Native)](MOBILE_APP.md)** - Mobile development guide
+- **[API Reference](QUICK_REFERENCE.md)** - Quick API reference with examples
+
+### Specialized Documentation
+- **[UI_VISUAL_GUIDE.md](UI_VISUAL_GUIDE.md)** - UI components and design specs
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing procedures
+- **[ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)** - System architecture and data flows
+- **[FEATURES.md](FEATURES.md)** - Complete feature catalog
+- **[SECURITY_NOTICE.md](SECURITY_NOTICE.md)** - Security guidelines
+
+### OpenAPI & Contracts
+- **[OpenAPI Specs](docs/openapi/)** - API specifications
+- **[Business Requirements](specs.yaml)** - Business logic and rules
 
 ## 🤝 Contributing
 
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+**Quick checklist:**
 1. Create feature branches from `main`
 2. Follow existing code style and conventions
 3. Update tests and documentation
-4. Generate API clients after OpenAPI changes
-5. Test locally before pushing
+4. Generate API clients after OpenAPI changes (`npm run generate:api:ui`, `npm run generate:api:mobile`)
+5. Run quality checks (`npm run quality`)
+6. Test locally before pushing
 
 ## 📄 License
 
