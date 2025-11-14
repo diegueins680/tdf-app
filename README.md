@@ -275,6 +275,7 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 
 ### Essential Guides
 - **[QUICKSTART.md](QUICKSTART.md)** - Get up and running in minutes
+- **[QUICK_START_REFERENCE.md](QUICK_START_REFERENCE.md)** - Command cheat sheet
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Detailed development workflows
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 - **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - Code quality and standards

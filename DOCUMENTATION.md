@@ -7,8 +7,9 @@ Welcome to the comprehensive documentation for the TDF Records Platform. This in
 ### For New Developers
 1. **[README.md](README.md)** - Start here! Project overview and quick setup
 2. **[QUICKSTART.md](QUICKSTART.md)** - Minimal steps to get running locally
-3. **[DEVELOPMENT.md](DEVELOPMENT.md)** - Detailed development workflows and patterns
-4. **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to the project
+3. **[QUICK_START_REFERENCE.md](QUICK_START_REFERENCE.md)** - Fast command reference (cheat sheet)
+4. **[DEVELOPMENT.md](DEVELOPMENT.md)** - Detailed development workflows and patterns
+5. **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to the project
 
 ### For Deployment & Operations
 1. **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment procedures for all platforms
@@ -164,7 +165,7 @@ The Musician Developer agent specializes in:
 ## 📖 Reference Documentation
 
 ### Quick References
-- **[INDEX.md](INDEX.md)** - Multi-role implementation index
+- **[QUICK_START_REFERENCE.md](QUICK_START_REFERENCE.md)** - Command cheat sheet and common workflows
 - **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - API quick reference
 - **[CLEANUP_SUMMARY.md](CLEANUP_SUMMARY.md)** - Recent cleanup activities
 
