@@ -85,6 +85,7 @@ executable tdf-hq-exe
     , path-pieces
     , uuid
     , template-haskell
+    , file-embed
     , smtp-mail
 
 test-suite tdf-hq-test
@@ -131,5 +132,6 @@ test-suite tdf-hq-test
     , path-pieces
     , uuid
     , template-haskell
+    , file-embed
     , hspec                >=2.7
     , smtp-mail

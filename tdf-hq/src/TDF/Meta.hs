@@ -4,6 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
 module TDF.Meta
   ( MetaAPI
   , metaServer
@@ -19,9 +20,10 @@ import           GHC.Generics               (Generic)
 import           Network.HTTP.Media         ((//), (/:))
 import           Servant
 import qualified Data.Text                  as T
-import qualified Data.Text.IO               as TIO
+import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Lazy             as TL
 import qualified Data.Text.Lazy.Encoding    as TLE
+import           Data.FileEmbed             (embedFile)
 import qualified Paths_tdf_hq               as Paths
 
 -- | Basic build info for the About dialog.
@@ -47,8 +49,11 @@ metaServer = versionH :<|> openapiH :<|> docsH
         , version = T.pack (showVersion Paths.version)
         , builtAt = now
         }
-    openapiH = liftIO $ TIO.readFile "docs/openapi/api.yaml"
+    openapiH = pure openapiSpec
     docsH    = pure (T.pack redocIndex)
+
+openapiSpec :: T.Text
+openapiSpec = TE.decodeUtf8 $(embedFile "docs/openapi/api.yaml")
 
 -- | Minimal content type to serve HTML documents encoded as UTF-8.
 data HTML
