@@ -2,6 +2,7 @@ import { get, post, put, del } from './client';
 import type {
   ArtistProfileDTO,
   ArtistReleaseDTO,
+  ArtistProfileUpsert,
   FanProfileDTO,
   FanProfileUpdate,
   FanFollowDTO,
@@ -16,4 +17,7 @@ export const Fans = {
   listFollows: () => get<FanFollowDTO[]>('/fans/me/follows'),
   follow: (artistId: number) => post<FanFollowDTO>(`/fans/me/follows/${artistId}`, {}),
   unfollow: (artistId: number) => del<void>(`/fans/me/follows/${artistId}`),
+  getMyArtistProfile: () => get<ArtistProfileDTO>('/fans/me/artist-profile'),
+  updateMyArtistProfile: (payload: ArtistProfileUpsert) =>
+    put<ArtistProfileDTO>('/fans/me/artist-profile', payload),
 };

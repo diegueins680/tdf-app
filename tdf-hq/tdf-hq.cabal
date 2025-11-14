@@ -43,6 +43,7 @@ executable tdf-hq-exe
     TDF.Trials.Seed
     TDF.Trials.Server
     TDF.Version
+    TDF.Profiles.Artist
     Paths_tdf_hq
   default-language: Haskell2010
   ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N

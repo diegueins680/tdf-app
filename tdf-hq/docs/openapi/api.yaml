@@ -75,6 +75,191 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '409':
           description: Email already registered
+  /fans/artists:
+    get:
+      tags: [FanHub]
+      summary: List public artist profiles
+      description: Returns fan-facing artist profiles with bio, location, and follower counts.
+      operationId: listFanArtists
+      security: [ ]
+      responses:
+        '200':
+          description: Artist profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtistProfile'
+  /fans/artists/{artistId}:
+    parameters:
+      - name: artistId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags: [FanHub]
+      summary: Get artist profile
+      description: Returns the public profile for the specified artist id.
+      operationId: getFanArtist
+      security: [ ]
+      responses:
+        '200':
+          description: Artist profile found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtistProfile'
+        '404':
+          description: Artist not found
+  /fans/artists/{artistId}/releases:
+    parameters:
+      - name: artistId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags: [FanHub]
+      summary: List artist releases
+      description: Returns the releases registered for the artist.
+      operationId: listFanArtistReleases
+      security: [ ]
+      responses:
+        '200':
+          description: Artist releases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtistRelease'
+        '404':
+          description: Artist not found
+  /fans/me/profile:
+    get:
+      tags: [FanHub]
+      summary: Get fan profile
+      description: Returns the profile for the authenticated fan/customer.
+      operationId: getFanProfile
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Fan profile loaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FanProfile'
+    put:
+      tags: [FanHub]
+      summary: Update fan profile
+      description: Creates or updates the fan profile for the authenticated party.
+      operationId: updateFanProfile
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FanProfileUpdate'
+      responses:
+        '200':
+          description: Fan profile saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FanProfile'
+  /fans/me/follows:
+    get:
+      tags: [FanHub]
+      summary: List follows
+      description: Returns the artists followed by the authenticated fan.
+      operationId: listFanFollows
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Follow list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FanFollow'
+  /fans/me/follows/{artistId}:
+    parameters:
+      - name: artistId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    post:
+      tags: [FanHub]
+      summary: Follow artist
+      description: Adds the selected artist to the authenticated fan feed.
+      operationId: followArtist
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Artist followed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FanFollow'
+        '404':
+          description: Artist not found
+    delete:
+      tags: [FanHub]
+      summary: Unfollow artist
+      description: Removes the follow relationship for the authenticated fan.
+      operationId: unfollowArtist
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '204':
+          description: Follow removed
+  /fans/me/artist-profile:
+    get:
+      tags: [FanHub]
+      summary: Get my artist profile
+      description: Returns the artist profile for the authenticated artist/admin.
+      operationId: getMyArtistProfile
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Artist profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtistProfile'
+    put:
+      tags: [FanHub]
+      summary: Upsert my artist profile
+      description: Updates artist bio, links, genres, and media shown to fans.
+      operationId: updateMyArtistProfile
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtistProfileUpsert'
+      responses:
+        '200':
+          description: Artist profile saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtistProfile'
   /parties:
     get:
       tags: [CRM]
@@ -643,3 +828,198 @@ components:
           nullable: true
           items:
             $ref: '#/components/schemas/Role'
+    ArtistProfile:
+      type: object
+      properties:
+        apArtistId:
+          type: integer
+          format: int64
+        apDisplayName:
+          type: string
+        apSlug:
+          type: string
+          nullable: true
+        apBio:
+          type: string
+          nullable: true
+        apCity:
+          type: string
+          nullable: true
+        apHeroImageUrl:
+          type: string
+          format: uri
+          nullable: true
+        apSpotifyArtistId:
+          type: string
+          nullable: true
+        apSpotifyUrl:
+          type: string
+          format: uri
+          nullable: true
+        apYoutubeChannelId:
+          type: string
+          nullable: true
+        apYoutubeUrl:
+          type: string
+          format: uri
+          nullable: true
+        apWebsiteUrl:
+          type: string
+          format: uri
+          nullable: true
+        apFeaturedVideoUrl:
+          type: string
+          format: uri
+          nullable: true
+        apGenres:
+          type: string
+          nullable: true
+        apHighlights:
+          type: string
+          nullable: true
+        apFollowerCount:
+          type: integer
+          format: int64
+          description: Total followers captured in the Fan Hub.
+    ArtistProfileUpsert:
+      type: object
+      required: [apuArtistId]
+      properties:
+        apuArtistId:
+          type: integer
+          format: int64
+        apuSlug:
+          type: string
+          nullable: true
+        apuBio:
+          type: string
+          nullable: true
+        apuCity:
+          type: string
+          nullable: true
+        apuHeroImageUrl:
+          type: string
+          format: uri
+          nullable: true
+        apuSpotifyArtistId:
+          type: string
+          nullable: true
+        apuSpotifyUrl:
+          type: string
+          format: uri
+          nullable: true
+        apuYoutubeChannelId:
+          type: string
+          nullable: true
+        apuYoutubeUrl:
+          type: string
+          format: uri
+          nullable: true
+        apuWebsiteUrl:
+          type: string
+          format: uri
+          nullable: true
+        apuFeaturedVideoUrl:
+          type: string
+          format: uri
+          nullable: true
+        apuGenres:
+          type: string
+          nullable: true
+        apuHighlights:
+          type: string
+          nullable: true
+    ArtistRelease:
+      type: object
+      properties:
+        arArtistId:
+          type: integer
+          format: int64
+        arReleaseId:
+          type: integer
+          format: int64
+        arTitle:
+          type: string
+        arReleaseDate:
+          type: string
+          format: date
+          nullable: true
+        arDescription:
+          type: string
+          nullable: true
+        arCoverImageUrl:
+          type: string
+          format: uri
+          nullable: true
+        arSpotifyUrl:
+          type: string
+          format: uri
+          nullable: true
+        arYoutubeUrl:
+          type: string
+          format: uri
+          nullable: true
+    FanProfile:
+      type: object
+      properties:
+        fpArtistId:
+          type: integer
+          format: int64
+        fpDisplayName:
+          type: string
+          nullable: true
+        fpAvatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        fpFavoriteGenres:
+          type: string
+          nullable: true
+        fpBio:
+          type: string
+          nullable: true
+        fpCity:
+          type: string
+          nullable: true
+    FanProfileUpdate:
+      type: object
+      properties:
+        fpuDisplayName:
+          type: string
+          nullable: true
+        fpuAvatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        fpuFavoriteGenres:
+          type: string
+          nullable: true
+        fpuBio:
+          type: string
+          nullable: true
+        fpuCity:
+          type: string
+          nullable: true
+    FanFollow:
+      type: object
+      properties:
+        ffArtistId:
+          type: integer
+          format: int64
+        ffArtistName:
+          type: string
+        ffHeroImageUrl:
+          type: string
+          format: uri
+          nullable: true
+        ffSpotifyUrl:
+          type: string
+          format: uri
+          nullable: true
+        ffYoutubeUrl:
+          type: string
+          format: uri
+          nullable: true
+        ffStartedAt:
+          type: string
+          format: date

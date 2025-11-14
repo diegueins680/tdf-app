@@ -51,7 +51,7 @@ import           TDF.Models
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO
-import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, lookupUsernameFromToken, moduleName, loadAuthedUser)
+import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, moduleName, loadAuthedUser)
 import           TDF.Seed       (seedAll)
 import           TDF.ServerAdmin (adminServer)
 import           TDF.ServerExtra (bandsServer, inventoryServer, loadBandForParty, pipelinesServer, roomsServer, sessionsServer)
@@ -62,6 +62,13 @@ import qualified TDF.Meta as Meta
 import           TDF.Version      (getVersionInfo)
 import qualified TDF.Handlers.InputList as InputList
 import qualified TDF.Email as Email
+import           TDF.Profiles.Artist ( fetchArtistProfileMap
+                                     , fetchPartyNameMap
+                                     , loadAllArtistProfilesDTO
+                                     , loadArtistProfileDTO
+                                     , loadOrCreateArtistProfileDTO
+                                     , upsertArtistProfileRecord
+                                     )
 
 type AppM = ReaderT Env Handler
 
@@ -216,12 +223,12 @@ fanPublicServer =
     listFanArtists :: AppM [ArtistProfileDTO]
     listFanArtists = do
       Env pool _ <- ask
-      liftIO $ flip runSqlPool pool loadAllArtistProfiles
+      liftIO $ flip runSqlPool pool loadAllArtistProfilesDTO
 
     fanArtistProfile :: Int64 -> AppM ArtistProfileDTO
     fanArtistProfile artistId = do
       Env pool _ <- ask
-      mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfile (toSqlKey artistId)
+      mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfileDTO (toSqlKey artistId)
       maybe (throwError err404) pure mDto
 
     fanArtistReleases :: Int64 -> AppM [ArtistReleaseDTO]
@@ -235,6 +242,7 @@ fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
+  :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
 
 protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
@@ -665,6 +673,26 @@ requireFanAccess AuthedUser{..} =
   unless (Fan `elem` auRoles || Customer `elem` auRoles) $
     throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Fan access required") }
 
+requireArtistAccess :: AuthedUser -> AppM ()
+requireArtistAccess AuthedUser{..} =
+  unless (Artist `elem` auRoles || Admin `elem` auRoles) $
+    throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Artist access required") }
+
+artistGetOwnProfile :: AuthedUser -> AppM ArtistProfileDTO
+artistGetOwnProfile user = do
+  requireArtistAccess user
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ loadOrCreateArtistProfileDTO (auPartyId user)
+
+artistUpdateOwnProfile :: AuthedUser -> ArtistProfileUpsert -> AppM ArtistProfileDTO
+artistUpdateOwnProfile user payload = do
+  requireArtistAccess user
+  let artistKey = auPartyId user
+      sanitized = payload { apuArtistId = fromSqlKey artistKey }
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool pool $ upsertArtistProfileRecord artistKey sanitized now
+
 loadFanProfileDTO :: PartyId -> SqlPersistT IO FanProfileDTO
 loadFanProfileDTO fanId = do
   mProfile <- getBy (UniqueFanProfile fanId)
@@ -689,72 +717,6 @@ loadFanProfileDTO fanId = do
   let fallbackName = maybe Nothing (Just . M.partyDisplayName) party
   pure (fanProfileToDTO fallbackName (entityVal profileEntity))
 
-loadAllArtistProfiles :: SqlPersistT IO [ArtistProfileDTO]
-loadAllArtistProfiles = do
-  profiles <- selectList [] [Asc ArtistProfileArtistPartyId]
-  buildArtistProfileDTOs profiles
-
-loadArtistProfile :: PartyId -> SqlPersistT IO (Maybe ArtistProfileDTO)
-loadArtistProfile artistId = do
-  mProfile <- getBy (UniqueArtistProfile artistId)
-  case mProfile of
-    Nothing -> pure Nothing
-    Just prof -> do
-      dtos <- buildArtistProfileDTOs [prof]
-      pure (listToMaybe dtos)
-
-buildArtistProfileDTOs :: [Entity ArtistProfile] -> SqlPersistT IO [ArtistProfileDTO]
-buildArtistProfileDTOs profiles = do
-  let artistIds = map (artistProfileArtistPartyId . entityVal) profiles
-  nameMap <- fetchPartyNameMap artistIds
-  followCounts <- fetchFollowerCounts artistIds
-  pure (map (artistProfileEntityToDTO nameMap followCounts) profiles)
-
-fetchPartyNameMap :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Text)
-fetchPartyNameMap partyIds = do
-  parties <- if null partyIds then pure [] else selectList [PartyId <-. partyIds] []
-  pure $ Map.fromList [ (entityKey p, M.partyDisplayName (entityVal p)) | p <- parties ]
-
-fetchFollowerCounts :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Int)
-fetchFollowerCounts ids
-  | null ids  = pure Map.empty
-  | otherwise = do
-      follows <- selectList [FanFollowArtistPartyId <-. ids] []
-      pure $ foldl' (\acc (Entity _ fol) -> Map.insertWith (+) (fanFollowArtistPartyId fol) 1 acc) Map.empty follows
-
-fetchArtistProfileMap :: [PartyId] -> SqlPersistT IO (Map.Map PartyId ArtistProfile)
-fetchArtistProfileMap ids
-  | null ids  = pure Map.empty
-  | otherwise = do
-      profiles <- selectList [ArtistProfileArtistPartyId <-. ids] []
-      pure $ Map.fromList [ (artistProfileArtistPartyId (entityVal ap), entityVal ap) | ap <- profiles ]
-
-artistProfileEntityToDTO
-  :: Map.Map PartyId Text
-  -> Map.Map PartyId Int
-  -> Entity ArtistProfile
-  -> ArtistProfileDTO
-artistProfileEntityToDTO nameMap followMap (Entity _ prof) =
-  let artistId = artistProfileArtistPartyId prof
-      displayName = Map.findWithDefault "Artista" artistId nameMap
-      followerCount = Map.findWithDefault 0 artistId followMap
-  in ArtistProfileDTO
-      { apArtistId         = fromSqlKey artistId
-      , apDisplayName      = displayName
-      , apSlug             = artistProfileSlug prof
-      , apBio              = artistProfileBio prof
-      , apCity             = artistProfileCity prof
-      , apHeroImageUrl     = artistProfileHeroImageUrl prof
-      , apSpotifyArtistId  = artistProfileSpotifyArtistId prof
-      , apSpotifyUrl       = artistProfileSpotifyUrl prof
-      , apYoutubeChannelId = artistProfileYoutubeChannelId prof
-      , apYoutubeUrl       = artistProfileYoutubeUrl prof
-      , apWebsiteUrl       = artistProfileWebsiteUrl prof
-      , apFeaturedVideoUrl = artistProfileFeaturedVideoUrl prof
-      , apGenres           = artistProfileGenres prof
-      , apHighlights       = artistProfileHighlights prof
-      , apFollowerCount    = followerCount
-      }
 
 toArtistReleaseDTO :: Entity ArtistRelease -> ArtistReleaseDTO
 toArtistReleaseDTO (Entity releaseId release) =

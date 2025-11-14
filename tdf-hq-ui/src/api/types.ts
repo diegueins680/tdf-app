@@ -162,3 +162,19 @@ export interface FanFollowDTO {
   ffYoutubeUrl?: string | null;
   ffStartedAt: string;
 }
+
+export interface ArtistProfileUpsert {
+  apuArtistId: number;
+  apuSlug?: string | null;
+  apuBio?: string | null;
+  apuCity?: string | null;
+  apuHeroImageUrl?: string | null;
+  apuSpotifyArtistId?: string | null;
+  apuSpotifyUrl?: string | null;
+  apuYoutubeChannelId?: string | null;
+  apuYoutubeUrl?: string | null;
+  apuWebsiteUrl?: string | null;
+  apuFeaturedVideoUrl?: string | null;
+  apuGenres?: string | null;
+  apuHighlights?: string | null;
+}

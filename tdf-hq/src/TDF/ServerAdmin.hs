@@ -7,16 +7,14 @@ module TDF.ServerAdmin
   ( adminServer
   ) where
 
-import           Control.Monad          (unless, when, void)
+import           Control.Monad          (unless, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
-import           Data.Char              (isAlphaNum, toLower)
-import           Data.Maybe             (fromMaybe, isJust, listToMaybe)
-import           Data.List              (foldl')
-import qualified Data.Map.Strict        as Map
+import           Data.Char              (isAlphaNum)
+import           Data.Maybe             (fromMaybe, isJust)
 import qualified Data.Set               as Set
 import           Data.Text              (Text)
 import qualified Data.Text              as T
@@ -29,7 +27,6 @@ import           Database.Persist       ( (==.), (!=.)
                                         , SelectOpt(..)
                                         , selectFirst
                                         , selectList
-                                        , (<-.)
                                         , get
                                         , getBy
                                         , update
@@ -51,8 +48,7 @@ import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , UserAccountDTO(..)
                                         , UserAccountUpdate(..)
                                         )
-import           TDF.DTO                ( ArtistProfileDTO(..)
-                                        , ArtistProfileUpsert(..)
+import           TDF.DTO                ( ArtistProfileUpsert(..)
                                         , ArtistReleaseDTO(..)
                                         , ArtistReleaseUpsert(..)
                                         )
@@ -69,6 +65,9 @@ import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
+import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
+                                        , upsertArtistProfileRecord
+                                        )
 
 adminServer
   :: ( MonadReader Env m
@@ -114,51 +113,18 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
 
     listArtistProfilesAdmin = do
       ensureModule ModuleAdmin user
-      withPool loadAllArtistProfilesAdmin
+      withPool loadAllArtistProfilesDTO
 
     upsertArtistProfileAdmin payload@ArtistProfileUpsert{..} = do
       ensureModule ModuleAdmin user
-      now <- liftIO getCurrentTime
       let artistKey = toSqlKey apuArtistId
-      dto <- withPool $ do
-        mParty <- get artistKey
-        case mParty of
-          Nothing -> pure Nothing
-          Just _ -> do
-            _ <- upsert
-              ArtistProfile
-                { artistProfileArtistPartyId    = artistKey
-                , artistProfileSlug             = apuSlug
-                , artistProfileBio              = apuBio
-                , artistProfileCity             = apuCity
-                , artistProfileHeroImageUrl     = apuHeroImageUrl
-                , artistProfileSpotifyArtistId  = apuSpotifyArtistId
-                , artistProfileSpotifyUrl       = apuSpotifyUrl
-                , artistProfileYoutubeChannelId = apuYoutubeChannelId
-                , artistProfileYoutubeUrl       = apuYoutubeUrl
-                , artistProfileWebsiteUrl       = apuWebsiteUrl
-                , artistProfileFeaturedVideoUrl = apuFeaturedVideoUrl
-                , artistProfileGenres           = apuGenres
-                , artistProfileHighlights       = apuHighlights
-                , artistProfileCreatedAt        = now
-                , artistProfileUpdatedAt        = Just now
-                }
-              [ ArtistProfileSlug             =. apuSlug
-              , ArtistProfileBio              =. apuBio
-              , ArtistProfileCity             =. apuCity
-              , ArtistProfileHeroImageUrl     =. apuHeroImageUrl
-              , ArtistProfileSpotifyArtistId  =. apuSpotifyArtistId
-              , ArtistProfileSpotifyUrl       =. apuSpotifyUrl
-              , ArtistProfileYoutubeChannelId =. apuYoutubeChannelId
-              , ArtistProfileYoutubeUrl       =. apuYoutubeUrl
-              , ArtistProfileWebsiteUrl       =. apuWebsiteUrl
-              , ArtistProfileFeaturedVideoUrl =. apuFeaturedVideoUrl
-              , ArtistProfileGenres           =. apuGenres
-              , ArtistProfileHighlights       =. apuHighlights
-              , ArtistProfileUpdatedAt        =. Just now
-              ]
-            loadArtistProfileAdmin artistKey
-      maybe (throwError err404) pure dto
+      mParty <- withPool $ get artistKey
+      case mParty of
+        Nothing -> throwError err404
+        Just _ -> do
+          now <- liftIO getCurrentTime
+          dto <- withPool $ upsertArtistProfileRecord artistKey payload now
+          pure dto
 
     createArtistReleaseAdmin ArtistReleaseUpsert{..} = do
       ensureModule ModuleAdmin user
@@ -455,66 +421,6 @@ setPartyRoles partyKey rolesList = do
   for_ existing $ \(Entity roleId partyRole) ->
     when (partyRoleActive partyRole && Set.notMember (partyRoleRole partyRole) desired) $
       update roleId [PartyRoleActive =. False]
-
-loadAllArtistProfilesAdmin :: SqlPersistT IO [ArtistProfileDTO]
-loadAllArtistProfilesAdmin = do
-  profiles <- selectList [] [Asc ArtistProfileArtistPartyId]
-  buildArtistProfileDTOsAdmin profiles
-
-loadArtistProfileAdmin :: PartyId -> SqlPersistT IO (Maybe ArtistProfileDTO)
-loadArtistProfileAdmin artistId = do
-  mProfile <- getBy (UniqueArtistProfile artistId)
-  case mProfile of
-    Nothing -> pure Nothing
-    Just prof -> do
-      dtos <- buildArtistProfileDTOsAdmin [prof]
-      pure (listToMaybe dtos)
-
-buildArtistProfileDTOsAdmin :: [Entity ArtistProfile] -> SqlPersistT IO [ArtistProfileDTO]
-buildArtistProfileDTOsAdmin profiles = do
-  let artistIds = map (artistProfileArtistPartyId . entityVal) profiles
-  nameMap <- fetchPartyNameMapAdmin artistIds
-  followerMap <- fetchFollowerCountsAdmin artistIds
-  pure (map (artistProfileEntityToDTOAdmin nameMap followerMap) profiles)
-
-fetchPartyNameMapAdmin :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Text)
-fetchPartyNameMapAdmin ids
-  | null ids  = pure Map.empty
-  | otherwise = do
-      parties <- selectList [PartyId <-. ids] []
-      pure $ Map.fromList [ (entityKey p, partyDisplayName (entityVal p)) | p <- parties ]
-
-fetchFollowerCountsAdmin :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Int)
-fetchFollowerCountsAdmin ids
-  | null ids  = pure Map.empty
-  | otherwise = do
-      follows <- selectList [FanFollowArtistPartyId <-. ids] []
-      pure $ foldl' (\acc (Entity _ fol) -> Map.insertWith (+) (fanFollowArtistPartyId fol) 1 acc) Map.empty follows
-
-artistProfileEntityToDTOAdmin
-  :: Map.Map PartyId Text
-  -> Map.Map PartyId Int
-  -> Entity ArtistProfile
-  -> ArtistProfileDTO
-artistProfileEntityToDTOAdmin nameMap followerMap (Entity _ prof) =
-  let artistId = artistProfileArtistPartyId prof
-  in ArtistProfileDTO
-      { apArtistId         = fromSqlKey artistId
-      , apDisplayName      = Map.findWithDefault "Artista" artistId nameMap
-      , apSlug             = artistProfileSlug prof
-      , apBio              = artistProfileBio prof
-      , apCity             = artistProfileCity prof
-      , apHeroImageUrl     = artistProfileHeroImageUrl prof
-      , apSpotifyArtistId  = artistProfileSpotifyArtistId prof
-      , apSpotifyUrl       = artistProfileSpotifyUrl prof
-      , apYoutubeChannelId = artistProfileYoutubeChannelId prof
-      , apYoutubeUrl       = artistProfileYoutubeUrl prof
-      , apWebsiteUrl       = artistProfileWebsiteUrl prof
-      , apFeaturedVideoUrl = artistProfileFeaturedVideoUrl prof
-      , apGenres           = artistProfileGenres prof
-      , apHighlights       = artistProfileHighlights prof
-      , apFollowerCount    = Map.findWithDefault 0 artistId followerMap
-      }
 
 artistReleaseEntityToDTOAdmin :: Entity ArtistRelease -> ArtistReleaseDTO
 artistReleaseEntityToDTOAdmin (Entity releaseId release) =

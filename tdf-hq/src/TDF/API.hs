@@ -113,12 +113,16 @@ type FanPublicAPI =
 type FanSecureAPI =
        "me" :> "profile" :>
          ( Get '[JSON] FanProfileDTO
-       :<|> ReqBody '[JSON] FanProfileUpdate :> Put '[JSON] FanProfileDTO
+      :<|> ReqBody '[JSON] FanProfileUpdate :> Put '[JSON] FanProfileDTO
          )
   :<|> "me" :> "follows" :>
          ( Get '[JSON] [FanFollowDTO]
-       :<|> Capture "artistId" Int64 :> Post '[JSON] FanFollowDTO
-       :<|> Capture "artistId" Int64 :> Delete '[JSON] NoContent
+      :<|> Capture "artistId" Int64 :> Post '[JSON] FanFollowDTO
+      :<|> Capture "artistId" Int64 :> Delete '[JSON] NoContent
+         )
+  :<|> "me" :> "artist-profile" :>
+         ( Get '[JSON] ArtistProfileDTO
+       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
          )
 
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
