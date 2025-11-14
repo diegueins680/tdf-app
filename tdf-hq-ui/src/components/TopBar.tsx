@@ -50,7 +50,14 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           }}
           aria-label="Ir al inicio"
         >
-          <BrandLogo size={36} variant="alt" />
+          <BrandLogo
+            variant="alt"
+            size={72}
+            sx={{
+              height: { xs: 42, sm: 52, md: 72 },
+              filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.3))',
+            }}
+          />
         </Box>
 
         <Stack
