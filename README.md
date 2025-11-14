@@ -278,6 +278,8 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Detailed development workflows
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 - **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - Code quality and standards
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment procedures
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### Technical Documentation
 - **[Backend (Haskell)](tdf-hq/README.md)** - API architecture and patterns

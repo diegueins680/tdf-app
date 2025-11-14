@@ -11,9 +11,11 @@ Welcome to the comprehensive documentation for the TDF Records Platform. This in
 4. **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to the project
 
 ### For Deployment & Operations
-1. **[README.md](README.md#-deployments)** - Deployment guide for Cloudflare, Vercel, and Koyeb
-2. **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - Quality gates and engineering standards
-3. **[SECURITY_NOTICE.md](SECURITY_NOTICE.md)** - Security considerations and guidelines
+1. **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment procedures for all platforms
+2. **[README.md](README.md#-deployments)** - Quick deployment reference
+3. **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - Quality gates and engineering standards
+4. **[SECURITY_NOTICE.md](SECURITY_NOTICE.md)** - Security considerations and guidelines
+5. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
 
 ## 🏗️ Architecture & Design
 
@@ -240,12 +242,18 @@ The Musician Developer agent specializes in:
 ## 🆘 Getting Help
 
 ### Troubleshooting Resources
-- **[DEVELOPMENT.md](DEVELOPMENT.md#troubleshooting)** - Common issues and solutions
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Comprehensive troubleshooting guide (NEW!)
+- **[DEVELOPMENT.md](DEVELOPMENT.md#troubleshooting)** - Development-specific issues
 - **[tdf-hq/README.md](tdf-hq/README.md#troubleshooting)** - Backend troubleshooting
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md#troubleshooting-deployment)** - Deployment issues
 - **[QUICKSTART.md](QUICKSTART.md#troubleshooting)** - Setup troubleshooting
 
 ### Common Issues
-1. **Backend won't start**: Check PostgreSQL connection and `.env` configuration
+1. **Backend won't start**: See [Backend Issues](TROUBLESHOOTING.md#backend-issues)
+2. **CORS errors**: See [API & CORS Issues](TROUBLESHOOTING.md#api--cors-issues)
+3. **Frontend won't connect**: See [Frontend Issues](TROUBLESHOOTING.md#frontend-issues)
+4. **Mobile submodule empty**: See [Mobile App Issues](TROUBLESHOOTING.md#mobile-app-issues)
+5. **Database connection fails**: See [Database Issues](TROUBLESHOOTING.md#database-issues)
 2. **CORS errors**: Verify `ALLOW_ORIGINS` includes your frontend URL
 3. **API generation fails**: Validate OpenAPI spec and check paths
 4. **Module not found**: Run `stack clean && stack build` or `npm install`
