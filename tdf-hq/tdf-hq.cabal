@@ -58,6 +58,7 @@ executable tdf-hq-exe
     , persistent           >=2.14
     , persistent-template  >=2.12
     , persistent-postgresql >=2.13
+    , persistent-sqlite     >=2.13
     , resource-pool
     , monad-logger
     , resourcet
@@ -106,6 +107,7 @@ test-suite tdf-hq-test
     , persistent           >=2.14
     , persistent-template  >=2.12
     , persistent-postgresql >=2.13
+    , persistent-sqlite     >=2.13
     , resource-pool
     , monad-logger
     , resourcet

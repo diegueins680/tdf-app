@@ -12,7 +12,7 @@ module TDF.Profiles.Artist
   , fetchArtistProfileMap
   ) where
 
-import           Control.Monad.IO.Class    (liftIO)
+import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import qualified Data.Map.Strict           as Map
 import           Data.List                 (foldl')
 import           Data.Maybe                (listToMaybe)
@@ -28,10 +28,11 @@ import           TDF.Models
 import qualified TDF.Models                as M
 
 upsertArtistProfileRecord
-  :: PartyId
+  :: MonadIO m
+  => PartyId
   -> ArtistProfileUpsert
   -> UTCTime
-  -> SqlPersistT IO ArtistProfileDTO
+  -> SqlPersistT m ArtistProfileDTO
 upsertArtistProfileRecord artistKey ArtistProfileUpsert{..} now = do
   _ <- upsert
     ArtistProfile
@@ -87,12 +88,12 @@ emptyDto artistKey = ArtistProfileDTO
   , apFollowerCount    = 0
   }
 
-loadAllArtistProfilesDTO :: SqlPersistT IO [ArtistProfileDTO]
+loadAllArtistProfilesDTO :: MonadIO m => SqlPersistT m [ArtistProfileDTO]
 loadAllArtistProfilesDTO = do
   profiles <- selectList [] [Asc ArtistProfileArtistPartyId]
   buildArtistProfileDTOs profiles
 
-loadArtistProfileDTO :: PartyId -> SqlPersistT IO (Maybe ArtistProfileDTO)
+loadArtistProfileDTO :: MonadIO m => PartyId -> SqlPersistT m (Maybe ArtistProfileDTO)
 loadArtistProfileDTO artistId = do
   mEntity <- getBy (UniqueArtistProfile artistId)
   case mEntity of
@@ -101,13 +102,13 @@ loadArtistProfileDTO artistId = do
       dtos <- buildArtistProfileDTOs [entity]
       pure (listToMaybe dtos)
 
-loadOrCreateArtistProfileDTO :: PartyId -> SqlPersistT IO ArtistProfileDTO
+loadOrCreateArtistProfileDTO :: MonadIO m => PartyId -> SqlPersistT m ArtistProfileDTO
 loadOrCreateArtistProfileDTO artistId = do
   _ <- ensureArtistProfileEntity artistId
   mDto <- loadArtistProfileDTO artistId
   pure (maybe (emptyDto artistId) id mDto)
 
-ensureArtistProfileEntity :: PartyId -> SqlPersistT IO (Entity ArtistProfile)
+ensureArtistProfileEntity :: MonadIO m => PartyId -> SqlPersistT m (Entity ArtistProfile)
 ensureArtistProfileEntity artistId = do
   mProfile <- getBy (UniqueArtistProfile artistId)
   case mProfile of
@@ -134,26 +135,26 @@ ensureArtistProfileEntity artistId = do
       key <- insert record
       pure (Entity key record)
 
-buildArtistProfileDTOs :: [Entity ArtistProfile] -> SqlPersistT IO [ArtistProfileDTO]
+buildArtistProfileDTOs :: MonadIO m => [Entity ArtistProfile] -> SqlPersistT m [ArtistProfileDTO]
 buildArtistProfileDTOs profiles = do
   let artistIds = map (artistProfileArtistPartyId . entityVal) profiles
   nameMap <- fetchPartyNameMap artistIds
   followerCounts <- fetchFollowerCounts artistIds
   pure (map (artistProfileEntityToDTO nameMap followerCounts) profiles)
 
-fetchPartyNameMap :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Text)
+fetchPartyNameMap :: MonadIO m => [PartyId] -> SqlPersistT m (Map.Map PartyId Text)
 fetchPartyNameMap partyIds = do
   parties <- if null partyIds then pure [] else selectList [PartyId <-. partyIds] []
   pure $ Map.fromList [ (entityKey p, M.partyDisplayName (entityVal p)) | p <- parties ]
 
-fetchFollowerCounts :: [PartyId] -> SqlPersistT IO (Map.Map PartyId Int)
+fetchFollowerCounts :: MonadIO m => [PartyId] -> SqlPersistT m (Map.Map PartyId Int)
 fetchFollowerCounts ids
   | null ids  = pure Map.empty
   | otherwise = do
       follows <- selectList [FanFollowArtistPartyId <-. ids] []
       pure $ foldl' (\acc (Entity _ fol) -> Map.insertWith (+) (fanFollowArtistPartyId fol) 1 acc) Map.empty follows
 
-fetchArtistProfileMap :: [PartyId] -> SqlPersistT IO (Map.Map PartyId ArtistProfile)
+fetchArtistProfileMap :: MonadIO m => [PartyId] -> SqlPersistT m (Map.Map PartyId ArtistProfile)
 fetchArtistProfileMap ids
   | null ids  = pure Map.empty
   | otherwise = do
