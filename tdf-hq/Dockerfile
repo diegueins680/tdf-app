@@ -23,9 +23,7 @@ RUN stack --no-terminal --install-ghc setup && \
 # Copy sources (git metadata is provided via build args when available)
 COPY app app
 COPY src src
-COPY config config
 COPY docs docs
-COPY .git .git
 
 
 # Build and export the binary
