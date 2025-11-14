@@ -333,39 +333,47 @@ signup SignupRequest
       firstClean    = T.strip rawFirst
       lastClean     = T.strip rawLast
       phoneClean    = fmap T.strip rawPhone
+      displayName =
+        case filter (not . T.null) [firstClean, lastClean] of
+          [] -> emailClean
+          xs -> T.unwords xs
   when (T.null emailClean) $ throwBadRequest "Email is required"
   when (T.null passwordClean) $ throwBadRequest "Password is required"
   when (T.length passwordClean < 8) $ throwBadRequest "Password must be at least 8 characters"
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
   now <- liftIO getCurrentTime
-  Env pool _ <- ask
+  Env pool cfg <- ask
   result <- liftIO $ flip runSqlPool pool $
-    runSignupDb emailClean passwordClean firstClean lastClean phoneClean now
+    runSignupDb emailClean passwordClean displayName phoneClean now
   case result of
     Left SignupEmailExists ->
       throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 "Account already exists for this email") }
     Left SignupProfileError ->
       throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
-    Right resp -> pure resp
+    Right resp -> do
+      liftIO $
+        Email.sendWelcomeEmail
+          (emailConfig cfg)
+          displayName
+          emailClean
+          emailClean
+          passwordClean
+          (appBaseUrl cfg)
+      pure resp
   where
     runSignupDb
       :: Text
       -> Text
       -> Text
-      -> Text
       -> Maybe Text
       -> UTCTime
       -> SqlPersistT IO (Either SignupDbError LoginResponse)
-    runSignupDb emailVal passwordVal firstVal lastVal phoneVal nowVal = do
+    runSignupDb emailVal passwordVal displayName phoneVal nowVal = do
       existing <- getBy (UniqueCredentialUsername emailVal)
       case existing of
         Just _  -> pure (Left SignupEmailExists)
         Nothing -> do
-          let displayName =
-                case filter (not . T.null) [firstVal, lastVal] of
-                  [] -> emailVal
-                  xs -> T.unwords xs
-              partyRecord = Party
+          let partyRecord = Party
                 { partyLegalName        = Nothing
                 , partyDisplayName      = displayName
                 , partyIsOrg            = False
