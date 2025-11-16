@@ -13,21 +13,35 @@ import {
 } from '@mui/material';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
+import { loginRequest } from '../api/auth';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { session, login } = useSession();
   const navigate = useNavigate();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    login({
-      username,
-      displayName: username || 'Usuario',
-      roles: username.toLowerCase().includes('admin') ? ['admin'] : ['staff'],
-    });
-    navigate('/crm/contactos', { replace: true });
+    setSubmitting(true);
+    setError(null);
+    try {
+      const data = await loginRequest({ username, password });
+      login({
+        username,
+        displayName: username || 'Usuario',
+        roles: data.roles ?? [],
+        partyId: data.partyId,
+        modules: data.modules ?? [],
+      });
+      navigate('/crm/contactos', { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No pudimos iniciar sesión');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (session) {
@@ -75,8 +89,14 @@ export default function LoginPage() {
           </Stack>
 
           <Button variant="contained" type="submit" size="large">
-            Iniciar sesion
+            {submitting ? 'Ingresando...' : 'Iniciar sesion'}
           </Button>
+
+          {error && (
+            <Typography variant="body2" color="error" textAlign="center">
+              {error}
+            </Typography>
+          )}
 
           <Typography variant="caption" color="text.disabled" textAlign="center">
             Administracion integral de estudios, label, eventos y escuela.

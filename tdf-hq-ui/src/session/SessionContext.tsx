@@ -97,7 +97,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((user: SessionUser) => {
     setSession(user);
-  }, []);
+    if (!apiToken && DEFAULT_DEMO_TOKEN) {
+      setApiTokenState(DEFAULT_DEMO_TOKEN);
+    }
+  }, [apiToken]);
 
   const logout = useCallback(() => {
     setSession(null);
