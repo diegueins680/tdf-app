@@ -431,7 +431,8 @@ export default function FanHubPage() {
           {artists.map((artist) => {
             const spotifyUrl = artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
             const youtubeUrl = artist.apYoutubeUrl ?? (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
-            const isFollowing = follows.some((follow) => follow.ffArtistId === artist.apArtistId);
+            const artistId = artist.apArtistId ?? artist.apId;
+            const isFollowing = artistId ? follows.some((follow) => follow.ffArtistId === artistId) : false;
             const spotifyButtonProps = spotifyUrl
               ? { component: 'a', href: spotifyUrl, target: '_blank', rel: 'noopener noreferrer' }
               : {};
@@ -439,10 +440,15 @@ export default function FanHubPage() {
               ? { component: 'a', href: youtubeUrl, target: '_blank', rel: 'noopener noreferrer' }
               : {};
             return (
-              <Grid item xs={12} md={6} key={artist.apArtistId}>
+              <Grid item xs={12} md={6} key={artist.apArtistId ?? artist.apId ?? artist.apSlug ?? Math.random()}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   {artist.apHeroImageUrl && (
-                    <CardMedia component="img" height="220" image={artist.apHeroImageUrl} alt={artist.apDisplayName} />
+                    <CardMedia
+                      component="img"
+                      height="220"
+                      image={artist.apHeroImageUrl ?? undefined}
+                      alt={artist.apDisplayName ?? 'Artista'}
+                    />
                   )}
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -485,12 +491,12 @@ export default function FanHubPage() {
                       >
                         YouTube
                       </Button>
-                      {isFan && (
+                      {isFan && artistId && (
                         <Button
                           variant={isFollowing ? 'outlined' : 'contained'}
                           color={isFollowing ? 'inherit' : 'secondary'}
                           size="small"
-                          onClick={() => handleFollowToggle(artist.apArtistId, isFollowing)}
+                          onClick={() => handleFollowToggle(artistId, isFollowing)}
                           disabled={followMutation.isPending || unfollowMutation.isPending}
                         >
                           {isFollowing ? 'Siguiendo' : 'Seguir'}

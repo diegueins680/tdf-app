@@ -14,14 +14,24 @@ import { DateTime } from 'luxon';
 
 export default function BookingsPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ['bookings'], queryFn: Bookings.list });
-  const zone = import.meta.env.VITE_TZ || 'America/Guayaquil';
+  const zone = import.meta.env['VITE_TZ'] || 'America/Guayaquil';
 
-  const events = useMemo(() => (data || []).map((b: BookingDTO) => ({
-    id: String(b.bookingId),
-    title: b.title,
-    start: DateTime.fromISO(b.startsAt).toISO(),
-    end: DateTime.fromISO(b.endsAt).toISO(),
-  })), [data]);
+  const events = useMemo(
+    () =>
+      (data || [])
+        .map((b: BookingDTO) => {
+          const start = b.startsAt ? DateTime.fromISO(b.startsAt).toISO() ?? undefined : undefined;
+          const end = b.endsAt ? DateTime.fromISO(b.endsAt).toISO() ?? undefined : undefined;
+          return {
+            id: String(b.bookingId),
+            title: b.title ?? 'Booking',
+            start,
+            end,
+          };
+        })
+        .filter((ev) => Boolean(ev.start)),
+    [data],
+  );
 
   return (
     <>

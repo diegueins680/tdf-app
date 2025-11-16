@@ -134,7 +134,7 @@ export default function OrdersPage() {
 
       return {
         bookingId: booking.bookingId,
-        schedule: formatScheduleRange(booking.startsAt, booking.endsAt),
+        schedule: formatScheduleRange(booking.startsAt ?? '', booking.endsAt ?? ''),
         service: serviceTitle,
         bookingPrimary,
         bookingSecondary: bookingSecondaryJoined.length > 0 ? bookingSecondaryJoined : null,
@@ -284,7 +284,7 @@ export default function OrdersPage() {
                   </TableCell>
                   <TableCell>{row.engineers}</TableCell>
                   <TableCell>{row.rooms}</TableCell>
-                  <TableCell>{renderStatus(row.status)}</TableCell>
+                  <TableCell>{renderStatus(row.status ?? '')}</TableCell>
                   <TableCell align="right">
                     <Button variant="text" size="small" onClick={() => handleEditClick(row.bookingId)}>
                       Editar
