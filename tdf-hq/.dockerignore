@@ -1,0 +1,8 @@
+.git
+.stack-work
+dist
+node_modules
+tmp
+*.log
+*.swp
+*.swo

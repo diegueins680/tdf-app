@@ -12,8 +12,7 @@ RUN ghc --version || true
 RUN stack --version || true
 
 # Copy project definition first for better layer caching
-COPY stack.yaml tdf-hq.cabal ./
-# COPY package.yaml ./   # uncomment if you have it
+COPY stack.yaml stack.yaml.lock* package.yaml tdf-hq.cabal ./
 
 # Make sure Stack installs the correct compiler for the resolver
 # Also, be explicit and avoid any global "system-ghc" config
