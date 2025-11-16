@@ -1,5 +1,6 @@
-import { Container } from '@mui/material';
+import { Container, Box, useMediaQuery, useTheme } from '@mui/material';
 import { Route, Routes, Navigate, Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import TopBar from './components/TopBar';
 import PartiesPage from './pages/PartiesPage';
 import BookingsPage from './pages/BookingsPage';
@@ -9,21 +10,32 @@ import UserRoleManagement from './components/UserRoleManagement';
 import SystemPage from './pages/SystemPage';
 import PlaceholderPage from './components/PlaceholderPage';
 import { useSession } from './session/SessionContext';
+import SidebarNav from './components/SidebarNav';
 
 function Shell() {
   const { session } = useSession();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+
+  useEffect(() => {
+    setSidebarOpen(isDesktop);
+  }, [isDesktop]);
 
   if (!session) {
     return <Navigate to="/login" replace />;
   }
 
   return (
-    <>
-      <TopBar />
-      <Container maxWidth="xl" sx={{ mt: 3, mb: 6 }}>
-        <Outlet />
-      </Container>
-    </>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      <SidebarNav open={sidebarOpen} onNavigate={() => !isDesktop && setSidebarOpen(false)} />
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <TopBar onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
+        <Container maxWidth="xl" sx={{ mt: 3, mb: 6 }}>
+          <Outlet />
+        </Container>
+      </Box>
+    </Box>
   );
 }
 
