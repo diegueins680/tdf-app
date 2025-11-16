@@ -8,14 +8,14 @@ interface ApiTokenDialogProps {
 }
 
 export default function ApiTokenDialog({ open, onClose }: ApiTokenDialogProps) {
-  const { session, setApiToken } = useSession();
-  const [token, setToken] = useState(session?.apiToken ?? '');
+  const { apiToken, setApiToken } = useSession();
+  const [token, setToken] = useState(apiToken ?? '');
 
   useEffect(() => {
     if (open) {
-      setToken(session?.apiToken ?? '');
+      setToken(apiToken ?? '');
     }
-  }, [open, session]);
+  }, [open, apiToken]);
 
   const handleSave = () => {
     const trimmedToken = token.trim();

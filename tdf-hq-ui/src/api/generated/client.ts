@@ -1,13 +1,12 @@
 // API client for user role management
 import type { components } from './types';
-import { getStoredSessionToken } from '../../session/SessionContext';
 
 export type User = components['schemas']['User'];
 export type PartyRole = components['schemas']['PartyRole'];
 export type PartyStatus = components['schemas']['PartyStatus'];
 export type UserRoleUpdate = components['schemas']['UserRoleUpdate'];
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
 
 export class ApiClient {
   private baseUrl: string;
@@ -18,29 +17,19 @@ export class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options?: RequestInit,
+    options?: RequestInit
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const token = getStoredSessionToken();
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}` } : {}),
         ...options?.headers,
       },
     });
 
     if (!response.ok) {
-      const message = await response.text().catch(() => '');
-      const trimmedMessage = message.trim();
-      const trimmedStatus = response.statusText.trim();
-      const details = trimmedMessage !== '' ? trimmedMessage : trimmedStatus !== '' ? trimmedStatus : 'Request failed';
-      throw new Error(`API error: ${response.status} ${details}`);
-    }
-
-    if (response.status === 204) {
-      return undefined as T;
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
     return response.json();

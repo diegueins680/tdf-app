@@ -7,6 +7,7 @@ import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import ApiTokenDialog from './ApiTokenDialog';
 import BrandLogo from './BrandLogo';
+import ApiStatusChip from './ApiStatusChip';
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
@@ -77,6 +78,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           </Button>
 
           <Chip label="ADMIN" size="small" sx={{ bgcolor: 'rgba(59,130,246,0.15)', color: '#93c5fd' }} />
+          <ApiStatusChip />
           <Button
             variant="outlined"
             color="inherit"

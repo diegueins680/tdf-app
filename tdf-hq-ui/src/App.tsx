@@ -1,92 +1,35 @@
-import { useState } from 'react';
-import { Box, Button, Container } from '@mui/material';
+import { Container } from '@mui/material';
 import { Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import TopBar from './components/TopBar';
 import PartiesPage from './pages/PartiesPage';
 import BookingsPage from './pages/BookingsPage';
 import KanbanPage from './pages/KanbanPage';
-import OrdersPage from './pages/OrdersPage';
-import RoomsPage from './pages/RoomsPage';
 import LoginPage from './pages/LoginPage';
 import UserRoleManagement from './components/UserRoleManagement';
 import SystemPage from './pages/SystemPage';
 import PlaceholderPage from './components/PlaceholderPage';
-import AboutPage from './pages/AboutPage';
-import DocsPage from './pages/DocsPage';
-import FanHubPage from './pages/FanHubPage';
 import { useSession } from './session/SessionContext';
-import SidebarNav from './components/SidebarNav';
-import ApiStatusChip from './components/ApiStatusChip';
 
 function Shell() {
   const { session } = useSession();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 1024;
-  });
 
   if (!session) {
     return <Navigate to="/login" replace />;
   }
 
-  const handleNavigateFromSidebar = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setSidebarCollapsed(true);
-    }
-  };
-
-  const handleToggleSidebar = () => setSidebarCollapsed((prev) => !prev);
-
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <SidebarNav open={!sidebarCollapsed} onNavigate={handleNavigateFromSidebar} />
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-        {!sidebarCollapsed && (
-          <Box
-            sx={{
-              position: 'fixed',
-              inset: 0,
-              bgcolor: 'rgba(15,17,24,0.72)',
-              zIndex: 1100,
-              display: { xs: 'block', lg: 'none' },
-            }}
-            onClick={() => setSidebarCollapsed(true)}
-          />
-        )}
-        <TopBar onToggleSidebar={handleToggleSidebar} />
-        <Box component="main" sx={{ flexGrow: 1, position: 'relative', px: { xs: 2, md: 4 }, py: { xs: 2, md: 4 } }}>
-          <Box sx={{ position: 'absolute', left: { xs: 16, md: 32 }, top: 16 }}>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleToggleSidebar}
-              sx={{
-                borderRadius: 999,
-                px: 3,
-                bgcolor: 'rgba(148,163,184,0.2)',
-                color: '#f8fafc',
-                backdropFilter: 'blur(12px)',
-              }}
-            >
-              {sidebarCollapsed ? 'Abrir menú' : 'Cerrar menú'}
-            </Button>
-          </Box>
-          <Container maxWidth="xl" sx={{ pt: 10, pb: 6 }}>
-            <Outlet />
-          </Container>
-          <Box sx={{ position: 'fixed', bottom: 24, right: 32 }}>
-            <ApiStatusChip />
-          </Box>
-        </Box>
-      </Box>
-    </Box>
+    <>
+      <TopBar />
+      <Container maxWidth="xl" sx={{ mt: 3, mb: 6 }}>
+        <Outlet />
+      </Container>
+    </>
   );
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/fans" element={<FanHubPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
@@ -101,9 +44,6 @@ export default function App() {
         <Route path="/admin/roles" element={<Navigate to="/configuracion/roles-permisos" replace />} />
 
         <Route path="/inicio" element={<PlaceholderPage title="Inicio" description="Resumen ejecutivo y accesos rápidos." />} />
-        <Route path="/docs" element={<DocsPage />} />
-        <Route path="/acerca" element={<AboutPage />} />
-        <Route path="/seguridad" element={<PlaceholderPage title="Seguridad" />} />
 
         <Route path="/crm" element={<Outlet />}>
           <Route path="contactos" element={<PartiesPage />} />
@@ -114,8 +54,8 @@ export default function App() {
 
         <Route path="/estudio" element={<Outlet />}>
           <Route path="calendario" element={<BookingsPage />} />
-          <Route path="salas" element={<RoomsPage />} />
-          <Route path="ordenes" element={<OrdersPage />} />
+          <Route path="salas" element={<PlaceholderPage title="Estudio / Salas" />} />
+          <Route path="ordenes" element={<PlaceholderPage title="Estudio / Órdenes" />} />
           <Route path="pipelines" element={<KanbanPage />} />
           <Route path="reportes" element={<PlaceholderPage title="Estudio / Reportes" />} />
           <Route index element={<Navigate to="calendario" replace />} />

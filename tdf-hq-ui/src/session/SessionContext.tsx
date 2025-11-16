@@ -1,30 +1,26 @@
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-export interface SessionUser {
+export type SessionUser = {
   username: string;
   displayName: string;
   roles: string[];
-  apiToken?: string | null;
+  partyId?: number | null;
   modules?: string[];
-  partyId?: number;
-}
+};
 
-export interface LoginOptions {
-  remember?: boolean;
-}
-
-let currentSession: SessionUser | null = null;
-
-export interface SessionContextValue {
+export type SessionContextValue = {
   session: SessionUser | null;
-  login: (user: SessionUser, options?: LoginOptions) => void;
+  login: (user: SessionUser) => void;
   logout: () => void;
+  apiToken: string | null;
   setApiToken: (token: string | null) => void;
-}
+};
 
-export const SESSION_STORAGE_KEY = 'tdf-hq-ui/session';
-export const DEFAULT_DEMO_TOKEN = import.meta.env.VITE_API_DEMO_TOKEN ?? '';
+const SESSION_STORAGE_KEY = 'tdf-hq-ui/session';
+const TOKEN_STORAGE_KEY = 'tdf-hq-ui/api-token';
+const envDemoToken = (import.meta.env.VITE_API_DEMO_TOKEN ?? '').trim();
+export const DEFAULT_DEMO_TOKEN = envDemoToken;
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
@@ -32,9 +28,7 @@ function readStoredSession(): SessionUser | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as SessionUser) : null;
-    currentSession = parsed;
-    return parsed;
+    return raw ? (JSON.parse(raw) as SessionUser) : null;
   } catch (error) {
     console.warn('Failed to parse stored session', error);
     return null;
@@ -54,51 +48,76 @@ function persistSession(value: SessionUser | null) {
   }
 }
 
-interface SessionProviderProps {
-  children: ReactNode;
+function readStoredApiToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (raw) {
+      const trimmed = raw.trim();
+      return trimmed === '' ? null : trimmed;
+    }
+  } catch (error) {
+    console.warn('Failed to read stored API token', error);
+  }
+  return null;
 }
 
-export function SessionProvider({ children }: SessionProviderProps) {
+function persistApiToken(token: string | null) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (token && token.trim() !== '') {
+      window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    } else {
+      window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.warn('Failed to persist API token', error);
+  }
+}
+
+export function getStoredSessionToken(): string | null {
+  const stored = readStoredApiToken();
+  if (stored) {
+    return stored;
+  }
+  return DEFAULT_DEMO_TOKEN !== '' ? DEFAULT_DEMO_TOKEN : null;
+}
+
+export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SessionUser | null>(() => readStoredSession());
-  const [persistSessionEnabled, setPersistSessionEnabled] = useState<boolean>(true);
+  const [apiToken, setApiTokenState] = useState<string | null>(() => readStoredApiToken() ?? (DEFAULT_DEMO_TOKEN || null));
 
   useEffect(() => {
-    if (session && persistSessionEnabled) {
-      persistSession(session);
-    } else {
-      persistSession(null);
-    }
-  }, [session, persistSessionEnabled]);
+    persistSession(session);
+  }, [session]);
 
-  const login = useCallback((user: SessionUser, options?: LoginOptions) => {
-    setPersistSessionEnabled(options?.remember ?? true);
+  useEffect(() => {
+    persistApiToken(apiToken);
+  }, [apiToken]);
+
+  const login = useCallback((user: SessionUser) => {
     setSession(user);
-    currentSession = user;
   }, []);
 
   const logout = useCallback(() => {
     setSession(null);
-    currentSession = null;
+    setApiTokenState(DEFAULT_DEMO_TOKEN ? DEFAULT_DEMO_TOKEN : null);
   }, []);
 
-  const setApiToken = useCallback((token: string | null) => {
-    const normalized = token?.trim();
-    const nextToken = normalized && normalized.length > 0 ? normalized : undefined;
-
-    setSession((prev) => {
-      if (!prev) {
-        currentSession = prev;
-        return prev;
-      }
-      const updatedSession = { ...prev, apiToken: nextToken ?? undefined };
-      currentSession = updatedSession;
-      return updatedSession;
-    });
+  const setApiToken = useCallback((next: string | null) => {
+    const sanitized = next?.trim();
+    setApiTokenState(sanitized && sanitized.length > 0 ? sanitized : null);
   }, []);
 
   const value = useMemo<SessionContextValue>(
-    () => ({ session, login, logout, setApiToken }),
-    [session, login, logout, setApiToken],
+    () => ({
+      session,
+      login,
+      logout,
+      apiToken,
+      setApiToken,
+    }),
+    [session, login, logout, apiToken, setApiToken],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
@@ -110,16 +129,4 @@ export function useSession(): SessionContextValue {
     throw new Error('useSession must be used within a SessionProvider');
   }
   return context;
-}
-
-export function getStoredSessionToken(): string | null {
-  if (currentSession?.apiToken) {
-    return currentSession.apiToken;
-  }
-  const stored = readStoredSession();
-  return stored?.apiToken ?? null;
-}
-
-export function getActiveSession(): SessionUser | null {
-  return currentSession;
 }

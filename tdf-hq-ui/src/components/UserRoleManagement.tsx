@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Table,
@@ -25,8 +25,8 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import type { SelectChangeEvent } from '@mui/material/Select';
-import type { User, PartyRole, PartyStatus } from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
+import type { User, PartyRole, PartyStatus } from '../api/generated/client';
 import { ALL_ROLES } from '../constants/roles';
 
 const STATUS_COLORS: Record<PartyStatus, 'success' | 'default'> = {
@@ -56,7 +56,7 @@ export default function UserRoleManagement() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    void loadUsers();
+    loadUsers();
   }, []);
 
   const loadUsers = async () => {
@@ -84,13 +84,9 @@ export default function UserRoleManagement() {
     setSelectedRoles([]);
   };
 
-  const normalizeRoles = (value: string | string[]): PartyRole[] => {
-    const values = Array.isArray(value) ? value : value.split(',');
-    return values.filter((role): role is PartyRole => ALL_ROLES.includes(role as PartyRole));
-  };
-
   const handleRoleChange = (event: SelectChangeEvent<PartyRole[]>) => {
-    setSelectedRoles(normalizeRoles(event.target.value));
+    const value = event.target.value;
+    setSelectedRoles(typeof value === 'string' ? (value.split(',') as PartyRole[]) : (value as PartyRole[]));
   };
 
   const handleSaveRoles = async () => {
@@ -99,6 +95,7 @@ export default function UserRoleManagement() {
     try {
       setSaving(true);
       await apiClient.updateUserRoles(selectedUser.id, selectedRoles);
+      // Use functional update to avoid clobbering fresher data.
       setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, roles: selectedRoles } : u)));
       handleCloseDialog();
     } catch (err) {
@@ -144,8 +141,8 @@ export default function UserRoleManagement() {
               <TableRow key={user.id}>
                 <TableCell>{user.id}</TableCell>
                 <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email ?? '-'}</TableCell>
-                <TableCell>{user.phone ?? '-'}</TableCell>
+                <TableCell>{user.email || '-'}</TableCell>
+                <TableCell>{user.phone || '-'}</TableCell>
                 <TableCell>
                   <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
                 </TableCell>
@@ -173,7 +170,7 @@ export default function UserRoleManagement() {
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel id="roles-label">Roles</InputLabel>
-            <Select<PartyRole[]>
+            <Select
               labelId="roles-label"
               multiple
               value={selectedRoles}
@@ -181,7 +178,7 @@ export default function UserRoleManagement() {
               input={<OutlinedInput label="Roles" />}
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((role) => (
+                  {(selected as PartyRole[]).map((role) => (
                     <Chip key={role} label={role} size="small" color={ROLE_COLORS[role]} />
                   ))}
                 </Box>
@@ -199,7 +196,7 @@ export default function UserRoleManagement() {
           <Button onClick={handleCloseDialog} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={() => void handleSaveRoles()} variant="contained" disabled={saving}>
+          <Button onClick={handleSaveRoles} variant="contained" disabled={saving}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
