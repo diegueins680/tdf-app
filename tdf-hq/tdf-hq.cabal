@@ -24,6 +24,10 @@ library
       TDF.DTO
       TDF.DB
       TDF.Server
+      TDF.Config
+      TDF.Cors
+      TDF.ModelsExtra
+      TDF.Seed
   other-modules:
       TDF.API.Admin
       TDF.API.Bands
@@ -34,19 +38,15 @@ library
       TDF.API.Sessions
       TDF.API.Types
       TDF.Auth
-      TDF.Config
       TDF.Contracts.API
       TDF.Contracts.Server
       TDF.Contracts.Types
-      TDF.Cors
       TDF.Email
       TDF.Handlers.InputList
       TDF.Meta
-      TDF.ModelsExtra
       TDF.Pipelines
       TDF.Profiles.Artist
       TDF.Routes.Academy
-      TDF.Seed
       TDF.ServerAdmin
       TDF.ServerExtra
       TDF.ServerFuture
@@ -62,19 +62,33 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base64-bytestring
+    , bcrypt
     , bytestring
+    , containers
+    , directory
+    , entropy
+    , file-embed
+    , filepath
     , gitrev
+    , http-media
+    , http-types
+    , mime-mail
     , monad-logger
     , mtl
+    , path-pieces
     , persistent
     , persistent-postgresql
     , persistent-template
+    , process
     , servant
     , servant-server
+    , smtp-mail
     , template-haskell
     , text
     , time
     , transformers
+    , uuid
     , wai
     , wai-cors
   default-language: Haskell2010
@@ -89,20 +103,34 @@ executable tdf-hq
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base64-bytestring
+    , bcrypt
     , bytestring
+    , containers
+    , directory
+    , entropy
+    , file-embed
+    , filepath
     , gitrev
+    , http-media
+    , http-types
+    , mime-mail
     , monad-logger
     , mtl
+    , path-pieces
     , persistent
     , persistent-postgresql
     , persistent-template
+    , process
     , servant
     , servant-server
+    , smtp-mail
     , tdf-hq
     , template-haskell
     , text
     , time
     , transformers
+    , uuid
     , wai
     , wai-cors
     , warp

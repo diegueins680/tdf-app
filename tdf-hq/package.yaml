@@ -19,6 +19,20 @@ dependencies:
   - mtl
   - monad-logger
   - bytestring
+  - containers
+  - base64-bytestring
+  - http-types
+  - http-media
+  - file-embed
+  - path-pieces
+  - uuid
+  - mime-mail
+  - smtp-mail
+  - entropy
+  - bcrypt
+  - directory
+  - filepath
+  - process
   - gitrev
   - template-haskell
   - wai
@@ -32,6 +46,10 @@ library:
     - TDF.DTO
     - TDF.DB
     - TDF.Server
+    - TDF.Config
+    - TDF.Cors
+    - TDF.ModelsExtra
+    - TDF.Seed
 
 executables:
   tdf-hq:
