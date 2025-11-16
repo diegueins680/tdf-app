@@ -17,6 +17,7 @@ import FanHubPage from './pages/FanHubPage';
 import { useSession } from './session/SessionContext';
 import SidebarNav from './components/SidebarNav';
 import ApiStatusChip from './components/ApiStatusChip';
+import InscripcionPage from './pages/inscripcion/InscripcionPage';
 
 function Shell() {
   const { session } = useSession();
@@ -87,6 +88,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/fans" element={<FanHubPage />} />
+      <Route path="/inscripcion/:slug" element={<InscripcionPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>
         <Route path="/" element={<Navigate to="/inicio" replace />} />

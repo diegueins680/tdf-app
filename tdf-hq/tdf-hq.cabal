@@ -20,6 +20,7 @@ executable tdf-hq-exe
     TDF.API.Rooms
     TDF.API.Sessions
     TDF.API.Types
+    TDF.API.WhatsApp
     TDF.Auth
     TDF.Config
     TDF.Cors
@@ -30,6 +31,7 @@ executable tdf-hq-exe
     TDF.Meta
     TDF.Models
     TDF.ModelsExtra
+    TDF.Leads.Model
     TDF.Pipelines
     TDF.Routes.Academy
     TDF.Seed
@@ -43,52 +45,58 @@ executable tdf-hq-exe
     TDF.Trials.Seed
     TDF.Trials.Server
     TDF.Version
+    TDF.WhatsApp.Client
+    TDF.WhatsApp.Types
     TDF.Profiles.Artist
     Paths_tdf_hq
   default-language: Haskell2010
   ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      base                 >=4.14 && <5
-    , aeson                >=2.0
-    , bytestring
-    , text
-    , time
-    , containers
-    , gitrev
-    , persistent           >=2.14
-    , persistent-template  >=2.12
-    , persistent-postgresql >=2.13
-    , persistent-sqlite     >=2.13
-    , resource-pool
-    , monad-logger
-    , resourcet
-    , conduit
-    , servant              >=0.19
-    , servant-server       >=0.19
-    , http-types
-    , http-media
-    , warp                 >=3.3
-    , wai
-    , wai-cors
-    , entropy
-    , filepath
-    , directory
-    , transformers
-    , mtl
-    , mime-mail
-    , unordered-containers
-    , uuid-types
-    , scientific
-    , safe-exceptions
-    , base64-bytestring
-    , directory
-    , process
-    , bcrypt
-    , path-pieces
-    , uuid
-    , template-haskell
-    , file-embed
-    , smtp-mail
+build-depends:
+    base                 >=4.14 && <5
+  , aeson                >=2.0
+  , bytestring
+  , text
+  , time
+  , random
+  , containers
+  , gitrev
+  , http-client
+  , http-client-tls
+  , persistent           >=2.14
+  , persistent-template  >=2.12
+  , persistent-postgresql >=2.13
+  , persistent-sqlite     >=2.13
+  , resource-pool
+  , monad-logger
+  , resourcet
+  , conduit
+  , servant              >=0.19
+  , servant-server       >=0.19
+  , postgresql-simple
+  , http-types
+  , http-media
+  , warp                 >=3.3
+  , wai
+  , wai-cors
+  , entropy
+  , filepath
+  , directory
+  , transformers
+  , mtl
+  , mime-mail
+  , unordered-containers
+  , uuid-types
+  , scientific
+  , safe-exceptions
+  , base64-bytestring
+  , directory
+  , process
+  , bcrypt
+  , path-pieces
+  , uuid
+  , template-haskell
+  , file-embed
+  , smtp-mail
 
 test-suite tdf-hq-test
   type:              exitcode-stdio-1.0
