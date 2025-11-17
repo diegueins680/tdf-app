@@ -62,6 +62,7 @@ import qualified TDF.Meta as Meta
 import           TDF.Version      (getVersionInfo)
 import qualified TDF.Handlers.InputList as InputList
 import qualified TDF.Email as Email
+import qualified TDF.Email.Service as EmailSvc
 import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , fetchPartyNameMap
                                      , loadAllArtistProfilesDTO
@@ -343,6 +344,7 @@ signup SignupRequest
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
+  let emailSvc = EmailSvc.mkEmailService cfg
   result <- liftIO $ flip runSqlPool pool $
     runSignupDb emailClean passwordClean displayName phoneClean now
   case result of
@@ -351,14 +353,7 @@ signup SignupRequest
     Left SignupProfileError ->
       throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
     Right resp -> do
-      liftIO $
-        Email.sendWelcomeEmail
-          (emailConfig cfg)
-          displayName
-          emailClean
-          emailClean
-          passwordClean
-          (appBaseUrl cfg)
+      liftIO $ EmailSvc.sendWelcome emailSvc displayName emailClean emailClean passwordClean
       pure resp
   where
     runSignupDb
@@ -506,14 +501,10 @@ passwordReset PasswordResetRequest{..} = do
   let emailClean = T.strip email
   when (T.null emailClean) $ throwBadRequest "Email is required"
   Env pool cfg <- ask
+  let emailSvc = EmailSvc.mkEmailService cfg
   mPayload <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
   for_ mPayload $ \(token, displayName) -> liftIO $
-    Email.sendPasswordResetEmail
-      (emailConfig cfg)
-      displayName
-      emailClean
-      token
-      (appBaseUrl cfg)
+    EmailSvc.sendPasswordReset emailSvc displayName emailClean token
   pure NoContent
   where
     runPasswordReset :: Text -> SqlPersistT IO (Maybe (Text, Text))

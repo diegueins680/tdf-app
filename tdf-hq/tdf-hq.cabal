@@ -32,6 +32,7 @@ executable tdf-hq-exe
     TDF.Models
     TDF.ModelsExtra
     TDF.Leads.Model
+    TDF.Email.Service
     TDF.Pipelines
     TDF.Routes.Academy
     TDF.Seed
