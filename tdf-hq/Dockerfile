@@ -1,6 +1,7 @@
 # -------- Stage 1: build with Stack (no GHCR) ----------
 FROM haskell:9.6-bullseye AS builder
 WORKDIR /app
+ENV STACK_ROOT=/root/.cache/stack
 
 # OS deps for building persistent-postgresql + basic tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
