@@ -12,11 +12,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN ghc --version || true
 RUN stack --version || true
 
-# Copy project definition first for better layer caching
+# Copy project definition first for better layer caching (dependencies layer)
 COPY stack.yaml stack.yaml.lock* package.yaml tdf-hq.cabal ./
 
-# Make sure Stack installs the correct compiler for the resolver
-# Also, be explicit and avoid any global "system-ghc" config
+# Make sure Stack installs the correct compiler for the resolver and cache deps
+# This layer should be cached across builds
 RUN stack --no-terminal --install-ghc setup && \
     stack --no-terminal --install-ghc build --only-dependencies
 
