@@ -65,6 +65,7 @@ import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
+import qualified TDF.Email.Service      as EmailSvc
 import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         , upsertArtistProfileRecord
                                         )
@@ -250,6 +251,7 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
       config <- asks envConfig
       let partyKey = toSqlKey uacPartyId :: PartyId
           activeValue = fromMaybe True uacActive
+          emailSvc = EmailSvc.mkEmailService config
       partyEnt <- do
         mParty <- withPool $ getEntity partyKey
         maybe (throwError err404 { errBody = "Party not found" }) pure mParty
@@ -277,13 +279,12 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
         credEnt <- getJustEntity credId
         loadUserAccount credEnt
       liftIO $
-        Email.sendWelcomeEmail
-          (emailConfig config)
+        EmailSvc.sendWelcome
+          emailSvc
           (partyDisplayName (entityVal partyEnt))
           emailAddress
           uniqueUsername
           tempPassword
-          (appBaseUrl config)
       pure account
       where
         normalizeUsername :: Text -> Maybe Text
