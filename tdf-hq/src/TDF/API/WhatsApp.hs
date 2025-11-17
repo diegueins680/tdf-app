@@ -3,7 +3,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module TDF.Api.WhatsApp (WhatsAppApi, whatsappServer, LeadsCompleteApi, leadsCompleteServer) where
+module TDF.API.WhatsApp (WhatsAppApi, whatsappServer, LeadsCompleteApi, leadsCompleteServer) where
 
 import Servant
 import GHC.Generics (Generic)

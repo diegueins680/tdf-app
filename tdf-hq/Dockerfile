@@ -23,6 +23,7 @@ RUN stack --no-terminal --install-ghc setup && \
 COPY app app
 COPY src src
 COPY docs docs
+COPY sql sql
 
 
 # Build and export the binary
