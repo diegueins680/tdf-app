@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { execSync } from 'node:child_process';
+import packageJson from './package.json';
 
 function resolveGitSha() {
   const envKeys = [
@@ -27,11 +28,13 @@ function resolveGitSha() {
 }
 
 const uiCommit = resolveGitSha();
+const uiVersion = packageJson.version ?? '0.0.0';
 
 export default defineConfig({
   plugins: [react()],
   server: { port: 5173, host: true },
   define: {
     __APP_COMMIT__: JSON.stringify(uiCommit),
+    __APP_VERSION__: JSON.stringify(uiVersion),
   },
 });

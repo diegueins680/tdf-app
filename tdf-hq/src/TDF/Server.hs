@@ -63,6 +63,7 @@ import           TDF.Version      (getVersionInfo)
 import qualified TDF.Handlers.InputList as InputList
 import qualified TDF.Email as Email
 import qualified TDF.Email.Service as EmailSvc
+import qualified TDF.Services as Services
 import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , fetchPartyNameMap
                                      , loadAllArtistProfilesDTO
@@ -344,7 +345,8 @@ signup SignupRequest
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
-  let emailSvc = EmailSvc.mkEmailService cfg
+  let services = Services.buildServices cfg
+      emailSvc = Services.emailService services
   result <- liftIO $ flip runSqlPool pool $
     runSignupDb emailClean passwordClean displayName phoneClean now
   case result of
@@ -501,7 +503,8 @@ passwordReset PasswordResetRequest{..} = do
   let emailClean = T.strip email
   when (T.null emailClean) $ throwBadRequest "Email is required"
   Env pool cfg <- ask
-  let emailSvc = EmailSvc.mkEmailService cfg
+  let services = Services.buildServices cfg
+      emailSvc = Services.emailService services
   mPayload <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
   for_ mPayload $ \(token, displayName) -> liftIO $
     EmailSvc.sendPasswordReset emailSvc displayName emailClean token

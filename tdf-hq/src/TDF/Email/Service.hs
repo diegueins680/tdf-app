@@ -7,11 +7,11 @@ module TDF.Email.Service
   ) where
 
 import Data.Text (Text)
-import TDF.Config (AppConfig(..))
+import TDF.Config (AppConfig(..), EmailConfig)
 import qualified TDF.Email as Email
 
 data EmailService = EmailService
-  { esConfig   :: Maybe Email.EmailConfig
+  { esConfig   :: Maybe EmailConfig
   , esAppBase  :: Maybe Text
   }
 

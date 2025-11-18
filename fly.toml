@@ -1,0 +1,28 @@
+app = "tdf-hq"
+
+# Deploy prebuilt image from Docker Hub
+[build]
+  image = "diegueins680/tdf-hq@sha256:82071c5ed39fdd1f37ecdb0345f408b87e563e0e7782eebd0948da81e84790e1"
+
+[env]
+  APP_PORT = "8080"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  auto_start_machines = true
+  auto_stop_machines = false
+  min_machines_running = 1
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 50
+    soft_limit = 40
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]

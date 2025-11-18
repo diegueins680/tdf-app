@@ -18,7 +18,7 @@ ensureLead conn phone ceId = do
             "SELECT id, token FROM lead WHERE phone_e164 = ? AND course_edition_id = ? LIMIT 1"
             (phone, ceId)
   case rows of
-    [(lid :: Int, tok :: Text)] -> pure (lid, tok)
+    ((lid, tok):_) -> pure (lid, tok)
     _ -> do
       tok <- genToken
       _ <- execute conn

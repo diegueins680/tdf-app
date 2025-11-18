@@ -52,10 +52,10 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         >
           <BrandLogo
             variant="alt"
-            size={72}
+            size={96}
             sx={{
-              height: { xs: 42, sm: 52, md: 72 },
-              filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.3))',
+              height: { xs: 52, sm: 64, md: 90 },
+              filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.35))',
             }}
           />
         </Box>
