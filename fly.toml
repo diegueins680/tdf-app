@@ -1,8 +1,8 @@
 app = "tdf-hq"
 
-# Deploy prebuilt image from Docker Hub
 [build]
-  image = "diegueins680/tdf-hq@sha256:82071c5ed39fdd1f37ecdb0345f408b87e563e0e7782eebd0948da81e84790e1"
+  dockerfile = "tdf-hq/Dockerfile"
+  context = "."
 
 [env]
   APP_PORT = "8080"
