@@ -2,6 +2,7 @@
 FROM haskell:9.6-bullseye AS builder
 WORKDIR /app
 ENV STACK_ROOT=/root/.cache/stack
+ARG STACK_FLAGS="--fast --no-haddock-deps"
 
 # OS deps for building persistent-postgresql + basic tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -18,7 +19,7 @@ COPY stack.yaml stack.yaml.lock* package.yaml tdf-hq.cabal ./
 # Make sure Stack installs the correct compiler for the resolver and cache deps
 # This layer should be cached across builds
 RUN stack --no-terminal --install-ghc setup && \
-    stack --no-terminal --install-ghc build --only-dependencies
+    stack --no-terminal --install-ghc build --only-dependencies $STACK_FLAGS
 
 # Copy sources (git metadata is provided via build args when available)
 COPY app app
@@ -28,7 +29,7 @@ COPY sql sql
 
 
 # Build and export the binary
-RUN stack --no-terminal --install-ghc build --copy-bins --local-bin-path /out
+RUN stack --no-terminal --install-ghc build --copy-bins --local-bin-path /out $STACK_FLAGS
 
 # -------- Stage 2: slim runtime ----------
 FROM debian:bookworm-slim
