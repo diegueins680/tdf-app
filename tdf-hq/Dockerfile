@@ -1,8 +1,6 @@
 # -------- Stage 1: build with Stack (no GHCR) ----------
 FROM haskell:9.6-bullseye AS builder
 WORKDIR /app
-ENV STACK_ROOT=/root/.cache/stack
-ARG STACK_FLAGS="--fast --no-haddock-deps"
 
 # OS deps for building persistent-postgresql + basic tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,23 +11,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN ghc --version || true
 RUN stack --version || true
 
-# Copy project definition first for better layer caching (dependencies layer)
-COPY stack.yaml stack.yaml.lock* package.yaml tdf-hq.cabal ./
+# Copy project definition first for better layer caching
+COPY stack.yaml tdf-hq.cabal ./
+# COPY package.yaml ./   # uncomment if you have it
 
-# Make sure Stack installs the correct compiler for the resolver and cache deps
-# This layer should be cached across builds
+# Make sure Stack installs the correct compiler for the resolver
+# Also, be explicit and avoid any global "system-ghc" config
 RUN stack --no-terminal --install-ghc setup && \
-    stack --no-terminal --install-ghc build --only-dependencies $STACK_FLAGS
+    stack --no-terminal --install-ghc build --only-dependencies
 
 # Copy sources (git metadata is provided via build args when available)
 COPY app app
 COPY src src
+COPY config config
 COPY docs docs
-COPY sql sql
+COPY .git .git
 
 
 # Build and export the binary
-RUN stack --no-terminal --install-ghc build --copy-bins --local-bin-path /out $STACK_FLAGS
+RUN stack --no-terminal --install-ghc build --copy-bins --local-bin-path /out
 
 # -------- Stage 2: slim runtime ----------
 FROM debian:bookworm-slim
