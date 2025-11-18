@@ -25,7 +25,6 @@ COPY app app
 COPY src src
 COPY config config
 COPY docs docs
-COPY .git .git
 
 
 # Build and export the binary
