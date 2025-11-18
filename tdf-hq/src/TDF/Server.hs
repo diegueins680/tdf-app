@@ -56,6 +56,7 @@ import           TDF.Seed       (seedAll)
 import           TDF.ServerAdmin (adminServer)
 import           TDF.ServerExtra (bandsServer, inventoryServer, loadBandForParty, pipelinesServer, roomsServer, sessionsServer)
 import           TDF.ServerFuture (futureServer)
+import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Trials.API (TrialsAPI)
 import           TDF.Trials.Server (trialsServer)
 import qualified TDF.Meta as Meta
@@ -261,6 +262,7 @@ protectedServer user =
   :<|> sessionsServer user
   :<|> pipelinesServer user
   :<|> roomsServer user
+  :<|> liveSessionsServer user
   :<|> futureServer
 
 -- Health
