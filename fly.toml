@@ -6,6 +6,8 @@ app = "tdf-hq"
 
 [env]
   APP_PORT = "8080"
+  ALLOW_ORIGINS = "https://tdf-app.pages.dev"
+  ALLOW_ALL_ORIGINS = "false"
 
 [[services]]
   protocol = "tcp"
