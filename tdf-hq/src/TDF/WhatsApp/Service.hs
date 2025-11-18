@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NamedFieldPuns #-}
 module TDF.WhatsApp.Service
   ( WhatsAppService(..)
   , WhatsAppConfig(..)
@@ -15,8 +16,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.ByteString.Lazy (ByteString)
 import System.Environment (lookupEnv)
-import Network.HTTP.Client (Manager)
-import Network.HTTP.Client.TLS (tlsManagerSettings, newManager)
+import Network.HTTP.Client (Manager, newManager)
+import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Database.PostgreSQL.Simple (Connection, execute, Only(..))
 
 import TDF.Leads.Model (ensureLead, lookupCourseIdBySlug)
