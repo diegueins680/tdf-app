@@ -15,6 +15,7 @@ executable tdf-hq-exe
     TDF.API
     TDF.API.Bands
     TDF.API.Future
+    TDF.API.LiveSessions
     TDF.API.Inventory
     TDF.API.Pipelines
     TDF.API.Rooms
@@ -40,6 +41,7 @@ executable tdf-hq-exe
     TDF.Server
     TDF.ServerAdmin
     TDF.ServerExtra
+    TDF.ServerLiveSessions
     TDF.ServerFuture
     TDF.Trials.API
     TDF.Trials.DTO
@@ -75,6 +77,7 @@ executable tdf-hq-exe
     , conduit
     , servant              >=0.19
     , servant-server       >=0.19
+    , servant-multipart
     , postgresql-simple
     , http-types
     , http-media

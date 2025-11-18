@@ -32,6 +32,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Salas y recursos', path: '/estudio/salas' },
       { label: 'Órdenes', path: '/estudio/ordenes' },
       { label: 'Pipelines', path: '/estudio/pipelines' },
+      { label: 'Live Sessions', path: '/estudio/live-sessions' },
       { label: 'Reportes', path: '/estudio/reportes' },
     ],
   },

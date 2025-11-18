@@ -202,6 +202,29 @@ BandMember
     UniqueBandMember bandId partyId
     deriving Show Generic
 
+LiveSessionIntake
+    Id           UUID default=gen_random_uuid()
+    bandName     Text
+    contactEmail Text Maybe
+    contactPhone Text Maybe
+    sessionDate  Day Maybe
+    riderPath    Text Maybe
+    createdBy    PartyId Maybe
+    createdAt    UTCTime default=now()
+    deriving Show Generic
+
+LiveSessionMusician
+    Id          UUID default=gen_random_uuid()
+    intakeId    LiveSessionIntakeId
+    partyId     PartyId
+    name        Text
+    email       Text Maybe
+    instrument  Text Maybe
+    role        Text Maybe
+    notes       Text Maybe
+    isExisting  Bool default=False
+    deriving Show Generic
+
 Session
     Id               UUID default=gen_random_uuid()
     bookingRef       Text Maybe
