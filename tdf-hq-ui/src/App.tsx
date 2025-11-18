@@ -18,6 +18,7 @@ import { useSession } from './session/SessionContext';
 import SidebarNav from './components/SidebarNav';
 import ApiStatusChip from './components/ApiStatusChip';
 import InscripcionPage from './pages/inscripcion/InscripcionPage';
+import LiveSessionIntakePage from './pages/LiveSessionIntakePage';
 
 function Shell() {
   const { session } = useSession();
@@ -119,6 +120,7 @@ export default function App() {
           <Route path="salas" element={<RoomsPage />} />
           <Route path="ordenes" element={<OrdersPage />} />
           <Route path="pipelines" element={<KanbanPage />} />
+          <Route path="live-sessions" element={<LiveSessionIntakePage />} />
           <Route path="reportes" element={<PlaceholderPage title="Estudio / Reportes" />} />
           <Route index element={<Navigate to="calendario" replace />} />
         </Route>
