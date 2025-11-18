@@ -31,7 +31,12 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         borderBottom: '1px solid rgba(255,255,255,0.08)',
       }}
     >
-      <Toolbar sx={{ minHeight: 72, px: { xs: 2, md: 4 } }}>
+      <Toolbar
+        sx={{
+          minHeight: { xs: 96, md: 124 },
+          px: { xs: 2, md: 4 },
+        }}
+      >
         <IconButton
           edge="start"
           onClick={onToggleSidebar}
@@ -52,10 +57,10 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         >
           <BrandLogo
             variant="alt"
-            size={96}
+            size={180}
             sx={{
-              height: { xs: 52, sm: 64, md: 90 },
-              filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.35))',
+              height: { xs: 120, sm: 150, md: 180 },
+              filter: 'drop-shadow(0 8px 22px rgba(0,0,0,0.35))',
             }}
           />
         </Box>
