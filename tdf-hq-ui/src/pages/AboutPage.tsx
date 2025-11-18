@@ -4,6 +4,7 @@ import {
   Alert,
   Button,
   Chip,
+  Divider,
   Grid,
   Link,
   Paper,
@@ -46,6 +47,7 @@ export default function AboutPage() {
 
   const loading = versionLoading || healthLoading;
   const hasMetaError = Boolean(versionError ?? healthError);
+  const uiVersion = (__APP_VERSION__ || '').trim() || null;
   const uiCommit = useMemo(() => {
     if (!__APP_COMMIT__ || __APP_COMMIT__.trim().length === 0) {
       return null;
@@ -111,31 +113,51 @@ export default function AboutPage() {
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, height: '100%' }}>
-            <Stack gap={1}>
-              <Typography variant="overline">Versión</Typography>
-              <Typography variant="h5" fontWeight={600}>
-                {version?.name ?? 'Aplicación'}
-              </Typography>
-              <Typography variant="body1">
-                Release <strong>{version?.version ?? '—'}</strong>
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Compilado: {buildDate}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                UI commit:{' '}
-                {uiCommit ? (
-                  uiCommit.link ? (
-                    <Link href={uiCommit.link} target="_blank" rel="noreferrer">
-                      {uiCommit.display}
-                    </Link>
+            <Stack gap={2}>
+              <Typography variant="overline">Versiones</Typography>
+
+              <Stack gap={0.5}>
+                <Typography variant="body2" color="text.secondary">
+                  Backend (API)
+                </Typography>
+                <Typography variant="h6" fontWeight={600}>
+                  {version?.name ?? 'tdf-hq'}
+                </Typography>
+                <Typography variant="body1">
+                  Release <strong>{version?.version ?? '—'}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Compilado: {buildDate}
+                </Typography>
+              </Stack>
+
+              <Divider flexItem />
+
+              <Stack gap={0.5}>
+                <Typography variant="body2" color="text.secondary">
+                  Web UI
+                </Typography>
+                <Typography variant="h6" fontWeight={600}>
+                  tdf-hq-ui
+                </Typography>
+                <Typography variant="body1">
+                  Release <strong>{uiVersion ?? '—'}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Commit:{' '}
+                  {uiCommit ? (
+                    uiCommit.link ? (
+                      <Link href={uiCommit.link} target="_blank" rel="noreferrer">
+                        {uiCommit.display}
+                      </Link>
+                    ) : (
+                      uiCommit.display
+                    )
                   ) : (
-                    uiCommit.display
-                  )
-                ) : (
-                  '—'
-                )}
-              </Typography>
+                    '—'
+                  )}
+                </Typography>
+              </Stack>
             </Stack>
           </Paper>
         </Grid>
