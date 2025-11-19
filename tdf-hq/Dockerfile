@@ -24,7 +24,7 @@ RUN stack --no-terminal --install-ghc setup && \
 # Copy sources (git metadata is provided via build args when available)
 COPY tdf-hq/app app
 COPY tdf-hq/src src
-COPY tdf-hq/config config
+COPY tdf-hq/config/default.env.example config/default.env
 COPY tdf-hq/docs docs
 
 
