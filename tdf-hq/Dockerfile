@@ -12,8 +12,8 @@ RUN ghc --version || true
 RUN stack --version || true
 
 # Copy project definition first for better layer caching
-COPY tdf-hq/stack.yaml stack.yaml
-COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
+COPY stack.yaml stack.yaml
+COPY tdf-hq.cabal tdf-hq.cabal
 # COPY tdf-hq/package.yaml ./   # uncomment if you have it
 
 # Make sure Stack installs the correct compiler for the resolver
@@ -22,10 +22,10 @@ RUN stack --no-terminal --install-ghc setup && \
     stack --no-terminal --install-ghc build --only-dependencies
 
 # Copy sources (git metadata is provided via build args when available)
-COPY tdf-hq/app app
-COPY tdf-hq/src src
-COPY tdf-hq/config/default.env.example config/default.env
-COPY tdf-hq/docs docs
+COPY app app
+COPY src src
+COPY config/default.env.example config/default.env
+COPY docs docs
 
 
 # Build and export the binary
