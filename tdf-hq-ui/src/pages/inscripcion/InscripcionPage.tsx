@@ -26,8 +26,11 @@ export default function InscripcionPage() {
       if (res.ok) {
         setDone(true);
       } else {
-        const errorText = await res.text().catch(() => 'Error al enviar el formulario');
-        setError(errorText || 'Error al enviar el formulario. Por favor intenta nuevamente.');
+        // Only show user-friendly messages, not raw backend errors
+        const userMessage = res.status === 400
+          ? 'Por favor verifica los datos ingresados.'
+          : 'Error al enviar el formulario. Por favor intenta nuevamente.';
+        setError(userMessage);
       }
     } catch (err) {
       setError('Error de conexión. Por favor verifica tu conexión a internet e intenta nuevamente.');
