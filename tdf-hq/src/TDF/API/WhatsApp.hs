@@ -41,7 +41,7 @@ hookVerifyH :: Maybe Text -> Maybe Text -> Maybe Text -> Handler Text
 hookVerifyH _ mchall mtoken = do
   svc <- liftIO mkWhatsAppService
   case (mchall, mtoken, waVerifyToken (waConfig svc)) of
-    (Just c, Just t, Just e) | Just t == waVerifyToken (waConfig svc) -> pure c
+    (Just c, Just t, Just e) | t == e -> pure c
     _ -> throwError err403
 
 hookReceiveH :: Connection -> WAMetaWebhook -> Handler Value

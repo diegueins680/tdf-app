@@ -9,12 +9,9 @@ module TDF.WhatsApp.Service
   , verifyTokenMatches
   ) where
 
-import Control.Exception (SomeException, try)
 import Data.Aeson (Value, object, (.=))
-import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.ByteString.Lazy (ByteString)
 import System.Environment (lookupEnv)
 import Network.HTTP.Client (Manager, newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
