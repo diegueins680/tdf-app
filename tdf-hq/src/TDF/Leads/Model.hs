@@ -21,10 +21,12 @@ ensureLead conn phone ceId = do
     [(lid :: Int, tok :: Text)] -> pure (lid, tok)
     _ -> do
       tok <- genToken
-      [Only lid] <- query conn
+      result <- query conn
             "INSERT INTO lead (phone_e164, course_edition_id, token) VALUES (?,?,?) RETURNING id"
             (phone, ceId, tok)
-      pure (lid, tok)
+      case result of
+        [Only lid] -> pure (lid, tok)
+        _ -> error "Failed to insert lead"
 
 lookupCourseIdBySlug :: Connection -> Text -> IO (Maybe Int)
 lookupCourseIdBySlug conn slug = do

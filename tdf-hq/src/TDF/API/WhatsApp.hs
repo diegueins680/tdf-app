@@ -146,11 +146,15 @@ isValidE164 t =
 -- Validate email format (basic validation)
 isValidEmail :: Text -> Bool
 isValidEmail email =
-  let parts = T.split (== '@') email
-  in length parts == 2 && 
-     not (T.null (head parts)) && 
-     not (T.null (parts !! 1)) &&
-     T.isInfixOf "." (parts !! 1)
+  case T.split (== '@') email of
+    [localPart, domain] ->
+      not (T.null localPart) &&
+      not (T.null domain) &&
+      not (T.isPrefixOf "." domain) &&
+      not (T.isSuffixOf "." domain) &&
+      T.isInfixOf "." domain &&
+      T.length domain >= 3
+    _ -> False
 
 -- Lead completion -------------------------------------------------------------
 
