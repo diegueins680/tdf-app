@@ -41,6 +41,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 ARG SOURCE_COMMIT=UNKNOWN
+ENV SOURCE_COMMIT=${SOURCE_COMMIT}
 ENV GIT_SHA=${SOURCE_COMMIT}
 COPY --from=builder /out/tdf-hq-exe /app/tdf-hq-exe
 COPY --from=builder /app/docs /app/docs

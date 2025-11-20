@@ -21,11 +21,7 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           FLY_NO_DEPOT_CACHE: "1"
         run: |
-          COMMIT_SHA=${GITHUB_SHA}
-          flyctl deploy \
+          ./scripts/fly-deploy.sh \
             --local-only \
-            --config fly.toml \
             --app tdf-hq \
-            --verbose \
-            --env SOURCE_COMMIT=${COMMIT_SHA} \
-            --env GIT_SHA=${COMMIT_SHA}
+            --verbose

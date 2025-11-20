@@ -2,7 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT_DIR"
+APP_DIR="$ROOT_DIR/tdf-hq"
+CONFIG_FILE="$ROOT_DIR/fly.toml"
+
+cd "$APP_DIR"
 
 if ! command -v fly >/dev/null 2>&1; then
   echo "fly CLI is required but not found" >&2
@@ -14,4 +17,9 @@ export SOURCE_COMMIT="$COMMIT_SHA"
 export GIT_SHA="$COMMIT_SHA"
 
 echo "Deploying commit $COMMIT_SHA to Fly..." >&2
-exec fly deploy --env SOURCE_COMMIT="$COMMIT_SHA" --env GIT_SHA="$COMMIT_SHA" "$@"
+exec fly deploy \
+  --config "$CONFIG_FILE" \
+  --build-arg SOURCE_COMMIT="$COMMIT_SHA" \
+  --env SOURCE_COMMIT="$COMMIT_SHA" \
+  --env GIT_SHA="$COMMIT_SHA" \
+  "$@"
