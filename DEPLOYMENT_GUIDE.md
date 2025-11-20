@@ -8,7 +8,7 @@ The TDF platform consists of three deployable components:
 
 | Component | Technology | Deployment Target | Status |
 |-----------|-----------|-------------------|--------|
-| **Backend API** | Haskell + PostgreSQL | Koyeb | Production |
+| **Backend API** | Haskell + PostgreSQL | Koyeb / Fly.io | Production |
 | **Web UI** | React/Vite SPA | Cloudflare Pages / Vercel | Production |
 | **Mobile App** | Expo/React Native | App Store / Play Store | Development |
 
@@ -181,6 +181,15 @@ server {
 ```
 
 ---
+
+## Backend Deployment (Fly.io)
+
+Fly powers the production `tdf-hq` API. Deployments must inject the git SHA so `/version` returns the running commit.
+
+1. Install and authenticate the Fly CLI (`fly auth login`).
+2. Run `scripts/fly-deploy.sh [additional fly deploy flags]` from the repo root. The helper script captures `git rev-parse HEAD` and forwards it as both `SOURCE_COMMIT` and `GIT_SHA` via `--env` so the runtime knows the commit.
+3. Use the standard Fly flags (`--remote-only`, `--local-only`, `--build-only`, etc.) when needed; they are passed through by the script.
+4. If you must call `fly deploy` manually, always append `--env SOURCE_COMMIT=$(git rev-parse HEAD) --env GIT_SHA=$(git rev-parse HEAD)` to prevent the backend from falling back to the placeholder `dev` commit.
 
 ## Frontend Deployment
 

@@ -14,8 +14,6 @@ RUN stack --version || true
 # Copy project definition first for better layer caching
 COPY stack.yaml stack.yaml
 COPY tdf-hq.cabal tdf-hq.cabal
-# Copy git metadata so Template H (gitHash) can embed the commit SHA
-COPY .git .git
 # COPY tdf-hq/package.yaml ./   # uncomment if you have it
 
 # Make sure Stack installs the correct compiler for the resolver
