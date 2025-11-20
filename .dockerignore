@@ -1,0 +1,56 @@
+# Ignore Python cache files and directories
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Ignore virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Ignore version control directories
+.git/
+.gitignore
+
+# Ignore Docker-related files (keep Dockerfiles in the build context)
+.dockerignore
+
+# Ignore IDE/editor config files
+.vscode/
+.idea/
+*.swp
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Ignore build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Ignore node_modules (if applicable)
+node_modules/
+
+# Ignore secrets and environment files
+.env
+.env.*
+secrets/
+
+# Ignore database files
+*.db
+*.sqlite3
+
+# Ignore other unnecessary files
+*.DS_Store
+Thumbs.db
+
+# Ignore SQL and DB init scripts (mounted as volumes, no need to include in build context)
+sql/
+db/
