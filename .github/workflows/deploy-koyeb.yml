@@ -53,5 +53,7 @@ jobs:
             echo "KOYEB_API_TOKEN and KOYEB_SERVICE_NAME secrets are required" >&2
             exit 1
           fi
-          koyeb --token "$KOYEB_TOKEN" service redeploy "$KOYEB_SERVICE" \
-            --image "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
+          koyeb --token "$KOYEB_TOKEN" services update "$KOYEB_SERVICE" \
+            --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
+            --strategy rolling \
+            --ports 8080:http
