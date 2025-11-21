@@ -42,10 +42,9 @@ jobs:
       - name: Install Koyeb CLI
         run: |
           set -euo pipefail
-          curl -sSL https://github.com/koyeb/koyeb-cli/releases/latest/download/koyeb-linux-amd64 -o /tmp/koyeb
-          chmod +x /tmp/koyeb
-          sudo mv /tmp/koyeb /usr/local/bin/koyeb
-          koyeb version
+          # Use official install script to fetch the correct binary
+          curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+          /usr/local/bin/koyeb version
       - name: Deploy latest image to Koyeb
         env:
           KOYEB_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
