@@ -138,7 +138,6 @@ interface SidebarNavProps {
 
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set(NAV_GROUPS.map((g) => g.title)));
   const { session } = useSession();
   const modules = useMemo(() => new Set((session?.modules ?? []).map((m) => m.toLowerCase())), [session?.modules]);
 
@@ -167,6 +166,36 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       return { ...group, items: filteredItems };
     }).filter((group) => group.items.length > 0);
   }, [modules]);
+
+  const ensureExpandedDefaults = (groups: NavGroup[]) => {
+    const next = new Set<string>();
+    groups.forEach((group) => {
+      const hasSingle = group.items.length <= 1;
+      const matchesRoute = group.items.some(
+        (item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`),
+      );
+      if (hasSingle || matchesRoute) next.add(group.title);
+    });
+    return next;
+  };
+
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => ensureExpandedDefaults(allowedNavGroups));
+
+  // Keep active group expanded when route or available groups change.
+  useEffect(() => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      allowedNavGroups.forEach((group) => {
+        const matchesRoute = group.items.some(
+          (item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`),
+        );
+        if (matchesRoute || group.items.length <= 1) {
+          next.add(group.title);
+        }
+      });
+      return next;
+    });
+  }, [allowedNavGroups, location.pathname]);
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) => {
