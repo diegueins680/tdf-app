@@ -189,8 +189,9 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         bgcolor: '#10131b',
         color: '#f8fafc',
         borderRight: '1px solid rgba(255,255,255,0.06)',
-        overflow: 'hidden',
-        display: { xs: open ? 'block' : 'none', lg: 'block' },
+        overflowX: 'hidden',
+        overflowY: 'hidden',
+        display: { xs: open ? 'flex' : 'none', lg: 'flex' },
         position: { xs: 'fixed', lg: 'sticky' },
         zIndex: 1200,
         height: '100vh',
@@ -198,11 +199,10 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         top: 0,
         left: 0,
         flexShrink: 0,
-        display: 'flex',
         flexDirection: 'column',
       }}
     >
-      <Stack spacing={2} sx={{ px: 3, pt: 4, pb: 3 }}>
+      <Stack spacing={2} sx={{ px: 3, pt: 4, pb: 3, flexShrink: 0 }}>
         <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.6)', letterSpacing: 2 }}>
           MENÚ
         </Typography>

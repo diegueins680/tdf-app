@@ -22,10 +22,7 @@ import LiveSessionIntakePage from './pages/LiveSessionIntakePage';
 
 function Shell() {
   const { session } = useSession();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 1024;
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   if (!session) {
     return <Navigate to="/login" replace />;
@@ -40,9 +37,28 @@ function Shell() {
   const handleToggleSidebar = () => setSidebarCollapsed((prev) => !prev);
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        height: '100vh',
+        bgcolor: 'background.default',
+        overflow: 'hidden',
+      }}
+    >
       <SidebarNav open={!sidebarCollapsed} onNavigate={handleNavigateFromSidebar} />
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          minWidth: 0,
+          minHeight: 0,
+          maxHeight: '100vh',
+          overflow: 'hidden',
+        }}
+      >
         {!sidebarCollapsed && (
           <Box
             sx={{
@@ -56,7 +72,17 @@ function Shell() {
           />
         )}
         <TopBar onToggleSidebar={handleToggleSidebar} />
-        <Box component="main" sx={{ flexGrow: 1, position: 'relative', px: { xs: 2, md: 4 }, py: { xs: 2, md: 4 } }}>
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            position: 'relative',
+            px: { xs: 2, md: 4 },
+            py: { xs: 2, md: 4 },
+            overflowY: 'auto',
+            minHeight: 0,
+          }}
+        >
           <Box sx={{ position: 'absolute', left: { xs: 16, md: 32 }, top: 16 }}>
             <Button
               variant="contained"
