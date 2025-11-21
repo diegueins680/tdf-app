@@ -41,10 +41,11 @@ jobs:
     steps:
       - name: Install Koyeb CLI
         run: |
-          curl -sL https://github.com/koyeb/koyeb-cli/releases/latest/download/koyeb-linux-amd64.tar.gz -o /tmp/koyeb.tar.gz
-          mkdir -p "$HOME/.local/bin"
-          tar -xzf /tmp/koyeb.tar.gz -C "$HOME/.local/bin" koyeb
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          set -euo pipefail
+          curl -sSL https://github.com/koyeb/koyeb-cli/releases/latest/download/koyeb-linux-amd64 -o /tmp/koyeb
+          chmod +x /tmp/koyeb
+          sudo mv /tmp/koyeb /usr/local/bin/koyeb
+          koyeb version
       - name: Deploy latest image to Koyeb
         env:
           KOYEB_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
