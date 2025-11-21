@@ -15,8 +15,9 @@ jobs:
       - name: Install flyctl
         run: |
           curl -L https://fly.io/install.sh | sh
-          # Persist flyctl into the PATH for following steps
+          # Persist flyctl into the PATH for following steps and current shell
           echo "$HOME/.fly/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.fly/bin:$PATH"
           flyctl version
 
       - name: Deploy to Fly
