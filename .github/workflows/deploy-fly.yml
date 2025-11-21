@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_REPO: diegueins680/tdf-hq
-      DOCKER_IMAGE_TAG: ${{ github.sha }}
+      DOCKER_IMAGE_TAG: latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
