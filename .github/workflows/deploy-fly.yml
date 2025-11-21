@@ -25,9 +25,14 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         working-directory: tdf-hq
         run: |
+          APP_NAME="tdf-hq"
+          if [ -f fly.toml ] && grep -q '^app *= *"[^"]*"' fly.toml; then
+            APP_NAME=$(grep '^app *= *"' fly.toml | head -n1 | sed -E 's/app *= *"([^"]+)"/\1/')
+          fi
           flyctl deploy \
             --config ./fly.toml \
             --dockerfile ./Dockerfile \
             --build-arg SOURCE_COMMIT=${{ github.sha }} \
             --build-arg BUILD_TIME=${{ github.run_started_at }} \
-            --remote-only
+            --remote-only \
+            --app "$APP_NAME"
