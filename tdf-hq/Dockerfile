@@ -26,8 +26,6 @@ COPY app app
 COPY src src
 COPY config/default.env.example config/default.env
 COPY docs docs
-# Copy git metadata so gitrev can embed the commit SHA in the binary
-COPY .git .git
 
 
 # Build and export the binary
