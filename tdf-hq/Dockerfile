@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV SOURCE_COMMIT=${SOURCE_COMMIT}
 ENV GIT_SHA=${SOURCE_COMMIT}
 ENV BUILD_TIME=${BUILD_TIME}
+ENV STACK_ROOT=/root/.stack
 
 # Show toolchain versions (handy in Render logs)
 RUN ghc --version || true
@@ -36,6 +37,10 @@ COPY src src
 COPY config/default.env.example config/default.env
 COPY docs docs
 
+
+# Refresh stack indices and clear any stale pantry cache to avoid hash issues
+RUN rm -rf /root/.stack/pantry/hackage && \
+    stack --no-terminal update
 
 # Build and export the binary
 RUN stack --no-terminal --install-ghc build --copy-bins --local-bin-path /out
