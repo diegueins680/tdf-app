@@ -54,19 +54,15 @@ jobs:
             echo "KOYEB_API_TOKEN, KOYEB_SERVICE_NAME, and KOYEB_APP_NAME secrets are required" >&2
             exit 1
           fi
-          # Ensure we deploy a container source, not a git build
-          SERVICE_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$KOYEB_APP" --output json | jq -r '.services[] | select(.name=="'"$KOYEB_SERVICE"'") | .id')
-          if [ -z "$SERVICE_ID" ] || [ "$SERVICE_ID" = "null" ]; then
-            echo "Service not found; creating $KOYEB_SERVICE in app $KOYEB_APP"
-            koyeb --token "$KOYEB_TOKEN" services create "$KOYEB_SERVICE" \
-              --app "$KOYEB_APP" \
-              --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
-              --ports 8080:http \
-              --strategy rolling
-          else
-            echo "Updating existing service $KOYEB_SERVICE ($SERVICE_ID) to use Docker image"
-            koyeb --token "$KOYEB_TOKEN" services update "$SERVICE_ID" \
-              --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
-              --ports 8080:http \
-              --strategy rolling
+          # Force container-based deploy: remove existing service (if any) and recreate from DockerHub image.
+          EXISTING_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$KOYEB_APP" --output json | jq -r '.services[] | select(.name=="'"$KOYEB_SERVICE"'") | .id')
+          if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
+            echo "Deleting existing service $KOYEB_SERVICE ($EXISTING_ID) to ensure container-based deployment"
+            koyeb --token "$KOYEB_TOKEN" services delete "$EXISTING_ID" --yes
           fi
+          echo "Creating service $KOYEB_SERVICE in app $KOYEB_APP with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
+          koyeb --token "$KOYEB_TOKEN" services create "$KOYEB_SERVICE" \
+            --app "$KOYEB_APP" \
+            --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
+            --ports 8080:http \
+            --strategy rolling
