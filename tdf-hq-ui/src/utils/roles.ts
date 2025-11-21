@@ -55,7 +55,7 @@ export function buildSignupPayload(
 export function deriveEffectiveRoles(
   apiRoles: string[] | undefined,
   selectedRoles: SignupRole[],
-  defaultRole: string = 'fan',
+  defaultRole = 'fan',
 ): string[] {
   const apiNormalized = (apiRoles ?? []).map((role) => role.toLowerCase()).filter(Boolean);
   if (apiNormalized.length) return apiNormalized;

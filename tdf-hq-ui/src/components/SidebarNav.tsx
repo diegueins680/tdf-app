@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Box, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useSession } from '../session/SessionContext';
 
 export interface NavItem {
   label: string;
@@ -138,6 +139,34 @@ interface SidebarNavProps {
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set(NAV_GROUPS.map((g) => g.title)));
+  const { session } = useSession();
+  const modules = useMemo(() => new Set((session?.modules ?? []).map((m) => m.toLowerCase())), [session?.modules]);
+
+  const pathRequiresModule = (path: string): string | null => {
+    if (path.startsWith('/crm')) return 'crm';
+    if (path.startsWith('/estudio')) return 'scheduling';
+    if (path.startsWith('/finanzas')) return 'invoicing';
+    if (path.startsWith('/configuracion')) return 'admin';
+    if (path.startsWith('/operacion')) return 'packages';
+    if (path.startsWith('/label')) return 'packages';
+    if (path.startsWith('/bar')) return 'packages';
+    if (path.startsWith('/escuela')) return 'scheduling';
+    if (path.startsWith('/eventos')) return 'scheduling';
+    return null;
+  };
+
+  const allowedNavGroups = useMemo(() => {
+    const modulesProvided = modules.size > 0;
+    return NAV_GROUPS.map((group) => {
+      const filteredItems = group.items.filter((item) => {
+        const required = pathRequiresModule(item.path);
+        if (!required) return true;
+        if (!modulesProvided) return true; // keep legacy behavior when API doesn't send modules
+        return modules.has(required);
+      });
+      return { ...group, items: filteredItems };
+    }).filter((group) => group.items.length > 0);
+  }, [modules]);
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) => {
@@ -162,11 +191,15 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         borderRight: '1px solid rgba(255,255,255,0.06)',
         overflow: 'hidden',
         display: { xs: open ? 'block' : 'none', lg: 'block' },
-        position: { xs: 'fixed', lg: 'relative' },
+        position: { xs: 'fixed', lg: 'sticky' },
         zIndex: 1200,
-        height: { xs: '100vh', lg: 'auto' },
+        height: '100vh',
+        maxHeight: '100vh',
         top: 0,
         left: 0,
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <Stack spacing={2} sx={{ px: 3, pt: 4, pb: 3 }}>
@@ -174,8 +207,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
           MENÚ
         </Typography>
       </Stack>
-      <List disablePadding>
-        {NAV_GROUPS.map((group) => {
+      <List disablePadding sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
+        {allowedNavGroups.map((group) => {
           const isExpanded = expandedGroups.has(group.title);
           return (
             <Box key={group.title} sx={{ px: 1 }}>

@@ -25,21 +25,21 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import type { SelectChangeEvent } from '@mui/material/Select';
-import type { UserSummary, Role } from '../api/generated/client';
+import type { Role } from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
 import { ALL_ROLES } from '../constants/roles';
 import { normalizeRolesInput } from '../utils/roles';
 
 type RoleValue = Role | (string & Record<never, never>);
 
-type NormalizedUser = {
+interface NormalizedUser {
   id: number;
   name: string;
   email: string | null | undefined;
   phone: string | null | undefined;
   status: 'Active' | 'Inactive';
   roles: RoleValue[];
-};
+}
 
 const STATUS_COLORS: Record<'Active' | 'Inactive', 'success' | 'default'> = {
   Active: 'success',
