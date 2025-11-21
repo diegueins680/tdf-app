@@ -28,6 +28,9 @@ jobs:
           context: ./tdf-hq
           file: ./tdf-hq/Dockerfile
           push: true
+          build-args: |
+            SOURCE_COMMIT=${{ github.sha }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp || github.run_started_at }}
           tags: |
             ${{ env.DOCKER_IMAGE_REPO }}:${{ env.DOCKER_IMAGE_TAG }}
             ${{ env.DOCKER_IMAGE_REPO }}:latest
