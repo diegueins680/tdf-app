@@ -19,7 +19,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import type { PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
-import type { PartyRole } from '../api/generated/client';
+import type { Role } from '../api/generated/client';
 import { submitLiveSessionIntake } from '../api/liveSessions';
 
 interface MusicianEntry {
@@ -85,7 +85,7 @@ export default function LiveSessionIntakePage() {
     };
     await Parties.update(created.partyId, updatePayload);
     if (entry.email) {
-      const roles: PartyRole[] = ['Artist'];
+      const roles: Role[] = ['Artist'];
       await Admin.createUser({
         partyId: created.partyId,
         username: entry.email,

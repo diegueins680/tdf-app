@@ -38,12 +38,12 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { useNavigate } from 'react-router-dom';
-import type { PartyRole } from '../api/generated/client';
+import type { Role } from '../api/generated/client';
 import { Admin } from '../api/admin';
 import { ALL_ROLES } from '../constants/roles';
 import { normalizeRolesInput } from '../utils/roles';
 
-type RoleValue = PartyRole | (string & Record<never, never>);
+type RoleValue = Role | (string & Record<never, never>);
 
 interface CreatePartyDialogProps {
   open: boolean;

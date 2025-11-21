@@ -1,4 +1,4 @@
-import type { PartyRole } from '../api/generated/client';
+import type { Role } from '../api/generated/client';
 
 export const EXTENDED_MUSIC_ROLES = [
   'Fan',
@@ -19,9 +19,9 @@ export const EXTENDED_MUSIC_ROLES = [
 ] as const;
 
 export type ExtendedMusicRole = (typeof EXTENDED_MUSIC_ROLES)[number];
-export type SignupRole = PartyRole | ExtendedMusicRole;
+export type SignupRole = Role | ExtendedMusicRole;
 
-export const CORE_ROLES: PartyRole[] = [
+export const CORE_ROLES: Role[] = [
   'Admin',
   'Manager',
   'Engineer',

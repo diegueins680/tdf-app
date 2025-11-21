@@ -2,10 +2,9 @@
 import type { components } from './types';
 import { getStoredSessionToken } from '../../session/SessionContext';
 
-export type User = components['schemas']['User'];
-export type PartyRole = components['schemas']['PartyRole'];
-export type PartyStatus = components['schemas']['PartyStatus'];
-type RoleInput = PartyRole | (string & Record<never, never>);
+export type Role = components['schemas']['Role'];
+export type UserSummary = components['schemas']['UserRoleSummary'];
+type RoleInput = Role | (string & Record<never, never>);
 export type UserRoleUpdate = { roles: RoleInput[] };
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
@@ -48,13 +47,13 @@ export class ApiClient {
   }
 
   // Get all users with their roles
-  async getUsers(): Promise<User[]> {
-    return this.request<User[]>('/api/users');
+  async getUsers(): Promise<UserSummary[]> {
+    return this.request<UserSummary[]>('/api/users');
   }
 
   // Get roles for a specific user
-  async getUserRoles(userId: number): Promise<PartyRole[]> {
-    return this.request<PartyRole[]>(`/api/users/${userId}/roles`);
+  async getUserRoles(userId: number): Promise<Role[]> {
+    return this.request<Role[]>(`/api/users/${userId}/roles`);
   }
 
   // Update roles for a user

@@ -25,14 +25,23 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import type { SelectChangeEvent } from '@mui/material/Select';
-import type { User, PartyRole, PartyStatus } from '../api/generated/client';
+import type { UserSummary, Role } from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
 import { ALL_ROLES } from '../constants/roles';
 import { normalizeRolesInput } from '../utils/roles';
 
-type RoleValue = PartyRole | (string & Record<never, never>);
+type RoleValue = Role | (string & Record<never, never>);
 
-const STATUS_COLORS: Record<PartyStatus, 'success' | 'default'> = {
+type NormalizedUser = {
+  id: number;
+  name: string;
+  email: string | null | undefined;
+  phone: string | null | undefined;
+  status: 'Active' | 'Inactive';
+  roles: RoleValue[];
+};
+
+const STATUS_COLORS: Record<'Active' | 'Inactive', 'success' | 'default'> = {
   Active: 'success',
   Inactive: 'default',
 };
@@ -65,14 +74,12 @@ const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success'
 
 const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
 
-type UserWithRoles = Omit<User, 'roles'> & { roles: RoleValue[] };
-
 export default function UserRoleManagement() {
-  const [users, setUsers] = useState<UserWithRoles[]>([]);
+  const [users, setUsers] = useState<NormalizedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
+  const [selectedUser, setSelectedUser] = useState<NormalizedUser | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<RoleValue[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -85,12 +92,15 @@ export default function UserRoleManagement() {
       setLoading(true);
       setError(null);
       const data = await apiClient.getUsers();
-      setUsers(
-        data.map((u) => ({
-          ...u,
-          roles: (u.roles ?? []).map((role) => role as RoleValue),
-        })),
-      );
+      const normalized: NormalizedUser[] = data.map((u) => ({
+        id: u.id ?? 0,
+        name: u.name ?? 'Sin nombre',
+        email: u.email,
+        phone: u.phone,
+        status: u.status ?? 'Inactive',
+        roles: (u.roles ?? []) as RoleValue[],
+      }));
+      setUsers(normalized);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users');
     } finally {
@@ -98,7 +108,7 @@ export default function UserRoleManagement() {
     }
   };
 
-  const handleEditClick = (user: UserWithRoles) => {
+  const handleEditClick = (user: NormalizedUser) => {
     setSelectedUser(user);
     setSelectedRoles(user.roles);
     setEditDialogOpen(true);

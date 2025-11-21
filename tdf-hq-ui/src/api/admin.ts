@@ -1,10 +1,10 @@
 import { post } from './client';
-import type { PartyRole } from './generated/client';
+import type { Role } from './generated/client';
 
 export interface CreateUserPayload {
   partyId: number;
   username?: string | null;
-  roles?: (PartyRole | (string & Record<never, never>))[];
+  roles?: (Role | (string & Record<never, never>))[];
 }
 
 export const Admin = {
