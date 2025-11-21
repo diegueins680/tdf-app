@@ -9,6 +9,7 @@ on:
 env:
   DOCKER_IMAGE_REPO: diegueins680/tdf-hq
   DOCKER_IMAGE_TAG: ${{ github.sha }}
+  KOYEB_APP: ${{ secrets.KOYEB_APP_NAME }}
 
 jobs:
   build-and-push:
@@ -49,11 +50,23 @@ jobs:
           KOYEB_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
           KOYEB_SERVICE: ${{ secrets.KOYEB_SERVICE_NAME }}
         run: |
-          if [ -z "$KOYEB_TOKEN" ] || [ -z "$KOYEB_SERVICE" ]; then
-            echo "KOYEB_API_TOKEN and KOYEB_SERVICE_NAME secrets are required" >&2
+          if [ -z "$KOYEB_TOKEN" ] || [ -z "$KOYEB_SERVICE" ] || [ -z "$KOYEB_APP" ]; then
+            echo "KOYEB_API_TOKEN, KOYEB_SERVICE_NAME, and KOYEB_APP_NAME secrets are required" >&2
             exit 1
           fi
-          koyeb --token "$KOYEB_TOKEN" services update "$KOYEB_SERVICE" \
-            --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
-            --strategy rolling \
-            --ports 8080:http
+          # Ensure we deploy a container source, not a git build
+          SERVICE_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$KOYEB_APP" --output json | jq -r '.services[] | select(.name=="'"$KOYEB_SERVICE"'") | .id')
+          if [ -z "$SERVICE_ID" ] || [ "$SERVICE_ID" = "null" ]; then
+            echo "Service not found; creating $KOYEB_SERVICE in app $KOYEB_APP"
+            koyeb --token "$KOYEB_TOKEN" services create "$KOYEB_SERVICE" \
+              --app "$KOYEB_APP" \
+              --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
+              --ports 8080:http \
+              --strategy rolling
+          else
+            echo "Updating existing service $KOYEB_SERVICE ($SERVICE_ID) to use Docker image"
+            koyeb --token "$KOYEB_TOKEN" services update "$SERVICE_ID" \
+              --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
+              --ports 8080:http \
+              --strategy rolling
+          fi
