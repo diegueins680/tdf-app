@@ -24,7 +24,7 @@ import           Network.Wai.Middleware.Cors
                  , simpleHeaders
                  )
 
-import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, seedDatabase)
+import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
 import           TDF.DB         (Env(..), makePool)
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
@@ -41,8 +41,12 @@ main = do
       runSqlPool resetSchema pool
     else
       putStrLn "RESET_DB disabled, preserving existing schema."
-  putStrLn "Running DB migrations..."
-  runSqlPool runMigrations pool
+  if runMigrations cfg
+    then do
+      putStrLn "Running DB migrations..."
+      runSqlPool runAllMigrations pool
+    else
+      putStrLn "RUN_MIGRATIONS disabled (using pre-initialized schema)."
   when (seedDatabase cfg) $ do
     putStrLn "Seeding initial data..."
     runSqlPool seedAll pool
@@ -120,8 +124,8 @@ resetSchema = do
   rawExecute "GRANT ALL ON SCHEMA public TO CURRENT_USER" []
   rawExecute "GRANT ALL ON SCHEMA public TO public" []
 
-runMigrations :: SqlPersistT IO ()
-runMigrations = do
+runAllMigrations :: SqlPersistT IO ()
+runAllMigrations = do
   rawExecute "CREATE EXTENSION IF NOT EXISTS pgcrypto" []
   renameLegacyPartyRoleConstraint
   legacyRoles <- captureLegacyPartyRoles

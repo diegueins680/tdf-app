@@ -577,6 +577,17 @@ components:
           type: string
           format: password
           example: changeme123
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+          description: Optional roles (non-admin) to assign during signup.
+        fanArtistIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: Artist or band ids the fan wants to follow immediately after signup.
     LoginResponse:
       type: object
       properties:
@@ -606,8 +617,24 @@ components:
         - Reception
         - Accounting
         - Artist
+        - Artista
+        - Promotor
+        - Promoter
+        - Producer
+        - Songwriter
+        - DJ
+        - Publicist
+        - TourManager
+        - LabelRep
+        - StageManager
+        - RoadCrew
+        - Photographer
+        - A&R
         - Student
         - ReadOnly
+        - Vendor
+        - Customer
+        - Fan
     UserRoleSummary:
       type: object
       properties:

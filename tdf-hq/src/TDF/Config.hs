@@ -26,6 +26,7 @@ data AppConfig = AppConfig
   , appPort         :: Int
   , resetDb         :: Bool
   , seedDatabase    :: Bool
+  , runMigrations   :: Bool
   , seedTriggerToken :: Maybe Text
   , appBaseUrl      :: Maybe Text
   , emailConfig     :: Maybe EmailConfig
@@ -49,6 +50,7 @@ loadConfig = do
   ap         <- get "APP_PORT" "8080"
   rdb        <- get "RESET_DB" "false"
   sdb        <- get "SEED_DB" "true"
+  mig        <- get "RUN_MIGRATIONS" "true"
   seedEnv    <- lookupEnv "SEED_TRIGGER_TOKEN"
   baseUrlEnv <- lookupEnv "HQ_APP_URL"
   smtpHostEnv <- lookupEnv "SMTP_HOST"
@@ -67,6 +69,7 @@ loadConfig = do
     , appPort = read ap
     , resetDb = asBool rdb
     , seedDatabase = asBool sdb
+    , runMigrations = asBool mig
     , seedTriggerToken = mkSeedToken seedEnv
     , appBaseUrl = fmap (T.strip . T.pack) baseUrlEnv
     , emailConfig = mkEmailConfig smtpHostEnv smtpUserEnv smtpPassEnv smtpFromEnv smtpFromNameEnv smtpPortEnv smtpTlsEnv

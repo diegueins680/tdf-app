@@ -28,13 +28,16 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import type { User, PartyRole, PartyStatus } from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
 import { ALL_ROLES } from '../constants/roles';
+import { normalizeRolesInput } from '../utils/roles';
+
+type RoleValue = PartyRole | (string & Record<never, never>);
 
 const STATUS_COLORS: Record<PartyStatus, 'success' | 'default'> = {
   Active: 'success',
   Inactive: 'default',
 };
 
-const ROLE_COLORS: Record<PartyRole, 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' | 'default'> = {
+const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' | 'default'>> = {
   Admin: 'error',
   Manager: 'primary',
   Engineer: 'info',
@@ -44,15 +47,33 @@ const ROLE_COLORS: Record<PartyRole, 'primary' | 'secondary' | 'success' | 'erro
   Artist: 'primary',
   Student: 'default',
   ReadOnly: 'default',
+  Fan: 'info',
+  Artista: 'primary',
+  Promotor: 'secondary',
+  Promoter: 'secondary',
+  'A&R': 'warning',
+  Producer: 'primary',
+  Songwriter: 'default',
+  DJ: 'info',
+  Publicist: 'success',
+  TourManager: 'warning',
+  LabelRep: 'warning',
+  StageManager: 'warning',
+  RoadCrew: 'secondary',
+  Photographer: 'info',
 };
 
+const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
+
+type UserWithRoles = Omit<User, 'roles'> & { roles: RoleValue[] };
+
 export default function UserRoleManagement() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedRoles, setSelectedRoles] = useState<PartyRole[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<RoleValue[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -64,7 +85,12 @@ export default function UserRoleManagement() {
       setLoading(true);
       setError(null);
       const data = await apiClient.getUsers();
-      setUsers(data);
+      setUsers(
+        data.map((u) => ({
+          ...u,
+          roles: (u.roles ?? []).map((role) => role as RoleValue),
+        })),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users');
     } finally {
@@ -72,7 +98,7 @@ export default function UserRoleManagement() {
     }
   };
 
-  const handleEditClick = (user: User) => {
+  const handleEditClick = (user: UserWithRoles) => {
     setSelectedUser(user);
     setSelectedRoles(user.roles);
     setEditDialogOpen(true);
@@ -84,12 +110,10 @@ export default function UserRoleManagement() {
     setSelectedRoles([]);
   };
 
-  const normalizeRoles = (value: string | string[]): PartyRole[] => {
-    const values = Array.isArray(value) ? value : value.split(',');
-    return values.filter((role): role is PartyRole => ALL_ROLES.includes(role as PartyRole));
-  };
+  const normalizeRoles = (value: string | string[]): RoleValue[] =>
+    normalizeRolesInput(value, ALL_ROLES);
 
-  const handleRoleChange = (event: SelectChangeEvent<PartyRole[]>) => {
+  const handleRoleChange = (event: SelectChangeEvent<RoleValue[]>) => {
     setSelectedRoles(normalizeRoles(event.target.value));
   };
 
@@ -152,7 +176,7 @@ export default function UserRoleManagement() {
                 <TableCell>
                   <Box display="flex" gap={0.5} flexWrap="wrap">
                     {user.roles.map((role) => (
-                      <Chip key={role} label={role} color={ROLE_COLORS[role]} size="small" />
+                      <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
                     ))}
                     {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
                   </Box>
@@ -173,7 +197,7 @@ export default function UserRoleManagement() {
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel id="roles-label">Roles</InputLabel>
-            <Select<PartyRole[]>
+            <Select<RoleValue[]>
               labelId="roles-label"
               multiple
               value={selectedRoles}
@@ -182,7 +206,7 @@ export default function UserRoleManagement() {
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map((role) => (
-                    <Chip key={role} label={role} size="small" color={ROLE_COLORS[role]} />
+                    <Chip key={role} label={role} size="small" color={getRoleColor(role)} />
                   ))}
                 </Box>
               )}

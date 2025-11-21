@@ -1,19 +1,27 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Checkbox,
   Chip,
+  CircularProgress,
   Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Fab,
+  FormControl,
   FormControlLabel,
+  FormHelperText,
+  InputLabel,
   Link,
+  MenuItem,
+  OutlinedInput,
   Paper,
+  Select,
   Stack,
   Tab,
   Tabs,
@@ -21,6 +29,7 @@ import {
   Typography,
   type ChipProps,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -29,7 +38,11 @@ import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
 import { useThemeMode } from '../theme/AppThemeProvider';
 import { loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
+import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
+import { Fans } from '../api/fans';
+import type { ArtistProfileDTO } from '../api/types';
 import BrandLogo from '../components/BrandLogo';
+import { buildSignupPayload, deriveEffectiveRoles, normalizeSignupRoles } from '../utils/roles';
 
 type LoginTab = 'password' | 'token';
 
@@ -51,6 +64,8 @@ export default function LoginPage() {
     phone: '',
     password: '',
   });
+  const [signupRoles, setSignupRoles] = useState<SignupRole[]>([]);
+  const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { session, login } = useSession();
@@ -91,6 +106,14 @@ export default function LoginPage() {
     }
     return { label: 'API: offline', color: 'error' };
   }, [health, healthError, healthLoading]);
+
+  const fanArtistsQuery = useQuery({
+    queryKey: ['signup', 'artists'],
+    queryFn: Fans.listArtists,
+    enabled: signupDialogOpen,
+    staleTime: 5 * 60 * 1000,
+  });
+  const fanArtists = fanArtistsQuery.data ?? [];
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -196,23 +219,30 @@ export default function LoginPage() {
       phone: '',
       password: '',
     });
+    setSignupRoles([]);
+    setFavoriteArtistIds([]);
     signupMutation.reset();
   };
 
   const closeSignupDialog = () => {
     setSignupDialogOpen(false);
     setSignupFeedback(null);
+    setSignupRoles([]);
+    setFavoriteArtistIds([]);
     signupMutation.reset();
   };
 
+  const handleSignupRoleChange = (event: SelectChangeEvent<SignupRole[]>) => {
+    const nextRoles = normalizeSignupRoles(event.target.value);
+    setSignupRoles(nextRoles);
+    if (!nextRoles.includes('Fan')) {
+      setFavoriteArtistIds([]);
+    }
+  };
+
   const handleSignupSubmit = async () => {
-    const payload = {
-      firstName: signupForm.firstName.trim(),
-      lastName: signupForm.lastName.trim(),
-      email: signupForm.email.trim(),
-      phone: signupForm.phone.trim() || undefined,
-      password: signupForm.password,
-    };
+    const payload = buildSignupPayload(signupForm, signupRoles, favoriteArtistIds);
+    const selectedRoles = payload.roles ?? [];
     if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
       setSignupFeedback({ type: 'error', message: 'Completa nombre, correo y una contraseña segura (8+ caracteres).' });
       return;
@@ -224,17 +254,29 @@ export default function LoginPage() {
     setSignupFeedback(null);
     try {
       const response = await signupMutation.mutateAsync(payload);
+      const effectiveRoles = deriveEffectiveRoles(response.roles, selectedRoles);
+      const shouldFollowArtists = selectedRoles.includes('Fan') && favoriteArtistIds.length > 0;
+      const selectedFanArtistIds = favoriteArtistIds;
       login(
         {
           username: payload.email,
           displayName: `${payload.firstName} ${payload.lastName}`.trim() || payload.email,
-          roles: response.roles?.map((role) => role.toLowerCase()) ?? ['fan'],
+          roles: effectiveRoles,
           apiToken: response.token,
           modules: response.modules,
           partyId: response.partyId,
         },
         { remember: true },
       );
+      if (shouldFollowArtists) {
+        void Promise.all(
+          selectedFanArtistIds.map((artistId) =>
+            Fans.follow(artistId).catch((followErr) => {
+              console.warn('No se pudo seguir al artista después del registro', followErr);
+            }),
+          ),
+        );
+      }
       navigate('/crm/contactos', { replace: true });
     } catch (err) {
       setSignupFeedback({
@@ -454,6 +496,69 @@ export default function LoginPage() {
               onChange={(event) => setSignupForm((prev) => ({ ...prev, phone: event.target.value }))}
               fullWidth
             />
+            <FormControl fullWidth>
+              <InputLabel id="signup-roles-label">Roles (opcional)</InputLabel>
+              <Select<SignupRole[]>
+                labelId="signup-roles-label"
+                multiple
+                value={signupRoles}
+                onChange={handleSignupRoleChange}
+                input={<OutlinedInput label="Roles (opcional)" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((role) => (
+                      <Chip key={role} label={role} size="small" />
+                    ))}
+                  </Box>
+                )}
+              >
+                {SELF_SIGNUP_ROLES.map((role) => (
+                  <MenuItem key={role} value={role}>
+                    <Checkbox checked={signupRoles.includes(role)} />
+                    <Typography variant="body2">{role}</Typography>
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>
+                Elige los roles que necesitas (Fan, Artista, Promotor, Manager, A&R, Producer, etc.). Roles administrativos o financieros (como Admin o Accounting) no se pueden autoseleccionar.
+              </FormHelperText>
+            </FormControl>
+            {signupRoles.includes('Fan') && (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">¿De qué artistas o bandas eres fan?</Typography>
+                <Autocomplete<ArtistProfileDTO, true, false, false>
+                  multiple
+                  options={fanArtists}
+                  getOptionLabel={(option) => option.apDisplayName}
+                  value={fanArtists.filter((artist) => favoriteArtistIds.includes(artist.apArtistId))}
+                  loading={fanArtistsQuery.isFetching}
+                  onChange={(_, selected) => {
+                    setFavoriteArtistIds(selected.map((item) => item.apArtistId));
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Artistas o bandas"
+                      placeholder={fanArtistsQuery.isFetching ? 'Cargando artistas...' : 'Buscar y seleccionar'}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {fanArtistsQuery.isFetching ? <CircularProgress color="inherit" size={16} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+                {fanArtistsQuery.isError && (
+                  <Alert severity="warning">
+                    No pudimos cargar la lista de artistas en este momento. Puedes seguirlos después desde el Fan Hub.
+                  </Alert>
+                )}
+              </Stack>
+            )}
             <TextField
               label="Contraseña *"
               type="password"

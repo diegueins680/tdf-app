@@ -15,11 +15,14 @@
 
 module TDF.Models where
 
-import           Data.Aeson (ToJSON, FromJSON)
+import           Data.Aeson (ToJSON(..), FromJSON(..), withText, Value(String))
 import           GHC.Generics (Generic)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           Data.Time (UTCTime, Day)
+import           Data.UUID (UUID)
 import           Database.Persist.TH
+import           TDF.UUIDInstances ()
 
 -- Enums
 data ServiceKind = Recording | Mixing | Mastering | Rehearsal | Classes | EventProduction
@@ -30,7 +33,32 @@ data PricingModel = Hourly | PerSong | Package | Quote | Retainer
   deriving (Show, Read, Eq, Enum, Bounded, Generic)
 derivePersistField "PricingModel"
 
-data RoleEnum = Admin | Manager | Engineer | Teacher | Reception | Accounting | Artist | Student | Vendor | ReadOnly | Customer | Fan
+data RoleEnum
+  = Admin
+  | Manager
+  | Engineer
+  | Teacher
+  | Reception
+  | Accounting
+  | Artist
+  | Artista
+  | Promotor
+  | Promoter
+  | Producer
+  | Songwriter
+  | DJ
+  | Publicist
+  | TourManager
+  | LabelRep
+  | StageManager
+  | RoadCrew
+  | Photographer
+  | AandR
+  | Student
+  | Vendor
+  | ReadOnly
+  | Customer
+  | Fan
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
 derivePersistField "RoleEnum"
 
@@ -75,8 +103,12 @@ instance ToJSON ServiceKind
 instance FromJSON ServiceKind
 instance ToJSON PricingModel
 instance FromJSON PricingModel
-instance ToJSON RoleEnum
-instance FromJSON RoleEnum
+instance ToJSON RoleEnum where
+  toJSON = String . roleToText
+
+instance FromJSON RoleEnum where
+  parseJSON = withText "RoleEnum" $ \txt ->
+    maybe (fail $ "Invalid role: " <> T.unpack txt) pure (roleFromText txt)
 instance ToJSON ResourceType
 instance FromJSON ResourceType
 instance ToJSON BookingStatus
@@ -93,6 +125,65 @@ instance ToJSON InvoiceStatus
 instance FromJSON InvoiceStatus
 instance ToJSON TicketStatus
 instance FromJSON TicketStatus
+
+roleToText :: RoleEnum -> Text
+roleToText Admin         = "Admin"
+roleToText Manager       = "Manager"
+roleToText Engineer      = "Engineer"
+roleToText Teacher       = "Teacher"
+roleToText Reception     = "Reception"
+roleToText Accounting    = "Accounting"
+roleToText Artist        = "Artist"
+roleToText Artista       = "Artista"
+roleToText Promotor      = "Promotor"
+roleToText Promoter      = "Promoter"
+roleToText Producer      = "Producer"
+roleToText Songwriter    = "Songwriter"
+roleToText DJ            = "DJ"
+roleToText Publicist     = "Publicist"
+roleToText TourManager   = "TourManager"
+roleToText LabelRep      = "LabelRep"
+roleToText StageManager  = "StageManager"
+roleToText RoadCrew      = "RoadCrew"
+roleToText Photographer  = "Photographer"
+roleToText AandR         = "A&R"
+roleToText Student       = "Student"
+roleToText Vendor        = "Vendor"
+roleToText ReadOnly      = "ReadOnly"
+roleToText Customer      = "Customer"
+roleToText Fan           = "Fan"
+
+roleFromText :: Text -> Maybe RoleEnum
+roleFromText raw = 
+  let normalized = T.toLower (T.strip raw)
+  in case normalized of
+    "admin"        -> Just Admin
+    "manager"      -> Just Manager
+    "engineer"     -> Just Engineer
+    "teacher"      -> Just Teacher
+    "reception"    -> Just Reception
+    "accounting"   -> Just Accounting
+    "artist"       -> Just Artist
+    "artista"      -> Just Artista
+    "promotor"     -> Just Promotor
+    "promoter"     -> Just Promoter
+    "producer"     -> Just Producer
+    "songwriter"   -> Just Songwriter
+    "dj"           -> Just DJ
+    "publicist"    -> Just Publicist
+    "tourmanager"  -> Just TourManager
+    "labelrep"     -> Just LabelRep
+    "stagemanager" -> Just StageManager
+    "roadcrew"     -> Just RoadCrew
+    "photographer" -> Just Photographer
+    "a&r"          -> Just AandR
+    "aandr"        -> Just AandR
+    "student"      -> Just Student
+    "vendor"       -> Just Vendor
+    "readonly"     -> Just ReadOnly
+    "customer"     -> Just Customer
+    "fan"          -> Just Fan
+    _              -> Nothing
 instance ToJSON StockTxnReason
 instance FromJSON StockTxnReason
 
@@ -339,5 +430,71 @@ AuditLog
     action           Text
     diff             Text Maybe
     createdAt        UTCTime
+    deriving Show Generic
+
+AcademyUser
+    Id UUID default=gen_random_uuid()
+    email     Text
+    role      Text
+    platform  Text Maybe
+    createdAt UTCTime default=now()
+    UniqueAcademyUserEmail email
+    deriving Show Generic
+
+AcademyMicrocourse
+    Id UUID default=gen_random_uuid()
+    slug     Text
+    title    Text
+    summary  Text Maybe
+    createdAt UTCTime default=now()
+    UniqueAcademyMicrocourseSlug slug
+    deriving Show Generic
+
+AcademyLesson
+    Id UUID default=gen_random_uuid()
+    microcourseId AcademyMicrocourseId
+    day      Int
+    title    Text
+    body     Text
+    UniqueAcademyLesson microcourseId day
+    deriving Show Generic
+
+AcademyProgress
+    userId   AcademyUserId
+    lessonId AcademyLessonId
+    completedAt UTCTime default=now()
+    Primary userId lessonId
+    deriving Show Generic
+
+ReferralCode
+    Id Text
+    ownerUserId AcademyUserId Maybe
+    createdAt   UTCTime default=now()
+    deriving Show Generic
+
+ReferralClaim
+    Id UUID default=gen_random_uuid()
+    codeId         ReferralCodeId
+    claimantUserId AcademyUserId Maybe
+    email          Text
+    claimedAt      UTCTime default=now()
+    UniqueReferralClaim codeId email
+    deriving Show Generic
+
+Cohort
+    Id UUID default=gen_random_uuid()
+    slug     Text
+    title    Text
+    startsAt UTCTime
+    endsAt   UTCTime
+    seatCap  Int
+    UniqueCohortSlug slug
+    deriving Show Generic
+
+CohortEnrollment
+    cohortId CohortId
+    userId   AcademyUserId
+    createdAt UTCTime default=now()
+    Primary cohortId userId
     deriving Show Generic
 |]

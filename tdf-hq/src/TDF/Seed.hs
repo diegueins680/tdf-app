@@ -188,11 +188,97 @@ seedAll = do
 
   seedInventoryAssets
   seedHolgerSession now
+  seedAcademy now
 
   pure ()
 
 slugify :: Text -> Text
 slugify = T.toLower . T.replace " " "-"
+
+seedAcademy :: UTCTime -> SqlPersistT IO ()
+seedAcademy now = do
+  microId <- ensureMicrocourse "release-readiness" "Release Readiness" (Just summary)
+  mapM_ (ensureLesson microId)
+    [ (1, "Bienvenida", "Cómo preparamos tu lanzamiento en TDF")
+    , (2, "Producción", "Checklist de mezcla y mastering antes de publicar")
+    , (3, "Distribución", "Configuración de perfiles y agregadores")
+    , (4, "Marketing", "Campañas, anuncios y redes sociales para tu release")
+    , (5, "Release Day", "Plan de lanzamiento y métricas a monitorear")
+    ]
+  mapM_ ensureReferralCodeRow ["RR-ALFA", "RR-BETA"]
+  let inDays d = addUTCTime (realToFrac (d * 86400))
+  ensureCohortRow "rr-sprint" "Release Readiness Sprint" (inDays 14 now) (inDays 28 now) 40
+  ensureCohortRow "rr-q4" "Academy Q4" (inDays 60 now) (inDays 90 now) 50
+  where
+    summary = "Programa intensivo de 5 días para preparar lanzamientos profesionales"
+
+ensureMicrocourse :: Text -> Text -> Maybe Text -> SqlPersistT IO AcademyMicrocourseId
+ensureMicrocourse slug titleTxt summaryTxt = do
+  mExisting <- getBy (UniqueAcademyMicrocourseSlug slug)
+  case mExisting of
+    Just (Entity mid _) -> do
+      update mid
+        [ AcademyMicrocourseTitle =. titleTxt
+        , AcademyMicrocourseSummary =. summaryTxt
+        ]
+      pure mid
+    Nothing -> do
+      now <- liftIO getCurrentTime
+      mid <- insert AcademyMicrocourse
+        { academyMicrocourseSlug = slug
+        , academyMicrocourseTitle = titleTxt
+        , academyMicrocourseSummary = summaryTxt
+        , academyMicrocourseCreatedAt = now
+        }
+      pure mid
+
+
+ensureLesson :: AcademyMicrocourseId -> (Int, Text, Text) -> SqlPersistT IO ()
+ensureLesson microId (dayNum, titleTxt, bodyTxt) = do
+  void $ upsert
+    AcademyLesson
+      { academyLessonMicrocourseId = microId
+      , academyLessonDay = dayNum
+      , academyLessonTitle = titleTxt
+      , academyLessonBody = bodyTxt
+      }
+    [ AcademyLessonTitle =. titleTxt
+    , AcademyLessonBody =. bodyTxt
+    ]
+
+ensureReferralCodeRow :: Text -> SqlPersistT IO ()
+ensureReferralCodeRow codeTxt = do
+  let normalized = T.toUpper codeTxt
+      key = ReferralCodeKey normalized
+  existing <- get key
+  case existing of
+    Just _  -> pure ()
+    Nothing -> do
+      now <- liftIO getCurrentTime
+      insertKey key ReferralCode
+        { referralCodeOwnerUserId = Nothing
+        , referralCodeCreatedAt = now
+        }
+
+ensureCohortRow :: Text -> Text -> UTCTime -> UTCTime -> Int -> SqlPersistT IO ()
+ensureCohortRow slug titleTxt starts ends seats = do
+  mExisting <- getBy (UniqueCohortSlug slug)
+  case mExisting of
+    Just (Entity cid _) ->
+      update cid
+        [ CohortTitle =. titleTxt
+        , CohortStartsAt =. starts
+        , CohortEndsAt =. ends
+        , CohortSeatCap =. seats
+        ]
+    Nothing -> do
+      void $ insert Cohort
+        { cohortSlug = slug
+        , cohortTitle = titleTxt
+        , cohortStartsAt = starts
+        , cohortEndsAt = ends
+        , cohortSeatCap = seats
+        }
 
 ensureStaff :: UTCTime -> Text -> Maybe Text -> RoleEnum -> Text -> Text -> Text -> SqlPersistT IO (Key Party)
 ensureStaff now name mlegal role token uname pwd = do

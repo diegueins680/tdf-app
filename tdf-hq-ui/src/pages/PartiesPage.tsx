@@ -41,6 +41,9 @@ import { useNavigate } from 'react-router-dom';
 import type { PartyRole } from '../api/generated/client';
 import { Admin } from '../api/admin';
 import { ALL_ROLES } from '../constants/roles';
+import { normalizeRolesInput } from '../utils/roles';
+
+type RoleValue = PartyRole | (string & Record<never, never>);
 
 interface CreatePartyDialogProps {
   open: boolean;
@@ -179,7 +182,7 @@ interface CreateUserFromPartyDialogProps {
 function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromPartyDialogProps) {
   const qc = useQueryClient();
   const [username, setUsername] = useState('');
-  const [roles, setRoles] = useState<PartyRole[]>([]);
+  const [roles, setRoles] = useState<RoleValue[]>([]);
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -193,12 +196,9 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
     setSuccess(null);
   }, [party, open]);
 
-  const selectRoles = (value: string | string[]) => {
-    const entries = Array.isArray(value) ? value : value.split(',');
-    return entries.filter((role): role is PartyRole => ALL_ROLES.includes(role as PartyRole));
-  };
+  const selectRoles = (value: string | string[]) => normalizeRolesInput(value, ALL_ROLES);
 
-  const handleRoleChange = (event: SelectChangeEvent<PartyRole[]>) => {
+  const handleRoleChange = (event: SelectChangeEvent<RoleValue[]>) => {
     setRoles(selectRoles(event.target.value));
   };
 
@@ -252,7 +252,7 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
           />
           <FormControl fullWidth>
             <InputLabel id="create-user-roles-label">Roles iniciales</InputLabel>
-            <Select<PartyRole[]>
+            <Select<RoleValue[]>
               labelId="create-user-roles-label"
               multiple
               value={roles}

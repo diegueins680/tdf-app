@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -34,7 +35,8 @@ import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra           as ME
 
 liveSessionsServer
-  :: ( MonadReader Env m
+  :: forall m.
+     ( MonadReader Env m
      , MonadIO m
      , MonadError ServerError m
      )
@@ -177,12 +179,12 @@ liveSessionsServer user = intakeHandler
 
     storeRiderFile :: FileData Tmp -> IO Text
     storeRiderFile FileData{..} = do
-      let safeName = sanitize (T.pack (takeFileName fdFileName))
+      let safeName = sanitize (T.pack (takeFileName (T.unpack fdFileName)))
       token <- toText <$> nextRandom
       let destDir  = "uploads/live-sessions"
           destPath = destDir </> T.unpack token <> "-" <> T.unpack safeName
       createDirectoryIfMissing True destDir
-      BL.readFile fdFilePath >>= BL.writeFile destPath
+      BL.readFile fdPayload >>= BL.writeFile destPath
       pure (T.pack destPath)
 
     sanitize :: Text -> Text

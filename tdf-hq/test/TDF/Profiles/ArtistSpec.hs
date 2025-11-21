@@ -9,7 +9,7 @@ import           Control.Monad.Trans.Resource (ResourceT)
 import           Data.Text                  (Text)
 import           Data.Time.Clock            (getCurrentTime)
 import           Database.Persist
-import           Database.Persist.Sql       (SqlBackend, SqlPersistT, fromSqlKey, runMigrationSilent)
+import           Database.Persist.Sql       (SqlBackend, SqlPersistT, fromSqlKey, rawExecute)
 import           Database.Persist.Sqlite    (runSqlite)
 import           Test.Hspec
 
@@ -61,8 +61,58 @@ spec = describe "Artist profile helpers" $ do
 runInMemory :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a
 runInMemory action =
   runSqlite ":memory:" $ do
-    _ <- runMigrationSilent migrateAll
+    initializeTestSchema
     action
+
+initializeTestSchema :: MonadIO m => SqlPersistT m ()
+initializeTestSchema = do
+  rawExecute "PRAGMA foreign_keys = ON" []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"party\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"legal_name\" VARCHAR NULL,\
+    \\"display_name\" VARCHAR NOT NULL,\
+    \\"is_org\" BOOLEAN NOT NULL,\
+    \\"tax_id\" VARCHAR NULL,\
+    \\"primary_email\" VARCHAR NULL,\
+    \\"primary_phone\" VARCHAR NULL,\
+    \\"whatsapp\" VARCHAR NULL,\
+    \\"instagram\" VARCHAR NULL,\
+    \\"emergency_contact\" VARCHAR NULL,\
+    \\"notes\" VARCHAR NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)" []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"artist_profile\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"artist_party_id\" INTEGER NOT NULL,\
+    \\"slug\" VARCHAR NULL,\
+    \\"bio\" VARCHAR NULL,\
+    \\"city\" VARCHAR NULL,\
+    \\"hero_image_url\" VARCHAR NULL,\
+    \\"spotify_artist_id\" VARCHAR NULL,\
+    \\"spotify_url\" VARCHAR NULL,\
+    \\"youtube_channel_id\" VARCHAR NULL,\
+    \\"youtube_url\" VARCHAR NULL,\
+    \\"website_url\" VARCHAR NULL,\
+    \\"featured_video_url\" VARCHAR NULL,\
+    \\"genres\" VARCHAR NULL,\
+    \\"highlights\" VARCHAR NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL,\
+    \\"updated_at\" TIMESTAMP NULL,\
+    \CONSTRAINT \"unique_artist_profile\" UNIQUE (\"artist_party_id\"),\
+    \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\") ON DELETE CASCADE\
+    \)" []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"fan_follow\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"fan_party_id\" INTEGER NOT NULL,\
+    \\"artist_party_id\" INTEGER NOT NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL,\
+    \CONSTRAINT \"unique_fan_follow\" UNIQUE (\"fan_party_id\", \"artist_party_id\"),\
+    \FOREIGN KEY(\"fan_party_id\") REFERENCES \"party\"(\"id\") ON DELETE CASCADE,\
+    \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\") ON DELETE CASCADE\
+    \)" []
 
 insertParty :: MonadIO m => Text -> SqlPersistT m PartyId
 insertParty name = do

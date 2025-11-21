@@ -321,6 +321,8 @@ data SignupRequest = SignupRequest
   , password        :: Text
   , googleIdToken   :: Maybe Text
   , marketingOptIn  :: Maybe Bool
+  , roles           :: Maybe [RoleEnum]
+  , fanArtistIds    :: Maybe [Int64]
   } deriving (Show, Generic)
 instance FromJSON SignupRequest
 

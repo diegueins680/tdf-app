@@ -1,3 +1,5 @@
+import type { SignupRole } from '../constants/roles';
+
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
 export interface LoginResponseDTO {
@@ -40,6 +42,8 @@ export interface SignupPayload {
   email: string;
   phone?: string;
   password: string;
+  roles?: SignupRole[];
+  fanArtistIds?: number[];
 }
 
 export async function signupRequest(payload: SignupPayload): Promise<LoginResponseDTO> {

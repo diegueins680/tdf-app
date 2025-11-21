@@ -5,7 +5,8 @@ import { getStoredSessionToken } from '../../session/SessionContext';
 export type User = components['schemas']['User'];
 export type PartyRole = components['schemas']['PartyRole'];
 export type PartyStatus = components['schemas']['PartyStatus'];
-export type UserRoleUpdate = components['schemas']['UserRoleUpdate'];
+type RoleInput = PartyRole | (string & Record<never, never>);
+export type UserRoleUpdate = { roles: RoleInput[] };
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
 
@@ -57,7 +58,7 @@ export class ApiClient {
   }
 
   // Update roles for a user
-  async updateUserRoles(userId: number, roles: PartyRole[]): Promise<void> {
+  async updateUserRoles(userId: number, roles: RoleInput[]): Promise<void> {
     const body: UserRoleUpdate = { roles };
     await this.request<void>(`/api/users/${userId}/roles`, {
       method: 'PUT',

@@ -4,7 +4,7 @@ import type { PartyRole } from './generated/client';
 export interface CreateUserPayload {
   partyId: number;
   username?: string | null;
-  roles?: PartyRole[];
+  roles?: (PartyRole | (string & Record<never, never>))[];
 }
 
 export const Admin = {

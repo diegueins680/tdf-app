@@ -28,6 +28,7 @@ import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
+import           TDF.Routes.Academy (AcademyAPI)
 import           Data.Int (Int64)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 
@@ -154,6 +155,7 @@ type API =
   :<|> "v1" :> AuthV1API
   :<|> "fans" :> FanPublicAPI
   :<|> MetaAPI
+  :<|> AcademyAPI
   :<|> "seed"   :> SeedAPI
   :<|> "input-list" :> InputListAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
