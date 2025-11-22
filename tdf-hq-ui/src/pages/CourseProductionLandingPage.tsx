@@ -30,8 +30,7 @@ import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
 import { Courses } from '../api/courses';
 
 const COURSE_SLUG = 'produccion-musical-dic-2025';
-const INSTRUCTOR_IMAGE_URL =
-  'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80';
+const INSTRUCTOR_IMAGE_URL = '/assets/tdf-ui/esteban-munoz.jpg';
 const INSTRUCTOR_IMAGE_FALLBACK = 'https://via.placeholder.com/1400x900.png?text=Esteban+Mu%C3%B1oz';
 
 const badgeStyle = {
