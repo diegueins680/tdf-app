@@ -12,6 +12,7 @@
 module TDF.Server where
 
 import           Control.Applicative ((<|>))
+import           Control.Exception (SomeException, try)
 import           Control.Monad (forM, forM_, void, when, unless)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
@@ -29,9 +30,11 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
 import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay)
+import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
+import           System.IO (hPutStrLn, stderr)
 import           Network.Wai (Request)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler)
@@ -328,6 +331,12 @@ fanSecureServer user =
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
 
+socialServer :: AuthedUser -> ServerT SocialAPI AppM
+socialServer user =
+       socialListFollowers user
+  :<|> socialListFollowing user
+  :<|> vcardExchange user
+
 protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
        partyServer user
@@ -344,6 +353,7 @@ protectedServer user =
   :<|> pipelinesServer user
   :<|> roomsServer user
   :<|> liveSessionsServer user
+  :<|> socialServer user
   :<|> futureServer
 
 productionCourseSlug :: Text
@@ -500,6 +510,7 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)
         , ME.CourseRegistrationUpdatedAt =. now
         ]
+      sendConfirmation meta nameClean normalizedEmail
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
     _ -> do
       regId <- runDB $ insert ME.CourseRegistration
@@ -517,7 +528,31 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.courseRegistrationCreatedAt = now
         , ME.courseRegistrationUpdatedAt = now
         }
+      sendConfirmation meta nameClean normalizedEmail
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
+  where
+    sendConfirmation meta nameClean mEmail =
+      case mEmail of
+        Nothing -> pure ()
+        Just emailAddr -> do
+          Env{..} <- ask
+          let emailSvc = EmailSvc.mkEmailService envConfig
+              displayName = fromMaybe "" nameClean
+              courseTitle = Courses.title meta
+              datesSummary =
+                let fmt d = T.pack (formatTime defaultTimeLocale "%d %b %Y" d)
+                in T.intercalate ", " (map (fmt . Courses.date) (Courses.sessions meta))
+              landing = Courses.landingUrl meta
+          -- Check if email is configured before attempting to send
+          case EmailSvc.esConfig emailSvc of
+            Nothing -> liftIO $ hPutStrLn stderr $ "[CourseRegistration] WARNING: SMTP not configured. Email confirmation not sent to " <> T.unpack emailAddr
+            Just _ -> do
+              -- Send email asynchronously, but log if it fails
+              liftIO $ do
+                result <- try $ EmailSvc.sendCourseRegistration emailSvc displayName emailAddr courseTitle landing datesSummary
+                case result of
+                  Left err -> hPutStrLn stderr $ "[CourseRegistration] Failed to send confirmation email to " <> T.unpack emailAddr <> ": " <> show (err :: SomeException)
+                  Right () -> pure ()
 
 -- | Returns messages that include text bodies, paired with the sender phone.
 extractTextMessages :: WAMetaWebhook -> [(Text, Text)]
@@ -1023,6 +1058,60 @@ fanUnfollowArtist user artistId = do
     deleteBy (UniqueFanFollow (auPartyId user) artistKey)
   pure NoContent
 
+-- Social graph (party <-> party follows)
+socialListFollowers :: AuthedUser -> AppM [PartyFollowDTO]
+socialListFollowers user = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    rows <- selectList [PartyFollowFollowingPartyId ==. auPartyId user] [Desc PartyFollowCreatedAt]
+    pure (map partyFollowEntityToDTO rows)
+
+socialListFollowing :: AuthedUser -> AppM [PartyFollowDTO]
+socialListFollowing user = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    rows <- selectList [PartyFollowFollowerPartyId ==. auPartyId user] [Desc PartyFollowCreatedAt]
+    pure (map partyFollowEntityToDTO rows)
+
+vcardExchange :: AuthedUser -> VCardExchangeRequest -> AppM [PartyFollowDTO]
+vcardExchange user VCardExchangeRequest{..} = do
+  when (vcerPartyId <= 0) $ throwBadRequest "Invalid party id"
+  let followerKey = auPartyId user
+      targetKey   = toSqlKey vcerPartyId :: PartyId
+  when (followerKey == targetKey) $
+    throwBadRequest "No puedes compartir tu vCard contigo mismo"
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    mTarget <- get targetKey
+    case mTarget of
+      Nothing -> pure []
+      Just _ -> do
+        now <- liftIO getCurrentTime
+        -- Create mutual follows; mark as NFC-sourced.
+        _ <- upsert PartyFollow
+          { partyFollowFollowerPartyId  = followerKey
+          , partyFollowFollowingPartyId = targetKey
+          , partyFollowViaNfc           = True
+          , partyFollowCreatedAt        = now
+          }
+          [ PartyFollowViaNfc =. True ]
+        _ <- upsert PartyFollow
+          { partyFollowFollowerPartyId  = targetKey
+          , partyFollowFollowingPartyId = followerKey
+          , partyFollowViaNfc           = True
+          , partyFollowCreatedAt        = now
+          }
+          [ PartyFollowViaNfc =. True ]
+        rowsAB <- selectList
+          [ PartyFollowFollowerPartyId ==. followerKey
+          , PartyFollowFollowingPartyId ==. targetKey
+          ] [Desc PartyFollowCreatedAt]
+        rowsBA <- selectList
+          [ PartyFollowFollowerPartyId ==. targetKey
+          , PartyFollowFollowingPartyId ==. followerKey
+          ] [Desc PartyFollowCreatedAt]
+        pure (map partyFollowEntityToDTO (rowsAB ++ rowsBA))
+
 requireFanAccess :: AuthedUser -> AppM ()
 requireFanAccess AuthedUser{..} =
   unless (Fan `elem` auRoles || Customer `elem` auRoles) $
@@ -1071,6 +1160,15 @@ loadFanProfileDTO fanId = do
     Just ent -> pure ent
   let fallbackName = maybe Nothing (Just . M.partyDisplayName) party
   pure (fanProfileToDTO fallbackName (entityVal profileEntity))
+
+partyFollowEntityToDTO :: Entity PartyFollow -> PartyFollowDTO
+partyFollowEntityToDTO (Entity _ pf) =
+  PartyFollowDTO
+    { pfFollowerId  = fromSqlKey (partyFollowFollowerPartyId pf)
+    , pfFollowingId = fromSqlKey (partyFollowFollowingPartyId pf)
+    , pfViaNfc      = partyFollowViaNfc pf
+    , pfStartedAt   = utctDay (partyFollowCreatedAt pf)
+    }
 
 
 toArtistReleaseDTO :: Entity ArtistRelease -> ArtistReleaseDTO
