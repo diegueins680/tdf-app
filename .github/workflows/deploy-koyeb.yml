@@ -45,20 +45,28 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq ca-certificates
           RELEASE_API="https://api.github.com/repos/koyeb/koyeb-cli/releases/latest"
-          ARCHIVE_NAME="koyeb_$(uname -s)_$(uname -m).tar.gz"
-          LATEST_URL=$(curl -fsSL "$RELEASE_API" | jq -r '.assets[] | select(.name | test("(?i)linux.*x86_64.*\\.tar\\.gz$")) | .browser_download_url' | head -n1)
+          CANDIDATES=$(curl -fsSL "$RELEASE_API" | jq -r '.assets[].browser_download_url')
+          LATEST_URL=""
+          for pat in 'linux.*amd64.*\.tar\.gz' 'linux.*x86_64.*\.tar\.gz' 'Linux_x86_64\.tar\.gz' 'linux-amd64\.tar\.gz' 'linux-x86_64\.tar\.gz'; do
+            LATEST_URL=$(echo "$CANDIDATES" | grep -iE "$pat" | head -n1 || true)
+            [ -n "$LATEST_URL" ] && break
+          done
+          if [ -z "$LATEST_URL" ]; then
+            LATEST_URL=$(echo "$CANDIDATES" | grep -iE 'linux.*\.tar\.gz' | head -n1 || true)
+          fi
           if [ -z "$LATEST_URL" ] || [ "$LATEST_URL" = "null" ]; then
-            # Fallback to predictable asset path
-            LATEST_URL="https://github.com/koyeb/koyeb-cli/releases/latest/download/$ARCHIVE_NAME"
+            echo "Failed to resolve Koyeb CLI download URL" >&2
+            exit 1
           fi
           echo "Downloading Koyeb CLI from $LATEST_URL"
           curl -fsSL "$LATEST_URL" -o /tmp/koyeb.tar.gz
           tar -xzf /tmp/koyeb.tar.gz -C /tmp
-          if [ ! -f /tmp/koyeb ]; then
+          BIN_PATH=$(find /tmp -maxdepth 2 -type f -name 'koyeb*' | head -n1 || true)
+          if [ -z "$BIN_PATH" ]; then
             echo "Koyeb binary not found after extraction" >&2
             exit 1
           fi
-          sudo install /tmp/koyeb /usr/local/bin/koyeb
+          sudo install "$BIN_PATH" /usr/local/bin/koyeb
           /usr/local/bin/koyeb version
       - name: Deploy latest image to Koyeb
         env:
