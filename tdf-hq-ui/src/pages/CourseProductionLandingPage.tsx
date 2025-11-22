@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactElement, type RefObject } from 'react';
+import { useMemo, useRef, useState, type ReactElement, type RefObject, type SyntheticEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -28,10 +28,11 @@ import HeadsetIcon from '@mui/icons-material/Headset';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
 import { Courses } from '../api/courses';
-import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
 
 const COURSE_SLUG = 'produccion-musical-dic-2025';
-const INSTRUCTOR_IMAGE_URL = instructorImage;
+const INSTRUCTOR_IMAGE_URL =
+  'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80';
+const INSTRUCTOR_IMAGE_FALLBACK = 'https://via.placeholder.com/1400x900.png?text=Esteban+Mu%C3%B1oz';
 
 const badgeStyle = {
   bgcolor: 'rgba(255,255,255,0.1)',
@@ -160,6 +161,13 @@ export default function CourseProductionLandingPage() {
 }
 
 function InstructorCard() {
+  const handleImageError = (e: SyntheticEvent<HTMLImageElement>) => {
+    const target = e.currentTarget;
+    if (target.src !== INSTRUCTOR_IMAGE_FALLBACK) {
+      target.src = INSTRUCTOR_IMAGE_FALLBACK;
+    }
+  };
+
   return (
     <Card
       sx={{
@@ -173,11 +181,16 @@ function InstructorCard() {
         component="img"
         image={INSTRUCTOR_IMAGE_URL}
         alt="Esteban Muñoz en el control room"
+        onError={handleImageError}
         sx={{ height: 220, objectFit: 'cover' }}
       />
       <CardContent sx={{ pb: 3 }}>
         <Stack direction="row" spacing={2} alignItems="center" mb={1}>
-          <Avatar alt="Esteban Muñoz" src={INSTRUCTOR_IMAGE_URL} />
+          <Avatar
+            alt="Esteban Muñoz"
+            src={INSTRUCTOR_IMAGE_URL}
+            imgProps={{ onError: handleImageError }}
+          />
           <Box>
             <Typography variant="subtitle1" sx={{ color: '#f8fafc', fontWeight: 700 }}>
               Esteban Muñoz
