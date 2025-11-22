@@ -14,6 +14,7 @@ import           TDF.API.Types ( DropdownOptionCreate
                                 , UserAccountDTO
                                 , UserAccountUpdate
                                 )
+import           TDF.Routes.Courses (CoursesAdminAPI)
 
 import           Data.Int      (Int64)
 import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert)
@@ -47,3 +48,4 @@ type AdminAPI =
   :<|> "users" :> UsersAPI
   :<|> "roles" :> RolesAPI
   :<|> "artists" :> ArtistAdminAPI
+  :<|> CoursesAdminAPI

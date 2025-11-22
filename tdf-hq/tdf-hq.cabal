@@ -44,6 +44,7 @@ executable tdf-hq-exe
     TDF.ServerExtra
     TDF.ServerLiveSessions
     TDF.ServerFuture
+    TDF.Routes.Courses
     TDF.Trials.API
     TDF.Trials.DTO
     TDF.Trials.Models
@@ -139,6 +140,7 @@ test-suite tdf-hq-test
     TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec
     TDF.Routes.Academy
+    TDF.Routes.Courses
     TDF.Seed
     TDF.Server
     TDF.ServerAdmin

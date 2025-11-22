@@ -42,10 +42,16 @@ jobs:
       - name: Install Koyeb CLI
         run: |
           set -euo pipefail
-          # Fetch binary directly (install script URL changed)
-          curl -fsSL https://github.com/koyeb/koyeb-cli/releases/latest/download/koyeb-linux-amd64 -o /tmp/koyeb
-          chmod +x /tmp/koyeb
-          sudo mv /tmp/koyeb /usr/local/bin/koyeb
+          sudo apt-get update -y
+          sudo apt-get install -y jq ca-certificates
+          LATEST_URL=$(curl -fsSL https://api.github.com/repos/koyeb/koyeb-cli/releases/latest | jq -r '.assets[] | select(.name | test("Linux_x86_64\\.tar\\.gz$")) | .browser_download_url' | head -n1)
+          if [ -z "$LATEST_URL" ] || [ "$LATEST_URL" = "null" ]; then
+            echo "Failed to resolve Koyeb CLI download URL" >&2
+            exit 1
+          fi
+          curl -fsSL "$LATEST_URL" -o /tmp/koyeb.tar.gz
+          tar -xzf /tmp/koyeb.tar.gz -C /tmp
+          sudo install /tmp/koyeb /usr/local/bin/koyeb
           /usr/local/bin/koyeb version
       - name: Deploy latest image to Koyeb
         env:

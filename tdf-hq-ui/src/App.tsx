@@ -19,6 +19,7 @@ import SidebarNav from './components/SidebarNav';
 import ApiStatusChip from './components/ApiStatusChip';
 import InscripcionPage from './pages/inscripcion/InscripcionPage';
 import LiveSessionIntakePage from './pages/LiveSessionIntakePage';
+import CourseProductionLandingPage from './pages/CourseProductionLandingPage';
 
 function Shell() {
   const { session } = useSession();
@@ -115,6 +116,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/fans" element={<FanHubPage />} />
+      <Route path="/curso/produccion-musical-dic-2025" element={<CourseProductionLandingPage />} />
       <Route path="/inscripcion/:slug" element={<InscripcionPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>
