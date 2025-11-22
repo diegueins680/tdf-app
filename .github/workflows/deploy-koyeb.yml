@@ -77,15 +77,40 @@ jobs:
             echo "KOYEB_API_TOKEN, KOYEB_SERVICE_NAME, and KOYEB_APP_NAME secrets are required" >&2
             exit 1
           fi
+          if echo "$KOYEB_SERVICE" | grep -q '\*\*\*'; then
+            echo "KOYEB_SERVICE_NAME secret appears masked/empty" >&2
+            exit 1
+          fi
+          if echo "$KOYEB_APP" | grep -q '\*\*\*'; then
+            echo "KOYEB_APP_NAME secret appears masked/empty" >&2
+            exit 1
+          fi
+          if ! echo "$KOYEB_SERVICE" | grep -Eq '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'; then
+            echo "KOYEB_SERVICE_NAME must be lowercase, alphanumeric with optional dashes (no spaces/uppercase)." >&2
+            exit 1
+          fi
+
+          # Ensure app exists
+          APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$KOYEB_APP"'") | .id' | head -n1)
+          if [ -z "$APP_ID" ] || [ "$APP_ID" = "null" ]; then
+            echo "Koyeb app '$KOYEB_APP' not found; creating it..."
+            koyeb --token "$KOYEB_TOKEN" apps create "$KOYEB_APP"
+            APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$KOYEB_APP"'") | .id' | head -n1)
+            if [ -z "$APP_ID" ] || [ "$APP_ID" = "null" ]; then
+              echo "Failed to create/resolve Koyeb app '$KOYEB_APP'" >&2
+              exit 1
+            fi
+          fi
+
           # Force container-based deploy: remove existing service (if any) and recreate from DockerHub image.
-          EXISTING_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$KOYEB_APP" --output json | jq -r '.services[] | select(.name=="'"$KOYEB_SERVICE"'") | .id')
+          EXISTING_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$APP_ID" --output json | jq -r '.services[] | select(.name=="'"$KOYEB_SERVICE"'") | .id')
           if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
             echo "Deleting existing service $KOYEB_SERVICE ($EXISTING_ID) to ensure container-based deployment"
             koyeb --token "$KOYEB_TOKEN" services delete "$EXISTING_ID" --yes
           fi
           echo "Creating service $KOYEB_SERVICE in app $KOYEB_APP with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
           koyeb --token "$KOYEB_TOKEN" services create "$KOYEB_SERVICE" \
-            --app "$KOYEB_APP" \
+            --app "$APP_ID" \
             --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
             --ports 8080:http \
             --strategy rolling
