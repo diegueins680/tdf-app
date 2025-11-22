@@ -28,9 +28,10 @@ import HeadsetIcon from '@mui/icons-material/Headset';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
 import { Courses } from '../api/courses';
+import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
 
 const COURSE_SLUG = 'produccion-musical-dic-2025';
-const INSTRUCTOR_IMAGE_URL = '/assets/tdf-ui/esteban-munoz.jpg';
+const INSTRUCTOR_IMAGE_URL = instructorImage;
 const INSTRUCTOR_IMAGE_FALLBACK = 'https://via.placeholder.com/1400x900.png?text=Esteban+Mu%C3%B1oz';
 
 const badgeStyle = {
