@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Config where
 
+import           Control.Applicative ((<|>))
 import           Data.Char          (toLower)
 import           Data.Maybe         (fromMaybe)
 import           Data.Text          (Text)
