@@ -19,13 +19,12 @@ import SidebarNav from './components/SidebarNav';
 import ApiStatusChip from './components/ApiStatusChip';
 import InscripcionPage from './pages/inscripcion/InscripcionPage';
 import LiveSessionIntakePage from './pages/LiveSessionIntakePage';
+import CourseProductionLandingPage from './pages/CourseProductionLandingPage';
+import LogsPage from './pages/LogsPage';
 
 function Shell() {
   const { session } = useSession();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 1024;
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   if (!session) {
     return <Navigate to="/login" replace />;
@@ -40,9 +39,28 @@ function Shell() {
   const handleToggleSidebar = () => setSidebarCollapsed((prev) => !prev);
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        height: '100vh',
+        bgcolor: 'background.default',
+        overflow: 'hidden',
+      }}
+    >
       <SidebarNav open={!sidebarCollapsed} onNavigate={handleNavigateFromSidebar} />
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          minWidth: 0,
+          minHeight: 0,
+          maxHeight: '100vh',
+          overflow: 'hidden',
+        }}
+      >
         {!sidebarCollapsed && (
           <Box
             sx={{
@@ -56,7 +74,17 @@ function Shell() {
           />
         )}
         <TopBar onToggleSidebar={handleToggleSidebar} />
-        <Box component="main" sx={{ flexGrow: 1, position: 'relative', px: { xs: 2, md: 4 }, py: { xs: 2, md: 4 } }}>
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            position: 'relative',
+            px: { xs: 2, md: 4 },
+            py: { xs: 2, md: 4 },
+            overflowY: 'auto',
+            minHeight: 0,
+          }}
+        >
           <Box sx={{ position: 'absolute', left: { xs: 16, md: 32 }, top: 16 }}>
             <Button
               variant="contained"
@@ -89,6 +117,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/fans" element={<FanHubPage />} />
+      <Route path="/curso/produccion-musical-dic-2025" element={<CourseProductionLandingPage />} />
       <Route path="/inscripcion/:slug" element={<InscripcionPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>
@@ -190,6 +219,7 @@ export default function App() {
         </Route>
 
         <Route path="/configuracion" element={<Outlet />}>
+          <Route path="logs" element={<LogsPage />} />
           <Route path="roles-permisos" element={<UserRoleManagement />} />
           <Route path="impuestos-series" element={<PlaceholderPage title="Configuración / Impuestos y series" />} />
           <Route path="unidades-negocio" element={<PlaceholderPage title="Configuración / Unidades de negocio" />} />

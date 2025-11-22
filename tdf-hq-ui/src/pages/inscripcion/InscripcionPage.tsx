@@ -4,16 +4,15 @@ import { useState } from 'react';
 export default function InscripcionPage() {
   const { slug } = useParams();
   const [sp] = useSearchParams();
-  const leadId = sp.get('lead') || '';
-  const token = sp.get('t') || '';
+  const leadId = sp.get('lead') ?? '';
+  const token = sp.get('t') ?? '';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  const submit = async () => {
     setBusy(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/leads/${leadId}/complete`, {
@@ -25,7 +24,12 @@ export default function InscripcionPage() {
     } finally {
       setBusy(false);
     }
-  }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    void submit();
+  };
 
   if (!leadId || !token) {
     return (
@@ -56,11 +60,20 @@ export default function InscripcionPage() {
         grabaciones y certificado. Precio: $150 USD. Descuento por referidos.
       </p>
 
-      <form onSubmit={submit}>
-        <label>Nombre</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} required style={{ display: 'block', width: '100%' }} />
-        <label style={{ marginTop: 12 }}>Correo</label>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="inscripcion-name">Nombre</label>
         <input
+          id="inscripcion-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          style={{ display: 'block', width: '100%' }}
+        />
+        <label htmlFor="inscripcion-email" style={{ marginTop: 12 }}>
+          Correo
+        </label>
+        <input
+          id="inscripcion-email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           type="email"

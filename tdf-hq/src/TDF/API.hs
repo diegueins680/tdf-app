@@ -28,6 +28,8 @@ import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
+import           TDF.Routes.Academy (AcademyAPI)
+import           TDF.Routes.Courses (CoursesPublicAPI, WhatsAppWebhookAPI)
 import           Data.Int (Int64)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 
@@ -59,6 +61,11 @@ type PartyAPI =
       :<|> ReqBody '[JSON] PartyUpdate :> Put '[JSON] PartyDTO
       :<|> "roles" :> ReqBody '[LooseJSON, PlainText, OctetStream] RolePayload :> Post '[JSON] NoContent
       )
+
+type SocialAPI =
+       "followers" :> Get '[JSON] [PartyFollowDTO]
+  :<|> "following" :> Get '[JSON] [PartyFollowDTO]
+  :<|> "vcard-exchange" :> ReqBody '[JSON] VCardExchangeRequest :> Post '[JSON] [PartyFollowDTO]
 
 type BookingAPI =
        Get '[JSON] [BookingDTO]
@@ -143,6 +150,7 @@ type ProtectedAPI =
   :<|> PipelinesAPI
   :<|> RoomsAPI
   :<|> LiveSessionsAPI
+  :<|> "social" :> SocialAPI
   :<|> "stubs"    :> FutureAPI
 
 type API =
@@ -153,7 +161,10 @@ type API =
   :<|> "password" :> PasswordAPI
   :<|> "v1" :> AuthV1API
   :<|> "fans" :> FanPublicAPI
+  :<|> CoursesPublicAPI
+  :<|> WhatsAppWebhookAPI
   :<|> MetaAPI
+  :<|> AcademyAPI
   :<|> "seed"   :> SeedAPI
   :<|> "input-list" :> InputListAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI

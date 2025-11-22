@@ -19,7 +19,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import type { PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
-import type { PartyRole } from '../api/generated/client';
+import type { Role } from '../api/generated/client';
 import { submitLiveSessionIntake } from '../api/liveSessions';
 
 interface MusicianEntry {
@@ -43,6 +43,12 @@ const emptyMusician = (): MusicianEntry => ({
   role: '',
   mode: 'new',
 });
+
+const asNullableString = (value?: string | null): string | null => {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
 
 export default function LiveSessionIntakePage() {
   const qc = useQueryClient();
@@ -73,13 +79,13 @@ export default function LiveSessionIntakePage() {
       cIsOrg: false,
     });
     const updatePayload: PartyUpdate = {
-      uPrimaryEmail: entry.email || null,
-      uPrimaryPhone: entry.phone || null,
+      uPrimaryEmail: asNullableString(entry.email),
+      uPrimaryPhone: asNullableString(entry.phone),
       uNotes: entry.instrument ? `Instrumento: ${entry.instrument}` : undefined,
     };
     await Parties.update(created.partyId, updatePayload);
     if (entry.email) {
-      const roles: PartyRole[] = ['Artist'];
+      const roles: Role[] = ['Artist'];
       await Admin.createUser({
         partyId: created.partyId,
         username: entry.email,
@@ -111,19 +117,19 @@ export default function LiveSessionIntakePage() {
         ensuredMusicians.push({
           partyId,
           name: entry.name,
-          email: entry.email || null,
-          instrument: entry.instrument || null,
-          role: entry.role || null,
-          notes: entry.notes || null,
+          email: asNullableString(entry.email),
+          instrument: asNullableString(entry.instrument),
+          role: asNullableString(entry.role),
+          notes: asNullableString(entry.notes),
           isExisting: Boolean(entry.partyId),
         });
       }
 
       await submitLiveSessionIntake({
         bandName,
-        contactEmail: contactEmail || null,
-        contactPhone: contactPhone || null,
-        sessionDate: sessionDate || null,
+        contactEmail: asNullableString(contactEmail),
+        contactPhone: asNullableString(contactPhone),
+        sessionDate: asNullableString(sessionDate),
         musicians: ensuredMusicians,
         riderFile,
       });
@@ -165,7 +171,11 @@ export default function LiveSessionIntakePage() {
         </Typography>
       </Box>
 
-      {mutation.isError && <Alert severity="error">{(mutation.error as Error).message}</Alert>}
+      {mutation.isError && (
+        <Alert severity="error">
+          {mutation.error instanceof Error ? mutation.error.message : 'Ocurrió un error inesperado.'}
+        </Alert>
+      )}
       {mutation.isSuccess && <Alert severity="success">Información guardada. ¡Gracias!</Alert>}
 
       <Paper sx={{ p: 3 }}>

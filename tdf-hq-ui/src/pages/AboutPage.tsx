@@ -16,6 +16,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import ShieldIcon from '@mui/icons-material/Shield';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { Meta } from '../api/meta';
+import { API_BASE_URL } from '../api/client';
 
 const RESOURCE_LINKS = [
   { label: 'Documentación (Redoc)', href: '/docs' },
@@ -31,6 +32,24 @@ const MODULES = [
   'Finanzas',
   'Escuela / Academy',
 ];
+
+interface CommitInfo {
+  display: string;
+  link: string | null;
+}
+
+const formatCommit = (value?: string | null): CommitInfo | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return null;
+  if (trimmed.toLowerCase() === 'dev') {
+    return { display: trimmed, link: null };
+  }
+  return {
+    display: trimmed.slice(0, 7),
+    link: `https://github.com/diegueins680/tdf-app/commit/${trimmed}`,
+  };
+};
 
 export default function AboutPage() {
   const {
@@ -48,15 +67,11 @@ export default function AboutPage() {
   const loading = versionLoading || healthLoading;
   const hasMetaError = Boolean(versionError ?? healthError);
   const uiVersion = (__APP_VERSION__ || '').trim() || null;
-  const uiCommit = useMemo(() => {
-    if (!__APP_COMMIT__ || __APP_COMMIT__.trim().length === 0) {
-      return null;
-    }
-    const value = __APP_COMMIT__.trim();
-    return {
-      display: value.slice(0, 7),
-      link: value === 'dev' ? null : `https://github.com/diegueins680/tdf-app/commit/${value}`,
-    };
+  const uiCommit = useMemo(() => formatCommit(__APP_COMMIT__), []);
+  const apiCommit = useMemo(() => formatCommit(version?.commit), [version?.commit]);
+  const apiBaseUrl = useMemo(() => {
+    const trimmed = API_BASE_URL.trim();
+    return trimmed.length > 0 ? trimmed : null;
   }, []);
 
   const buildDate = useMemo(() => {
@@ -128,6 +143,30 @@ export default function AboutPage() {
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Compilado: {buildDate}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Endpoint:{' '}
+                  {apiBaseUrl ? (
+                    <Link href={apiBaseUrl} target="_blank" rel="noreferrer">
+                      {apiBaseUrl}
+                    </Link>
+                  ) : (
+                    '—'
+                  )}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Commit:{' '}
+                  {apiCommit ? (
+                    apiCommit.link ? (
+                      <Link href={apiCommit.link} target="_blank" rel="noreferrer">
+                        {apiCommit.display}
+                      </Link>
+                    ) : (
+                      apiCommit.display
+                    )
+                  ) : (
+                    '—'
+                  )}
                 </Typography>
               </Stack>
 

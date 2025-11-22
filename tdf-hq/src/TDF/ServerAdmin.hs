@@ -61,7 +61,7 @@ import           TDF.Auth               ( AuthedUser
 import           TDF.Config             (AppConfig(..))
 import           TDF.DB                 (Env(..))
 import           TDF.Models
-import           TDF.ModelsExtra (DropdownOption(..))
+import           TDF.ModelsExtra (DropdownOption(..), CourseRegistration(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
@@ -70,6 +70,12 @@ import qualified TDF.Services           as Services
 import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         , upsertArtistProfileRecord
                                         )
+import           TDF.Routes.Courses     ( CourseRegistrationStatusUpdate(..)
+                                        , CourseRegistrationResponse(..)
+                                        )
+import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), getRecentLogs, clearLogs )
+import           TDF.DTO                ( LogEntryDTO(..) )
+import           Data.Time.Format       ( formatTime, defaultTimeLocale )
 
 adminServer
   :: ( MonadReader Env m
@@ -78,7 +84,7 @@ adminServer
      )
   => AuthedUser
   -> ServerT AdminAPI m
-adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHandler :<|> artistsRouter
+adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHandler :<|> artistsRouter :<|> logsRouter :<|> courseRegistrationsRouter
   where
     seedHandler = do
       ensureModule ModuleAdmin user
@@ -106,6 +112,12 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
     artistsRouter =
       (listArtistProfilesAdmin :<|> upsertArtistProfileAdmin)
       :<|> createArtistReleaseAdmin
+
+    logsRouter mLimit =
+      (getLogs mLimit :<|> clearLogsHandler)
+
+    courseRegistrationsRouter slug regId =
+      updateRegistrationStatus slug regId
 
     roleDetail role = RoleDetailDTO
       { role    = role
@@ -150,6 +162,28 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
             entity <- getJustEntity releaseId
             pure (Just (artistReleaseEntityToDTOAdmin entity))
       maybe (throwError err404) pure dto
+
+    updateRegistrationStatus slug regId CourseRegistrationStatusUpdate{..} = do
+      ensureModule ModuleAdmin user
+      let normalizedSlug = T.toLower (T.strip slug)
+      normalizedStatus <- normaliseStatus status
+      let regKey = toSqlKey regId :: Key CourseRegistration
+      now <- liftIO getCurrentTime
+      entity <- withPool $ get regKey
+      reg <- maybe (throwError err404) pure entity
+      when (ME.courseRegistrationCourseSlug reg /= normalizedSlug) $
+        throwError err404
+      withPool $ update regKey
+        [ ME.CourseRegistrationStatus =. normalizedStatus
+        , ME.CourseRegistrationUpdatedAt =. now
+        ]
+      pure CourseRegistrationResponse { id = regId, status = normalizedStatus }
+
+    normaliseStatus raw =
+      let trimmed = T.toLower (T.strip raw)
+      in if trimmed `elem` ["pending_payment", "paid", "cancelled"]
+           then pure trimmed
+           else throwError err400 { errBody = "Estado inválido; usa pending_payment, paid o cancelled" }
 
     listOptions rawCategory mIncludeInactive = do
       ensureModule ModuleAdmin user
@@ -454,3 +488,27 @@ toDTO (Entity key option) = DropdownOptionDTO
   , active    = dropdownOptionActive option
   , sortOrder = dropdownOptionSortOrder option
   }
+
+-- Log handlers
+getLogs :: (MonadIO m) => Maybe Int -> m [LogEntryDTO]
+getLogs mLimit = do
+  let limit = fromMaybe 100 mLimit
+  entries <- liftIO $ getRecentLogs limit
+  pure $ map logEntryToDTO entries
+
+clearLogsHandler :: (MonadIO m) => m NoContent
+clearLogsHandler = do
+  liftIO clearLogs
+  pure NoContent
+
+logEntryToDTO :: LogEntry -> LogEntryDTO
+logEntryToDTO LogEntry{..} = LogEntryDTO
+  { logTimestamp = logTimestamp
+  , logLevel = levelToText logLevel
+  , logMessage = logMessage
+  }
+
+levelToText :: LogLevel -> Text
+levelToText LogInfo = "info"
+levelToText LogWarning = "warning"
+levelToText LogError = "error"

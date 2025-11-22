@@ -267,12 +267,35 @@ Currently, testing is done manually with Expo Go:
 - [ ] Forms validate correctly
 - [ ] Error messages are clear
 - [ ] Loading states are shown
-- [ ] Offline behavior is acceptable
+- [ ] **Offline mode works correctly**:
+  - [ ] Offline banner appears when disconnected
+  - [ ] Schedule and packages load from cache
+  - [ ] Bookings can be created offline
+  - [ ] Offline mutations sync on reconnect
+  - [ ] Failed syncs show appropriate errors
 
-### Future: Automated Testing
+### Offline Support Testing
 
-Planned testing setup:
-- Jest for unit tests
+See [tdf-mobile/README.md](tdf-mobile/README.md#testing-offline-mode) for detailed instructions on:
+- Simulating offline mode in Expo Go, iOS Simulator, and Android Emulator
+- Manual test checklist for offline features
+- Expected behavior for queued mutations and sync
+
+### Automated Testing
+
+Current test coverage (Phase 1):
+- **Jest** for unit tests of offline logic
+- Tests for storage layer (cache and queue operations)
+- Tests for sync engine (retry logic, backoff, error handling)
+- Tests for network detection
+
+Run tests:
+```bash
+cd tdf-mobile
+npm test
+```
+
+Planned additions:
 - React Native Testing Library for component tests
 - Detox for E2E tests
 
