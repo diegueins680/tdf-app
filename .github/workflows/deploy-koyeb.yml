@@ -89,6 +89,14 @@ jobs:
             echo "KOYEB_SERVICE_NAME must be lowercase, alphanumeric with optional dashes (no spaces/uppercase)." >&2
             exit 1
           fi
+          if echo "$KOYEB_APP" | grep -q '\*\*\*'; then
+            echo "KOYEB_APP_NAME secret appears masked/empty" >&2
+            exit 1
+          fi
+          if ! echo "$KOYEB_APP" | grep -Eq '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'; then
+            echo "KOYEB_APP_NAME must be lowercase, alphanumeric with optional dashes (no spaces/uppercase)." >&2
+            exit 1
+          fi
 
           # Ensure app exists
           APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$KOYEB_APP"'") | .id' | head -n1)
