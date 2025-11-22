@@ -28,8 +28,10 @@ import HeadsetIcon from '@mui/icons-material/Headset';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
 import { Courses } from '../api/courses';
+import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
 
 const COURSE_SLUG = 'produccion-musical-dic-2025';
+const INSTRUCTOR_IMAGE_URL = instructorImage;
 
 const badgeStyle = {
   bgcolor: 'rgba(255,255,255,0.1)',
@@ -169,13 +171,13 @@ function InstructorCard() {
     >
       <CardMedia
         component="img"
-        image="/assets/tdf-ui/esteban-munoz.jpg"
+        image={INSTRUCTOR_IMAGE_URL}
         alt="Esteban Muñoz en el control room"
         sx={{ height: 220, objectFit: 'cover' }}
       />
       <CardContent sx={{ pb: 3 }}>
         <Stack direction="row" spacing={2} alignItems="center" mb={1}>
-          <Avatar alt="Esteban Muñoz" src="/assets/tdf-ui/esteban-munoz.jpg" />
+          <Avatar alt="Esteban Muñoz" src={INSTRUCTOR_IMAGE_URL} />
           <Box>
             <Typography variant="subtitle1" sx={{ color: '#f8fafc', fontWeight: 700 }}>
               Esteban Muñoz
