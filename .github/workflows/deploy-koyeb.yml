@@ -73,30 +73,40 @@ jobs:
           KOYEB_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
           KOYEB_SERVICE: ${{ secrets.KOYEB_SERVICE_NAME }}
         run: |
-          if [ -z "$KOYEB_TOKEN" ] || [ -z "$KOYEB_SERVICE" ] || [ -z "$KOYEB_APP" ]; then
+          set -euo pipefail
+          slugify() {
+            echo "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g; s/-{2,}/-/g'
+          }
+          if [ -z "${KOYEB_TOKEN:-}" ] || [ -z "${KOYEB_SERVICE:-}" ] || [ -z "${KOYEB_APP:-}" ]; then
             echo "KOYEB_API_TOKEN, KOYEB_SERVICE_NAME, and KOYEB_APP_NAME secrets are required" >&2
             exit 1
           fi
+          APP_NAME=$(slugify "$KOYEB_APP")
+          SERVICE_NAME=$(slugify "$KOYEB_SERVICE")
+          if [ -z "$APP_NAME" ] || [ -z "$SERVICE_NAME" ]; then
+            echo "Koyeb app/service names resolved to empty after slugify; please set KOYEB_APP_NAME / KOYEB_SERVICE_NAME to alphanumeric or dash." >&2
+            exit 1
+          fi
           # Ensure app exists
-          APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$KOYEB_APP"'") | .id' | head -n1)
+          APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$APP_NAME"'") | .id' | head -n1)
           if [ -z "$APP_ID" ] || [ "$APP_ID" = "null" ]; then
-            echo "Koyeb app '$KOYEB_APP' not found; creating it..."
-            koyeb --token "$KOYEB_TOKEN" apps create "$KOYEB_APP"
-            APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$KOYEB_APP"'") | .id' | head -n1)
+            echo "Koyeb app '$APP_NAME' not found; creating it..."
+            koyeb --token "$KOYEB_TOKEN" apps create "$APP_NAME"
+            APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$APP_NAME"'") | .id' | head -n1)
             if [ -z "$APP_ID" ] || [ "$APP_ID" = "null" ]; then
-              echo "Failed to create/resolve Koyeb app '$KOYEB_APP'" >&2
+              echo "Failed to create/resolve Koyeb app '$APP_NAME'" >&2
               exit 1
             fi
           fi
 
           # Force container-based deploy: remove existing service (if any) and recreate from DockerHub image.
-          EXISTING_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$APP_ID" --output json | jq -r '.services[] | select(.name=="'"$KOYEB_SERVICE"'") | .id')
+          EXISTING_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$APP_ID" --output json | jq -r '.services[] | select(.name=="'"$SERVICE_NAME"'") | .id')
           if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
-            echo "Deleting existing service $KOYEB_SERVICE ($EXISTING_ID) to ensure container-based deployment"
-            koyeb --token "$KOYEB_TOKEN" services delete "$EXISTING_ID" --yes
+            echo "Deleting existing service $SERVICE_NAME ($EXISTING_ID) to ensure container-based deployment"
+            koyeb --token "$KOYEB_TOKEN" services delete "$EXISTING_ID"
           fi
-          echo "Creating service $KOYEB_SERVICE in app $KOYEB_APP with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
-          koyeb --token "$KOYEB_TOKEN" services create "$KOYEB_SERVICE" \
+          echo "Creating service $SERVICE_NAME in app $APP_NAME with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
+          koyeb --token "$KOYEB_TOKEN" services create "$SERVICE_NAME" \
             --app "$APP_ID" \
             --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
             --ports 8080:http \
