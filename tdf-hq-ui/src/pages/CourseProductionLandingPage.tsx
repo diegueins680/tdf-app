@@ -2,10 +2,12 @@ import { useMemo, useRef, useState, type ReactElement, type RefObject } from 're
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Card,
   CardContent,
+  CardMedia,
   Chip,
   CircularProgress,
   Container,
@@ -59,7 +61,10 @@ export default function CourseProductionLandingPage() {
     const medium = params.get('utm_medium') ?? undefined;
     const campaign = params.get('utm_campaign') ?? undefined;
     const content = params.get('utm_content') ?? undefined;
-    if (source || medium || campaign || content) {
+    const hasUtm = [source, medium, campaign, content].some(
+      (value) => value !== undefined && value !== null && value !== '',
+    );
+    if (hasUtm) {
       return { source, medium, campaign, content };
     }
     return undefined;
@@ -90,6 +95,14 @@ export default function CourseProductionLandingPage() {
 
   const meta: CourseMetadata | undefined = metaQuery.data;
   const whatsappHref = meta?.whatsappCtaUrl ?? 'https://wa.me/?text=INSCRIBIRME%20Curso%20Produccion%20Musical';
+  const patchedSessions = useMemo(() => {
+    const targetDates = ['2025-12-13', '2025-12-20', '2025-12-27', '2026-01-03'];
+    if (!meta?.sessions?.length) return undefined;
+    return meta.sessions.map((s, idx) => ({
+      ...s,
+      date: targetDates[idx] ?? s.date,
+    }));
+  }, [meta?.sessions]);
 
   const submitted = registrationMutation.isSuccess;
   const submitting = registrationMutation.isPending;
@@ -114,7 +127,7 @@ export default function CourseProductionLandingPage() {
           <Hero meta={meta} onPrimaryClick={scrollToForm} whatsappHref={whatsappHref} loading={metaQuery.isLoading} />
           <Grid container spacing={3}>
             <Grid item xs={12} md={7}>
-              <Info meta={meta} loading={metaQuery.isLoading} />
+              <Info meta={meta} loading={metaQuery.isLoading} sessionsOverride={patchedSessions} />
             </Grid>
             <Grid item xs={12} md={5}>
               <FormCard
@@ -132,6 +145,7 @@ export default function CourseProductionLandingPage() {
                 submitted={submitted}
                 submitError={submitError}
               />
+              <InstructorCard />
               {meta?.locationLabel && meta?.locationMapUrl && (
                 <LocationCard label={meta.locationLabel} mapUrl={meta.locationMapUrl} />
               )}
@@ -140,6 +154,43 @@ export default function CourseProductionLandingPage() {
         </Stack>
       </Container>
     </Box>
+  );
+}
+
+function InstructorCard() {
+  return (
+    <Card
+      sx={{
+        mt: 3,
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        color: '#e2e8f0',
+      }}
+    >
+      <CardMedia
+        component="img"
+        image="/assets/tdf-ui/esteban-munoz.jpg"
+        alt="Esteban Muñoz en el control room"
+        sx={{ height: 220, objectFit: 'cover' }}
+      />
+      <CardContent sx={{ pb: 3 }}>
+        <Stack direction="row" spacing={2} alignItems="center" mb={1}>
+          <Avatar alt="Esteban Muñoz" src="/assets/tdf-ui/esteban-munoz.jpg" />
+          <Box>
+            <Typography variant="subtitle1" sx={{ color: '#f8fafc', fontWeight: 700 }}>
+              Esteban Muñoz
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.7)' }}>
+              Ingeniero de mezcla · Mentor del curso
+            </Typography>
+          </Box>
+        </Stack>
+        <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+          Productor e ingeniero residente en TDF Records, con experiencia en grabación, mezcla y masterización
+          en Logic y Luna. Te acompañará en sesiones prácticas dentro del control room del estudio.
+        </Typography>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -218,7 +269,7 @@ function Hero({
   );
 }
 
-function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
+function Info({ meta, loading, sessionsOverride }: { meta?: CourseMetadata; loading: boolean; sessionsOverride?: CourseMetadata['sessions'] }) {
   const formatDate = (value?: string | null) => {
     if (!value) return '—';
     const parsed = new Date(value);
@@ -249,7 +300,7 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
           {loading && <Typography>Cargando fechas...</Typography>}
           {!loading && (
             <Stack spacing={1.2}>
-              {meta?.sessions?.map((session) => (
+              {(sessionsOverride ?? meta?.sessions ?? []).map((session) => (
                 <Stack
                   key={`${session.date}-${session.label}`}
                   direction="row"
@@ -362,6 +413,20 @@ function FormCard({
                 onChange={(e) => onFullNameChange(e.target.value)}
                 disabled={submitted}
                 fullWidth
+                InputProps={{
+                  sx: {
+                    color: '#f8fafc',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.28)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.45)' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
+                    input: {
+                      color: '#f8fafc',
+                      '::placeholder': { color: 'rgba(226,232,240,0.6)' },
+                      caretColor: '#f8fafc',
+                    },
+                  },
+                }}
+                InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.75)' } }}
               />
               <TextField
                 label="Correo"
@@ -371,6 +436,20 @@ function FormCard({
                 onChange={(e) => onEmailChange(e.target.value)}
                 disabled={submitted}
                 fullWidth
+                InputProps={{
+                  sx: {
+                    color: '#f8fafc',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.28)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.45)' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
+                    input: {
+                      color: '#f8fafc',
+                      '::placeholder': { color: 'rgba(226,232,240,0.6)' },
+                      caretColor: '#f8fafc',
+                    },
+                  },
+                }}
+                InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.75)' } }}
               />
               <TextField
                 label="WhatsApp (opcional)"
@@ -378,6 +457,20 @@ function FormCard({
                 onChange={(e) => onPhoneChange(e.target.value)}
                 disabled={submitted}
                 fullWidth
+                InputProps={{
+                  sx: {
+                    color: '#f8fafc',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.22)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
+                    input: {
+                      color: '#f8fafc',
+                      '::placeholder': { color: 'rgba(226,232,240,0.6)' },
+                      caretColor: '#f8fafc',
+                    },
+                  },
+                }}
+                InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.68)' } }}
               />
               <TextField
                 label="¿Cómo te enteraste del curso? (opcional)"
@@ -387,6 +480,20 @@ function FormCard({
                 fullWidth
                 multiline
                 minRows={2}
+                InputProps={{
+                  sx: {
+                    color: '#f8fafc',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.22)' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
+                    textarea: {
+                      color: '#f8fafc',
+                      '::placeholder': { color: 'rgba(226,232,240,0.6)' },
+                      caretColor: '#f8fafc',
+                    },
+                  },
+                }}
+                InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.68)' } }}
               />
               <Button
                 type="submit"
