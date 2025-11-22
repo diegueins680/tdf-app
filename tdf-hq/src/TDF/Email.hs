@@ -16,6 +16,7 @@ import qualified Data.Text.Lazy           as TL
 import           Network.Mail.Mime        (Address(..), simpleMail')
 import qualified Network.Mail.SMTP        as SMTP
 import           System.Entropy           (getEntropy)
+import           System.IO                (hPutStrLn, stderr)
 
 import           TDF.Config               (EmailConfig(..))
 
@@ -64,20 +65,8 @@ sendWelcomeEmail (Just cfg) name email username password mAppUrl = do
           ]
       fromAddr = Address (Just (emailFromName cfg)) (emailFromAddress cfg)
       toAddr = Address (Just name) email
-  let mail = simpleMail' toAddr fromAddr subject (TL.fromStrict body)
-  let host = T.unpack (smtpHost cfg)
-      port = fromIntegral (smtpPort cfg)
-      user = T.unpack (smtpUsername cfg)
-      pass = T.unpack (smtpPassword cfg)
-      sendAction =
-        if smtpUseTLS cfg
-          then SMTP.sendMailWithLoginTLS' host port user pass mail
-          else SMTP.sendMailWithLogin' host port user pass mail
-  result <- try sendAction
-  case result of
-    Left err ->
-      putStrLn $ "Failed to send welcome email to " <> T.unpack email <> ": " <> show (err :: SomeException)
-    Right () -> pure ()
+      mail = simpleMail' toAddr fromAddr subject (TL.fromStrict body)
+  sendMailWithLogging cfg toAddr subject mail
 
 sendPasswordResetEmail
   :: Maybe EmailConfig
@@ -114,16 +103,31 @@ sendPasswordResetEmail (Just cfg) name email token mAppUrl = do
       fromAddr = Address (Just (emailFromName cfg)) (emailFromAddress cfg)
       toAddr = Address (Just name) email
       mail = simpleMail' toAddr fromAddr subject (TL.fromStrict body)
-      host = T.unpack (smtpHost cfg)
+  sendMailWithLogging cfg toAddr subject mail
+
+-- | Send an email with a small audit trail for admins.
+sendMailWithLogging :: EmailConfig -> Address -> Text -> SMTP.Mail -> IO ()
+sendMailWithLogging cfg toAddr subject mail = do
+  let host = T.unpack (smtpHost cfg)
       port = fromIntegral (smtpPort cfg)
       user = T.unpack (smtpUsername cfg)
       pass = T.unpack (smtpPassword cfg)
-      sendAction =
-        if smtpUseTLS cfg
-          then SMTP.sendMailWithLoginTLS' host port user pass mail
-          else SMTP.sendMailWithLogin' host port user pass mail
+      modeLabel
+        | smtpUseTLS cfg && port == 465 = "SMTPS"
+        | smtpUseTLS cfg                = "STARTTLS"
+        | otherwise                     = "PLAIN"
+      sendAction
+        | modeLabel == "SMTPS"    = SMTP.sendMailWithLoginTLS' host port user pass mail
+        | modeLabel == "STARTTLS" = SMTP.sendMailWithLoginSTARTTLS' host port user pass mail
+        | otherwise               = SMTP.sendMailWithLogin' host port user pass mail
+      toEmail = T.unpack (addressEmail toAddr)
+      fromEmail = T.unpack (emailFromAddress cfg)
+      subj = T.unpack subject
+  putStrLn $ "[Email] Sending \"" <> subj <> "\" to " <> toEmail <> " from " <> fromEmail
+           <> " via " <> host <> ":" <> show port <> " (" <> modeLabel <> ")"
   result <- try sendAction
   case result of
-    Left err ->
-      putStrLn $ "Failed to send password reset email to " <> T.unpack email <> ": " <> show (err :: SomeException)
-    Right () -> pure ()
+    Left (err :: SomeException) ->
+      hPutStrLn stderr $ "[Email] Failed to send to " <> toEmail <> ": " <> show err
+    Right () ->
+      putStrLn $ "[Email] Sent \"" <> subj <> "\" to " <> toEmail
