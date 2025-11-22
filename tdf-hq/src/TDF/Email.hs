@@ -14,6 +14,7 @@ import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as TE
 import qualified Data.Text.Lazy           as TL
 import           Network.Mail.Mime        (Address(..), simpleMail')
+import qualified Network.Mail.Mime        as Mime
 import qualified Network.Mail.SMTP        as SMTP
 import           System.Entropy           (getEntropy)
 import           System.IO                (hPutStrLn, stderr)
@@ -106,7 +107,7 @@ sendPasswordResetEmail (Just cfg) name email token mAppUrl = do
   sendMailWithLogging cfg toAddr subject mail
 
 -- | Send an email with a small audit trail for admins.
-sendMailWithLogging :: EmailConfig -> Address -> Text -> SMTP.Mail -> IO ()
+sendMailWithLogging :: EmailConfig -> Address -> Text -> Mime.Mail -> IO ()
 sendMailWithLogging cfg toAddr subject mail = do
   let host = T.unpack (smtpHost cfg)
       port = fromIntegral (smtpPort cfg)
@@ -125,9 +126,9 @@ sendMailWithLogging cfg toAddr subject mail = do
       subj = T.unpack subject
   putStrLn $ "[Email] Sending \"" <> subj <> "\" to " <> toEmail <> " from " <> fromEmail
            <> " via " <> host <> ":" <> show port <> " (" <> modeLabel <> ")"
-  result <- try sendAction
+  result <- try (sendAction :: IO ())
   case result of
-    Left (err :: SomeException) ->
-      hPutStrLn stderr $ "[Email] Failed to send to " <> toEmail <> ": " <> show err
+    Left err ->
+      hPutStrLn stderr $ "[Email] Failed to send to " <> toEmail <> ": " <> show (err :: SomeException)
     Right () ->
       putStrLn $ "[Email] Sent \"" <> subj <> "\" to " <> toEmail
