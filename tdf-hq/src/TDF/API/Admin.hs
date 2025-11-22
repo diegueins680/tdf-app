@@ -17,7 +17,7 @@ import           TDF.API.Types ( DropdownOptionCreate
 import           TDF.Routes.Courses (CoursesAdminAPI)
 
 import           Data.Int      (Int64)
-import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert)
+import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert, LogEntryDTO)
 
 type DropdownCategoryAPI =
        QueryParam "includeInactive" Bool :> Get '[JSON] [DropdownOptionDTO]
@@ -42,10 +42,15 @@ type ArtistAdminAPI =
   :<|> "releases" :>
          ( ReqBody '[JSON] ArtistReleaseUpsert :> Post '[JSON] ArtistReleaseDTO )
 
+type LogsAPI =
+       QueryParam "limit" Int :> Get '[JSON] [LogEntryDTO]
+  :<|> Delete '[JSON] NoContent
+
 type AdminAPI =
        "seed" :> Post '[JSON] NoContent
   :<|> "dropdowns" :> Capture "category" Text :> DropdownCategoryAPI
   :<|> "users" :> UsersAPI
   :<|> "roles" :> RolesAPI
   :<|> "artists" :> ArtistAdminAPI
+  :<|> "logs" :> LogsAPI
   :<|> CoursesAdminAPI

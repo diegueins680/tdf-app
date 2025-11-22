@@ -29,6 +29,7 @@ executable tdf-hq-exe
     TDF.DTO
     TDF.Email
     TDF.Handlers.InputList
+    TDF.LogBuffer
     TDF.Meta
     TDF.Models
     TDF.ModelsExtra

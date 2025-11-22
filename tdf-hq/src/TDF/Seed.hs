@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Seed where
 
+import           Control.Applicative   ((<|>))
 import           Control.Monad          (forM, forM_, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
@@ -172,6 +173,8 @@ seedAll = do
            pure ()
         ) staffAccounts
 
+  seedCoreStaffRoles now
+
   -- Dropdown options for admin-managed metadata
   let dropdowns =
         [ ("band-role", "Singer", Nothing, Just 1)
@@ -279,6 +282,209 @@ ensureCohortRow slug titleTxt starts ends seats = do
         , cohortEndsAt = ends
         , cohortSeatCap = seats
         }
+
+-- Core staff & RBAC seeds -------------------------------------------------
+
+data StaffSeed = StaffSeed
+  { ssName  :: Text
+  , ssEmail :: Text
+  , ssRoles :: [RoleEnum]
+  }
+
+coreStaffDefaultPassword :: Text
+coreStaffDefaultPassword = "changeme123"
+
+coreStaffSeeds :: [StaffSeed]
+coreStaffSeeds =
+  [ StaffSeed "Esteban Muñoz" "mixandlivesound@gmail.com" [Engineer, Teacher, StudioManager]
+  , StaffSeed "Emanuele Pilo-Pais" "interfacerandom@gmail.com" [AandR]
+  , StaffSeed "Claudia Palma" "unaclaudiapalma@gmail.com" [LiveSessionsProducer]
+  , StaffSeed "Fabricio Alomía" "fabro.sounds@gmail.com" [Teacher]
+  , StaffSeed "Juan Ledesma" "juan.ledesma@tdfrecords.com" [Teacher, Producer, Artist]
+  ]
+
+data PartyChange
+  = PartyCreated
+  | PartyUpdated
+  | PartyUnchanged
+
+data CredentialStatus
+  = CredentialCreated
+  | CredentialUpdated
+  | CredentialUnchanged
+
+seedCoreStaffRoles :: UTCTime -> SqlPersistT IO ()
+seedCoreStaffRoles now = do
+  liftIO $ putStrLn "Seeding core staff roles..."
+  mapM_ (seedStaff now) coreStaffSeeds
+
+seedStaff :: UTCTime -> StaffSeed -> SqlPersistT IO ()
+seedStaff now StaffSeed{ssName = nameVal, ssEmail = emailVal, ssRoles = rolesVal} = do
+  let normalizedEmail = normalizeEmail emailVal
+      cleanName       = T.strip nameVal
+  (pid, partyChange) <- ensureStaffParty now cleanName normalizedEmail
+  newRoles <- ensureStaffRoles pid rolesVal
+  credStatus <- ensureStaffCredential pid normalizedEmail
+  logStaffSeed cleanName rolesVal partyChange newRoles credStatus
+
+ensureStaffParty :: UTCTime -> Text -> Text -> SqlPersistT IO (Key Party, PartyChange)
+ensureStaffParty now displayName email = do
+  mPartyFromCredential <- lookupPartyByCredential email
+  mPartyByEmail <- maybe (lookupPartyByEmail email) (const (pure Nothing)) mPartyFromCredential
+  mPartyByName <- case mPartyFromCredential <|> mPartyByEmail of
+    Just _  -> pure Nothing
+    Nothing -> lookupPartyByName displayName
+  let chosen = mPartyFromCredential <|> mPartyByEmail <|> mPartyByName
+  case chosen of
+    Just (Entity pid party) -> do
+      let updates = catMaybes
+            [ if partyDisplayName party == displayName
+                then Nothing
+                else Just (PartyDisplayName =. displayName)
+            , case partyPrimaryEmail party of
+                Nothing -> Just (PartyPrimaryEmail =. Just email)
+                Just existing
+                  | T.toLower existing == email -> Nothing
+                  | otherwise                   -> Just (PartyPrimaryEmail =. Just email)
+            ]
+      unless (null updates) $ update pid updates
+      pure (pid, if null updates then PartyUnchanged else PartyUpdated)
+    Nothing -> do
+      pid <- insert $ Party
+        { partyLegalName        = Nothing
+        , partyDisplayName      = displayName
+        , partyIsOrg            = False
+        , partyTaxId            = Nothing
+        , partyPrimaryEmail     = Just email
+        , partyPrimaryPhone     = Nothing
+        , partyWhatsapp         = Nothing
+        , partyInstagram        = Nothing
+        , partyEmergencyContact = Nothing
+        , partyNotes            = Nothing
+        , partyCreatedAt        = now
+        }
+      pure (pid, PartyCreated)
+  where
+    lookupPartyByCredential :: Text -> SqlPersistT IO (Maybe (Entity Party))
+    lookupPartyByCredential username = do
+      mCred <- getBy (UniqueCredentialUsername username)
+      case mCred of
+        Nothing -> pure Nothing
+        Just (Entity _ cred) -> do
+          mParty <- get (userCredentialPartyId cred)
+          case mParty of
+            Nothing    -> pure Nothing
+            Just party -> pure (Just (Entity (userCredentialPartyId cred) party))
+
+    lookupPartyByEmail :: Text -> SqlPersistT IO (Maybe (Entity Party))
+    lookupPartyByEmail emailTxt = selectFirst [PartyPrimaryEmail ==. Just emailTxt] []
+
+    lookupPartyByName :: Text -> SqlPersistT IO (Maybe (Entity Party))
+    lookupPartyByName nameTxt = selectFirst [PartyDisplayName ==. nameTxt] []
+
+ensureStaffRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO [RoleEnum]
+ensureStaffRoles pid rolesList = do
+  added <- mapM (ensureRole pid) rolesList
+  pure (catMaybes added)
+  where
+    ensureRole partyId role = do
+      mExisting <- getBy (UniquePartyRole partyId role)
+      case mExisting of
+        Nothing -> do
+          _ <- insert (PartyRole partyId role True)
+          pure (Just role)
+        Just (Entity roleId pr)
+          | partyRoleActive pr -> pure Nothing
+          | otherwise -> do
+              update roleId [PartyRoleActive =. True]
+              pure (Just role)
+
+ensureStaffCredential :: PartyId -> Text -> SqlPersistT IO CredentialStatus
+ensureStaffCredential pid username = do
+  mCred <- getBy (UniqueCredentialUsername username)
+  case mCred of
+    Nothing -> do
+      hashed <- liftIO (hashPasswordText coreStaffDefaultPassword)
+      void $ insert UserCredential
+        { userCredentialPartyId      = pid
+        , userCredentialUsername     = username
+        , userCredentialPasswordHash = hashed
+        , userCredentialActive       = True
+        }
+      pure CredentialCreated
+    Just (Entity credId cred) -> do
+      let updates = catMaybes
+            [ if userCredentialPartyId cred == pid
+                then Nothing
+                else Just (UserCredentialPartyId =. pid)
+            , if userCredentialActive cred
+                then Nothing
+                else Just (UserCredentialActive =. True)
+            ]
+      unless (null updates) $ update credId updates
+      pure $ if null updates then CredentialUnchanged else CredentialUpdated
+
+logStaffSeed
+  :: Text
+  -> [RoleEnum]
+  -> PartyChange
+  -> [RoleEnum]
+  -> CredentialStatus
+  -> SqlPersistT IO ()
+logStaffSeed nameTxt rolesList partyChange newRoles credStatus = do
+  let roleListTxt   = T.intercalate ", " (map roleSlug rolesList)
+      changes       = catMaybes
+        [ case partyChange of
+            PartyCreated   -> Just "created profile"
+            PartyUpdated   -> Just "updated profile"
+            PartyUnchanged -> Nothing
+        , case credStatus of
+            CredentialCreated   -> Just "created credential"
+            CredentialUpdated   -> Just "updated credential"
+            CredentialUnchanged -> Nothing
+        , if null newRoles
+            then Nothing
+            else Just ("added roles: " <> T.intercalate ", " (map roleSlug newRoles))
+        ]
+      prefix = case partyChange of
+        PartyCreated   -> "Created staff user "
+        PartyUpdated   -> "Updated staff user "
+        PartyUnchanged -> "Ensured staff user "
+      suffix = if null changes then "" else " [" <> T.intercalate "; " changes <> "]"
+      msg = prefix <> nameTxt <> " (" <> roleListTxt <> ")" <> suffix
+  liftIO $ putStrLn (T.unpack msg)
+
+normalizeEmail :: Text -> Text
+normalizeEmail = T.toLower . T.strip
+
+roleSlug :: RoleEnum -> Text
+roleSlug Admin         = "admin"
+roleSlug Manager       = "manager"
+roleSlug StudioManager = "studio-manager"
+roleSlug Engineer      = "engineer"
+roleSlug Teacher       = "teacher"
+roleSlug Reception     = "reception"
+roleSlug Accounting    = "accounting"
+roleSlug LiveSessionsProducer = "live-sessions-producer"
+roleSlug Artist        = "artist"
+roleSlug Artista       = "artista"
+roleSlug Promotor      = "promotor"
+roleSlug Promoter      = "promoter"
+roleSlug Producer      = "producer"
+roleSlug Songwriter    = "songwriter"
+roleSlug DJ            = "dj"
+roleSlug Publicist     = "publicist"
+roleSlug TourManager   = "tourmanager"
+roleSlug LabelRep      = "labelrep"
+roleSlug StageManager  = "stagemanager"
+roleSlug RoadCrew      = "roadcrew"
+roleSlug Photographer  = "photographer"
+roleSlug AandR         = "ar"
+roleSlug Student       = "student"
+roleSlug Vendor        = "vendor"
+roleSlug ReadOnly      = "readonly"
+roleSlug Customer      = "customer"
+roleSlug Fan           = "fan"
 
 ensureStaff :: UTCTime -> Text -> Maybe Text -> RoleEnum -> Text -> Text -> Text -> SqlPersistT IO (Key Party)
 ensureStaff now name mlegal role token uname pwd = do
