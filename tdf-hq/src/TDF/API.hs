@@ -62,6 +62,11 @@ type PartyAPI =
       :<|> "roles" :> ReqBody '[LooseJSON, PlainText, OctetStream] RolePayload :> Post '[JSON] NoContent
       )
 
+type SocialAPI =
+       "followers" :> Get '[JSON] [PartyFollowDTO]
+  :<|> "following" :> Get '[JSON] [PartyFollowDTO]
+  :<|> "vcard-exchange" :> ReqBody '[JSON] VCardExchangeRequest :> Post '[JSON] [PartyFollowDTO]
+
 type BookingAPI =
        Get '[JSON] [BookingDTO]
   :<|> ReqBody '[JSON] CreateBookingReq :> Post '[JSON] BookingDTO
@@ -145,6 +150,7 @@ type ProtectedAPI =
   :<|> PipelinesAPI
   :<|> RoomsAPI
   :<|> LiveSessionsAPI
+  :<|> "social" :> SocialAPI
   :<|> "stubs"    :> FutureAPI
 
 type API =

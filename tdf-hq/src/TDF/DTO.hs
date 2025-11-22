@@ -126,6 +126,28 @@ data FanFollowDTO = FanFollowDTO
   } deriving (Show, Generic)
 instance ToJSON FanFollowDTO
 
+-- Social follows between any parties (used for vCard/NFC exchanges)
+data PartyFollowDTO = PartyFollowDTO
+  { pfFollowerId   :: Int64
+  , pfFollowingId  :: Int64
+  , pfViaNfc       :: Bool
+  , pfStartedAt    :: Day
+  } deriving (Show, Generic)
+instance ToJSON PartyFollowDTO
+
+data VCardExchangeRequest = VCardExchangeRequest
+  { vcerPartyId :: Int64
+  } deriving (Show, Generic)
+instance FromJSON VCardExchangeRequest
+
+-- Logs
+data LogEntryDTO = LogEntryDTO
+  { logTimestamp :: UTCTime
+  , logLevel     :: Text
+  , logMessage   :: Text
+  } deriving (Show, Generic)
+instance ToJSON LogEntryDTO
+
 data PartyCreate = PartyCreate
   { cLegalName        :: Maybe Text
   , cDisplayName      :: Text

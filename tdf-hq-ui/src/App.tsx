@@ -20,6 +20,7 @@ import ApiStatusChip from './components/ApiStatusChip';
 import InscripcionPage from './pages/inscripcion/InscripcionPage';
 import LiveSessionIntakePage from './pages/LiveSessionIntakePage';
 import CourseProductionLandingPage from './pages/CourseProductionLandingPage';
+import LogsPage from './pages/LogsPage';
 
 function Shell() {
   const { session } = useSession();
@@ -218,6 +219,7 @@ export default function App() {
         </Route>
 
         <Route path="/configuracion" element={<Outlet />}>
+          <Route path="logs" element={<LogsPage />} />
           <Route path="roles-permisos" element={<UserRoleManagement />} />
           <Route path="impuestos-series" element={<PlaceholderPage title="Configuración / Impuestos y series" />} />
           <Route path="unidades-negocio" element={<PlaceholderPage title="Configuración / Unidades de negocio" />} />

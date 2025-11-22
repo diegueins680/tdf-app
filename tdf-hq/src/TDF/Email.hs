@@ -3,6 +3,7 @@ module TDF.Email
   ( generateTempPassword
   , sendWelcomeEmail
   , sendPasswordResetEmail
+  , sendCourseRegistrationEmail
   ) where
 
 import           Control.Exception        (SomeException, try)
@@ -100,6 +101,36 @@ sendPasswordResetEmail (Just cfg) name email token mAppUrl = do
           , "Token: " <> token
           , ""
           , "Si no hiciste esta solicitud puedes ignorar este mensaje."
+          ]
+      fromAddr = Address (Just (emailFromName cfg)) (emailFromAddress cfg)
+      toAddr = Address (Just name) email
+      mail = simpleMail' toAddr fromAddr subject (TL.fromStrict body)
+  sendMailWithLogging cfg toAddr subject mail
+
+sendCourseRegistrationEmail
+  :: Maybe EmailConfig
+  -> Text   -- ^ recipient name
+  -> Text   -- ^ recipient email
+  -> Text   -- ^ course title
+  -> Text   -- ^ landing URL
+  -> Text   -- ^ dates summary
+  -> IO ()
+sendCourseRegistrationEmail Nothing _name _email _courseTitle _landingUrl _datesSummary =
+  putStrLn "[Email] SMTP not configured; skipped course registration email."
+sendCourseRegistrationEmail (Just cfg) name email courseTitle landingUrl datesSummary = do
+  let subject = "Reserva recibida: " <> courseTitle
+      greeting = if T.null name then "Hola," else "Hola " <> name <> ","
+      body =
+        T.unlines
+          [ greeting
+          , ""
+          , "Gracias por inscribirte en " <> courseTitle <> "."
+          , "Fechas: " <> datesSummary
+          , "Landing: " <> landingUrl
+          , ""
+          , "Te contactaremos por este correo para completar el proceso de pago."
+          , ""
+          , "Equipo TDF Records"
           ]
       fromAddr = Address (Just (emailFromName cfg)) (emailFromAddress cfg)
       toAddr = Address (Just name) email

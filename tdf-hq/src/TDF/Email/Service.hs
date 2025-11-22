@@ -4,6 +4,7 @@ module TDF.Email.Service
   , mkEmailService
   , sendWelcome
   , sendPasswordReset
+  , sendCourseRegistration
   ) where
 
 import Data.Text (Text)
@@ -39,3 +40,13 @@ sendPasswordReset svc name email token =
     email
     token
     (esAppBase svc)
+
+sendCourseRegistration :: EmailService -> Text -> Text -> Text -> Text -> Text -> IO ()
+sendCourseRegistration svc name email courseTitle landingUrl datesSummary =
+  Email.sendCourseRegistrationEmail
+    (esConfig svc)
+    name
+    email
+    courseTitle
+    landingUrl
+    datesSummary

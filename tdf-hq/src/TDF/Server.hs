@@ -59,6 +59,7 @@ import           TDF.DTO
 import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, moduleName, loadAuthedUser)
 import           TDF.Seed       (seedAll)
 import           TDF.ServerAdmin (adminServer)
+import qualified TDF.LogBuffer as LogBuf
 import           TDF.ServerExtra (bandsServer, inventoryServer, loadBandForParty, pipelinesServer, roomsServer, sessionsServer)
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
@@ -545,14 +546,22 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
               landing = Courses.landingUrl meta
           -- Check if email is configured before attempting to send
           case EmailSvc.esConfig emailSvc of
-            Nothing -> liftIO $ hPutStrLn stderr $ "[CourseRegistration] WARNING: SMTP not configured. Email confirmation not sent to " <> T.unpack emailAddr
+            Nothing -> liftIO $ do
+              let msg = "[CourseRegistration] WARNING: SMTP not configured. Email confirmation not sent to " <> T.unpack emailAddr
+              hPutStrLn stderr msg
+              LogBuf.addLog LogBuf.LogWarning msg
             Just _ -> do
               -- Send email asynchronously, but log if it fails
               liftIO $ do
                 result <- try $ EmailSvc.sendCourseRegistration emailSvc displayName emailAddr courseTitle landing datesSummary
                 case result of
-                  Left err -> hPutStrLn stderr $ "[CourseRegistration] Failed to send confirmation email to " <> T.unpack emailAddr <> ": " <> show (err :: SomeException)
-                  Right () -> pure ()
+                  Left err -> do
+                    let msg = "[CourseRegistration] Failed to send confirmation email to " <> T.unpack emailAddr <> ": " <> show (err :: SomeException)
+                    hPutStrLn stderr msg
+                    LogBuf.addLog LogBuf.LogError (T.pack msg)
+                  Right () -> do
+                    let msg = "[CourseRegistration] Successfully sent confirmation email to " <> T.unpack emailAddr
+                    LogBuf.addLog LogBuf.LogInfo (T.pack msg)
 
 -- | Returns messages that include text bodies, paired with the sender phone.
 extractTextMessages :: WAMetaWebhook -> [(Text, Text)]

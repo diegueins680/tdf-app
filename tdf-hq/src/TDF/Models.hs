@@ -36,10 +36,12 @@ derivePersistField "PricingModel"
 data RoleEnum
   = Admin
   | Manager
+  | StudioManager
   | Engineer
   | Teacher
   | Reception
   | Accounting
+  | LiveSessionsProducer
   | Artist
   | Artista
   | Promotor
@@ -129,10 +131,12 @@ instance FromJSON TicketStatus
 roleToText :: RoleEnum -> Text
 roleToText Admin         = "Admin"
 roleToText Manager       = "Manager"
+roleToText StudioManager = "Studio Manager"
 roleToText Engineer      = "Engineer"
 roleToText Teacher       = "Teacher"
 roleToText Reception     = "Reception"
 roleToText Accounting    = "Accounting"
+roleToText LiveSessionsProducer = "Live Sessions Producer"
 roleToText Artist        = "Artist"
 roleToText Artista       = "Artista"
 roleToText Promotor      = "Promotor"
@@ -159,10 +163,18 @@ roleFromText raw =
   in case normalized of
     "admin"        -> Just Admin
     "manager"      -> Just Manager
+    "studio-manager" -> Just StudioManager
+    "studiomanager" -> Just StudioManager
+    "studio manager" -> Just StudioManager
     "engineer"     -> Just Engineer
     "teacher"      -> Just Teacher
     "reception"    -> Just Reception
     "accounting"   -> Just Accounting
+    "live-sessions-producer" -> Just LiveSessionsProducer
+    "livesessionsproducer" -> Just LiveSessionsProducer
+    "live-session-producer" -> Just LiveSessionsProducer
+    "live sessions producer" -> Just LiveSessionsProducer
+    "live session producer" -> Just LiveSessionsProducer
     "artist"       -> Just Artist
     "artista"      -> Just Artista
     "promotor"     -> Just Promotor
@@ -178,6 +190,7 @@ roleFromText raw =
     "photographer" -> Just Photographer
     "a&r"          -> Just AandR
     "aandr"        -> Just AandR
+    "ar"           -> Just AandR
     "student"      -> Just Student
     "vendor"       -> Just Vendor
     "readonly"     -> Just ReadOnly
@@ -265,6 +278,13 @@ FanFollow
     artistPartyId    PartyId
     createdAt        UTCTime
     UniqueFanFollow  fanPartyId artistPartyId
+    deriving Show Generic
+PartyFollow
+    followerPartyId  PartyId
+    followingPartyId PartyId
+    viaNfc           Bool
+    createdAt        UTCTime
+    UniquePartyFollow followerPartyId followingPartyId
     deriving Show Generic
 ServiceCatalog
     name             Text
