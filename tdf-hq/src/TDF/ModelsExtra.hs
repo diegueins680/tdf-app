@@ -15,11 +15,9 @@
 
 module TDF.ModelsExtra where
 
-import           Data.Text          (Text, pack)
+import           Data.Text          (Text)
 import           Data.Time          (Day, UTCTime)
 import           Data.UUID          (UUID)
-import           Database.Persist
-import           Database.Persist.Postgresql ()
 import           Database.Persist.Sql
 import           Database.Persist.TH
 import           GHC.Generics       (Generic)
@@ -60,6 +58,22 @@ data DeliverableKind = Mix | Master | Stems | DDP | OtherDeliverable
 derivePersistField "DeliverableKind"
 
 share [mkPersist sqlSettings, mkMigrate "migrateExtra"] [persistLowerCase|
+
+CourseRegistration
+    courseSlug   Text
+    fullName     Text Maybe
+    email        Text Maybe
+    phoneE164    Text Maybe
+    source       Text
+    status       Text
+    howHeard     Text Maybe
+    utmSource    Text Maybe
+    utmMedium    Text Maybe
+    utmCampaign  Text Maybe
+    utmContent   Text Maybe
+    createdAt    UTCTime default=now()
+    updatedAt    UTCTime default=now()
+    deriving Show Generic
 
 DropdownOption
     Id         UUID default=gen_random_uuid()

@@ -84,6 +84,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/courses/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get course metadata
+         * @description Returns public metadata for a course landing page.
+         */
+        get: operations["getCourseMetadata"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create course registration
+         * @description Stores a registration for the specified course. Landing submissions use source=landing and include UTM tags.
+         */
+        post: operations["createCourseRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/whatsapp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify WhatsApp webhook
+         * @description Echoes the hub.challenge parameter when the verify token matches.
+         */
+        get: operations["verifyWhatsAppWebhook"];
+        put?: never;
+        /**
+         * Receive WhatsApp webhook
+         * @description Consumes WhatsApp Cloud API message payloads and triggers keyword-based enrollment.
+         */
+        post: operations["handleWhatsAppWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/courses/{slug}/registrations/{registrationId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update course registration status
+         * @description Marks a course registration as paid or cancelled.
+         */
+        patch: operations["updateCourseRegistrationStatus"];
+        trace?: never;
+    };
     "/fans/artists": {
         parameters: {
             query?: never;
@@ -670,6 +761,68 @@ export interface components {
             /** Format: date */
             ffStartedAt?: string;
         };
+        CourseSession: {
+            label?: string;
+            /** Format: date */
+            date?: string;
+        };
+        SyllabusItem: {
+            title?: string;
+            topics?: string[];
+        };
+        CourseMetadata: {
+            slug?: string;
+            title?: string;
+            subtitle?: string;
+            format?: string;
+            duration?: string;
+            /** Format: float */
+            price?: number;
+            currency?: string;
+            capacity?: number;
+            locationLabel?: string;
+            /** Format: uri */
+            locationMapUrl?: string;
+            daws?: string[];
+            includes?: string[];
+            sessions?: components["schemas"]["CourseSession"][];
+            syllabus?: components["schemas"]["SyllabusItem"][];
+            /** Format: uri */
+            whatsappCtaUrl?: string;
+            /** Format: uri */
+            landingUrl?: string;
+        };
+        UTMTags: {
+            source?: string | null;
+            medium?: string | null;
+            campaign?: string | null;
+            content?: string | null;
+        };
+        CourseRegistrationRequest: {
+            fullName?: string | null;
+            /** Format: email */
+            email?: string | null;
+            /** @example +593999001122 */
+            phoneE164?: string | null;
+            /** @description landing | whatsapp | other keyword */
+            source: string;
+            howHeard?: string | null;
+            utm?: components["schemas"]["UTMTags"];
+        };
+        CourseRegistrationResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** @enum {string} */
+            status?: "pending_payment" | "paid" | "cancelled";
+        };
+        CourseRegistrationStatusUpdate: {
+            /** @enum {string} */
+            status: "pending_payment" | "paid" | "cancelled";
+        };
+        /** @description Meta WhatsApp Cloud API webhook payload (pass-through, not strictly validated). */
+        WhatsAppWebhook: {
+            [key: string]: unknown;
+        };
     };
     responses: never;
     parameters: never;
@@ -774,6 +927,162 @@ export interface operations {
             };
             /** @description Email already registered */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getCourseMetadata: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Course metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseMetadata"];
+                };
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createCourseRegistration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseRegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description Registration stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseRegistrationResponse"];
+                };
+            };
+            /** @description Invalid payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    verifyWhatsAppWebhook: {
+        parameters: {
+            query?: {
+                "hub.mode"?: string;
+                "hub.verify_token"?: string;
+                "hub.challenge"?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Challenge echoed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Verify token mismatch */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    handleWhatsAppWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppWebhook"];
+            };
+        };
+        responses: {
+            /** @description Processed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateCourseRegistrationStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseRegistrationStatusUpdate"];
+            };
+        };
+        responses: {
+            /** @description Status updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseRegistrationResponse"];
+                };
+            };
+            /** @description Registration not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -29,6 +29,7 @@ import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
 import           TDF.Routes.Academy (AcademyAPI)
+import           TDF.Routes.Courses (CoursesPublicAPI, WhatsAppWebhookAPI)
 import           Data.Int (Int64)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 
@@ -154,6 +155,8 @@ type API =
   :<|> "password" :> PasswordAPI
   :<|> "v1" :> AuthV1API
   :<|> "fans" :> FanPublicAPI
+  :<|> CoursesPublicAPI
+  :<|> WhatsAppWebhookAPI
   :<|> MetaAPI
   :<|> AcademyAPI
   :<|> "seed"   :> SeedAPI
