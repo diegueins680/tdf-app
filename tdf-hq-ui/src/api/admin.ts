@@ -13,7 +13,20 @@ export interface LogEntry {
   logMessage: string;
 }
 
+export interface AdminUser {
+  userId: number;
+  partyId: number;
+  partyName: string;
+  username: string;
+  active: boolean;
+  roles: string[];
+  modules: string[];
+}
+
 export const Admin = {
+  listUsers: (includeInactive?: boolean) =>
+    get<AdminUser[]>(`/admin/users${includeInactive ? '?includeInactive=true' : ''}`),
+  getUser: (userId: number) => get<AdminUser>(`/admin/users/${userId}`),
   createUser: (payload: CreateUserPayload) =>
     post('/admin/users', {
       uacPartyId: payload.partyId,

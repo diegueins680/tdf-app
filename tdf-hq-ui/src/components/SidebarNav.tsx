@@ -112,6 +112,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Inscripciones curso', path: '/configuracion/inscripciones-curso' },
       { label: 'Logs', path: '/configuracion/logs' },
+      { label: 'Estado sistema', path: '/configuracion/estado' },
+      { label: 'Usuarios admin', path: '/configuracion/usuarios-admin' },
       { label: 'Roles y permisos', path: '/configuracion/roles-permisos' },
       { label: 'Impuestos y series', path: '/configuracion/impuestos-series' },
       { label: 'Unidades de negocio', path: '/configuracion/unidades-negocio' },

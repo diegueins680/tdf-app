@@ -22,6 +22,8 @@ import InscripcionPage from './pages/inscripcion/InscripcionPage';
 import LiveSessionIntakePage from './pages/LiveSessionIntakePage';
 import CourseProductionLandingPage from './pages/CourseProductionLandingPage';
 import LogsPage from './pages/LogsPage';
+import SystemStatusPage from './pages/SystemStatusPage';
+import AdminUsersPage from './pages/AdminUsersPage';
 
 function Shell() {
   const { session } = useSession();
@@ -221,6 +223,8 @@ export default function App() {
 
         <Route path="/configuracion" element={<Outlet />}>
           <Route path="inscripciones-curso" element={<CourseRegistrationsAdminPage />} />
+          <Route path="usuarios-admin" element={<AdminUsersPage />} />
+          <Route path="estado" element={<SystemStatusPage />} />
           <Route path="logs" element={<LogsPage />} />
           <Route path="roles-permisos" element={<UserRoleManagement />} />
           <Route path="impuestos-series" element={<PlaceholderPage title="Configuración / Impuestos y series" />} />
