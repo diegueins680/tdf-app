@@ -11,6 +11,7 @@ import LoginPage from './pages/LoginPage';
 import UserRoleManagement from './components/UserRoleManagement';
 import SystemPage from './pages/SystemPage';
 import PlaceholderPage from './components/PlaceholderPage';
+import BasicFeaturePage from './components/BasicFeaturePage';
 import AboutPage from './pages/AboutPage';
 import DocsPage from './pages/DocsPage';
 import FanHubPage from './pages/FanHubPage';
@@ -138,12 +139,27 @@ export default function App() {
         <Route path="/inicio" element={<FanHubPage />} />
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/acerca" element={<AboutPage />} />
-        <Route path="/seguridad" element={<PlaceholderPage title="Seguridad" />} />
+        <Route
+          path="/seguridad"
+          element={
+            <BasicFeaturePage
+              title="Seguridad"
+              description="Notas de seguridad y pendientes de hardening."
+              storageKey="seguridad"
+            />
+          }
+        />
 
         <Route path="/crm" element={<Outlet />}>
           <Route path="contactos" element={<PartiesPage />} />
-          <Route path="empresas" element={<PlaceholderPage title="CRM / Empresas" />} />
-          <Route path="leads" element={<PlaceholderPage title="CRM / Leads" />} />
+          <Route
+            path="empresas"
+            element={<BasicFeaturePage title="CRM / Empresas" storageKey="crm-empresas" />}
+          />
+          <Route
+            path="leads"
+            element={<BasicFeaturePage title="CRM / Leads" storageKey="crm-leads" />}
+          />
           <Route index element={<Navigate to="contactos" replace />} />
         </Route>
 
@@ -153,71 +169,74 @@ export default function App() {
           <Route path="ordenes" element={<OrdersPage />} />
           <Route path="pipelines" element={<KanbanPage />} />
           <Route path="live-sessions" element={<LiveSessionIntakePage />} />
-          <Route path="reportes" element={<PlaceholderPage title="Estudio / Reportes" />} />
+          <Route
+            path="reportes"
+            element={<BasicFeaturePage title="Estudio / Reportes" storageKey="estudio-reportes" />}
+          />
           <Route index element={<Navigate to="calendario" replace />} />
         </Route>
 
         <Route path="/label" element={<Outlet />}>
-          <Route path="artistas" element={<PlaceholderPage title="Label / Artistas" />} />
-          <Route path="proyectos" element={<PlaceholderPage title="Label / Proyectos" />} />
-          <Route path="releases" element={<PlaceholderPage title="Label / Releases" />} />
-          <Route path="tracks" element={<PlaceholderPage title="Label / Tracks" />} />
-          <Route path="assets" element={<PlaceholderPage title="Label / Assets" />} />
-          <Route path="metadata" element={<PlaceholderPage title="Label / Metadata" />} />
-          <Route path="contratos" element={<PlaceholderPage title="Label / Contratos" />} />
-          <Route path="regalias" element={<PlaceholderPage title="Label / Regalías" />} />
-          <Route path="marketing" element={<PlaceholderPage title="Label / Marketing" />} />
+          <Route path="artistas" element={<BasicFeaturePage title="Label / Artistas" storageKey="label-artistas" />} />
+          <Route path="proyectos" element={<BasicFeaturePage title="Label / Proyectos" storageKey="label-proyectos" />} />
+          <Route path="releases" element={<BasicFeaturePage title="Label / Releases" storageKey="label-releases" />} />
+          <Route path="tracks" element={<BasicFeaturePage title="Label / Tracks" storageKey="label-tracks" />} />
+          <Route path="assets" element={<BasicFeaturePage title="Label / Assets" storageKey="label-assets" />} />
+          <Route path="metadata" element={<BasicFeaturePage title="Label / Metadata" storageKey="label-metadata" />} />
+          <Route path="contratos" element={<BasicFeaturePage title="Label / Contratos" storageKey="label-contratos" />} />
+          <Route path="regalias" element={<BasicFeaturePage title="Label / Regalías" storageKey="label-regalias" />} />
+          <Route path="marketing" element={<BasicFeaturePage title="Label / Marketing" storageKey="label-marketing" />} />
           <Route index element={<Navigate to="artistas" replace />} />
         </Route>
 
         <Route path="/eventos" element={<Outlet />}>
-          <Route path="agenda" element={<PlaceholderPage title="Eventos / Agenda" />} />
-          <Route path="fechas-y-tours" element={<PlaceholderPage title="Eventos / Fechas y tours" />} />
-          <Route path="venues" element={<PlaceholderPage title="Eventos / Venues" />} />
-          <Route path="staff" element={<PlaceholderPage title="Eventos / Staff" />} />
-          <Route path="presupuestos" element={<PlaceholderPage title="Eventos / Presupuestos" />} />
-          <Route path="post-mortem" element={<PlaceholderPage title="Eventos / Post-mortem" />} />
+          <Route path="agenda" element={<BasicFeaturePage title="Eventos / Agenda" storageKey="eventos-agenda" />} />
+          <Route path="fechas-y-tours" element={<BasicFeaturePage title="Eventos / Fechas y tours" storageKey="eventos-fechas" />} />
+          <Route path="venues" element={<BasicFeaturePage title="Eventos / Venues" storageKey="eventos-venues" />} />
+          <Route path="staff" element={<BasicFeaturePage title="Eventos / Staff" storageKey="eventos-staff" />} />
+          <Route path="presupuestos" element={<BasicFeaturePage title="Eventos / Presupuestos" storageKey="eventos-presupuestos" />} />
+          <Route path="post-mortem" element={<BasicFeaturePage title="Eventos / Post-mortem" storageKey="eventos-postmortem" />} />
           <Route index element={<Navigate to="agenda" replace />} />
         </Route>
 
         <Route path="/escuela" element={<Outlet />}>
-          <Route path="profesores" element={<PlaceholderPage title="Escuela / Profesores" />} />
-          <Route path="clases" element={<PlaceholderPage title="Escuela / Clases" />} />
-          <Route path="trial-lessons" element={<PlaceholderPage title="Escuela / Trial lessons" />} />
-          <Route path="trial-queue" element={<PlaceholderPage title="Escuela / Trial queue" />} />
-          <Route path="programas" element={<PlaceholderPage title="Escuela / Programas" />} />
-          <Route path="cursos" element={<PlaceholderPage title="Escuela / Cursos" />} />
-          <Route path="cohortes" element={<PlaceholderPage title="Escuela / Cohortes" />} />
-          <Route path="estudiantes" element={<PlaceholderPage title="Escuela / Estudiantes" />} />
-          <Route path="inscripciones" element={<PlaceholderPage title="Escuela / Inscripciones" />} />
-          <Route path="pagos" element={<PlaceholderPage title="Escuela / Pagos" />} />
+          <Route path="profesores" element={<BasicFeaturePage title="Escuela / Profesores" storageKey="escuela-profesores" />} />
+          <Route path="clases" element={<BasicFeaturePage title="Escuela / Clases" storageKey="escuela-clases" />} />
+          <Route path="trial-lessons" element={<BasicFeaturePage title="Escuela / Trial lessons" storageKey="escuela-trial-lessons" />} />
+          <Route path="trial-queue" element={<BasicFeaturePage title="Escuela / Trial queue" storageKey="escuela-trial-queue" />} />
+          <Route path="programas" element={<BasicFeaturePage title="Escuela / Programas" storageKey="escuela-programas" />} />
+          <Route path="cursos" element={<BasicFeaturePage title="Escuela / Cursos" storageKey="escuela-cursos" />} />
+          <Route path="cohortes" element={<BasicFeaturePage title="Escuela / Cohortes" storageKey="escuela-cohortes" />} />
+          <Route path="estudiantes" element={<BasicFeaturePage title="Escuela / Estudiantes" storageKey="escuela-estudiantes" />} />
+          <Route path="inscripciones" element={<BasicFeaturePage title="Escuela / Inscripciones" storageKey="escuela-inscripciones" />} />
+          <Route path="pagos" element={<BasicFeaturePage title="Escuela / Pagos" storageKey="escuela-pagos" />} />
           <Route index element={<Navigate to="programas" replace />} />
         </Route>
 
         <Route path="/finanzas" element={<Outlet />}>
-          <Route path="cotizaciones" element={<PlaceholderPage title="Finanzas / Cotizaciones" />} />
-          <Route path="facturas" element={<PlaceholderPage title="Finanzas / Facturas" />} />
-          <Route path="cobros" element={<PlaceholderPage title="Finanzas / Cobros" />} />
-          <Route path="recibos" element={<PlaceholderPage title="Finanzas / Recibos" />} />
-          <Route path="regalias" element={<PlaceholderPage title="Finanzas / Regalías" />} />
+          <Route path="cotizaciones" element={<BasicFeaturePage title="Finanzas / Cotizaciones" storageKey="finanzas-cotizaciones" />} />
+          <Route path="facturas" element={<BasicFeaturePage title="Finanzas / Facturas" storageKey="finanzas-facturas" />} />
+          <Route path="cobros" element={<BasicFeaturePage title="Finanzas / Cobros" storageKey="finanzas-cobros" />} />
+          <Route path="recibos" element={<BasicFeaturePage title="Finanzas / Recibos" storageKey="finanzas-recibos" />} />
+          <Route path="regalias" element={<BasicFeaturePage title="Finanzas / Regalías" storageKey="finanzas-regalias" />} />
           <Route index element={<Navigate to="cotizaciones" replace />} />
         </Route>
 
         <Route path="/bar" element={<Outlet />}>
-          <Route path="sell" element={<PlaceholderPage title="Bar / Sell" />} />
-          <Route path="register" element={<PlaceholderPage title="Bar / Register" />} />
-          <Route path="inventory" element={<PlaceholderPage title="Bar / Inventory" />} />
-          <Route path="staff" element={<PlaceholderPage title="Bar / Staff" />} />
+          <Route path="sell" element={<BasicFeaturePage title="Bar / Sell" storageKey="bar-sell" />} />
+          <Route path="register" element={<BasicFeaturePage title="Bar / Register" storageKey="bar-register" />} />
+          <Route path="inventory" element={<BasicFeaturePage title="Bar / Inventory" storageKey="bar-inventory" />} />
+          <Route path="staff" element={<BasicFeaturePage title="Bar / Staff" storageKey="bar-staff" />} />
           <Route index element={<Navigate to="sell" replace />} />
         </Route>
 
         <Route path="/operacion" element={<Outlet />}>
-          <Route path="inventario" element={<PlaceholderPage title="Operación / Inventario" />} />
-          <Route path="calendario-domo" element={<PlaceholderPage title="Operación / Calendario del domo" />} />
-          <Route path="reservas-equipo" element={<PlaceholderPage title="Operación / Reservas de equipo" />} />
-          <Route path="mantenimiento" element={<PlaceholderPage title="Operación / Mantenimiento" />} />
-          <Route path="paquetes" element={<PlaceholderPage title="Operación / Paquetes" />} />
-          <Route path="paquetes/resumen" element={<PlaceholderPage title="Operación / Paquetes - Resumen" />} />
+          <Route path="inventario" element={<BasicFeaturePage title="Operación / Inventario" storageKey="operacion-inventario" />} />
+          <Route path="calendario-domo" element={<BasicFeaturePage title="Operación / Calendario del domo" storageKey="operacion-calendario-domo" />} />
+          <Route path="reservas-equipo" element={<BasicFeaturePage title="Operación / Reservas de equipo" storageKey="operacion-reservas-equipo" />} />
+          <Route path="mantenimiento" element={<BasicFeaturePage title="Operación / Mantenimiento" storageKey="operacion-mantenimiento" />} />
+          <Route path="paquetes" element={<BasicFeaturePage title="Operación / Paquetes" storageKey="operacion-paquetes" />} />
+          <Route path="paquetes/resumen" element={<BasicFeaturePage title="Operación / Paquetes - Resumen" storageKey="operacion-paquetes-resumen" />} />
           <Route index element={<Navigate to="inventario" replace />} />
         </Route>
 
@@ -227,16 +246,19 @@ export default function App() {
           <Route path="estado" element={<SystemStatusPage />} />
           <Route path="logs" element={<LogsPage />} />
           <Route path="roles-permisos" element={<UserRoleManagement />} />
-          <Route path="impuestos-series" element={<PlaceholderPage title="Configuración / Impuestos y series" />} />
-          <Route path="unidades-negocio" element={<PlaceholderPage title="Configuración / Unidades de negocio" />} />
-          <Route path="sedes" element={<PlaceholderPage title="Configuración / Sedes" />} />
-          <Route path="marcas" element={<PlaceholderPage title="Configuración / Marcas" />} />
-          <Route path="integraciones" element={<PlaceholderPage title="Configuración / Integraciones" />} />
+          <Route path="impuestos-series" element={<BasicFeaturePage title="Configuración / Impuestos y series" storageKey="configuracion-impuestos" />} />
+          <Route path="unidades-negocio" element={<BasicFeaturePage title="Configuración / Unidades de negocio" storageKey="configuracion-unidades" />} />
+          <Route path="sedes" element={<BasicFeaturePage title="Configuración / Sedes" storageKey="configuracion-sedes" />} />
+          <Route path="marcas" element={<BasicFeaturePage title="Configuración / Marcas" storageKey="configuracion-marcas" />} />
+          <Route path="integraciones" element={<BasicFeaturePage title="Configuración / Integraciones" storageKey="configuracion-integraciones" />} />
           <Route path="preferencias" element={<SystemPage />} />
           <Route index element={<Navigate to="roles-permisos" replace />} />
         </Route>
 
-        <Route path="/insights" element={<PlaceholderPage title="Insights" description="Analítica consolidada de negocio." />} />
+        <Route
+          path="/insights"
+          element={<BasicFeaturePage title="Insights" description="Notas y KPIs pendientes de instrumentar." storageKey="insights" />}
+        />
 
         <Route path="*" element={<Navigate to="/inicio" replace />} />
       </Route>
