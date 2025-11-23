@@ -4,6 +4,7 @@ module TDF.Email
   , sendWelcomeEmail
   , sendPasswordResetEmail
   , sendCourseRegistrationEmail
+  , sendCoursePaymentReminderEmail
   , sendTestEmail
   ) where
 
@@ -27,6 +28,7 @@ import qualified Network.Mail.Mime        as Mime
 import qualified Network.Mail.SMTP        as SMTP
 import           System.Entropy           (getEntropy)
 import           System.IO                (hPutStrLn, stderr)
+import           Text.Printf              (printf)
 
 import           TDF.Config               (EmailConfig(..))
 
@@ -125,6 +127,47 @@ sendCourseRegistrationEmail (Just cfg) name email courseTitle landingUrl datesSu
       toAddr = Address (Just name) email
       mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
   sendMailWithLogging cfg toAddr subject mail
+
+sendCoursePaymentReminderEmail
+  :: Maybe EmailConfig
+  -> Text   -- ^ recipient name
+  -> Text   -- ^ recipient email
+  -> Text   -- ^ course title
+  -> Double -- ^ course price (USD)
+  -> Int    -- ^ remaining seats
+  -> Text   -- ^ landing URL
+  -> IO ()
+sendCoursePaymentReminderEmail Nothing _name _email _courseTitle _price _seats _landingUrl =
+  putStrLn "[Email] SMTP not configured; skipped course payment reminder."
+sendCoursePaymentReminderEmail (Just cfg) name email courseTitle price seats landingUrl = do
+  let subject   = "Completa tu pago - " <> courseTitle
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      seatsLine
+        | seats == 1 = "Solo queda 1 cupo disponible."
+        | otherwise  = "Solo quedan " <> T.pack (show seats) <> " cupos disponibles."
+      preheader = "Asegura tu cupo realizando el pago hoy mismo."
+      priceLine = "Valor del curso: " <> formatUsd price
+      bodyLines =
+        [ "Recibimos tu inscripción a " <> courseTitle <> "."
+        , "Para asegurar tu cupo realiza tu pago hoy."
+        , seatsLine
+        , priceLine
+        , "Datos para transferencia o depósito:"
+        , "Banco del Austro"
+        , "Cta. Cte. #0717804813"
+        , "RUC 1793215092001"
+        , "Beneficiario: TDF Records S.A.S."
+        , "Envíanos el comprobante respondiendo a este correo para confirmar tu cupo."
+        , "Si ya realizaste el pago, por favor ignora este mensaje."
+        ]
+      toAddr = Address (Just name) email
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
+  sendMailWithLogging cfg toAddr subject mail
+
+formatUsd :: Double -> Text
+formatUsd amount =
+  let formatted = printf "%.2f" amount :: String
+  in "$" <> T.pack formatted <> " USD"
 
 -- Send a test/custom email for diagnostics.
 sendTestEmail

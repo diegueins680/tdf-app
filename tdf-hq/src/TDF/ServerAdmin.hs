@@ -8,6 +8,7 @@ module TDF.ServerAdmin
   ( adminServer
   ) where
 
+import           Control.Exception      (SomeException, try)
 import           Control.Monad          (unless, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
@@ -76,7 +77,7 @@ import           TDF.Routes.Courses     ( CourseRegistrationStatusUpdate(..)
                                         , CourseRegistrationResponse(..)
                                         , CoursesAdminAPI
                                         )
-import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), getRecentLogs, clearLogs )
+import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), addLog, getRecentLogs, clearLogs )
 import           TDF.DTO                ( LogEntryDTO(..) )
 import           TDF.DTO                ( CourseRegistrationDTO(..) )
 import           Data.Time.Format       ( formatTime, defaultTimeLocale )
@@ -134,14 +135,22 @@ adminServer user =
       let emailSvc = Services.emailService (Services.buildServices cfg)
           subj = fromMaybe "Correo de prueba TDF" etrSubject
           body = maybe ["Correo de prueba desde TDF HQ."] (\txt -> [txt]) etrBody
-      liftIO $
+          targetName = fromMaybe "" etrName
+          preMsg = "[Admin][EmailTest] Sending to " <> etrEmail <> " | subject: " <> subj
+      liftIO $ addLog LogInfo preMsg
+      sendResult <- liftIO $ try $
         EmailSvc.sendTestEmail
           emailSvc
-          (fromMaybe "" etrName)
+          targetName
           etrEmail
           subj
           body
           etrCtaUrl
+      case sendResult of
+        Left (err :: SomeException) -> liftIO $
+          addLog LogError ("[Admin][EmailTest] Failed for " <> etrEmail <> ": " <> T.pack (show err))
+        Right () -> liftIO $
+          addLog LogInfo ("[Admin][EmailTest] Sent to " <> etrEmail)
       pure NoContent
 
     courseRegistrationsRouter =

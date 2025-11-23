@@ -24,6 +24,7 @@ executable tdf-hq-exe
     TDF.API.WhatsApp
     TDF.Auth
     TDF.Config
+    TDF.Cron
     TDF.Cors
     TDF.DB
     TDF.DTO
@@ -128,6 +129,7 @@ test-suite tdf-hq-test
     TDF.APITypesSpec
     TDF.Auth
     TDF.Config
+    TDF.Cron
     TDF.DB
     TDF.DTO
     TDF.Email

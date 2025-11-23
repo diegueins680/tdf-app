@@ -27,6 +27,7 @@ import           Network.Wai.Middleware.Cors
                  )
 
 import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
+import           TDF.Cron       (startCoursePaymentReminderJob)
 import           TDF.DB         (Env(..), makePool)
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
@@ -57,7 +58,8 @@ main = do
     runSqlPool seedAll pool
   putStrLn ("Starting server on port " <> show (appPort cfg))
 
-  let allowedOriginsBase =
+  let env = Env{ envPool = pool, envConfig = cfg }
+      allowedOriginsBase =
         [ "http://localhost:5173"
         , "http://127.0.0.1:5173"
         , "http://localhost:4173"
@@ -89,8 +91,9 @@ main = do
           , corsMethods        = ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
           , corsOrigins        = if allowAllFlag then Nothing else Just (allowedOrigins, True)
           }
-      app = mkApp Env{ envPool = pool, envConfig = cfg }
+      app = mkApp env
 
+  startCoursePaymentReminderJob env
   Warp.run (appPort cfg) (cors (const $ Just corsPolicy) app)
 
 -- | Split a comma-separated list into trimmed entries.
