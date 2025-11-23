@@ -85,12 +85,13 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             Seguridad
           </Button>
 
-          {hasAdmin && (
+          {hasAdmin ? (
             <Button
               color="inherit"
               variant="outlined"
               size="small"
-              onClick={() => navigate('/configuracion/roles-permisos')}
+              component={RouterLink}
+              to="/configuracion/roles-permisos"
               sx={{
                 textTransform: 'none',
                 borderColor: 'rgba(59,130,246,0.35)',
@@ -100,6 +101,8 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             >
               ADMIN
             </Button>
+          ) : (
+            <Chip label="ADMIN" size="small" sx={{ bgcolor: 'rgba(59,130,246,0.15)', color: '#93c5fd' }} />
           )}
           <Button
             variant="outlined"
