@@ -113,8 +113,8 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
       (listArtistProfilesAdmin :<|> upsertArtistProfileAdmin)
       :<|> createArtistReleaseAdmin
 
-    logsRouter mLimit =
-      (getLogs mLimit :<|> clearLogsHandler)
+    logsRouter =
+      getLogs :<|> clearLogsHandler
 
     courseRegistrationsRouter slug regId =
       updateRegistrationStatus slug regId
