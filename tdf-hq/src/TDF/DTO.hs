@@ -140,6 +140,25 @@ data VCardExchangeRequest = VCardExchangeRequest
   } deriving (Show, Generic)
 instance FromJSON VCardExchangeRequest
 
+-- Course registrations (admin)
+data CourseRegistrationDTO = CourseRegistrationDTO
+  { crId          :: Int64
+  , crCourseSlug  :: Text
+  , crFullName    :: Maybe Text
+  , crEmail       :: Maybe Text
+  , crPhoneE164   :: Maybe Text
+  , crSource      :: Text
+  , crStatus      :: Text
+  , crHowHeard    :: Maybe Text
+  , crUtmSource   :: Maybe Text
+  , crUtmMedium   :: Maybe Text
+  , crUtmCampaign :: Maybe Text
+  , crUtmContent  :: Maybe Text
+  , crCreatedAt   :: UTCTime
+  , crUpdatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON CourseRegistrationDTO
+
 -- Logs
 data LogEntryDTO = LogEntryDTO
   { logTimestamp :: UTCTime

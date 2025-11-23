@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
 
 module TDF.ServerAdmin
   ( adminServer
@@ -20,6 +21,7 @@ import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (getCurrentTime)
+import           Data.Int               (Int64)
 import           Database.Persist       ( (==.), (!=.)
                                         , (=.)
                                         , Entity(..)
@@ -72,9 +74,11 @@ import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         )
 import           TDF.Routes.Courses     ( CourseRegistrationStatusUpdate(..)
                                         , CourseRegistrationResponse(..)
+                                        , CoursesAdminAPI
                                         )
 import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), getRecentLogs, clearLogs )
 import           TDF.DTO                ( LogEntryDTO(..) )
+import           TDF.DTO                ( CourseRegistrationDTO(..) )
 import           Data.Time.Format       ( formatTime, defaultTimeLocale )
 
 adminServer
@@ -116,8 +120,27 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
     logsRouter =
       getLogs :<|> clearLogsHandler
 
-    courseRegistrationsRouter slug regId =
-      updateRegistrationStatus slug regId
+    courseRegistrationsRouter =
+      listCourseRegistrations :<|> getRegistration :<|> updateRegistrationStatus
+
+    listCourseRegistrations mSlug mStatus mLimit = do
+      ensureModule ModuleAdmin user
+      let filters =
+            maybe [] (\slugTxt -> [ME.CourseRegistrationCourseSlug ==. normaliseCategory slugTxt]) mSlug
+            ++ maybe [] (\statusTxt -> [ME.CourseRegistrationStatus ==. normalizeStatusText statusTxt]) mStatus
+          limitN = fromMaybe 200 mLimit
+      entities <- withPool $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo limitN]
+      pure (map toCourseRegistrationDTO entities)
+
+    getRegistration slug regId = do
+      ensureModule ModuleAdmin user
+      let key = toSqlKey regId :: Key ME.CourseRegistration
+          slugKey = normaliseCategory slug
+      mReg <- withPool $ getEntity key
+      case mReg of
+        Nothing -> throwError err404
+        Just (Entity _ reg) | ME.courseRegistrationCourseSlug reg /= slugKey -> throwError err404
+        Just ent -> pure (toCourseRegistrationDTO ent)
 
     roleDetail role = RoleDetailDTO
       { role    = role
@@ -413,6 +436,9 @@ parseKey raw =
 normaliseCategory :: Text -> Text
 normaliseCategory = T.toLower . T.strip
 
+normalizeStatusText :: Text -> Text
+normalizeStatusText = T.toLower . T.strip
+
 normaliseText :: Maybe Text -> Maybe Text
 normaliseText Nothing = Nothing
 normaliseText (Just txt) =
@@ -512,3 +538,21 @@ levelToText :: LogLevel -> Text
 levelToText LogInfo = "info"
 levelToText LogWarning = "warning"
 levelToText LogError = "error"
+
+toCourseRegistrationDTO :: Entity ME.CourseRegistration -> CourseRegistrationDTO
+toCourseRegistrationDTO (Entity regId reg) = CourseRegistrationDTO
+  { crId          = fromSqlKey regId
+  , crCourseSlug  = ME.courseRegistrationCourseSlug reg
+  , crFullName    = ME.courseRegistrationFullName reg
+  , crEmail       = ME.courseRegistrationEmail reg
+  , crPhoneE164   = ME.courseRegistrationPhoneE164 reg
+  , crSource      = ME.courseRegistrationSource reg
+  , crStatus      = ME.courseRegistrationStatus reg
+  , crHowHeard    = ME.courseRegistrationHowHeard reg
+  , crUtmSource   = ME.courseRegistrationUtmSource reg
+  , crUtmMedium   = ME.courseRegistrationUtmMedium reg
+  , crUtmCampaign = ME.courseRegistrationUtmCampaign reg
+  , crUtmContent  = ME.courseRegistrationUtmContent reg
+  , crCreatedAt   = ME.courseRegistrationCreatedAt reg
+  , crUpdatedAt   = ME.courseRegistrationUpdatedAt reg
+  }

@@ -25,6 +25,7 @@ import           GHC.Generics (Generic)
 import           Servant
 
 import           TDF.WhatsApp.Types (WAMetaWebhook)
+import qualified TDF.DTO
 
 data CourseSession = CourseSession
   { label :: Text
@@ -101,7 +102,13 @@ type CoursesPublicAPI =
   :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> ReqBody '[JSON] CourseRegistrationRequest :> PostCreated '[JSON] CourseRegistrationResponse
 
 type CoursesAdminAPI =
-  "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "status" :> ReqBody '[JSON] CourseRegistrationStatusUpdate :> Patch '[JSON] CourseRegistrationResponse
+       "courses" :> "registrations" :>
+         QueryParam "slug" Text :>
+         QueryParam "status" Text :>
+         QueryParam "limit" Int :>
+         Get '[JSON] [TDF.DTO.CourseRegistrationDTO]
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> Get '[JSON] TDF.DTO.CourseRegistrationDTO
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "status" :> ReqBody '[JSON] CourseRegistrationStatusUpdate :> Patch '[JSON] CourseRegistrationResponse
 
 type WhatsAppWebhookAPI =
        "webhooks" :> "whatsapp" :> QueryParam "hub.mode" Text :> QueryParam "hub.verify_token" Text :> QueryParam "hub.challenge" Text :> Get '[PlainText] Text
