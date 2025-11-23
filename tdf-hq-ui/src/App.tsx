@@ -14,6 +14,7 @@ import PlaceholderPage from './components/PlaceholderPage';
 import AboutPage from './pages/AboutPage';
 import DocsPage from './pages/DocsPage';
 import FanHubPage from './pages/FanHubPage';
+import HomePage from './pages/HomePage';
 import { useSession } from './session/SessionContext';
 import SidebarNav from './components/SidebarNav';
 import ApiStatusChip from './components/ApiStatusChip';
@@ -132,7 +133,7 @@ export default function App() {
         <Route path="/system" element={<Navigate to="/configuracion/preferencias" replace />} />
         <Route path="/admin/roles" element={<Navigate to="/configuracion/roles-permisos" replace />} />
 
-        <Route path="/inicio" element={<PlaceholderPage title="Inicio" description="Resumen ejecutivo y accesos rápidos." />} />
+        <Route path="/inicio" element={<HomePage />} />
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/acerca" element={<AboutPage />} />
         <Route path="/seguridad" element={<PlaceholderPage title="Seguridad" />} />
