@@ -20,7 +20,7 @@ import           Control.Monad.Trans.Class (lift)
 import           Data.Int (Int64)
 import           Data.List (find, foldl', nub)
 import           Data.Foldable (for_)
-import           Data.Char (isDigit, isSpace)
+import           Data.Char (isDigit, isSpace, isAlphaNum)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
@@ -490,6 +490,9 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
   normalizedEmail <- case cleanOptional email of
     Nothing -> pure Nothing
     Just e  -> Just <$> requireEmail e
+  mNewUser <- case normalizedEmail of
+    Nothing -> pure Nothing
+    Just addr -> ensureUserAccount nameClean addr
   when (sourceClean == "landing" && isNothing nameClean) $
     throwBadRequest "nombre requerido"
   when (sourceClean == "landing" && isNothing normalizedEmail) $
@@ -511,7 +514,7 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)
         , ME.CourseRegistrationUpdatedAt =. now
         ]
-      sendConfirmation meta nameClean normalizedEmail
+      sendConfirmation meta nameClean normalizedEmail mNewUser
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
     _ -> do
       regId <- runDB $ insert ME.CourseRegistration
@@ -529,10 +532,10 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.courseRegistrationCreatedAt = now
         , ME.courseRegistrationUpdatedAt = now
         }
-      sendConfirmation meta nameClean normalizedEmail
+      sendConfirmation meta nameClean normalizedEmail mNewUser
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
   where
-    sendConfirmation meta nameClean mEmail =
+    sendConfirmation meta nameClean mEmail mNewUser =
       case mEmail of
         Nothing -> pure ()
         Just emailAddr -> do
@@ -552,17 +555,27 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
               let msg = "[CourseRegistration] WARNING: SMTP not configured. Email confirmation not sent to " <> emailAddr
               hPutStrLn stderr (T.unpack msg)
               LogBuf.addLog LogBuf.LogWarning msg
-            Just _ -> do
-              -- Send email asynchronously, but log if it fails
-              liftIO $ do
-                result <- try $ EmailSvc.sendCourseRegistration emailSvc displayName emailAddr courseTitle landing datesSummary
-                case result of
+            Just _ -> liftIO $ do
+              -- Send registration confirmation
+              result <- try $ EmailSvc.sendCourseRegistration emailSvc displayName emailAddr courseTitle landing datesSummary
+              case result of
+                Left err -> do
+                  let msg = "[CourseRegistration] Failed to send confirmation email to " <> emailAddr <> ": " <> T.pack (show (err :: SomeException))
+                  hPutStrLn stderr (T.unpack msg)
+                  LogBuf.addLog LogBuf.LogError msg
+                Right () -> do
+                  let msg = "[CourseRegistration] Successfully sent confirmation email to " <> emailAddr
+                  LogBuf.addLog LogBuf.LogInfo msg
+              -- Send welcome email if we just created credentials
+              for_ mNewUser $ \(username, tempPassword) -> do
+                welcomeResult <- try $ EmailSvc.sendWelcome emailSvc displayName emailAddr username tempPassword
+                case welcomeResult of
                   Left err -> do
-                    let msg = "[CourseRegistration] Failed to send confirmation email to " <> emailAddr <> ": " <> T.pack (show (err :: SomeException))
+                    let msg = "[CourseRegistration] Failed to send welcome email to " <> emailAddr <> ": " <> T.pack (show (err :: SomeException))
                     hPutStrLn stderr (T.unpack msg)
                     LogBuf.addLog LogBuf.LogError msg
                   Right () -> do
-                    let msg = "[CourseRegistration] Successfully sent confirmation email to " <> emailAddr
+                    let msg = "[CourseRegistration] Sent welcome credentials to " <> emailAddr
                     LogBuf.addLog LogBuf.LogInfo msg
 
 -- | Returns messages that include text bodies, paired with the sender phone.
@@ -606,6 +619,82 @@ normalizeUtm :: Maybe UTMTags -> (Maybe Text, Maybe Text, Maybe Text, Maybe Text
 normalizeUtm Nothing = (Nothing, Nothing, Nothing, Nothing)
 normalizeUtm (Just UTMTags{..}) =
   (cleanOptional source, cleanOptional medium, cleanOptional campaign, cleanOptional content)
+
+-- Ensure a Party/UserCredential exists for a registration email. Returns (username, tempPassword) only when a new
+-- credential was created.
+ensureUserAccount :: Maybe Text -> Text -> AppM (Maybe (Text, Text))
+ensureUserAccount mName emailAddr = do
+  now <- liftIO getCurrentTime
+  partyId <- runDB $ do
+    mParty <- selectFirst [PartyPrimaryEmail ==. Just emailAddr] []
+    case mParty of
+      Just (Entity pid _) -> pure pid
+      Nothing -> do
+        let display = fromMaybe emailAddr mName
+        insert Party
+          { partyLegalName = Nothing
+          , partyDisplayName = display
+          , partyIsOrg = False
+          , partyTaxId = Nothing
+          , partyPrimaryEmail = Just emailAddr
+          , partyPrimaryPhone = Nothing
+          , partyWhatsapp = Nothing
+          , partyInstagram = Nothing
+          , partyEmergencyContact = Nothing
+          , partyNotes = Nothing
+          , partyCreatedAt = now
+          }
+  mCred <- runDB $ selectFirst [UserCredentialPartyId ==. partyId] []
+  case mCred of
+    Just _ -> pure Nothing
+    Nothing -> do
+      username <- runDB (generateUniqueUsername (deriveBaseUsername mName emailAddr) partyId)
+      tempPassword <- liftIO Email.generateTempPassword
+      hashed <- liftIO (hashPasswordText tempPassword)
+      _ <- runDB $ insert UserCredential
+        { userCredentialPartyId = partyId
+        , userCredentialUsername = username
+        , userCredentialPasswordHash = hashed
+        , userCredentialActive = True
+        }
+      -- Assign default roles for new customers/fans
+      runDB $ do
+        _ <- upsert (PartyRole partyId Customer True) [PartyRoleActive =. True]
+        _ <- upsert (PartyRole partyId Fan True) [PartyRoleActive =. True]
+        pure ()
+      pure (Just (username, tempPassword))
+
+deriveBaseUsername :: Maybe Text -> Text -> Text
+deriveBaseUsername mName emailAddr =
+  let emailLocal = T.takeWhile (/= '@') emailAddr
+      candidate = fromMaybe emailLocal (slugify <$> mName)
+  in if T.null candidate then emailLocal else candidate
+
+generateUniqueUsername :: Text -> PartyId -> SqlPersistT IO Text
+generateUniqueUsername base partyId = go 0
+  where
+    baseClean = T.take 60 (T.filter (\c -> isAlphaNum c || c `elem` (".-_" :: String)) (T.toLower (T.strip base)))
+    fallback = "tdf-user-" <> T.pack (show (fromSqlKey partyId))
+    root = if T.null baseClean then fallback else baseClean
+    go attempt = do
+      let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)
+          candidate = T.take 60 (root <> suffix)
+      conflict <- getBy (UniqueCredentialUsername candidate)
+      case conflict of
+        Nothing -> pure candidate
+        Just _  -> go (attempt + 1)
+
+slugify :: Text -> Text
+slugify =
+  T.take 60 . T.filter (\c -> isAlphaNum c || c `elem` ("._-" :: String)) . T.toLower . T.strip
+
+hashPasswordText :: Text -> IO Text
+hashPasswordText pwd = do
+  let raw = TE.encodeUtf8 pwd
+  mHash <- hashPasswordUsingPolicy slowerBcryptHashingPolicy raw
+  case mHash of
+    Nothing   -> fail "Failed to hash password"
+    Just hash -> pure (TE.decodeUtf8 hash)
 
 findExistingRegistration
   :: Text
@@ -1273,14 +1362,6 @@ deactivatePasswordResetTokens pid = do
       Just lbl | "password-reset:" `T.isPrefixOf` lbl ->
         update tokenId [ApiTokenActive =. False]
       _ -> pure ()
-
-hashPasswordText :: Text -> IO Text
-hashPasswordText pwd = do
-  let raw = TE.encodeUtf8 pwd
-  mHash <- hashPasswordUsingPolicy slowerBcryptHashingPolicy raw
-  case mHash of
-    Nothing   -> fail "Failed to hash password"
-    Just hash -> pure (TE.decodeUtf8 hash)
 
 metaServer :: ServerT Meta.MetaAPI AppM
 metaServer = hoistServer metaProxy lift Meta.metaServer
