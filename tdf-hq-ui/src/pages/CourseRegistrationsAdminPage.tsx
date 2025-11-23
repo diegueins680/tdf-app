@@ -33,7 +33,7 @@ const statusChip = (status: string) => {
 
 const actionButtons = (
   reg: CourseRegistrationDTO,
-  onUpdate: (status: StatusFilter) => void,
+  onUpdate: (status: 'pending_payment' | 'paid' | 'cancelled') => void,
   isUpdating: boolean,
 ) => {
   return (
@@ -100,7 +100,7 @@ export default function CourseRegistrationsAdminPage() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: (args: { id: number; newStatus: StatusFilter }) =>
+    mutationFn: (args: { id: number; newStatus: Exclude<StatusFilter, 'all'> }) =>
       Courses.updateStatus(slug, args.id, { status: args.newStatus }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin', 'course-registrations'] });
