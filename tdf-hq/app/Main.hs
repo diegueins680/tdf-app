@@ -16,7 +16,7 @@ import           Database.Persist.Sql     (SqlPersistT, Single(..), rawExecute, 
 import           Database.Persist.Types   (PersistValue (PersistText))
 import           System.Environment       (lookupEnv)
 import           System.IO                (hSetEncoding, stdout, stderr)
-import           GHC.IO.Encoding          (utf8)
+import           GHC.IO.Encoding          (utf8, setLocaleEncoding)
 import           Text.Read                (readMaybe)
 
 import           Network.Wai.Middleware.Cors
@@ -35,6 +35,7 @@ import           TDF.Server     (mkApp)
 import           TDF.Seed       (seedAll)
 main :: IO ()
 main = do
+  setLocaleEncoding utf8
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   cfg  <- loadConfig

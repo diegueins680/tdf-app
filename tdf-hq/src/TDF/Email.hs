@@ -14,6 +14,8 @@ import           Data.Text                (Text)
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as TE
 import qualified Data.Text.Lazy           as TL
+import qualified Data.Text.Encoding       as TE
+import qualified Data.ByteString.Char8    as BS
 import           Network.Mail.Mime        (Address(..), simpleMail')
 import qualified Network.Mail.Mime        as Mime
 import qualified Network.Mail.SMTP        as SMTP
@@ -155,11 +157,27 @@ sendMailWithLogging cfg toAddr subject mail = do
       toEmail = T.unpack (addressEmail toAddr)
       fromEmail = T.unpack (emailFromAddress cfg)
       subj = T.unpack subject
-  putStrLn $ "[Email] Sending \"" <> subj <> "\" to " <> toEmail <> " from " <> fromEmail
-           <> " via " <> host <> ":" <> show port <> " (" <> modeLabel <> ")"
+  let logLine = T.concat
+        [ "[Email] Sending registration email to "
+        , T.pack toEmail
+        , " via "
+        , smtpHost cfg
+        , ":"
+        , T.pack (show port)
+        , " ("
+        , T.pack modeLabel
+        , ")"
+        ]
+  BS.putStrLn (TE.encodeUtf8 logLine)
   result <- try (sendAction :: IO ())
   case result of
-    Left err ->
-      hPutStrLn stderr $ "[Email] Failed to send to " <> toEmail <> ": " <> show (err :: SomeException)
+    Left err -> do
+      let errLine = T.concat
+            [ "[Email] Failed to send to "
+            , T.pack toEmail
+            , ": "
+            , T.pack (show (err :: SomeException))
+            ]
+      BS.hPutStrLn stderr (TE.encodeUtf8 errLine)
     Right () ->
-      putStrLn $ "[Email] Sent \"" <> subj <> "\" to " <> toEmail
+      BS.putStrLn (TE.encodeUtf8 ("[Email] Sent registration email to " <> T.pack toEmail))
