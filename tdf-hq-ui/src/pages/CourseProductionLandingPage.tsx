@@ -287,6 +287,18 @@ function Hero({
 function Info({ meta, loading, sessionsOverride }: { meta?: CourseMetadata; loading: boolean; sessionsOverride?: CourseMetadata['sessions'] }) {
   const formatDate = (value?: string | null) => {
     if (!value) return '—';
+    // Parse YYYY-MM-DD without shifting timezones.
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (match) {
+      const [, y, m, d] = match;
+      const dt = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 12));
+      return dt.toLocaleDateString('es-EC', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
+    }
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return value;
     return parsed.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
