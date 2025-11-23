@@ -4,6 +4,7 @@ module TDF.Email
   , sendWelcomeEmail
   , sendPasswordResetEmail
   , sendCourseRegistrationEmail
+  , sendTestEmail
   ) where
 
 import           Control.Exception        (SomeException, try)
@@ -123,6 +124,24 @@ sendCourseRegistrationEmail (Just cfg) name email courseTitle landingUrl datesSu
         ]
       toAddr = Address (Just name) email
       mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
+  sendMailWithLogging cfg toAddr subject mail
+
+-- Send a test/custom email for diagnostics.
+sendTestEmail
+  :: Maybe EmailConfig
+  -> Text   -- ^ recipient name (optional; can be empty)
+  -> Text   -- ^ recipient email
+  -> Text   -- ^ subject
+  -> [Text] -- ^ body paragraphs
+  -> Maybe Text -- ^ optional CTA url
+  -> IO ()
+sendTestEmail Nothing _name _email _subject _body _cta =
+  putStrLn "[Email] SMTP not configured; skipped test email."
+sendTestEmail (Just cfg) name email subject bodyLines mCtaUrl = do
+  let preheader = "Correo de prueba de TDF Records"
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      toAddr = Address (Just name) email
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl
   sendMailWithLogging cfg toAddr subject mail
 
 -- | Send an email with a small audit trail for admins.

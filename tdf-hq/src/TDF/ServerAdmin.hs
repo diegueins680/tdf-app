@@ -41,7 +41,7 @@ import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, to
 import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
-import           TDF.API.Admin          (AdminAPI)
+import           TDF.API.Admin          (AdminAPI, EmailTestRequest(..))
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
                                         , DropdownOptionUpdate(..)
@@ -88,7 +88,15 @@ adminServer
      )
   => AuthedUser
   -> ServerT AdminAPI m
-adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHandler :<|> artistsRouter :<|> logsRouter :<|> courseRegistrationsRouter
+adminServer user =
+       seedHandler
+  :<|> dropdownRouter
+  :<|> usersRouter
+  :<|> rolesHandler
+  :<|> artistsRouter
+  :<|> logsRouter
+  :<|> emailTestHandler
+  :<|> courseRegistrationsRouter
   where
     seedHandler = do
       ensureModule ModuleAdmin user
@@ -119,6 +127,22 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
 
     logsRouter =
       getLogs :<|> clearLogsHandler
+
+    emailTestHandler EmailTestRequest{..} = do
+      ensureModule ModuleAdmin user
+      cfg <- asks envConfig
+      let emailSvc = Services.emailService (Services.buildServices cfg)
+          subj = fromMaybe "Correo de prueba TDF" etrSubject
+          body = maybe ["Correo de prueba desde TDF HQ."] (\txt -> [txt]) etrBody
+      liftIO $
+        EmailSvc.sendTestEmail
+          emailSvc
+          (fromMaybe "" etrName)
+          etrEmail
+          subj
+          body
+          etrCtaUrl
+      pure NoContent
 
     courseRegistrationsRouter =
       listCourseRegistrations :<|> getRegistration :<|> updateRegistrationStatus

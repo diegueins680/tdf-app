@@ -5,6 +5,7 @@ module TDF.Email.Service
   , sendWelcome
   , sendPasswordReset
   , sendCourseRegistration
+  , sendTestEmail
   ) where
 
 import Data.Text (Text)
@@ -50,3 +51,7 @@ sendCourseRegistration svc name email courseTitle landingUrl datesSummary =
     courseTitle
     landingUrl
     datesSummary
+
+sendTestEmail :: EmailService -> Text -> Text -> Text -> [Text] -> Maybe Text -> IO ()
+sendTestEmail svc name email subject bodyLines mCtaUrl =
+  Email.sendTestEmail (esConfig svc) name email subject bodyLines mCtaUrl
