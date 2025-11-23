@@ -99,15 +99,19 @@ jobs:
             fi
           fi
 
-          # Force container-based deploy: remove existing service (if any) and recreate from DockerHub image.
+          # Deploy image: update existing service if present, otherwise create it.
           EXISTING_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$APP_ID" --output json | jq -r '.services[] | select(.name=="'"$SERVICE_NAME"'") | .id')
           if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
-            echo "Deleting existing service $SERVICE_NAME ($EXISTING_ID) to ensure container-based deployment"
-            koyeb --token "$KOYEB_TOKEN" services delete "$EXISTING_ID"
+            echo "Updating existing service $SERVICE_NAME ($EXISTING_ID) with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
+            koyeb --token "$KOYEB_TOKEN" services update "$EXISTING_ID" \
+              --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
+              --ports 8080:http \
+              --strategy rolling
+          else
+            echo "Creating service $SERVICE_NAME in app $APP_NAME with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
+            koyeb --token "$KOYEB_TOKEN" services create "$SERVICE_NAME" \
+              --app "$APP_ID" \
+              --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
+              --ports 8080:http \
+              --strategy rolling
           fi
-          echo "Creating service $SERVICE_NAME in app $APP_NAME with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
-          koyeb --token "$KOYEB_TOKEN" services create "$SERVICE_NAME" \
-            --app "$APP_ID" \
-            --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
-            --ports 8080:http \
-            --strategy rolling
