@@ -42,7 +42,7 @@ import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, to
 import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
-import           TDF.API.Admin          (AdminAPI, EmailTestRequest(..))
+import           TDF.API.Admin          (AdminAPI, EmailTestRequest(..), EmailTestResponse(..))
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
                                         , DropdownOptionUpdate(..)
@@ -147,11 +147,14 @@ adminServer user =
           body
           etrCtaUrl
       case sendResult of
-        Left (err :: SomeException) -> liftIO $
-          addLog LogError ("[Admin][EmailTest] Failed for " <> etrEmail <> ": " <> T.pack (show err))
-        Right () -> liftIO $
-          addLog LogInfo ("[Admin][EmailTest] Sent to " <> etrEmail)
-      pure NoContent
+        Left (err :: SomeException) -> do
+          let msg = "[Admin][EmailTest] Failed for " <> etrEmail <> ": " <> T.pack (show err)
+          liftIO $ addLog LogError msg
+          pure EmailTestResponse { status = "error", message = Just msg }
+        Right () -> do
+          let msg = "[Admin][EmailTest] Sent to " <> etrEmail
+          liftIO $ addLog LogInfo msg
+          pure EmailTestResponse { status = "sent", message = Nothing }
 
     courseRegistrationsRouter =
       listCourseRegistrations :<|> getRegistration :<|> updateRegistrationStatus

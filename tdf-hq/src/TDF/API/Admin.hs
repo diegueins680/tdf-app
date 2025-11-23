@@ -15,7 +15,7 @@ import           TDF.API.Types ( DropdownOptionCreate
                                 , UserAccountDTO
                                 , UserAccountUpdate
                                 )
-import           Data.Aeson (FromJSON)
+import           Data.Aeson (FromJSON, ToJSON)
 import           GHC.Generics (Generic)
 import           TDF.Routes.Courses (CoursesAdminAPI)
 
@@ -56,7 +56,7 @@ type AdminAPI =
   :<|> "roles" :> RolesAPI
   :<|> "artists" :> ArtistAdminAPI
   :<|> "logs" :> LogsAPI
-  :<|> "email-test" :> ReqBody '[JSON] EmailTestRequest :> Post '[JSON] NoContent
+  :<|> "email-test" :> ReqBody '[JSON] EmailTestRequest :> Post '[JSON] EmailTestResponse
   :<|> CoursesAdminAPI
 
 data EmailTestRequest = EmailTestRequest
@@ -67,3 +67,9 @@ data EmailTestRequest = EmailTestRequest
   , etrCtaUrl  :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON EmailTestRequest
+
+data EmailTestResponse = EmailTestResponse
+  { status  :: Text
+  , message :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON EmailTestResponse
