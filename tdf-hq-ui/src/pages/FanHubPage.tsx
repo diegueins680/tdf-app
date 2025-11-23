@@ -32,10 +32,7 @@ export default function FanHubPage() {
     () => Boolean(session?.roles?.some((role) => role === 'fan' || role === 'customer')),
     [session?.roles],
   );
-  const isArtist = useMemo(
-    () => Boolean(session?.roles?.some((role) => role === 'artist' || role === 'admin')),
-    [session?.roles],
-  );
+  const canEditArtist = useMemo(() => Boolean(session?.partyId), [session?.partyId]);
 
   const artistsQuery = useQuery({
     queryKey: ['fan-artists'],
@@ -56,7 +53,7 @@ export default function FanHubPage() {
   const artistProfileQuery = useQuery({
     queryKey: ['artist-profile', viewerId],
     queryFn: Fans.getMyArtistProfile,
-    enabled: Boolean(viewerId) && isArtist,
+    enabled: Boolean(viewerId) && canEditArtist,
   });
 
   const [profileDraft, setProfileDraft] = useState<FanProfileUpdate>({
@@ -282,10 +279,10 @@ export default function FanHubPage() {
           </ProfileSectionCard>
         )}
 
-        {isArtist && (
+        {canEditArtist && (
           <ProfileSectionCard
             title="Perfil de artista"
-            description="Completa la información que verán los fans en el hub."
+            description="Cualquier usuario puede convertirse en artista y publicar su perfil."
             actions={
               <Stack direction="row" spacing={2} alignItems="center">
                 {artistProfileQuery.data && (
