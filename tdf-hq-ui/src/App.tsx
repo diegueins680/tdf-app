@@ -14,6 +14,7 @@ import PlaceholderPage from './components/PlaceholderPage';
 import AboutPage from './pages/AboutPage';
 import DocsPage from './pages/DocsPage';
 import FanHubPage from './pages/FanHubPage';
+import CourseRegistrationsAdminPage from './pages/CourseRegistrationsAdminPage';
 import { useSession } from './session/SessionContext';
 import SidebarNav from './components/SidebarNav';
 import ApiStatusChip from './components/ApiStatusChip';
@@ -219,6 +220,7 @@ export default function App() {
         </Route>
 
         <Route path="/configuracion" element={<Outlet />}>
+          <Route path="inscripciones-curso" element={<CourseRegistrationsAdminPage />} />
           <Route path="logs" element={<LogsPage />} />
           <Route path="roles-permisos" element={<UserRoleManagement />} />
           <Route path="impuestos-series" element={<PlaceholderPage title="Configuración / Impuestos y series" />} />
