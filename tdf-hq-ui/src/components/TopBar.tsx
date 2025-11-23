@@ -1,6 +1,6 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
@@ -16,6 +16,10 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const { session, logout } = useSession();
   const navigate = useNavigate();
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
+  const hasAdmin = useMemo(
+    () => (session?.modules ?? []).some((m) => m.toLowerCase() === 'admin'),
+    [session?.modules],
+  );
 
   const handleLogout = () => {
     logout();
@@ -81,7 +85,22 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             Seguridad
           </Button>
 
-          <Chip label="ADMIN" size="small" sx={{ bgcolor: 'rgba(59,130,246,0.15)', color: '#93c5fd' }} />
+          {hasAdmin && (
+            <Button
+              color="inherit"
+              variant="outlined"
+              size="small"
+              onClick={() => navigate('/configuracion/roles-permisos')}
+              sx={{
+                textTransform: 'none',
+                borderColor: 'rgba(59,130,246,0.35)',
+                color: '#93c5fd',
+                '&:hover': { borderColor: 'rgba(59,130,246,0.6)', bgcolor: 'rgba(59,130,246,0.08)' },
+              }}
+            >
+              ADMIN
+            </Button>
+          )}
           <Button
             variant="outlined"
             color="inherit"
