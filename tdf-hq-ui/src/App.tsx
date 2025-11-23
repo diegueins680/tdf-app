@@ -121,6 +121,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/fans" element={<FanHubPage />} />
+      <Route path="/mi-artista" element={<FanHubPage focusArtist />} />
       <Route path="/curso/produccion-musical-dic-2025" element={<CourseProductionLandingPage />} />
       <Route path="/inscripcion/:slug" element={<InscripcionPage />} />
       <Route path="/login" element={<LoginPage />} />

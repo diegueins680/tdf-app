@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Alert,
   Avatar,
@@ -24,7 +24,7 @@ import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { Link as RouterLink } from 'react-router-dom';
 
-export default function FanHubPage() {
+export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session } = useSession();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
@@ -115,6 +115,12 @@ export default function FanHubPage() {
     if (!partyId) return;
     setArtistDraft((prev) => ({ ...prev, apuArtistId: partyId }));
   }, [session?.partyId]);
+
+  useEffect(() => {
+    if (focusArtist && artistSectionRef.current) {
+      artistSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [focusArtist, artistSectionRef.current]);
 
   const updateProfileMutation = useMutation({
     mutationFn: Fans.updateProfile,
@@ -280,121 +286,123 @@ export default function FanHubPage() {
         )}
 
         {canEditArtist && (
-          <ProfileSectionCard
-            title="Perfil de artista"
-            description="Cualquier usuario puede convertirse en artista y publicar su perfil."
-            actions={
-              <Stack direction="row" spacing={2} alignItems="center">
-                {artistProfileQuery.data && (
-                  <Chip label={`${artistProfileQuery.data.apFollowerCount} fans`} color="secondary" />
-                )}
-                <Button
-                  variant="contained"
-                  onClick={handleSaveArtistProfile}
-                  disabled={updateArtistProfileMutation.isPending || !session?.partyId}
-                >
-                  {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Actualizar perfil de artista'}
-                </Button>
+          <div ref={artistSectionRef}>
+            <ProfileSectionCard
+              title="Perfil de artista"
+              description="Cualquier usuario puede convertirse en artista y publicar su perfil."
+              actions={
+                <Stack direction="row" spacing={2} alignItems="center">
+                  {artistProfileQuery.data && (
+                    <Chip label={`${artistProfileQuery.data.apFollowerCount} fans`} color="secondary" />
+                  )}
+                  <Button
+                    variant="contained"
+                    onClick={handleSaveArtistProfile}
+                    disabled={updateArtistProfileMutation.isPending || !session?.partyId}
+                  >
+                    {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Actualizar perfil de artista'}
+                  </Button>
+                </Stack>
+              }
+            >
+              {artistProfileQuery.isLoading && <CircularProgress size={20} />}
+              {artistProfileQuery.isError && (
+                <Alert severity="error">No pudimos cargar tu perfil de artista.</Alert>
+              )}
+              <Stack spacing={2}>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                  <TextField
+                    label="Slug público"
+                    value={artistDraft.apuSlug ?? ''}
+                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSlug: event.target.value }))}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Ciudad"
+                    value={artistDraft.apuCity ?? ''}
+                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuCity: event.target.value }))}
+                    fullWidth
+                  />
+                </Stack>
+                <TextField
+                  label="Bio"
+                  multiline
+                  minRows={3}
+                  value={artistDraft.apuBio ?? ''}
+                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuBio: event.target.value }))}
+                  fullWidth
+                />
+                <TextField
+                  label="Imagen principal (URL)"
+                  value={artistDraft.apuHeroImageUrl ?? ''}
+                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: event.target.value }))}
+                  fullWidth
+                />
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                  <TextField
+                    label="Spotify URL"
+                    value={artistDraft.apuSpotifyUrl ?? ''}
+                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSpotifyUrl: event.target.value }))}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Spotify Artist ID"
+                    value={artistDraft.apuSpotifyArtistId ?? ''}
+                    onChange={(event) =>
+                      setArtistDraft((prev) => ({ ...prev, apuSpotifyArtistId: event.target.value }))
+                    }
+                    fullWidth
+                  />
+                </Stack>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                  <TextField
+                    label="YouTube URL"
+                    value={artistDraft.apuYoutubeUrl ?? ''}
+                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuYoutubeUrl: event.target.value }))}
+                    fullWidth
+                  />
+                  <TextField
+                    label="YouTube Channel ID"
+                    value={artistDraft.apuYoutubeChannelId ?? ''}
+                    onChange={(event) =>
+                      setArtistDraft((prev) => ({ ...prev, apuYoutubeChannelId: event.target.value }))
+                    }
+                    fullWidth
+                  />
+                </Stack>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                  <TextField
+                    label="Sitio web"
+                    value={artistDraft.apuWebsiteUrl ?? ''}
+                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuWebsiteUrl: event.target.value }))}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Video destacado"
+                    value={artistDraft.apuFeaturedVideoUrl ?? ''}
+                    onChange={(event) =>
+                      setArtistDraft((prev) => ({ ...prev, apuFeaturedVideoUrl: event.target.value }))
+                    }
+                    fullWidth
+                  />
+                </Stack>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                  <TextField
+                    label="Géneros (separados por coma)"
+                    value={artistDraft.apuGenres ?? ''}
+                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuGenres: event.target.value }))}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Highlights"
+                    value={artistDraft.apuHighlights ?? ''}
+                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuHighlights: event.target.value }))}
+                    fullWidth
+                  />
+                </Stack>
               </Stack>
-            }
-          >
-            {artistProfileQuery.isLoading && <CircularProgress size={20} />}
-            {artistProfileQuery.isError && (
-              <Alert severity="error">No pudimos cargar tu perfil de artista.</Alert>
-            )}
-            <Stack spacing={2}>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField
-                  label="Slug público"
-                  value={artistDraft.apuSlug ?? ''}
-                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSlug: event.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Ciudad"
-                  value={artistDraft.apuCity ?? ''}
-                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuCity: event.target.value }))}
-                  fullWidth
-                />
-              </Stack>
-              <TextField
-                label="Bio"
-                multiline
-                minRows={3}
-                value={artistDraft.apuBio ?? ''}
-                onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuBio: event.target.value }))}
-                fullWidth
-              />
-              <TextField
-                label="Imagen principal (URL)"
-                value={artistDraft.apuHeroImageUrl ?? ''}
-                onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: event.target.value }))}
-                fullWidth
-              />
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField
-                  label="Spotify URL"
-                  value={artistDraft.apuSpotifyUrl ?? ''}
-                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSpotifyUrl: event.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Spotify Artist ID"
-                  value={artistDraft.apuSpotifyArtistId ?? ''}
-                  onChange={(event) =>
-                    setArtistDraft((prev) => ({ ...prev, apuSpotifyArtistId: event.target.value }))
-                  }
-                  fullWidth
-                />
-              </Stack>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField
-                  label="YouTube URL"
-                  value={artistDraft.apuYoutubeUrl ?? ''}
-                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuYoutubeUrl: event.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="YouTube Channel ID"
-                  value={artistDraft.apuYoutubeChannelId ?? ''}
-                  onChange={(event) =>
-                    setArtistDraft((prev) => ({ ...prev, apuYoutubeChannelId: event.target.value }))
-                  }
-                  fullWidth
-                />
-              </Stack>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField
-                  label="Sitio web"
-                  value={artistDraft.apuWebsiteUrl ?? ''}
-                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuWebsiteUrl: event.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Video destacado"
-                  value={artistDraft.apuFeaturedVideoUrl ?? ''}
-                  onChange={(event) =>
-                    setArtistDraft((prev) => ({ ...prev, apuFeaturedVideoUrl: event.target.value }))
-                  }
-                  fullWidth
-                />
-              </Stack>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField
-                  label="Géneros (separados por coma)"
-                  value={artistDraft.apuGenres ?? ''}
-                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuGenres: event.target.value }))}
-                  fullWidth
-                />
-                <TextField
-                  label="Highlights"
-                  value={artistDraft.apuHighlights ?? ''}
-                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuHighlights: event.target.value }))}
-                  fullWidth
-                />
-              </Stack>
-            </Stack>
-          </ProfileSectionCard>
+            </ProfileSectionCard>
+          </div>
         )}
 
         {isFan && follows.length > 0 && (
@@ -532,3 +540,4 @@ function ProfileSectionCard({
     </Card>
   );
 }
+  const artistSectionRef = useRef<HTMLDivElement | null>(null);
