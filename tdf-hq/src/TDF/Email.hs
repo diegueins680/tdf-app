@@ -14,9 +14,14 @@ import           Data.Text                (Text)
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as TE
 import qualified Data.Text.Lazy           as TL
-import qualified Data.Text.Encoding       as TE
+import qualified Data.Text.Lazy.Encoding  as TLE
 import qualified Data.ByteString.Char8    as BS
-import           Network.Mail.Mime        (Address(..), simpleMail')
+import           Network.Mail.Mime        ( Address(..)
+                                          , Mail(..)
+                                          , emptyMail
+                                          , htmlPart
+                                          , plainPart
+                                          )
 import qualified Network.Mail.Mime        as Mime
 import qualified Network.Mail.SMTP        as SMTP
 import           System.Entropy           (getEntropy)
@@ -52,24 +57,18 @@ sendWelcomeEmail Nothing name email username password _ = do
     <> T.unpack name <> " <" <> T.unpack email <> ">."
   putStrLn $ "Temporary password for " <> T.unpack username <> ": " <> T.unpack password
 sendWelcomeEmail (Just cfg) name email username password mAppUrl = do
-  let subject = "Tu acceso a TDF Records HQ"
-      greeting = if T.null name then "Hola," else "Hola " <> name <> ","
-      urlLine = maybe "" (\url -> "Inicia sesión en: " <> url <> "\n") mAppUrl
-      body =
-        T.unlines
-          [ greeting
-          , ""
-          , "Se creó tu acceso a TDF Records HQ."
-          , "Usuario: " <> username
-          , "Contraseña temporal: " <> password
-          , ""
-          , "Te recomendamos iniciar sesión y cambiar la contraseña inmediatamente."
-          , urlLine
-          , "Equipo TDF Records"
-          ]
-      fromAddr = Address (Just (emailFromName cfg)) (emailFromAddress cfg)
+  let subject   = "Tu acceso a TDF Records HQ"
+      preheader = "Accede al panel con tu usuario y contraseña temporal."
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      urlLine   = mAppUrl
+      bodyLines =
+        [ "Se creó tu acceso a TDF Records HQ."
+        , "Usuario: " <> username
+        , "Contraseña temporal: " <> password
+        , "Te recomendamos iniciar sesión y cambiar la contraseña inmediatamente."
+        ]
       toAddr = Address (Just name) email
-      mail = simpleMail' toAddr fromAddr subject (TL.fromStrict body)
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines urlLine
   sendMailWithLogging cfg toAddr subject mail
 
 sendPasswordResetEmail
@@ -85,28 +84,22 @@ sendPasswordResetEmail Nothing name email token mAppUrl = do
   putStrLn $ "Reset token: " <> T.unpack token
   maybe (pure ()) (\url -> putStrLn $ "Use base URL: " <> T.unpack url) mAppUrl
 sendPasswordResetEmail (Just cfg) name email token mAppUrl = do
-  let subject = "Restablecer tu contraseña de TDF Records"
-      greeting = if T.null name then "Hola," else "Hola " <> name <> ","
-      baseUrl = fromMaybe "https://tdf-app.pages.dev" mAppUrl
+  let subject   = "Restablecer tu contraseña de TDF Records"
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      baseUrl   = fromMaybe "https://tdf-app.pages.dev" mAppUrl
       sanitizedBase =
         let trimmed = T.dropWhileEnd (== '/') baseUrl
         in if T.null trimmed then baseUrl else trimmed
       resetLink = sanitizedBase <> "/reset?token=" <> token
-      body =
-        T.unlines
-          [ greeting
-          , ""
-          , "Recibimos una solicitud para restablecer tu acceso a TDF Records HQ."
-          , "Usa el siguiente enlace o token temporal para definir una nueva contraseña:"
-          , ""
-          , "Enlace: " <> resetLink
-          , "Token: " <> token
-          , ""
-          , "Si no hiciste esta solicitud puedes ignorar este mensaje."
-          ]
-      fromAddr = Address (Just (emailFromName cfg)) (emailFromAddress cfg)
+      preheader = "Usa tu token para restablecer la contraseña de tu cuenta."
+      bodyLines =
+        [ "Recibimos una solicitud para restablecer tu acceso a TDF Records HQ."
+        , "Usa el enlace o token para definir una nueva contraseña."
+        , "Enlace: " <> resetLink
+        , "Token de seguridad: " <> token
+        ]
       toAddr = Address (Just name) email
-      mail = simpleMail' toAddr fromAddr subject (TL.fromStrict body)
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just resetLink)
   sendMailWithLogging cfg toAddr subject mail
 
 sendCourseRegistrationEmail
@@ -120,23 +113,16 @@ sendCourseRegistrationEmail
 sendCourseRegistrationEmail Nothing _name _email _courseTitle _landingUrl _datesSummary =
   putStrLn "[Email] SMTP not configured; skipped course registration email."
 sendCourseRegistrationEmail (Just cfg) name email courseTitle landingUrl datesSummary = do
-  let subject = "Reserva recibida: " <> courseTitle
-      greeting = if T.null name then "Hola," else "Hola " <> name <> ","
-      body =
-        T.unlines
-          [ greeting
-          , ""
-          , "Gracias por inscribirte en " <> courseTitle <> "."
-          , "Fechas: " <> datesSummary
-          , "Landing: " <> landingUrl
-          , ""
-          , "Te contactaremos por este correo para completar el proceso de pago."
-          , ""
-          , "Equipo TDF Records"
-          ]
-      fromAddr = Address (Just (emailFromName cfg)) (emailFromAddress cfg)
+  let subject   = "Reserva recibida: " <> courseTitle
+      preheader = "Hemos recibido tu inscripción. Te contactaremos para completar el pago."
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      bodyLines =
+        [ "Gracias por inscribirte en " <> courseTitle <> "."
+        , "Fechas: " <> datesSummary
+        , "Te contactaremos por este correo para completar el proceso de pago."
+        ]
       toAddr = Address (Just name) email
-      mail = simpleMail' toAddr fromAddr subject (TL.fromStrict body)
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
   sendMailWithLogging cfg toAddr subject mail
 
 -- | Send an email with a small audit trail for admins.
@@ -181,3 +167,66 @@ sendMailWithLogging cfg toAddr subject mail = do
       BS.hPutStrLn stderr (TE.encodeUtf8 errLine)
     Right () ->
       BS.putStrLn (TE.encodeUtf8 ("[Email] Sent registration email to " <> T.pack toEmail))
+
+buildMail :: EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail
+buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl =
+  let fromAddr = Address (Just (emailFromName cfg)) (emailFromAddress cfg)
+      mailBase = emptyMail fromAddr
+      plainText = renderPlain greeting bodyLines mCtaUrl
+      htmlBody = renderHtml preheader greeting bodyLines mCtaUrl
+  in mailBase
+      { mailTo = [toAddr]
+      , mailHeaders = [("Subject", subject)]
+      , mailParts = [[ plainPart (TL.fromStrict plainText)
+                     , htmlPart htmlBody
+                     ]]
+      }
+
+renderPlain :: Text -> [Text] -> Maybe Text -> Text
+renderPlain greeting bodyLines mCtaUrl =
+  T.unlines $
+    [greeting, ""] <> bodyLines <> maybe [] (\url -> ["", "Ver detalles: " <> url]) mCtaUrl
+    <> ["", "—", "TDF Records"]
+
+renderHtml :: Text -> Text -> [Text] -> Maybe Text -> TL.Text
+renderHtml preheader greeting bodyLines mCtaUrl =
+  let logoUrl = "https://tdf-app.pages.dev/tdf-logo-wordmark.svg"
+      esc = escapeHtml
+      bodyParas = T.concat (map (\p -> "<p style=\"margin:0 0 12px;color:#0f172a;font-size:15px;line-height:22px;\">" <> esc p <> "</p>") bodyLines)
+      ctaBlock = maybe "" (\url ->
+        "<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin-top:20px;\"><tr><td style=\"background:#0ea5e9;padding:12px 18px;border-radius:999px;font-weight:700;\"><a href=\"" <> esc url <> "\" style=\"color:#0b0f1b;text-decoration:none;font-family:Inter,Arial,sans-serif;\">Ver detalles del curso</a></td></tr></table>"
+        ) mCtaUrl
+      html = T.concat
+        [ "<!DOCTYPE html><html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"
+        , "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />"
+        , "<style>body{margin:0;padding:0;background:#f1f5f9;} a{color:#0ea5e9;}</style>"
+        , "</head><body style=\"margin:0;padding:0;background:#f1f5f9;\">"
+        , "<div style=\"display:none;max-height:0;overflow:hidden;opacity:0;\">", esc preheader, "</div>"
+        , "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#f1f5f9;padding:24px 12px;\">"
+        , "<tr><td align=\"center\">"
+        , "<table role=\"presentation\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:640px;width:100%;background:#ffffff;border-radius:16px;box-shadow:0 14px 40px rgba(15,23,42,0.08);overflow:hidden;border:1px solid #e2e8f0;\">"
+        , "<tr><td style=\"padding:24px 32px 8px;\" align=\"center\">"
+        , "<img src=\"", esc logoUrl, "\" alt=\"TDF Records\" width=\"160\" style=\"display:block;height:auto;margin:0 auto 8px;\" />"
+        , "<p style=\"margin:0;color:#334155;font-size:13px;\">Escuela &amp; Estudios</p>"
+        , "</td></tr>"
+        , "<tr><td style=\"padding:8px 32px 24px;\">"
+        , "<p style=\"margin:0 0 12px;color:#0f172a;font-size:16px;font-weight:700;\">", esc greeting, "</p>"
+        , bodyParas
+        , ctaBlock
+        , "<div style=\"margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;\">"
+        , "<p style=\"margin:0 0 4px;color:#0f172a;font-weight:700;\">TDF Records</p>"
+        , "<p style=\"margin:0;color:#475569;font-size:13px;\">Quito · Escuela &amp; Estudios</p>"
+        , "</div>"
+        , "</td></tr></table></td></tr></table></body></html>"
+        ]
+  in TL.fromStrict html
+
+escapeHtml :: Text -> Text
+escapeHtml = T.concatMap replaceChar
+  where
+    replaceChar '<' = "&lt;"
+    replaceChar '>' = "&gt;"
+    replaceChar '&' = "&amp;"
+    replaceChar '"' = "&quot;"
+    replaceChar '\'' = "&#39;"
+    replaceChar c   = T.singleton c
