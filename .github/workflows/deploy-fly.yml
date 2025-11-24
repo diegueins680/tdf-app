@@ -8,9 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      DOCKER_IMAGE_REPO: diegueins680/tdf-hq
-      DOCKER_IMAGE_TAG: latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -41,10 +38,8 @@ jobs:
           fi
           SOURCE_COMMIT=$(git rev-parse --short=12 HEAD || echo "dev")
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          IMAGE_REF="${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
           flyctl deploy \
             --config ./fly.toml \
-            --image "$IMAGE_REF" \
             --build-arg SOURCE_COMMIT="$SOURCE_COMMIT" \
             --build-arg BUILD_TIME="$BUILD_TIME" \
             --strategy rolling \
