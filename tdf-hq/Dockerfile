@@ -38,8 +38,9 @@ COPY config/default.env.example config/default.env
 COPY docs docs
 
 # Capture commit and build time inside the image for version endpoint
-RUN (git rev-parse --short=12 HEAD || echo "dev") > /app/COMMIT && \
-    date -u +"%Y-%m-%dT%H:%M:%SZ" > /app/BUILD_TIME
+# In build contexts without .git (e.g., Fly remote builds), fall back to SOURCE_COMMIT/BUILD_TIME args.
+RUN echo "${SOURCE_COMMIT:-dev}" > /app/COMMIT && \
+    echo "${BUILD_TIME:-unknown}" > /app/BUILD_TIME
 
 # Refresh stack indices and clear any stale pantry cache to avoid hash issues
 RUN rm -rf /root/.stack/pantry/hackage && \

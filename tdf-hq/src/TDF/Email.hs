@@ -252,8 +252,8 @@ renderPlain greeting bodyLines mCtaUrl =
 
 renderHtml :: Text -> Text -> [Text] -> Maybe Text -> TL.Text
 renderHtml preheader greeting bodyLines mCtaUrl =
-  -- Use hosted SVG (Github raw) to avoid data URI blocking in Gmail.
-  let logoUrl = "https://raw.githubusercontent.com/diegueins680/tdf-app/main/tdf-hq-ui/src/assets/tdf-logo-wordmark.svg"
+  -- Use hosted PNG to avoid data URI blocking in Gmail.
+  let logoUrl = "https://raw.githubusercontent.com/diegueins680/tdf-app/main/tdf-hq/app/templates/tdf-logo.png"
       esc = escapeHtml
       bodyParas = T.concat (map (\p -> "<p style=\"margin:0 0 12px;color:#0f172a;font-size:15px;line-height:22px;\">" <> esc p <> "</p>") bodyLines)
       ctaBlock = maybe "" (\url ->
