@@ -36,6 +36,8 @@ COPY app app
 COPY src src
 COPY config/default.env.example config/default.env
 COPY docs docs
+# Bring git metadata into the builder so git rev-parse can resolve the SHA
+COPY .git .git
 
 # Capture commit and build time inside the image for the /version endpoint.
 # Prefer the actual repo metadata when it's available; otherwise, fall back to
