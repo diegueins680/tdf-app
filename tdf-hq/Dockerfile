@@ -2,7 +2,8 @@
 ARG SOURCE_COMMIT=dev
 ARG BUILD_TIME=unknown
 
-FROM haskell:9.6-bullseye AS builder
+# Move to a newer base to avoid upstream cache corruption on 9.6 bullseye.
+FROM haskell:9.8-bullseye AS builder
 ARG SOURCE_COMMIT
 ARG BUILD_TIME
 WORKDIR /app
