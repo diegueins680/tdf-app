@@ -10,8 +10,7 @@ env/
 venv/
 ENV/
 
-# Ignore version control directories
-.git/
+# Version metadata needs to reach backend builds, so keep .git in context
 .gitignore
 
 # Ignore Docker-related files (keep Dockerfiles in the build context)
