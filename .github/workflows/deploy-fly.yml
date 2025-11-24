@@ -18,7 +18,7 @@ jobs:
       - name: Checkout backend (tdf-hq)
         uses: actions/checkout@v4
         with:
-          repository: diegueins680/tdf-hq
+          repository: diegueins680/TDF
           path: tdf-hq
           fetch-depth: 1
 
