@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module TDF.Email
   ( generateTempPassword
   , sendWelcomeEmail
@@ -10,7 +11,9 @@ module TDF.Email
 
 import           Control.Exception        (SomeException, try)
 import           Data.Char                (isAlphaNum)
-import qualified Data.ByteString.Base64.URL as B64
+import qualified Data.ByteString.Base64      as B64Std
+import qualified Data.ByteString.Base64.URL  as B64
+import           Data.FileEmbed             (embedFile)
 import           Data.Maybe              (fromMaybe)
 import           Data.Text                (Text)
 import qualified Data.Text                as T
@@ -252,10 +255,8 @@ renderPlain greeting bodyLines mCtaUrl =
 
 renderHtml :: Text -> Text -> [Text] -> Maybe Text -> TL.Text
 renderHtml preheader greeting bodyLines mCtaUrl =
-  -- Use public asset hosted on the app domain to avoid blocking.
-  -- Gmail blocks external SVGs; serve a PNG instead.
-  let logoUrl = "https://tdf-app.pages.dev/tdf-logo-wordmark.png"
-      esc = escapeHtml
+  -- Inline PNG so the correct TDF Records logo always renders (no remote fetch).
+  let esc = escapeHtml
       bodyParas = T.concat (map (\p -> "<p style=\"margin:0 0 12px;color:#0f172a;font-size:15px;line-height:22px;\">" <> esc p <> "</p>") bodyLines)
       ctaBlock = maybe "" (\url ->
         "<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin-top:20px;\"><tr><td style=\"background:#0ea5e9;padding:12px 18px;border-radius:999px;font-weight:700;\"><a href=\"" <> esc url <> "\" style=\"color:#0b0f1b;text-decoration:none;font-family:Inter,Arial,sans-serif;\">Ver detalles del curso</a></td></tr></table>"
@@ -270,7 +271,7 @@ renderHtml preheader greeting bodyLines mCtaUrl =
         , "<tr><td align=\"center\">"
         , "<table role=\"presentation\" width=\"640\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:640px;width:100%;background:#ffffff;border-radius:16px;box-shadow:0 14px 40px rgba(15,23,42,0.08);overflow:hidden;border:1px solid #e2e8f0;\">"
         , "<tr><td style=\"padding:24px 32px 8px;\" align=\"center\">"
-        , "<img src=\"", esc logoUrl, "\" alt=\"TDF Records\" width=\"160\" style=\"display:block;height:auto;margin:0 auto 8px;\" />"
+        , "<img src=\"", logoDataUri, "\" alt=\"TDF Records\" width=\"160\" style=\"display:block;height:auto;margin:0 auto 8px;\" />"
         , "<p style=\"margin:0;color:#334155;font-size:13px;\">Escuela &amp; Estudios</p>"
         , "</td></tr>"
         , "<tr><td style=\"padding:8px 32px 24px;\">"
@@ -284,6 +285,11 @@ renderHtml preheader greeting bodyLines mCtaUrl =
         , "</td></tr></table></td></tr></table></body></html>"
         ]
   in TL.fromStrict html
+
+logoDataUri :: Text
+logoDataUri =
+  -- Embedded PNG generated from the official tdf_logo_nobg asset.
+  "data:image/png;base64," <> TE.decodeUtf8 (B64Std.encode $(embedFile "app/templates/tdf-logo-email.png"))
 
 escapeHtml :: Text -> Text
 escapeHtml = T.concatMap replaceChar
