@@ -2,7 +2,8 @@
 ARG SOURCE_COMMIT=dev
 ARG BUILD_TIME=unknown
 
-FROM haskell:9.6-bullseye AS builder
+# Pin the base image digest to avoid depot cache digest mismatches.
+FROM haskell:9.6-bullseye@sha256:9270b47dee9320df80370885efacdd16aafa4fea6e32ac157c6e8abe085cc70e AS builder
 ARG SOURCE_COMMIT
 ARG BUILD_TIME
 WORKDIR /app
