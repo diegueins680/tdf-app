@@ -43,13 +43,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const profileQuery = useQuery({
     queryKey: ['fan-profile', viewerId],
     queryFn: Fans.getProfile,
-    enabled: Boolean(viewerId) && isFan,
+    enabled: Boolean(viewerId),
   });
 
   const followsQuery = useQuery({
     queryKey: ['fan-follows', viewerId],
     queryFn: Fans.listFollows,
-    enabled: Boolean(viewerId) && isFan,
+    enabled: Boolean(viewerId),
   });
   const artistProfileQuery = useQuery({
     queryKey: ['artist-profile', viewerId],
@@ -155,7 +155,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const follows = followsQuery.data ?? [];
 
   const handleFollowToggle = (artistId: number, currentlyFollowing: boolean) => {
-    if (!isFan) return;
+    if (!viewerId) return;
     if (currentlyFollowing) {
       unfollowMutation.mutate(artistId);
     } else {
@@ -406,7 +406,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </div>
         )}
 
-        {isFan && follows.length > 0 && (
+        {viewerId && follows.length > 0 && (
           <Card sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>Artistas que sigues</Typography>
             <Stack direction="row" spacing={2} flexWrap="wrap">
@@ -436,7 +436,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         <Grid container spacing={3}>
           {artists.map((artist) => {
             const spotifyUrl = artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
-            const youtubeUrl = artist.apYoutubeUrl ?? (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
+            const youtubeUrl =
+              artist.apFeaturedVideoUrl ??
+              artist.apYoutubeUrl ??
+              (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
             const isFollowing = follows.some((follow) => follow.ffArtistId === artist.apArtistId);
             const spotifyButtonProps = spotifyUrl
               ? { component: 'a', href: spotifyUrl, target: '_blank', rel: 'noopener noreferrer' }
@@ -491,17 +494,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       >
                         YouTube
                       </Button>
-                      {isFan && (
-                        <Button
-                          variant={isFollowing ? 'outlined' : 'contained'}
-                          color={isFollowing ? 'inherit' : 'secondary'}
-                          size="small"
-                          onClick={() => handleFollowToggle(artist.apArtistId, isFollowing)}
-                          disabled={followMutation.isPending || unfollowMutation.isPending}
-                        >
-                          {isFollowing ? 'Siguiendo' : 'Seguir'}
-                        </Button>
-                      )}
+                      <Button
+                        variant={isFollowing ? 'outlined' : 'contained'}
+                        color={isFollowing ? 'inherit' : 'secondary'}
+                        size="small"
+                        onClick={() => handleFollowToggle(artist.apArtistId, isFollowing)}
+                        disabled={!viewerId || followMutation.isPending || unfollowMutation.isPending}
+                      >
+                        {isFollowing ? 'Siguiendo' : 'Seguir'}
+                      </Button>
                     </Stack>
                   </CardContent>
                 </Card>

@@ -81,6 +81,7 @@ import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), addLog, ge
 import           TDF.DTO                ( LogEntryDTO(..) )
 import           TDF.DTO                ( CourseRegistrationDTO(..) )
 import           Data.Time.Format       ( formatTime, defaultTimeLocale )
+import           System.IO              (hPutStrLn, stderr)
 
 adminServer
   :: ( MonadReader Env m
@@ -150,10 +151,12 @@ adminServer user =
         Left (err :: SomeException) -> do
           let msg = "[Admin][EmailTest] Failed for " <> etrEmail <> ": " <> T.pack (show err)
           liftIO $ addLog LogError msg
+          liftIO $ hPutStrLn stderr (T.unpack msg)
           pure EmailTestResponse { status = "error", message = Just msg }
         Right () -> do
           let msg = "[Admin][EmailTest] Sent to " <> etrEmail
           liftIO $ addLog LogInfo msg
+          liftIO $ hPutStrLn stderr (T.unpack msg)
           pure EmailTestResponse { status = "sent", message = Nothing }
 
     courseRegistrationsRouter =
