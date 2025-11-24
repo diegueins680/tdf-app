@@ -22,8 +22,8 @@ RUN ghc --version || true
 RUN stack --version || true
 
 # Copy project definition first for better layer caching
-COPY stack.yaml stack.yaml
-COPY tdf-hq.cabal tdf-hq.cabal
+COPY tdf-hq/stack.yaml stack.yaml
+COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
 # COPY tdf-hq/package.yaml ./   # uncomment if you have it
 
 # Make sure Stack installs the correct compiler for the resolver
@@ -32,15 +32,28 @@ RUN stack --no-terminal --install-ghc setup && \
     stack --no-terminal --install-ghc build --only-dependencies
 
 # Copy sources (git metadata is provided via build args when available)
-COPY app app
-COPY src src
-COPY config/default.env.example config/default.env
-COPY docs docs
+COPY tdf-hq/app app
+COPY tdf-hq/src src
+COPY tdf-hq/config/default.env.example config/default.env
+COPY tdf-hq/docs docs
 
-# Capture commit and build time inside the image for version endpoint
-# In build contexts without .git (e.g., Fly remote builds), fall back to SOURCE_COMMIT/BUILD_TIME args.
-RUN echo "${SOURCE_COMMIT:-dev}" > /app/COMMIT && \
-    echo "${BUILD_TIME:-unknown}" > /app/BUILD_TIME
+# Capture commit and build time inside the image for the /version endpoint.
+# Prefer the actual repo metadata when it's available; otherwise, fall back to
+# the provided build args (which default to dev/unknown).
+RUN set -eu; \
+    COMMIT_VAL="${SOURCE_COMMIT:-}"; \
+    if [ -z "$COMMIT_VAL" ] || [ "$COMMIT_VAL" = "dev" ] || [ "$COMMIT_VAL" = "unknown" ]; then \
+      if git rev-parse --verify HEAD >/dev/null 2>&1; then \
+        COMMIT_VAL="$(git rev-parse --short=12 HEAD)"; \
+      fi; \
+    fi; \
+    if [ -z "$COMMIT_VAL" ]; then COMMIT_VAL="dev"; fi; \
+    echo "$COMMIT_VAL" > /app/COMMIT; \
+    BUILD_TS="${BUILD_TIME:-}"; \
+    if [ -z "$BUILD_TS" ] || [ "$BUILD_TS" = "unknown" ]; then \
+      BUILD_TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"; \
+    fi; \
+    echo "$BUILD_TS" > /app/BUILD_TIME
 
 # Refresh stack indices and clear any stale pantry cache to avoid hash issues
 RUN rm -rf /root/.stack/pantry/hackage && \

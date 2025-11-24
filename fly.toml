@@ -2,7 +2,7 @@ app = "tdf-hq"
 
 [build]
   dockerfile = "tdf-hq/Dockerfile"
-  context = "tdf-hq"
+  context = "."
 
 [env]
   APP_PORT = "8080"
