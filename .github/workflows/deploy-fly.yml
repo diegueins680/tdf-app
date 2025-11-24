@@ -40,6 +40,7 @@ jobs:
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           flyctl deploy \
             --config ./fly.toml \
+            --dockerfile ./Dockerfile \
             --build-arg SOURCE_COMMIT="$SOURCE_COMMIT" \
             --build-arg BUILD_TIME="$BUILD_TIME" \
             --strategy rolling \
