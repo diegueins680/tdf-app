@@ -10,7 +10,6 @@ import RoomsPage from './pages/RoomsPage';
 import LoginPage from './pages/LoginPage';
 import UserRoleManagement from './components/UserRoleManagement';
 import SystemPage from './pages/SystemPage';
-import PlaceholderPage from './components/PlaceholderPage';
 import BasicFeaturePage from './components/BasicFeaturePage';
 import AboutPage from './pages/AboutPage';
 import DocsPage from './pages/DocsPage';

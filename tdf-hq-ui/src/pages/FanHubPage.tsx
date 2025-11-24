@@ -33,6 +33,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     [session?.roles],
   );
   const canEditArtist = useMemo(() => Boolean(session?.partyId), [session?.partyId]);
+  const artistSectionRef = useRef<HTMLDivElement | null>(null);
 
   const artistsQuery = useQuery({
     queryKey: ['fan-artists'],
@@ -120,7 +121,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     if (focusArtist && artistSectionRef.current) {
       artistSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [focusArtist, artistSectionRef.current]);
+  }, [focusArtist]);
 
   const updateProfileMutation = useMutation({
     mutationFn: Fans.updateProfile,
@@ -540,4 +541,3 @@ function ProfileSectionCard({
     </Card>
   );
 }
-  const artistSectionRef = useRef<HTMLDivElement | null>(null);
