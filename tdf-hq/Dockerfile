@@ -21,10 +21,10 @@ ENV STACK_ROOT=/root/.stack
 RUN ghc --version || true
 RUN stack --version || true
 
-# Copy project definition first for better layer caching (paths are relative to the build context)
-COPY stack.yaml stack.yaml
-COPY tdf-hq.cabal tdf-hq.cabal
-# COPY package.yaml ./   # uncomment if you have it
+# Copy project definition first for better layer caching (context: repo root)
+COPY tdf-hq/stack.yaml stack.yaml
+COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
+# COPY tdf-hq/package.yaml ./   # uncomment if you have it
 
 # Make sure Stack installs the correct compiler for the resolver
 # Also, be explicit and avoid any global "system-ghc" config
@@ -32,10 +32,10 @@ RUN stack --no-terminal --install-ghc setup && \
     stack --no-terminal --install-ghc build --only-dependencies
 
 # Copy sources (git metadata is provided via build args when available)
-COPY app app
-COPY src src
-COPY config/default.env.example config/default.env
-COPY docs docs
+COPY tdf-hq/app app
+COPY tdf-hq/src src
+COPY tdf-hq/config/default.env.example config/default.env
+COPY tdf-hq/docs docs
 
 # Capture commit and build time inside the image for the /version endpoint.
 # Prefer the actual repo metadata when it's available; otherwise, fall back to
