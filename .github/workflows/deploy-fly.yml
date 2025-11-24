@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: diegueins680/TDF
-          path: tdf-hq
+          path: backend
           fetch-depth: 1
 
       - name: Install flyctl
@@ -35,10 +35,11 @@ jobs:
           if [ -f fly.toml ] && grep -q '^app *= *"[^"]*"' fly.toml; then
             APP_NAME=$(grep '^app *= *"' fly.toml | head -n1 | sed -E 's/app *= *"([^"]+)"/\1/')
           fi
-          SOURCE_COMMIT=$(git -C tdf-hq rev-parse --short=12 HEAD || echo "dev")
+          SOURCE_COMMIT=$(git -C backend rev-parse --short=12 HEAD || echo "dev")
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           flyctl deploy \
-            --config ./fly.toml \
+            --config backend/fly.toml \
+            --dockerfile backend/Dockerfile \
             --build-arg SOURCE_COMMIT="$SOURCE_COMMIT" \
             --build-arg BUILD_TIME="$BUILD_TIME" \
             --strategy rolling \
