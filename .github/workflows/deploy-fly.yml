@@ -30,7 +30,7 @@ jobs:
       - name: Deploy to Fly
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        working-directory: backend
+        working-directory: backend/tdf-hq
         run: |
           APP_NAME="tdf-hq"
           if [ -f fly.toml ] && grep -q '^app *= *"[^"]*"' fly.toml; then
@@ -40,6 +40,7 @@ jobs:
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           flyctl deploy \
             --config ./fly.toml \
+            --dockerfile ./Dockerfile \
             --build-arg SOURCE_COMMIT="$SOURCE_COMMIT" \
             --build-arg BUILD_TIME="$BUILD_TIME" \
             --strategy rolling \
