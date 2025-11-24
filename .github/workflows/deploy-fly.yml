@@ -15,6 +15,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Checkout backend (tdf-hq)
+        uses: actions/checkout@v4
+        with:
+          repository: diegueins680/tdf-hq
+          path: tdf-hq
+          fetch-depth: 1
+
       - name: Install flyctl
         run: |
           curl -L https://fly.io/install.sh | sh
