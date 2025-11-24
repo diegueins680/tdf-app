@@ -19,6 +19,12 @@ jobs:
           path: backend
           fetch-depth: 1
 
+      - name: Prepare Dockerfile path
+        working-directory: backend
+        run: |
+          mkdir -p tdf-hq
+          cp Dockerfile tdf-hq/Dockerfile
+
       - name: Install flyctl
         run: |
           curl -L https://fly.io/install.sh | sh
