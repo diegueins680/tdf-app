@@ -11,7 +11,7 @@ import           Control.Exception      (throwIO)
 import           Control.Monad          (forM, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
-import           Data.Char              (isAlphaNum, isDigit)
+import           Data.Char              (isAlphaNum, isDigit, isSpace)
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
@@ -30,7 +30,18 @@ import           Database.Persist.Sql hiding (loadConfig)
 
 import           TDF.Auth             (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import           TDF.Config          (loadConfig)
-import           TDF.Models          (Party(..), PartyId, ResourceId, partyDisplayName, RoleEnum(..), PartyRole(..))
+import           TDF.Models          ( Party(..)
+                                      , PartyId
+                                      , ResourceId
+                                      , partyDisplayName
+                                      , RoleEnum(..)
+                                      , PartyRole(..)
+                                      , PartyPrimaryEmail
+                                      , PartyPrimaryPhone
+                                      , PartyWhatsapp
+                                      , PartyDisplayName
+                                      , PartyRoleActive
+                                      )
 import qualified TDF.Models          as Models
 import qualified TDF.Email           as Email
 import qualified TDF.Email.Service   as EmailSvc
