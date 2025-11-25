@@ -120,7 +120,7 @@ modulesForRoles = foldl' (flip (Set.union . modulesForRole)) Set.empty
 modulesForRole :: RoleEnum -> Set ModuleAccess
 modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin]
 modulesForRole Manager    = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing]
-modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing]
+modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin]
 modulesForRole Reception  = Set.fromList [ModuleCRM, ModuleScheduling]
 modulesForRole Accounting = Set.singleton ModuleInvoicing
 modulesForRole Engineer   = Set.singleton ModuleScheduling

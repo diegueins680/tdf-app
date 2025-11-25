@@ -25,6 +25,8 @@ import LogsPage from './pages/LogsPage';
 import SystemStatusPage from './pages/SystemStatusPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import TrialsPage from './pages/TrialsPage';
+import TeachersPage from './pages/TeachersPage';
+import TrialLessonsPage from './pages/TrialLessonsPage';
 
 function Shell() {
   const { session } = useSession();
@@ -202,9 +204,9 @@ export default function App() {
         </Route>
 
         <Route path="/escuela" element={<Outlet />}>
-          <Route path="profesores" element={<BasicFeaturePage title="Escuela / Profesores" storageKey="escuela-profesores" />} />
+          <Route path="profesores" element={<TeachersPage />} />
           <Route path="clases" element={<BasicFeaturePage title="Escuela / Clases" storageKey="escuela-clases" />} />
-          <Route path="trial-lessons" element={<BasicFeaturePage title="Escuela / Trial lessons" storageKey="escuela-trial-lessons" />} />
+          <Route path="trial-lessons" element={<TrialLessonsPage />} />
           <Route path="trial-queue" element={<BasicFeaturePage title="Escuela / Trial queue" storageKey="escuela-trial-queue" />} />
           <Route path="programas" element={<BasicFeaturePage title="Escuela / Programas" storageKey="escuela-programas" />} />
           <Route path="cursos" element={<BasicFeaturePage title="Escuela / Cursos" storageKey="escuela-cursos" />} />

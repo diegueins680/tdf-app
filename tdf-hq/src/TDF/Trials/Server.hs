@@ -12,7 +12,7 @@ import           Control.Monad          (forM, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
 import           Data.Char              (isAlphaNum, isDigit, isSpace)
-import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
+import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, maybeToList)
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 import           Data.List              (foldl')
@@ -422,9 +422,13 @@ privateTrialsServer user@AuthedUser{..} =
     :<|> deleteSubjectH
     :<|> packagesH
     :<|> purchaseH
+    :<|> classSessionsListH
     :<|> createClassH
+    :<|> updateClassH
     :<|> attendH
     :<|> commissionsH
+    :<|> teachersH
+    :<|> teacherClassesH
   where
     queueH :: Maybe Int -> Maybe Text -> AppM [TrialQueueItem]
     queueH mSubject mStatus = do
@@ -782,6 +786,19 @@ privateTrialsServer user@AuthedUser{..} =
         }
       pure (PurchaseOut (entityKeyInt pid))
 
+    classSessionsListH :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe UTCTime -> Maybe UTCTime -> Maybe Text -> AppM [ClassSessionDTO]
+    classSessionsListH mSubject mTeacher mStudent mFrom mTo mStatus = do
+      let filters =
+            maybe [] (\sid -> [ClassSessionSubjectId ==. intKey sid]) mSubject
+            ++ maybe [] (\tid -> [ClassSessionTeacherId ==. intKey tid]) mTeacher
+            ++ maybe [] (\pid -> [ClassSessionStudentId ==. intKey pid]) mStudent
+            ++ maybe [] (\startFrom -> [ClassSessionStartAt >=. startFrom]) mFrom
+            ++ maybe [] (\endTo -> [ClassSessionStartAt <=. endTo]) mTo
+      sessions <- selectList filters [Asc ClassSessionStartAt]
+      dtos <- buildClassSessionDTOs sessions
+      let normalized = T.toLower . T.strip
+      pure $ maybe dtos (\st -> filter (\c -> normalized (status c) == normalized st) dtos) mStatus
+
     createClassH :: ClassSessionIn -> AppM ClassSessionOut
     createClassH ClassSessionIn{..} = do
       let studentKey = intKey studentId
@@ -804,6 +821,29 @@ privateTrialsServer user@AuthedUser{..} =
         , classSessionNotes           = Nothing
         }
       pure (ClassSessionOut (entityKeyInt sid) (max 0 durationMinutes))
+
+    updateClassH :: Int -> ClassSessionUpdate -> AppM ClassSessionDTO
+    updateClassH classId ClassSessionUpdate{..} = do
+      let cid = intKey classId :: Key ClassSession
+      mSession <- get cid
+      case mSession of
+        Nothing -> liftIO $ throwIO err404
+        Just _ -> do
+          let updates = catMaybes
+                [ ClassSessionTeacherId =. intKey <$> teacherId
+                , ClassSessionSubjectId =. intKey <$> subjectId
+                , ClassSessionStudentId =. intKey <$> studentId
+                , ClassSessionStartAt   =. <$> startAt
+                , ClassSessionEndAt     =. <$> endAt
+                , ClassSessionRoomId    =. intKey <$> roomId
+                , ClassSessionBookingId =. maybeKey <$> bookingId
+                , ClassSessionNotes     =. notes
+                ]
+          unless (null updates) $
+            update cid updates
+          ent <- getJustEntity cid
+          dtos <- buildClassSessionDTOs [ent]
+          pure (head dtos)
 
     attendH :: Int -> AttendIn -> AppM ClassSessionOut
     attendH classId AttendIn{..} = do
@@ -835,6 +875,127 @@ privateTrialsServer user@AuthedUser{..} =
               }
            | Entity _ commission <- entities
            ]
+
+    teachersH :: AppM [TeacherDTO]
+    teachersH = do
+      teacherRoles <- selectList [Models.PartyRoleRole ==. Teacher, Models.PartyRoleActive ==. True] []
+      let teacherIds = map (Models.partyRolePartyId . entityVal) teacherRoles
+
+      parties <- if null teacherIds
+        then pure Map.empty
+        else do
+          ents <- selectList [Models.PartyId <-. teacherIds] []
+          pure $ Map.fromList [ (entityKey e, entityVal e) | e <- ents ]
+
+      subjectLinks <- if null teacherIds
+        then pure []
+        else selectList [TeacherSubjectTeacherId <-. teacherIds] []
+      let subjectIds = distinct (map (Trials.teacherSubjectSubjectId . entityVal) subjectLinks)
+
+      subjectEntities <- if null subjectIds
+        then pure []
+        else selectList [SubjectId <-. subjectIds] []
+      let subjectMap = Map.fromList [ (entityKey s, entityVal s) | s <- subjectEntities ]
+          subjectsByTeacher = Map.fromListWith (<>) 
+            [ ( Trials.teacherSubjectTeacherId (entityVal link)
+              , [ Trials.teacherSubjectSubjectId (entityVal link) ]
+              )
+            | link <- subjectLinks
+            ]
+
+      pure
+        [ TeacherDTO
+            { teacherId   = entityKeyInt tid
+            , teacherName = partyDisplayName party
+            , subjects    =
+                [ SubjectBriefDTO
+                    { subjectId = entityKeyInt sid
+                    , name      = Trials.subjectName subj
+                    }
+                | sid <- Map.findWithDefault [] tid subjectsByTeacher
+                , subj <- maybeToList (Map.lookup sid subjectMap)
+                ]
+            }
+        | (tid, party) <- Map.toList parties
+        ]
+
+    buildClassSessionDTOs :: [Entity ClassSession] -> AppM [ClassSessionDTO]
+    buildClassSessionDTOs sessions = do
+      now <- liftIO getCurrentTime
+      let subjectIds = distinct (map (Trials.classSessionSubjectId . entityVal) sessions)
+          teacherIds = distinct (map (Trials.classSessionTeacherId . entityVal) sessions)
+          studentIds = distinct (map (Trials.classSessionStudentId . entityVal) sessions)
+          bookingIds = catMaybes (map (Trials.classSessionBookingId . entityVal) sessions)
+          roomIds    = distinct (map (Trials.classSessionRoomId . entityVal) sessions)
+
+      subjectMap <- if null subjectIds
+        then pure Map.empty
+        else do
+          ents <- selectList [SubjectId <-. subjectIds] []
+          pure $ Map.fromList [ (entityKey e, entityVal e) | e <- ents ]
+
+      let partyIds = distinct (teacherIds ++ studentIds)
+      partyMap <- if null partyIds
+        then pure Map.empty
+        else do
+          ents <- selectList [Models.PartyId <-. partyIds] []
+          pure $ Map.fromList [ (entityKey e, partyDisplayName (entityVal e)) | e <- ents ]
+
+      bookingMap <- if null bookingIds
+        then pure Map.empty
+        else do
+          ents <- selectList [Models.BookingId <-. bookingIds] []
+          pure $ Map.fromList [ (entityKey e, entityVal e) | e <- ents ]
+
+      resourceMap <- if null roomIds
+        then pure Map.empty
+        else do
+          ents <- selectList [Models.ResourceId <-. roomIds] []
+          pure $ Map.fromList [ (entityKey e, entityVal e) | e <- ents ]
+
+      pure
+        [ ClassSessionDTO
+            { classSessionId = entityKeyInt sid
+            , teacherId      = entityKeyInt (Trials.classSessionTeacherId cs)
+            , teacherName    = Map.lookup (Trials.classSessionTeacherId cs) partyMap
+            , subjectId      = entityKeyInt (Trials.classSessionSubjectId cs)
+            , subjectName    = fmap Trials.subjectName (Map.lookup (Trials.classSessionSubjectId cs) subjectMap)
+            , studentId      = entityKeyInt (Trials.classSessionStudentId cs)
+            , studentName    = Map.lookup (Trials.classSessionStudentId cs) partyMap
+            , startAt        = Trials.classSessionStartAt cs
+            , endAt          = Trials.classSessionEndAt cs
+            , status         = classStatusLabel now (Trials.classSessionAttended cs) (Trials.classSessionStartAt cs) (Trials.classSessionBookingId cs >>= (`Map.lookup` bookingMap))
+            , roomId         = Just (toPathPiece (Trials.classSessionRoomId cs))
+            , roomName       = Models.resourceName <$> Map.lookup (Trials.classSessionRoomId cs) resourceMap
+            , bookingId      = entityKeyInt <$> Trials.classSessionBookingId cs
+            , notes          = Trials.classSessionNotes cs
+            }
+        | Entity sid cs <- sessions
+        ]
+
+    teacherClassesH :: Int -> Maybe Int -> Maybe UTCTime -> Maybe UTCTime -> AppM [ClassSessionDTO]
+    teacherClassesH teacherId mSubject mFrom mTo = do
+      let teacherKey = intKey teacherId :: PartyId
+          filters = [ClassSessionTeacherId ==. teacherKey]
+                  ++ maybe [] (\sid -> [ClassSessionSubjectId ==. intKey sid]) mSubject
+                  ++ maybe [] (\startFrom -> [ClassSessionStartAt >=. startFrom]) mFrom
+                  ++ maybe [] (\endTo -> [ClassSessionStartAt <=. endTo]) mTo
+      sessions <- selectList filters [Asc ClassSessionStartAt]
+      buildClassSessionDTOs sessions
+
+    classStatusLabel :: UTCTime -> Bool -> UTCTime -> Maybe Models.Booking -> Text
+    classStatusLabel now attended startAt mBooking =
+      case Models.bookingStatus <$> mBooking of
+        Just Models.Cancelled  -> "cancelada"
+        Just Models.NoShow     -> "cancelada"
+        Just Models.Completed  -> "realizada"
+        Just Models.Tentative  -> "por-confirmar"
+        Just Models.InProgress -> "programada"
+        Just Models.Confirmed  -> "programada"
+        _ ->
+          if attended
+            then "realizada"
+            else if startAt > now then "programada" else "por-confirmar"
 
 
 trialsServer :: ConnectionPool -> Server TrialsAPI
