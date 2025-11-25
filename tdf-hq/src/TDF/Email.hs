@@ -288,8 +288,8 @@ renderHtml preheader greeting bodyLines mCtaUrl =
 
 logoDataUri :: Text
 logoDataUri =
-  -- Embedded PNG generated from the official tdf_logo_nobg asset.
-  "data:image/png;base64," <> TE.decodeUtf8 (B64Std.encode $(embedFile "app/templates/tdf-logo-email.png"))
+  -- Hosted asset (Gmail bloquea data URIs); fallback is the Cloudflare Pages frontend.
+  "https://tdf-app.pages.dev/tdf-logo-wordmark.png"
 
 escapeHtml :: Text -> Text
 escapeHtml = T.concatMap replaceChar
