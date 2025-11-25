@@ -23,13 +23,9 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import type { TrialSubject } from '../api/trials';
 import { Trials } from '../api/trials';
 
-type SlotInput = { start: string; end: string };
+type SlotInput = { start: string };
 
-const emptySlots: SlotInput[] = [
-  { start: '', end: '' },
-  { start: '', end: '' },
-  { start: '', end: '' },
-];
+const emptySlots: SlotInput[] = [{ start: '' }, { start: '' }, { start: '' }];
 
 const fieldSx = {
   '& .MuiOutlinedInput-root': {
@@ -85,8 +81,8 @@ export default function TrialsPage() {
     },
   });
 
-  const handleSlotChange = (index: number, field: keyof SlotInput, value: string) => {
-    setSlotInputs((prev) => prev.map((slot, idx) => (idx === index ? { ...slot, [field]: value } : slot)));
+  const handleSlotChange = (index: number, value: string) => {
+    setSlotInputs((prev) => prev.map((slot, idx) => (idx === index ? { ...slot, start: value } : slot)));
   };
 
   const parseIsoOrNull = (value: string) => {
@@ -104,24 +100,21 @@ export default function TrialsPage() {
       return;
     }
 
-    const filledSlots = slotInputs.filter((slot) => slot.start && slot.end);
+    const filledSlots = slotInputs.filter((slot) => slot.start);
     if (filledSlots.length === 0) {
       setFormError('Agrega al menos un horario preferido.');
       return;
     }
 
     const preferred = filledSlots
-      .map((slot) => ({
-        startAt: parseIsoOrNull(slot.start),
-        endAt: parseIsoOrNull(slot.end),
-      }))
-      .filter((slot) => slot.startAt && slot.endAt) as { startAt: string; endAt: string }[];
-
-    const invalidRange = preferred.find((slot) => new Date(slot.endAt) <= new Date(slot.startAt));
-    if (invalidRange) {
-      setFormError('Revisa tus horarios: la hora de fin debe ser mayor a la de inicio.');
-      return;
-    }
+      .map((slot) => {
+        const startAt = parseIsoOrNull(slot.start);
+        if (!startAt) return null;
+        const startDate = new Date(startAt);
+        const endAt = new Date(startDate.getTime() + 45 * 60 * 1000).toISOString();
+        return { startAt, endAt };
+      })
+      .filter(Boolean) as { startAt: string; endAt: string }[];
 
     if (!preferred.length) {
       setFormError('Los horarios ingresados no son válidos.');
@@ -230,6 +223,9 @@ export default function TrialsPage() {
                     <Typography variant="h6" fontWeight={700}>
                       Materia y horarios
                     </Typography>
+                    <Typography variant="body2" color="rgba(226,232,240,0.8)">
+                      Las clases de prueba duran 45 minutos. Solo elige la hora de inicio.
+                    </Typography>
                     <TextField
                       label="Materia"
                       select
@@ -248,30 +244,16 @@ export default function TrialsPage() {
                     </TextField>
                     <Stack spacing={2}>
                       {slotInputs.map((slot, idx) => (
-                        <Grid container spacing={1.5} key={idx}>
-                          <Grid item xs={12} sm={6}>
-                            <TextField
-                              label={`Preferencia ${idx + 1} - inicio`}
-                              type="datetime-local"
-                              value={slot.start}
-                              onChange={(e) => handleSlotChange(idx, 'start', e.target.value)}
-                              fullWidth
-                              InputLabelProps={{ shrink: true }}
-                              sx={fieldSx}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <TextField
-                              label={`Preferencia ${idx + 1} - fin`}
-                              type="datetime-local"
-                              value={slot.end}
-                              onChange={(e) => handleSlotChange(idx, 'end', e.target.value)}
-                              fullWidth
-                              InputLabelProps={{ shrink: true }}
-                              sx={fieldSx}
-                            />
-                          </Grid>
-                        </Grid>
+                        <TextField
+                          key={idx}
+                          label={`Preferencia ${idx + 1} - inicio`}
+                          type="datetime-local"
+                          value={slot.start}
+                          onChange={(e) => handleSlotChange(idx, e.target.value)}
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                          sx={fieldSx}
+                        />
                       ))}
                     </Stack>
 
