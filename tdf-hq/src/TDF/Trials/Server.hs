@@ -8,15 +8,17 @@
 module TDF.Trials.Server where
 
 import           Control.Exception      (throwIO)
-import           Control.Monad          (forM, unless, when)
+import           Control.Monad          (forM, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
-import           Data.Maybe             (catMaybes, fromMaybe, listToMaybe)
+import           Data.Char              (isAlphaNum, isDigit)
+import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 import           Data.List              (foldl')
 import           Data.Text              (Text)
 import qualified Data.Text              as T
+import qualified Data.Text.Encoding     as TE
 import           Data.Time              (UTCTime, diffUTCTime, getCurrentTime)
 import           Web.PathPieces         (fromPathPiece, toPathPiece)
 
@@ -27,12 +29,16 @@ import           Servant.Server.Experimental.Auth (AuthHandler)
 import           Database.Persist.Sql
 
 import           TDF.Auth             (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
-import           TDF.Models          (Party(..), PartyId, ResourceId, partyDisplayName)
+import           TDF.Config          (loadConfig)
+import           TDF.Models          (Party(..), PartyId, ResourceId, partyDisplayName, RoleEnum(..), PartyRole(..))
 import qualified TDF.Models          as Models
+import qualified TDF.Email           as Email
+import qualified TDF.Email.Service   as EmailSvc
 import           TDF.Trials.API
 import           TDF.Trials.DTO
 import           TDF.Trials.Models
 import qualified TDF.Trials.Models      as Trials
+import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 
 type AppM = SqlPersistT IO
 
@@ -49,6 +55,49 @@ intKey i = toSqlKey (fromIntegral i :: Int64)
 
 maybeKey :: (PersistEntity record, PersistEntityBackend record ~ SqlBackend, ToBackendKey SqlBackend record) => Maybe Int -> Maybe (Key record)
 maybeKey = fmap intKey
+
+cleanOptional :: Maybe Text -> Maybe Text
+cleanOptional = (>>= (\txt -> let t = T.strip txt in if T.null t then Nothing else Just t))
+
+normalizePhone :: Text -> Maybe Text
+normalizePhone raw =
+  let trimmed = T.filter (not . isSpace) (T.strip raw)
+      digits = T.filter (\c -> isDigit c || c == '+') trimmed
+      withoutPlus = T.dropWhile (== '+') digits
+      onlyDigits = T.filter isDigit withoutPlus
+  in if T.null onlyDigits then Nothing else Just ("+" <> onlyDigits)
+
+slugify :: Text -> Text
+slugify =
+  T.take 60 . T.filter (\c -> isAlphaNum c || c `elem` ("._-" :: String)) . T.toLower . T.strip
+
+deriveBaseUsername :: Maybe Text -> Text -> Text
+deriveBaseUsername mName emailAddr =
+  let emailLocal = T.takeWhile (/= '@') emailAddr
+      candidate = fromMaybe emailLocal (slugify <$> mName)
+  in if T.null candidate then emailLocal else candidate
+
+generateUniqueUsername :: Text -> PartyId -> SqlPersistT IO Text
+generateUniqueUsername base partyId = go 0
+  where
+    baseClean = T.take 60 (T.filter (\c -> isAlphaNum c || c `elem` (".-_" :: String)) (T.toLower (T.strip base)))
+    fallback = "tdf-user-" <> T.pack (show (fromSqlKey partyId))
+    root = if T.null baseClean then fallback else baseClean
+    go attempt = do
+      let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)
+          candidate = T.take 60 (root <> suffix)
+      conflict <- getBy (Models.UniqueCredentialUsername candidate)
+      case conflict of
+        Nothing -> pure candidate
+        Just _  -> go (attempt + 1)
+
+hashPasswordText :: Text -> IO Text
+hashPasswordText pwd = do
+  let raw = TE.encodeUtf8 pwd
+  mHash <- hashPasswordUsingPolicy slowerBcryptHashingPolicy raw
+  case mHash of
+    Nothing   -> fail "Failed to hash password"
+    Just hash -> pure (TE.decodeUtf8 hash)
 
 preferredSlotsFrom :: TrialRequest -> [PreferredSlot]
 preferredSlotsFrom req =
@@ -231,6 +280,26 @@ publicTrialsServer =
     trialRequestCreateH :: TrialRequestIn -> AppM TrialRequestOut
     trialRequestCreateH TrialRequestIn{..} = do
       now <- liftIO getCurrentTime
+      let nameClean  = cleanOptional fullName
+          emailClean = cleanOptional email
+          phoneClean = cleanOptional phone
+
+      resolvedPartyId <- case partyId of
+        Just pid -> pure (intKey pid)
+        Nothing  -> createOrFetchParty nameClean emailClean phoneClean now
+
+      mNewCred <- case emailClean of
+        Nothing -> pure Nothing
+        Just addr -> ensureUserAccountForParty resolvedPartyId nameClean addr
+
+      -- Send welcome email only when we created a credential.
+      case (mNewCred, emailClean) of
+        (Just (username, password), Just addr) -> liftIO $ do
+          cfg <- loadConfig
+          let svc = EmailSvc.mkEmailService cfg
+              display = fromMaybe addr nameClean
+          EmailSvc.sendWelcome svc display addr username password
+        _ -> pure ()
       case preferred of
         [] -> liftIO $ throwIO err400 { errBody = "Need at least one preferred slot" }
         (slot1@(PreferredSlot firstStart firstEnd) : rest) -> do
@@ -239,7 +308,7 @@ publicTrialsServer =
               pref3 = listToMaybe (drop 1 rest)
               (pref2Start, pref2End) = slotBounds pref2
               (pref3Start, pref3End) = slotBounds pref3
-              partyKey = maybe (intKey 0) intKey partyId
+              partyKey = resolvedPartyId
               subjectKey = intKey subjectId
           ensureSubjectAvailability subjectKey slots
           rid <- insert TrialRequest
@@ -278,9 +347,60 @@ publicTrialsServer =
         whenNoTeachers [] = liftIO $ throwIO err422 { errBody = "No hay profesores disponibles para esta materia" }
         whenNoTeachers _  = pure ()
 
-        ensureSlotHasTeacher teacherIds (PreferredSlot slotStart slotEnd) = do
-          available <- anyM (\teacherId -> teacherAvailable teacherId slotStart slotEnd) teacherIds
-          unless available $ liftIO $ throwIO err422 { errBody = "No hay profesores disponibles en el horario solicitado" }
+    ensureSlotHasTeacher teacherIds (PreferredSlot slotStart slotEnd) = do
+      available <- anyM (\teacherId -> teacherAvailable teacherId slotStart slotEnd) teacherIds
+      unless available $ liftIO $ throwIO err422 { errBody = "No hay profesores disponibles en el horario solicitado" }
+
+createOrFetchParty :: Maybe Text -> Maybe Text -> Maybe Text -> UTCTime -> AppM PartyId
+createOrFetchParty mName mEmail mPhone now = do
+  emailVal <- case cleanOptional mEmail of
+    Nothing -> liftIO $ throwIO err400 { errBody = "Correo requerido para crear la cuenta" }
+    Just e  -> pure e
+  let phoneVal = mPhone >>= normalizePhone
+      display = fromMaybe emailVal mName
+  mExisting <- selectFirst [PartyPrimaryEmail ==. Just emailVal] []
+  case mExisting of
+    Just (Entity pid party) -> do
+      let updates = catMaybes
+            [ if isJust (partyPrimaryPhone party) || isNothing phoneVal then Nothing else Just (PartyPrimaryPhone =. phoneVal)
+            , if isJust (partyWhatsapp party) || isNothing phoneVal then Nothing else Just (PartyWhatsapp =. phoneVal)
+            , if T.strip (partyDisplayName party) == "" && not (T.null display) then Just (PartyDisplayName =. display) else Nothing
+            ]
+      unless (null updates) $
+        update pid updates
+      pure pid
+    Nothing -> insert Party
+      { partyLegalName       = Nothing
+      , partyDisplayName     = display
+      , partyIsOrg           = False
+      , partyTaxId           = Nothing
+      , partyPrimaryEmail    = Just emailVal
+      , partyPrimaryPhone    = phoneVal
+      , partyWhatsapp        = phoneVal
+      , partyInstagram       = Nothing
+      , partyEmergencyContact = Nothing
+      , partyNotes           = Nothing
+      , partyCreatedAt       = now
+      }
+
+ensureUserAccountForParty :: PartyId -> Maybe Text -> Text -> AppM (Maybe (Text, Text))
+ensureUserAccountForParty partyId mName emailVal = do
+  mCred <- selectFirst [Models.UserCredentialPartyId ==. partyId] []
+  case mCred of
+    Just _ -> pure Nothing
+    Nothing -> do
+      username <- generateUniqueUsername (deriveBaseUsername mName emailVal) partyId
+      tempPassword <- liftIO Email.generateTempPassword
+      hashed <- liftIO (hashPasswordText tempPassword)
+      _ <- insert Models.UserCredential
+        { Models.userCredentialPartyId = partyId
+        , Models.userCredentialUsername = username
+        , Models.userCredentialPasswordHash = hashed
+        , Models.userCredentialActive = True
+        }
+      void $ upsert (PartyRole partyId Customer True) [PartyRoleActive =. True]
+      void $ upsert (PartyRole partyId Fan True) [PartyRoleActive =. True]
+      pure (Just (username, tempPassword))
 
 privateTrialsServer :: AuthedUser -> ServerT PrivateTrialsAPI AppM
 privateTrialsServer user@AuthedUser{..} =

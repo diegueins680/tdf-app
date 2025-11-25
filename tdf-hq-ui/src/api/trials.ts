@@ -24,6 +24,9 @@ export interface TrialRequestPayload {
   subjectId: number;
   preferred: PreferredSlot[];
   notes?: string;
+  fullName?: string;
+  email?: string;
+  phone?: string;
 }
 
 export interface TrialRequestResponse {

@@ -121,19 +121,13 @@ export default function TrialsPage() {
       return;
     }
 
-    const contactNote = [
-      fullName && `Nombre: ${fullName}`,
-      email && `Email: ${email}`,
-      phone && `Tel: ${phone}`,
-      notes && `Notas: ${notes}`,
-    ]
-      .filter(Boolean)
-      .join(' | ');
-
     requestMutation.mutate({
       subjectId: Number(subjectId),
       preferred,
-      notes: contactNote || undefined,
+      fullName: fullName.trim() || undefined,
+      email: email.trim() || undefined,
+      phone: phone.trim() || undefined,
+      notes: notes.trim() || undefined,
     });
   };
 

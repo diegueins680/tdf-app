@@ -20,6 +20,9 @@ data TrialRequestIn = TrialRequestIn
   , subjectId :: Int
   , preferred :: [PreferredSlot]   -- up to 3
   , notes     :: Maybe Text
+  , fullName  :: Maybe Text
+  , email     :: Maybe Text
+  , phone     :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON TrialRequestIn
 instance FromJSON TrialRequestIn
