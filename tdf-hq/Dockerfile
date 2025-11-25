@@ -17,6 +17,17 @@ ENV SOURCE_COMMIT=${SOURCE_COMMIT}
 ENV GIT_SHA=${SOURCE_COMMIT}
 ENV BUILD_TIME=${BUILD_TIME}
 ENV STACK_ROOT=/root/.stack
+ENV STACK_SETUP_PATH=/tmp/stack-setup-2.yaml
+ENV STACK_SETUP_URL=https://api.github.com/repos/commercialhaskell/stackage-content/contents/stack/stack-setup-2.yaml?ref=master
+
+# Pre-fetch stack setup info with simple retries to avoid GitHub rate limits during stack setup
+RUN set -e; \
+    for i in $(seq 1 8); do \
+      if curl -fsSL -H "Accept: application/vnd.github.v3.raw" "$STACK_SETUP_URL" -o "$STACK_SETUP_PATH"; then break; fi; \
+      echo "Retrying stack-setup-2.yaml download ($i/8)..." >&2; \
+      sleep 10; \
+    done; \
+    test -s "$STACK_SETUP_PATH"
 
 # Show toolchain versions (handy in Render logs)
 RUN ghc --version || true
@@ -29,8 +40,8 @@ COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
 
 # Make sure Stack installs the correct compiler for the resolver
 # Also, be explicit and avoid any global "system-ghc" config
-RUN stack --no-terminal --install-ghc setup && \
-    stack --no-terminal --install-ghc build --only-dependencies
+RUN stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc setup && \
+    stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc build --only-dependencies
 
 # Copy sources (git metadata is provided via build args when available)
 COPY tdf-hq/app app
@@ -61,7 +72,7 @@ RUN rm -rf /root/.stack/pantry/hackage && \
     stack --no-terminal update
 
 # Build and export the binary
-RUN stack --no-terminal --install-ghc build --copy-bins --local-bin-path /out
+RUN stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc build --copy-bins --local-bin-path /out
 
 # -------- Stage 2: slim runtime ----------
 FROM debian:bookworm-slim

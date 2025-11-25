@@ -12,19 +12,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout backend (tdf-hq)
-        uses: actions/checkout@v4
-        with:
-          repository: diegueins680/TDF
-          path: backend
-          fetch-depth: 1
-
-      - name: Prepare Dockerfile path
-        working-directory: backend
-        run: |
-          mkdir -p tdf-hq
-          cp Dockerfile tdf-hq/Dockerfile
-
       - name: Install flyctl
         run: |
           curl -L https://fly.io/install.sh | sh
@@ -37,7 +24,6 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           FLY_NO_DEPOT: "1"
-        working-directory: backend
         run: |
           APP_NAME="tdf-hq"
           if [ -f fly.toml ] && grep -q '^app *= *"[^"]*"' fly.toml; then
@@ -47,7 +33,7 @@ jobs:
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           flyctl deploy \
             --config ./fly.toml \
-            --dockerfile ./Dockerfile \
+            --dockerfile ./tdf-hq/Dockerfile \
             --no-cache \
             --build-arg SOURCE_COMMIT="$SOURCE_COMMIT" \
             --build-arg BUILD_TIME="$BUILD_TIME" \
