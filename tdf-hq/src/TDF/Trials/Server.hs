@@ -36,11 +36,6 @@ import           TDF.Models          ( Party(..)
                                       , partyDisplayName
                                       , RoleEnum(..)
                                       , PartyRole(..)
-                                      , PartyPrimaryEmail
-                                      , PartyPrimaryPhone
-                                      , PartyWhatsapp
-                                      , PartyDisplayName
-                                      , PartyRoleActive
                                       )
 import qualified TDF.Models          as Models
 import qualified TDF.Email           as Email
@@ -369,13 +364,13 @@ createOrFetchParty mName mEmail mPhone now = do
     Just e  -> pure e
   let phoneVal = mPhone >>= normalizePhone
       display = fromMaybe emailVal mName
-  mExisting <- selectFirst [PartyPrimaryEmail ==. Just emailVal] []
+  mExisting <- selectFirst [Models.PartyPrimaryEmail ==. Just emailVal] []
   case mExisting of
     Just (Entity pid party) -> do
       let updates = catMaybes
-            [ if isJust (partyPrimaryPhone party) || isNothing phoneVal then Nothing else Just (PartyPrimaryPhone =. phoneVal)
-            , if isJust (partyWhatsapp party) || isNothing phoneVal then Nothing else Just (PartyWhatsapp =. phoneVal)
-            , if T.strip (partyDisplayName party) == "" && not (T.null display) then Just (PartyDisplayName =. display) else Nothing
+            [ if isJust (partyPrimaryPhone party) || isNothing phoneVal then Nothing else Just (Models.PartyPrimaryPhone =. phoneVal)
+            , if isJust (partyWhatsapp party) || isNothing phoneVal then Nothing else Just (Models.PartyWhatsapp =. phoneVal)
+            , if T.strip (partyDisplayName party) == "" && not (T.null display) then Just (Models.PartyDisplayName =. display) else Nothing
             ]
       unless (null updates) $
         update pid updates
@@ -409,8 +404,8 @@ ensureUserAccountForParty partyId mName emailVal = do
         , Models.userCredentialPasswordHash = hashed
         , Models.userCredentialActive = True
         }
-      void $ upsert (PartyRole partyId Customer True) [PartyRoleActive =. True]
-      void $ upsert (PartyRole partyId Fan True) [PartyRoleActive =. True]
+  void $ upsert (PartyRole partyId Customer True) [Models.PartyRoleActive =. True]
+  void $ upsert (PartyRole partyId Fan True) [Models.PartyRoleActive =. True]
       pure (Just (username, tempPassword))
 
 privateTrialsServer :: AuthedUser -> ServerT PrivateTrialsAPI AppM
