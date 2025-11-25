@@ -31,6 +31,33 @@ const emptySlots: SlotInput[] = [
   { start: '', end: '' },
 ];
 
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    color: '#f8fafc',
+    bgcolor: 'rgba(255,255,255,0.03)',
+    '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.25)' },
+    '&.Mui-focused fieldset': {
+      borderColor: '#7dd3fc',
+      boxShadow: '0 0 0 1px rgba(125,211,252,0.35)',
+    },
+  },
+  '& .MuiInputBase-input': {
+    color: '#f8fafc',
+    caretColor: '#cbd5f5',
+    '&::placeholder': { color: 'rgba(226,232,240,0.7)' },
+    '&::-webkit-calendar-picker-indicator': {
+      filter: 'invert(0.8)',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: 'rgba(226,232,240,0.8)',
+  },
+  '& .MuiInputLabel-root.Mui-focused': {
+    color: '#cbd5f5',
+  },
+};
+
 export default function TrialsPage() {
   const [subjectId, setSubjectId] = useState<number | ''>('');
   const [fullName, setFullName] = useState('');
@@ -178,6 +205,7 @@ export default function TrialsPage() {
                       onChange={(e) => setFullName(e.target.value)}
                       required
                       fullWidth
+                      sx={fieldSx}
                     />
                     <TextField
                       label="Correo"
@@ -186,6 +214,7 @@ export default function TrialsPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       fullWidth
+                      sx={fieldSx}
                     />
                     <TextField
                       label="WhatsApp o teléfono"
@@ -193,6 +222,7 @@ export default function TrialsPage() {
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+593..."
                       fullWidth
+                      sx={fieldSx}
                     />
 
                     <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)' }} />
@@ -208,6 +238,7 @@ export default function TrialsPage() {
                       disabled={subjectsQuery.isLoading}
                       required
                       fullWidth
+                      sx={fieldSx}
                     >
                       {subjects.map((subject) => (
                         <MenuItem key={subject.subjectId} value={subject.subjectId}>
@@ -226,6 +257,7 @@ export default function TrialsPage() {
                               onChange={(e) => handleSlotChange(idx, 'start', e.target.value)}
                               fullWidth
                               InputLabelProps={{ shrink: true }}
+                              sx={fieldSx}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6}>
@@ -236,6 +268,7 @@ export default function TrialsPage() {
                               onChange={(e) => handleSlotChange(idx, 'end', e.target.value)}
                               fullWidth
                               InputLabelProps={{ shrink: true }}
+                              sx={fieldSx}
                             />
                           </Grid>
                         </Grid>
@@ -250,6 +283,7 @@ export default function TrialsPage() {
                       fullWidth
                       multiline
                       minRows={2}
+                      sx={fieldSx}
                     />
 
                     {formError && <Alert severity="warning">{formError}</Alert>}
