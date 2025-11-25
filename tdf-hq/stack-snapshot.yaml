@@ -1,0 +1,30 @@
+<!doctype html><!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]--><!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]--><!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]--><!--[if gt IE 8]><!--><html class="no-js" lang="en"> <!--<![endif]--><head><meta charset="UTF-8"><link href="//fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css"><link rel="search" type="application/opensearchdescription+xml" title="Stackage.org hoogle" href="/static/opensearchhoogle.xml"><link rel="search" type="application/opensearchdescription+xml" title="Stackage.org package page" href="/static/opensearchpackage.xml"><title>Not Found :: Stackage Server</title><meta name="og:site_name" content="Stackage"><meta name="twitter:card" content="summary"><meta name="og:title" content="Not Found"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://www.stackage.org/feed" type="application/atom+xml" rel="alternate" title="Recent Stackage snapshots">
+<link rel="stylesheet" href="https://www.stackage.org/static/combined/d9jEluDQ.css"><style>html{position:relative;min-height:100%}body{background:#f0f0f0;font-family:'Lato', sans-serif;font-size:16px;margin-bottom:4em;padding-bottom:2em}code,pre{color:#555;font-family:"ubuntu mono", monospace}.brand > img{height:20px}.navbar-inverse{margin-bottom:1em}.navbar-inverse .navbar-inner{background:#0981c3}.navbar-inverse .navbar-inner .btn-navbar{background:#0981c3}.navbar-inverse .navbar-inner *{color:#fff !important
+}.navbar-inverse .nav .active>a,.navbar-inverse .nav .active>a:hover,.navbar-inverse .nav .active>a:focus{background:#0981c3 !important}.navbar-inner{border-color:#06537d !important}footer{background:#0981c3;border-top:1px solid #ddd;color:#fff;position:absolute;bottom:0;left:0;width:100%}footer p{margin:1em 0;padding:0 1em}footer a{color:#fff;font-weight:bold}.alert{margin-top:1em}h1,h2,h3,h4,h5{color:#06537d
+}.content{line-height:30px}</style><!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]--><script>document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/,'js');</script></head><body><div id="main" role="main"><div class="navbar navbar-inverse navbar-static-top"><div class="navbar-inner"><div class="container"><button class="btn btn-navbar" type="button" data-toggle="collapse" data-target=".nav-collapse"><span class="icon-bar"></span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+</button>
+<a class="brand" href="/"><img src="/static/img/stackage.png" title="Stackage">
+</a>
+<div class="nav-collapse collapse"><ul class="nav"><li> <a href="/#about">About</a></li>
+<li> <a href="/snapshots">Snapshots</a></li>
+<li> <a href="/lts">LTS</a></li>
+<li> <a href="/nightly">Nightly</a></li>
+<li> <a href="https://github.com/commercialhaskell/stackage#frequently-asked-questions">FAQ</a></li>
+<li> <a href="/blog">Blog</a></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="container"><h1>Not Found</h1>
+<p>/lts-22.28/snapshot.yaml</p>
+</div>
+<footer class="text-center"><p>Stackage is a service provided by the
+<a href="https://haskell.foundation">Haskell Foundation</a>
+│&nbsp;Originally developed by
+<a href="https://www.fpcomplete.com/">FP Complete</a>
+</p>
+</footer>
+<script src="https://www.stackage.org/static/combined/KkkNZOBL.js"></script></div><!-- Prompt IE 6 users to install Chrome Frame. Remove this if you want to support IE 6.  chromium.org/developers/how-tos/chrome-frame-getting-started --><!--[if lt IE 7 ]><script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script><script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script><![endif]--><script async src="https://www.googletagmanager.com/gtag/js?id=UA-36928035-2"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-36928035-2');</script></body></html>

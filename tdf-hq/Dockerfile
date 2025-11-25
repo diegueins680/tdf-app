@@ -35,6 +35,7 @@ RUN stack --version || true
 
 # Copy project definition first for better layer caching (context: repo root)
 COPY tdf-hq/stack.yaml stack.yaml
+COPY tdf-hq/stack-snapshot.yaml stack-snapshot.yaml
 COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
 # COPY tdf-hq/package.yaml ./   # uncomment if you have it
 
