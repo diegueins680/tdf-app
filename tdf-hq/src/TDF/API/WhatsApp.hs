@@ -12,11 +12,10 @@ import Data.Maybe (listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Monad.IO.Class (liftIO)
-import Database.PostgreSQL.Simple (Connection, execute, Only(..))
+import Database.PostgreSQL.Simple (Connection, execute)
 
 import TDF.WhatsApp.Types
 import TDF.WhatsApp.Service
-import qualified TDF.Services as Services
 
 -- GET verification + POST inbound + preview
 type WhatsAppApi =

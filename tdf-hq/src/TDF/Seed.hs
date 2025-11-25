@@ -209,7 +209,8 @@ seedAcademy now = do
     , (5, "Release Day", "Plan de lanzamiento y métricas a monitorear")
     ]
   mapM_ ensureReferralCodeRow ["RR-ALFA", "RR-BETA"]
-  let inDays d = addUTCTime (realToFrac (d * 86400))
+  let inDays :: Integer -> UTCTime -> UTCTime
+      inDays d = addUTCTime (realToFrac (d * 86400))
   ensureCohortRow "rr-sprint" "Release Readiness Sprint" (inDays 14 now) (inDays 28 now) 40
   ensureCohortRow "rr-q4" "Academy Q4" (inDays 60 now) (inDays 90 now) 50
   where

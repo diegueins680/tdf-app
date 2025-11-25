@@ -7,7 +7,7 @@ import Database.PostgreSQL.Simple
 import System.Random (randomRIO)
 
 genToken :: IO Text
-genToken = T.pack <$> mapM (const rand) [1..10]
+genToken = T.pack <$> mapM (const rand) ([1..10] :: [Int])
   where
     alphabet = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9']
     rand = (alphabet !!) <$> randomRIO (0, length alphabet - 1)

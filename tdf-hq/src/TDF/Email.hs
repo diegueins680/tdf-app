@@ -11,15 +11,12 @@ module TDF.Email
 
 import           Control.Exception        (SomeException, try)
 import           Data.Char                (isAlphaNum)
-import qualified Data.ByteString.Base64      as B64Std
 import qualified Data.ByteString.Base64.URL  as B64
-import           Data.FileEmbed             (embedFile)
 import           Data.Maybe              (fromMaybe)
 import           Data.Text                (Text)
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as TE
 import qualified Data.Text.Lazy           as TL
-import qualified Data.Text.Lazy.Encoding  as TLE
 import qualified Data.ByteString.Char8    as BS
 import           Network.Mail.Mime        ( Address(..)
                                           , Mail(..)
@@ -30,7 +27,7 @@ import           Network.Mail.Mime        ( Address(..)
 import qualified Network.Mail.Mime        as Mime
 import qualified Network.Mail.SMTP        as SMTP
 import           System.Entropy           (getEntropy)
-import           System.IO                (hPutStrLn, stderr)
+import           System.IO                (stderr)
 import           Text.Printf              (printf)
 
 import           TDF.Config               (EmailConfig(..))
@@ -192,7 +189,7 @@ sendTestEmail (Just cfg) name email subject bodyLines mCtaUrl = do
 
 -- | Send an email with a small audit trail for admins.
 sendMailWithLogging :: EmailConfig -> Address -> Text -> Mime.Mail -> IO ()
-sendMailWithLogging cfg toAddr subject mail = do
+sendMailWithLogging cfg toAddr _subject mail = do
   let host = T.unpack (smtpHost cfg)
       port = fromIntegral (smtpPort cfg)
       user = T.unpack (smtpUsername cfg)
@@ -206,8 +203,6 @@ sendMailWithLogging cfg toAddr subject mail = do
         | modeLabel == "STARTTLS" = SMTP.sendMailWithLoginSTARTTLS' host port user pass mail
         | otherwise               = SMTP.sendMailWithLogin' host port user pass mail
       toEmail = T.unpack (addressEmail toAddr)
-      fromEmail = T.unpack (emailFromAddress cfg)
-      subj = T.unpack subject
   let logLine = T.concat
         [ "[Email] Sending registration email to "
         , T.pack toEmail

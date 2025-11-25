@@ -22,7 +22,6 @@ import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (getCurrentTime)
-import           Data.Int               (Int64)
 import           Database.Persist       ( (==.), (!=.)
                                         , (=.)
                                         , Entity(..)
@@ -61,7 +60,6 @@ import           TDF.Auth               ( AuthedUser
                                         , moduleName
                                         , modulesForRoles
                                         )
-import           TDF.Config             (AppConfig(..))
 import           TDF.DB                 (Env(..))
 import           TDF.Models
 import           TDF.ModelsExtra (DropdownOption(..), CourseRegistration(..))
@@ -75,12 +73,10 @@ import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         )
 import           TDF.Routes.Courses     ( CourseRegistrationStatusUpdate(..)
                                         , CourseRegistrationResponse(..)
-                                        , CoursesAdminAPI
                                         )
 import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), addLog, getRecentLogs, clearLogs )
 import           TDF.DTO                ( LogEntryDTO(..) )
 import           TDF.DTO                ( CourseRegistrationDTO(..) )
-import           Data.Time.Format       ( formatTime, defaultTimeLocale )
 import           System.IO              (hPutStrLn, stderr)
 
 adminServer
@@ -399,7 +395,7 @@ adminServer user =
                    then "tdf-user-" <> T.pack (show (fromSqlKey pid))
                    else slug
 
-        generateUniqueUsername base = go 0
+        generateUniqueUsername base = go (0 :: Int)
           where
             go attempt = do
               let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)

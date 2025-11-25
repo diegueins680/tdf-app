@@ -29,7 +29,6 @@ import           Database.Persist.Sql       (SqlPersistT, runSqlPool)
 import           Network.Wai                (Request, requestHeaders)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler, AuthServerData)
-import           Servant.API.Experimental.Auth    (AuthProtect)
 
 import           TDF.DB                     (Env(..))
 import           TDF.Models
@@ -150,10 +149,10 @@ extractToken :: Request -> Either Text Text
 extractToken req =
   case lookup "Authorization" (requestHeaders req) of
     Nothing   -> Left "Missing Authorization header"
-    Just hdr  -> parseHeader (TE.decodeUtf8' hdr)
+    Just hdr  -> parseAuthHeader (TE.decodeUtf8' hdr)
   where
-    parseHeader (Left _) = Left "Invalid Authorization header encoding"
-    parseHeader (Right txt) =
+    parseAuthHeader (Left _) = Left "Invalid Authorization header encoding"
+    parseAuthHeader (Right txt) =
       case T.words txt of
         [scheme, value]
           | T.toLower scheme == "bearer" -> Right value

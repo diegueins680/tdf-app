@@ -53,13 +53,13 @@ statusRequested = "Requested"
 statusAssigned  = "Assigned"
 statusScheduled = "Scheduled"
 
-entityKeyInt :: (PersistEntity record, PersistEntityBackend record ~ SqlBackend, ToBackendKey SqlBackend record) => Key record -> Int
+entityKeyInt :: ToBackendKey SqlBackend record => Key record -> Int
 entityKeyInt = fromIntegral . fromSqlKey
 
-intKey :: (PersistEntity record, PersistEntityBackend record ~ SqlBackend, ToBackendKey SqlBackend record) => Int -> Key record
+intKey :: ToBackendKey SqlBackend record => Int -> Key record
 intKey i = toSqlKey (fromIntegral i :: Int64)
 
-maybeKey :: (PersistEntity record, PersistEntityBackend record ~ SqlBackend, ToBackendKey SqlBackend record) => Maybe Int -> Maybe (Key record)
+maybeKey :: ToBackendKey SqlBackend record => Maybe Int -> Maybe (Key record)
 maybeKey = fmap intKey
 
 cleanOptional :: Maybe Text -> Maybe Text
@@ -84,7 +84,7 @@ deriveBaseUsername mName emailAddr =
   in if T.null candidate then emailLocal else candidate
 
 generateUniqueUsername :: Text -> PartyId -> SqlPersistT IO Text
-generateUniqueUsername base partyId = go 0
+generateUniqueUsername base partyId = go (0 :: Int)
   where
     baseClean = T.take 60 (T.filter (\c -> isAlphaNum c || c `elem` (".-_" :: String)) (T.toLower (T.strip base)))
     fallback = "tdf-user-" <> T.pack (show (fromSqlKey partyId))
@@ -232,8 +232,8 @@ roomAvailable roomId slotStart slotEnd = do
                                    , ClassSessionEndAt   >. slotStart
                                    ]
   -- check bookings attached to the room resource
-  bookingRes <- selectList [BookingResourceResourceId ==. roomId] []
-  let bookingIds = map (bookingResourceBookingId . entityVal) bookingRes
+  bookingRes <- selectList [Models.BookingResourceResourceId ==. roomId] []
+  let bookingIds = map (Models.bookingResourceBookingId . entityVal) bookingRes
   bookings <- if null bookingIds
     then pure []
     else selectList [ Models.BookingId <-. bookingIds
@@ -858,12 +858,12 @@ privateTrialsServer user@AuthedUser{..} =
       case mSession of
         Nothing -> liftIO $ throwIO err404
         Just sess -> do
-          let newStart = fromMaybe (Trials.classSessionStartAt sess) startAt
-              newEnd   = fromMaybe (Trials.classSessionEndAt sess) endAt
-          when (newEnd <= newStart) $
-            liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
+          let newStart   = fromMaybe (Trials.classSessionStartAt sess) startAt
+              newEnd     = fromMaybe (Trials.classSessionEndAt sess) endAt
               newTeacher = maybe (Trials.classSessionTeacherId sess) intKey teacherId
               newRoom    = maybe (Trials.classSessionRoomId sess) intKey roomId
+          when (newEnd <= newStart) $
+            liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
           teacherFree <- teacherAvailable newTeacher newStart newEnd
           unless teacherFree $
             liftIO $ throwIO err409 { errBody = "Profesor no disponible en ese horario" }
@@ -878,7 +878,7 @@ privateTrialsServer user@AuthedUser{..} =
                 , maybe [] (\v   -> [ClassSessionEndAt     =. v])         endAt
                 , maybe [] (\rid -> [ClassSessionRoomId    =. intKey rid]) roomId
                 , maybe [] (\bid -> [ClassSessionBookingId =. maybeKey (Just bid)]) bookingId
-                , maybe [] (\txt -> [ClassSessionNotes     =. txt])       notes
+                , maybe [] (\txt -> [ClassSessionNotes     =. Just txt])  notes
                 ]
           unless (null updates) $
             update cid updates

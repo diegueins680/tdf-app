@@ -41,7 +41,6 @@ import           Servant.Server.Experimental.Auth (AuthHandler)
 import           Text.Printf (printf)
 import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
-import           Data.Proxy (Proxy (..))
 
 import           Database.Persist
 import           Database.Persist.Sql
@@ -671,7 +670,7 @@ deriveBaseUsername mName emailAddr =
   in if T.null candidate then emailLocal else candidate
 
 generateUniqueUsername :: Text -> PartyId -> SqlPersistT IO Text
-generateUniqueUsername base partyId = go 0
+generateUniqueUsername base partyId = go (0 :: Int)
   where
     baseClean = T.take 60 (T.filter (\c -> isAlphaNum c || c `elem` (".-_" :: String)) (T.toLower (T.strip base)))
     fallback = "tdf-user-" <> T.pack (show (fromSqlKey partyId))
@@ -1930,7 +1929,7 @@ defaultResourcesForService (Just service) start end = do
     _ -> pure []
   where
     pickBooth [] = pure []
-    pickBooth (Entity key room : rest) = do
+    pickBooth (Entity key _ : rest) = do
       available <- isResourceAvailableDB key start end
       if available
         then pure [key]
@@ -2147,8 +2146,8 @@ createReceipt user CreateReceiptReq{..} = do
         existing <- selectFirst [ReceiptInvoiceId ==. iid] []
         case existing of
           Just receiptEnt -> do
-            lines <- selectList [ReceiptLineReceiptId ==. entityKey receiptEnt] [Asc ReceiptLineId]
-            pure (Right (receiptToDTO receiptEnt lines))
+            receiptLines <- selectList [ReceiptLineReceiptId ==. entityKey receiptEnt] [Asc ReceiptLineId]
+            pure (Right (receiptToDTO receiptEnt receiptLines))
           Nothing -> do
             invoiceLines <- selectList [InvoiceLineInvoiceId ==. iid] [Asc InvoiceLineId]
             if null invoiceLines
@@ -2175,8 +2174,8 @@ getReceipt user ridParam = do
     case mReceipt of
       Nothing -> pure Nothing
       Just rec -> do
-        lines <- selectList [ReceiptLineReceiptId ==. rid] [Asc ReceiptLineId]
-        pure (Just (receiptToDTO rec lines))
+        receiptLines <- selectList [ReceiptLineReceiptId ==. rid] [Asc ReceiptLineId]
+        pure (Just (receiptToDTO rec receiptLines))
   maybe (throwError err404) pure result
 
 data PreparedLine = PreparedLine
@@ -2242,7 +2241,7 @@ normalizeOptionalText =
   in (>>= clean)
 
 invoiceToDTO :: Entity Invoice -> [Entity InvoiceLine] -> Maybe (Key Receipt) -> InvoiceDTO
-invoiceToDTO (Entity iid inv) lines mReceiptKey = InvoiceDTO
+invoiceToDTO (Entity iid inv) invLines mReceiptKey = InvoiceDTO
   { invId      = fromSqlKey iid
   , number     = invoiceNumber inv
   , statusI    = T.pack (show (invoiceStatus inv))
@@ -2253,7 +2252,7 @@ invoiceToDTO (Entity iid inv) lines mReceiptKey = InvoiceDTO
   , customerId = Just (fromSqlKey (invoiceCustomerId inv))
   , notes      = invoiceNotes inv
   , receiptId  = fmap fromSqlKey mReceiptKey
-  , lineItems  = map invoiceLineToDTO lines
+  , lineItems  = map invoiceLineToDTO invLines
   }
 
 invoiceLineToDTO :: Entity InvoiceLine -> InvoiceLineDTO
@@ -2269,7 +2268,7 @@ invoiceLineToDTO (Entity lid line) = InvoiceLineDTO
   }
 
 receiptToDTO :: Entity Receipt -> [Entity ReceiptLine] -> ReceiptDTO
-receiptToDTO (Entity rid rec) lines = ReceiptDTO
+receiptToDTO (Entity rid rec) receiptLines = ReceiptDTO
   { receiptId     = fromSqlKey rid
   , receiptNumber = M.receiptNumber rec
   , issuedAt      = M.receiptIssuedAt rec
@@ -2282,7 +2281,7 @@ receiptToDTO (Entity rid rec) lines = ReceiptDTO
   , totalCents    = M.receiptTotalCents rec
   , notes         = M.receiptNotes rec
   , invoiceId     = fromSqlKey (M.receiptInvoiceId rec)
-  , lineItems     = map receiptLineToDTO lines
+  , lineItems     = map receiptLineToDTO receiptLines
   }
 
 receiptLineToDTO :: Entity ReceiptLine -> ReceiptLineDTO

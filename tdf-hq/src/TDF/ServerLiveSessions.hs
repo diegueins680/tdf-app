@@ -7,8 +7,8 @@ module TDF.ServerLiveSessions
   ( liveSessionsServer
   ) where
 
-import           Control.Monad              (forM_, unless, void, when)
-import           Control.Monad.Except       (MonadError, throwError)
+import           Control.Monad              (forM_, void, when)
+import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Crypto.BCrypt              (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
@@ -16,13 +16,13 @@ import           Data.Maybe                 (fromMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
-import           Data.Time                  (Day, UTCTime, getCurrentTime)
+import           Data.Time                  (UTCTime, getCurrentTime)
 import           Data.UUID                  (toText)
 import           Data.UUID.V4               (nextRandom)
 import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
-import           Servant.Multipart          (FileData(..), Tmp(..))
+import           Servant.Multipart          (FileData(..), Tmp)
 import           System.Directory           (createDirectoryIfMissing)
 import           System.FilePath            ((</>), takeFileName)
 import qualified Data.ByteString.Lazy       as BL
@@ -86,8 +86,8 @@ liveSessionsServer user = intakeHandler
       partyKey <- case lsmPartyId of
         Just pidInt -> do
           let key = toSqlKey (fromIntegral pidInt)
-          exists <- withPool $ get key
-          case exists of
+          existingParty <- withPool $ get key
+          case existingParty of
             Nothing -> throwError err400 { errBody = "Referenced party not found" }
             Just _  -> pure key
         Nothing -> do
