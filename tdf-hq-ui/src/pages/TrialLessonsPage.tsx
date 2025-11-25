@@ -33,7 +33,6 @@ import type {
 } from '../api/trials';
 import { Trials } from '../api/trials';
 import { Rooms } from '../api/rooms';
-import { Parties } from '../api/parties';
 
 type StatusKey = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
 
@@ -110,9 +109,9 @@ export default function TrialLessonsPage() {
     queryKey: ['rooms'],
     queryFn: Rooms.list,
   });
-  const partiesQuery = useQuery({
-    queryKey: ['parties'],
-    queryFn: Parties.list,
+  const studentsQuery = useQuery({
+    queryKey: ['trial-students'],
+    queryFn: Trials.listStudents,
   });
 
   const [subjectFilter, setSubjectFilter] = useState<number | 'all'>('all');
@@ -158,10 +157,11 @@ export default function TrialLessonsPage() {
   const subjects = useMemo<TrialSubject[]>(() => (subjectsQuery.data ?? []).filter((s) => s.active), [subjectsQuery.data]);
   const teachers = teachersQuery.data ?? [];
   const rooms = roomsQuery.data ?? [];
-  const parties = partiesQuery.data ?? [];
+  const students = studentsQuery.data ?? [];
 
   const [formError, setFormError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [studentDialogOpen, setStudentDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ClassSessionDTO | null>(null);
   const [form, setForm] = useState<{
     studentId: number | '';
@@ -218,6 +218,25 @@ export default function TrialLessonsPage() {
     setDialogOpen(false);
   };
 
+  const [studentForm, setStudentForm] = useState<{ fullName: string; email: string; phone: string; notes: string }>({
+    fullName: '',
+    email: '',
+    phone: '',
+    notes: '',
+  });
+  const studentMutation = useMutation({
+    mutationFn: Trials.createStudent,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['trial-students'] });
+    },
+  });
+
+  const openStudentDialog = () => {
+    setStudentForm({ fullName: '', email: '', phone: '', notes: '' });
+    setStudentDialogOpen(true);
+  };
+  const closeStudentDialog = () => setStudentDialogOpen(false);
+
   const handleDateChange = (value: string, minutesFallback: number) => {
     const iso = value ? new Date(value).toISOString() : '';
     const endIso = iso ? addMinutes(iso, minutesFallback) : '';
@@ -262,7 +281,7 @@ export default function TrialLessonsPage() {
   };
 
   const data = classesQuery.data ?? [];
-  const loading = classesQuery.isLoading || subjectsQuery.isLoading || teachersQuery.isLoading || roomsQuery.isLoading;
+  const loading = classesQuery.isLoading || subjectsQuery.isLoading || teachersQuery.isLoading || roomsQuery.isLoading || studentsQuery.isLoading;
 
   const normalizedStatus = (status: string): StatusKey =>
     (['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'].includes(status) ? status : 'programada') as StatusKey;
@@ -344,6 +363,9 @@ export default function TrialLessonsPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
+          <Button variant="outlined" onClick={openStudentDialog}>
+            Nuevo alumno
+          </Button>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
@@ -375,7 +397,7 @@ export default function TrialLessonsPage() {
               const teacher = teachers.find((t) => t.teacherId === cls.teacherId);
               const subject = subjects.find((s) => s.subjectId === cls.subjectId);
               const room = rooms.find((r) => r.roomId === cls.roomId);
-              const student = parties.find((p) => p.partyId === cls.studentId);
+              const student = students.find((p) => p.studentId === cls.studentId);
               return (
                 <Paper
                   key={cls.classSessionId}
@@ -437,9 +459,9 @@ export default function TrialLessonsPage() {
               onChange={(e) => setForm((prev) => ({ ...prev, studentId: Number(e.target.value) }))}
               fullWidth
             >
-              {parties.map((p) => (
-                <MenuItem key={p.partyId} value={p.partyId}>
-                  {p.displayName} {p.primaryEmail ? `· ${p.primaryEmail}` : ''}
+              {students.map((p) => (
+                <MenuItem key={p.studentId} value={p.studentId}>
+                  {p.displayName} {p.email ? `· ${p.email}` : ''}
                 </MenuItem>
               ))}
             </TextField>
@@ -532,6 +554,65 @@ export default function TrialLessonsPage() {
             disabled={createMutation.isPending || updateMutation.isPending}
           >
             {editing ? 'Guardar cambios' : 'Crear clase'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={studentDialogOpen} onClose={closeStudentDialog} fullWidth maxWidth="sm">
+        <DialogTitle>Nuevo alumno</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <TextField
+              label="Nombre completo"
+              value={studentForm.fullName}
+              onChange={(e) => setStudentForm((prev) => ({ ...prev, fullName: e.target.value }))}
+              fullWidth
+            />
+            <TextField
+              label="Correo"
+              type="email"
+              value={studentForm.email}
+              onChange={(e) => setStudentForm((prev) => ({ ...prev, email: e.target.value }))}
+              fullWidth
+            />
+            <TextField
+              label="Teléfono"
+              value={studentForm.phone}
+              onChange={(e) => setStudentForm((prev) => ({ ...prev, phone: e.target.value }))}
+              fullWidth
+            />
+            <TextField
+              label="Notas"
+              value={studentForm.notes}
+              onChange={(e) => setStudentForm((prev) => ({ ...prev, notes: e.target.value }))}
+              fullWidth
+              multiline
+              minRows={2}
+            />
+            {studentMutation.isError && (
+              <Alert severity="error">
+                {studentMutation.error instanceof Error ? studentMutation.error.message : 'No se pudo crear el alumno.'}
+              </Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeStudentDialog}>Cancelar</Button>
+          <Button
+            variant="contained"
+            onClick={async () => {
+              const payload = {
+                fullName: studentForm.fullName.trim(),
+                email: studentForm.email.trim(),
+                phone: studentForm.phone.trim() || undefined,
+                notes: studentForm.notes.trim() || undefined,
+              };
+              await studentMutation.mutateAsync(payload);
+              closeStudentDialog();
+            }}
+            disabled={studentMutation.isPending}
+          >
+            Crear alumno
           </Button>
         </DialogActions>
       </Dialog>

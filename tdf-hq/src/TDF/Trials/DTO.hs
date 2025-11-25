@@ -132,3 +132,21 @@ data ClassSessionUpdate = ClassSessionUpdate
   } deriving (Show, Generic)
 instance ToJSON ClassSessionUpdate
 instance FromJSON ClassSessionUpdate
+
+data StudentCreate = StudentCreate
+  { fullName :: Text
+  , email    :: Text
+  , phone    :: Maybe Text
+  , notes    :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON StudentCreate
+instance FromJSON StudentCreate
+
+data StudentDTO = StudentDTO
+  { studentId   :: Int
+  , displayName :: Text
+  , email       :: Maybe Text
+  , phone       :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON StudentDTO
+instance FromJSON StudentDTO

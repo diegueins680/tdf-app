@@ -225,6 +225,25 @@ teacherAvailable teacherId slotStart slotEnd = do
                                    ]
   pure (not (hasTrialConflict || hasClassConflict))
 
+roomAvailable :: ResourceId -> UTCTime -> UTCTime -> AppM Bool
+roomAvailable roomId slotStart slotEnd = do
+  hasClassConflict <- recordExists [ ClassSessionRoomId ==. roomId
+                                   , ClassSessionStartAt <. slotEnd
+                                   , ClassSessionEndAt   >. slotStart
+                                   ]
+  -- check bookings attached to the room resource
+  bookingRes <- selectList [BookingResourceResourceId ==. roomId] []
+  let bookingIds = map (bookingResourceBookingId . entityVal) bookingRes
+  bookings <- if null bookingIds
+    then pure []
+    else selectList [ Models.BookingId <-. bookingIds
+                    , Models.BookingStartsAt <. slotEnd
+                    , Models.BookingEndsAt   >. slotStart
+                    , Models.BookingStatus /<-. [Models.Cancelled, Models.NoShow]
+                    ] []
+  let hasBookingConflict = not (null bookings)
+  pure (not (hasClassConflict || hasBookingConflict))
+
 recordExists
   :: ( PersistEntity record
      , PersistEntityBackend record ~ SqlBackend
@@ -429,6 +448,8 @@ privateTrialsServer user@AuthedUser{..} =
     :<|> commissionsH
     :<|> teachersH
     :<|> teacherClassesH
+    :<|> studentsListH
+    :<|> studentCreateH
   where
     queueH :: Maybe Int -> Maybe Text -> AppM [TrialQueueItem]
     queueH mSubject mStatus = do
@@ -797,16 +818,24 @@ privateTrialsServer user@AuthedUser{..} =
       sessions <- selectList filters [Asc ClassSessionStartAt]
       dtos <- buildClassSessionDTOs sessions
       let normalized = T.toLower . T.strip
-      pure $ maybe dtos (\st -> filter (\c -> normalized (status c) == normalized st) dtos) mStatus
+      pure $ maybe dtos (\st -> filter (\ClassSessionDTO{status = s} -> normalized s == normalized st) dtos) mStatus
 
     createClassH :: ClassSessionIn -> AppM ClassSessionOut
     createClassH ClassSessionIn{..} = do
+      when (endAt <= startAt) $
+        liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
       let studentKey = intKey studentId
           teacherKey = intKey teacherId
           subjectKey = intKey subjectId
           roomKey    = intKey roomId :: ResourceId
           bookingKey = maybeKey bookingId
           durationMinutes = floor (realToFrac (diffUTCTime endAt startAt) / 60 :: Double)
+      teacherFree <- teacherAvailable teacherKey startAt endAt
+      unless teacherFree $
+        liftIO $ throwIO err409 { errBody = "Profesor no disponible en ese horario" }
+      roomFree <- roomAvailable roomKey startAt endAt
+      unless roomFree $
+        liftIO $ throwIO err409 { errBody = "Sala no disponible en ese horario" }
       sid <- insert ClassSession
         { classSessionStudentId       = studentKey
         , classSessionTeacherId       = teacherKey
@@ -828,7 +857,19 @@ privateTrialsServer user@AuthedUser{..} =
       mSession <- get cid
       case mSession of
         Nothing -> liftIO $ throwIO err404
-        Just _ -> do
+        Just sess -> do
+          let newStart = fromMaybe (Trials.classSessionStartAt sess) startAt
+              newEnd   = fromMaybe (Trials.classSessionEndAt sess) endAt
+          when (newEnd <= newStart) $
+            liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
+              newTeacher = maybe (Trials.classSessionTeacherId sess) intKey teacherId
+              newRoom    = maybe (Trials.classSessionRoomId sess) intKey roomId
+          teacherFree <- teacherAvailable newTeacher newStart newEnd
+          unless teacherFree $
+            liftIO $ throwIO err409 { errBody = "Profesor no disponible en ese horario" }
+          roomFree <- roomAvailable newRoom newStart newEnd
+          unless roomFree $
+            liftIO $ throwIO err409 { errBody = "Sala no disponible en ese horario" }
           let updates = concat
                 [ maybe [] (\tid -> [ClassSessionTeacherId =. intKey tid]) teacherId
                 , maybe [] (\sid -> [ClassSessionSubjectId =. intKey sid]) subjectId
@@ -996,6 +1037,38 @@ privateTrialsServer user@AuthedUser{..} =
           if attended
             then "realizada"
             else if startAt > now then "programada" else "por-confirmar"
+
+    studentsListH :: AppM [StudentDTO]
+    studentsListH = do
+      studentRoles <- selectList [Models.PartyRoleRole ==. Student, Models.PartyRoleActive ==. True] []
+      let ids = map (Models.partyRolePartyId . entityVal) studentRoles
+      parties <- if null ids
+        then pure []
+        else selectList [Models.PartyId <-. ids] []
+      pure
+        [ StudentDTO
+            { studentId   = entityKeyInt pid
+            , displayName = Models.partyDisplayName party
+            , email       = Models.partyPrimaryEmail party
+            , phone       = Models.partyPrimaryPhone party
+            }
+        | Entity pid party <- parties
+        ]
+
+    studentCreateH :: StudentCreate -> AppM StudentDTO
+    studentCreateH StudentCreate{..} = do
+      now <- liftIO getCurrentTime
+      partyId <- createOrFetchParty (Just fullName) (Just email) phone now
+      void $ upsert (PartyRole partyId Student True) [Models.PartyRoleActive =. True]
+      when (isJust notes) $
+        update partyId [Models.PartyNotes =. fmap T.strip notes]
+      Entity _ party <- getJustEntity partyId
+      pure StudentDTO
+        { studentId   = entityKeyInt partyId
+        , displayName = Models.partyDisplayName party
+        , email       = Models.partyPrimaryEmail party
+        , phone       = Models.partyPrimaryPhone party
+        }
 
 
 trialsServer :: ConnectionPool -> Server TrialsAPI

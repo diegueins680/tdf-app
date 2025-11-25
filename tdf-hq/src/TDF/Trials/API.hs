@@ -47,6 +47,8 @@ type PrivateTrialsAPI =
         :> QueryParam "from" UTCTime
         :> QueryParam "to" UTCTime
         :> Get '[JSON] [ClassSessionDTO]
+  :<|> "students" :> Get '[JSON] [StudentDTO]
+  :<|> "students" :> ReqBody '[JSON] StudentCreate :> PostCreated '[JSON] StudentDTO
 
 -- Minimal DTOs for the above (you likely have them elsewhere; these are placeholders)
 data SignupIn = SignupIn { firstName :: Text, lastName :: Text, email :: Text, phone :: Maybe Text, password :: Maybe Text, googleIdToken :: Maybe Text, marketingOptIn :: Bool } deriving (Generic)

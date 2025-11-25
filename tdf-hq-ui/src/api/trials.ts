@@ -88,6 +88,20 @@ export interface ClassSessionUpdate {
   notes?: string | null;
 }
 
+export interface StudentCreate {
+  fullName: string;
+  email: string;
+  phone?: string;
+  notes?: string;
+}
+
+export interface StudentDTO {
+  studentId: number;
+  displayName: string;
+  email?: string | null;
+  phone?: string | null;
+}
+
 const base = '/trials/v1';
 
 export const Trials = {
@@ -122,4 +136,6 @@ export const Trials = {
     post<ClassSessionOut>(`${base}/class-sessions`, payload),
   updateClassSession: (classId: number, payload: ClassSessionUpdate) =>
     patch<ClassSessionDTO>(`${base}/class-sessions/${classId}`, payload),
+  listStudents: () => get<StudentDTO[]>(`${base}/students`),
+  createStudent: (payload: StudentCreate) => post<StudentDTO>(`${base}/students`, payload),
 };
