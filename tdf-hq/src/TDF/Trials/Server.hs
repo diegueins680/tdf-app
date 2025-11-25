@@ -829,15 +829,15 @@ privateTrialsServer user@AuthedUser{..} =
       case mSession of
         Nothing -> liftIO $ throwIO err404
         Just _ -> do
-          let updates = catMaybes
-                [ ClassSessionTeacherId =. intKey <$> teacherId
-                , ClassSessionSubjectId =. intKey <$> subjectId
-                , ClassSessionStudentId =. intKey <$> studentId
-                , ClassSessionStartAt   =. <$> startAt
-                , ClassSessionEndAt     =. <$> endAt
-                , ClassSessionRoomId    =. intKey <$> roomId
-                , ClassSessionBookingId =. maybeKey <$> bookingId
-                , ClassSessionNotes     =. notes
+          let updates = concat
+                [ maybe [] (\tid -> [ClassSessionTeacherId =. intKey tid]) teacherId
+                , maybe [] (\sid -> [ClassSessionSubjectId =. intKey sid]) subjectId
+                , maybe [] (\pid -> [ClassSessionStudentId =. intKey pid]) studentId
+                , maybe [] (\v   -> [ClassSessionStartAt   =. v])         startAt
+                , maybe [] (\v   -> [ClassSessionEndAt     =. v])         endAt
+                , maybe [] (\rid -> [ClassSessionRoomId    =. intKey rid]) roomId
+                , maybe [] (\bid -> [ClassSessionBookingId =. maybeKey (Just bid)]) bookingId
+                , maybe [] (\txt -> [ClassSessionNotes     =. txt])       notes
                 ]
           unless (null updates) $
             update cid updates
