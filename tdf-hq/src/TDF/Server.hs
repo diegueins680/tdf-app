@@ -862,7 +862,7 @@ signup SignupRequest
       case existing of
         Just _  -> pure (Left SignupEmailExists)
         Nothing -> do
-          partyResult <- resolveParty mClaimArtistId emailVal phoneVal nowVal
+          partyResult <- resolveParty displayNameText mClaimArtistId emailVal phoneVal nowVal
           case partyResult of
             Left err -> pure (Left err)
             Right (pid, partyLabel, existingRoles) -> do
@@ -891,12 +891,13 @@ signup SignupRequest
                 Just user -> pure (Right (toLoginResponse token user))
 
     resolveParty
-      :: Maybe Int64
+      :: Text
+      -> Maybe Int64
       -> Text
       -> Maybe Text
       -> UTCTime
       -> SqlPersistT IO (Either SignupDbError (PartyId, Text, [RoleEnum]))
-    resolveParty Nothing emailVal phoneVal nowVal = do
+    resolveParty displayNameText Nothing emailVal phoneVal nowVal = do
       let partyRecord = Party
             { partyLegalName        = Nothing
             , partyDisplayName      = displayNameText
@@ -913,7 +914,7 @@ signup SignupRequest
       pid <- insert partyRecord
       pure (Right (pid, displayNameText, []))
 
-    resolveParty (Just artistId) emailVal phoneVal _ = do
+    resolveParty _ (Just artistId) emailVal phoneVal _ = do
       let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
       mProfile <- getBy (UniqueArtistProfile artistKey)
       case mProfile of
