@@ -404,8 +404,8 @@ ensureUserAccountForParty partyId mName emailVal = do
         , Models.userCredentialPasswordHash = hashed
         , Models.userCredentialActive = True
         }
-  void $ upsert (PartyRole partyId Customer True) [Models.PartyRoleActive =. True]
-  void $ upsert (PartyRole partyId Fan True) [Models.PartyRoleActive =. True]
+      void $ upsert (PartyRole partyId Customer True) [Models.PartyRoleActive =. True]
+      void $ upsert (PartyRole partyId Fan True) [Models.PartyRoleActive =. True]
       pure (Just (username, tempPassword))
 
 privateTrialsServer :: AuthedUser -> ServerT PrivateTrialsAPI AppM
