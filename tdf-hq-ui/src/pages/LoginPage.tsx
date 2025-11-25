@@ -421,7 +421,7 @@ export default function LoginPage() {
               </Typography>
               <Typography variant="body2">
                 ¿Buscas una clase de prueba?{' '}
-                <Link href="#" underline="hover">
+                <Link component={RouterLink} to="/trials" underline="hover">
                   Solicitar trial
                 </Link>
               </Typography>

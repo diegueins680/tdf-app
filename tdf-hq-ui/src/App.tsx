@@ -24,6 +24,7 @@ import CourseProductionLandingPage from './pages/CourseProductionLandingPage';
 import LogsPage from './pages/LogsPage';
 import SystemStatusPage from './pages/SystemStatusPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import TrialsPage from './pages/TrialsPage';
 
 function Shell() {
   const { session } = useSession();
@@ -123,6 +124,7 @@ export default function App() {
       <Route path="/mi-artista" element={<FanHubPage focusArtist />} />
       <Route path="/curso/produccion-musical-dic-2025" element={<CourseProductionLandingPage />} />
       <Route path="/inscripcion/:slug" element={<InscripcionPage />} />
+      <Route path="/trials" element={<TrialsPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
