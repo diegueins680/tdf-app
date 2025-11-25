@@ -27,7 +27,7 @@
     "music-studio"
   ],
   "overrides": {
-    "react-native-reanimated": "~3.10.1"
+    "react-native-reanimated": "~4.1.1"
   },
   "author": "TDF Records",
   "license": "MIT",
@@ -36,6 +36,6 @@
     "url": "https://github.com/diegueins680/tdf-app"
   },
   "devDependencies": {
-    "react-native-reanimated": "~3.10.1"
+    "react-native-reanimated": "~4.1.1"
   }
 }
