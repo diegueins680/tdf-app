@@ -26,6 +26,9 @@
     "invoicing",
     "music-studio"
   ],
+  "overrides": {
+    "react-native-reanimated": "~3.10.1"
+  },
   "author": "TDF Records",
   "license": "MIT",
   "repository": {
