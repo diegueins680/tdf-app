@@ -40,6 +40,14 @@ describe('signup payload builder', () => {
     expect(payload.roles).toBeUndefined();
     expect(payload.fanArtistIds).toBeUndefined();
   });
+
+  it('keeps claimable artist ids only when valid', () => {
+    const claimed = buildSignupPayload(baseForm, ['Artista'], [], 42);
+    expect(claimed.claimArtistId).toBe(42);
+
+    const ignored = buildSignupPayload(baseForm, ['Artista'], [], 0);
+    expect(ignored.claimArtistId).toBeUndefined();
+  });
 });
 
 describe('deriveEffectiveRoles', () => {

@@ -44,6 +44,7 @@ export interface SignupPayload {
   password: string;
   roles?: SignupRole[];
   fanArtistIds?: number[];
+  claimArtistId?: number;
 }
 
 export async function signupRequest(payload: SignupPayload): Promise<LoginResponseDTO> {

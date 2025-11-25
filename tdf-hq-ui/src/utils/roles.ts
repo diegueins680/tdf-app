@@ -37,9 +37,11 @@ export function buildSignupPayload(
   form: SignupFormState,
   signupRoles: SignupRole[],
   favoriteArtistIds: number[],
+  claimArtistId?: number | null,
 ): SignupPayload {
   const roles = normalizeSignupRoles(signupRoles);
   const wantsFanRole = roles.includes('Fan');
+  const normalizedClaimId = claimArtistId && claimArtistId > 0 ? claimArtistId : undefined;
 
   return {
     firstName: form.firstName.trim(),
@@ -49,6 +51,7 @@ export function buildSignupPayload(
     password: form.password,
     roles: roles.length ? roles : undefined,
     fanArtistIds: wantsFanRole && favoriteArtistIds.length ? favoriteArtistIds : undefined,
+    claimArtistId: normalizedClaimId,
   };
 }
 

@@ -183,7 +183,7 @@ adminServer user =
 
     roleDetail role = RoleDetailDTO
       { role    = role
-      , label   = T.pack (show role)
+      , label   = roleToText role
       , modules = map moduleName (Set.toList (modulesForRoles [role]))
       }
 

@@ -776,6 +776,7 @@ lookupByEmail emailAddress = do
 data SignupDbError
   = SignupEmailExists
   | SignupProfileError
+  | SignupArtistUnavailable
   deriving (Eq, Show)
 
 signupAllowedRoles :: [RoleEnum]
@@ -810,12 +811,14 @@ signup SignupRequest
   , password = rawPassword
   , roles = requestedRoles
   , fanArtistIds = requestedFanArtistIds
+  , claimArtistId = rawClaimArtistId
   } = do
   let emailClean    = T.strip rawEmail
       passwordClean = T.strip rawPassword
       firstClean    = T.strip rawFirst
       lastClean     = T.strip rawLast
       phoneClean    = fmap T.strip rawPhone
+      claimArtistIdClean = rawClaimArtistId >>= (\val -> if val > 0 then Just val else Nothing)
       displayName =
         case filter (not . T.null) [firstClean, lastClean] of
           [] -> emailClean
@@ -832,10 +835,12 @@ signup SignupRequest
       sanitizedRoles = nub (Customer : Fan : allowedRoles)
       sanitizedFanArtists = maybe [] (filter (> 0)) requestedFanArtistIds
   result <- liftIO $ flip runSqlPool pool $
-    runSignupDb emailClean passwordClean displayName phoneClean sanitizedRoles sanitizedFanArtists now
+    runSignupDb emailClean passwordClean displayName phoneClean sanitizedRoles sanitizedFanArtists claimArtistIdClean now
   case result of
     Left SignupEmailExists ->
       throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 "Account already exists for this email") }
+    Left SignupArtistUnavailable ->
+      throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 "Artist profile is not available to claim") }
     Left SignupProfileError ->
       throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
     Right resp -> do
@@ -849,53 +854,106 @@ signup SignupRequest
       -> Maybe Text
       -> [RoleEnum]
       -> [Int64]
+      -> Maybe Int64
       -> UTCTime
       -> SqlPersistT IO (Either SignupDbError LoginResponse)
-    runSignupDb emailVal passwordVal displayName phoneVal rolesVal fanArtistIdsVal nowVal = do
+    runSignupDb emailVal passwordVal displayName phoneVal rolesVal fanArtistIdsVal mClaimArtistId nowVal = do
       existing <- getBy (UniqueCredentialUsername emailVal)
       case existing of
         Just _  -> pure (Left SignupEmailExists)
         Nothing -> do
-          let partyRecord = Party
-                { partyLegalName        = Nothing
-                , partyDisplayName      = displayName
-                , partyIsOrg            = False
-                , partyTaxId            = Nothing
-                , partyPrimaryEmail     = Just emailVal
-                , partyPrimaryPhone     = phoneVal
-                , partyWhatsapp         = Nothing
-                , partyInstagram        = Nothing
-                , partyEmergencyContact = Nothing
-                , partyNotes            = Nothing
-                , partyCreatedAt        = nowVal
+          partyResult <- resolveParty mClaimArtistId emailVal phoneVal nowVal
+          case partyResult of
+            Left err -> pure (Left err)
+            Right (pid, partyLabel, existingRoles) -> do
+              let rolesWithArtist =
+                    if isJust mClaimArtistId && Artist `notElem` rolesVal
+                      then Artist : rolesVal
+                      else rolesVal
+                  rolesToApply = nub (rolesWithArtist ++ existingRoles)
+              applyRoles pid rolesToApply
+              for_ fanArtistIdsVal $ \artistId -> do
+                let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
+                when (artistKey /= pid) $
+                  void $ insertBy (FanFollow pid artistKey nowVal)
+              hashed <- liftIO (hashPasswordText passwordVal)
+              _ <- insert UserCredential
+                { userCredentialPartyId      = pid
+                , userCredentialUsername     = emailVal
+                , userCredentialPasswordHash = hashed
+                , userCredentialActive       = True
                 }
-          pid <- insert partyRecord
-          applyRoles pid rolesVal
-          for_ fanArtistIdsVal $ \artistId ->
-            let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
-            in void $ insertBy (FanFollow pid artistKey nowVal)
-          hashed <- liftIO (hashPasswordText passwordVal)
-          _ <- insert UserCredential
-            { userCredentialPartyId      = pid
-            , userCredentialUsername     = emailVal
-            , userCredentialPasswordHash = hashed
-            , userCredentialActive       = True
+              ensureFanProfile pid partyLabel nowVal
+              token <- createSessionToken pid emailVal
+              mUser <- loadAuthedUser token
+              case mUser of
+                Nothing   -> pure (Left SignupProfileError)
+                Just user -> pure (Right (toLoginResponse token user))
+
+    resolveParty
+      :: Maybe Int64
+      -> Text
+      -> Maybe Text
+      -> UTCTime
+      -> SqlPersistT IO (Either SignupDbError (PartyId, Text, [RoleEnum]))
+    resolveParty Nothing emailVal phoneVal nowVal = do
+      let partyRecord = Party
+            { partyLegalName        = Nothing
+            , partyDisplayName      = displayName
+            , partyIsOrg            = False
+            , partyTaxId            = Nothing
+            , partyPrimaryEmail     = Just emailVal
+            , partyPrimaryPhone     = phoneVal
+            , partyWhatsapp         = Nothing
+            , partyInstagram        = Nothing
+            , partyEmergencyContact = Nothing
+            , partyNotes            = Nothing
+            , partyCreatedAt        = nowVal
             }
-          insert_ FanProfile
-            { fanProfileFanPartyId     = pid
-            , fanProfileDisplayName    = Just displayName
-            , fanProfileAvatarUrl      = Nothing
-            , fanProfileFavoriteGenres = Nothing
-            , fanProfileBio            = Nothing
-            , fanProfileCity           = Nothing
-            , fanProfileCreatedAt      = nowVal
-            , fanProfileUpdatedAt      = Nothing
-            }
-          token <- createSessionToken pid emailVal
-          mUser <- loadAuthedUser token
-          case mUser of
-            Nothing   -> pure (Left SignupProfileError)
-            Just user -> pure (Right (toLoginResponse token user))
+      pid <- insert partyRecord
+      pure (Right (pid, displayName, []))
+
+    resolveParty (Just artistId) emailVal phoneVal _ = do
+      let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
+      mProfile <- getBy (UniqueArtistProfile artistKey)
+      case mProfile of
+        Nothing -> pure (Left SignupArtistUnavailable)
+        Just _ -> do
+          existingAccount <- selectFirst [UserCredentialPartyId ==. artistKey] []
+          case existingAccount of
+            Just _  -> pure (Left SignupArtistUnavailable)
+            Nothing -> do
+              mArtistParty <- getEntity artistKey
+              case mArtistParty of
+                Nothing -> pure (Left SignupArtistUnavailable)
+                Just (Entity _ party) -> do
+                  let normalizedPhone = cleanOptional phoneVal
+                      normalizedEmail = Just emailVal
+                      emailMissing = maybe True T.null (M.partyPrimaryEmail party)
+                      updates =
+                        [PartyPrimaryEmail =. normalizedEmail | emailMissing]
+                        ++ [PartyPrimaryPhone =. normalizedPhone | isNothing (M.partyPrimaryPhone party), isJust normalizedPhone]
+                  unless (null updates) $
+                    update artistKey updates
+                  activeRoles <- selectList [PartyRolePartyId ==. artistKey, PartyRoleActive ==. True] []
+                  let existingRoles = map (partyRoleRole . entityVal) activeRoles
+                      label = M.partyDisplayName party
+                  pure (Right (artistKey, label, existingRoles))
+
+    ensureFanProfile pid label nowVal = do
+      mProfile <- getBy (UniqueFanProfile pid)
+      case mProfile of
+        Just _ -> pure ()
+        Nothing -> insert_ FanProfile
+          { fanProfileFanPartyId     = pid
+          , fanProfileDisplayName    = Just label
+          , fanProfileAvatarUrl      = Nothing
+          , fanProfileFavoriteGenres = Nothing
+          , fanProfileBio            = Nothing
+          , fanProfileCity           = Nothing
+          , fanProfileCreatedAt      = nowVal
+          , fanProfileUpdatedAt      = Nothing
+          }
 
 data PasswordChangeError
   = PasswordInvalid

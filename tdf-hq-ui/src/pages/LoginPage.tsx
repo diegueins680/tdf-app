@@ -66,6 +66,7 @@ export default function LoginPage() {
   });
   const [signupRoles, setSignupRoles] = useState<SignupRole[]>([]);
   const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
+  const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { session, login } = useSession();
@@ -114,6 +115,14 @@ export default function LoginPage() {
     staleTime: 5 * 60 * 1000,
   });
   const fanArtists = fanArtistsQuery.data ?? [];
+  const claimableArtists = useMemo(
+    () => fanArtists.filter((artist) => artist.apHasUserAccount === false),
+    [fanArtists],
+  );
+  const selectedClaim = useMemo(
+    () => claimableArtists.find((artist) => artist.apArtistId === claimArtistId) ?? null,
+    [claimArtistId, claimableArtists],
+  );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -221,6 +230,7 @@ export default function LoginPage() {
     });
     setSignupRoles([]);
     setFavoriteArtistIds([]);
+    setClaimArtistId(null);
     signupMutation.reset();
   };
 
@@ -229,6 +239,7 @@ export default function LoginPage() {
     setSignupFeedback(null);
     setSignupRoles([]);
     setFavoriteArtistIds([]);
+    setClaimArtistId(null);
     signupMutation.reset();
   };
 
@@ -241,7 +252,13 @@ export default function LoginPage() {
   };
 
   const handleSignupSubmit = async () => {
-    const payload = buildSignupPayload(signupForm, signupRoles, favoriteArtistIds);
+    const claimIsValid = claimArtistId ? claimableArtists.some((artist) => artist.apArtistId === claimArtistId) : true;
+    if (!claimIsValid) {
+      setSignupFeedback({ type: 'error', message: 'El perfil seleccionado ya no está disponible para reclamar.' });
+      return;
+    }
+
+    const payload = buildSignupPayload(signupForm, signupRoles, favoriteArtistIds, claimArtistId ?? undefined);
     const selectedRoles = payload.roles ?? [];
     if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
       setSignupFeedback({ type: 'error', message: 'Completa nombre, correo y una contraseña segura (8+ caracteres).' });
@@ -521,8 +538,45 @@ export default function LoginPage() {
               </Select>
               <FormHelperText>
                 Elige los roles que necesitas (Fan, Artista, Promotor, Manager, A&R, Producer, etc.). Roles administrativos o financieros (como Admin o Accounting) no se pueden autoseleccionar.
-              </FormHelperText>
-            </FormControl>
+                </FormHelperText>
+              </FormControl>
+            {(claimableArtists.length > 0 || claimArtistId) && (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">¿Tu perfil de artista ya existe en TDF?</Typography>
+                <Autocomplete
+                  options={claimableArtists}
+                  getOptionLabel={(option) => option.apDisplayName}
+                  value={selectedClaim}
+                  loading={fanArtistsQuery.isFetching}
+                  onChange={(_, option) => {
+                    setClaimArtistId(option?.apArtistId ?? null);
+                    if (option && !signupRoles.some((role) => role.toLowerCase().startsWith('artist'))) {
+                      setSignupRoles((prev) => [...prev, 'Artista']);
+                    }
+                  }}
+                  noOptionsText={fanArtistsQuery.isFetching ? 'Buscando artistas…' : 'No hay perfiles disponibles para reclamar'}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Reclamar perfil de artista (opcional)"
+                      helperText="Solo se muestran perfiles sin usuario. Al reclamarlo obtendrás acceso como Artista."
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {fanArtistsQuery.isFetching ? <CircularProgress color="inherit" size={16} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+                {claimArtistId && !selectedClaim && (
+                  <Alert severity="warning">El perfil elegido ya no está disponible para reclamar.</Alert>
+                )}
+              </Stack>
+            )}
             {signupRoles.includes('Fan') && (
               <Stack spacing={1}>
                 <Typography variant="subtitle2">¿De qué artistas o bandas eres fan?</Typography>

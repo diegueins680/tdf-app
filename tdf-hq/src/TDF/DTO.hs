@@ -54,6 +54,7 @@ data ArtistProfileDTO = ArtistProfileDTO
   , apGenres          :: Maybe Text
   , apHighlights      :: Maybe Text
   , apFollowerCount   :: Int
+  , apHasUserAccount  :: Bool
   } deriving (Show, Generic)
 instance ToJSON ArtistProfileDTO
 
@@ -364,6 +365,7 @@ data SignupRequest = SignupRequest
   , marketingOptIn  :: Maybe Bool
   , roles           :: Maybe [RoleEnum]
   , fanArtistIds    :: Maybe [Int64]
+  , claimArtistId   :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON SignupRequest
 

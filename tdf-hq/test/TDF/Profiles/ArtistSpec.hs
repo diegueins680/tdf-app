@@ -28,6 +28,7 @@ spec = describe "Artist profile helpers" $ do
     apDisplayName dto `shouldBe` "Aurora"
     apFollowerCount dto `shouldBe` 0
     apSlug dto `shouldBe` Nothing
+    apHasUserAccount dto `shouldBe` False
 
   it "upserts profile data and reports follower counts" $ do
     dto <- runInMemory $ do
@@ -55,6 +56,7 @@ spec = describe "Artist profile helpers" $ do
     apCity dto `shouldBe` Just "Quito"
     apFollowerCount dto `shouldBe` 2
     apSpotifyUrl dto `shouldBe` Just "https://open.spotify.com/artist/spotify-123"
+    apHasUserAccount dto `shouldBe` False
 
 -- Helpers
 

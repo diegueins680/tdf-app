@@ -550,6 +550,8 @@ export interface components {
             roles?: components["schemas"]["Role"][];
             /** @description Artist or band ids the fan wants to follow immediately after signup. */
             fanArtistIds?: number[];
+            /** @description Optional existing artist profile to claim when it is not already assigned to a user. */
+            claimArtistId?: number | null;
         };
         LoginResponse: {
             /** @description Bearer token for authenticated requests. */
@@ -692,6 +694,8 @@ export interface components {
              * @description Total followers captured in the Fan Hub.
              */
             apFollowerCount?: number;
+            /** @description Whether this artist is already assigned to a user account. */
+            apHasUserAccount?: boolean;
         };
         ArtistProfileUpsert: {
             /** Format: int64 */

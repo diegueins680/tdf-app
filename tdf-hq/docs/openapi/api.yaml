@@ -722,6 +722,11 @@ components:
             type: integer
             format: int64
           description: Artist or band ids the fan wants to follow immediately after signup.
+        claimArtistId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Optional existing artist profile to claim when it is not already assigned to a user.
     LoginResponse:
       type: object
       properties:
@@ -1042,6 +1047,9 @@ components:
           type: integer
           format: int64
           description: Total followers captured in the Fan Hub.
+        apHasUserAccount:
+          type: boolean
+          description: Whether this artist is already assigned to a user account.
     ArtistProfileUpsert:
       type: object
       required: [apuArtistId]
