@@ -26,7 +26,7 @@ import           Network.Wai                     (Request)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler)
 
-import           Database.Persist.Sql
+import           Database.Persist.Sql hiding (loadConfig)
 
 import           TDF.Auth             (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import           TDF.Config          (loadConfig)
