@@ -819,7 +819,7 @@ signup SignupRequest
       lastClean     = T.strip rawLast
       phoneClean    = fmap T.strip rawPhone
       claimArtistIdClean = rawClaimArtistId >>= (\val -> if val > 0 then Just val else Nothing)
-      displayName =
+      displayNameText =
         case filter (not . T.null) [firstClean, lastClean] of
           [] -> emailClean
           xs -> T.unwords xs
@@ -835,7 +835,7 @@ signup SignupRequest
       sanitizedRoles = nub (Customer : Fan : allowedRoles)
       sanitizedFanArtists = maybe [] (filter (> 0)) requestedFanArtistIds
   result <- liftIO $ flip runSqlPool pool $
-    runSignupDb emailClean passwordClean displayName phoneClean sanitizedRoles sanitizedFanArtists claimArtistIdClean now
+    runSignupDb emailClean passwordClean displayNameText phoneClean sanitizedRoles sanitizedFanArtists claimArtistIdClean now
   case result of
     Left SignupEmailExists ->
       throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 "Account already exists for this email") }
@@ -844,7 +844,7 @@ signup SignupRequest
     Left SignupProfileError ->
       throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
     Right resp -> do
-      liftIO $ EmailSvc.sendWelcome emailSvc displayName emailClean emailClean passwordClean
+      liftIO $ EmailSvc.sendWelcome emailSvc displayNameText emailClean emailClean passwordClean
       pure resp
   where
     runSignupDb
@@ -857,7 +857,7 @@ signup SignupRequest
       -> Maybe Int64
       -> UTCTime
       -> SqlPersistT IO (Either SignupDbError LoginResponse)
-    runSignupDb emailVal passwordVal displayName phoneVal rolesVal fanArtistIdsVal mClaimArtistId nowVal = do
+    runSignupDb emailVal passwordVal displayNameText phoneVal rolesVal fanArtistIdsVal mClaimArtistId nowVal = do
       existing <- getBy (UniqueCredentialUsername emailVal)
       case existing of
         Just _  -> pure (Left SignupEmailExists)
@@ -899,7 +899,7 @@ signup SignupRequest
     resolveParty Nothing emailVal phoneVal nowVal = do
       let partyRecord = Party
             { partyLegalName        = Nothing
-            , partyDisplayName      = displayName
+            , partyDisplayName      = displayNameText
             , partyIsOrg            = False
             , partyTaxId            = Nothing
             , partyPrimaryEmail     = Just emailVal
@@ -911,7 +911,7 @@ signup SignupRequest
             , partyCreatedAt        = nowVal
             }
       pid <- insert partyRecord
-      pure (Right (pid, displayName, []))
+      pure (Right (pid, displayNameText, []))
 
     resolveParty (Just artistId) emailVal phoneVal _ = do
       let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
