@@ -67,10 +67,6 @@ RUN set -eu; \
     fi; \
     echo "$BUILD_TS" > /app/BUILD_TIME
 
-# Refresh stack indices and clear any stale pantry cache to avoid hash issues
-RUN rm -rf /root/.stack/pantry/hackage && \
-    stack --no-terminal update
-
 # Build and export the binary
 RUN stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc build --copy-bins --local-bin-path /out
 
