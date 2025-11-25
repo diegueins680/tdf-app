@@ -109,7 +109,7 @@ const buildDemoClasses = (): ClassRow[] => {
     start.setDate(base.getDate() + daysFromNow);
     start.setHours(hour, minute, 0, 0);
     const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
-    return { start: start.toISOString(), end: end.toISOString() };
+    return { startAt: start.toISOString(), endAt: end.toISOString() };
   };
 
   return [
@@ -252,7 +252,7 @@ const buildClassesFromSlots = (slots: TrialSlot[], subjectMap: Map<number, strin
   const rows: ClassRow[] = [];
   slots.forEach((slot) => {
     slot.slots.forEach((s) => {
-      const status = statuses[idx % statuses.length];
+      const status: ClassStatus = statuses[idx % statuses.length] ?? 'programada';
       rows.push({
         id: `slot-${slot.teacherId}-${slot.subjectId}-${idx}`,
         teacherId: slot.teacherId,
@@ -275,7 +275,7 @@ const normalizeStatus = (status: string): ClassStatus => {
   return allowed.includes(status as ClassStatus) ? (status as ClassStatus) : 'programada';
 };
 
-const buildClassesFromDTO = (classes: ClassSessionDTO[], subjectFallback: Map<number, string>): ClassRow[] =>
+const buildClassesFromDTO = (classes: ClassSessionDTO[]): ClassRow[] =>
   classes.map((cls) => ({
     id: `class-${cls.classSessionId}`,
     teacherId: cls.teacherId,
@@ -347,7 +347,7 @@ export default function TeachersPage() {
       return;
     }
     if (!selectedTeacherId || !filteredTeachers.some((t) => t.id === selectedTeacherId)) {
-      setSelectedTeacherId(filteredTeachers[0].id);
+      setSelectedTeacherId(filteredTeachers[0]?.id ?? null);
     }
   }, [filteredTeachers, selectedTeacherId]);
 
@@ -363,8 +363,8 @@ export default function TeachersPage() {
   });
 
   const classesFromApi = useMemo(
-    () => buildClassesFromDTO(teacherClassesQuery.data ?? [], subjectMap),
-    [teacherClassesQuery.data, subjectMap],
+    () => buildClassesFromDTO(teacherClassesQuery.data ?? []),
+    [teacherClassesQuery.data],
   );
   const classes = classesFromApi.length
     ? classesFromApi
