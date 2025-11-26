@@ -284,7 +284,7 @@ renderHtml preheader greeting bodyLines mCtaUrl =
 logoDataUri :: Text
 logoDataUri =
   -- Hosted asset (Gmail bloquea data URIs); fallback is the Cloudflare Pages frontend.
-  "https://tdf-app.pages.dev/tdf-logo-wordmark.png"
+  "https://tdf-app.pages.dev/tdf-logo-wordmark.svg"
 
 escapeHtml :: Text -> Text
 escapeHtml = T.concatMap replaceChar
