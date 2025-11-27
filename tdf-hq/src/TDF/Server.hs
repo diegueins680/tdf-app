@@ -2566,14 +2566,6 @@ resolveSubject mCourse =
       | "sint" `T.isInfixOf` txt = "Síntesis Modular"
       | otherwise = txt
 
-normalizePhone :: Maybe Text -> Maybe Text
-normalizePhone Nothing = Nothing
-normalizePhone (Just raw) =
-  let digits = T.filter (\c -> isDigit c || c == '+') (T.strip raw)
-      withoutPlus = T.dropWhile (== '+') digits
-      onlyDigits = T.filter isDigit withoutPlus
-  in if T.null onlyDigits then Nothing else Just ("+" <> onlyDigits)
-
 sendAutoReplies :: AppConfig -> AdsInquiry -> Maybe Text -> IO [Text]
 sendAutoReplies cfg AdsInquiry{..} mCourse = do
   mgr <- newManager tlsManagerSettings
