@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { recordings, releases, sessionVideos } from '../constants/recordsContent';
+import PublicBrandBar from '../components/PublicBrandBar';
 
 const SectionTitle = ({ title, kicker }: { title: string; kicker?: string }) => (
   <Stack spacing={1} direction="row" alignItems="center" sx={{ mb: 2 }}>
@@ -244,6 +245,9 @@ export default function RecordsPublicPage() {
         }}
       >
         <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <PublicBrandBar tagline="TDF Records · Estudio · Label · Sessions" />
+          </Box>
           <Stack spacing={3} maxWidth="md">
             <Chip
               label="TDF Records — Public CMS"

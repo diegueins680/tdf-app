@@ -29,6 +29,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
 import { Courses } from '../api/courses';
 import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
+import PublicBrandBar from '../components/PublicBrandBar';
 
 const COURSE_SLUG = 'produccion-musical-dic-2025';
 const INSTRUCTOR_IMAGE_URL = instructorImage;
@@ -127,6 +128,9 @@ export default function CourseProductionLandingPage() {
               No pudimos cargar la información del curso. Intenta de nuevo o escríbenos por WhatsApp.
             </Alert>
           )}
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <PublicBrandBar tagline="Producción Musical · Diciembre 2025" />
+          </Box>
           <Hero meta={meta} onPrimaryClick={scrollToForm} whatsappHref={whatsappHref} loading={metaQuery.isLoading} />
           <Grid container spacing={3}>
             <Grid item xs={12} md={7}>

@@ -22,6 +22,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import type { TrialSubject } from '../api/trials';
 import { Trials } from '../api/trials';
+import PublicBrandBar from '../components/PublicBrandBar';
 
 type SlotInput = { start: string };
 
@@ -153,6 +154,9 @@ export default function TrialsPage() {
     >
       <Container maxWidth="md">
         <Stack spacing={3}>
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <PublicBrandBar tagline="Clases de prueba · Escuela TDF" compact />
+          </Box>
           <Box textAlign="center">
             <Chip
               label="Trial lesson"
