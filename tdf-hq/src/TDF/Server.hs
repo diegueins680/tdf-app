@@ -2509,7 +2509,7 @@ adsAdminServer user = do
 ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO PartyId
 ensurePartyForInquiry AdsInquiry{..} now = do
   let emailClean = T.strip <$> aiEmail
-      phoneClean = normalizePhone aiPhone
+      phoneClean = aiPhone >>= normalizePhone
       display = fromMaybe "Contacto Ads" (T.strip <$> aiName)
   mExisting <- case emailClean of
     Just e  -> selectFirst [M.PartyPrimaryEmail ==. Just e] []
