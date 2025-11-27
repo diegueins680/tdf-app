@@ -12,6 +12,7 @@ import           Data.Int (Int64)
 import           Data.Text (Text)
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
+import           Data.Char (toLower)
 import           Data.Aeson (ToJSON(..), FromJSON(..), Value, object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier)
 import qualified Data.ByteString.Lazy as BL
 
@@ -212,7 +213,7 @@ data AdsInquiry = AdsInquiry
   , aiChannel :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON AdsInquiry where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = drop 2 }
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 2 }
 
 data AdsInquiryDTO = AdsInquiryDTO
   { aidInquiryId :: Int
@@ -226,7 +227,7 @@ data AdsInquiryDTO = AdsInquiryDTO
   , aidStatus    :: Text
   } deriving (Show, Generic)
 instance ToJSON AdsInquiryDTO where
-  toJSON = genericToJSON defaultOptions { fieldLabelModifier = drop 3 }
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
 
 data AdsInquiryOut = AdsInquiryOut
   { aioOk         :: Bool
@@ -235,4 +236,9 @@ data AdsInquiryOut = AdsInquiryOut
   , aioRepliedVia :: [Text]
   } deriving (Show, Generic)
 instance ToJSON AdsInquiryOut where
-  toJSON = genericToJSON defaultOptions { fieldLabelModifier = drop 3 }
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+camelDrop :: Int -> String -> String
+camelDrop n xs = case drop n xs of
+  (c:cs) -> toLower c : cs
+  []     -> []

@@ -2493,7 +2493,7 @@ adsAdminServer user = do
       subjectMap = Map.fromList [ (entityKey s, Trials.subjectName (entityVal s)) | s <- subjects ]
   pure
     [ AdsInquiryDTO
-        { inquiryId = entityKeyInt iid
+        { aidInquiryId = entityKeyInt iid
         , aidCreatedAt = Trials.leadInterestCreatedAt li
         , aidName      = M.partyDisplayName <$> Map.lookup (Trials.leadInterestPartyId li) partyMap
         , aidEmail     = M.partyPrimaryEmail =<< Map.lookup (Trials.leadInterestPartyId li) partyMap
