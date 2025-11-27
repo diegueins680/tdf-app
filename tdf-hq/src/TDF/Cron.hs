@@ -89,9 +89,10 @@ sendCoursePaymentReminders Env{..} = do
       emailSvc = EmailSvc.mkEmailService envConfig
       landingUrl = buildLandingUrl envConfig
       courseTitle = maybe "Curso de Producción Musical" title (courseMetadataFor envConfig Nothing slugVal)
-  paidCount <- runSqlPool (count [ ME.CourseRegistrationCourseSlug ==. slugVal
-                                 , ME.CourseRegistrationStatus ==. "paid"
-                                 ]) envPool
+  totalCount <- runSqlPool
+    (count [ ME.CourseRegistrationCourseSlug ==. slugVal
+           , ME.CourseRegistrationStatus !=. "cancelled"
+           ]) envPool
   pendingRegs <- runSqlPool
     (selectList
       [ ME.CourseRegistrationCourseSlug ==. slugVal
@@ -101,7 +102,8 @@ sendCoursePaymentReminders Env{..} = do
       [Desc ME.CourseRegistrationCreatedAt])
     envPool
   let recipients = dedupeByEmail pendingRegs
-      remainingSeats = max 0 (productionCourseCapacity - paidCount)
+      remainingSeatsRaw = productionCourseCapacity - totalCount
+      remainingSeats = max 1 remainingSeatsRaw
       introMsg = T.concat
         [ "[Cron][CoursePayment] Pending with email: "
         , T.pack (show (length recipients))
