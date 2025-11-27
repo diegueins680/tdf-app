@@ -29,7 +29,7 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
-import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay)
+import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime)
 import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
@@ -107,6 +107,9 @@ import           Network.HTTP.Client (newManager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.URI (urlEncode)
 import           System.Environment (lookupEnv)
+import qualified TDF.Trials.Models as Trials
+import           Database.Persist.Sql (toSqlKey, fromSqlKey)
+import           Data.Function (on)
 
 type AppM = ReaderT Env Handler
 
@@ -145,6 +148,7 @@ server =
   :<|> academyServer
   :<|> seedTrigger
   :<|> inputListServer
+  :<|> adsInquiryPublic
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -354,6 +358,7 @@ protectedServer user =
   :<|> roomsServer user
   :<|> liveSessionsServer user
   :<|> socialServer user
+  :<|> adsAdminServer user
   :<|> futureServer
 
 productionCourseSlug :: Text
@@ -2449,3 +2454,159 @@ applyRoles partyKey rolesList = do
   forM_ existing $ \(Entity roleId record) ->
     when (partyRoleActive record && Set.notMember (partyRoleRole record) desired) $
       update roleId [PartyRoleActive =. False]
+
+adsInquiryPublic :: ServerT AdsPublicAPI AppM
+adsInquiryPublic inquiry = do
+  env <- ask
+  now <- liftIO getCurrentTime
+  partyId <- runDB $ ensurePartyForInquiry inquiry now
+  (mSubjectKey, courseLabel) <- runDB $ resolveSubject (course inquiry)
+  inquiryId <- runDB $ do
+    rid <- insert (Trials.LeadInterest
+      { Trials.leadInterestPartyId   = partyId
+      , Trials.leadInterestInterestType = "ad_inquiry"
+      , Trials.leadInterestSubjectId = mSubjectKey
+      , Trials.leadInterestDetails   = fmap T.strip (message inquiry)
+      , Trials.leadInterestSource    = T.toLower (fromMaybe "ads" (channel inquiry))
+      , Trials.leadInterestDriveLink = Nothing
+      , Trials.leadInterestStatus    = "Open"
+      , Trials.leadInterestCreatedAt = now
+      })
+    pure rid
+  channels <- liftIO $ sendAutoReplies (envConfig env) inquiry courseLabel
+  pure AdsInquiryOut
+    { ok = True
+    , inquiryId = entityKeyInt inquiryId
+    , partyId = entityKeyInt partyId
+    , repliedVia = channels
+    }
+
+adsAdminServer :: AuthedUser -> ServerT AdsAdminAPI AppM
+adsAdminServer user = do
+  requireModule user ModuleAdmin
+  rows <- runDB $ selectList [Trials.LeadInterestInterestType ==. "ad_inquiry"] [Desc Trials.LeadInterestCreatedAt, LimitTo 200]
+  let partyIds = map (Trials.leadInterestPartyId . entityVal) rows
+      subjectIds = mapMaybe (Trials.leadInterestSubjectId . entityVal) rows
+  parties <- if null partyIds then pure [] else runDB (selectList [M.PartyId <-. partyIds] [])
+  subjects <- if null subjectIds then pure [] else runDB (selectList [Trials.SubjectId <-. subjectIds] [])
+  let partyMap = Map.fromList [ (entityKey p, entityVal p) | p <- parties ]
+      subjectMap = Map.fromList [ (entityKey s, Trials.subjectName (entityVal s)) | s <- subjects ]
+  pure
+    [ AdsInquiryDTO
+        { inquiryId = entityKeyInt iid
+        , createdAt = Trials.leadInterestCreatedAt li
+        , name      = M.partyDisplayName <$> Map.lookup (Trials.leadInterestPartyId li) partyMap
+        , email     = M.partyPrimaryEmail =<< Map.lookup (Trials.leadInterestPartyId li) partyMap
+        , phone     = M.partyPrimaryPhone =<< Map.lookup (Trials.leadInterestPartyId li) partyMap
+        , course    = (Trials.leadInterestSubjectId li >>= (`Map.lookup` subjectMap)) <|> Trials.leadInterestDetails li
+        , message   = Trials.leadInterestDetails li
+        , channel   = Just (Trials.leadInterestSource li)
+        , status    = Trials.leadInterestStatus li
+        }
+    | Entity iid li <- rows
+    ]
+
+ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO PartyId
+ensurePartyForInquiry AdsInquiry{..} now = do
+  let emailClean = T.strip <$> email
+      phoneClean = normalizePhone phone
+      display = fromMaybe "Contacto Ads" (T.strip <$> name)
+  mExisting <- case emailClean of
+    Just e  -> selectFirst [M.PartyPrimaryEmail ==. Just e] []
+    Nothing -> case phoneClean of
+      Just p  -> selectFirst [M.PartyPrimaryPhone ==. Just p] []
+      Nothing -> pure Nothing
+  case mExisting of
+    Just (Entity pid party) -> do
+      let updates = catMaybes
+            [ if isJust (M.partyPrimaryEmail party) || isNothing emailClean then Nothing else Just (M.PartyPrimaryEmail =. emailClean)
+            , if isJust (M.partyPrimaryPhone party) || isNothing phoneClean then Nothing else Just (M.PartyPrimaryPhone =. phoneClean)
+            , if isJust (M.partyWhatsapp party) || isNothing phoneClean then Nothing else Just (M.PartyWhatsapp =. phoneClean)
+            , if T.null (M.partyDisplayName party) && not (T.null display) then Just (M.PartyDisplayName =. display) else Nothing
+            ]
+      unless (null updates) $
+        update pid updates
+      ensureStudentRole pid
+      pure pid
+    Nothing -> do
+      pid <- insert M.Party
+        { M.partyLegalName        = Nothing
+        , M.partyDisplayName      = display
+        , M.partyIsOrg            = False
+        , M.partyTaxId            = Nothing
+        , M.partyPrimaryEmail     = emailClean
+        , M.partyPrimaryPhone     = phoneClean
+        , M.partyWhatsapp         = phoneClean
+        , M.partyInstagram        = Nothing
+        , M.partyEmergencyContact = Nothing
+        , M.partyNotes            = Nothing
+        , M.partyCreatedAt        = now
+        }
+      ensureStudentRole pid
+      pure pid
+  where
+    ensureStudentRole pid = void $ upsert (M.PartyRole pid Student True) [M.PartyRoleActive =. True]
+
+resolveSubject :: Maybe Text -> SqlPersistT IO (Maybe (Key Trials.Subject), Maybe Text)
+resolveSubject mCourse =
+  case fmap (T.toLower . T.strip) mCourse of
+    Nothing -> pure (Nothing, Nothing)
+    Just raw -> do
+      mSubject <- selectFirst [Trials.SubjectName ==. canonicalCourse raw] []
+      pure (entityKey <$> mSubject, Just (canonicalCourse raw))
+  where
+    canonicalCourse txt
+      | "dj" `T.isInfixOf` txt = "DJ"
+      | "ableton" `T.isInfixOf` txt = "Producción Música Electrónica (Ableton Live)"
+      | "logic" `T.isInfixOf` txt || "luna" `T.isInfixOf` txt = "Producción Musical (Logic/Luna)"
+      | "bajo" `T.isInfixOf` txt = "Bajo"
+      | "guitarra" `T.isInfixOf` txt = "Guitarra"
+      | "teclado" `T.isInfixOf` txt || "piano" `T.isInfixOf` txt = "Teclado"
+      | "bateria" `T.isInfixOf` txt = "Batería"
+      | "sint" `T.isInfixOf` txt = "Síntesis Modular"
+      | otherwise = txt
+
+normalizePhone :: Maybe Text -> Maybe Text
+normalizePhone Nothing = Nothing
+normalizePhone (Just raw) =
+  let digits = T.filter (\c -> isDigit c || c == '+') (T.strip raw)
+      withoutPlus = T.dropWhile (== '+') digits
+      onlyDigits = T.filter isDigit withoutPlus
+  in if T.null onlyDigits then Nothing else Just ("+" <> onlyDigits)
+
+sendAutoReplies :: AppConfig -> AdsInquiry -> Maybe Text -> IO [Text]
+sendAutoReplies cfg AdsInquiry{..} mCourse = do
+  mgr <- newManager tlsManagerSettings
+  wa <- loadWhatsAppEnv
+  let ctaBase = fromMaybe "https://tdf-app.pages.dev" (appBaseUrl cfg)
+      cta = ctaBase <> "/trials"
+      courseLabel = fromMaybe "las clases 1:1" mCourse
+      body = T.intercalate "\n"
+        [ "Hola " <> fromMaybe "" name <> " 🙌"
+        , "Gracias por tu interés en " <> courseLabel <> "."
+        , "Paquete 1:1 (16 horas): $480."
+        , "Grupo pequeño: más info y fechas en https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
+        , "¿Te agendo una clase de prueba gratis para ver horarios y profesor ideal?"
+        , "Confírmame tu disponibilidad y ciudad. Agendamos aquí: " <> cta
+        ]
+  channels <- fmap catMaybes . sequence $
+    [ case (waToken wa, waPhoneId wa, phone >>= normalizePhone) of
+        (Just tok, Just pid, Just ph) ->
+          do res <- sendText mgr tok pid ph body
+             pure (either (const Nothing) (const (Just "whatsapp")) res)
+        _ -> pure Nothing
+    , case email of
+        Just e -> do
+          let svc = EmailSvc.mkEmailService cfg
+          EmailSvc.sendTestEmail svc (fromMaybe "Amigo TDF" name) e "Gracias por tu interés en TDF"
+            [ "Paquete 1:1 (16 horas): $480."
+            , "Grupo pequeño: detalles y fechas en https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
+            , "Agenda tu clase de prueba gratis aquí: " <> cta <> "/trials"
+            ] (Just (cta <> "/trials"))
+          pure (Just "email")
+        Nothing -> pure Nothing
+    ]
+  pure channels
+
+entityKeyInt :: (PersistEntity record, PersistEntityBackend record ~ SqlBackend, ToBackendKey SqlBackend record) => Key record -> Int
+entityKeyInt = fromIntegral . fromSqlKey

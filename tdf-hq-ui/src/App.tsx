@@ -27,6 +27,8 @@ import AdminUsersPage from './pages/AdminUsersPage';
 import TrialsPage from './pages/TrialsPage';
 import TeachersPage from './pages/TeachersPage';
 import TrialLessonsPage from './pages/TrialLessonsPage';
+import RecordsPublicPage from './pages/RecordsPublicPage';
+import AdsInboxPage from './pages/AdsInboxPage';
 
 function Shell() {
   const { session } = useSession();
@@ -127,6 +129,7 @@ export default function App() {
       <Route path="/curso/produccion-musical-dic-2025" element={<CourseProductionLandingPage />} />
       <Route path="/inscripcion/:slug" element={<InscripcionPage />} />
       <Route path="/trials" element={<TrialsPage />} />
+      <Route path="/records" element={<RecordsPublicPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
@@ -207,7 +210,7 @@ export default function App() {
           <Route path="profesores" element={<TeachersPage />} />
           <Route path="clases" element={<BasicFeaturePage title="Escuela / Clases" storageKey="escuela-clases" />} />
           <Route path="trial-lessons" element={<TrialLessonsPage />} />
-          <Route path="trial-queue" element={<BasicFeaturePage title="Escuela / Trial queue" storageKey="escuela-trial-queue" />} />
+          <Route path="trial-queue" element={<AdsInboxPage />} />
           <Route path="programas" element={<BasicFeaturePage title="Escuela / Programas" storageKey="escuela-programas" />} />
           <Route path="cursos" element={<BasicFeaturePage title="Escuela / Cursos" storageKey="escuela-cursos" />} />
           <Route path="cohortes" element={<BasicFeaturePage title="Escuela / Cohortes" storageKey="escuela-cohortes" />} />

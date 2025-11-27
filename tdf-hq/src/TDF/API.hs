@@ -52,6 +52,12 @@ type InputListSeedAPI =
 
 type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
+type AdsPublicAPI =
+       "ads" :> "inquiry" :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] AdsInquiryOut
+
+type AdsAdminAPI =
+       "ads" :> "inquiries" :> Get '[JSON] [AdsInquiryDTO]
+
 type PartyAPI =
        Get '[JSON] [PartyDTO]
   :<|> ReqBody '[JSON] PartyCreate :> Post '[JSON] PartyDTO
@@ -150,6 +156,7 @@ type ProtectedAPI =
   :<|> RoomsAPI
   :<|> LiveSessionsAPI
   :<|> "social" :> SocialAPI
+  :<|> AdsAdminAPI
   :<|> "stubs"    :> FutureAPI
 
 type API =
@@ -166,6 +173,7 @@ type API =
   :<|> AcademyAPI
   :<|> "seed"   :> SeedAPI
   :<|> "input-list" :> InputListAPI
+  :<|> AdsPublicAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
 data HealthStatus = HealthStatus { status :: String, db :: String }
@@ -194,3 +202,34 @@ data UpdateBookingReq = UpdateBookingReq
   , ubEndsAt      :: Maybe UTCTime
   } deriving (Show, Generic)
 instance FromJSON UpdateBookingReq
+
+data AdsInquiry = AdsInquiry
+  { name    :: Maybe Text
+  , email   :: Maybe Text
+  , phone   :: Maybe Text
+  , course  :: Maybe Text
+  , message :: Maybe Text
+  , channel :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON AdsInquiry
+
+data AdsInquiryDTO = AdsInquiryDTO
+  { inquiryId :: Int
+  , createdAt :: UTCTime
+  , name      :: Maybe Text
+  , email     :: Maybe Text
+  , phone     :: Maybe Text
+  , course    :: Maybe Text
+  , message   :: Maybe Text
+  , channel   :: Maybe Text
+  , status    :: Text
+  } deriving (Show, Generic)
+instance ToJSON AdsInquiryDTO
+
+data AdsInquiryOut = AdsInquiryOut
+  { ok          :: Bool
+  , inquiryId   :: Int
+  , partyId     :: Int
+  , repliedVia  :: [Text]
+  } deriving (Show, Generic)
+instance ToJSON AdsInquiryOut
