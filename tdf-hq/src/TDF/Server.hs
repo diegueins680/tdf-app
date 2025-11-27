@@ -2460,14 +2460,14 @@ adsInquiryPublic inquiry = do
   env <- ask
   now <- liftIO getCurrentTime
   partyId <- runDB $ ensurePartyForInquiry inquiry now
-  (mSubjectKey, courseLabel) <- runDB $ resolveSubject (course inquiry)
+  (mSubjectKey, courseLabel) <- runDB $ resolveSubject (aiCourse inquiry)
   inquiryId <- runDB $ do
     rid <- insert (Trials.LeadInterest
       { Trials.leadInterestPartyId   = partyId
       , Trials.leadInterestInterestType = "ad_inquiry"
       , Trials.leadInterestSubjectId = mSubjectKey
-      , Trials.leadInterestDetails   = fmap T.strip (message inquiry)
-      , Trials.leadInterestSource    = T.toLower (fromMaybe "ads" (channel inquiry))
+      , Trials.leadInterestDetails   = fmap T.strip (aiMessage inquiry)
+      , Trials.leadInterestSource    = T.toLower (fromMaybe "ads" (aiChannel inquiry))
       , Trials.leadInterestDriveLink = Nothing
       , Trials.leadInterestStatus    = "Open"
       , Trials.leadInterestCreatedAt = now
@@ -2475,10 +2475,10 @@ adsInquiryPublic inquiry = do
     pure rid
   channels <- liftIO $ sendAutoReplies (envConfig env) inquiry courseLabel
   pure AdsInquiryOut
-    { ok = True
-    , inquiryId = entityKeyInt inquiryId
-    , partyId = entityKeyInt partyId
-    , repliedVia = channels
+    { aioOk = True
+    , aioInquiryId = entityKeyInt inquiryId
+    , aioPartyId = entityKeyInt partyId
+    , aioRepliedVia = channels
     }
 
 adsAdminServer :: AuthedUser -> ServerT AdsAdminAPI AppM
@@ -2494,23 +2494,23 @@ adsAdminServer user = do
   pure
     [ AdsInquiryDTO
         { inquiryId = entityKeyInt iid
-        , createdAt = Trials.leadInterestCreatedAt li
-        , name      = M.partyDisplayName <$> Map.lookup (Trials.leadInterestPartyId li) partyMap
-        , email     = M.partyPrimaryEmail =<< Map.lookup (Trials.leadInterestPartyId li) partyMap
-        , phone     = M.partyPrimaryPhone =<< Map.lookup (Trials.leadInterestPartyId li) partyMap
-        , course    = (Trials.leadInterestSubjectId li >>= (`Map.lookup` subjectMap)) <|> Trials.leadInterestDetails li
-        , message   = Trials.leadInterestDetails li
-        , channel   = Just (Trials.leadInterestSource li)
-        , status    = Trials.leadInterestStatus li
+        , aidCreatedAt = Trials.leadInterestCreatedAt li
+        , aidName      = M.partyDisplayName <$> Map.lookup (Trials.leadInterestPartyId li) partyMap
+        , aidEmail     = M.partyPrimaryEmail =<< Map.lookup (Trials.leadInterestPartyId li) partyMap
+        , aidPhone     = M.partyPrimaryPhone =<< Map.lookup (Trials.leadInterestPartyId li) partyMap
+        , aidCourse    = (Trials.leadInterestSubjectId li >>= (`Map.lookup` subjectMap)) <|> Trials.leadInterestDetails li
+        , aidMessage   = Trials.leadInterestDetails li
+        , aidChannel   = Just (Trials.leadInterestSource li)
+        , aidStatus    = Trials.leadInterestStatus li
         }
     | Entity iid li <- rows
     ]
 
 ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO PartyId
 ensurePartyForInquiry AdsInquiry{..} now = do
-  let emailClean = T.strip <$> email
-      phoneClean = normalizePhone phone
-      display = fromMaybe "Contacto Ads" (T.strip <$> name)
+  let emailClean = T.strip <$> aiEmail
+      phoneClean = normalizePhone aiPhone
+      display = fromMaybe "Contacto Ads" (T.strip <$> aiName)
   mExisting <- case emailClean of
     Just e  -> selectFirst [M.PartyPrimaryEmail ==. Just e] []
     Nothing -> case phoneClean of
@@ -2582,7 +2582,7 @@ sendAutoReplies cfg AdsInquiry{..} mCourse = do
       cta = ctaBase <> "/trials"
       courseLabel = fromMaybe "las clases 1:1" mCourse
       body = T.intercalate "\n"
-        [ "Hola " <> fromMaybe "" name <> " 🙌"
+        [ "Hola " <> fromMaybe "" aiName <> " 🙌"
         , "Gracias por tu interés en " <> courseLabel <> "."
         , "Paquete 1:1 (16 horas): $480."
         , "Grupo pequeño: más info y fechas en https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
@@ -2590,15 +2590,15 @@ sendAutoReplies cfg AdsInquiry{..} mCourse = do
         , "Confírmame tu disponibilidad y ciudad. Agendamos aquí: " <> cta
         ]
   channels <- fmap catMaybes . sequence $
-    [ case (waToken wa, waPhoneId wa, phone >>= normalizePhone) of
+    [ case (waToken wa, waPhoneId wa, aiPhone >>= normalizePhone) of
         (Just tok, Just pid, Just ph) ->
           do res <- sendText mgr tok pid ph body
              pure (either (const Nothing) (const (Just "whatsapp")) res)
         _ -> pure Nothing
-    , case email of
+    , case aiEmail of
         Just e -> do
           let svc = EmailSvc.mkEmailService cfg
-          EmailSvc.sendTestEmail svc (fromMaybe "Amigo TDF" name) e "Gracias por tu interés en TDF"
+          EmailSvc.sendTestEmail svc (fromMaybe "Amigo TDF" aiName) e "Gracias por tu interés en TDF"
             [ "Paquete 1:1 (16 horas): $480."
             , "Grupo pequeño: detalles y fechas en https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
             , "Agenda tu clase de prueba gratis aquí: " <> cta <> "/trials"

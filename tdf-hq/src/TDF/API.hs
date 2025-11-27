@@ -12,7 +12,7 @@ import           Data.Int (Int64)
 import           Data.Text (Text)
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
-import           Data.Aeson (ToJSON(..), FromJSON(..), Value, object, (.=))
+import           Data.Aeson (ToJSON(..), FromJSON(..), Value, object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier)
 import qualified Data.ByteString.Lazy as BL
 
 import           TDF.API.Admin     (AdminAPI)
@@ -204,32 +204,35 @@ data UpdateBookingReq = UpdateBookingReq
 instance FromJSON UpdateBookingReq
 
 data AdsInquiry = AdsInquiry
-  { name    :: Maybe Text
-  , email   :: Maybe Text
-  , phone   :: Maybe Text
-  , course  :: Maybe Text
-  , message :: Maybe Text
-  , channel :: Maybe Text
+  { aiName    :: Maybe Text
+  , aiEmail   :: Maybe Text
+  , aiPhone   :: Maybe Text
+  , aiCourse  :: Maybe Text
+  , aiMessage :: Maybe Text
+  , aiChannel :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON AdsInquiry
+instance FromJSON AdsInquiry where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = drop 2 }
 
 data AdsInquiryDTO = AdsInquiryDTO
-  { inquiryId :: Int
-  , createdAt :: UTCTime
-  , name      :: Maybe Text
-  , email     :: Maybe Text
-  , phone     :: Maybe Text
-  , course    :: Maybe Text
-  , message   :: Maybe Text
-  , channel   :: Maybe Text
-  , status    :: Text
+  { aidInquiryId :: Int
+  , aidCreatedAt :: UTCTime
+  , aidName      :: Maybe Text
+  , aidEmail     :: Maybe Text
+  , aidPhone     :: Maybe Text
+  , aidCourse    :: Maybe Text
+  , aidMessage   :: Maybe Text
+  , aidChannel   :: Maybe Text
+  , aidStatus    :: Text
   } deriving (Show, Generic)
-instance ToJSON AdsInquiryDTO
+instance ToJSON AdsInquiryDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = drop 3 }
 
 data AdsInquiryOut = AdsInquiryOut
-  { ok          :: Bool
-  , inquiryId   :: Int
-  , partyId     :: Int
-  , repliedVia  :: [Text]
+  { aioOk         :: Bool
+  , aioInquiryId  :: Int
+  , aioPartyId    :: Int
+  , aioRepliedVia :: [Text]
   } deriving (Show, Generic)
-instance ToJSON AdsInquiryOut
+instance ToJSON AdsInquiryOut where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = drop 3 }
