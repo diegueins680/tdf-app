@@ -1,6 +1,5 @@
-import { Avatar, Box, Chip, Link as MuiLink, Stack, Typography } from '@mui/material';
+import { Box, Chip, Link as MuiLink, Typography } from '@mui/material';
 import tdfWordmark from '../assets/tdf-logo-wordmark.svg';
-import tdfIsotype from '../assets/tdf-logo-alt.svg';
 
 interface PublicBrandBarProps {
   tagline?: string;
@@ -14,8 +13,7 @@ interface PublicBrandBarProps {
  * and adds a short descriptor per page.
  */
 export function PublicBrandBar({ tagline, compact, href = '/records', target }: PublicBrandBarProps) {
-  const isoSize = compact ? 120 : 192;
-  const wordmarkHeight = compact ? 42 : 60;
+  const wordmarkHeight = compact ? 150 : 210;
 
   return (
     <MuiLink href={href} target={target} underline="none" sx={{ display: 'inline-block' }}>
@@ -23,11 +21,11 @@ export function PublicBrandBar({ tagline, compact, href = '/records', target }: 
         sx={{
           border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 999,
-          px: { xs: 1.25, md: 1.5 },
-          py: { xs: 0.75, md: 0.9 },
+          px: { xs: 1.2, md: 1.4 },
+          py: { xs: 0.7, md: 0.85 },
           display: 'inline-flex',
           alignItems: 'center',
-          gap: { xs: 0.75, md: 1 },
+          gap: { xs: 0.7, md: 0.9 },
           flexWrap: 'wrap',
           justifyContent: 'center',
           backdropFilter: 'blur(10px)',
@@ -40,26 +38,15 @@ export function PublicBrandBar({ tagline, compact, href = '/records', target }: 
           },
         }}
       >
-        <Avatar
-          src={tdfIsotype}
-          alt="TDF Records logo"
-          variant="rounded"
-          sx={{
-            width: isoSize,
-            height: isoSize,
-            bgcolor: '#0f1629',
-            border: '1px solid rgba(255,255,255,0.12)',
-            padding: 0.2,
-          }}
-        />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.6, md: 0.8 }, flexWrap: 'wrap' }}>
           <Box
             component="img"
             src={tdfWordmark}
             alt="TDF Records wordmark"
             sx={{
               height: wordmarkHeight,
-              filter: 'drop-shadow(0px 4px 10px rgba(0,0,0,0.35))',
+              filter: 'drop-shadow(0px 10px 26px rgba(0,0,0,0.55))',
+              display: 'block',
             }}
           />
           <Chip
