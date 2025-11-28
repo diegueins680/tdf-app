@@ -14,8 +14,8 @@ interface PublicBrandBarProps {
  * and adds a short descriptor per page.
  */
 export function PublicBrandBar({ tagline, compact, href = '/records', target }: PublicBrandBarProps) {
-  const isoSize = compact ? 64 : 80;
-  const wordmarkHeight = compact ? 34 : 44;
+  const isoSize = compact ? 120 : 192;
+  const wordmarkHeight = compact ? 42 : 60;
 
   return (
     <MuiLink href={href} target={target} underline="none" sx={{ display: 'inline-block' }}>
@@ -23,11 +23,13 @@ export function PublicBrandBar({ tagline, compact, href = '/records', target }: 
         sx={{
           border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 999,
-          px: { xs: 1.4, md: 1.8 },
-          py: { xs: 0.85, md: 1 },
+          px: { xs: 1.25, md: 1.5 },
+          py: { xs: 0.75, md: 0.9 },
           display: 'inline-flex',
           alignItems: 'center',
-          gap: { xs: 1, md: 1.4 },
+          gap: { xs: 0.75, md: 1 },
+          flexWrap: 'wrap',
+          justifyContent: 'center',
           backdropFilter: 'blur(10px)',
           bgcolor: 'rgba(12,16,28,0.7)',
           boxShadow: '0 20px 50px rgba(0,0,0,0.35)',
@@ -47,7 +49,7 @@ export function PublicBrandBar({ tagline, compact, href = '/records', target }: 
             height: isoSize,
             bgcolor: '#0f1629',
             border: '1px solid rgba(255,255,255,0.12)',
-            padding: compact ? 0.4 : 0.6,
+            padding: 0.2,
           }}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
