@@ -45,7 +45,8 @@ export function PublicBrandBar({ tagline, compact, href = '/records', target }: 
             alt="TDF Records wordmark"
             sx={{
               height: wordmarkHeight,
-              filter: 'drop-shadow(0px 10px 26px rgba(0,0,0,0.55))',
+              filter: 'brightness(0) invert(1) drop-shadow(0px 10px 26px rgba(0,0,0,0.65))',
+              opacity: 0.95,
               display: 'block',
             }}
           />
