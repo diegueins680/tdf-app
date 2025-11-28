@@ -28,6 +28,7 @@ import TrialsPage from './pages/TrialsPage';
 import TeachersPage from './pages/TeachersPage';
 import TrialLessonsPage from './pages/TrialLessonsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
+import ServiceTypesPage from './pages/ServiceTypesPage';
 import AdsInboxPage from './pages/AdsInboxPage';
 
 function Shell() {
@@ -174,6 +175,7 @@ export default function App() {
           <Route path="calendario" element={<BookingsPage />} />
           <Route path="salas" element={<RoomsPage />} />
           <Route path="ordenes" element={<OrdersPage />} />
+          <Route path="servicios" element={<ServiceTypesPage />} />
           <Route path="pipelines" element={<KanbanPage />} />
           <Route path="live-sessions" element={<LiveSessionIntakePage />} />
           <Route

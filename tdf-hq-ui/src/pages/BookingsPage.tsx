@@ -13,12 +13,14 @@ import {
   Stack,
   TextField,
   Alert,
+  MenuItem,
 } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DateTime } from 'luxon';
+import { loadServiceTypes } from '../utils/serviceTypesStore';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -56,6 +58,8 @@ export default function BookingsPage() {
   const [startInput, setStartInput] = useState('');
   const [endInput, setEndInput] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const [serviceType, setServiceType] = useState<string>('');
+  const serviceTypes = useMemo(() => loadServiceTypes(), []);
 
   const formatForInput = (date: Date) =>
     DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm");
@@ -89,12 +93,14 @@ export default function BookingsPage() {
         cbEndsAt: toUtcIso(endInput) ?? '',
         cbStatus: 'Confirmed',
         cbNotes: notes.trim() || null,
+        cbServiceType: serviceType.trim() || null,
       }),
     onSuccess: () => {
       setDialogOpen(false);
       setFormError(null);
       setTitle('Bloque de estudio');
       setNotes('');
+      setServiceType('');
       void qc.invalidateQueries({ queryKey: ['bookings'] });
     },
     onError: (err) => {
@@ -180,6 +186,21 @@ export default function BookingsPage() {
               multiline
               minRows={2}
             />
+            <TextField
+              select
+              label="Servicio"
+              value={serviceType}
+              onChange={(e) => setServiceType(e.target.value)}
+              helperText="Elige el tipo de servicio asociado a la sesión."
+            >
+              <MenuItem value="">(Sin asignar)</MenuItem>
+              {serviceTypes.map((svc) => (
+                <MenuItem key={svc.id} value={svc.name}>
+                  {svc.name} — {svc.currency} {svc.price}
+                  {svc.billingUnit ? ` / ${svc.billingUnit}` : ''}
+                </MenuItem>
+              ))}
+            </TextField>
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
