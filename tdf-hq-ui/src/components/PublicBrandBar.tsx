@@ -13,7 +13,7 @@ interface PublicBrandBarProps {
  * and adds a short descriptor per page.
  */
 export function PublicBrandBar({ tagline, compact, href = '/records', target }: PublicBrandBarProps) {
-  const wordmarkHeight = compact ? 150 : 210;
+  const wordmarkHeight = compact ? 75 : 105;
 
   return (
     <MuiLink href={href} target={target} underline="none" sx={{ display: 'inline-block' }}>
