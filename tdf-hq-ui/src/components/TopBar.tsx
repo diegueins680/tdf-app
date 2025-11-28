@@ -61,9 +61,9 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         >
           <BrandLogo
             variant="wordmark"
-            size={220}
+            size={110}
             sx={{
-              height: { xs: 120, sm: 170, md: 220 },
+              height: { xs: 70, sm: 100, md: 130 },
               filter: 'brightness(0) invert(1) drop-shadow(0 10px 26px rgba(0,0,0,0.45))',
             }}
           />
