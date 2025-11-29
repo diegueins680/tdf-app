@@ -18,6 +18,7 @@ import Database.Persist.TH
 import Data.Time (UTCTime)
 import Data.Text (Text)
 import Data.Aeson (Value)
+import Database.Persist.TH (derivePersistFieldJSON)
 import TDF.Models (PartyId)
 
 share [mkPersist sqlSettings, mkMigrate "migrateCMS"] [persistLowerCase|
@@ -35,3 +36,5 @@ CmsContent
     UniqueCmsVersion slug locale version
     deriving Show
 |]
+
+derivePersistFieldJSON "Value"
