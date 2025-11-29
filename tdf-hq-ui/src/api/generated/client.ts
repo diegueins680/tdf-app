@@ -39,11 +39,11 @@ export class ApiClient {
       throw new Error(`API error: ${response.status} ${details}`);
     }
 
-    if (response.status === 204) {
+    const raw = await response.text();
+    if (!raw || raw.trim() === '') {
       return undefined as T;
     }
-
-    return response.json();
+    return JSON.parse(raw) as T;
   }
 
   // Get all users with their roles
