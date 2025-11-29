@@ -16,6 +16,7 @@ import           GHC.Generics             (Generic)
 import           Servant
 import           Servant.Multipart        ( FileData
                                           , FromMultipart(..)
+                                          , fdInputName
                                           , MultipartData(inputs, files)
                                           , MultipartForm
                                           , Tmp
@@ -48,9 +49,9 @@ instance FromMultipart Tmp FeedbackPayload where
     pure FeedbackPayload
       { fpTitle        = T.strip title
       , fpDescription  = T.strip description
-      , fpCategory     = fmap T.strip =<< category
-      , fpSeverity     = fmap T.strip =<< severity
-      , fpContactEmail = fmap T.strip =<< contact
+      , fpCategory     = fmap T.strip category
+      , fpSeverity     = fmap T.strip severity
+      , fpContactEmail = fmap T.strip contact
       , fpConsent      = consent
       , fpAttachment   = attachment
       }
