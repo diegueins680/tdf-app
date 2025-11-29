@@ -17,12 +17,30 @@ module TDF.CMS.Models where
 import Database.Persist.TH
 import Data.Time (UTCTime)
 import Data.Text (Text)
-import Data.Aeson (Value)
-import Database.Persist.TH (derivePersistFieldJSON)
+import Data.Aeson (Value, encode, eitherDecodeStrict')
+import qualified Data.ByteString.Lazy as BL
+import qualified Data.Text as T
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
+import Database.Persist
+import Database.Persist.Sql (PersistFieldSql(..), SqlType(..))
 import TDF.Models (PartyId)
 
-newtype AesonValue = AesonValue { unAesonValue :: Value }
-derivePersistFieldJSON "AesonValue"
+newtype AesonValue = AesonValue { unAesonValue :: Value } deriving stock (Show, Eq)
+
+instance PersistField AesonValue where
+  toPersistValue (AesonValue v) = PersistText . decodeUtf8 . BL.toStrict $ encode v
+  fromPersistValue (PersistText t) =
+    case eitherDecodeStrict' (encodeUtf8 t) of
+      Left err -> Left (T.pack err)
+      Right val -> Right (AesonValue val)
+  fromPersistValue (PersistByteString bs) =
+    case eitherDecodeStrict' bs of
+      Left err -> Left (T.pack err)
+      Right val -> Right (AesonValue val)
+  fromPersistValue other = Left $ "Expected JSON text, got: " <> T.pack (show other)
+
+instance PersistFieldSql AesonValue where
+  sqlType _ = SqlString
 
 share [mkPersist sqlSettings, mkMigrate "migrateCMS"] [persistLowerCase|
 CmsContent
