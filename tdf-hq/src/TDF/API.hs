@@ -59,6 +59,17 @@ type AdsPublicAPI =
 type AdsAdminAPI =
        "ads" :> "inquiries" :> Get '[JSON] [AdsInquiryDTO]
 
+type CmsPublicAPI =
+       "cms" :> "content" :> QueryParam "slug" Text :> QueryParam "locale" Text :> Get '[JSON] CmsContentDTO
+
+type CmsAdminAPI =
+       "cms" :> "content" :>
+         ( QueryParam "slug" Text :> QueryParam "locale" Text :> Get '[JSON] [CmsContentDTO]
+      :<|> ReqBody '[JSON] CmsContentIn :> Post '[JSON] CmsContentDTO
+      :<|> Capture "id" Int :> "publish" :> Post '[JSON] CmsContentDTO
+      :<|> Capture "id" Int :> Delete '[JSON] NoContent
+         )
+
 type PartyAPI =
        Get '[JSON] [PartyDTO]
   :<|> ReqBody '[JSON] PartyCreate :> Post '[JSON] PartyDTO
@@ -158,6 +169,7 @@ type ProtectedAPI =
   :<|> LiveSessionsAPI
   :<|> "social" :> SocialAPI
   :<|> AdsAdminAPI
+  :<|> CmsAdminAPI
   :<|> "stubs"    :> FutureAPI
 
 type API =
@@ -175,6 +187,7 @@ type API =
   :<|> "seed"   :> SeedAPI
   :<|> "input-list" :> InputListAPI
   :<|> AdsPublicAPI
+  :<|> CmsPublicAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
 data HealthStatus = HealthStatus { status :: String, db :: String }
@@ -236,6 +249,30 @@ data AdsInquiryOut = AdsInquiryOut
   , aioRepliedVia :: [Text]
   } deriving (Show, Generic)
 instance ToJSON AdsInquiryOut where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data CmsContentIn = CmsContentIn
+  { cciSlug    :: Text
+  , cciLocale  :: Text
+  , cciTitle   :: Maybe Text
+  , cciStatus  :: Maybe Text
+  , cciPayload :: Maybe Value
+  } deriving (Show, Generic)
+instance FromJSON CmsContentIn where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data CmsContentDTO = CmsContentDTO
+  { ccdId        :: Int
+  , ccdSlug      :: Text
+  , ccdLocale    :: Text
+  , ccdVersion   :: Int
+  , ccdStatus    :: Text
+  , ccdTitle     :: Maybe Text
+  , ccdPayload   :: Maybe Value
+  , ccdCreatedAt :: UTCTime
+  , ccdPublishedAt :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON CmsContentDTO where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
 
 camelDrop :: Int -> String -> String

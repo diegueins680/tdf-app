@@ -30,6 +30,7 @@ import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
 import { Courses } from '../api/courses';
 import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
 import PublicBrandBar from '../components/PublicBrandBar';
+import { useCmsContent } from '../hooks/useCmsContent';
 
 const COURSE_SLUG = 'produccion-musical-dic-2025';
 const INSTRUCTOR_IMAGE_URL = instructorImage;
@@ -57,6 +58,8 @@ export default function CourseProductionLandingPage() {
     queryKey: ['course-meta', COURSE_SLUG],
     queryFn: () => Courses.getMetadata(COURSE_SLUG),
   });
+  const cmsQuery = useCmsContent('course-production', 'es');
+  const cmsPayload = useMemo(() => (cmsQuery.data?.ccdPayload as any) ?? null, [cmsQuery.data]);
 
   const utmParams = useMemo(() => {
     if (typeof window === 'undefined') return undefined;
@@ -131,7 +134,13 @@ export default function CourseProductionLandingPage() {
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <PublicBrandBar tagline="Producción Musical · Diciembre 2025" />
           </Box>
-          <Hero meta={meta} onPrimaryClick={scrollToForm} whatsappHref={whatsappHref} loading={metaQuery.isLoading} />
+          <Hero
+            meta={meta}
+            onPrimaryClick={scrollToForm}
+            whatsappHref={whatsappHref}
+            loading={metaQuery.isLoading}
+            heroOverride={cmsPayload?.hero}
+          />
           <Grid container spacing={3}>
             <Grid item xs={12} md={7}>
               <Info meta={meta} loading={metaQuery.isLoading} sessionsOverride={patchedSessions} />
@@ -218,12 +227,18 @@ function Hero({
   loading,
   onPrimaryClick,
   whatsappHref,
+  heroOverride,
 }: {
   meta?: CourseMetadata;
   loading: boolean;
   onPrimaryClick: () => void;
   whatsappHref: string;
+  heroOverride?: any;
 }) {
+  const title = loading ? 'Cargando curso…' : heroOverride?.title ?? meta?.title ?? 'Curso de Producción Musical';
+  const subtitle = loading ? 'Preparando detalles...' : heroOverride?.subtitle ?? meta?.subtitle ?? 'Presencial · 4 sábados · 16 horas';
+  const primaryCta = heroOverride?.cta ?? 'Inscribirme';
+  const whatsappCta = heroOverride?.whatsappCta ?? 'Inscribirme por WhatsApp';
   return (
     <Box
       sx={{
@@ -235,16 +250,16 @@ function Hero({
       }}
     >
       <Stack spacing={2}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Chip icon={<VerifiedIcon />} label="Plazas limitadas" color="default" sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
-          <Chip icon={<HeadsetIcon />} label="Mentorías incluidas" sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
-          <Chip icon={<CalendarTodayIcon />} label="Dic 2025 / Ene 2026" sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          <Chip icon={<VerifiedIcon />} label={heroOverride?.badge1 ?? 'Plazas limitadas'} color="default" sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
+          <Chip icon={<HeadsetIcon />} label={heroOverride?.badge2 ?? 'Mentorías incluidas'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
+          <Chip icon={<CalendarTodayIcon />} label={heroOverride?.badge3 ?? 'Dic 2025 / Ene 2026'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
         </Stack>
         <Typography variant="h3" fontWeight={700} sx={{ color: '#f8fafc' }}>
-          {loading ? 'Cargando curso…' : meta?.title ?? 'Curso de Producción Musical'}
+          {title}
         </Typography>
         <Typography variant="h6" sx={{ color: 'rgba(226,232,240,0.85)', maxWidth: 820 }}>
-          {loading ? 'Preparando detalles...' : meta?.subtitle ?? 'Presencial · 4 sábados · 16 horas'}
+          {subtitle}
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
           <Typography variant="h4" fontWeight={800} sx={{ color: '#cbd5f5' }}>
@@ -266,7 +281,7 @@ function Hero({
               boxShadow: '0 14px 30px rgba(124,58,237,0.35)',
             }}
           >
-            Inscribirme
+            {primaryCta}
           </Button>
           <Button
             variant="outlined"
@@ -280,7 +295,7 @@ function Hero({
               color: '#e2e8f0',
             }}
           >
-            Inscribirme por WhatsApp
+            {whatsappCta}
           </Button>
         </Stack>
       </Stack>

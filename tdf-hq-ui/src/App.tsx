@@ -30,6 +30,7 @@ import TrialLessonsPage from './pages/TrialLessonsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import ServiceTypesPage from './pages/ServiceTypesPage';
 import AdsInboxPage from './pages/AdsInboxPage';
+import CmsAdminPage from './pages/CmsAdminPage';
 
 function Shell() {
   const { session } = useSession();
@@ -260,6 +261,7 @@ export default function App() {
           <Route path="sedes" element={<BasicFeaturePage title="Configuración / Sedes" storageKey="configuracion-sedes" />} />
           <Route path="marcas" element={<BasicFeaturePage title="Configuración / Marcas" storageKey="configuracion-marcas" />} />
           <Route path="integraciones" element={<BasicFeaturePage title="Configuración / Integraciones" storageKey="configuracion-integraciones" />} />
+          <Route path="cms" element={<CmsAdminPage />} />
           <Route path="preferencias" element={<SystemPage />} />
           <Route index element={<Navigate to="roles-permisos" replace />} />
         </Route>

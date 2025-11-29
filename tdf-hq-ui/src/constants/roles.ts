@@ -28,6 +28,7 @@ export const CORE_ROLES: Role[] = [
   'Teacher',
   'Reception',
   'Accounting',
+  'Webmaster',
   'Artist',
   'Student',
   'ReadOnly',

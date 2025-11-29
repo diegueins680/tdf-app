@@ -52,6 +52,7 @@ executable tdf-hq-exe
     TDF.Trials.Models
     TDF.Trials.Seed
     TDF.Trials.Server
+    TDF.CMS.Models
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.Types

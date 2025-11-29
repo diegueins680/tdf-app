@@ -12,8 +12,10 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { recordings, releases, sessionVideos } from '../constants/recordsContent';
+import { useMemo } from 'react';
+import { recordings as defaultRecordings, releases as defaultReleases, sessionVideos as defaultSessions } from '../constants/recordsContent';
 import PublicBrandBar from '../components/PublicBrandBar';
+import { useCmsContent } from '../hooks/useCmsContent';
 
 const SectionTitle = ({ title, kicker }: { title: string; kicker?: string }) => (
   <Stack spacing={1} direction="row" alignItems="center" sx={{ mb: 2 }}>
@@ -53,9 +55,13 @@ const GradientCard = ({
   </Box>
 );
 
-const RecordingsGrid = () => (
+type RecordingItem = typeof defaultRecordings[number];
+type ReleaseItem = typeof defaultReleases[number];
+type SessionItem = typeof defaultSessions[number];
+
+const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
   <Grid container spacing={3}>
-    {recordings.map((item) => (
+    {items.map((item) => (
       <Grid item key={item.title} xs={12} md={4}>
         <Card
           sx={{
@@ -100,9 +106,9 @@ const RecordingsGrid = () => (
   </Grid>
 );
 
-const ReleasesGrid = () => (
+const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
   <Grid container spacing={3}>
-    {releases.map((release) => (
+    {items.map((release) => (
       <Grid item xs={12} md={6} key={release.title}>
         <Card
           sx={{
@@ -170,9 +176,9 @@ const ReleasesGrid = () => (
   </Grid>
 );
 
-const SessionsGrid = () => (
+const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
   <Grid container spacing={3}>
-    {sessionVideos.map((video) => (
+    {items.map((video) => (
       <Grid item xs={12} md={4} key={video.youtubeId}>
         <Card
           sx={{
@@ -225,6 +231,21 @@ const SessionsGrid = () => (
 );
 
 export default function RecordsPublicPage() {
+  const cmsQuery = useCmsContent('records-public', 'es');
+  const payload = useMemo(() => (cmsQuery.data?.ccdPayload as any) ?? null, [cmsQuery.data]);
+  const heroTitle: string =
+    payload?.heroTitle ??
+    'Historias desde el estudio, releases y TDF Sessions en un solo lugar.';
+  const heroSubtitle: string =
+    payload?.heroSubtitle ??
+    'Mantén al día la página pública de TDF Records con fotos, lanzamientos y videos curados desde el CMS.';
+  const recordings: RecordingItem[] = payload?.recordings ?? defaultRecordings;
+  const releases: ReleaseItem[] = payload?.releases ?? defaultReleases;
+  const sessions: SessionItem[] = payload?.sessions ?? defaultSessions;
+  const heroCta = payload?.heroCta ?? 'Reservar sesión';
+  const heroCtaLink = payload?.heroCtaLink ?? 'https://wa.me/573135205493';
+  const heroSecondaryCta = payload?.heroSecondaryCta ?? 'Ver lanzamientos';
+
   return (
     <Box
       sx={{
@@ -258,21 +279,17 @@ export default function RecordsPublicPage() {
                 fontWeight: 700,
               }}
             />
-            <Typography
-              variant="h2"
-              sx={{ fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.05 }}
-            >
-              Historias desde el estudio, releases y TDF Sessions en un solo lugar.
+            <Typography variant="h2" sx={{ fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.05 }}>
+              {heroTitle}
             </Typography>
             <Typography variant="h6" sx={{ color: 'rgba(226,232,240,0.82)', maxWidth: 640 }}>
-              Mantén al día la página pública de TDF Records con fotos, lanzamientos y videos curados
-              desde este CMS mínimo. Edita el contenido en un solo archivo y publícalo en minutos.
+              {heroSubtitle}
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <Button
                 variant="contained"
                 size="large"
-                href="https://wa.me/573135205493"
+                href={heroCtaLink}
                 sx={{
                   bgcolor: '#7c3aed',
                   color: '#f8fafc',
@@ -282,7 +299,7 @@ export default function RecordsPublicPage() {
                   '&:hover': { bgcolor: '#6d28d9' },
                 }}
               >
-                Reservar sesión
+                {heroCta}
               </Button>
               <Button
                 variant="outlined"
@@ -294,7 +311,7 @@ export default function RecordsPublicPage() {
                   textTransform: 'none',
                 }}
               >
-                Ver lanzamientos
+                {heroSecondaryCta}
               </Button>
             </Stack>
           </Stack>
@@ -305,7 +322,7 @@ export default function RecordsPublicPage() {
           >
             <GradientCard title="Fotos del estudio">
               <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                Actualiza imágenes en <code>src/constants/recordsContent.ts</code>.
+                Actualiza imágenes y textos desde Configuración → CMS (slug records-public).
               </Typography>
               <Stack direction="row" spacing={1} alignItems="center">
                 {recordings.slice(0, 3).map((item) => (
@@ -320,7 +337,7 @@ export default function RecordsPublicPage() {
             </GradientCard>
             <GradientCard title="TDF Sessions">
               <Stack spacing={1}>
-                {sessionVideos.slice(0, 2).map((video) => (
+                {sessions.slice(0, 2).map((video) => (
                   <Stack key={video.youtubeId} direction="row" spacing={1} alignItems="center">
                     <Chip label="Video" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
                     <Typography variant="body2" sx={{ fontWeight: 700 }}>
@@ -347,54 +364,31 @@ export default function RecordsPublicPage() {
         <Box sx={{ mb: 6 }}>
           <SectionTitle title="Grabaciones recientes" kicker="Estudio" />
           <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
-            Mantén este grid con las sesiones más frescas: toma la foto hero, fecha y un párrafo
-            corto sobre cómo se grabó. Ideal para mostrar el sonido de TDF.
+            Mantén este grid con las sesiones más frescas: foto hero, fecha y un párrafo corto sobre cómo se grabó. Edita desde Configuración → CMS.
           </Typography>
-          <RecordingsGrid />
+          <RecordingsGrid items={recordings} />
         </Box>
 
         <Box id="releases" sx={{ mb: 6 }}>
           <SectionTitle title="Lanzamientos TDF Records" kicker="Label" />
           <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
-            Cada release incluye los links oficiales. Edita los enlaces a plataformas en el mismo
-            archivo de contenido.
+            Cada release incluye los links oficiales. Edita los enlaces a plataformas en el CMS.
           </Typography>
-          <ReleasesGrid />
+          <ReleasesGrid items={releases} />
         </Box>
 
         <Box sx={{ mb: 6 }}>
           <SectionTitle title="TDF Sessions" kicker="YouTube" />
           <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
-            Inserta el ID de YouTube en la lista de sesiones para embeberlo aquí. Ideal para
-            compartir en la página pública sin esfuerzo.
+            Inserta el ID de YouTube en la lista de sesiones para embeberlo aquí. Ideal para compartir en la página pública sin esfuerzo.
           </Typography>
-          <SessionsGrid />
+          <SessionsGrid items={sessions} />
         </Box>
 
         <GradientCard title="Cómo actualizar este CMS">
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-            Edita el archivo <code>src/constants/recordsContent.ts</code> para cambiar fotos,
-            descripciones, links y videos. Al desplegar, la página pública en /records se actualiza
-            automáticamente.
+            Usa el panel en Configuración → CMS (slug records-public) para crear borradores, publicar y versionar contenido en es/en.
           </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 2 }}>
-            <Button
-              variant="contained"
-              href="https://github.com/diegueins680/tdf-app/tree/main/tdf-hq-ui/src/constants/recordsContent.ts"
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{ textTransform: 'none', fontWeight: 800 }}
-            >
-              Abrir contenido
-            </Button>
-            <Button
-              variant="outlined"
-              href="mailto:bookings@tdfrecords.studio"
-              sx={{ textTransform: 'none', borderColor: 'rgba(255,255,255,0.3)', color: '#e5e7eb' }}
-            >
-              Hablar con el estudio
-            </Button>
-          </Stack>
         </GradientCard>
       </Container>
     </Box>

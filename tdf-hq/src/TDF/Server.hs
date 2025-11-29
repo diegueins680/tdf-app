@@ -108,6 +108,7 @@ import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.URI (urlEncode)
 import           System.Environment (lookupEnv)
 import qualified TDF.Trials.Models as Trials
+import qualified TDF.CMS.Models as CMS
 import           Database.Persist.Sql (toSqlKey, fromSqlKey)
 import           Data.Function (on)
 
@@ -149,6 +150,7 @@ server =
   :<|> seedTrigger
   :<|> inputListServer
   :<|> adsInquiryPublic
+  :<|> cmsPublicServer
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -359,6 +361,7 @@ protectedServer user =
   :<|> liveSessionsServer user
   :<|> socialServer user
   :<|> adsAdminServer user
+  :<|> cmsAdminServer user
   :<|> futureServer
 
 productionCourseSlug :: Text
@@ -2369,6 +2372,9 @@ generateReceiptNumber day = do
 throwBadRequest :: Text -> AppM a
 throwBadRequest msg = throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
+hasRole :: RoleEnum -> AuthedUser -> Bool
+hasRole roleTag AuthedUser{..} = roleTag `elem` auRoles
+
 
 requireModule :: AuthedUser -> ModuleAccess -> AppM ()
 requireModule user moduleTag
@@ -2599,6 +2605,116 @@ sendAutoReplies cfg AdsInquiry{..} mCourse = do
         Nothing -> pure Nothing
     ]
   pure channels
+
+cmsPublicServer :: Maybe Text -> Maybe Text -> AppM CmsContentDTO
+cmsPublicServer mSlug mLocale = do
+  slug <- maybe (throwError err400 { errBody = "slug requerido" }) pure mSlug
+  let locale = fromMaybe "es" mLocale
+  mPublished <- runDB $ selectFirst
+    [ CMS.CmsContentSlug ==. slug
+    , CMS.CmsContentLocale ==. locale
+    , CMS.CmsContentStatus ==. "published"
+    ] [Desc CMS.CmsContentVersion]
+  content <- case mPublished of
+    Just ent -> pure ent
+    Nothing -> do
+      mDraft <- runDB $ selectFirst
+        [ CMS.CmsContentSlug ==. slug
+        , CMS.CmsContentLocale ==. locale
+        ]
+        [Desc CMS.CmsContentVersion]
+      maybe (throwError err404) pure mDraft
+  pure (toCmsDTO content)
+
+cmsAdminServer :: AuthedUser -> ServerT CmsAdminAPI AppM
+cmsAdminServer user =
+       cmsListH
+  :<|> cmsCreateH
+  :<|> cmsPublishH
+  :<|> cmsDeleteH
+  where
+    requireWebmaster = unless (hasRole Admin user || hasRole Webmaster user) $
+      throwError err403
+
+    cmsListH mSlug mLocale = do
+      requireWebmaster
+      let filters = catMaybes
+            [ (CMS.CmsContentSlug ==.) <$> mSlug
+            , (CMS.CmsContentLocale ==.) <$> mLocale
+            ]
+      rows <- runDB $ selectList filters [Desc CMS.CmsContentCreatedAt]
+      pure (map toCmsDTO rows)
+
+    cmsCreateH CmsContentIn{..} = do
+      requireWebmaster
+      now <- liftIO getCurrentTime
+      let slug = cciSlug
+          locale = cciLocale
+          statusVal = fromMaybe "draft" cciStatus
+      nextVersion <- runDB $ do
+        mLatest <- selectFirst
+          [ CMS.CmsContentSlug ==. slug
+          , CMS.CmsContentLocale ==. locale
+          ]
+          [Desc CMS.CmsContentVersion]
+        pure $ maybe 1 ((+1) . CMS.cmsContentVersion . entityVal) mLatest
+      let publishedAt = if statusVal == "published" then Just now else Nothing
+      cid <- runDB $ insert CMS.CmsContent
+        { CMS.cmsContentSlug = slug
+        , CMS.cmsContentLocale = locale
+        , CMS.cmsContentVersion = nextVersion
+        , CMS.cmsContentStatus = statusVal
+        , CMS.cmsContentTitle = cciTitle
+        , CMS.cmsContentPayload = cciPayload
+        , CMS.cmsContentCreatedBy = Just (auPartyId user)
+        , CMS.cmsContentCreatedAt = now
+        , CMS.cmsContentUpdatedAt = now
+        , CMS.cmsContentPublishedAt = publishedAt
+        }
+      ent <- runDB $ getJustEntity cid
+      pure (toCmsDTO ent)
+
+    cmsPublishH cid = do
+      requireWebmaster
+      let contentKey = toSqlKey (fromIntegral cid) :: Key CMS.CmsContent
+      now <- liftIO getCurrentTime
+      mEnt <- runDB $ get contentKey
+      case mEnt of
+        Nothing -> throwError err404
+        Just ent -> do
+          runDB $ do
+            updateWhere
+              [ CMS.CmsContentSlug ==. CMS.cmsContentSlug ent
+              , CMS.CmsContentLocale ==. CMS.cmsContentLocale ent
+              ]
+              [ CMS.CmsContentStatus =. "archived" ]
+            update contentKey
+              [ CMS.CmsContentStatus =. "published"
+              , CMS.CmsContentPublishedAt =. Just now
+              , CMS.CmsContentUpdatedAt =. now
+              ]
+          ent' <- runDB $ getJustEntity contentKey
+          pure (toCmsDTO ent')
+
+    cmsDeleteH cid = do
+      requireWebmaster
+      let contentKey = toSqlKey (fromIntegral cid) :: Key CMS.CmsContent
+      runDB $ delete contentKey
+      pure NoContent
+
+toCmsDTO :: Entity CMS.CmsContent -> CmsContentDTO
+toCmsDTO (Entity cid c) =
+  CmsContentDTO
+    { ccdId = entityKeyInt cid
+    , ccdSlug = CMS.cmsContentSlug c
+    , ccdLocale = CMS.cmsContentLocale c
+    , ccdVersion = CMS.cmsContentVersion c
+    , ccdStatus = CMS.cmsContentStatus c
+    , ccdTitle = CMS.cmsContentTitle c
+    , ccdPayload = CMS.cmsContentPayload c
+    , ccdCreatedAt = CMS.cmsContentCreatedAt c
+    , ccdPublishedAt = CMS.cmsContentPublishedAt c
+    }
 
 entityKeyInt :: (PersistEntity record, PersistEntityBackend record ~ SqlBackend, ToBackendKey SqlBackend record) => Key record -> Int
 entityKeyInt = fromIntegral . fromSqlKey

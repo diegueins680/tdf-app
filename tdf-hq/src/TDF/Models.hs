@@ -44,6 +44,7 @@ data RoleEnum
   | LiveSessionsProducer
   | Artist
   | Artista
+  | Webmaster
   | Promotor
   | Promoter
   | Producer
@@ -139,6 +140,7 @@ roleToText Accounting    = "Accounting"
 roleToText LiveSessionsProducer = "Live Sessions Producer"
 roleToText Artist        = "Artist"
 roleToText Artista       = "Artista"
+roleToText Webmaster     = "Webmaster"
 roleToText Promotor      = "Promotor"
 roleToText Promoter      = "Promoter"
 roleToText Producer      = "Producer"
@@ -177,6 +179,7 @@ roleFromText raw =
     "live session producer" -> Just LiveSessionsProducer
     "artist"       -> Just Artist
     "artista"      -> Just Artista
+    "webmaster"    -> Just Webmaster
     "promotor"     -> Just Promotor
     "promoter"     -> Just Promoter
     "producer"     -> Just Producer

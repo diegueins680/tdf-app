@@ -23,6 +23,7 @@ import type { ArtistProfileUpsert, FanProfileUpdate } from '../api/types';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { Link as RouterLink } from 'react-router-dom';
+import { useCmsContent } from '../hooks/useCmsContent';
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session } = useSession();
@@ -33,6 +34,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     [session?.roles],
   );
   const canEditArtist = useMemo(() => Boolean(session?.partyId), [session?.partyId]);
+  const cmsQuery = useCmsContent('fan-hub', 'es');
+  const cmsPayload = useMemo(() => (cmsQuery.data?.ccdPayload as any) ?? null, [cmsQuery.data]);
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
 
   const artistsQuery = useQuery({
@@ -205,10 +208,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
         <Stack spacing={1}>
           <Typography variant="h3" fontWeight={700}>
-            Fan Hub — Conecta con tus artistas
+            {cmsPayload?.heroTitle ?? 'Fan Hub — Conecta con tus artistas'}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Sigue a tus artistas favoritos, recibe lanzamientos y escucha sus playlists oficiales en Spotify y YouTube.
+            {cmsPayload?.heroSubtitle ?? 'Sigue a tus artistas favoritos, recibe lanzamientos y escucha sus playlists oficiales en Spotify y YouTube.'}
           </Typography>
           {!session && (
             <Typography variant="body2">

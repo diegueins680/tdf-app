@@ -127,6 +127,7 @@ modulesForRole Teacher    = Set.singleton ModuleScheduling
 modulesForRole LiveSessionsProducer = Set.fromList [ModuleCRM, ModuleScheduling]
 modulesForRole Artist     = Set.fromList [ModuleScheduling, ModulePackages]
 modulesForRole Artista    = Set.fromList [ModuleScheduling, ModulePackages]
+modulesForRole Webmaster  = Set.fromList [ModuleAdmin, ModuleCRM]
 modulesForRole Promotor   = Set.empty
 modulesForRole Promoter   = Set.empty
 modulesForRole Producer   = Set.fromList [ModuleCRM, ModuleScheduling]
