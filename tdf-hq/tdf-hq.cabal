@@ -16,6 +16,7 @@ executable tdf-hq-exe
     TDF.API.Bands
     TDF.API.Future
     TDF.API.LiveSessions
+    TDF.API.Feedback
     TDF.API.Inventory
     TDF.API.Pipelines
     TDF.API.Rooms
@@ -45,6 +46,7 @@ executable tdf-hq-exe
     TDF.ServerAdmin
     TDF.ServerExtra
     TDF.ServerLiveSessions
+    TDF.ServerFeedback
     TDF.ServerFuture
     TDF.Routes.Courses
     TDF.Trials.API
@@ -121,6 +123,7 @@ test-suite tdf-hq-test
     TDF.API.Admin
     TDF.API.Bands
     TDF.API.Future
+    TDF.API.Feedback
     TDF.API.Inventory
     TDF.API.LiveSessions
     TDF.API.Pipelines
@@ -151,6 +154,7 @@ test-suite tdf-hq-test
     TDF.ServerExtra
     TDF.ServerFuture
     TDF.ServerLiveSessions
+    TDF.ServerFeedback
     TDF.ServerSpec
     TDF.Services
     TDF.Trials.API

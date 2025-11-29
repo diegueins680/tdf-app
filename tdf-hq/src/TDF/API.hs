@@ -32,6 +32,7 @@ import qualified TDF.ModelsExtra  as ME
 import           TDF.Routes.Academy (AcademyAPI)
 import           TDF.Routes.Courses (CoursesPublicAPI, WhatsAppWebhookAPI)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
+import           TDF.API.Feedback    (FeedbackAPI)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -167,6 +168,7 @@ type ProtectedAPI =
   :<|> PipelinesAPI
   :<|> RoomsAPI
   :<|> LiveSessionsAPI
+  :<|> FeedbackAPI
   :<|> "social" :> SocialAPI
   :<|> AdsAdminAPI
   :<|> CmsAdminAPI

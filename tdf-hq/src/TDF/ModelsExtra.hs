@@ -197,6 +197,9 @@ LiveSessionIntake
     contactEmail Text Maybe
     contactPhone Text Maybe
     sessionDate  Day Maybe
+    availability Text Maybe
+    acceptedTerms Bool default=False
+    termsVersion Text Maybe
     riderPath    Text Maybe
     createdBy    PartyId Maybe
     createdAt    UTCTime default=now()
@@ -212,6 +215,19 @@ LiveSessionMusician
     role        Text Maybe
     notes       Text Maybe
     isExisting  Bool default=False
+    deriving Show Generic
+
+Feedback
+    Id           UUID default=gen_random_uuid()
+    title        Text
+    description  Text
+    category     Text Maybe
+    severity     Text Maybe
+    contactEmail Text Maybe
+    attachment   Text Maybe
+    consent      Bool default=False
+    createdBy    PartyId Maybe
+    createdAt    UTCTime default=now()
     deriving Show Generic
 
 Session

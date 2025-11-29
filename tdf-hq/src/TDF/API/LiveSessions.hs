@@ -51,6 +51,9 @@ data LiveSessionIntakePayload = LiveSessionIntakePayload
   , lsiContactEmail :: Maybe Text
   , lsiContactPhone :: Maybe Text
   , lsiSessionDate  :: Maybe Day
+  , lsiAvailability :: Maybe Text
+  , lsiAcceptedTerms :: Bool
+  , lsiTermsVersion :: Maybe Text
   , lsiMusicians    :: [LiveSessionMusicianPayload]
   , lsiRider        :: Maybe (FileData Tmp)
   } deriving (Show, Generic)
@@ -62,6 +65,9 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
     contactPhone <- optionalText "contactPhone" multipart
     let riderFile    = lookupFile "rider" multipart
     sessionDate <- optionalDay "sessionDate" multipart
+    availability <- optionalText "availability" multipart
+    acceptedTerms <- optionalBool "acceptedTerms" multipart
+    termsVersion <- optionalText "termsVersion" multipart
     musiciansTxt <- lookupText "musicians" multipart
     musicians <- decodeMusicians musiciansTxt
     pure LiveSessionIntakePayload
@@ -69,6 +75,9 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       , lsiContactEmail = fmap T.strip contactEmail
       , lsiContactPhone = fmap T.strip contactPhone
       , lsiSessionDate  = sessionDate
+      , lsiAvailability = fmap T.strip availability
+      , lsiAcceptedTerms = acceptedTerms
+      , lsiTermsVersion = fmap T.strip termsVersion
       , lsiMusicians    = musicians
       , lsiRider        = riderFile
       }
@@ -90,6 +99,12 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
             in if T.null txt
                  then Right Nothing
                  else fmap Just (readMaybeDay txt)
+      optionalBool name mp =
+        case lookupInputByName name mp of
+          Nothing -> Right False
+          Just inp ->
+            let txt = T.toLower (T.strip (inputValueText inp))
+            in Right (txt `elem` ["true", "1", "yes", "on", "si", "sí"])
 
       decodeMusicians txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of

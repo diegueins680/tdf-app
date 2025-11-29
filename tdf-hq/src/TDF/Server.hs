@@ -62,6 +62,7 @@ import qualified TDF.LogBuffer as LogBuf
 import           TDF.ServerExtra (bandsServer, inventoryServer, loadBandForParty, pipelinesServer, roomsServer, sessionsServer)
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
+import           TDF.ServerFeedback (feedbackServer)
 import           TDF.Trials.API (TrialsAPI)
 import           TDF.Trials.Server (trialsServer)
 import qualified TDF.Meta as Meta
@@ -359,6 +360,7 @@ protectedServer user =
   :<|> pipelinesServer user
   :<|> roomsServer user
   :<|> liveSessionsServer user
+  :<|> feedbackServer user
   :<|> socialServer user
   :<|> adsAdminServer user
   :<|> cmsAdminServer user

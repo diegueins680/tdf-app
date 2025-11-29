@@ -33,7 +33,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     () => Boolean(session?.roles?.some((role) => role === 'fan' || role === 'customer')),
     [session?.roles],
   );
-  const canEditArtist = useMemo(() => Boolean(session?.partyId), [session?.partyId]);
+  const canEditArtist = useMemo(
+    () => Boolean(session?.partyId && (session.roles?.some((r) => r === 'artist' || r === 'artista' || r === 'admin') ?? false)),
+    [session?.partyId, session?.roles],
+  );
   const cmsQuery = useCmsContent('fan-hub', 'es');
   const cmsPayload = useMemo(() => (cmsQuery.data?.ccdPayload as any) ?? null, [cmsQuery.data]);
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
@@ -46,13 +49,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const profileQuery = useQuery({
     queryKey: ['fan-profile', viewerId],
     queryFn: Fans.getProfile,
-    enabled: Boolean(viewerId),
+    enabled: Boolean(viewerId && isFan),
   });
 
   const followsQuery = useQuery({
     queryKey: ['fan-follows', viewerId],
     queryFn: Fans.listFollows,
-    enabled: Boolean(viewerId),
+    enabled: Boolean(viewerId && isFan),
   });
   const artistProfileQuery = useQuery({
     queryKey: ['artist-profile', viewerId],
@@ -223,6 +226,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+
+        {!isFan && session && (
+          <Alert severity="info">
+            Este usuario no tiene rol de Fan/Customer, por lo que no cargamos el perfil fan. Agrega el rol Fan para evitar errores 403 en esta sección.
+          </Alert>
+        )}
 
         {isFan && (
           <ProfileSectionCard

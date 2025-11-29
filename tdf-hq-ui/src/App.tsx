@@ -25,12 +25,14 @@ import LogsPage from './pages/LogsPage';
 import SystemStatusPage from './pages/SystemStatusPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import TrialsPage from './pages/TrialsPage';
+import LiveSessionPublicPage from './pages/LiveSessionPublicPage';
 import TeachersPage from './pages/TeachersPage';
 import TrialLessonsPage from './pages/TrialLessonsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import ServiceTypesPage from './pages/ServiceTypesPage';
 import AdsInboxPage from './pages/AdsInboxPage';
 import CmsAdminPage from './pages/CmsAdminPage';
+import FeedbackPage from './pages/FeedbackPage';
 
 function Shell() {
   const { session } = useSession();
@@ -131,6 +133,8 @@ export default function App() {
       <Route path="/curso/produccion-musical-dic-2025" element={<CourseProductionLandingPage />} />
       <Route path="/inscripcion/:slug" element={<InscripcionPage />} />
       <Route path="/trials" element={<TrialsPage />} />
+      <Route path="/live-sessions/registro" element={<LiveSessionPublicPage />} />
+      <Route path="/feedback" element={<FeedbackPage />} />
       <Route path="/records" element={<RecordsPublicPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>

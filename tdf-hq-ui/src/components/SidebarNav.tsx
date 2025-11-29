@@ -132,6 +132,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Acerca de', path: '/acerca' },
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Fan Hub', path: '/fans' },
+      { label: 'Sugerencias', path: '/feedback' },
     ],
   },
 ];

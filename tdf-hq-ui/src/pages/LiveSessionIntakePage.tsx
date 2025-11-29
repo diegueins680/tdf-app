@@ -11,6 +11,8 @@ import {
   Stack,
   TextField,
   Typography,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -21,6 +23,7 @@ import type { PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
 import type { Role } from '../api/generated/client';
 import { submitLiveSessionIntake } from '../api/liveSessions';
+import { getStoredSessionToken } from '../session/SessionContext';
 
 interface MusicianEntry {
   id: string;
@@ -30,6 +33,7 @@ interface MusicianEntry {
   phone: string;
   instrument: string;
   role: string;
+  instagram: string;
   notes?: string;
   mode: 'existing' | 'new';
 }
@@ -41,6 +45,7 @@ const emptyMusician = (): MusicianEntry => ({
   phone: '',
   instrument: '',
   role: '',
+  instagram: '',
   mode: 'new',
 });
 
@@ -50,19 +55,30 @@ const asNullableString = (value?: string | null): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
-export default function LiveSessionIntakePage() {
+export interface LiveSessionIntakeFormProps {
+  variant?: 'internal' | 'public';
+  requireTerms?: boolean;
+}
+
+export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: LiveSessionIntakeFormProps) {
   const qc = useQueryClient();
+  const hasToken = Boolean(getStoredSessionToken());
   const { data: parties = [], isLoading: partiesLoading } = useQuery({
     queryKey: ['parties'],
     queryFn: () => Parties.list(),
+    enabled: hasToken,
   });
 
   const [bandName, setBandName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [availableDates, setAvailableDates] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [musicians, setMusicians] = useState<MusicianEntry[]>([emptyMusician()]);
   const [riderFile, setRiderFile] = useState<File | null>(null);
+  const mustAcceptTerms = requireTerms ?? variant === 'public';
+  const termsVersion = 'TDF Live Sessions v1';
 
   const partyOptions = useMemo(
     () =>
@@ -77,11 +93,13 @@ export default function LiveSessionIntakePage() {
     const created = await Parties.create({
       cDisplayName: entry.name,
       cIsOrg: false,
+      cInstagram: asNullableString(entry.instagram),
     });
     const updatePayload: PartyUpdate = {
       uPrimaryEmail: asNullableString(entry.email),
       uPrimaryPhone: asNullableString(entry.phone),
       uNotes: entry.instrument ? `Instrumento: ${entry.instrument}` : undefined,
+      uInstagram: asNullableString(entry.instagram),
     };
     await Parties.update(created.partyId, updatePayload);
     if (entry.email) {
@@ -112,7 +130,16 @@ export default function LiveSessionIntakePage() {
           const created = await createPartyAndUser(entry);
           partyId = created.partyId;
           await qc.invalidateQueries({ queryKey: ['parties'] });
+        } else if (entry.instagram.trim()) {
+          await Parties.update(partyId, {
+            uInstagram: asNullableString(entry.instagram),
+          });
         }
+
+        const instagramNote = asNullableString(entry.instagram)
+          ? `Instagram: ${entry.instagram.trim().startsWith('@') ? entry.instagram.trim() : `@${entry.instagram.trim()}`}`
+          : null;
+        const mergedNotes = [asNullableString(entry.notes), instagramNote].filter(Boolean).join(' · ') || null;
 
         ensuredMusicians.push({
           partyId,
@@ -120,7 +147,7 @@ export default function LiveSessionIntakePage() {
           email: asNullableString(entry.email),
           instrument: asNullableString(entry.instrument),
           role: asNullableString(entry.role),
-          notes: asNullableString(entry.notes),
+          notes: mergedNotes,
           isExisting: Boolean(entry.partyId),
         });
       }
@@ -130,9 +157,13 @@ export default function LiveSessionIntakePage() {
         contactEmail: asNullableString(contactEmail),
         contactPhone: asNullableString(contactPhone),
         sessionDate: asNullableString(sessionDate),
+        availabilityNotes: asNullableString(availableDates),
+        acceptedTerms: mustAcceptTerms ? acceptedTerms : undefined,
+        termsVersion: mustAcceptTerms ? termsVersion : undefined,
         musicians: ensuredMusicians,
         riderFile,
       });
+      setAcceptedTerms(false);
     },
   });
 
@@ -145,7 +176,7 @@ export default function LiveSessionIntakePage() {
 
   const handleSelectParty = (id: string, party: PartyDTO | null) => {
     if (!party) {
-      handleMusicianChange(id, { partyId: undefined, mode: 'new', name: '', email: '', phone: '' });
+      handleMusicianChange(id, { partyId: undefined, mode: 'new', name: '', email: '', phone: '', instagram: '' });
       return;
     }
 
@@ -154,6 +185,7 @@ export default function LiveSessionIntakePage() {
       name: party.displayName,
       email: party.primaryEmail ?? '',
       phone: party.primaryPhone ?? '',
+      instagram: party.instagram ?? '',
       mode: 'existing',
     });
   };
@@ -164,7 +196,7 @@ export default function LiveSessionIntakePage() {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h4" fontWeight={700} gutterBottom>
-          Live Session — Datos de banda
+          {variant === 'public' ? 'Aplicar a TDF Live Sessions' : 'Live Session — Datos de banda'}
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Ingresa la información del proyecto, los músicos y adjunta el rider técnico para generar el input list.
@@ -216,6 +248,17 @@ export default function LiveSessionIntakePage() {
                 onChange={(e) => setSessionDate(e.target.value)}
                 fullWidth
                 InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} md={9}>
+              <TextField
+                label="Fechas tentativas / disponibilidad"
+                value={availableDates}
+                onChange={(e) => setAvailableDates(e.target.value)}
+                placeholder="Ej: 5-8 de mayo, 12 de mayo tarde, 18 de mayo noche"
+                fullWidth
+                multiline
+                minRows={2}
               />
             </Grid>
           </Grid>
@@ -274,7 +317,7 @@ export default function LiveSessionIntakePage() {
                       fullWidth
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} md={3}>
                     <TextField
                       label="Email"
                       type="email"
@@ -283,7 +326,7 @@ export default function LiveSessionIntakePage() {
                       fullWidth
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} md={3}>
                     <TextField
                       label="Teléfono"
                       value={musician.phone}
@@ -291,7 +334,16 @@ export default function LiveSessionIntakePage() {
                       fullWidth
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      label="Instagram"
+                      value={musician.instagram}
+                      onChange={(e) => handleMusicianChange(musician.id, { instagram: e.target.value })}
+                      placeholder="@usuario"
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={3}>
                     <TextField
                       label="Rol en sesión (instrumento)"
                       value={musician.instrument}
@@ -323,6 +375,41 @@ export default function LiveSessionIntakePage() {
               </Paper>
             ))}
           </Stack>
+        </Stack>
+      </Paper>
+
+      <Paper sx={{ p: 3 }}>
+        <Stack spacing={2}>
+          <Typography variant="h6">Términos y logística</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Participar en las TDF Live Sessions implica autorizar el uso de audio y video grabado durante la sesión para fines
+            promocionales, respetar los horarios pactados y entregar información veraz del rider técnico y los músicos.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            También confirmas que tienes los derechos para interpretar y grabar el material presentado y que aceptarás la agenda
+            definitiva propuesta por TDF Records según disponibilidad de salas y staff.
+          </Typography>
+          {mustAcceptTerms && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body2" fontWeight={600}>
+                    Acepto los términos de participación ({termsVersion})
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Lee y acepta antes de enviar. Esto sirve como constancia de consentimiento.
+                  </Typography>
+                </Box>
+              }
+              sx={{ alignItems: 'flex-start' }}
+            />
+          )}
         </Stack>
       </Paper>
 
@@ -362,11 +449,15 @@ export default function LiveSessionIntakePage() {
           variant="contained"
           size="large"
           onClick={() => mutation.mutate()}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || (mustAcceptTerms && !acceptedTerms)}
         >
           {mutation.isPending ? 'Guardando…' : 'Enviar Live Session'}
         </Button>
       </Stack>
     </Stack>
   );
+}
+
+export default function LiveSessionIntakePage() {
+  return <LiveSessionIntakeForm variant="internal" />;
 }
