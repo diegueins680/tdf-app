@@ -2665,7 +2665,7 @@ cmsAdminServer user =
         , CMS.cmsContentVersion = nextVersion
         , CMS.cmsContentStatus = statusVal
         , CMS.cmsContentTitle = cciTitle
-        , CMS.cmsContentPayload = cciPayload
+        , CMS.cmsContentPayload = fmap CMS.AesonValue cciPayload
         , CMS.cmsContentCreatedBy = Just (auPartyId user)
         , CMS.cmsContentCreatedAt = now
         , CMS.cmsContentUpdatedAt = now
@@ -2711,7 +2711,7 @@ toCmsDTO (Entity cid c) =
     , ccdVersion = CMS.cmsContentVersion c
     , ccdStatus = CMS.cmsContentStatus c
     , ccdTitle = CMS.cmsContentTitle c
-    , ccdPayload = CMS.cmsContentPayload c
+    , ccdPayload = CMS.unAesonValue <$> CMS.cmsContentPayload c
     , ccdCreatedAt = CMS.cmsContentCreatedAt c
     , ccdPublishedAt = CMS.cmsContentPublishedAt c
     }

@@ -18,8 +18,11 @@ import Database.Persist.TH
 import Data.Time (UTCTime)
 import Data.Text (Text)
 import Data.Aeson (Value)
-import Database.Persist.JSON () -- PersistField instances for Value
+import Database.Persist.TH (derivePersistFieldJSON)
 import TDF.Models (PartyId)
+
+newtype AesonValue = AesonValue { unAesonValue :: Value }
+derivePersistFieldJSON "AesonValue"
 
 share [mkPersist sqlSettings, mkMigrate "migrateCMS"] [persistLowerCase|
 CmsContent
@@ -28,7 +31,7 @@ CmsContent
     version     Int
     status      Text          -- draft | published | archived
     title       Text Maybe
-    payload     Value Maybe
+    payload     AesonValue Maybe
     createdBy   PartyId Maybe
     createdAt   UTCTime default=CURRENT_TIMESTAMP
     updatedAt   UTCTime default=CURRENT_TIMESTAMP
