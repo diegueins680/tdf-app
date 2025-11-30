@@ -168,11 +168,22 @@ export default function LoginPage() {
         roles = ['token'];
       }
 
+      const baseRoles =
+        roles.length > 0
+          ? roles
+          : normalizedIdentifier.toLowerCase().includes('admin')
+            ? ['admin']
+            : ['staff'];
+      const normalized = Array.from(new Set(baseRoles.map((r) => r.toLowerCase())));
+      if (!normalized.includes('fan')) {
+        normalized.push('fan');
+      }
+
       login(
         {
           username: normalizedIdentifier,
           displayName,
-          roles: roles.length ? roles : normalizedIdentifier.toLowerCase().includes('admin') ? ['admin'] : ['staff'],
+          roles: normalized,
           apiToken,
           modules,
           partyId,
