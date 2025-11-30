@@ -20,6 +20,9 @@ data TrialRequestIn = TrialRequestIn
   , subjectId :: Int
   , preferred :: [PreferredSlot]   -- up to 3
   , notes     :: Maybe Text
+  , fullName  :: Maybe Text
+  , email     :: Maybe Text
+  , phone     :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON TrialRequestIn
 instance FromJSON TrialRequestIn
@@ -82,3 +85,68 @@ data TrialScheduleIn = TrialScheduleIn
   } deriving (Show, Generic)
 instance ToJSON TrialScheduleIn
 instance FromJSON TrialScheduleIn
+
+data SubjectBriefDTO = SubjectBriefDTO
+  { subjectId :: Int
+  , name      :: Text
+  } deriving (Show, Generic)
+instance ToJSON SubjectBriefDTO
+instance FromJSON SubjectBriefDTO
+
+data TeacherDTO = TeacherDTO
+  { teacherId   :: Int
+  , teacherName :: Text
+  , subjects    :: [SubjectBriefDTO]
+  } deriving (Show, Generic)
+instance ToJSON TeacherDTO
+instance FromJSON TeacherDTO
+
+data ClassSessionDTO = ClassSessionDTO
+  { classSessionId :: Int
+  , teacherId      :: Int
+  , teacherName    :: Maybe Text
+  , subjectId      :: Int
+  , subjectName    :: Maybe Text
+  , studentId      :: Int
+  , studentName    :: Maybe Text
+  , startAt        :: UTCTime
+  , endAt          :: UTCTime
+  , status         :: Text
+  , roomId         :: Maybe Text
+  , roomName       :: Maybe Text
+  , bookingId      :: Maybe Int
+  , notes          :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON ClassSessionDTO
+instance FromJSON ClassSessionDTO
+
+data ClassSessionUpdate = ClassSessionUpdate
+  { teacherId :: Maybe Int
+  , subjectId :: Maybe Int
+  , studentId :: Maybe Int
+  , startAt   :: Maybe UTCTime
+  , endAt     :: Maybe UTCTime
+  , roomId    :: Maybe Int
+  , bookingId :: Maybe Int
+  , notes     :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON ClassSessionUpdate
+instance FromJSON ClassSessionUpdate
+
+data StudentCreate = StudentCreate
+  { fullName :: Text
+  , email    :: Text
+  , phone    :: Maybe Text
+  , notes    :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON StudentCreate
+instance FromJSON StudentCreate
+
+data StudentDTO = StudentDTO
+  { studentId   :: Int
+  , displayName :: Text
+  , email       :: Maybe Text
+  , phone       :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON StudentDTO
+instance FromJSON StudentDTO

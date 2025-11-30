@@ -11,9 +11,4 @@ packages:
       size: 450
   original:
     hackage: smtp-mail-0.5.0.0
-snapshots:
-- completed:
-    sha256: 87da71cb0ae9ee1ea1bf51a8eb9812f39f779be76abc0a3c926defd8afda05d1
-    size: 719139
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/28.yaml
-  original: lts-22.28
+snapshots: []

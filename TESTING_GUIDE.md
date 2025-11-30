@@ -8,6 +8,13 @@ This guide provides manual and automated testing procedures for the multi-role u
 - Backend server running on port 8080
 - Frontend dev server running on port 5173 (for UI testing)
 
+## Frontend QA: Signup with Extended Roles
+
+- Open `/login`, click **Crear cuenta**, select new roles (Fan, Artista, Promotor, Manager, A&R, Producer, etc.) and submit.
+- When selecting **Fan**, pick at least one artist/band in the autocomplete; the signup request should include `fanArtistIds` plus `roles`, and follows should be created after login.
+- Verify the created session includes the selected roles when the API response omits them (fallback to selected roles).
+- Reopen **Roles y permisos** admin screen and confirm the new roles appear on the dropdown; assign a couple of extended roles and save.
+
 ## Database Setup for Testing
 
 ### Create Test Database

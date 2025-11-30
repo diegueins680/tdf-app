@@ -2,11 +2,7 @@
 module TDF.Cors (corsPolicy) where
 import Network.Wai (Middleware)
 import Network.Wai.Middleware.Cors
-import Network.HTTP.Types (Method)
-import Data.Maybe (fromMaybe)
 import System.Environment (lookupEnv)
-import Data.Text (Text)
-import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import Data.Char (isSpace)
 

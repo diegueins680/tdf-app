@@ -43,7 +43,7 @@ This is a monorepo containing three main applications:
 - Student lesson scheduling
 - Package balance tracking
 - Calendar integration
-- Offline support (planned)
+- **Offline support**: Schedule viewing, package balances, and booking mutations work offline with automatic sync
 
 **Note:** This is a Git submodule. Run `git submodule update --init --recursive` after cloning.
 

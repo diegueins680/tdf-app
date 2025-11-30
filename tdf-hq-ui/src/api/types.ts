@@ -124,6 +124,7 @@ export interface ArtistProfileDTO {
   apGenres?: string | null;
   apHighlights?: string | null;
   apFollowerCount: number;
+  apHasUserAccount?: boolean;
 }
 
 export interface ArtistReleaseDTO {

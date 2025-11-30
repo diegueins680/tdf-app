@@ -12,7 +12,14 @@ export interface BookingUpdatePayload {
 
 export const Bookings = {
   list: () => get<BookingDTO[]>('/bookings'),
-  create: (body: { cbTitle: string; cbStartsAt: string; cbEndsAt: string; cbStatus: string; cbNotes?: string | null }) =>
+  create: (body: {
+    cbTitle: string;
+    cbStartsAt: string;
+    cbEndsAt: string;
+    cbStatus: string;
+    cbNotes?: string | null;
+    cbServiceType?: string | null;
+  }) =>
     post<BookingDTO>('/bookings', body),
   update: (bookingId: number, body: BookingUpdatePayload) =>
     put<BookingDTO>(`/bookings/${bookingId}`, body),

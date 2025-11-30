@@ -16,6 +16,7 @@ executable tdf-hq-exe
     TDF.API.Bands
     TDF.API.Future
     TDF.API.LiveSessions
+    TDF.API.Feedback
     TDF.API.Inventory
     TDF.API.Pipelines
     TDF.API.Rooms
@@ -24,14 +25,17 @@ executable tdf-hq-exe
     TDF.API.WhatsApp
     TDF.Auth
     TDF.Config
+    TDF.Cron
     TDF.Cors
     TDF.DB
     TDF.DTO
     TDF.Email
     TDF.Handlers.InputList
+    TDF.LogBuffer
     TDF.Meta
     TDF.Models
     TDF.ModelsExtra
+    TDF.UUIDInstances
     TDF.Leads.Model
     TDF.Email.Service
     TDF.Services
@@ -42,12 +46,15 @@ executable tdf-hq-exe
     TDF.ServerAdmin
     TDF.ServerExtra
     TDF.ServerLiveSessions
+    TDF.ServerFeedback
     TDF.ServerFuture
+    TDF.Routes.Courses
     TDF.Trials.API
     TDF.Trials.DTO
     TDF.Trials.Models
     TDF.Trials.Seed
     TDF.Trials.Server
+    TDF.CMS.Models
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.Types
@@ -78,12 +85,14 @@ executable tdf-hq-exe
     , servant              >=0.19
     , servant-server       >=0.19
     , servant-multipart
+    , servant-multipart
     , postgresql-simple
     , http-types
     , http-media
     , warp                 >=3.3
     , wai
     , wai-cors
+    , http2                >=5.0 && <5.3
     , entropy
     , filepath
     , directory
@@ -108,6 +117,54 @@ test-suite tdf-hq-test
   type:              exitcode-stdio-1.0
   hs-source-dirs:    test, src
   main-is:           Spec.hs
+  other-modules:
+    Paths_tdf_hq
+    TDF.API
+    TDF.API.Admin
+    TDF.API.Bands
+    TDF.API.Future
+    TDF.API.Feedback
+    TDF.API.Inventory
+    TDF.API.LiveSessions
+    TDF.API.Pipelines
+    TDF.API.Rooms
+    TDF.API.Sessions
+    TDF.API.Types
+    TDF.APITypesSpec
+    TDF.Auth
+    TDF.Config
+    TDF.Cron
+    TDF.DB
+    TDF.DTO
+    TDF.Email
+    TDF.Email.Service
+    TDF.Handlers.InputList
+    TDF.Leads.Model
+    TDF.Meta
+    TDF.Models
+    TDF.ModelsExtra
+    TDF.Pipelines
+    TDF.Profiles.Artist
+    TDF.Profiles.ArtistSpec
+    TDF.Routes.Academy
+    TDF.Routes.Courses
+    TDF.Seed
+    TDF.Server
+    TDF.ServerAdmin
+    TDF.ServerExtra
+    TDF.ServerFuture
+    TDF.ServerLiveSessions
+    TDF.ServerFeedback
+    TDF.ServerSpec
+    TDF.Services
+    TDF.Trials.API
+    TDF.Trials.DTO
+    TDF.Trials.Models
+    TDF.Trials.Server
+    TDF.UUIDInstances
+    TDF.Version
+    TDF.WhatsApp.Client
+    TDF.WhatsApp.Service
   ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
   default-language:  Haskell2010
   build-depends:
@@ -128,11 +185,17 @@ test-suite tdf-hq-test
     , conduit
     , servant              >=0.19
     , servant-server       >=0.19
+    , servant-multipart
     , http-types
     , http-media
     , wai
     , warp                 >=3.3
     , wai-cors
+    , http2                >=5.0 && <5.3
+    , postgresql-simple
+    , random
+    , http-client
+    , http-client-tls
     , entropy
     , filepath
     , directory

@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -11,6 +12,7 @@
 module TDF.Server where
 
 import           Control.Applicative ((<|>))
+import           Control.Exception (SomeException, try)
 import           Control.Monad (forM, forM_, void, when, unless)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
@@ -18,6 +20,7 @@ import           Control.Monad.Trans.Class (lift)
 import           Data.Int (Int64)
 import           Data.List (find, foldl', nub)
 import           Data.Foldable (for_)
+import           Data.Char (isDigit, isSpace, isAlphaNum)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
@@ -26,17 +29,18 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
-import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay)
+import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime)
+import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
+import           System.IO (hPutStrLn, stderr)
 import           Network.Wai (Request)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler)
 import           Text.Printf (printf)
 import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
-import           Data.Proxy (Proxy (..))
 
 import           Database.Persist
 import           Database.Persist.Sql
@@ -54,9 +58,11 @@ import           TDF.DTO
 import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, moduleName, loadAuthedUser)
 import           TDF.Seed       (seedAll)
 import           TDF.ServerAdmin (adminServer)
+import qualified TDF.LogBuffer as LogBuf
 import           TDF.ServerExtra (bandsServer, inventoryServer, loadBandForParty, pipelinesServer, roomsServer, sessionsServer)
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
+import           TDF.ServerFeedback (feedbackServer)
 import           TDF.Trials.API (TrialsAPI)
 import           TDF.Trials.Server (trialsServer)
 import qualified TDF.Meta as Meta
@@ -72,8 +78,47 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , loadOrCreateArtistProfileDTO
                                      , upsertArtistProfileRecord
                                      )
+import           TDF.Routes.Academy ( AcademyAPI
+                                    , EnrollReq(..)
+                                    , ProgressReq(..)
+                                    , ReferralClaimReq(..)
+                                    , MicrocourseDTO(..)
+                                    , LessonDTO(..)
+                                    , NextCohortDTO(..)
+                                    )
+import           TDF.Routes.Courses ( CoursesPublicAPI
+                                    , WhatsAppWebhookAPI
+                                    , CourseMetadata(..)
+                                    , CourseSession(..)
+                                    , SyllabusItem(..)
+                                    , CourseRegistrationRequest(..)
+                                    , CourseRegistrationResponse(..)
+                                    , UTMTags(..)
+                                    )
+import qualified TDF.Routes.Courses as Courses
+import           TDF.WhatsApp.Types ( WAMetaWebhook(..)
+                                    , WAEntry(..)
+                                    , WAChange(..)
+                                    , WAMessage(..)
+                                    , WAValue(..)
+                                    )
+import qualified TDF.WhatsApp.Types as WA
+import           TDF.WhatsApp.Client (sendText)
+import           Network.HTTP.Client (newManager)
+import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Types.URI (urlEncode)
+import           System.Environment (lookupEnv)
+import qualified TDF.Trials.Models as Trials
+import qualified TDF.CMS.Models as CMS
+import           Database.Persist.Sql (toSqlKey, fromSqlKey)
+import           Data.Function (on)
 
 type AppM = ReaderT Env Handler
+
+runDB :: SqlPersistT IO a -> AppM a
+runDB action = do
+  Env{..} <- ask
+  liftIO $ runSqlPool action envPool
 
 type CombinedAPI = TrialsAPI :<|> API
 
@@ -99,9 +144,14 @@ server =
   :<|> changePassword
   :<|> authV1Server
   :<|> fanPublicServer
+  :<|> coursesPublicServer
+  :<|> whatsappWebhookServer
   :<|> metaServer
+  :<|> academyServer
   :<|> seedTrigger
   :<|> inputListServer
+  :<|> adsInquiryPublic
+  :<|> cmsPublicServer
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -241,11 +291,58 @@ fanPublicServer =
         releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistId] [Desc ArtistReleaseCreatedAt]
         pure (map toArtistReleaseDTO releases)
 
+coursesPublicServer :: ServerT CoursesPublicAPI AppM
+coursesPublicServer =
+       courseMetadataH
+  :<|> registrationH
+  where
+    courseMetadataH slug = loadCourseMetadata slug
+    registrationH slug payload = createOrUpdateRegistration slug payload
+
+whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM
+whatsappWebhookServer =
+       verifyHook
+  :<|> handleMessages
+  where
+    verifyHook _ mToken mChallenge = do
+      cfg <- liftIO loadWhatsAppEnv
+      case waVerifyToken cfg of
+        Nothing -> throwError err403 { errBody = "Verify token not configured" }
+        Just expected ->
+          case mToken of
+            Just tok | tok == expected -> pure (fromMaybe "" mChallenge)
+            _ -> throwError err403 { errBody = "Verify token mismatch" }
+
+    handleMessages payload = do
+      cfg <- liftIO loadWhatsAppEnv
+      let incomingMessages = extractTextMessages payload
+      for_ incomingMessages $ \(fromNumber, bodyTxt) -> do
+        let lowerBody = T.toLower (T.strip bodyTxt)
+        when ("inscribirme" `T.isInfixOf` lowerBody) $ do
+          case normalizePhone fromNumber of
+            Nothing -> pure ()
+            Just phone -> do
+              _ <- createOrUpdateRegistration productionCourseSlug CourseRegistrationRequest
+                { fullName = Nothing
+                , email = Nothing
+                , phoneE164 = Just phone
+                , source = "whatsapp"
+                , howHeard = Just "whatsapp"
+                , utm = Nothing
+                }
+              sendWhatsappReply cfg phone
+      pure NoContent
 fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
+
+socialServer :: AuthedUser -> ServerT SocialAPI AppM
+socialServer user =
+       socialListFollowers user
+  :<|> socialListFollowing user
+  :<|> vcardExchange user
 
 protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
@@ -263,7 +360,373 @@ protectedServer user =
   :<|> pipelinesServer user
   :<|> roomsServer user
   :<|> liveSessionsServer user
+  :<|> feedbackServer user
+  :<|> socialServer user
+  :<|> adsAdminServer user
+  :<|> cmsAdminServer user
   :<|> futureServer
+
+productionCourseSlug :: Text
+productionCourseSlug = "produccion-musical-dic-2025"
+
+productionCoursePrice :: Double
+productionCoursePrice = 150
+
+productionCourseCapacity :: Int
+productionCourseCapacity = 10
+
+data WhatsAppEnv = WhatsAppEnv
+  { waToken        :: Maybe Text
+  , waPhoneId      :: Maybe Text
+  , waVerifyToken  :: Maybe Text
+  , waContactNumber :: Maybe Text
+  }
+
+loadWhatsAppEnv :: IO WhatsAppEnv
+loadWhatsAppEnv = do
+  token   <- firstNonEmptyText ["WHATSAPP_TOKEN", "WA_TOKEN"]
+  phoneId <- firstNonEmptyText ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
+  verify  <- firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
+  contact <- firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
+  pure WhatsAppEnv
+    { waToken = token
+    , waPhoneId = phoneId
+    , waVerifyToken = verify
+    , waContactNumber = contact
+    }
+
+firstNonEmptyText :: [String] -> IO (Maybe Text)
+firstNonEmptyText names = go names
+  where
+    go [] = pure Nothing
+    go (n:ns) = do
+      val <- lookupEnv n
+      case fmap (T.strip . T.pack) val of
+        Just txt | not (T.null txt) -> pure (Just txt)
+        _                           -> go ns
+
+loadCourseMetadata :: Text -> AppM CourseMetadata
+loadCourseMetadata rawSlug = do
+  Env{..} <- ask
+  waEnv <- liftIO loadWhatsAppEnv
+  let normalized = normalizeSlug rawSlug
+      meta = courseMetadataFor envConfig (waContactNumber waEnv) normalized
+  maybe (throwNotFound "Curso no encontrado") pure meta
+
+courseMetadataFor :: AppConfig -> Maybe Text -> Text -> Maybe CourseMetadata
+courseMetadataFor cfg mWaContact slugVal
+  | slugVal /= productionCourseSlug = Nothing
+  | otherwise =
+      let landingUrlVal = buildLandingUrl cfg
+          whatsappUrl   = buildWhatsappCta mWaContact landingUrlVal
+      in Just CourseMetadata
+        { slug = productionCourseSlug
+        , title = "Curso de Producción Musical"
+        , subtitle = "Presencial · 4 sábados · 16 horas"
+        , format = "Presencial"
+        , duration = "4 sábados · 16 horas"
+        , price = productionCoursePrice
+        , currency = "USD"
+        , capacity = productionCourseCapacity
+        , locationLabel = "TDF Records – Quito"
+        , locationMapUrl = "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6"
+        , daws = ["Logic", "Luna"]
+        , includes =
+            [ "Acceso a grabaciones"
+            , "Certificado de participación"
+            , "Mentorías"
+            , "Grupo de WhatsApp"
+            , "Acceso a la plataforma de TDF Records"
+            ]
+        , sessions =
+            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2025 12 13)
+            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2025 12 20)
+            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2025 12 27)
+            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 1 3)
+            ]
+        , syllabus =
+            [ SyllabusItem "Primer sábado – Introducción a la producción musical"
+                [ "Conceptos básicos"
+                , "Herramientas esenciales y software"
+                ]
+            , SyllabusItem "Segundo sábado – Grabación y captura de audio"
+                [ "Técnicas de grabación"
+                , "Configuración de micrófonos y espacios"
+                ]
+            , SyllabusItem "Tercer sábado – Mezcla y edición"
+                [ "Ecualización, compresión y efectos"
+                , "Técnicas de balance y panoramización"
+                ]
+            , SyllabusItem "Cuarto sábado – Masterización y publicación"
+                [ "Técnicas de masterización"
+                , "Preparación para distribución digital"
+                ]
+            ]
+        , whatsappCtaUrl = whatsappUrl
+        , landingUrl = landingUrlVal
+        }
+
+buildLandingUrl :: AppConfig -> Text
+buildLandingUrl cfg =
+  let rawBase = fromMaybe "https://tdf-app.pages.dev" (appBaseUrl cfg)
+      base = T.dropWhileEnd (== '/') rawBase
+  in base <> "/curso/" <> productionCourseSlug
+
+buildWhatsappCta :: Maybe Text -> Text -> Text
+buildWhatsappCta mNumber landingUrl =
+  let msg = "INSCRIBIRME Curso Produccion Musical " <> landingUrl
+      encoded = TE.decodeUtf8 (urlEncode True (TE.encodeUtf8 msg))
+      cleanNumber txt = T.filter isDigit txt
+  in case mNumber >>= nonEmpty of
+       Just num -> "https://wa.me/" <> cleanNumber num <> "?text=" <> encoded
+       Nothing  -> "https://wa.me/?text=" <> encoded
+  where
+    nonEmpty txt =
+      let trimmed = T.strip txt
+      in if T.null trimmed then Nothing else Just trimmed
+
+createOrUpdateRegistration :: Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
+createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
+  meta <- loadCourseMetadata rawSlug
+  now <- liftIO getCurrentTime
+  let slugVal = normalizeSlug (Courses.slug meta)
+      nameClean = cleanOptional fullName
+      sourceClean = normalizeSource source
+      howHeardClean = cleanOptional howHeard
+      phoneClean = phoneE164 >>= normalizePhone
+      pendingStatus = "pending_payment"
+      (utmSourceVal, utmMediumVal, utmCampaignVal, utmContentVal) = normalizeUtm utm
+  normalizedEmail <- case cleanOptional email of
+    Nothing -> pure Nothing
+    Just e  -> Just <$> requireEmail e
+  mNewUser <- case normalizedEmail of
+    Nothing -> pure Nothing
+    Just addr -> ensureUserAccount nameClean addr
+  when (sourceClean == "landing" && isNothing nameClean) $
+    throwBadRequest "nombre requerido"
+  when (sourceClean == "landing" && isNothing normalizedEmail) $
+    throwBadRequest "email requerido"
+  existing <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean
+  case existing of
+    -- Update in-place only when the existing row is still pending; otherwise create a fresh row.
+    Just (Entity regId reg) | ME.courseRegistrationStatus reg == pendingStatus -> do
+      runDB $ update regId
+        [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)
+        , ME.CourseRegistrationEmail =. (normalizedEmail <|> ME.courseRegistrationEmail reg)
+        , ME.CourseRegistrationPhoneE164 =. (phoneClean <|> ME.courseRegistrationPhoneE164 reg)
+        , ME.CourseRegistrationSource =. sourceClean
+        , ME.CourseRegistrationStatus =. pendingStatus
+        , ME.CourseRegistrationHowHeard =. (howHeardClean <|> ME.courseRegistrationHowHeard reg)
+        , ME.CourseRegistrationUtmSource =. (utmSourceVal <|> ME.courseRegistrationUtmSource reg)
+        , ME.CourseRegistrationUtmMedium =. (utmMediumVal <|> ME.courseRegistrationUtmMedium reg)
+        , ME.CourseRegistrationUtmCampaign =. (utmCampaignVal <|> ME.courseRegistrationUtmCampaign reg)
+        , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)
+        , ME.CourseRegistrationUpdatedAt =. now
+        ]
+      sendConfirmation meta nameClean normalizedEmail mNewUser
+      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
+    _ -> do
+      regId <- runDB $ insert ME.CourseRegistration
+        { ME.courseRegistrationCourseSlug = slugVal
+        , ME.courseRegistrationFullName = nameClean
+        , ME.courseRegistrationEmail = normalizedEmail
+        , ME.courseRegistrationPhoneE164 = phoneClean
+        , ME.courseRegistrationSource = sourceClean
+        , ME.courseRegistrationStatus = pendingStatus
+        , ME.courseRegistrationHowHeard = howHeardClean
+        , ME.courseRegistrationUtmSource = utmSourceVal
+        , ME.courseRegistrationUtmMedium = utmMediumVal
+        , ME.courseRegistrationUtmCampaign = utmCampaignVal
+        , ME.courseRegistrationUtmContent = utmContentVal
+        , ME.courseRegistrationCreatedAt = now
+        , ME.courseRegistrationUpdatedAt = now
+        }
+      sendConfirmation meta nameClean normalizedEmail mNewUser
+      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
+  where
+    sendConfirmation meta nameClean mEmail mNewUser =
+      case mEmail of
+        Nothing -> pure ()
+        Just emailAddr -> do
+          Env{..} <- ask
+          let emailSvc = EmailSvc.mkEmailService envConfig
+              displayName = fromMaybe "" nameClean
+              CourseMetadata{ title = courseTitle
+                            , sessions = metaSessions
+                            , landingUrl = landing
+                            } = meta
+              datesSummary =
+                let fmt d = T.pack (formatTime defaultTimeLocale "%d %b %Y" d)
+                in T.intercalate ", " (map (fmt . Courses.date) metaSessions)
+          -- Check if email is configured before attempting to send
+          case EmailSvc.esConfig emailSvc of
+            Nothing -> liftIO $ do
+              let msg = "[CourseRegistration] WARNING: SMTP not configured. Email confirmation not sent to " <> emailAddr
+              hPutStrLn stderr (T.unpack msg)
+              LogBuf.addLog LogBuf.LogWarning msg
+            Just _ -> liftIO $ do
+              -- Send registration confirmation
+              result <- try $ EmailSvc.sendCourseRegistration emailSvc displayName emailAddr courseTitle landing datesSummary
+              case result of
+                Left err -> do
+                  let msg = "[CourseRegistration] Failed to send confirmation email to " <> emailAddr <> ": " <> T.pack (show (err :: SomeException))
+                  hPutStrLn stderr (T.unpack msg)
+                  LogBuf.addLog LogBuf.LogError msg
+                Right () -> do
+                  let msg = "[CourseRegistration] Successfully sent confirmation email to " <> emailAddr
+                  LogBuf.addLog LogBuf.LogInfo msg
+              -- Send welcome email if we just created credentials
+              for_ mNewUser $ \(username, tempPassword) -> do
+                welcomeResult <- try $ EmailSvc.sendWelcome emailSvc displayName emailAddr username tempPassword
+                case welcomeResult of
+                  Left err -> do
+                    let msg = "[CourseRegistration] Failed to send welcome email to " <> emailAddr <> ": " <> T.pack (show (err :: SomeException))
+                    hPutStrLn stderr (T.unpack msg)
+                    LogBuf.addLog LogBuf.LogError msg
+                  Right () -> do
+                    let msg = "[CourseRegistration] Sent welcome credentials to " <> emailAddr
+                    LogBuf.addLog LogBuf.LogInfo msg
+
+-- | Returns messages that include text bodies, paired with the sender phone.
+extractTextMessages :: WAMetaWebhook -> [(Text, Text)]
+extractTextMessages WAMetaWebhook{entry} =
+  [ (WA.from msg, body)
+  | WAEntry{changes} <- entry
+  , WAChange{value=WAValue{messages=Just msgs}} <- changes
+  , msg@WAMessage{waType, text=Just txtBody} <- msgs
+  , waType == "text"
+  , let body = WA.body txtBody
+  ]
+
+sendWhatsappReply :: WhatsAppEnv -> Text -> AppM ()
+sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid} phone = do
+  meta <- loadCourseMetadata productionCourseSlug
+  manager <- liftIO $ newManager tlsManagerSettings
+  let msg = "¡Gracias por tu interés en el Curso de Producción Musical! Aquí tienes el link de inscripción: "
+            <> landingUrl meta <> ". Cupos limitados (" <> T.pack (show productionCourseCapacity) <> ")."
+  _ <- liftIO $ sendText manager tok pid phone msg
+  pure ()
+sendWhatsappReply _ _ = pure ()
+
+normalizePhone :: Text -> Maybe Text
+normalizePhone raw =
+  let trimmed = T.filter (not . isSpace) (T.strip raw)
+      digits = T.filter (\c -> isDigit c || c == '+') trimmed
+      withoutPlus = T.dropWhile (== '+') digits
+      onlyDigits = T.filter isDigit withoutPlus
+  in if T.null onlyDigits then Nothing else Just ("+" <> onlyDigits)
+
+normalizeSlug :: Text -> Text
+normalizeSlug = T.toLower . T.strip
+
+normalizeSource :: Text -> Text
+normalizeSource raw =
+  let trimmed = T.toLower (T.strip raw)
+  in if T.null trimmed then "landing" else trimmed
+
+normalizeUtm :: Maybe UTMTags -> (Maybe Text, Maybe Text, Maybe Text, Maybe Text)
+normalizeUtm Nothing = (Nothing, Nothing, Nothing, Nothing)
+normalizeUtm (Just UTMTags{..}) =
+  (cleanOptional source, cleanOptional medium, cleanOptional campaign, cleanOptional content)
+
+-- Ensure a Party/UserCredential exists for a registration email. Returns (username, tempPassword) only when a new
+-- credential was created.
+ensureUserAccount :: Maybe Text -> Text -> AppM (Maybe (Text, Text))
+ensureUserAccount mName emailAddr = do
+  now <- liftIO getCurrentTime
+  partyId <- runDB $ do
+    mParty <- selectFirst [PartyPrimaryEmail ==. Just emailAddr] []
+    case mParty of
+      Just (Entity pid _) -> pure pid
+      Nothing -> do
+        let display = fromMaybe emailAddr mName
+        insert Party
+          { partyLegalName = Nothing
+          , partyDisplayName = display
+          , partyIsOrg = False
+          , partyTaxId = Nothing
+          , partyPrimaryEmail = Just emailAddr
+          , partyPrimaryPhone = Nothing
+          , partyWhatsapp = Nothing
+          , partyInstagram = Nothing
+          , partyEmergencyContact = Nothing
+          , partyNotes = Nothing
+          , partyCreatedAt = now
+          }
+  mCred <- runDB $ selectFirst [UserCredentialPartyId ==. partyId] []
+  case mCred of
+    Just _ -> pure Nothing
+    Nothing -> do
+      username <- runDB (generateUniqueUsername (deriveBaseUsername mName emailAddr) partyId)
+      tempPassword <- liftIO Email.generateTempPassword
+      hashed <- liftIO (hashPasswordText tempPassword)
+      _ <- runDB $ insert UserCredential
+        { userCredentialPartyId = partyId
+        , userCredentialUsername = username
+        , userCredentialPasswordHash = hashed
+        , userCredentialActive = True
+        }
+      -- Assign default roles for new customers/fans
+      runDB $ do
+        _ <- upsert (PartyRole partyId Customer True) [PartyRoleActive =. True]
+        _ <- upsert (PartyRole partyId Fan True) [PartyRoleActive =. True]
+        pure ()
+      pure (Just (username, tempPassword))
+
+deriveBaseUsername :: Maybe Text -> Text -> Text
+deriveBaseUsername mName emailAddr =
+  let emailLocal = T.takeWhile (/= '@') emailAddr
+      candidate = fromMaybe emailLocal (slugify <$> mName)
+  in if T.null candidate then emailLocal else candidate
+
+generateUniqueUsername :: Text -> PartyId -> SqlPersistT IO Text
+generateUniqueUsername base partyId = go (0 :: Int)
+  where
+    baseClean = T.take 60 (T.filter (\c -> isAlphaNum c || c `elem` (".-_" :: String)) (T.toLower (T.strip base)))
+    fallback = "tdf-user-" <> T.pack (show (fromSqlKey partyId))
+    root = if T.null baseClean then fallback else baseClean
+    go attempt = do
+      let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)
+          candidate = T.take 60 (root <> suffix)
+      conflict <- getBy (UniqueCredentialUsername candidate)
+      case conflict of
+        Nothing -> pure candidate
+        Just _  -> go (attempt + 1)
+
+slugify :: Text -> Text
+slugify =
+  T.take 60 . T.filter (\c -> isAlphaNum c || c `elem` ("._-" :: String)) . T.toLower . T.strip
+
+hashPasswordText :: Text -> IO Text
+hashPasswordText pwd = do
+  let raw = TE.encodeUtf8 pwd
+  mHash <- hashPasswordUsingPolicy slowerBcryptHashingPolicy raw
+  case mHash of
+    Nothing   -> fail "Failed to hash password"
+    Just hash -> pure (TE.decodeUtf8 hash)
+
+findExistingRegistration
+  :: Text
+  -> Maybe Text
+  -> Maybe Text
+  -> SqlPersistT IO (Maybe (Entity ME.CourseRegistration))
+findExistingRegistration slugVal mEmail mPhone = do
+  byEmail <- case mEmail of
+    Nothing -> pure Nothing
+    Just e  -> selectFirst
+      [ ME.CourseRegistrationCourseSlug ==. slugVal
+      , ME.CourseRegistrationEmail ==. Just e
+      ]
+      [Desc ME.CourseRegistrationCreatedAt]
+  case byEmail of
+    Just hit -> pure (Just hit)
+    Nothing -> case mPhone of
+      Nothing -> pure Nothing
+      Just p -> selectFirst
+        [ ME.CourseRegistrationCourseSlug ==. slugVal
+        , ME.CourseRegistrationPhoneE164 ==. Just p
+        ]
+        [Desc ME.CourseRegistrationCreatedAt]
 
 -- Health
 health :: AppM TDF.API.HealthStatus
@@ -322,7 +785,31 @@ lookupByEmail emailAddress = do
 data SignupDbError
   = SignupEmailExists
   | SignupProfileError
+  | SignupArtistUnavailable
   deriving (Eq, Show)
+
+signupAllowedRoles :: [RoleEnum]
+signupAllowedRoles =
+  [ Fan
+  , Customer
+  , Artist
+  , Artista
+  , Promotor
+  , Promoter
+  , Producer
+  , Songwriter
+  , DJ
+  , Publicist
+  , TourManager
+  , LabelRep
+  , StageManager
+  , RoadCrew
+  , Photographer
+  , AandR
+  , Student
+  , Vendor
+  , ReadOnly
+  ]
 
 signup :: SignupRequest -> AppM LoginResponse
 signup SignupRequest
@@ -331,13 +818,17 @@ signup SignupRequest
   , email = rawEmail
   , phone = rawPhone
   , password = rawPassword
+  , roles = requestedRoles
+  , fanArtistIds = requestedFanArtistIds
+  , claimArtistId = rawClaimArtistId
   } = do
   let emailClean    = T.strip rawEmail
       passwordClean = T.strip rawPassword
       firstClean    = T.strip rawFirst
       lastClean     = T.strip rawLast
       phoneClean    = fmap T.strip rawPhone
-      displayName =
+      claimArtistIdClean = rawClaimArtistId >>= (\val -> if val > 0 then Just val else Nothing)
+      displayNameText =
         case filter (not . T.null) [firstClean, lastClean] of
           [] -> emailClean
           xs -> T.unwords xs
@@ -349,15 +840,20 @@ signup SignupRequest
   Env pool cfg <- ask
   let services = Services.buildServices cfg
       emailSvc = Services.emailService services
+      allowedRoles = maybe [] (filter (`elem` signupAllowedRoles)) requestedRoles
+      sanitizedRoles = nub (Customer : Fan : allowedRoles)
+      sanitizedFanArtists = maybe [] (filter (> 0)) requestedFanArtistIds
   result <- liftIO $ flip runSqlPool pool $
-    runSignupDb emailClean passwordClean displayName phoneClean now
+    runSignupDb emailClean passwordClean displayNameText phoneClean sanitizedRoles sanitizedFanArtists claimArtistIdClean now
   case result of
     Left SignupEmailExists ->
       throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 "Account already exists for this email") }
+    Left SignupArtistUnavailable ->
+      throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 "Artist profile is not available to claim") }
     Left SignupProfileError ->
       throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
     Right resp -> do
-      liftIO $ EmailSvc.sendWelcome emailSvc displayName emailClean emailClean passwordClean
+      liftIO $ EmailSvc.sendWelcome emailSvc displayNameText emailClean emailClean passwordClean
       pure resp
   where
     runSignupDb
@@ -365,51 +861,109 @@ signup SignupRequest
       -> Text
       -> Text
       -> Maybe Text
+      -> [RoleEnum]
+      -> [Int64]
+      -> Maybe Int64
       -> UTCTime
       -> SqlPersistT IO (Either SignupDbError LoginResponse)
-    runSignupDb emailVal passwordVal displayName phoneVal nowVal = do
+    runSignupDb emailVal passwordVal displayNameText phoneVal rolesVal fanArtistIdsVal mClaimArtistId nowVal = do
       existing <- getBy (UniqueCredentialUsername emailVal)
       case existing of
         Just _  -> pure (Left SignupEmailExists)
         Nothing -> do
-          let partyRecord = Party
-                { partyLegalName        = Nothing
-                , partyDisplayName      = displayName
-                , partyIsOrg            = False
-                , partyTaxId            = Nothing
-                , partyPrimaryEmail     = Just emailVal
-                , partyPrimaryPhone     = phoneVal
-                , partyWhatsapp         = Nothing
-                , partyInstagram        = Nothing
-                , partyEmergencyContact = Nothing
-                , partyNotes            = Nothing
-                , partyCreatedAt        = nowVal
+          partyResult <- resolveParty displayNameText mClaimArtistId emailVal phoneVal nowVal
+          case partyResult of
+            Left err -> pure (Left err)
+            Right (pid, partyLabel, existingRoles) -> do
+              let rolesWithArtist =
+                    if isJust mClaimArtistId && Artist `notElem` rolesVal
+                      then Artist : rolesVal
+                      else rolesVal
+                  rolesToApply = nub (rolesWithArtist ++ existingRoles)
+              applyRoles pid rolesToApply
+              for_ fanArtistIdsVal $ \artistId -> do
+                let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
+                when (artistKey /= pid) $
+                  void $ insertBy (FanFollow pid artistKey nowVal)
+              hashed <- liftIO (hashPasswordText passwordVal)
+              _ <- insert UserCredential
+                { userCredentialPartyId      = pid
+                , userCredentialUsername     = emailVal
+                , userCredentialPasswordHash = hashed
+                , userCredentialActive       = True
                 }
-          pid <- insert partyRecord
-          _ <- upsert (PartyRole pid Customer True) [PartyRoleActive =. True]
-          _ <- upsert (PartyRole pid Fan True) [PartyRoleActive =. True]
-          hashed <- liftIO (hashPasswordText passwordVal)
-          _ <- insert UserCredential
-            { userCredentialPartyId      = pid
-            , userCredentialUsername     = emailVal
-            , userCredentialPasswordHash = hashed
-            , userCredentialActive       = True
+              ensureFanProfile pid partyLabel nowVal
+              token <- createSessionToken pid emailVal
+              mUser <- loadAuthedUser token
+              case mUser of
+                Nothing   -> pure (Left SignupProfileError)
+                Just user -> pure (Right (toLoginResponse token user))
+
+    resolveParty
+      :: Text
+      -> Maybe Int64
+      -> Text
+      -> Maybe Text
+      -> UTCTime
+      -> SqlPersistT IO (Either SignupDbError (PartyId, Text, [RoleEnum]))
+    resolveParty displayNameText Nothing emailVal phoneVal nowVal = do
+      let partyRecord = Party
+            { partyLegalName        = Nothing
+            , partyDisplayName      = displayNameText
+            , partyIsOrg            = False
+            , partyTaxId            = Nothing
+            , partyPrimaryEmail     = Just emailVal
+            , partyPrimaryPhone     = phoneVal
+            , partyWhatsapp         = Nothing
+            , partyInstagram        = Nothing
+            , partyEmergencyContact = Nothing
+            , partyNotes            = Nothing
+            , partyCreatedAt        = nowVal
             }
-          insert_ FanProfile
-            { fanProfileFanPartyId     = pid
-            , fanProfileDisplayName    = Just displayName
-            , fanProfileAvatarUrl      = Nothing
-            , fanProfileFavoriteGenres = Nothing
-            , fanProfileBio            = Nothing
-            , fanProfileCity           = Nothing
-            , fanProfileCreatedAt      = nowVal
-            , fanProfileUpdatedAt      = Nothing
-            }
-          token <- createSessionToken pid emailVal
-          mUser <- loadAuthedUser token
-          case mUser of
-            Nothing   -> pure (Left SignupProfileError)
-            Just user -> pure (Right (toLoginResponse token user))
+      pid <- insert partyRecord
+      pure (Right (pid, displayNameText, []))
+
+    resolveParty _ (Just artistId) emailVal phoneVal _ = do
+      let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
+      mProfile <- getBy (UniqueArtistProfile artistKey)
+      case mProfile of
+        Nothing -> pure (Left SignupArtistUnavailable)
+        Just _ -> do
+          existingAccount <- selectFirst [UserCredentialPartyId ==. artistKey] []
+          case existingAccount of
+            Just _  -> pure (Left SignupArtistUnavailable)
+            Nothing -> do
+              mArtistParty <- getEntity artistKey
+              case mArtistParty of
+                Nothing -> pure (Left SignupArtistUnavailable)
+                Just (Entity _ party) -> do
+                  let normalizedPhone = cleanOptional phoneVal
+                      normalizedEmail = Just emailVal
+                      emailMissing = maybe True T.null (M.partyPrimaryEmail party)
+                      updates =
+                        [PartyPrimaryEmail =. normalizedEmail | emailMissing]
+                        ++ [PartyPrimaryPhone =. normalizedPhone | isNothing (M.partyPrimaryPhone party), isJust normalizedPhone]
+                  unless (null updates) $
+                    update artistKey updates
+                  activeRoles <- selectList [PartyRolePartyId ==. artistKey, PartyRoleActive ==. True] []
+                  let existingRoles = map (partyRoleRole . entityVal) activeRoles
+                      label = M.partyDisplayName party
+                  pure (Right (artistKey, label, existingRoles))
+
+    ensureFanProfile pid label nowVal = do
+      mProfile <- getBy (UniqueFanProfile pid)
+      case mProfile of
+        Just _ -> pure ()
+        Nothing -> insert_ FanProfile
+          { fanProfileFanPartyId     = pid
+          , fanProfileDisplayName    = Just label
+          , fanProfileAvatarUrl      = Nothing
+          , fanProfileFavoriteGenres = Nothing
+          , fanProfileBio            = Nothing
+          , fanProfileCity           = Nothing
+          , fanProfileCreatedAt      = nowVal
+          , fanProfileUpdatedAt      = Nothing
+          }
 
 data PasswordChangeError
   = PasswordInvalid
@@ -672,6 +1226,60 @@ fanUnfollowArtist user artistId = do
     deleteBy (UniqueFanFollow (auPartyId user) artistKey)
   pure NoContent
 
+-- Social graph (party <-> party follows)
+socialListFollowers :: AuthedUser -> AppM [PartyFollowDTO]
+socialListFollowers user = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    rows <- selectList [PartyFollowFollowingPartyId ==. auPartyId user] [Desc PartyFollowCreatedAt]
+    pure (map partyFollowEntityToDTO rows)
+
+socialListFollowing :: AuthedUser -> AppM [PartyFollowDTO]
+socialListFollowing user = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    rows <- selectList [PartyFollowFollowerPartyId ==. auPartyId user] [Desc PartyFollowCreatedAt]
+    pure (map partyFollowEntityToDTO rows)
+
+vcardExchange :: AuthedUser -> VCardExchangeRequest -> AppM [PartyFollowDTO]
+vcardExchange user VCardExchangeRequest{..} = do
+  when (vcerPartyId <= 0) $ throwBadRequest "Invalid party id"
+  let followerKey = auPartyId user
+      targetKey   = toSqlKey vcerPartyId :: PartyId
+  when (followerKey == targetKey) $
+    throwBadRequest "No puedes compartir tu vCard contigo mismo"
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    mTarget <- get targetKey
+    case mTarget of
+      Nothing -> pure []
+      Just _ -> do
+        now <- liftIO getCurrentTime
+        -- Create mutual follows; mark as NFC-sourced.
+        _ <- upsert PartyFollow
+          { partyFollowFollowerPartyId  = followerKey
+          , partyFollowFollowingPartyId = targetKey
+          , partyFollowViaNfc           = True
+          , partyFollowCreatedAt        = now
+          }
+          [ PartyFollowViaNfc =. True ]
+        _ <- upsert PartyFollow
+          { partyFollowFollowerPartyId  = targetKey
+          , partyFollowFollowingPartyId = followerKey
+          , partyFollowViaNfc           = True
+          , partyFollowCreatedAt        = now
+          }
+          [ PartyFollowViaNfc =. True ]
+        rowsAB <- selectList
+          [ PartyFollowFollowerPartyId ==. followerKey
+          , PartyFollowFollowingPartyId ==. targetKey
+          ] [Desc PartyFollowCreatedAt]
+        rowsBA <- selectList
+          [ PartyFollowFollowerPartyId ==. targetKey
+          , PartyFollowFollowingPartyId ==. followerKey
+          ] [Desc PartyFollowCreatedAt]
+        pure (map partyFollowEntityToDTO (rowsAB ++ rowsBA))
+
 requireFanAccess :: AuthedUser -> AppM ()
 requireFanAccess AuthedUser{..} =
   unless (Fan `elem` auRoles || Customer `elem` auRoles) $
@@ -720,6 +1328,15 @@ loadFanProfileDTO fanId = do
     Just ent -> pure ent
   let fallbackName = maybe Nothing (Just . M.partyDisplayName) party
   pure (fanProfileToDTO fallbackName (entityVal profileEntity))
+
+partyFollowEntityToDTO :: Entity PartyFollow -> PartyFollowDTO
+partyFollowEntityToDTO (Entity _ pf) =
+  PartyFollowDTO
+    { pfFollowerId  = fromSqlKey (partyFollowFollowerPartyId pf)
+    , pfFollowingId = fromSqlKey (partyFollowFollowingPartyId pf)
+    , pfViaNfc      = partyFollowViaNfc pf
+    , pfStartedAt   = utctDay (partyFollowCreatedAt pf)
+    }
 
 
 toArtistReleaseDTO :: Entity ArtistRelease -> ArtistReleaseDTO
@@ -814,18 +1431,170 @@ deactivatePasswordResetTokens pid = do
         update tokenId [ApiTokenActive =. False]
       _ -> pure ()
 
-hashPasswordText :: Text -> IO Text
-hashPasswordText pwd = do
-  let raw = TE.encodeUtf8 pwd
-  mHash <- hashPasswordUsingPolicy slowerBcryptHashingPolicy raw
-  case mHash of
-    Nothing   -> fail "Failed to hash password"
-    Just hash -> pure (TE.decodeUtf8 hash)
-
 metaServer :: ServerT Meta.MetaAPI AppM
 metaServer = hoistServer metaProxy lift Meta.metaServer
   where
     metaProxy = Proxy :: Proxy Meta.MetaAPI
+
+academyServer :: ServerT AcademyAPI AppM
+academyServer =
+       enrollH
+  :<|> microcourseH
+  :<|> progressH
+  :<|> claimReferralH
+  :<|> nextCohortH
+  where
+    enrollH EnrollReq{..} = do
+      normalizedEmail <- requireEmail email
+      normalizedRole  <- requireRole role
+      let platformClean = cleanOptional platform
+      user <- upsertAcademyUser normalizedEmail normalizedRole platformClean
+      for_ (cleanOptional referralCode) $ \codeTxt ->
+        claimReferral normalizedEmail (Just (entityKey user)) codeTxt
+      pure NoContent
+
+    microcourseH rawSlug = do
+      slug <- requireSlug rawSlug
+      mCourse <- runDB $ getBy (UniqueAcademyMicrocourseSlug slug)
+      case mCourse of
+        Nothing -> throwNotFound "Microcurso no disponible"
+        Just (Entity courseId course) -> do
+          lessons <- runDB $ selectList
+            [AcademyLessonMicrocourseId ==. courseId]
+            [Asc AcademyLessonDay]
+          pure MicrocourseDTO
+            { mcSlug    = academyMicrocourseSlug course
+            , mcTitle   = academyMicrocourseTitle course
+            , mcSummary = academyMicrocourseSummary course
+            , lessons   = map lessonToDTO lessons
+            }
+
+    progressH ProgressReq{..} = do
+      normalizedEmail <- requireEmail email
+      courseSlug <- requireSlug slug
+      dayNumber <- requireDay day
+      mUser <- runDB $ getBy (UniqueAcademyUserEmail normalizedEmail)
+      user <- maybe (throwNotFound "Usuario no inscrito") pure mUser
+      mCourse <- runDB $ getBy (UniqueAcademyMicrocourseSlug courseSlug)
+      course <- maybe (throwNotFound "Microcurso no disponible") pure mCourse
+      mLesson <- runDB $ selectFirst
+        [ AcademyLessonMicrocourseId ==. entityKey course
+        , AcademyLessonDay ==. dayNumber
+        ]
+        []
+      lesson <- maybe (throwNotFound "Lección no encontrada") pure mLesson
+      now <- liftIO getCurrentTime
+      void $ runDB $ upsert
+        (AcademyProgress (entityKey user) (entityKey lesson) now)
+        [AcademyProgressCompletedAt =. now]
+      pure NoContent
+
+    claimReferralH ReferralClaimReq{..} = do
+      normalizedEmail <- requireEmail email
+      mUser <- runDB $ getBy (UniqueAcademyUserEmail normalizedEmail)
+      claimReferral normalizedEmail (entityKey <$> mUser) code
+      pure NoContent
+
+    nextCohortH = do
+      now <- liftIO getCurrentTime
+      mCohort <- runDB $ selectFirst
+        [CohortEndsAt >=. now]
+        [Asc CohortStartsAt]
+      cohortEnt <- maybe (throwNotFound "Sin cohortes activas") pure mCohort
+      seatsTaken <- runDB $ count [CohortEnrollmentCohortId ==. entityKey cohortEnt]
+      let cohort = entityVal cohortEnt
+          remaining = max 0 (cohortSeatCap cohort - seatsTaken)
+      pure NextCohortDTO
+        { nextSlug      = cohortSlug cohort
+        , nextTitle     = cohortTitle cohort
+        , nextStartsAt  = cohortStartsAt cohort
+        , nextEndsAt    = cohortEndsAt cohort
+        , nextSeatCap   = cohortSeatCap cohort
+        , nextSeatsLeft = remaining
+        }
+
+    lessonToDTO (Entity _ lesson) = LessonDTO
+      { lessonDay   = academyLessonDay lesson
+      , lessonTitle = academyLessonTitle lesson
+      , lessonBody  = academyLessonBody lesson
+      }
+
+cleanOptional :: Maybe Text -> Maybe Text
+cleanOptional Nothing = Nothing
+cleanOptional (Just raw) =
+  let trimmed = T.strip raw
+  in if T.null trimmed then Nothing else Just trimmed
+
+requireEmail :: Text -> AppM Text
+requireEmail raw = do
+  let normalized = T.toLower (T.strip raw)
+  when (T.null normalized) (throwBadRequest "email requerido")
+  pure normalized
+
+requireRole :: Text -> AppM Text
+requireRole raw = do
+  let normalized = T.toLower (T.strip raw)
+  when (T.null normalized) (throwBadRequest "role requerido")
+  pure normalized
+
+requireSlug :: Text -> AppM Text
+requireSlug raw = do
+  let normalized = T.toLower (T.strip raw)
+  when (T.null normalized) (throwBadRequest "slug requerido")
+  pure normalized
+
+requireDay :: Int -> AppM Int
+requireDay n = do
+  when (n <= 0) (throwBadRequest "day debe ser positivo")
+  pure n
+
+requireReferralCode :: Text -> AppM Text
+requireReferralCode raw = do
+  let normalized = T.toUpper (T.strip raw)
+  when (T.null normalized) (throwBadRequest "code requerido")
+  pure normalized
+
+upsertAcademyUser :: Text -> Text -> Maybe Text -> AppM (Entity AcademyUser)
+upsertAcademyUser emailVal roleVal platformVal = do
+  now <- liftIO getCurrentTime
+  runDB $ do
+    mExisting <- getBy (UniqueAcademyUserEmail emailVal)
+    case mExisting of
+      Nothing -> do
+        let record = AcademyUser emailVal roleVal platformVal now
+        key <- insert record
+        pure (Entity key record)
+      Just (Entity key _) -> do
+        update key
+          [ AcademyUserRole =. roleVal
+          , AcademyUserPlatform =. platformVal
+          ]
+        updated <- getJust key
+        pure (Entity key updated)
+
+claimReferral :: Text -> Maybe (Key AcademyUser) -> Text -> AppM ()
+claimReferral emailVal mUser rawCode = do
+  codeTxt <- requireReferralCode rawCode
+  let codeKey = ReferralCodeKey codeTxt
+  existing <- runDB $ get codeKey
+  case existing of
+    Nothing -> throwNotFound "Código de referido inválido"
+    Just _  -> pure ()
+  now <- liftIO getCurrentTime
+  void $ runDB $ upsert
+    ReferralClaim
+      { referralClaimCodeId = codeKey
+      , referralClaimClaimantUserId = mUser
+      , referralClaimEmail = emailVal
+      , referralClaimClaimedAt = now
+      }
+    [ ReferralClaimClaimantUserId =. mUser
+    , ReferralClaimEmail =. emailVal
+    , ReferralClaimClaimedAt =. now
+    ]
+
+throwNotFound :: Text -> AppM a
+throwNotFound msg = throwError err404 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
 seedTrigger :: Maybe Text -> AppM NoContent
 seedTrigger rawToken = do
@@ -1170,7 +1939,7 @@ defaultResourcesForService (Just service) start end = do
     _ -> pure []
   where
     pickBooth [] = pure []
-    pickBooth (Entity key room : rest) = do
+    pickBooth (Entity key _ : rest) = do
       available <- isResourceAvailableDB key start end
       if available
         then pure [key]
@@ -1387,8 +2156,8 @@ createReceipt user CreateReceiptReq{..} = do
         existing <- selectFirst [ReceiptInvoiceId ==. iid] []
         case existing of
           Just receiptEnt -> do
-            lines <- selectList [ReceiptLineReceiptId ==. entityKey receiptEnt] [Asc ReceiptLineId]
-            pure (Right (receiptToDTO receiptEnt lines))
+            receiptLines <- selectList [ReceiptLineReceiptId ==. entityKey receiptEnt] [Asc ReceiptLineId]
+            pure (Right (receiptToDTO receiptEnt receiptLines))
           Nothing -> do
             invoiceLines <- selectList [InvoiceLineInvoiceId ==. iid] [Asc InvoiceLineId]
             if null invoiceLines
@@ -1415,8 +2184,8 @@ getReceipt user ridParam = do
     case mReceipt of
       Nothing -> pure Nothing
       Just rec -> do
-        lines <- selectList [ReceiptLineReceiptId ==. rid] [Asc ReceiptLineId]
-        pure (Just (receiptToDTO rec lines))
+        receiptLines <- selectList [ReceiptLineReceiptId ==. rid] [Asc ReceiptLineId]
+        pure (Just (receiptToDTO rec receiptLines))
   maybe (throwError err404) pure result
 
 data PreparedLine = PreparedLine
@@ -1482,7 +2251,7 @@ normalizeOptionalText =
   in (>>= clean)
 
 invoiceToDTO :: Entity Invoice -> [Entity InvoiceLine] -> Maybe (Key Receipt) -> InvoiceDTO
-invoiceToDTO (Entity iid inv) lines mReceiptKey = InvoiceDTO
+invoiceToDTO (Entity iid inv) invLines mReceiptKey = InvoiceDTO
   { invId      = fromSqlKey iid
   , number     = invoiceNumber inv
   , statusI    = T.pack (show (invoiceStatus inv))
@@ -1493,7 +2262,7 @@ invoiceToDTO (Entity iid inv) lines mReceiptKey = InvoiceDTO
   , customerId = Just (fromSqlKey (invoiceCustomerId inv))
   , notes      = invoiceNotes inv
   , receiptId  = fmap fromSqlKey mReceiptKey
-  , lineItems  = map invoiceLineToDTO lines
+  , lineItems  = map invoiceLineToDTO invLines
   }
 
 invoiceLineToDTO :: Entity InvoiceLine -> InvoiceLineDTO
@@ -1509,7 +2278,7 @@ invoiceLineToDTO (Entity lid line) = InvoiceLineDTO
   }
 
 receiptToDTO :: Entity Receipt -> [Entity ReceiptLine] -> ReceiptDTO
-receiptToDTO (Entity rid rec) lines = ReceiptDTO
+receiptToDTO (Entity rid rec) receiptLines = ReceiptDTO
   { receiptId     = fromSqlKey rid
   , receiptNumber = M.receiptNumber rec
   , issuedAt      = M.receiptIssuedAt rec
@@ -1522,7 +2291,7 @@ receiptToDTO (Entity rid rec) lines = ReceiptDTO
   , totalCents    = M.receiptTotalCents rec
   , notes         = M.receiptNotes rec
   , invoiceId     = fromSqlKey (M.receiptInvoiceId rec)
-  , lineItems     = map receiptLineToDTO lines
+  , lineItems     = map receiptLineToDTO receiptLines
   }
 
 receiptLineToDTO :: Entity ReceiptLine -> ReceiptLineDTO
@@ -1604,6 +2373,9 @@ generateReceiptNumber day = do
 
 throwBadRequest :: Text -> AppM a
 throwBadRequest msg = throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+hasRole :: RoleEnum -> AuthedUser -> Bool
+hasRole roleTag AuthedUser{..} = roleTag `elem` auRoles
 
 
 requireModule :: AuthedUser -> ModuleAccess -> AppM ()
@@ -1690,3 +2462,261 @@ applyRoles partyKey rolesList = do
   forM_ existing $ \(Entity roleId record) ->
     when (partyRoleActive record && Set.notMember (partyRoleRole record) desired) $
       update roleId [PartyRoleActive =. False]
+
+adsInquiryPublic :: ServerT AdsPublicAPI AppM
+adsInquiryPublic inquiry = do
+  env <- ask
+  now <- liftIO getCurrentTime
+  partyId <- runDB $ ensurePartyForInquiry inquiry now
+  (mSubjectKey, courseLabel) <- runDB $ resolveSubject (aiCourse inquiry)
+  inquiryId <- runDB $ do
+    rid <- insert (Trials.LeadInterest
+      { Trials.leadInterestPartyId   = partyId
+      , Trials.leadInterestInterestType = "ad_inquiry"
+      , Trials.leadInterestSubjectId = mSubjectKey
+      , Trials.leadInterestDetails   = fmap T.strip (aiMessage inquiry)
+      , Trials.leadInterestSource    = T.toLower (fromMaybe "ads" (aiChannel inquiry))
+      , Trials.leadInterestDriveLink = Nothing
+      , Trials.leadInterestStatus    = "Open"
+      , Trials.leadInterestCreatedAt = now
+      })
+    pure rid
+  channels <- liftIO $ sendAutoReplies (envConfig env) inquiry courseLabel
+  pure AdsInquiryOut
+    { aioOk = True
+    , aioInquiryId = entityKeyInt inquiryId
+    , aioPartyId = entityKeyInt partyId
+    , aioRepliedVia = channels
+    }
+
+adsAdminServer :: AuthedUser -> ServerT AdsAdminAPI AppM
+adsAdminServer user = do
+  requireModule user ModuleAdmin
+  rows <- runDB $ selectList [Trials.LeadInterestInterestType ==. "ad_inquiry"] [Desc Trials.LeadInterestCreatedAt, LimitTo 200]
+  let partyIds = map (Trials.leadInterestPartyId . entityVal) rows
+      subjectIds = mapMaybe (Trials.leadInterestSubjectId . entityVal) rows
+  parties <- if null partyIds then pure [] else runDB (selectList [M.PartyId <-. partyIds] [])
+  subjects <- if null subjectIds then pure [] else runDB (selectList [Trials.SubjectId <-. subjectIds] [])
+  let partyMap = Map.fromList [ (entityKey p, entityVal p) | p <- parties ]
+      subjectMap = Map.fromList [ (entityKey s, Trials.subjectName (entityVal s)) | s <- subjects ]
+  pure
+    [ AdsInquiryDTO
+        { aidInquiryId = entityKeyInt iid
+        , aidCreatedAt = Trials.leadInterestCreatedAt li
+        , aidName      = M.partyDisplayName <$> Map.lookup (Trials.leadInterestPartyId li) partyMap
+        , aidEmail     = M.partyPrimaryEmail =<< Map.lookup (Trials.leadInterestPartyId li) partyMap
+        , aidPhone     = M.partyPrimaryPhone =<< Map.lookup (Trials.leadInterestPartyId li) partyMap
+        , aidCourse    = (Trials.leadInterestSubjectId li >>= (`Map.lookup` subjectMap)) <|> Trials.leadInterestDetails li
+        , aidMessage   = Trials.leadInterestDetails li
+        , aidChannel   = Just (Trials.leadInterestSource li)
+        , aidStatus    = Trials.leadInterestStatus li
+        }
+    | Entity iid li <- rows
+    ]
+
+ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO PartyId
+ensurePartyForInquiry AdsInquiry{..} now = do
+  let emailClean = T.strip <$> aiEmail
+      phoneClean = aiPhone >>= normalizePhone
+      display = fromMaybe "Contacto Ads" (T.strip <$> aiName)
+  mExisting <- case emailClean of
+    Just e  -> selectFirst [M.PartyPrimaryEmail ==. Just e] []
+    Nothing -> case phoneClean of
+      Just p  -> selectFirst [M.PartyPrimaryPhone ==. Just p] []
+      Nothing -> pure Nothing
+  case mExisting of
+    Just (Entity pid party) -> do
+      let updates = catMaybes
+            [ if isJust (M.partyPrimaryEmail party) || isNothing emailClean then Nothing else Just (M.PartyPrimaryEmail =. emailClean)
+            , if isJust (M.partyPrimaryPhone party) || isNothing phoneClean then Nothing else Just (M.PartyPrimaryPhone =. phoneClean)
+            , if isJust (M.partyWhatsapp party) || isNothing phoneClean then Nothing else Just (M.PartyWhatsapp =. phoneClean)
+            , if T.null (M.partyDisplayName party) && not (T.null display) then Just (M.PartyDisplayName =. display) else Nothing
+            ]
+      unless (null updates) $
+        update pid updates
+      ensureStudentRole pid
+      pure pid
+    Nothing -> do
+      pid <- insert M.Party
+        { M.partyLegalName        = Nothing
+        , M.partyDisplayName      = display
+        , M.partyIsOrg            = False
+        , M.partyTaxId            = Nothing
+        , M.partyPrimaryEmail     = emailClean
+        , M.partyPrimaryPhone     = phoneClean
+        , M.partyWhatsapp         = phoneClean
+        , M.partyInstagram        = Nothing
+        , M.partyEmergencyContact = Nothing
+        , M.partyNotes            = Nothing
+        , M.partyCreatedAt        = now
+        }
+      ensureStudentRole pid
+      pure pid
+  where
+    ensureStudentRole pid = void $ upsert (M.PartyRole pid Student True) [M.PartyRoleActive =. True]
+
+resolveSubject :: Maybe Text -> SqlPersistT IO (Maybe (Key Trials.Subject), Maybe Text)
+resolveSubject mCourse =
+  case fmap (T.toLower . T.strip) mCourse of
+    Nothing -> pure (Nothing, Nothing)
+    Just raw -> do
+      mSubject <- selectFirst [Trials.SubjectName ==. canonicalCourse raw] []
+      pure (entityKey <$> mSubject, Just (canonicalCourse raw))
+  where
+    canonicalCourse txt
+      | "dj" `T.isInfixOf` txt = "DJ"
+      | "ableton" `T.isInfixOf` txt = "Producción Música Electrónica (Ableton Live)"
+      | "logic" `T.isInfixOf` txt || "luna" `T.isInfixOf` txt = "Producción Musical (Logic/Luna)"
+      | "bajo" `T.isInfixOf` txt = "Bajo"
+      | "guitarra" `T.isInfixOf` txt = "Guitarra"
+      | "teclado" `T.isInfixOf` txt || "piano" `T.isInfixOf` txt = "Teclado"
+      | "bateria" `T.isInfixOf` txt = "Batería"
+      | "sint" `T.isInfixOf` txt = "Síntesis Modular"
+      | otherwise = txt
+
+sendAutoReplies :: AppConfig -> AdsInquiry -> Maybe Text -> IO [Text]
+sendAutoReplies cfg AdsInquiry{..} mCourse = do
+  mgr <- newManager tlsManagerSettings
+  wa <- loadWhatsAppEnv
+  let ctaBase = fromMaybe "https://tdf-app.pages.dev" (appBaseUrl cfg)
+      cta = ctaBase <> "/trials"
+      courseLabel = fromMaybe "las clases 1:1" mCourse
+      body = T.intercalate "\n"
+        [ "Hola " <> fromMaybe "" aiName <> " 🙌"
+        , "Gracias por tu interés en " <> courseLabel <> "."
+        , "Paquete 1:1 (16 horas): $480."
+        , "Grupo pequeño: más info y fechas en https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
+        , "¿Te agendo una clase de prueba gratis para ver horarios y profesor ideal?"
+        , "Confírmame tu disponibilidad y ciudad. Agendamos aquí: " <> cta
+        ]
+  channels <- fmap catMaybes . sequence $
+    [ case (waToken wa, waPhoneId wa, aiPhone >>= normalizePhone) of
+        (Just tok, Just pid, Just ph) ->
+          do res <- sendText mgr tok pid ph body
+             pure (either (const Nothing) (const (Just "whatsapp")) res)
+        _ -> pure Nothing
+    , case aiEmail of
+        Just e -> do
+          let svc = EmailSvc.mkEmailService cfg
+          EmailSvc.sendTestEmail svc (fromMaybe "Amigo TDF" aiName) e "Gracias por tu interés en TDF"
+            [ "Paquete 1:1 (16 horas): $480."
+            , "Grupo pequeño: detalles y fechas en https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
+            , "Agenda tu clase de prueba gratis aquí: " <> cta <> "/trials"
+            ] (Just (cta <> "/trials"))
+          pure (Just "email")
+        Nothing -> pure Nothing
+    ]
+  pure channels
+
+cmsPublicServer :: Maybe Text -> Maybe Text -> AppM CmsContentDTO
+cmsPublicServer mSlug mLocale = do
+  slug <- maybe (throwError err400 { errBody = "slug requerido" }) pure mSlug
+  let locale = fromMaybe "es" mLocale
+  mPublished <- runDB $ selectFirst
+    [ CMS.CmsContentSlug ==. slug
+    , CMS.CmsContentLocale ==. locale
+    , CMS.CmsContentStatus ==. "published"
+    ] [Desc CMS.CmsContentVersion]
+  content <- case mPublished of
+    Just ent -> pure ent
+    Nothing -> do
+      mDraft <- runDB $ selectFirst
+        [ CMS.CmsContentSlug ==. slug
+        , CMS.CmsContentLocale ==. locale
+        ]
+        [Desc CMS.CmsContentVersion]
+      maybe (throwError err404) pure mDraft
+  pure (toCmsDTO content)
+
+cmsAdminServer :: AuthedUser -> ServerT CmsAdminAPI AppM
+cmsAdminServer user =
+       cmsListH
+  :<|> cmsCreateH
+  :<|> cmsPublishH
+  :<|> cmsDeleteH
+  where
+    requireWebmaster = unless (hasRole Admin user || hasRole Webmaster user) $
+      throwError err403
+
+    cmsListH mSlug mLocale = do
+      requireWebmaster
+      let filters = catMaybes
+            [ (CMS.CmsContentSlug ==.) <$> mSlug
+            , (CMS.CmsContentLocale ==.) <$> mLocale
+            ]
+      rows <- runDB $ selectList filters [Desc CMS.CmsContentCreatedAt]
+      pure (map toCmsDTO rows)
+
+    cmsCreateH CmsContentIn{..} = do
+      requireWebmaster
+      now <- liftIO getCurrentTime
+      let slug = cciSlug
+          locale = cciLocale
+          statusVal = fromMaybe "draft" cciStatus
+      nextVersion <- runDB $ do
+        mLatest <- selectFirst
+          [ CMS.CmsContentSlug ==. slug
+          , CMS.CmsContentLocale ==. locale
+          ]
+          [Desc CMS.CmsContentVersion]
+        pure $ maybe 1 ((+1) . CMS.cmsContentVersion . entityVal) mLatest
+      let publishedAt = if statusVal == "published" then Just now else Nothing
+      cid <- runDB $ insert CMS.CmsContent
+        { CMS.cmsContentSlug = slug
+        , CMS.cmsContentLocale = locale
+        , CMS.cmsContentVersion = nextVersion
+        , CMS.cmsContentStatus = statusVal
+        , CMS.cmsContentTitle = cciTitle
+        , CMS.cmsContentPayload = fmap CMS.AesonValue cciPayload
+        , CMS.cmsContentCreatedBy = Just (auPartyId user)
+        , CMS.cmsContentCreatedAt = now
+        , CMS.cmsContentUpdatedAt = now
+        , CMS.cmsContentPublishedAt = publishedAt
+        }
+      ent <- runDB $ getJustEntity cid
+      pure (toCmsDTO ent)
+
+    cmsPublishH cid = do
+      requireWebmaster
+      let contentKey = toSqlKey (fromIntegral cid) :: Key CMS.CmsContent
+      now <- liftIO getCurrentTime
+      mEnt <- runDB $ get contentKey
+      case mEnt of
+        Nothing -> throwError err404
+        Just ent -> do
+          runDB $ do
+            updateWhere
+              [ CMS.CmsContentSlug ==. CMS.cmsContentSlug ent
+              , CMS.CmsContentLocale ==. CMS.cmsContentLocale ent
+              ]
+              [ CMS.CmsContentStatus =. "archived" ]
+            update contentKey
+              [ CMS.CmsContentStatus =. "published"
+              , CMS.CmsContentPublishedAt =. Just now
+              , CMS.CmsContentUpdatedAt =. now
+              ]
+          ent' <- runDB $ getJustEntity contentKey
+          pure (toCmsDTO ent')
+
+    cmsDeleteH cid = do
+      requireWebmaster
+      let contentKey = toSqlKey (fromIntegral cid) :: Key CMS.CmsContent
+      runDB $ delete contentKey
+      pure NoContent
+
+toCmsDTO :: Entity CMS.CmsContent -> CmsContentDTO
+toCmsDTO (Entity cid c) =
+  CmsContentDTO
+    { ccdId = entityKeyInt cid
+    , ccdSlug = CMS.cmsContentSlug c
+    , ccdLocale = CMS.cmsContentLocale c
+    , ccdVersion = CMS.cmsContentVersion c
+    , ccdStatus = CMS.cmsContentStatus c
+    , ccdTitle = CMS.cmsContentTitle c
+    , ccdPayload = CMS.unAesonValue <$> CMS.cmsContentPayload c
+    , ccdCreatedAt = CMS.cmsContentCreatedAt c
+    , ccdPublishedAt = CMS.cmsContentPublishedAt c
+    }
+
+entityKeyInt :: (PersistEntity record, PersistEntityBackend record ~ SqlBackend, ToBackendKey SqlBackend record) => Key record -> Int
+entityKeyInt = fromIntegral . fromSqlKey

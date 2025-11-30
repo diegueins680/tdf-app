@@ -1,7 +1,6 @@
-name: Deploy backend to Fly
+name: Deploy to Fly
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
@@ -10,15 +9,33 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Install flyctl
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          # Persist flyctl into the PATH for following steps and current shell
+          echo "$HOME/.fly/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.fly/bin:$PATH"
+          flyctl version
 
-      - name: Deploy tdf-hq (build locally on runner)
+      - name: Deploy to Fly
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          FLY_NO_DEPOT_CACHE: "1"
+          FLY_NO_DEPOT: "1"
         run: |
-          flyctl deploy --local-only --config fly.toml --app tdf-hq --verbose
+          APP_NAME="tdf-hq"
+          if [ -f fly.toml ] && grep -q '^app *= *"[^"]*"' fly.toml; then
+            APP_NAME=$(grep '^app *= *"' fly.toml | head -n1 | sed -E 's/app *= *"([^"]+)"/\1/')
+          fi
+          SOURCE_COMMIT=$(git rev-parse --short=12 HEAD || echo "dev")
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          flyctl deploy \
+            --config ./fly.toml \
+            --dockerfile ./tdf-hq/Dockerfile \
+            --no-cache \
+            --build-arg SOURCE_COMMIT="$SOURCE_COMMIT" \
+            --build-arg BUILD_TIME="$BUILD_TIME" \
+            --strategy rolling \
+            --app "$APP_NAME"

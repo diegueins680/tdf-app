@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -6,8 +7,8 @@ module TDF.ServerLiveSessions
   ( liveSessionsServer
   ) where
 
-import           Control.Monad              (forM_, unless, void, when)
-import           Control.Monad.Except       (MonadError, throwError)
+import           Control.Monad              (forM_, void, when)
+import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Crypto.BCrypt              (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
@@ -15,13 +16,13 @@ import           Data.Maybe                 (fromMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
-import           Data.Time                  (Day, UTCTime, getCurrentTime)
+import           Data.Time                  (UTCTime, getCurrentTime)
 import           Data.UUID                  (toText)
 import           Data.UUID.V4               (nextRandom)
 import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
-import           Servant.Multipart          (FileData(..), Tmp(..))
+import           Servant.Multipart          (FileData(..), Tmp)
 import           System.Directory           (createDirectoryIfMissing)
 import           System.FilePath            ((</>), takeFileName)
 import qualified Data.ByteString.Lazy       as BL
@@ -34,7 +35,8 @@ import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra           as ME
 
 liveSessionsServer
-  :: ( MonadReader Env m
+  :: forall m.
+     ( MonadReader Env m
      , MonadIO m
      , MonadError ServerError m
      )
@@ -57,6 +59,9 @@ liveSessionsServer user = intakeHandler
         , ME.liveSessionIntakeContactEmail = T.strip <$> lsiContactEmail payload
         , ME.liveSessionIntakeContactPhone = T.strip <$> lsiContactPhone payload
         , ME.liveSessionIntakeSessionDate  = lsiSessionDate payload
+        , ME.liveSessionIntakeAvailability = lsiAvailability payload
+        , ME.liveSessionIntakeAcceptedTerms = lsiAcceptedTerms payload
+        , ME.liveSessionIntakeTermsVersion = lsiTermsVersion payload
         , ME.liveSessionIntakeRiderPath    = riderPath
         , ME.liveSessionIntakeCreatedBy    = Just (auPartyId user)
         , ME.liveSessionIntakeCreatedAt    = now
@@ -84,8 +89,8 @@ liveSessionsServer user = intakeHandler
       partyKey <- case lsmPartyId of
         Just pidInt -> do
           let key = toSqlKey (fromIntegral pidInt)
-          exists <- withPool $ get key
-          case exists of
+          existingParty <- withPool $ get key
+          case existingParty of
             Nothing -> throwError err400 { errBody = "Referenced party not found" }
             Just _  -> pure key
         Nothing -> do
@@ -177,12 +182,12 @@ liveSessionsServer user = intakeHandler
 
     storeRiderFile :: FileData Tmp -> IO Text
     storeRiderFile FileData{..} = do
-      let safeName = sanitize (T.pack (takeFileName fdFileName))
+      let safeName = sanitize (T.pack (takeFileName (T.unpack fdFileName)))
       token <- toText <$> nextRandom
       let destDir  = "uploads/live-sessions"
           destPath = destDir </> T.unpack token <> "-" <> T.unpack safeName
       createDirectoryIfMissing True destDir
-      BL.readFile fdFilePath >>= BL.writeFile destPath
+      BL.readFile fdPayload >>= BL.writeFile destPath
       pure (T.pack destPath)
 
     sanitize :: Text -> Text

@@ -1,0 +1,117 @@
+name: Deploy to Koyeb
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE_REPO: diegueins680/tdf-hq
+  DOCKER_IMAGE_TAG: ${{ github.sha }}
+  KOYEB_APP: ${{ secrets.KOYEB_APP_NAME }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./tdf-hq/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE_REPO }}:${{ env.DOCKER_IMAGE_TAG }}
+            ${{ env.DOCKER_IMAGE_REPO }}:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Install Koyeb CLI
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y jq ca-certificates
+          RELEASE_API="https://api.github.com/repos/koyeb/koyeb-cli/releases/latest"
+          CANDIDATES=$(curl -fsSL "$RELEASE_API" | jq -r '.assets[].browser_download_url')
+          LATEST_URL=""
+          for pat in 'linux.*amd64.*\.tar\.gz' 'linux.*x86_64.*\.tar\.gz' 'Linux_x86_64\.tar\.gz' 'linux-amd64\.tar\.gz' 'linux-x86_64\.tar\.gz'; do
+            LATEST_URL=$(echo "$CANDIDATES" | grep -iE "$pat" | head -n1 || true)
+            [ -n "$LATEST_URL" ] && break
+          done
+          if [ -z "$LATEST_URL" ]; then
+            LATEST_URL=$(echo "$CANDIDATES" | grep -iE 'linux.*\.tar\.gz' | head -n1 || true)
+          fi
+          if [ -z "$LATEST_URL" ] || [ "$LATEST_URL" = "null" ]; then
+            echo "Failed to resolve Koyeb CLI download URL" >&2
+            exit 1
+          fi
+          echo "Downloading Koyeb CLI from $LATEST_URL"
+          curl -fsSL "$LATEST_URL" -o /tmp/koyeb.tar.gz
+          tar -xzf /tmp/koyeb.tar.gz -C /tmp
+          BIN_PATH=$(find /tmp -maxdepth 2 -type f -name 'koyeb*' | head -n1 || true)
+          if [ -z "$BIN_PATH" ]; then
+            echo "Koyeb binary not found after extraction" >&2
+            exit 1
+          fi
+          sudo install "$BIN_PATH" /usr/local/bin/koyeb
+          /usr/local/bin/koyeb version
+      - name: Deploy latest image to Koyeb
+        env:
+          KOYEB_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
+          KOYEB_SERVICE: ${{ secrets.KOYEB_SERVICE_NAME }}
+        run: |
+          set -euo pipefail
+          slugify() {
+            echo "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g; s/-{2,}/-/g'
+          }
+          if [ -z "${KOYEB_TOKEN:-}" ] || [ -z "${KOYEB_SERVICE:-}" ] || [ -z "${KOYEB_APP:-}" ]; then
+            echo "KOYEB_API_TOKEN, KOYEB_SERVICE_NAME, and KOYEB_APP_NAME secrets are required" >&2
+            exit 1
+          fi
+          APP_NAME=$(slugify "$KOYEB_APP")
+          SERVICE_NAME=$(slugify "$KOYEB_SERVICE")
+          if [ -z "$APP_NAME" ] || [ -z "$SERVICE_NAME" ]; then
+            echo "Koyeb app/service names resolved to empty after slugify; please set KOYEB_APP_NAME / KOYEB_SERVICE_NAME to alphanumeric or dash." >&2
+            exit 1
+          fi
+          # Ensure app exists
+          APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$APP_NAME"'") | .id' | head -n1)
+          if [ -z "$APP_ID" ] || [ "$APP_ID" = "null" ]; then
+            echo "Koyeb app '$APP_NAME' not found; creating it..."
+            koyeb --token "$KOYEB_TOKEN" apps create "$APP_NAME"
+            APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$APP_NAME"'") | .id' | head -n1)
+            if [ -z "$APP_ID" ] || [ "$APP_ID" = "null" ]; then
+              echo "Failed to create/resolve Koyeb app '$APP_NAME'" >&2
+              exit 1
+            fi
+          fi
+
+          # Deploy image: update existing service if present, otherwise create it.
+          EXISTING_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$APP_ID" --output json | jq -r '.services[] | select(.name=="'"$SERVICE_NAME"'") | .id')
+          if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
+            echo "Updating existing service $SERVICE_NAME ($EXISTING_ID) with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
+            koyeb --token "$KOYEB_TOKEN" services update "$EXISTING_ID" \
+              --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
+              --ports 8080:http \
+              --strategy rolling
+          else
+            echo "Creating service $SERVICE_NAME in app $APP_NAME with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
+            koyeb --token "$KOYEB_TOKEN" services create "$SERVICE_NAME" \
+              --app "$APP_ID" \
+              --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
+              --ports 8080:http \
+              --strategy rolling
+          fi

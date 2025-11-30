@@ -1,6 +1,6 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
@@ -16,6 +16,10 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const { session, logout } = useSession();
   const navigate = useNavigate();
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
+  const hasAdmin = useMemo(
+    () => (session?.modules ?? []).some((m) => m.toLowerCase() === 'admin'),
+    [session?.modules],
+  );
 
   const handleLogout = () => {
     logout();
@@ -56,11 +60,11 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           aria-label="Ir al inicio"
         >
           <BrandLogo
-            variant="alt"
-            size={180}
+            variant="wordmark"
+            size={55}
             sx={{
-              height: { xs: 120, sm: 150, md: 180 },
-              filter: 'drop-shadow(0 8px 22px rgba(0,0,0,0.35))',
+              height: { xs: 35, sm: 50, md: 65 },
+              filter: 'brightness(0) invert(1) drop-shadow(0 10px 26px rgba(0,0,0,0.45))',
             }}
           />
         </Box>
@@ -81,7 +85,25 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             Seguridad
           </Button>
 
-          <Chip label="ADMIN" size="small" sx={{ bgcolor: 'rgba(59,130,246,0.15)', color: '#93c5fd' }} />
+          {hasAdmin ? (
+            <Button
+              color="inherit"
+              variant="outlined"
+              size="small"
+              component={RouterLink}
+              to="/configuracion/roles-permisos"
+              sx={{
+                textTransform: 'none',
+                borderColor: 'rgba(59,130,246,0.35)',
+                color: '#93c5fd',
+                '&:hover': { borderColor: 'rgba(59,130,246,0.6)', bgcolor: 'rgba(59,130,246,0.08)' },
+              }}
+            >
+              ADMIN
+            </Button>
+          ) : (
+            <Chip label="ADMIN" size="small" sx={{ bgcolor: 'rgba(59,130,246,0.15)', color: '#93c5fd' }} />
+          )}
           <Button
             variant="outlined"
             color="inherit"
