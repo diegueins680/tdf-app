@@ -7,8 +7,9 @@ module TDF.ServerFeedback
   ) where
 
 import           Control.Monad              (when)
-import           Control.Monad.IO.Class     (liftIO)
-import           Control.Monad.Reader       (MonadReader, asks)
+import           Control.Monad.Except       (MonadError)
+import           Control.Monad.IO.Class     (MonadIO, liftIO)
+import           Control.Monad.Reader       (MonadReader, ask, asks)
 import           Data.Maybe                 (fromMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
