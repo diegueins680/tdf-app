@@ -2,11 +2,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
 
 module TDF.ServerAdmin
   ( adminServer
   ) where
 
+import           Control.Exception      (SomeException, try)
 import           Control.Monad          (unless, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
@@ -39,7 +41,7 @@ import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, to
 import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
-import           TDF.API.Admin          (AdminAPI)
+import           TDF.API.Admin          (AdminAPI, EmailTestRequest(..), EmailTestResponse(..))
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
                                         , DropdownOptionUpdate(..)
@@ -58,10 +60,9 @@ import           TDF.Auth               ( AuthedUser
                                         , moduleName
                                         , modulesForRoles
                                         )
-import           TDF.Config             (AppConfig(..))
 import           TDF.DB                 (Env(..))
 import           TDF.Models
-import           TDF.ModelsExtra (DropdownOption(..))
+import           TDF.ModelsExtra (DropdownOption(..), CourseRegistration(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
@@ -70,6 +71,13 @@ import qualified TDF.Services           as Services
 import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         , upsertArtistProfileRecord
                                         )
+import           TDF.Routes.Courses     ( CourseRegistrationStatusUpdate(..)
+                                        , CourseRegistrationResponse(..)
+                                        )
+import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), addLog, getRecentLogs, clearLogs )
+import           TDF.DTO                ( LogEntryDTO(..) )
+import           TDF.DTO                ( CourseRegistrationDTO(..) )
+import           System.IO              (hPutStrLn, stderr)
 
 adminServer
   :: ( MonadReader Env m
@@ -78,7 +86,15 @@ adminServer
      )
   => AuthedUser
   -> ServerT AdminAPI m
-adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHandler :<|> artistsRouter
+adminServer user =
+       seedHandler
+  :<|> dropdownRouter
+  :<|> usersRouter
+  :<|> rolesHandler
+  :<|> artistsRouter
+  :<|> logsRouter
+  :<|> emailTestHandler
+  :<|> courseRegistrationsRouter
   where
     seedHandler = do
       ensureModule ModuleAdmin user
@@ -107,9 +123,63 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
       (listArtistProfilesAdmin :<|> upsertArtistProfileAdmin)
       :<|> createArtistReleaseAdmin
 
+    logsRouter =
+      getLogs :<|> clearLogsHandler
+
+    emailTestHandler EmailTestRequest{..} = do
+      ensureModule ModuleAdmin user
+      cfg <- asks envConfig
+      let emailSvc = Services.emailService (Services.buildServices cfg)
+          subj = fromMaybe "Correo de prueba TDF" etrSubject
+          body = maybe ["Correo de prueba desde TDF HQ."] (\txt -> [txt]) etrBody
+          targetName = fromMaybe "" etrName
+          preMsg = "[Admin][EmailTest] Sending to " <> etrEmail <> " | subject: " <> subj
+      liftIO $ addLog LogInfo preMsg
+      sendResult <- liftIO $ try $
+        EmailSvc.sendTestEmail
+          emailSvc
+          targetName
+          etrEmail
+          subj
+          body
+          etrCtaUrl
+      case sendResult of
+        Left (err :: SomeException) -> do
+          let msg = "[Admin][EmailTest] Failed for " <> etrEmail <> ": " <> T.pack (show err)
+          liftIO $ addLog LogError msg
+          liftIO $ hPutStrLn stderr (T.unpack msg)
+          pure EmailTestResponse { status = "error", message = Just msg }
+        Right () -> do
+          let msg = "[Admin][EmailTest] Sent to " <> etrEmail
+          liftIO $ addLog LogInfo msg
+          liftIO $ hPutStrLn stderr (T.unpack msg)
+          pure EmailTestResponse { status = "sent", message = Nothing }
+
+    courseRegistrationsRouter =
+      listCourseRegistrations :<|> getRegistration :<|> updateRegistrationStatus
+
+    listCourseRegistrations mSlug mStatus mLimit = do
+      ensureModule ModuleAdmin user
+      let filters =
+            maybe [] (\slugTxt -> [ME.CourseRegistrationCourseSlug ==. normaliseCategory slugTxt]) mSlug
+            ++ maybe [] (\statusTxt -> [ME.CourseRegistrationStatus ==. normalizeStatusText statusTxt]) mStatus
+          limitN = fromMaybe 200 mLimit
+      entities <- withPool $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo limitN]
+      pure (map toCourseRegistrationDTO entities)
+
+    getRegistration slug regId = do
+      ensureModule ModuleAdmin user
+      let key = toSqlKey regId :: Key ME.CourseRegistration
+          slugKey = normaliseCategory slug
+      mReg <- withPool $ getEntity key
+      case mReg of
+        Nothing -> throwError err404
+        Just (Entity _ reg) | ME.courseRegistrationCourseSlug reg /= slugKey -> throwError err404
+        Just ent -> pure (toCourseRegistrationDTO ent)
+
     roleDetail role = RoleDetailDTO
       { role    = role
-      , label   = T.pack (show role)
+      , label   = roleToText role
       , modules = map moduleName (Set.toList (modulesForRoles [role]))
       }
 
@@ -150,6 +220,28 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
             entity <- getJustEntity releaseId
             pure (Just (artistReleaseEntityToDTOAdmin entity))
       maybe (throwError err404) pure dto
+
+    updateRegistrationStatus slug regId CourseRegistrationStatusUpdate{..} = do
+      ensureModule ModuleAdmin user
+      let normalizedSlug = T.toLower (T.strip slug)
+      normalizedStatus <- normaliseStatus status
+      let regKey = toSqlKey regId :: Key CourseRegistration
+      now <- liftIO getCurrentTime
+      entity <- withPool $ get regKey
+      reg <- maybe (throwError err404) pure entity
+      when (ME.courseRegistrationCourseSlug reg /= normalizedSlug) $
+        throwError err404
+      withPool $ update regKey
+        [ ME.CourseRegistrationStatus =. normalizedStatus
+        , ME.CourseRegistrationUpdatedAt =. now
+        ]
+      pure CourseRegistrationResponse { id = regId, status = normalizedStatus }
+
+    normaliseStatus raw =
+      let trimmed = T.toLower (T.strip raw)
+      in if trimmed `elem` ["pending_payment", "paid", "cancelled"]
+           then pure trimmed
+           else throwError err400 { errBody = "Estado inválido; usa pending_payment, paid o cancelled" }
 
     listOptions rawCategory mIncludeInactive = do
       ensureModule ModuleAdmin user
@@ -303,7 +395,7 @@ adminServer user = seedHandler :<|> dropdownRouter :<|> usersRouter :<|> rolesHa
                    then "tdf-user-" <> T.pack (show (fromSqlKey pid))
                    else slug
 
-        generateUniqueUsername base = go 0
+        generateUniqueUsername base = go (0 :: Int)
           where
             go attempt = do
               let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)
@@ -379,6 +471,9 @@ parseKey raw =
 normaliseCategory :: Text -> Text
 normaliseCategory = T.toLower . T.strip
 
+normalizeStatusText :: Text -> Text
+normalizeStatusText = T.toLower . T.strip
+
 normaliseText :: Maybe Text -> Maybe Text
 normaliseText Nothing = Nothing
 normaliseText (Just txt) =
@@ -453,4 +548,46 @@ toDTO (Entity key option) = DropdownOptionDTO
   , label     = dropdownOptionLabel option
   , active    = dropdownOptionActive option
   , sortOrder = dropdownOptionSortOrder option
+  }
+
+-- Log handlers
+getLogs :: (MonadIO m) => Maybe Int -> m [LogEntryDTO]
+getLogs mLimit = do
+  let limit = fromMaybe 100 mLimit
+  entries <- liftIO $ getRecentLogs limit
+  pure $ map logEntryToDTO entries
+
+clearLogsHandler :: (MonadIO m) => m NoContent
+clearLogsHandler = do
+  liftIO clearLogs
+  pure NoContent
+
+logEntryToDTO :: LogEntry -> LogEntryDTO
+logEntryToDTO LogEntry{..} = LogEntryDTO
+  { logTimestamp = logTimestamp
+  , logLevel = levelToText logLevel
+  , logMessage = logMessage
+  }
+
+levelToText :: LogLevel -> Text
+levelToText LogInfo = "info"
+levelToText LogWarning = "warning"
+levelToText LogError = "error"
+
+toCourseRegistrationDTO :: Entity ME.CourseRegistration -> CourseRegistrationDTO
+toCourseRegistrationDTO (Entity regId reg) = CourseRegistrationDTO
+  { crId          = fromSqlKey regId
+  , crCourseSlug  = ME.courseRegistrationCourseSlug reg
+  , crFullName    = ME.courseRegistrationFullName reg
+  , crEmail       = ME.courseRegistrationEmail reg
+  , crPhoneE164   = ME.courseRegistrationPhoneE164 reg
+  , crSource      = ME.courseRegistrationSource reg
+  , crStatus      = ME.courseRegistrationStatus reg
+  , crHowHeard    = ME.courseRegistrationHowHeard reg
+  , crUtmSource   = ME.courseRegistrationUtmSource reg
+  , crUtmMedium   = ME.courseRegistrationUtmMedium reg
+  , crUtmCampaign = ME.courseRegistrationUtmCampaign reg
+  , crUtmContent  = ME.courseRegistrationUtmContent reg
+  , crCreatedAt   = ME.courseRegistrationCreatedAt reg
+  , crUpdatedAt   = ME.courseRegistrationUpdatedAt reg
   }

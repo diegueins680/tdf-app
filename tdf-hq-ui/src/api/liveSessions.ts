@@ -15,6 +15,9 @@ export interface LiveSessionIntakePayload {
   contactEmail?: string | null;
   contactPhone?: string | null;
   sessionDate?: string | null;
+  availabilityNotes?: string | null;
+  acceptedTerms?: boolean;
+  termsVersion?: string | null;
   musicians: LiveSessionMusicianInput[];
   riderFile?: File | null;
 }
@@ -28,6 +31,9 @@ export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload)
   if (payload.contactEmail) form.append('contactEmail', payload.contactEmail);
   if (payload.contactPhone) form.append('contactPhone', payload.contactPhone);
   if (payload.sessionDate) form.append('sessionDate', payload.sessionDate);
+  if (payload.availabilityNotes) form.append('availability', payload.availabilityNotes);
+  if (typeof payload.acceptedTerms === 'boolean') form.append('acceptedTerms', String(payload.acceptedTerms));
+  if (payload.termsVersion) form.append('termsVersion', payload.termsVersion);
   form.append('musicians', JSON.stringify(payload.musicians));
   if (payload.riderFile) {
     form.append('rider', payload.riderFile);

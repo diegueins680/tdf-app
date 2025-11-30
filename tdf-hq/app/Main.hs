@@ -15,6 +15,8 @@ import           Database.Persist.Sql     (SqlPersistT, Single(..), rawExecute, 
                                            runSqlPool, toSqlKey)
 import           Database.Persist.Types   (PersistValue (PersistText))
 import           System.Environment       (lookupEnv)
+import           System.IO                (hSetEncoding, stdout, stderr)
+import           GHC.IO.Encoding          (utf8, setLocaleEncoding)
 import           Text.Read                (readMaybe)
 
 import           Network.Wai.Middleware.Cors
@@ -24,7 +26,8 @@ import           Network.Wai.Middleware.Cors
                  , simpleHeaders
                  )
 
-import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, seedDatabase)
+import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
+import           TDF.Cron       (startCoursePaymentReminderJob)
 import           TDF.DB         (Env(..), makePool)
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
@@ -33,6 +36,9 @@ import           TDF.Server     (mkApp)
 import           TDF.Seed       (seedAll)
 main :: IO ()
 main = do
+  setLocaleEncoding utf8
+  hSetEncoding stdout utf8
+  hSetEncoding stderr utf8
   cfg  <- loadConfig
   pool <- makePool (pack (dbConnString cfg))
   if resetDb cfg
@@ -41,14 +47,19 @@ main = do
       runSqlPool resetSchema pool
     else
       putStrLn "RESET_DB disabled, preserving existing schema."
-  putStrLn "Running DB migrations..."
-  runSqlPool runMigrations pool
+  if runMigrations cfg
+    then do
+      putStrLn "Running DB migrations..."
+      runSqlPool runAllMigrations pool
+    else
+      putStrLn "RUN_MIGRATIONS disabled (using pre-initialized schema)."
   when (seedDatabase cfg) $ do
     putStrLn "Seeding initial data..."
     runSqlPool seedAll pool
   putStrLn ("Starting server on port " <> show (appPort cfg))
 
-  let allowedOriginsBase =
+  let env = Env{ envPool = pool, envConfig = cfg }
+      allowedOriginsBase =
         [ "http://localhost:5173"
         , "http://127.0.0.1:5173"
         , "http://localhost:4173"
@@ -80,8 +91,9 @@ main = do
           , corsMethods        = ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
           , corsOrigins        = if allowAllFlag then Nothing else Just (allowedOrigins, True)
           }
-      app = mkApp Env{ envPool = pool, envConfig = cfg }
+      app = mkApp env
 
+  startCoursePaymentReminderJob env
   Warp.run (appPort cfg) (cors (const $ Just corsPolicy) app)
 
 -- | Split a comma-separated list into trimmed entries.
@@ -120,8 +132,8 @@ resetSchema = do
   rawExecute "GRANT ALL ON SCHEMA public TO CURRENT_USER" []
   rawExecute "GRANT ALL ON SCHEMA public TO public" []
 
-runMigrations :: SqlPersistT IO ()
-runMigrations = do
+runAllMigrations :: SqlPersistT IO ()
+runAllMigrations = do
   rawExecute "CREATE EXTENSION IF NOT EXISTS pgcrypto" []
   renameLegacyPartyRoleConstraint
   legacyRoles <- captureLegacyPartyRoles

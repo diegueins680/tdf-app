@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Box, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useSession } from '../session/SessionContext';
 
 export interface NavItem {
   label: string;
@@ -31,6 +32,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Calendario', path: '/estudio/calendario' },
       { label: 'Salas y recursos', path: '/estudio/salas' },
       { label: 'Órdenes', path: '/estudio/ordenes' },
+      { label: 'Servicios', path: '/estudio/servicios' },
       { label: 'Pipelines', path: '/estudio/pipelines' },
       { label: 'Live Sessions', path: '/estudio/live-sessions' },
       { label: 'Reportes', path: '/estudio/reportes' },
@@ -109,6 +111,10 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: 'CONFIGURACIÓN',
     items: [
+      { label: 'Inscripciones curso', path: '/configuracion/inscripciones-curso' },
+      { label: 'Logs', path: '/configuracion/logs' },
+      { label: 'Estado sistema', path: '/configuracion/estado' },
+      { label: 'Usuarios admin', path: '/configuracion/usuarios-admin' },
       { label: 'Roles y permisos', path: '/configuracion/roles-permisos' },
       { label: 'Impuestos y series', path: '/configuracion/impuestos-series' },
       { label: 'Unidades de negocio', path: '/configuracion/unidades-negocio' },
@@ -126,6 +132,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Acerca de', path: '/acerca' },
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Fan Hub', path: '/fans' },
+      { label: 'Sugerencias', path: '/feedback' },
     ],
   },
 ];
@@ -137,7 +144,64 @@ interface SidebarNavProps {
 
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set(NAV_GROUPS.map((g) => g.title)));
+  const { session } = useSession();
+  const modules = useMemo(() => new Set((session?.modules ?? []).map((m) => m.toLowerCase())), [session?.modules]);
+
+  const pathRequiresModule = (path: string): string | null => {
+    if (path.startsWith('/crm')) return 'crm';
+    if (path.startsWith('/estudio')) return 'scheduling';
+    if (path.startsWith('/finanzas')) return 'invoicing';
+    if (path.startsWith('/configuracion')) return 'admin';
+    if (path.startsWith('/operacion')) return 'packages';
+    if (path.startsWith('/label')) return 'packages';
+    if (path.startsWith('/bar')) return 'packages';
+    if (path.startsWith('/escuela')) return 'scheduling';
+    if (path.startsWith('/eventos')) return 'scheduling';
+    return null;
+  };
+
+  const allowedNavGroups = useMemo(() => {
+    const modulesProvided = modules.size > 0;
+    return NAV_GROUPS.map((group) => {
+      const filteredItems = group.items.filter((item) => {
+        const required = pathRequiresModule(item.path);
+        if (!required) return true;
+        if (!modulesProvided) return true; // keep legacy behavior when API doesn't send modules
+        return modules.has(required);
+      });
+      return { ...group, items: filteredItems };
+    }).filter((group) => group.items.length > 0);
+  }, [modules]);
+
+  const ensureExpandedDefaults = (groups: NavGroup[]) => {
+    const next = new Set<string>();
+    groups.forEach((group) => {
+      const hasSingle = group.items.length <= 1;
+      const matchesRoute = group.items.some(
+        (item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`),
+      );
+      if (hasSingle || matchesRoute) next.add(group.title);
+    });
+    return next;
+  };
+
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => ensureExpandedDefaults(allowedNavGroups));
+
+  // Keep active group expanded when route or available groups change.
+  useEffect(() => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      allowedNavGroups.forEach((group) => {
+        const matchesRoute = group.items.some(
+          (item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`),
+        );
+        if (matchesRoute || group.items.length <= 1) {
+          next.add(group.title);
+        }
+      });
+      return next;
+    });
+  }, [allowedNavGroups, location.pathname]);
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) => {
@@ -160,22 +224,26 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         bgcolor: '#10131b',
         color: '#f8fafc',
         borderRight: '1px solid rgba(255,255,255,0.06)',
-        overflow: 'hidden',
-        display: { xs: open ? 'block' : 'none', lg: 'block' },
-        position: { xs: 'fixed', lg: 'relative' },
+        overflowX: 'hidden',
+        overflowY: 'hidden',
+        display: { xs: open ? 'flex' : 'none', lg: 'flex' },
+        position: { xs: 'fixed', lg: 'sticky' },
         zIndex: 1200,
-        height: { xs: '100vh', lg: 'auto' },
+        height: '100vh',
+        maxHeight: '100vh',
         top: 0,
         left: 0,
+        flexShrink: 0,
+        flexDirection: 'column',
       }}
     >
-      <Stack spacing={2} sx={{ px: 3, pt: 4, pb: 3 }}>
+      <Stack spacing={2} sx={{ px: 3, pt: 4, pb: 3, flexShrink: 0 }}>
         <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.6)', letterSpacing: 2 }}>
           MENÚ
         </Typography>
       </Stack>
-      <List disablePadding>
-        {NAV_GROUPS.map((group) => {
+      <List disablePadding sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
+        {allowedNavGroups.map((group) => {
           const isExpanded = expandedGroups.has(group.title);
           return (
             <Box key={group.title} sx={{ px: 1 }}>

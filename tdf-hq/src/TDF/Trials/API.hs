@@ -35,9 +35,20 @@ type PrivateTrialsAPI =
   :<|> "subjects" :> Capture "id" Int :> Delete '[JSON] NoContent
   :<|> "packages" :> QueryParam "subjectId" Int :> Get '[JSON] [PackageDTO]
   :<|> "purchases" :> ReqBody '[JSON] PurchaseIn :> PostCreated '[JSON] PurchaseOut
+  :<|> "class-sessions" :> QueryParam "subjectId" Int :> QueryParam "teacherId" Int :> QueryParam "studentId" Int
+        :> QueryParam "from" UTCTime :> QueryParam "to" UTCTime :> QueryParam "status" Text :> Get '[JSON] [ClassSessionDTO]
   :<|> "class-sessions" :> ReqBody '[JSON] ClassSessionIn :> Post '[JSON] ClassSessionOut
+  :<|> "class-sessions" :> Capture "id" Int :> ReqBody '[JSON] ClassSessionUpdate :> Patch '[JSON] ClassSessionDTO
   :<|> "class-sessions" :> Capture "id" Int :> "attend" :> ReqBody '[JSON] AttendIn :> Post '[JSON] ClassSessionOut
   :<|> "commissions" :> QueryParam "from" UTCTime :> QueryParam "to" UTCTime :> QueryParam "teacherId" Int :> Get '[JSON] [CommissionDTO]
+  :<|> "teachers" :> Get '[JSON] [TeacherDTO]
+  :<|> "teachers" :> Capture "id" Int :> "classes"
+        :> QueryParam "subjectId" Int
+        :> QueryParam "from" UTCTime
+        :> QueryParam "to" UTCTime
+        :> Get '[JSON] [ClassSessionDTO]
+  :<|> "students" :> Get '[JSON] [StudentDTO]
+  :<|> "students" :> ReqBody '[JSON] StudentCreate :> PostCreated '[JSON] StudentDTO
 
 -- Minimal DTOs for the above (you likely have them elsewhere; these are placeholders)
 data SignupIn = SignupIn { firstName :: Text, lastName :: Text, email :: Text, phone :: Maybe Text, password :: Maybe Text, googleIdToken :: Maybe Text, marketingOptIn :: Bool } deriving (Generic)

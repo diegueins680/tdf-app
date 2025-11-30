@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module TDF.API.Admin where
 
@@ -14,9 +15,12 @@ import           TDF.API.Types ( DropdownOptionCreate
                                 , UserAccountDTO
                                 , UserAccountUpdate
                                 )
+import           Data.Aeson (FromJSON, ToJSON)
+import           GHC.Generics (Generic)
+import           TDF.Routes.Courses (CoursesAdminAPI)
 
 import           Data.Int      (Int64)
-import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert)
+import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert, LogEntryDTO)
 
 type DropdownCategoryAPI =
        QueryParam "includeInactive" Bool :> Get '[JSON] [DropdownOptionDTO]
@@ -41,9 +45,31 @@ type ArtistAdminAPI =
   :<|> "releases" :>
          ( ReqBody '[JSON] ArtistReleaseUpsert :> Post '[JSON] ArtistReleaseDTO )
 
+type LogsAPI =
+       QueryParam "limit" Int :> Get '[JSON] [LogEntryDTO]
+  :<|> Delete '[JSON] NoContent
+
 type AdminAPI =
        "seed" :> Post '[JSON] NoContent
   :<|> "dropdowns" :> Capture "category" Text :> DropdownCategoryAPI
   :<|> "users" :> UsersAPI
   :<|> "roles" :> RolesAPI
   :<|> "artists" :> ArtistAdminAPI
+  :<|> "logs" :> LogsAPI
+  :<|> "email-test" :> ReqBody '[JSON] EmailTestRequest :> Post '[JSON] EmailTestResponse
+  :<|> CoursesAdminAPI
+
+data EmailTestRequest = EmailTestRequest
+  { etrEmail   :: Text
+  , etrName    :: Maybe Text
+  , etrSubject :: Maybe Text
+  , etrBody    :: Maybe Text
+  , etrCtaUrl  :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON EmailTestRequest
+
+data EmailTestResponse = EmailTestResponse
+  { status  :: Text
+  , message :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON EmailTestResponse

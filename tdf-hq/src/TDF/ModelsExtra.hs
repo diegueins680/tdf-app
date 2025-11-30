@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -16,41 +15,15 @@
 
 module TDF.ModelsExtra where
 
--- Relax orphan warnings; we need Persist instances for UUID from an external package.
-
-import           Data.Text          (Text, pack)
+import           Data.Text          (Text)
 import           Data.Time          (Day, UTCTime)
 import           Data.UUID          (UUID)
-import qualified Data.UUID          as UUID
-import           Database.Persist
-import           Database.Persist.Postgresql ()
 import           Database.Persist.Sql
 import           Database.Persist.TH
 import           GHC.Generics       (Generic)
-import           Web.PathPieces     (PathPiece(..))
 
 import           TDF.Models         (PartyId, ServiceKind)
-
--- Enumerations
-instance PersistField UUID where
-  toPersistValue = PersistLiteralEscaped . UUID.toASCIIBytes
-  fromPersistValue value =
-    case value of
-      PersistText t       -> noteText (UUID.fromText t)
-      PersistByteString b -> noteBytes (UUID.fromASCIIBytes b)
-      PersistLiteral_ _ b -> noteBytes (UUID.fromASCIIBytes b)
-      PersistNull         -> Left "Unexpected NULL for UUID column"
-      other               -> Left ("Unable to parse UUID from " <> pack (show other))
-    where
-      noteText = maybe (Left "Failed to parse UUID from text value") Right
-      noteBytes = maybe (Left "Failed to parse UUID from raw bytes") Right
-
-instance PersistFieldSql UUID where
-  sqlType _ = SqlOther "uuid"
-
-instance PathPiece UUID where
-  toPathPiece   = UUID.toText
-  fromPathPiece = UUID.fromText
+import           TDF.UUIDInstances  ()
 
 data AssetStatus = Active | Booked | OutForMaintenance | Retired
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
@@ -85,6 +58,22 @@ data DeliverableKind = Mix | Master | Stems | DDP | OtherDeliverable
 derivePersistField "DeliverableKind"
 
 share [mkPersist sqlSettings, mkMigrate "migrateExtra"] [persistLowerCase|
+
+CourseRegistration
+    courseSlug   Text
+    fullName     Text Maybe
+    email        Text Maybe
+    phoneE164    Text Maybe
+    source       Text
+    status       Text
+    howHeard     Text Maybe
+    utmSource    Text Maybe
+    utmMedium    Text Maybe
+    utmCampaign  Text Maybe
+    utmContent   Text Maybe
+    createdAt    UTCTime default=now()
+    updatedAt    UTCTime default=now()
+    deriving Show Generic
 
 DropdownOption
     Id         UUID default=gen_random_uuid()
@@ -208,6 +197,9 @@ LiveSessionIntake
     contactEmail Text Maybe
     contactPhone Text Maybe
     sessionDate  Day Maybe
+    availability Text Maybe
+    acceptedTerms Bool default=False
+    termsVersion Text Maybe
     riderPath    Text Maybe
     createdBy    PartyId Maybe
     createdAt    UTCTime default=now()
@@ -223,6 +215,19 @@ LiveSessionMusician
     role        Text Maybe
     notes       Text Maybe
     isExisting  Bool default=False
+    deriving Show Generic
+
+Feedback
+    Id           UUID default=gen_random_uuid()
+    title        Text
+    description  Text
+    category     Text Maybe
+    severity     Text Maybe
+    contactEmail Text Maybe
+    attachment   Text Maybe
+    consent      Bool default=False
+    createdBy    PartyId Maybe
+    createdAt    UTCTime default=now()
     deriving Show Generic
 
 Session
