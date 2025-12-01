@@ -34,9 +34,10 @@ export const CORE_ROLES: Role[] = [
   'ReadOnly',
 ];
 
+// Keep a stable, alphabetized list so todos los roles (incluido Webmaster) se muestren explícitamente en selects.
 export const ALL_ROLES: SignupRole[] = Array.from(
   new Set<SignupRole>([...CORE_ROLES, ...EXTENDED_MUSIC_ROLES]),
-);
+).sort((a, b) => a.localeCompare(b));
 
 const SENSITIVE_ROLES: SignupRole[] = ['Admin', 'Accounting'];
 

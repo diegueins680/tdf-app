@@ -121,6 +121,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Sedes', path: '/configuracion/sedes' },
       { label: 'Marcas', path: '/configuracion/marcas' },
       { label: 'Integraciones', path: '/configuracion/integraciones' },
+      { label: 'CMS', path: '/configuracion/cms' },
       { label: 'Preferencias', path: '/configuracion/preferencias' },
     ],
   },
