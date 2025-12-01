@@ -159,7 +159,11 @@ data AssetDTO = AssetDTO
   , name     :: Text
   , category :: Text
   , status   :: Text
+  , condition :: Maybe Text
+  , brand    :: Maybe Text
+  , model    :: Maybe Text
   , location :: Maybe Text
+  , qrToken  :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON AssetDTO
@@ -183,6 +187,50 @@ data AssetUpdate = AssetUpdate
 
 instance FromJSON AssetUpdate
 instance ToJSON AssetUpdate
+
+data AssetCheckoutDTO = AssetCheckoutDTO
+  { checkoutId     :: Text
+  , assetId        :: Text
+  , targetKind     :: Text
+  , targetSessionId:: Maybe Text
+  , targetPartyRef :: Maybe Text
+  , targetRoomId   :: Maybe Text
+  , checkedOutBy   :: Text
+  , checkedOutAt   :: UTCTime
+  , dueAt          :: Maybe UTCTime
+  , conditionOut   :: Maybe Text
+  , conditionIn    :: Maybe Text
+  , returnedAt     :: Maybe UTCTime
+  , notes          :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON AssetCheckoutDTO
+instance FromJSON AssetCheckoutDTO
+
+data AssetCheckoutRequest = AssetCheckoutRequest
+  { coTargetKind    :: Maybe Text
+  , coTargetSession :: Maybe Text
+  , coTargetParty   :: Maybe Text
+  , coTargetRoom    :: Maybe Text
+  , coDueAt         :: Maybe UTCTime
+  , coConditionOut  :: Maybe Text
+  , coNotes         :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON AssetCheckoutRequest
+instance ToJSON AssetCheckoutRequest
+
+data AssetCheckinRequest = AssetCheckinRequest
+  { ciConditionIn :: Maybe Text
+  , ciNotes       :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON AssetCheckinRequest
+instance ToJSON AssetCheckinRequest
+
+data AssetQrDTO = AssetQrDTO
+  { qrToken :: Text
+  , qrUrl   :: Text
+  } deriving (Show, Generic)
+instance ToJSON AssetQrDTO
+instance FromJSON AssetQrDTO
 
 data RoomDTO = RoomDTO
   { roomId    :: Text

@@ -30,6 +30,8 @@ import TeachersPage from './pages/TeachersPage';
 import TrialLessonsPage from './pages/TrialLessonsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import ServiceTypesPage from './pages/ServiceTypesPage';
+import InventoryPage from './pages/InventoryPage';
+import InventoryScanPage from './pages/InventoryScanPage';
 import AdsInboxPage from './pages/AdsInboxPage';
 import CmsAdminPage from './pages/CmsAdminPage';
 import FeedbackPage from './pages/FeedbackPage';
@@ -136,6 +138,7 @@ export default function App() {
       <Route path="/live-sessions/registro" element={<LiveSessionPublicPage />} />
       <Route path="/feedback" element={<FeedbackPage />} />
       <Route path="/records" element={<RecordsPublicPage />} />
+      <Route path="/inventario/scan/:token" element={<InventoryScanPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
@@ -245,7 +248,7 @@ export default function App() {
         </Route>
 
         <Route path="/operacion" element={<Outlet />}>
-          <Route path="inventario" element={<BasicFeaturePage title="Operación / Inventario" storageKey="operacion-inventario" />} />
+          <Route path="inventario" element={<InventoryPage />} />
           <Route path="calendario-domo" element={<BasicFeaturePage title="Operación / Calendario del domo" storageKey="operacion-calendario-domo" />} />
           <Route path="reservas-equipo" element={<BasicFeaturePage title="Operación / Reservas de equipo" storageKey="operacion-reservas-equipo" />} />
           <Route path="mantenimiento" element={<BasicFeaturePage title="Operación / Mantenimiento" storageKey="operacion-mantenimiento" />} />

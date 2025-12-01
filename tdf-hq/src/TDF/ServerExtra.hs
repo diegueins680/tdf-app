@@ -53,6 +53,11 @@ inventoryServer user =
   :<|> getAssetH
   :<|> patchAssetH
   :<|> deleteAssetH
+  :<|> checkoutAssetH
+  :<|> checkinAssetH
+  :<|> checkoutHistoryH
+  :<|> refreshQrH
+  :<|> resolveByQrH
   where
     listAssets _mq mp mps = do
       ensureModule ModuleAdmin user
@@ -132,7 +137,125 @@ inventoryServer user =
       , name     = assetName asset
       , category = assetCategory asset
       , status   = T.pack (show (assetStatus asset))
+      , condition = Just (T.pack (show (assetCondition asset)))
+      , brand    = assetBrand asset
+      , model    = assetModel asset
       , location = fmap toPathPiece (assetLocationId asset)
+      , qrToken  = assetQrCode asset
+      }
+
+    checkoutAssetH rawId req = do
+      ensureModule ModuleAdmin user
+      assetKey <- parseKey @Asset rawId
+      asset <- withPool $ get assetKey
+      maybe (throwError err404) pure asset
+      now <- liftIO getCurrentTime
+      let targetKind = maybe TargetParty parseTarget (coTargetKind req)
+          targetRoomKey = coTargetRoom req >>= parseKeyMaybe @Room
+          targetSessionKey = coTargetSession req >>= parseKeyMaybe @ME.Session
+          checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
+      active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
+      when (isJust active) $
+        throwError err409 { errBody = "Asset already checked out" }
+      (mRoom, mSession) <- validateTargets targetKind targetRoomKey targetSessionKey
+      recEnt <- withPool $ do
+        checkoutId <- insert AssetCheckout
+          { assetCheckoutAssetId          = assetKey
+          , assetCheckoutTargetKind       = targetKind
+          , assetCheckoutTargetSessionId  = mSession
+          , assetCheckoutTargetPartyRef   = coTargetParty req
+          , assetCheckoutTargetRoomId     = mRoom
+          , assetCheckoutCheckedOutByRef  = checkedOutBy
+          , assetCheckoutCheckedOutAt     = now
+          , assetCheckoutDueAt            = coDueAt req
+          , assetCheckoutConditionOut     = coConditionOut req
+          , assetCheckoutPhotoDriveFileId = Nothing
+          , assetCheckoutReturnedAt       = Nothing
+          , assetCheckoutConditionIn      = Nothing
+          , assetCheckoutNotes            = coNotes req
+          }
+        update assetKey [AssetStatus =. Booked]
+        getJustEntity checkoutId
+      pure (toCheckoutDTO recEnt)
+
+    checkinAssetH rawId req = do
+      ensureModule ModuleAdmin user
+      assetKey <- parseKey @Asset rawId
+      now <- liftIO getCurrentTime
+      mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
+      case mOpen of
+        Nothing -> throwError err404 { errBody = "No active checkout" }
+        Just (Entity checkoutId _) -> do
+          recEnt <- withPool $ do
+            update checkoutId
+              [ AssetCheckoutReturnedAt   =. Just now
+              , AssetCheckoutConditionIn  =. ciConditionIn req
+              , AssetCheckoutNotes        =. ciNotes req
+              ]
+            update assetKey [AssetStatus =. Active]
+            getJustEntity checkoutId
+          pure (toCheckoutDTO recEnt)
+
+    checkoutHistoryH rawId = do
+      ensureModule ModuleAdmin user
+      assetKey <- parseKey @Asset rawId
+      recs <- withPool $ selectList [AssetCheckoutAssetId ==. assetKey] [Desc AssetCheckoutCheckedOutAt, LimitTo 50]
+      pure (map toCheckoutDTO recs)
+
+    refreshQrH rawId = do
+      ensureModule ModuleAdmin user
+      assetKey <- parseKey @Asset rawId
+      token <- liftIO (fmap (T.pack . show) nextRandom)
+      let qrUrl tokenVal = "https://tdf-app.pages.dev/inventario/scan/" <> tokenVal
+      withPool $ update assetKey [AssetQrCode =. Just token]
+      pure AssetQrDTO { qrToken = token, qrUrl = qrUrl token }
+
+    resolveByQrH token = do
+      ensureModule ModuleAdmin user
+      mAsset <- withPool $ selectFirst [AssetQrCode ==. Just token] []
+      maybe (throwError err404) (pure . toAssetDTO) mAsset
+
+    parseTarget raw =
+      case T.toLower (T.strip raw) of
+        "session" -> TargetSession
+        "party"   -> TargetParty
+        "room"    -> TargetRoom
+        _         -> TargetParty
+
+    parseKeyMaybe
+      :: forall record.
+         PathPiece (Key record)
+      => Text
+      -> Maybe (Key record)
+    parseKeyMaybe t = fromPathPiece t
+
+    validateTargets targetKind mRoom mSession = do
+      case targetKind of
+        TargetRoom ->
+          case mRoom of
+            Nothing -> throwError err400 { errBody = "targetRoom required for room checkout" }
+            Just _  -> pure (mRoom, Nothing)
+        TargetSession ->
+          case mSession of
+            Nothing -> throwError err400 { errBody = "targetSession required for session checkout" }
+            Just _  -> pure (Nothing, mSession)
+        TargetParty ->
+          pure (Nothing, Nothing)
+
+    toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
+      { checkoutId      = toPathPiece key
+      , assetId         = toPathPiece (assetCheckoutAssetId rec)
+      , targetKind      = T.pack (show (assetCheckoutTargetKind rec))
+      , targetSessionId = fmap toPathPiece (assetCheckoutTargetSessionId rec)
+      , targetPartyRef  = assetCheckoutTargetPartyRef rec
+      , targetRoomId    = fmap toPathPiece (assetCheckoutTargetRoomId rec)
+      , checkedOutBy    = assetCheckoutCheckedOutByRef rec
+      , checkedOutAt    = assetCheckoutCheckedOutAt rec
+      , dueAt           = assetCheckoutDueAt rec
+      , conditionOut    = assetCheckoutConditionOut rec
+      , conditionIn     = assetCheckoutConditionIn rec
+      , returnedAt      = assetCheckoutReturnedAt rec
+      , notes           = assetCheckoutNotes rec
       }
 
 bandsServer

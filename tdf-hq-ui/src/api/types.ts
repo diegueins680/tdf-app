@@ -45,6 +45,34 @@ export interface BookingResourceDTO {
   brRole: string;
 }
 
+export interface AssetDTO {
+  assetId: string;
+  name: string;
+  category: string;
+  status: string;
+  condition?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  location?: string | null;
+  qrToken?: string | null;
+}
+
+export interface AssetCheckoutDTO {
+  checkoutId: string;
+  assetId: string;
+  targetKind: string;
+  targetSessionId?: string | null;
+  targetPartyRef?: string | null;
+  targetRoomId?: string | null;
+  checkedOutBy: string;
+  checkedOutAt: string;
+  dueAt?: string | null;
+  conditionOut?: string | null;
+  conditionIn?: string | null;
+  returnedAt?: string | null;
+  notes?: string | null;
+}
+
 export interface BookingDTO {
   bookingId: number;
   title: string;
