@@ -23,6 +23,24 @@ const defaultSlugs = [
 
 const locales = ['es', 'en'];
 
+const PUBLIC_BASE =
+  typeof window !== 'undefined' && window.location.origin
+    ? window.location.origin.replace(/\/+$/, '')
+    : 'https://tdf-app.pages.dev';
+
+const livePathForSlug = (slug: string) => {
+  switch (slug) {
+    case 'records-public':
+      return '/records';
+    case 'fan-hub':
+      return '/fans';
+    case 'course-production':
+      return '/curso/produccion-musical-dic-2025';
+    default:
+      return `/${slug}`;
+  }
+};
+
 export default function CmsAdminPage() {
   const qc = useQueryClient();
   const [slugFilter, setSlugFilter] = useState<string>('records-public');
@@ -91,6 +109,8 @@ export default function CmsAdminPage() {
     }
   };
 
+  const liveUrl = `${PUBLIC_BASE}${livePathForSlug(slugFilter)}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`;
+
   return (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems="flex-start">
@@ -101,6 +121,9 @@ export default function CmsAdminPage() {
             Crear, publicar y versionar bloques para páginas públicas (records, fan hub, landing cursos).
           </Typography>
         </Box>
+        <Button variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
+          Ver contenido en vivo
+        </Button>
       </Stack>
 
       <Paper variant="outlined" sx={{ p: 2.5 }}>
@@ -217,6 +240,15 @@ export default function CmsAdminPage() {
                   <Stack direction="row" spacing={1}>
                     <Button size="small" variant="outlined" onClick={() => publishMutation.mutate(v.ccdId)} disabled={publishMutation.isPending}>
                       Publicar
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="text"
+                      href={`${PUBLIC_BASE}${livePathForSlug(v.ccdSlug)}${v.ccdLocale ? `?locale=${encodeURIComponent(v.ccdLocale)}` : ''}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Ver en vivo
                     </Button>
                     <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
                       Editar en formulario
