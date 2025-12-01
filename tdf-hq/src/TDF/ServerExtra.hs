@@ -8,18 +8,20 @@
 module TDF.ServerExtra where
 
 import           Control.Monad              (filterM, unless, when)
-import           Control.Monad.Except       (MonadError)
+import           Control.Monad.Except       (MonadError, throwError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Foldable              (for_)
 import qualified Data.Map.Strict            as Map
-import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing)
+import           Data.Maybe                 (catMaybes, fromMaybe, isJust)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Time                  (getCurrentTime)
+import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
+import           Data.UUID.V4               (nextRandom)
+import qualified Data.Text.Read             as TR
 import           Database.Persist        hiding (Active)
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
@@ -40,11 +42,6 @@ import           TDF.ModelsExtra
 import qualified TDF.ModelsExtra as ME
 import           TDF.Pipelines              (canonicalStage, defaultStage, pipelineStages, pipelineTypeSlug, parsePipelineType)
 import qualified TDF.Handlers.InputList     as InputList
-import           Data.UUID.V4               (nextRandom)
-import           Data.Time                  (UTCTime, defaultTimeLocale, parseTimeM)
-import qualified Data.Text.Read             as TR
-import           Data.Time                  (Day, UTCTime(..), getCurrentTime)
-import           Data.Maybe                 (fromMaybe)
 
 -- Helpers for simple date parsing (YYYY-MM-DD)
 parseDayText :: MonadError ServerError m => Text -> m Day
