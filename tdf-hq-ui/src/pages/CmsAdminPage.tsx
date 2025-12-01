@@ -30,6 +30,7 @@ export default function CmsAdminPage() {
   const [title, setTitle] = useState('');
   const [payload, setPayload] = useState('{}');
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
+  const [editingFromId, setEditingFromId] = useState<number | null>(null);
 
   const listQuery = useQuery({
     queryKey: ['cms-content', slugFilter, localeFilter],
@@ -74,6 +75,20 @@ export default function CmsAdminPage() {
       cciStatus: status,
       cciPayload: parsed,
     });
+    setEditingFromId(null);
+  };
+
+  const handleLoadVersion = (v: CmsContentDTO) => {
+    setSlugFilter(v.ccdSlug);
+    setLocaleFilter(v.ccdLocale);
+    setTitle(v.ccdTitle ?? '');
+    setStatus((v.ccdStatus as 'draft' | 'published') ?? 'draft');
+    setEditingFromId(v.ccdId);
+    try {
+      setPayload(JSON.stringify(v.ccdPayload ?? {}, null, 2));
+    } catch (_err) {
+      setPayload('{}');
+    }
   };
 
   return (
@@ -129,12 +144,12 @@ export default function CmsAdminPage() {
           </Grid>
 
           <Stack spacing={1}>
-            <TextField
-              label="Título"
-              fullWidth
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+              <TextField
+                label="Título"
+                fullWidth
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
             <TextField
               label="Payload JSON"
               fullWidth
@@ -173,6 +188,9 @@ export default function CmsAdminPage() {
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="h6" fontWeight={800}>Versiones</Typography>
             <Chip label={`${versions.length}`} size="small" />
+            {editingFromId && (
+              <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />
+            )}
           </Stack>
           {listQuery.isLoading && <LinearProgress />}
           {listQuery.error && (
@@ -199,6 +217,9 @@ export default function CmsAdminPage() {
                   <Stack direction="row" spacing={1}>
                     <Button size="small" variant="outlined" onClick={() => publishMutation.mutate(v.ccdId)} disabled={publishMutation.isPending}>
                       Publicar
+                    </Button>
+                    <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
+                      Editar en formulario
                     </Button>
                     <Button size="small" variant="text" color="error" onClick={() => deleteMutation.mutate(v.ccdId)} disabled={deleteMutation.isPending}>
                       Borrar
