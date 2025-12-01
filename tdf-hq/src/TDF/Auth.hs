@@ -15,7 +15,7 @@ module TDF.Auth
   ) where
 
 import           Control.Applicative        ((<|>))
-import           Control.Monad              (guard)
+import           Control.Monad              (forM_, guard)
 import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.List                  (foldl')
@@ -24,7 +24,7 @@ import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import           Database.Persist           (Entity(..), getBy, selectList, (==.))
+import           Database.Persist           (Entity(..), getBy, selectList, upsert, (==.), (=.))
 import           Database.Persist.Sql       (SqlPersistT, runSqlPool)
 import           Network.Wai                (Request, requestHeaders)
 import           Servant
@@ -86,8 +86,8 @@ loadAuthedUser token = do
       | not (apiTokenActive tok) -> pure Nothing
       | otherwise -> do
           roles <- selectList [PartyRolePartyId ==. apiTokenPartyId tok, PartyRoleActive ==. True] []
-          let roleList = map (partyRoleRole . entityVal) roles
-              modules  = modulesForRoles roleList
+          roleList <- ensureDefaultRoles (apiTokenPartyId tok) (map (partyRoleRole . entityVal) roles)
+          let modules  = modulesForRoles roleList
           pure $ Just AuthedUser
             { auPartyId = apiTokenPartyId tok
             , auRoles   = roleList
@@ -145,6 +145,18 @@ modulesForRole Vendor     = Set.singleton ModulePackages
 modulesForRole Customer   = Set.singleton ModulePackages
 modulesForRole ReadOnly   = Set.singleton ModuleCRM
 modulesForRole Fan        = Set.empty
+
+-- Ensure every authenticated user has baseline Fan and Customer roles active.
+defaultRoles :: [RoleEnum]
+defaultRoles = [Fan, Customer]
+
+ensureDefaultRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO [RoleEnum]
+ensureDefaultRoles pid roles = do
+  let existing = Set.fromList roles
+      missing  = filter (`Set.notMember` existing) defaultRoles
+  forM_ missing $ \r ->
+    upsert (PartyRole pid r True) [PartyRoleActive =. True]
+  pure (roles ++ missing)
 
 extractToken :: Request -> Either Text Text
 extractToken req =
