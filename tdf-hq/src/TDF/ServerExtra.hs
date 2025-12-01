@@ -31,7 +31,7 @@ import           TDF.API.Pipelines          (PipelinesAPI)
 import           TDF.API.Rooms              (RoomsAPI)
 import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Types
-import           TDF.Auth                   (AuthedUser, ModuleAccess(..), hasModuleAccess)
+import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import           TDF.DB                     (Env(..))
 import           TDF.Models                 (Party(..))
 import qualified TDF.Models                 as M
@@ -39,6 +39,7 @@ import           TDF.ModelsExtra
 import qualified TDF.ModelsExtra as ME
 import           TDF.Pipelines              (canonicalStage, defaultStage, pipelineStages, pipelineTypeSlug, parsePipelineType)
 import qualified TDF.Handlers.InputList     as InputList
+import           Data.UUID.V4               (nextRandom)
 
 inventoryServer
   :: ( MonadReader Env m
