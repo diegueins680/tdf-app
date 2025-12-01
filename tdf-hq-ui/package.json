@@ -13,6 +13,7 @@
     "generate:api": "openapi-typescript ../tdf-hq/docs/openapi/api.yaml --output src/api/generated/types.ts"
   },
   "dependencies": {
+    "qrcode": "^1.5.3",
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@fullcalendar/core": "^6.1.15",
@@ -36,6 +37,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.5",
     "@types/jest": "^30.0.0",
     "@types/luxon": "^3.7.1",
     "@types/node": "^22.5.4",
