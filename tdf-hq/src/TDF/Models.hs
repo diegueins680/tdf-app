@@ -428,12 +428,18 @@ ReceiptLine
     totalCents       Int
     deriving Show Generic
 Payment
-    invoiceId        InvoiceId
+    invoiceId        InvoiceId Maybe
+    orderId          OrderId Maybe
+    partyId          PartyId
     method           PaymentMethod
     amountCents      Int
     receivedAt       UTCTime
     reference        Text Maybe
+    concept          Text Maybe
+    period           Text Maybe
+    attachment       Text Maybe
     createdBy        PartyId Maybe
+    createdAt        UTCTime Maybe
     deriving Show Generic
 PaymentSplit
     paymentId        PaymentId

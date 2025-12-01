@@ -8,7 +8,7 @@ import Data.Char (isSpace)
 
 corsPolicy :: IO Middleware
 corsPolicy = do
-  origins <- fmap (maybe ["http://localhost:5173","https://tdfui.pages.dev"] splitComma) (lookupEnv "ALLOWED_ORIGINS")
+  origins <- fmap (maybe ["http://localhost:5173","https://tdfui.pages.dev","https://tdf-app.pages.dev"] splitComma) (lookupEnv "ALLOWED_ORIGINS")
   let policy = simpleCorsResourcePolicy
         { corsOrigins        = Just (map BS.pack origins, True)
         , corsRequestHeaders = "authorization":"content-type":simpleHeaders

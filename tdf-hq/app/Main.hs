@@ -71,6 +71,7 @@ main = do
         , "https://tdf-ui.onrender.com"
         , "https://tdf-7t2qa.onrender.com"
         , "https://tdfui.pages.dev"
+        , "https://tdf-app.pages.dev"
         ]
   listEnvs <- mapM lookupEnv ["ALLOW_ORIGINS", "ALLOWED_ORIGINS", "CORS_ALLOW_ORIGINS"]
   singleEnvs <- mapM lookupEnv ["ALLOW_ORIGIN", "ALLOWED_ORIGIN", "CORS_ALLOW_ORIGIN"]

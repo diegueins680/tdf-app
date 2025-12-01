@@ -32,6 +32,7 @@ import           TDF.API.Rooms              (RoomsAPI)
 import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Types
 import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
+import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..))
 import           TDF.DB                     (Env(..))
 import           TDF.Models                 (Party(..))
 import qualified TDF.Models                 as M
@@ -40,7 +41,23 @@ import qualified TDF.ModelsExtra as ME
 import           TDF.Pipelines              (canonicalStage, defaultStage, pipelineStages, pipelineTypeSlug, parsePipelineType)
 import qualified TDF.Handlers.InputList     as InputList
 import           Data.UUID.V4               (nextRandom)
+import           Data.Time                  (UTCTime, defaultTimeLocale, parseTimeM)
+import qualified Data.Text.Read             as TR
+import           Data.Time                  (Day, UTCTime(..), getCurrentTime)
+import           Data.Maybe                 (fromMaybe)
 
+-- Helpers for simple date parsing (YYYY-MM-DD)
+parseDayText :: MonadError ServerError m => Text -> m Day
+parseDayText t =
+  case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
+    Just d  -> pure d
+    Nothing -> throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
+
+parseUTCTimeText :: MonadError ServerError m => Text -> m UTCTime
+parseUTCTimeText t =
+  case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
+    Just d  -> pure (UTCTime d 0)
+    Nothing -> throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
 inventoryServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -874,6 +891,82 @@ ensureModule
 ensureModule moduleTag user =
   unless (hasModuleAccess moduleTag user) $
     throwError err403 { errBody = "Missing required module access" }
+
+-- Basic payments server (manual payouts / honorarios)
+paymentsServer
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => AuthedUser
+  -> ServerT TDF.API.Payments.PaymentsAPI m
+paymentsServer user =
+       listPaymentsH
+  :<|> createPaymentH
+  :<|> getPaymentH
+  where
+    listPaymentsH mPartyId = do
+      ensureModule ModuleAdmin user
+      let filt = maybe [] (\pid -> [PaymentPartyId ==. toSqlKey pid]) mPartyId
+      recs <- withPool $ selectList filt [Desc PaymentReceivedAt, LimitTo 200]
+      pure (map toPaymentDTO recs)
+
+    createPaymentH PaymentCreate{..} = do
+      ensureModule ModuleAdmin user
+      paidAt <- parseUTCTimeText pcPaidAt
+      now <- liftIO getCurrentTime
+      let partyKey   = toSqlKey pcPartyId
+          mOrderKey  = toSqlKey <$> pcOrderId
+          mInvoiceKey= toSqlKey <$> pcInvoiceId
+      ent <- withPool $ do
+        payId <- insert Payment
+          { paymentInvoiceId   = mInvoiceKey
+          , paymentOrderId     = mOrderKey
+          , paymentPartyId     = partyKey
+          , paymentMethod      = parseMethod pcMethod
+          , paymentAmountCents = pcAmountCents
+          , paymentReceivedAt  = paidAt
+          , paymentReference   = pcReference
+          , paymentConcept     = pcConcept
+          , paymentPeriod      = pcPeriod
+          , paymentAttachment  = pcAttachmentUrl
+          , paymentCreatedBy   = Just (auPartyId user)
+          , paymentCreatedAt   = now
+          }
+        getJustEntity payId
+      pure (toPaymentDTO ent)
+
+    getPaymentH pid = do
+      ensureModule ModuleAdmin user
+      mEnt <- withPool $ getEntity (toSqlKey pid :: Key Payment)
+      maybe (throwError err404) (pure . toPaymentDTO) mEnt
+
+    toPaymentDTO (Entity key p) = PaymentDTO
+      { payId          = fromSqlKey key
+      , payPartyId     = fromSqlKey (paymentPartyId p)
+      , payOrderId     = fmap fromSqlKey (paymentOrderId p)
+      , payInvoiceId   = fmap fromSqlKey (paymentInvoiceId p)
+      , payAmountCents = paymentAmountCents p
+      , payCurrency    = "USD"
+      , payMethod      = T.pack (show (paymentMethod p))
+      , payReference   = paymentReference p
+      , payPaidAt      = T.pack (show (paymentReceivedAt p))
+      , payConcept     = paymentConcept p
+      , payPeriod      = paymentPeriod p
+      , payAttachment  = paymentAttachment p
+      }
+
+parseMethod :: Text -> PaymentMethod
+parseMethod t =
+  case T.toLower (T.strip t) of
+    "bank" -> BankTransferM
+    "banktransfer" -> BankTransferM
+    "transferencia" -> BankTransferM
+    "produbanco" -> BankTransferM
+    "cash" -> CashM
+    "efectivo" -> CashM
+    "crypto" -> CryptoM
+    _ -> BankTransferM
 
 -- Shared helpers ----------------------------------------------------------
 

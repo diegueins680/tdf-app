@@ -479,6 +479,23 @@ instance FromJSON BandMemberInput where
       <$> o .:  "bmPartyId"
       <*> o .:? "bmRole"
 
+-- Minimal Payment DTO for UI/backend bridging
+data SimplePaymentDTO = SimplePaymentDTO
+  { spId          :: Int64
+  , spPartyId     :: Int64
+  , spOrderId     :: Maybe Int64
+  , spInvoiceId   :: Maybe Int64
+  , spAmountCents :: Int
+  , spCurrency    :: Text
+  , spMethod      :: Text
+  , spReference   :: Maybe Text
+  , spPaidAt      :: Text
+  , spConcept     :: Maybe Text
+  , spPeriod      :: Maybe Text
+  , spAttachment  :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON SimplePaymentDTO
+
 data BandCreate = BandCreate
   { bcName          :: Text
   , bcLabelArtist   :: Maybe Bool

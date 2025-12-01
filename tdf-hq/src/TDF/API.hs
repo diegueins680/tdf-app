@@ -20,6 +20,7 @@ import           TDF.API.Admin     (AdminAPI)
 import           TDF.API.Future    (FutureAPI)
 import           TDF.API.Bands     (BandsAPI)
 import           TDF.API.Inventory (InventoryAPI)
+import           TDF.API.Payments (PaymentsAPI)
 import           TDF.API.Pipelines (PipelinesAPI)
 import           TDF.API.Rooms     (RoomsAPI)
 import           TDF.API.Sessions  (SessionsAPI)
@@ -169,6 +170,7 @@ type ProtectedAPI =
   :<|> RoomsAPI
   :<|> LiveSessionsAPI
   :<|> FeedbackAPI
+  :<|> PaymentsAPI
   :<|> "social" :> SocialAPI
   :<|> AdsAdminAPI
   :<|> CmsAdminAPI
