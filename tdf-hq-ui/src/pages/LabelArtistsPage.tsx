@@ -105,6 +105,7 @@ export default function LabelArtistsPage() {
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
   const [heroImageFileName, setHeroImageFileName] = useState('');
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
+  const [noteDrafts, setNoteDrafts] = useState<Record<number, string>>({});
 
   const artistsQuery = useQuery({
     queryKey: ['admin', 'artists'],
@@ -117,6 +118,7 @@ export default function LabelArtistsPage() {
 
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
   const parties = useMemo(() => partiesQuery.data ?? [], [partiesQuery.data]);
+  const partyMap = useMemo(() => new Map(parties.map((p) => [p.partyId, p])), [parties]);
 
   const sortedArtists = useMemo(
     () => [...artists].sort((a, b) => a.apDisplayName.localeCompare(b.apDisplayName)),
@@ -130,6 +132,17 @@ export default function LabelArtistsPage() {
     if (heroImageFileName) return;
     setHeroImageFileName(form.heroImageUrl.startsWith('data:') ? 'Imagen seleccionada' : 'Imagen existente');
   }, [form.heroImageUrl, heroImageFileName]);
+
+  useEffect(() => {
+    const draftMap: Record<number, string> = {};
+    artists.forEach((artist) => {
+      const party = partyMap.get(artist.apArtistId);
+      if (party?.notes) {
+        draftMap[artist.apArtistId] = party.notes;
+      }
+    });
+    setNoteDrafts((prev) => ({ ...draftMap, ...prev }));
+  }, [artists, partyMap]);
 
   const filteredArtists = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -179,6 +192,21 @@ export default function LabelArtistsPage() {
     reader.onerror = () => setHeroImageError('No pudimos leer la imagen seleccionada.');
     reader.readAsDataURL(file);
   };
+
+  const noteMutation = useMutation({
+    mutationFn: async ({ partyId, note }: { partyId: number; note: string }) => {
+      await Parties.update(partyId, { uNotes: note.trim() ? note.trim() : null });
+      return partyId;
+    },
+    onSuccess: async (pid) => {
+      setBannerMessage('Nota guardada.');
+      await qc.invalidateQueries({ queryKey: ['parties'] });
+      setNoteDrafts((prev) => prev);
+    },
+    onError: (err: unknown) => {
+      setBannerMessage(err instanceof Error ? err.message : 'No se pudo guardar la nota.');
+    },
+  });
 
   const upsertMutation = useMutation({
     mutationFn: async (payload: { draft: ArtistFormState; originalDisplayName: string }) => {
@@ -318,6 +346,66 @@ export default function LabelArtistsPage() {
           </Button>
         </Stack>
       </Stack>
+
+      <Card>
+        <CardContent>
+          <Stack spacing={1.5}>
+            <Typography variant="h6">Notas rápidas por artista</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Usa este espacio para pendientes breves; se guardan en las notas del contacto (Party.notes) y se reutilizan en el CRM.
+            </Typography>
+            <Stack spacing={1.5}>
+              {filteredArtists.length === 0 && (
+                <Typography color="text.secondary">No hay artistas para mostrar.</Typography>
+              )}
+              {filteredArtists.map((artist) => {
+                const party = partyMap.get(artist.apArtistId);
+                const noteValue = noteDrafts[artist.apArtistId] ?? party?.notes ?? '';
+                return (
+                  <Box
+                    key={artist.apArtistId}
+                    sx={{
+                      border: '1px solid rgba(148,163,184,0.35)',
+                      borderRadius: 2,
+                      p: 1.5,
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      gap: 1,
+                      alignItems: { xs: 'stretch', sm: 'center' },
+                    }}
+                  >
+                    <Box sx={{ minWidth: 220 }}>
+                      <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {artist.apCity ?? 'Sin ciudad'}
+                      </Typography>
+                    </Box>
+                    <TextField
+                      value={noteValue}
+                      onChange={(e) =>
+                        setNoteDrafts((prev) => ({ ...prev, [artist.apArtistId]: e.target.value }))
+                      }
+                      placeholder="Agregar nota o pendiente"
+                      fullWidth
+                      size="small"
+                      multiline
+                      minRows={1}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={() => noteMutation.mutate({ partyId: artist.apArtistId, note: noteValue })}
+                      disabled={noteMutation.isPending}
+                      sx={{ minWidth: 140 }}
+                    >
+                      {noteMutation.isPending ? 'Guardando…' : 'Guardar'}
+                    </Button>
+                  </Box>
+                );
+              })}
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent>
