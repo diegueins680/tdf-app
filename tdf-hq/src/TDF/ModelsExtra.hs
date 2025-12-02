@@ -194,6 +194,8 @@ BandMember
 LiveSessionIntake
     Id           UUID default=gen_random_uuid()
     bandName     Text
+    bandDescription Text Maybe
+    primaryGenre Text Maybe
     contactEmail Text Maybe
     contactPhone Text Maybe
     sessionDate  Day Maybe
@@ -215,6 +217,20 @@ LiveSessionMusician
     role        Text Maybe
     notes       Text Maybe
     isExisting  Bool default=False
+    deriving Show Generic
+
+LiveSessionSong
+    Id          UUID default=gen_random_uuid()
+    intakeId    LiveSessionIntakeId
+    title       Text
+    bpm         Int Maybe
+    songKey     Text Maybe
+    lyrics      Text Maybe
+    inputList   Text Maybe
+    micId       AssetId Maybe
+    preampId    AssetId Maybe
+    interfaceId AssetId Maybe
+    sortOrder   Int default=0
     deriving Show Generic
 
 Feedback

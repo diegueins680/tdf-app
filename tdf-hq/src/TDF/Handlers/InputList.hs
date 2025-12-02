@@ -48,6 +48,7 @@ type InputListEntry = ME.InputRow
 data AssetField
   = AssetFieldMic
   | AssetFieldPreamp
+  | AssetFieldInterface
   deriving (Eq, Show)
 
 parseAssetField :: Text -> Maybe AssetField
@@ -59,6 +60,8 @@ parseAssetField raw =
     "preamp"      -> Just AssetFieldPreamp
     "pre-amp"     -> Just AssetFieldPreamp
     "preamplifier"-> Just AssetFieldPreamp
+    "interface"   -> Just AssetFieldInterface
+    "converter"   -> Just AssetFieldInterface
     _             -> Nothing
 
 instance ToJSON (Entity InventoryItem) where
@@ -116,11 +119,13 @@ listInventoryDB mField mSession mChannel = do
       in case field of
            AssetFieldMic    -> "mic" `T.isInfixOf` category || "di" `T.isInfixOf` category
            AssetFieldPreamp -> "pre" `T.isInfixOf` category
+           AssetFieldInterface -> "interface" `T.isInfixOf` category || "converter" `T.isInfixOf` category
 
     rowAsset field row =
       case field of
         AssetFieldMic    -> ME.inputRowMicId row
         AssetFieldPreamp -> ME.inputRowPreampId row
+        AssetFieldInterface -> Nothing
 
     currentChannelAsset field rows mChan = do
       channelNum <- mChan

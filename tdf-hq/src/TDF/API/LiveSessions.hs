@@ -9,6 +9,7 @@ module TDF.API.LiveSessions
   ( LiveSessionsAPI
   , LiveSessionIntakePayload(..)
   , LiveSessionMusicianPayload(..)
+  , LiveSessionSongPayload(..)
   ) where
 
 import           Data.Aeson               (FromJSON, eitherDecodeStrict')
@@ -46,8 +47,24 @@ data LiveSessionMusicianPayload = LiveSessionMusicianPayload
 
 instance FromJSON LiveSessionMusicianPayload
 
+data LiveSessionSongPayload = LiveSessionSongPayload
+  { lssTitle     :: Text
+  , lssBpm       :: Maybe Int
+  , lssSongKey   :: Maybe Text
+  , lssLyrics    :: Maybe Text
+  , lssInputList :: Maybe Text
+  , lssMicId     :: Maybe Text
+  , lssPreampId  :: Maybe Text
+  , lssInterfaceId :: Maybe Text
+  , lssSortOrder :: Maybe Int
+  } deriving (Show, Generic)
+
+instance FromJSON LiveSessionSongPayload
+
 data LiveSessionIntakePayload = LiveSessionIntakePayload
   { lsiBandName     :: Text
+  , lsiBandDescription :: Maybe Text
+  , lsiPrimaryGenre :: Maybe Text
   , lsiContactEmail :: Maybe Text
   , lsiContactPhone :: Maybe Text
   , lsiSessionDate  :: Maybe Day
@@ -55,12 +72,15 @@ data LiveSessionIntakePayload = LiveSessionIntakePayload
   , lsiAcceptedTerms :: Bool
   , lsiTermsVersion :: Maybe Text
   , lsiMusicians    :: [LiveSessionMusicianPayload]
+  , lsiSetlist      :: [LiveSessionSongPayload]
   , lsiRider        :: Maybe (FileData Tmp)
   } deriving (Show, Generic)
 
 instance FromMultipart Tmp LiveSessionIntakePayload where
   fromMultipart multipart = do
     bandName <- lookupText "bandName" multipart
+    bandDescription <- optionalText "bandDescription" multipart
+    primaryGenre <- optionalText "primaryGenre" multipart
     contactEmail <- optionalText "contactEmail" multipart
     contactPhone <- optionalText "contactPhone" multipart
     let riderFile    = lookupFile "rider" multipart
@@ -70,8 +90,12 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
     termsVersion <- optionalText "termsVersion" multipart
     musiciansTxt <- lookupText "musicians" multipart
     musicians <- decodeMusicians musiciansTxt
+    setlistTxt <- optionalText "setlist" multipart
+    setlist <- maybe (Right []) decodeSetlist setlistTxt
     pure LiveSessionIntakePayload
       { lsiBandName     = T.strip bandName
+      , lsiBandDescription = fmap T.strip bandDescription
+      , lsiPrimaryGenre = fmap T.strip primaryGenre
       , lsiContactEmail = fmap T.strip contactEmail
       , lsiContactPhone = fmap T.strip contactPhone
       , lsiSessionDate  = sessionDate
@@ -79,6 +103,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       , lsiAcceptedTerms = acceptedTerms
       , lsiTermsVersion = fmap T.strip termsVersion
       , lsiMusicians    = musicians
+      , lsiSetlist      = setlist
       , lsiRider        = riderFile
       }
     where
@@ -109,6 +134,10 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       decodeMusicians txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid musicians payload: " <> err)
+          Right xs -> Right xs
+      decodeSetlist txt =
+        case eitherDecodeStrict' (encodeUtf8 txt) of
+          Left err -> Left ("Invalid setlist payload: " <> err)
           Right xs -> Right xs
 
       inputValueText :: Input -> Text

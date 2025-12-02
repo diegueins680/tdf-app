@@ -26,6 +26,7 @@ import           Servant.Multipart          (FileData(..), Tmp)
 import           System.Directory           (createDirectoryIfMissing)
 import           System.FilePath            ((</>), takeFileName)
 import qualified Data.ByteString.Lazy       as BL
+import           Web.PathPieces             (fromPathPiece)
 
 import           TDF.API.LiveSessions
 import           TDF.Auth                   (AuthedUser, auPartyId)
@@ -56,6 +57,8 @@ liveSessionsServer user = intakeHandler
 
       intakeId <- withPool $ insert ME.LiveSessionIntake
         { ME.liveSessionIntakeBandName     = bandName
+        , ME.liveSessionIntakeBandDescription = lsiBandDescription payload
+        , ME.liveSessionIntakePrimaryGenre = lsiPrimaryGenre payload
         , ME.liveSessionIntakeContactEmail = T.strip <$> lsiContactEmail payload
         , ME.liveSessionIntakeContactPhone = T.strip <$> lsiContactPhone payload
         , ME.liveSessionIntakeSessionDate  = lsiSessionDate payload
@@ -79,6 +82,26 @@ liveSessionsServer user = intakeHandler
             , ME.liveSessionMusicianNotes      = lsmNotes m
             , ME.liveSessionMusicianIsExisting = lsmIsExisting m
             }
+
+      withPool $
+        forM_ (zip [0 :: Int ..] (lsiSetlist payload)) $ \(idx, song) ->
+          let title = T.strip (lssTitle song)
+          in when (not (T.null title)) $ do
+            micKey       <- parseAssetId (lssMicId song)
+            preampKey    <- parseAssetId (lssPreampId song)
+            interfaceKey <- parseAssetId (lssInterfaceId song)
+            insert_ ME.LiveSessionSong
+              { ME.liveSessionSongIntakeId  = intakeId
+              , ME.liveSessionSongTitle     = title
+              , ME.liveSessionSongBpm       = lssBpm song
+              , ME.liveSessionSongSongKey   = fmap T.strip (lssSongKey song)
+              , ME.liveSessionSongLyrics    = lssLyrics song
+              , ME.liveSessionSongInputList = lssInputList song
+              , ME.liveSessionSongMicId     = micKey
+              , ME.liveSessionSongPreampId  = preampKey
+              , ME.liveSessionSongInterfaceId = interfaceKey
+              , ME.liveSessionSongSortOrder = idx
+              }
 
       pure NoContent
 
@@ -192,6 +215,15 @@ liveSessionsServer user = intakeHandler
 
     sanitize :: Text -> Text
     sanitize = T.filter (\c -> c /= '/' && c /= '\\')
+
+    parseAssetId :: Maybe Text -> m (Maybe (Key ME.Asset))
+    parseAssetId = traverse $ \raw ->
+      let trimmed = T.strip raw
+      in if T.null trimmed
+           then pure Nothing
+           else case fromPathPiece trimmed of
+                  Nothing  -> throwError err400 { errBody = "Invalid asset reference" }
+                  Just key -> pure (Just key)
 
 withPool
   :: (MonadReader Env m, MonadIO m)

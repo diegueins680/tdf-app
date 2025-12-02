@@ -22,7 +22,7 @@ import { Parties } from '../api/parties';
 import type { PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
 import type { Role } from '../api/generated/client';
-import { submitLiveSessionIntake } from '../api/liveSessions';
+import { listInputInventory, submitLiveSessionIntake, type InputInventoryItem } from '../api/liveSessions';
 import { getStoredSessionToken } from '../session/SessionContext';
 
 interface MusicianEntry {
@@ -49,6 +49,52 @@ const emptyMusician = (): MusicianEntry => ({
   mode: 'new',
 });
 
+interface SongEntry {
+  id: string;
+  title: string;
+  bpm: string;
+  songKey: string;
+  lyrics: string;
+  inputList: string;
+  micAssetId?: string | null;
+  preampAssetId?: string | null;
+  interfaceAssetId?: string | null;
+}
+
+const emptySong = (): SongEntry => ({
+  id: crypto.randomUUID(),
+  title: '',
+  bpm: '',
+  songKey: '',
+  lyrics: '',
+  inputList: '',
+  micAssetId: null,
+  preampAssetId: null,
+  interfaceAssetId: null,
+});
+
+const GENRE_OPTIONS = [
+  'Rock',
+  'Pop',
+  'Hip-Hop',
+  'Rap',
+  'Trap',
+  'Reggaeton',
+  'Indie',
+  'Alternativo',
+  'Metal',
+  'Jazz',
+  'Funk',
+  'R&B',
+  'Soul',
+  'Electronica',
+  'Folk',
+  'Punk',
+  'Regional',
+  'Cumbia',
+  'Ska',
+];
+
 const asNullableString = (value?: string | null): string | null => {
   if (value == null) return null;
   const trimmed = value.trim();
@@ -68,14 +114,29 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     queryFn: () => Parties.list(),
     enabled: hasToken,
   });
+  const { data: micInventory = [] } = useQuery({
+    queryKey: ['input-inventory', 'mic'],
+    queryFn: () => listInputInventory('mic'),
+  });
+  const { data: preampInventory = [] } = useQuery({
+    queryKey: ['input-inventory', 'preamp'],
+    queryFn: () => listInputInventory('preamp'),
+  });
+  const { data: interfaceInventory = [] } = useQuery({
+    queryKey: ['input-inventory', 'interface'],
+    queryFn: () => listInputInventory('interface'),
+  });
 
   const [bandName, setBandName] = useState('');
+  const [bandDescription, setBandDescription] = useState('');
+  const [primaryGenre, setPrimaryGenre] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [availableDates, setAvailableDates] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [musicians, setMusicians] = useState<MusicianEntry[]>([emptyMusician()]);
+  const [setlist, setSetlist] = useState<SongEntry[]>([emptySong()]);
   const [riderFile, setRiderFile] = useState<File | null>(null);
   const mustAcceptTerms = requireTerms ?? variant === 'public';
   const termsVersion = 'TDF Live Sessions v1';
@@ -88,6 +149,15 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       })),
     [parties],
   );
+  const toInventoryOptions = (items: InputInventoryItem[]) =>
+    items.map((item) => ({
+      id: item.id,
+      label: [item.name, item.brand, item.model].filter(Boolean).join(' · '),
+      category: item.category,
+    }));
+  const micOptions = useMemo(() => toInventoryOptions(micInventory), [micInventory]);
+  const preampOptions = useMemo(() => toInventoryOptions(preampInventory), [preampInventory]);
+  const interfaceOptions = useMemo(() => toInventoryOptions(interfaceInventory), [interfaceInventory]);
 
   const createPartyAndUser = async (entry: MusicianEntry): Promise<PartyDTO> => {
     const created = await Parties.create({
@@ -154,6 +224,8 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
 
       await submitLiveSessionIntake({
         bandName,
+        bandDescription: asNullableString(bandDescription),
+        primaryGenre: asNullableString(primaryGenre),
         contactEmail: asNullableString(contactEmail),
         contactPhone: asNullableString(contactPhone),
         sessionDate: asNullableString(sessionDate),
@@ -161,6 +233,22 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
         acceptedTerms: mustAcceptTerms ? acceptedTerms : undefined,
         termsVersion: mustAcceptTerms ? termsVersion : undefined,
         musicians: ensuredMusicians,
+        setlist: setlist
+          .map((song, idx) => {
+            const bpmValue = Number.parseInt(song.bpm.trim(), 10);
+            return {
+              title: song.title.trim(),
+              bpm: Number.isFinite(bpmValue) ? bpmValue : null,
+              songKey: asNullableString(song.songKey),
+              lyrics: asNullableString(song.lyrics),
+              inputList: asNullableString(song.inputList),
+              micId: asNullableString(song.micAssetId ?? undefined),
+              preampId: asNullableString(song.preampAssetId ?? undefined),
+              interfaceId: asNullableString(song.interfaceAssetId ?? undefined),
+              sortOrder: idx,
+            };
+          })
+          .filter((song) => song.title.length > 0),
         riderFile,
       });
       setAcceptedTerms(false);
@@ -189,6 +277,13 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       mode: 'existing',
     });
   };
+
+  const handleSongChange = (id: string, patch: Partial<SongEntry>) => {
+    setSetlist((prev) => prev.map((song) => (song.id === id ? { ...song, ...patch } : song)));
+  };
+
+  const handleAddSong = () => setSetlist((prev) => [...prev, emptySong()]);
+  const handleRemoveSong = (id: string) => setSetlist((prev) => prev.filter((song) => song.id !== id));
 
   const riderLabel = riderFile ? `${riderFile.name} (${Math.round(riderFile.size / 1024)} KB)` : 'Subir rider técnico (PDF, DOCX)';
 
@@ -221,6 +316,22 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                 onChange={(e) => setBandName(e.target.value)}
                 required
                 fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Autocomplete
+                freeSolo
+                options={GENRE_OPTIONS}
+                value={primaryGenre}
+                onChange={(_, value) => setPrimaryGenre(value ?? '')}
+                onInputChange={(_, value) => setPrimaryGenre(value)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Género principal"
+                    placeholder="Rock, Rap, Pop..."
+                  />
+                )}
               />
             </Grid>
             <Grid item xs={12} md={3}>
@@ -259,6 +370,17 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                 fullWidth
                 multiline
                 minRows={2}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Descripción / bio del proyecto"
+                value={bandDescription}
+                onChange={(e) => setBandDescription(e.target.value)}
+                placeholder="Influencias, historia breve, concepto del show."
+                fullWidth
+                multiline
+                minRows={3}
               />
             </Grid>
           </Grid>
@@ -371,6 +493,139 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                       <Chip label="Se creará usuario y contacto automáticamente" color="info" size="small" />
                     </Grid>
                   )}
+                </Grid>
+              </Paper>
+            ))}
+          </Stack>
+        </Stack>
+      </Paper>
+
+      <Paper sx={{ p: 3 }}>
+        <Stack spacing={2}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">Setlist y canciones</Typography>
+            <Button startIcon={<AddIcon />} variant="outlined" onClick={handleAddSong}>
+              Agregar canción
+            </Button>
+          </Stack>
+          <Typography variant="body2" color="text.secondary">
+            Define el setlist con BPM, tonalidad, letra y el input list por canción para anticipar microfonía y ruteo.
+          </Typography>
+
+          <Stack spacing={2}>
+            {setlist.map((song, idx) => (
+              <Paper
+                key={song.id}
+                variant="outlined"
+                sx={{ p: 2, borderColor: 'divider', bgcolor: 'background.paper' }}
+              >
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Canción #{idx + 1}
+                  </Typography>
+                  {setlist.length > 1 && (
+                    <IconButton onClick={() => handleRemoveSong(song.id)} size="small">
+                      <DeleteIcon />
+                    </IconButton>
+                  )}
+                </Stack>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Título"
+                      value={song.title}
+                      onChange={(e) => handleSongChange(song.id, { title: e.target.value })}
+                      required
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <TextField
+                      label="BPM"
+                      type="number"
+                      value={song.bpm}
+                      onChange={(e) => handleSongChange(song.id, { bpm: e.target.value })}
+                      inputProps={{ min: 20, max: 260 }}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      label="Tonalidad"
+                      value={song.songKey}
+                      onChange={(e) => handleSongChange(song.id, { songKey: e.target.value })}
+                      placeholder="Ej: C#m, Bb, F# menor"
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Autocomplete
+                      options={micOptions}
+                      value={micOptions.find((opt) => opt.id === song.micAssetId) ?? null}
+                      isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                      onChange={(_, value) => handleSongChange(song.id, { micAssetId: value?.id ?? null })}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Mic del inventario"
+                          placeholder="SM7B, KM184..."
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Autocomplete
+                      options={preampOptions}
+                      value={preampOptions.find((opt) => opt.id === song.preampAssetId) ?? null}
+                      isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                      onChange={(_, value) => handleSongChange(song.id, { preampAssetId: value?.id ?? null })}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Preamp"
+                          placeholder="API, Neve, Avalon..."
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Autocomplete
+                      options={interfaceOptions}
+                      value={interfaceOptions.find((opt) => opt.id === song.interfaceAssetId) ?? null}
+                      isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                      onChange={(_, value) => handleSongChange(song.id, { interfaceAssetId: value?.id ?? null })}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Interfaz / converter"
+                          placeholder="Red 8Pre, Apollo..."
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Letra"
+                      value={song.lyrics}
+                      onChange={(e) => handleSongChange(song.id, { lyrics: e.target.value })}
+                      placeholder="Pega aquí la letra completa o notas clave."
+                      fullWidth
+                      multiline
+                      minRows={2}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Input list / microfonía para esta canción"
+                      value={song.inputList}
+                      onChange={(e) => handleSongChange(song.id, { inputList: e.target.value })}
+                      placeholder="Kick IN - Beta91, Kick OUT - D112, Snare - SM57, Guitarra DI + SM57, Voz - SM7..."
+                      fullWidth
+                      multiline
+                      minRows={2}
+                    />
+                  </Grid>
                 </Grid>
               </Paper>
             ))}
