@@ -63,6 +63,7 @@ type AdsAdminAPI =
 
 type CmsPublicAPI =
        "cms" :> "content" :> QueryParam "slug" Text :> QueryParam "locale" Text :> Get '[JSON] CmsContentDTO
+  :<|> "cms" :> "contents" :> QueryParam "locale" Text :> QueryParam "slugPrefix" Text :> Get '[JSON] [CmsContentDTO]
 
 type CmsAdminAPI =
        "cms" :> "content" :>

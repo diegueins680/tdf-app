@@ -2609,25 +2609,42 @@ sendAutoReplies cfg AdsInquiry{..} mCourse = do
     ]
   pure channels
 
-cmsPublicServer :: Maybe Text -> Maybe Text -> AppM CmsContentDTO
-cmsPublicServer mSlug mLocale = do
-  slug <- maybe (throwError err400 { errBody = "slug requerido" }) pure mSlug
-  let locale = fromMaybe "es" mLocale
-  mPublished <- runDB $ selectFirst
-    [ CMS.CmsContentSlug ==. slug
-    , CMS.CmsContentLocale ==. locale
-    , CMS.CmsContentStatus ==. "published"
-    ] [Desc CMS.CmsContentVersion]
-  content <- case mPublished of
-    Just ent -> pure ent
-    Nothing -> do
-      mDraft <- runDB $ selectFirst
+cmsPublicServer :: ServerT CmsPublicAPI AppM
+cmsPublicServer = cmsGet :<|> cmsList
+  where
+    cmsGet mSlug mLocale = do
+      slug <- maybe (throwError err400 { errBody = "slug requerido" }) pure mSlug
+      let locale = fromMaybe "es" mLocale
+      mPublished <- runDB $ selectFirst
         [ CMS.CmsContentSlug ==. slug
         , CMS.CmsContentLocale ==. locale
-        ]
-        [Desc CMS.CmsContentVersion]
-      maybe (throwError err404) pure mDraft
-  pure (toCmsDTO content)
+        , CMS.CmsContentStatus ==. "published"
+        ] [Desc CMS.CmsContentVersion]
+      content <- case mPublished of
+        Just ent -> pure ent
+        Nothing -> do
+          mDraft <- runDB $ selectFirst
+            [ CMS.CmsContentSlug ==. slug
+            , CMS.CmsContentLocale ==. locale
+            ]
+            [Desc CMS.CmsContentVersion]
+          maybe (throwError err404) pure mDraft
+      pure (toCmsDTO content)
+
+    cmsList mLocale mPrefix = do
+      let locale = fromMaybe "es" mLocale
+      entries <- runDB $
+        selectList
+          [ CMS.CmsContentLocale ==. locale
+          , CMS.CmsContentStatus ==. "published"
+          ]
+          [ Desc CMS.CmsContentPublishedAt
+          , Desc CMS.CmsContentVersion
+          ]
+      let filtered = case mPrefix of
+            Nothing -> entries
+            Just prefix -> filter (\(Entity _ c) -> prefix `T.isPrefixOf` CMS.cmsContentSlug c) entries
+      pure (map toCmsDTO filtered)
 
 cmsAdminServer :: AuthedUser -> ServerT CmsAdminAPI AppM
 cmsAdminServer user =

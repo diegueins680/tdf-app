@@ -15,7 +15,7 @@ import {
 import { useMemo } from 'react';
 import { recordings as defaultRecordings, releases as defaultReleases, sessionVideos as defaultSessions } from '../constants/recordsContent';
 import PublicBrandBar from '../components/PublicBrandBar';
-import { useCmsContent } from '../hooks/useCmsContent';
+import { useCmsContents } from '../hooks/useCmsContent';
 
 const SectionTitle = ({ title, kicker }: { title: string; kicker?: string }) => (
   <Stack spacing={1} direction="row" alignItems="center" sx={{ mb: 2 }}>
@@ -231,20 +231,77 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
 );
 
 export default function RecordsPublicPage() {
-  const cmsQuery = useCmsContent('records-public', 'es');
-  const payload = useMemo(() => (cmsQuery.data?.ccdPayload as any) ?? null, [cmsQuery.data]);
-  const heroTitle: string =
-    payload?.heroTitle ??
-    'Historias desde el estudio, releases y TDF Sessions en un solo lugar.';
+  const sessionsQuery = useCmsContents('records-session-', 'es');
+  const releasesQuery = useCmsContents('records-release-', 'es');
+  const recordingsQuery = useCmsContents('records-recording-', 'es');
+
+  const sessions: SessionItem[] = useMemo(() => {
+    const mapped = (sessionsQuery.data?.map((entry) => {
+        const p = (entry.ccdPayload as any) ?? {};
+        const youtubeId = p.youtubeId ?? p.youtubeID ?? p.id;
+        if (!youtubeId) return null;
+        return {
+          youtubeId,
+          title: p.title ?? entry.ccdTitle ?? 'TDF Session',
+          duration: p.duration ?? '',
+          guests: p.guests ?? '',
+          description: p.description ?? '',
+        } as SessionItem;
+      }).filter(Boolean) as SessionItem[] | undefined) ?? [];
+    return mapped.length ? mapped : defaultSessions;
+  }, [sessionsQuery.data]);
+
+  const releases: ReleaseItem[] = useMemo(() => {
+    const mapped = (releasesQuery.data?.map((entry) => {
+        const p = (entry.ccdPayload as any) ?? {};
+        const linksRaw = Array.isArray(p.links) ? p.links : [];
+        const links =
+          linksRaw
+            .map((l: any) =>
+              l?.url
+                ? {
+                    platform: l.platform ?? 'Link',
+                    url: l.url,
+                    accent: l.accent ?? '#a5b4fc',
+                  }
+                : null,
+            )
+            .filter(Boolean) ?? [];
+        if (!p.title && !entry.ccdTitle) return null;
+        return {
+          title: p.title ?? entry.ccdTitle ?? 'Release',
+          artist: p.artist ?? 'TDF House Band',
+          releasedOn: p.releasedOn ?? p.date ?? '',
+          blurb: p.description ?? p.blurb ?? '',
+          cover: p.cover ?? p.image ?? defaultReleases[0].cover,
+          links,
+        } as ReleaseItem;
+      }).filter(Boolean) as ReleaseItem[] | undefined) ?? [];
+    return mapped.length ? mapped : defaultReleases;
+  }, [releasesQuery.data]);
+
+  const recordings: RecordingItem[] = useMemo(() => {
+    const mapped = (recordingsQuery.data?.map((entry) => {
+        const p = (entry.ccdPayload as any) ?? {};
+        if (!p.title || !p.image) return null;
+        return {
+          title: p.title,
+          artist: p.artist ?? '',
+          recordedAt: p.recordedAt ?? p.date ?? '',
+          vibe: p.vibe ?? p.tag ?? 'Live',
+          description: p.description ?? '',
+          image: p.image,
+        } as RecordingItem;
+      }).filter(Boolean) as RecordingItem[] | undefined) ?? [];
+    return mapped.length ? mapped : defaultRecordings;
+  }, [recordingsQuery.data]);
+
+  const heroTitle: string = 'Historias desde el estudio, releases y TDF Sessions en un solo lugar.';
   const heroSubtitle: string =
-    payload?.heroSubtitle ??
     'Mantén al día la página pública de TDF Records con fotos, lanzamientos y videos curados desde el CMS.';
-  const recordings: RecordingItem[] = payload?.recordings ?? defaultRecordings;
-  const releases: ReleaseItem[] = payload?.releases ?? defaultReleases;
-  const sessions: SessionItem[] = payload?.sessions ?? defaultSessions;
-  const heroCta = payload?.heroCta ?? 'Reservar sesión';
-  const heroCtaLink = payload?.heroCtaLink ?? 'https://wa.me/573135205493';
-  const heroSecondaryCta = payload?.heroSecondaryCta ?? 'Ver lanzamientos';
+  const heroCta = 'Reservar sesión';
+  const heroCtaLink = 'https://wa.me/573135205493';
+  const heroSecondaryCta = 'Ver lanzamientos';
 
   return (
     <Box
@@ -322,7 +379,7 @@ export default function RecordsPublicPage() {
           >
             <GradientCard title="Fotos del estudio">
               <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                Actualiza imágenes y textos desde Configuración → CMS (slug records-public).
+                Actualiza imágenes y textos desde Configuración → CMS (slugs records-recording-*).
               </Typography>
               <Stack direction="row" spacing={1} alignItems="center">
                 {recordings.slice(0, 3).map((item) => (
@@ -387,7 +444,7 @@ export default function RecordsPublicPage() {
 
         <GradientCard title="Cómo actualizar este CMS">
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-            Usa el panel en Configuración → CMS (slug records-public) para crear borradores, publicar y versionar contenido en es/en.
+            Usa el panel en Configuración → CMS con slugs records-release-*, records-session-* y records-recording-* para crear borradores, publicar y versionar contenido en es/en.
           </Typography>
         </GradientCard>
       </Container>
