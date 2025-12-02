@@ -23,6 +23,9 @@ import qualified Data.ByteString.Lazy       as BL
 import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
 import           Data.UUID.V4               (nextRandom)
 import qualified Data.Text.Read             as TR
+import           Data.Aeson                 (Value, object, (.=))
+import qualified Data.Aeson                as A
+import           System.IO                  (hPutStrLn, stderr)
 import           Database.Persist        hiding (Active)
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
@@ -36,6 +39,7 @@ import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Types
 import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
+import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
@@ -965,6 +969,27 @@ parseMethod t =
     "efectivo" -> CashM
     "crypto" -> CryptoM
     _ -> BankTransferM
+
+-- Minimal Instagram server (stub): logs webhook payload and returns a canned response.
+instagramServer
+  :: (MonadIO m)
+  => ServerT IG.InstagramAPI m
+instagramServer =
+       handleWebhook
+  :<|> handleReply
+  where
+    handleWebhook payload = liftIO $ do
+      hPutStrLn stderr "[instagram] received webhook payload"
+      BL.hPutStrLn stderr (A.encode payload)
+      pure NoContent
+
+    handleReply req = do
+      let msg = T.concat
+            [ "Respuesta automática: Hola! Gracias por escribir. "
+            , "Recibimos: \"", T.take 200 (T.strip (IG.irMessage req)), "\". "
+            , "Pronto te contactaremos. (stub local)"
+            ]
+      pure (object ["status" .= ("ok" :: Text), "message" .= msg, "echoRecipient" .= IG.irSenderId req])
 
 -- Shared helpers ----------------------------------------------------------
 

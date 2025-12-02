@@ -112,6 +112,7 @@ import qualified TDF.Trials.Models as Trials
 import qualified TDF.CMS.Models as CMS
 import           Database.Persist.Sql (toSqlKey, fromSqlKey)
 import           Data.Function (on)
+import           TDF.API.Instagram (InstagramAPI)
 
 type AppM = ReaderT Env Handler
 
@@ -362,6 +363,7 @@ protectedServer user =
   :<|> liveSessionsServer user
   :<|> feedbackServer user
   :<|> paymentsServer user
+  :<|> instagramServer
   :<|> socialServer user
   :<|> adsAdminServer user
   :<|> cmsAdminServer user
