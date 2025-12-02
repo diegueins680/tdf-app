@@ -9,7 +9,7 @@ import           Data.Int (Int64)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant
-import           Data.Aeson (FromJSON, ToJSON)
+import           Data.Aeson (FromJSON, ToJSON, eitherDecode)
 
 import           TDF.API.Types (LooseJSON)
 
@@ -28,6 +28,8 @@ data PaymentCreate = PaymentCreate
   } deriving (Show, Generic)
 
 instance FromJSON PaymentCreate
+instance MimeUnrender LooseJSON PaymentCreate where
+  mimeUnrender _ = eitherDecode
 
 data PaymentDTO = PaymentDTO
   { payId         :: Int64
