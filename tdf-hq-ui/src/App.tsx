@@ -28,6 +28,7 @@ import TrialsPage from './pages/TrialsPage';
 import LiveSessionPublicPage from './pages/LiveSessionPublicPage';
 import TeachersPage from './pages/TeachersPage';
 import TrialLessonsPage from './pages/TrialLessonsPage';
+import ClassesPage from './pages/ClassesPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
 import ServiceTypesPage from './pages/ServiceTypesPage';
@@ -216,7 +217,7 @@ export default function App() {
 
         <Route path="/escuela" element={<Outlet />}>
           <Route path="profesores" element={<TeachersPage />} />
-          <Route path="clases" element={<BasicFeaturePage title="Escuela / Clases" storageKey="escuela-clases" />} />
+          <Route path="clases" element={<ClassesPage />} />
           <Route path="trial-lessons" element={<TrialLessonsPage />} />
           <Route path="trial-queue" element={<AdsInboxPage />} />
           <Route path="programas" element={<BasicFeaturePage title="Escuela / Programas" storageKey="escuela-programas" />} />

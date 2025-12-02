@@ -1,4 +1,4 @@
-import { get, post, patch } from './client';
+import { get, post, patch, put } from './client';
 
 export interface TrialSubject {
   subjectId: number;
@@ -50,6 +50,10 @@ export interface TeacherDTO {
   subjects: TeacherSubject[];
 }
 
+export interface TeacherSubjectsUpdate {
+  subjectIds: number[];
+}
+
 export interface ClassSessionDTO {
   classSessionId: number;
   teacherId: number;
@@ -88,6 +92,11 @@ export interface ClassSessionUpdate {
   notes?: string | null;
 }
 
+export interface ClassSessionAttend {
+  attended: boolean;
+  notes?: string | null;
+}
+
 export interface StudentCreate {
   fullName: string;
   email: string;
@@ -121,6 +130,8 @@ export const Trials = {
     const qs = search.toString();
     return get<ClassSessionDTO[]>(`${base}/teachers/${teacherId}/classes${qs ? `?${qs}` : ''}`);
   },
+  updateTeacherSubjects: (teacherId: number, payload: TeacherSubjectsUpdate) =>
+    put<TeacherDTO>(`${base}/teachers/${teacherId}/subjects`, payload),
   listClassSessions: (params?: { subjectId?: number; teacherId?: number; studentId?: number; from?: string; to?: string; status?: string }) => {
     const search = new URLSearchParams();
     if (params?.subjectId) search.set('subjectId', String(params.subjectId));
@@ -136,6 +147,8 @@ export const Trials = {
     post<ClassSessionOut>(`${base}/class-sessions`, payload),
   updateClassSession: (classId: number, payload: ClassSessionUpdate) =>
     patch<ClassSessionDTO>(`${base}/class-sessions/${classId}`, payload),
+  attendClassSession: (classId: number, payload: ClassSessionAttend) =>
+    post<ClassSessionOut>(`${base}/class-sessions/${classId}/attend`, payload),
   listStudents: () => get<StudentDTO[]>(`${base}/students`),
   createStudent: (payload: StudentCreate) => post<StudentDTO>(`${base}/students`, payload),
 };
