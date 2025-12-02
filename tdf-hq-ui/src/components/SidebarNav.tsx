@@ -147,7 +147,41 @@ interface SidebarNavProps {
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
   const { session } = useSession();
-  const modules = useMemo(() => new Set((session?.modules ?? []).map((m) => m.toLowerCase())), [session?.modules]);
+  const deriveModulesFromRoles = (roles: string[] | undefined): string[] => {
+    if (!roles || roles.length === 0) return [];
+    const lowerRoles = roles.map((r) => r.toLowerCase());
+    const moduleSet = new Set<string>();
+    lowerRoles.forEach((role) => {
+      if (role.includes('admin')) {
+        moduleSet.add('admin');
+        moduleSet.add('crm');
+        moduleSet.add('scheduling');
+        moduleSet.add('invoicing');
+        moduleSet.add('packages');
+      } else if (role.includes('manager')) {
+        moduleSet.add('crm');
+        moduleSet.add('scheduling');
+        moduleSet.add('invoicing');
+        moduleSet.add('packages');
+      } else if (role.includes('reception')) {
+        moduleSet.add('crm');
+        moduleSet.add('scheduling');
+      } else if (role.includes('accounting')) {
+        moduleSet.add('invoicing');
+      } else if (role.includes('engineer') || role.includes('scheduling')) {
+        moduleSet.add('scheduling');
+      } else if (role.includes('packages') || role.includes('package')) {
+        moduleSet.add('packages');
+      }
+    });
+    return Array.from(moduleSet);
+  };
+
+  const modules = useMemo(() => {
+    const provided = session?.modules ?? [];
+    const fromRoles = deriveModulesFromRoles(session?.roles);
+    return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+  }, [session?.modules, session?.roles]);
 
   const pathRequiresModule = (path: string): string | null => {
     if (path.startsWith('/crm')) return 'crm';
@@ -163,12 +197,10 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   };
 
   const allowedNavGroups = useMemo(() => {
-    const modulesProvided = modules.size > 0;
     return NAV_GROUPS.map((group) => {
       const filteredItems = group.items.filter((item) => {
         const required = pathRequiresModule(item.path);
         if (!required) return true;
-        if (!modulesProvided) return true; // keep legacy behavior when API doesn't send modules
         return modules.has(required);
       });
       return { ...group, items: filteredItems };
