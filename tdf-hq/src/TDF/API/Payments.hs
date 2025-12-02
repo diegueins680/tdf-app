@@ -9,6 +9,7 @@ import           Data.Int (Int64)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant
+import           Data.Aeson (FromJSON, ToJSON)
 
 import           TDF.API.Types (LooseJSON)
 
@@ -49,4 +50,3 @@ type PaymentsAPI =
        QueryParam "partyId" Int64 :> Get '[JSON] [PaymentDTO]
   :<|> ReqBody '[JSON, LooseJSON] PaymentCreate :> Post '[JSON] PaymentDTO
   :<|> Capture "paymentId" Int64 :> Get '[JSON] PaymentDTO
-
