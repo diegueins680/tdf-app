@@ -19,22 +19,53 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import YouTubeIcon from '@mui/icons-material/YouTube';
-import type { ArtistProfileUpsert, FanProfileUpdate } from '../api/types';
+import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { Link as RouterLink } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
 
+function StatPill({ label, value }: { label: string; value: number }) {
+  return (
+    <Box
+      sx={{
+        px: 2,
+        py: 1,
+        borderRadius: 2,
+        bgcolor: 'rgba(148,163,184,0.14)',
+        border: '1px solid rgba(148,163,184,0.3)',
+        minWidth: 140,
+      }}
+    >
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="h6" fontWeight={800}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session } = useSession();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
-  const isFan = useMemo(
-    () => Boolean(session?.roles?.some((role) => role === 'fan' || role === 'customer')),
-    [session?.roles],
-  );
+  const isFan = useMemo(() => {
+    const roles = session?.roles ?? [];
+    return roles.some((role) => {
+      const r = role.toLowerCase();
+      return r === 'fan' || r === 'customer';
+    });
+  }, [session?.roles]);
   const canEditArtist = useMemo(
-    () => Boolean(session?.partyId && (session.roles?.some((r) => r === 'artist' || r === 'artista' || r === 'admin') ?? false)),
+    () => Boolean(
+      session?.partyId &&
+        (session.roles?.some((r) => {
+          const role = r.toLowerCase();
+          return role === 'artist' || role === 'artista' || role === 'admin';
+        }) ?? false),
+    ),
     [session?.partyId, session?.roles],
   );
   const cmsQuery = useCmsContent('fan-hub', 'es');
@@ -159,6 +190,35 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   });
 
   const follows = followsQuery.data ?? [];
+  const followedArtistIds = useMemo(
+    () => follows.map((follow) => follow.ffArtistId).sort((a, b) => a - b),
+    [follows],
+  );
+
+  type ReleaseFeedItem = ArtistReleaseDTO & { artistName: string };
+  const releaseFeedQuery = useQuery({
+    queryKey: ['fan-release-feed', followedArtistIds],
+    enabled: isFan && follows.length > 0,
+    queryFn: async () => {
+      const perArtist = await Promise.all(
+        follows.map(async (follow) => {
+          const releases = await Fans.getReleases(follow.ffArtistId);
+          return releases.map((release) => ({
+            ...release,
+            artistName: follow.ffArtistName,
+          }));
+        }),
+      );
+      const parseDate = (value?: string | null) => {
+        const ts = value ? Date.parse(value) : Number.NaN;
+        return Number.isNaN(ts) ? 0 : ts;
+      };
+      const flat = perArtist.flat() as ReleaseFeedItem[];
+      return flat.sort((a, b) => parseDate(b.arReleaseDate) - parseDate(a.arReleaseDate));
+    },
+  });
+
+  const releaseFeed = releaseFeedQuery.data ?? [];
 
   const handleFollowToggle = (artistId: number, currentlyFollowing: boolean) => {
     if (!viewerId) return;
@@ -198,6 +258,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const artists = artistsQuery.data ?? [];
+  const suggestedArtists = useMemo(() => {
+    if (!artists.length) return [];
+    const followed = new Set(follows.map((f) => f.ffArtistId));
+    return artists
+      .filter((artist) => !followed.has(artist.apArtistId))
+      .sort((a, b) => (b.apFollowerCount ?? 0) - (a.apFollowerCount ?? 0))
+      .slice(0, 3);
+  }, [artists, follows]);
+
   const errorMessage =
     artistsQuery.error instanceof Error
       ? artistsQuery.error.message
@@ -205,6 +274,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const isLoading = artistsQuery.isLoading;
   const hasError = artistsQuery.error;
+  const formatReleaseDate = (value?: string | null) => {
+    if (!value) return 'Sin fecha';
+    const parsed = Date.parse(value);
+    if (Number.isNaN(parsed)) return 'Sin fecha';
+    return new Intl.DateTimeFormat('es-CO', { month: 'short', day: 'numeric' }).format(new Date(parsed));
+  };
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 6, px: { xs: 2, md: 6 } }}>
@@ -226,6 +301,166 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={8}>
+            <Card sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6">Novedades de tus artistas</Typography>
+                {isFan && <Chip label={`${releaseFeed.length} lanzamientos`} size="small" />}
+              </Stack>
+              <Typography variant="body2" color="text.secondary">
+                Conecta reproducciones directo desde el hub: si hay una URL de Spotify o YouTube la abrimos en otra pestaña.
+              </Typography>
+              {!isFan && (
+                <Alert severity="info">Inicia sesión con rol Fan/Customer para ver lanzamientos personalizados.</Alert>
+              )}
+              {isFan && releaseFeedQuery.isLoading && (
+                <Box display="flex" justifyContent="center" py={3}>
+                  <CircularProgress size={20} />
+                </Box>
+              )}
+              {isFan && !releaseFeedQuery.isLoading && releaseFeed.length === 0 && (
+                <Alert severity="info">Sigue al menos un artista para ver drops recientes aquí.</Alert>
+              )}
+              {isFan && releaseFeed.length > 0 && (
+                <Stack spacing={1.5}>
+                  {releaseFeed.slice(0, 4).map((release) => (
+                    <Box
+                      key={`${release.arArtistId}-${release.arReleaseId}`}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        bgcolor: 'background.paper',
+                      }}
+                    >
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={700}>
+                            {release.arTitle}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {release.artistName}
+                          </Typography>
+                        </Box>
+                        <Chip label={formatReleaseDate(release.arReleaseDate)} size="small" />
+                      </Stack>
+                      {release.arDescription && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          {release.arDescription.length > 140 ? `${release.arDescription.slice(0, 140)}…` : release.arDescription}
+                        </Typography>
+                      )}
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          component="a"
+                          href={release.arSpotifyUrl ?? undefined}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          disabled={!release.arSpotifyUrl}
+                        >
+                          Escuchar en Spotify
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          component="a"
+                          href={release.arYoutubeUrl ?? undefined}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          disabled={!release.arYoutubeUrl}
+                        >
+                          Ver en YouTube
+                        </Button>
+                      </Stack>
+                    </Box>
+                  ))}
+                </Stack>
+              )}
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Stack spacing={2} height="100%">
+              <Card sx={{ p: 3 }}>
+                <Stack spacing={1.5}>
+                  <Typography variant="h6">Panel rápido</Typography>
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <StatPill label="Artistas que sigues" value={follows.length} />
+                    {artistProfileQuery.data && (
+                      <StatPill label="Fans de tu perfil" value={artistProfileQuery.data.apFollowerCount} />
+                    )}
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Actualiza tu bio y enlaces para subir la tasa de follow. ¿Tienes un nuevo clip? Añádelo como video destacado.
+                  </Typography>
+                  <Button component={RouterLink} to="/records" variant="outlined">
+                    Ver Sessions y releases
+                  </Button>
+                </Stack>
+              </Card>
+              <Card sx={{ p: 3 }}>
+                <Stack spacing={1.5}>
+                  <Typography variant="h6">Sugerencias para seguir</Typography>
+                  {suggestedArtists.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      Ya sigues a todos los artistas activos en el hub.
+                    </Typography>
+                  )}
+                  {suggestedArtists.length > 0 && (
+                    <Stack spacing={1.25}>
+                      {suggestedArtists.map((artist) => (
+                        <Box
+                          key={artist.apArtistId}
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: 'background.paper',
+                          }}
+                        >
+                          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Avatar src={artist.apHeroImageUrl ?? undefined} alt={artist.apDisplayName} />
+                              <Box>
+                                <Typography variant="subtitle1" fontWeight={700}>
+                                  {artist.apDisplayName}
+                                </Typography>
+                                {artist.apCity && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {artist.apCity}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </Stack>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleFollowToggle(artist.apArtistId, false)}
+                              disabled={!viewerId || followMutation.isPending || unfollowMutation.isPending}
+                            >
+                              Seguir
+                            </Button>
+                          </Stack>
+                          {artist.apGenres && (
+                            <Stack direction="row" spacing={0.5} mt={1} flexWrap="wrap">
+                              {artist.apGenres.split(',').slice(0, 3).map((genre) => (
+                                <Chip key={genre.trim()} label={genre.trim()} size="small" variant="outlined" />
+                              ))}
+                            </Stack>
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                  )}
+                </Stack>
+              </Card>
+            </Stack>
+          </Grid>
+        </Grid>
 
         {!isFan && session && (
           <Alert severity="info">
