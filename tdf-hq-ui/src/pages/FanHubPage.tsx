@@ -19,6 +19,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import YouTubeIcon from '@mui/icons-material/YouTube';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
@@ -116,6 +117,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     apuGenres: '',
     apuHighlights: '',
   });
+  const [heroImageFileName, setHeroImageFileName] = useState<string>('');
+  const [heroImageError, setHeroImageError] = useState<string | null>(null);
 
   useEffect(() => {
     if (profileQuery.data) {
@@ -146,6 +149,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         apuGenres: dto.apGenres ?? '',
         apuHighlights: dto.apHighlights ?? '',
       });
+      setHeroImageFileName(dto.apHeroImageUrl ? 'Imagen existente' : '');
+      setHeroImageError(null);
     }
   }, [artistProfileQuery.data, session?.partyId]);
   useEffect(() => {
@@ -235,6 +240,33 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const normalizeField = (value?: string | null) => {
     const trimmed = value?.trim();
     return trimmed && trimmed.length > 0 ? trimmed : null;
+  };
+
+  const handleHeroImageFileChange = (file: File | null) => {
+    if (!file) {
+      setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+      setHeroImageFileName('');
+      return;
+    }
+    const maxBytes = 6 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setHeroImageError('El archivo supera 6 MB. Usa una imagen más liviana.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        const dataUrl = reader.result;
+        setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: dataUrl }));
+        setHeroImageFileName(file.name);
+        setHeroImageError(null);
+      } else {
+        setHeroImageError('No pudimos leer la imagen seleccionada.');
+        setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+      }
+    };
+    reader.onerror = () => setHeroImageError('No pudimos leer la imagen seleccionada.');
+    reader.readAsDataURL(file);
   };
 
   const handleSaveArtistProfile = () => {
@@ -580,12 +612,56 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuBio: event.target.value }))}
                   fullWidth
                 />
-                <TextField
-                  label="Imagen principal (URL)"
-                  value={artistDraft.apuHeroImageUrl ?? ''}
-                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: event.target.value }))}
-                  fullWidth
-                />
+                <Stack spacing={1}>
+                  <Typography variant="body2" fontWeight={700}>
+                    Imagen principal
+                  </Typography>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems="center">
+                    <Button
+                      component="label"
+                      startIcon={<UploadFileIcon />}
+                      variant="outlined"
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      Seleccionar imagen
+                      <input
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        onChange={(e) => handleHeroImageFileChange(e.target.files?.[0] ?? null)}
+                      />
+                    </Button>
+                    {heroImageFileName && (
+                      <Typography variant="body2" color="text.secondary">
+                        {heroImageFileName}
+                      </Typography>
+                    )}
+                    {artistDraft.apuHeroImageUrl && (
+                      <Button
+                        variant="text"
+                        color="inherit"
+                        onClick={() => {
+                          setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+                          setHeroImageFileName('');
+                        }}
+                      >
+                        Quitar
+                      </Button>
+                    )}
+                  </Stack>
+                  {artistDraft.apuHeroImageUrl && (
+                    <Card
+                      variant="outlined"
+                      sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
+                    >
+                      <CardMedia component="img" height="180" image={artistDraft.apuHeroImageUrl} alt="Vista previa" />
+                    </Card>
+                  )}
+                  {heroImageError && <Alert severity="warning">{heroImageError}</Alert>}
+                  <Typography variant="caption" color="text.secondary">
+                    Se guardará embebida (data URL). Usa imágenes livianas (&lt; 6 MB).
+                  </Typography>
+                </Stack>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                   <TextField
                     label="Spotify URL"
@@ -697,9 +773,19 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             return (
               <Grid item xs={12} md={6} key={artist.apArtistId}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  {artist.apHeroImageUrl && (
-                    <CardMedia component="img" height="220" image={artist.apHeroImageUrl} alt={artist.apDisplayName} />
-                  )}
+                  <CardActionArea
+                    onClick={() => {
+                      if (artist.apSlug) {
+                        window.open(`/artista/${artist.apSlug}`, '_blank');
+                      } else {
+                        window.open(`/artista/${artist.apArtistId}`, '_blank');
+                      }
+                    }}
+                  >
+                    {artist.apHeroImageUrl && (
+                      <CardMedia component="img" height="220" image={artist.apHeroImageUrl} alt={artist.apDisplayName} />
+                    )}
+                  </CardActionArea>
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                       <Typography variant="h5">{artist.apDisplayName}</Typography>
