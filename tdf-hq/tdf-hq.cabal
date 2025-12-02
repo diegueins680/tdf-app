@@ -14,6 +14,7 @@ executable tdf-hq-exe
     TDF.API.Admin
     TDF.API
     TDF.API.Bands
+    TDF.API.Instagram
     TDF.API.Future
     TDF.API.LiveSessions
     TDF.API.Feedback
@@ -127,6 +128,7 @@ test-suite tdf-hq-test
     TDF.API.Payments
     TDF.API.Feedback
     TDF.API.Inventory
+    TDF.API.Instagram
     TDF.API.LiveSessions
     TDF.API.Pipelines
     TDF.API.Rooms
@@ -165,6 +167,8 @@ test-suite tdf-hq-test
     TDF.Trials.Server
     TDF.UUIDInstances
     TDF.Version
+    TDF.LogBuffer
+    TDF.WhatsApp.Types
     TDF.WhatsApp.Client
     TDF.WhatsApp.Service
   ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints

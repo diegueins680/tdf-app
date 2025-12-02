@@ -11,7 +11,7 @@ module TDF.ServerExtra where
 import           Control.Monad              (filterM, forM, unless, when)
 import           Control.Monad.Except       (MonadError, throwError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import           Control.Monad.Reader       (MonadReader, asks)
+import           Control.Monad.Reader       (MonadReader, ask, asks)
 import           Data.Foldable              (for_)
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
@@ -20,6 +20,7 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.ByteString.Lazy       as BL
+import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
 import           Data.UUID.V4               (nextRandom)
 import qualified Data.Text.Read             as TR
@@ -983,7 +984,7 @@ instagramServer =
   where
     handleWebhook payload = liftIO $ do
       hPutStrLn stderr "[instagram] received webhook payload"
-      BL.hPutStrLn stderr (A.encode payload)
+      BL8.hPutStrLn stderr (A.encode payload)
       pure NoContent
 
     handleReply req = do
@@ -991,14 +992,14 @@ instagramServer =
       -- store outgoing message (stub)
       Env{..} <- ask
       liftIO $ flip runSqlPool envPool $ do
-        _ <- upsert (InstagramMessage (IG.irSenderId req <> "-out-" <> T.pack (show now))
+        _ <- upsert (M.InstagramMessage (IG.irSenderId req <> "-out-" <> T.pack (show now))
                          (IG.irSenderId req)
                          Nothing
                          (Just (IG.irMessage req))
                          "outgoing"
                          now)
-             [ InstagramMessageText =. Just (IG.irMessage req)
-             , InstagramMessageDirection =. "outgoing"
+             [ M.InstagramMessageText =. Just (IG.irMessage req)
+             , M.InstagramMessageDirection =. "outgoing"
              ]
         pure ()
       let msg = T.concat
@@ -1010,14 +1011,14 @@ instagramServer =
 
     listMessages = do
       Env{..} <- ask
-      rows <- liftIO $ flip runSqlPool envPool $ selectList [] [Desc InstagramMessageCreatedAt, LimitTo 100]
+      rows <- liftIO $ flip runSqlPool envPool $ selectList [] [Desc M.InstagramMessageCreatedAt, LimitTo 100]
       let toObj (Entity _ m) = object
-            [ "externalId" .= instagramMessageExternalId m
-            , "senderId"   .= instagramMessageSenderId m
-            , "senderName" .= instagramMessageSenderName m
-            , "text"       .= instagramMessageText m
-            , "direction"  .= instagramMessageDirection m
-            , "createdAt"  .= instagramMessageCreatedAt m
+            [ "externalId" .= M.instagramMessageExternalId m
+            , "senderId"   .= M.instagramMessageSenderId m
+            , "senderName" .= M.instagramMessageSenderName m
+            , "text"       .= M.instagramMessageText m
+            , "direction"  .= M.instagramMessageDirection m
+            , "createdAt"  .= M.instagramMessageCreatedAt m
             ]
       pure (A.toJSON (map toObj rows))
 

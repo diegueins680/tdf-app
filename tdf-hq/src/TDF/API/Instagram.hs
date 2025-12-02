@@ -4,7 +4,7 @@
 
 module TDF.API.Instagram where
 
-import           Data.Aeson (Value)
+import           Data.Aeson (Value, FromJSON, ToJSON)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant

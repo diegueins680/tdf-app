@@ -59,7 +59,7 @@ import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasMod
 import           TDF.Seed       (seedAll)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
-import           TDF.ServerExtra (bandsServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsServer, sessionsServer)
+import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsServer, sessionsServer)
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.ServerFeedback (feedbackServer)

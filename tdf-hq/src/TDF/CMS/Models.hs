@@ -24,7 +24,7 @@ import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8, decodeUtf8With, encodeUtf8)
 import Data.Text.Encoding.Error (lenientDecode)
 import Database.Persist
-import Database.Persist.Sql (PersistFieldSql(..), SqlType(..))
+import Database.Persist.Sql (PersistFieldSql(..))
 import TDF.Models (PartyId)
 
 newtype AesonValue = AesonValue { unAesonValue :: Value } deriving stock (Show, Eq)
