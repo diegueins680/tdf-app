@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardMedia,
+  CardActionArea,
   Chip,
   CircularProgress,
   Grid,
