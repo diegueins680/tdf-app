@@ -273,7 +273,7 @@ export default function RecordsPublicPage() {
           artist: p.artist ?? 'TDF House Band',
           releasedOn: p.releasedOn ?? p.date ?? '',
           blurb: p.description ?? p.blurb ?? '',
-          cover: p.cover ?? p.image ?? defaultReleases[0].cover,
+          cover: p.cover ?? p.image ?? defaultReleases[0]?.cover ?? '',
           links,
         } as ReleaseItem;
       }).filter(Boolean) as ReleaseItem[] | undefined) ?? [];
