@@ -35,6 +35,7 @@ import InventoryScanPage from './pages/InventoryScanPage';
 import AdsInboxPage from './pages/AdsInboxPage';
 import CmsAdminPage from './pages/CmsAdminPage';
 import FeedbackPage from './pages/FeedbackPage';
+import CompaniesPage from './pages/CompaniesPage';
 
 function Shell() {
   const { session } = useSession();
@@ -168,10 +169,7 @@ export default function App() {
 
         <Route path="/crm" element={<Outlet />}>
           <Route path="contactos" element={<PartiesPage />} />
-          <Route
-            path="empresas"
-            element={<BasicFeaturePage title="CRM / Empresas" storageKey="crm-empresas" />}
-          />
+          <Route path="empresas" element={<CompaniesPage />} />
           <Route
             path="leads"
             element={<BasicFeaturePage title="CRM / Leads" storageKey="crm-leads" />}
