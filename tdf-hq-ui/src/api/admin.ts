@@ -1,4 +1,5 @@
 import { get, post, del } from './client';
+import type { ArtistProfileDTO, ArtistProfileUpsert } from './types';
 import type { Role } from './generated/client';
 
 export interface CreateUserPayload {
@@ -33,6 +34,9 @@ export const Admin = {
       uacUsername: payload.username ?? null,
       uacRoles: payload.roles,
     }),
+  listArtistProfiles: () => get<ArtistProfileDTO[]>('/admin/artists/profiles'),
+  upsertArtistProfile: (payload: ArtistProfileUpsert) =>
+    post<ArtistProfileDTO>('/admin/artists/profiles', payload),
   getLogs: (limit?: number): Promise<LogEntry[]> => {
     const params = limit ? `?limit=${limit}` : '';
     return get(`/admin/logs${params}`);
