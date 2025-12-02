@@ -139,7 +139,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const [setlist, setSetlist] = useState<SongEntry[]>([emptySong()]);
   const [riderFile, setRiderFile] = useState<File | null>(null);
   const mustAcceptTerms = requireTerms ?? variant === 'public';
-  const termsVersion = 'TDF Live Sessions v1';
+  const termsVersion = 'TDF Live Sessions v2';
 
   const partyOptions = useMemo(
     () =>
