@@ -429,7 +429,7 @@ ReceiptLine
     deriving Show Generic
 Payment
     invoiceId        InvoiceId Maybe
-    orderId          OrderId Maybe
+    orderId          ServiceOrderId Maybe
     partyId          PartyId
     method           PaymentMethod
     amountCents      Int
