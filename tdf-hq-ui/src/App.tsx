@@ -36,6 +36,7 @@ import AdsInboxPage from './pages/AdsInboxPage';
 import CmsAdminPage from './pages/CmsAdminPage';
 import FeedbackPage from './pages/FeedbackPage';
 import CompaniesPage from './pages/CompaniesPage';
+import LeadsPage from './pages/LeadsPage';
 
 function Shell() {
   const { session } = useSession();
@@ -170,10 +171,7 @@ export default function App() {
         <Route path="/crm" element={<Outlet />}>
           <Route path="contactos" element={<PartiesPage />} />
           <Route path="empresas" element={<CompaniesPage />} />
-          <Route
-            path="leads"
-            element={<BasicFeaturePage title="CRM / Leads" storageKey="crm-leads" />}
-          />
+          <Route path="leads" element={<LeadsPage />} />
           <Route index element={<Navigate to="contactos" replace />} />
         </Route>
 
