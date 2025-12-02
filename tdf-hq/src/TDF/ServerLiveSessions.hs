@@ -7,12 +7,12 @@ module TDF.ServerLiveSessions
   ( liveSessionsServer
   ) where
 
-import           Control.Monad              (forM_, void, when)
+import           Control.Monad              (forM, forM_, void, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Crypto.BCrypt              (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
-import           Data.Maybe                 (fromMaybe)
+import           Data.Maybe                 (fromMaybe, mapMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE

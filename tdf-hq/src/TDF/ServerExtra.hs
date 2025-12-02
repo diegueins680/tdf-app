@@ -14,7 +14,7 @@ import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Foldable              (for_)
 import qualified Data.Map.Strict            as Map
-import           Data.Maybe                 (catMaybes, fromMaybe, isJust, mapMaybe)
+import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -905,8 +905,8 @@ paymentsServer user =
   where
     listPaymentsH mPartyId = do
       ensureModule ModuleAdmin user
-      let filt = maybe [] (\pid -> [PaymentPartyId ==. toSqlKey pid]) mPartyId
-      recs <- withPool $ selectList filt [Desc PaymentReceivedAt, LimitTo 200]
+      let filt = maybe [] (\pid -> [M.PaymentPartyId ==. toSqlKey pid]) mPartyId
+      recs <- withPool $ selectList filt [Desc M.PaymentReceivedAt, LimitTo 200]
       pure (map toPaymentDTO recs)
 
     createPaymentH PaymentCreate{..} = do
@@ -925,11 +925,11 @@ paymentsServer user =
           , paymentAmountCents = pcAmountCents
           , paymentReceivedAt  = paidAt
           , paymentReference   = pcReference
-          , paymentConcept     = pcConcept
+          , paymentConcept     = Just pcConcept
           , paymentPeriod      = pcPeriod
           , paymentAttachment  = pcAttachmentUrl
           , paymentCreatedBy   = Just (auPartyId user)
-          , paymentCreatedAt   = now
+          , paymentCreatedAt   = Just now
           }
         getJustEntity payId
       pure (toPaymentDTO ent)
@@ -949,7 +949,7 @@ paymentsServer user =
       , payMethod      = T.pack (show (paymentMethod p))
       , payReference   = paymentReference p
       , payPaidAt      = T.pack (show (paymentReceivedAt p))
-      , payConcept     = paymentConcept p
+      , payConcept     = fromMaybe "" (paymentConcept p)
       , payPeriod      = paymentPeriod p
       , payAttachment  = paymentAttachment p
       }
