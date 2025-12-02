@@ -788,55 +788,81 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     )}
                   </CardActionArea>
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography variant="h5">{artist.apDisplayName}</Typography>
-                      <Chip label={`${artist.apFollowerCount} fans`} size="small" />
-                    </Stack>
-                    {artist.apCity && (
-                      <Typography variant="body2" color="text.secondary">
-                        {artist.apCity}
-                      </Typography>
-                    )}
-                    {artist.apBio && (
-                      <Typography variant="body2" color="text.secondary">
-                        {artist.apBio.length > 180 ? `${artist.apBio.slice(0, 180)}…` : artist.apBio}
-                      </Typography>
-                    )}
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      {artist.apGenres
-                        ?.split(',')
-                        ?.map((genre) => (
-                          <Chip key={genre.trim()} label={genre.trim()} size="small" variant="outlined" />
-                        ))}
-                    </Stack>
-                    <Stack direction="row" spacing={1} mt={2}>
-                      <Button
-                        {...spotifyButtonProps}
-                        variant="contained"
-                        size="small"
-                        startIcon={<PlayArrowIcon />}
-                        disabled={!spotifyUrl}
-                      >
-                        Spotify
-                      </Button>
-                      <Button
-                        {...youtubeButtonProps}
-                        variant="outlined"
-                        size="small"
-                        startIcon={<YouTubeIcon />}
-                        disabled={!youtubeUrl}
-                      >
-                        YouTube
-                      </Button>
-                      <Button
-                        variant={isFollowing ? 'outlined' : 'contained'}
-                        color={isFollowing ? 'inherit' : 'secondary'}
-                        size="small"
-                        onClick={() => handleFollowToggle(artist.apArtistId, isFollowing)}
-                        disabled={!viewerId || followMutation.isPending || unfollowMutation.isPending}
-                      >
-                        {isFollowing ? 'Siguiendo' : 'Seguir'}
-                      </Button>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                      <Box flex={1} minWidth={0}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                          <Typography variant="h5">{artist.apDisplayName}</Typography>
+                          <Chip label={`${artist.apFollowerCount} fans`} size="small" />
+                        </Stack>
+                        {artist.apCity && (
+                          <Typography variant="body2" color="text.secondary">
+                            {artist.apCity}
+                          </Typography>
+                        )}
+                        {artist.apBio && (
+                          <Typography variant="body2" color="text.secondary">
+                            {artist.apBio.length > 180 ? `${artist.apBio.slice(0, 180)}…` : artist.apBio}
+                          </Typography>
+                        )}
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          {artist.apGenres
+                            ?.split(',')
+                            ?.map((genre) => (
+                              <Chip key={genre.trim()} label={genre.trim()} size="small" variant="outlined" />
+                            ))}
+                        </Stack>
+                        <Stack direction="row" spacing={1} mt={2}>
+                          <Button
+                            {...spotifyButtonProps}
+                            variant="contained"
+                            size="small"
+                            startIcon={<PlayArrowIcon />}
+                            disabled={!spotifyUrl}
+                          >
+                            Spotify
+                          </Button>
+                          <Button
+                            {...youtubeButtonProps}
+                            variant="outlined"
+                            size="small"
+                            startIcon={<YouTubeIcon />}
+                            disabled={!youtubeUrl}
+                          >
+                            YouTube
+                          </Button>
+                          <Button
+                            variant={isFollowing ? 'outlined' : 'contained'}
+                            color={isFollowing ? 'inherit' : 'secondary'}
+                            size="small"
+                            onClick={() => handleFollowToggle(artist.apArtistId, isFollowing)}
+                            disabled={!viewerId || followMutation.isPending || unfollowMutation.isPending}
+                          >
+                            {isFollowing ? 'Siguiendo' : 'Seguir'}
+                          </Button>
+                        </Stack>
+                      </Box>
+                      {artist.apFeaturedVideoUrl && (
+                        <Box
+                          sx={{
+                            width: { xs: '100%', md: 240 },
+                            aspectRatio: '16 / 9',
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: 'background.paper',
+                          }}
+                        >
+                          <Box
+                            component="iframe"
+                            src={artist.apFeaturedVideoUrl}
+                            title={`${artist.apDisplayName} preview`}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            sx={{ width: '100%', height: '100%', border: 'none' }}
+                          />
+                        </Box>
+                      )}
                     </Stack>
                   </CardContent>
                 </Card>

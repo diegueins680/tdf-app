@@ -19,8 +19,9 @@ export const Bookings = {
     cbStatus: string;
     cbNotes?: string | null;
     cbServiceType?: string | null;
-  }) =>
-    post<BookingDTO>('/bookings', body),
+    cbPartyId?: number | null;
+    cbResourceIds?: string[] | null;
+  }) => post<BookingDTO>('/bookings', body),
   update: (bookingId: number, body: BookingUpdatePayload) =>
     put<BookingDTO>(`/bookings/${bookingId}`, body),
 };

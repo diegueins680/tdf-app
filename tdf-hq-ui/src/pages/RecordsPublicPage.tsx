@@ -1,4 +1,5 @@
 import {
+  Alert,
   Avatar,
   Box,
   Button,
@@ -7,15 +8,382 @@ import {
   CardMedia,
   Chip,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   Link as MuiLink,
+  Autocomplete,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { DateTime } from 'luxon';
 import { recordings as defaultRecordings, releases as defaultReleases, sessionVideos as defaultSessions } from '../constants/recordsContent';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContents } from '../hooks/useCmsContent';
+import { Bookings } from '../api/bookings';
+import { Rooms } from '../api/rooms';
+import { Parties } from '../api/parties';
+import { Admin } from '../api/admin';
+import { useSession } from '../session/SessionContext';
+
+const BOOKING_ZONE = 'America/Bogota';
+const SERVICE_OPTIONS = [
+  'Vocal recording',
+  'Band recording',
+  'Band rehearsal',
+  'DJ booth rental',
+  'Podcast / Voiceover',
+  'Producción musical',
+  'Mezcla / Post',
+];
+
+const ENGINEER_ROSTER = ['Ing. Diego', 'Ing. Camilo', 'Ing. Laura', 'Ing. Sofía'];
+
+const overlap = (startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime) =>
+  endA > startB && startA < endB;
+
+function BookingRequestDialog({
+  open,
+  onClose,
+  hasToken,
+}: {
+  open: boolean;
+  onClose: () => void;
+  hasToken: boolean;
+}) {
+  const qc = useQueryClient();
+  const [contactName, setContactName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [serviceType, setServiceType] = useState<string>(SERVICE_OPTIONS[0] ?? 'Recording');
+  const [startInput, setStartInput] = useState<string>(
+    DateTime.now()
+      .setZone(BOOKING_ZONE)
+      .plus({ days: 1 })
+      .set({ hour: 10, minute: 0, second: 0, millisecond: 0 })
+      .toFormat("yyyy-LL-dd'T'HH:mm"),
+  );
+  const [duration, setDuration] = useState<number>(120);
+  const [notes, setNotes] = useState('');
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+  const [engineerName, setEngineerName] = useState<string>('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const bookingsQuery = useQuery({
+    queryKey: ['bookings'],
+    queryFn: () => Bookings.list(),
+    enabled: open && hasToken,
+  });
+  const roomsQuery = useQuery({
+    queryKey: ['rooms'],
+    queryFn: () => Rooms.list(),
+    enabled: open && hasToken,
+  });
+
+  const parsedStart = useMemo(
+    () => DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone: BOOKING_ZONE }),
+    [startInput],
+  );
+  const parsedEnd = useMemo(() => parsedStart.plus({ minutes: duration }), [parsedStart, duration]);
+  const isTimeValid = parsedStart.isValid && parsedEnd.isValid && parsedEnd > parsedStart;
+
+  const relevantConflicts = useMemo(() => {
+    const bookings = bookingsQuery.data ?? [];
+    if (!isTimeValid) return [];
+    return bookings.filter((booking) => {
+      const bStart = DateTime.fromISO(booking.startsAt);
+      const bEnd = DateTime.fromISO(booking.endsAt);
+      if (!bStart.isValid || !bEnd.isValid) return false;
+      return overlap(parsedStart.toUTC(), parsedEnd.toUTC(), bStart, bEnd);
+    });
+  }, [bookingsQuery.data, parsedStart, parsedEnd, isTimeValid]);
+
+  const selectedRoom = useMemo(
+    () => (roomsQuery.data ?? []).find((room) => room.roomId === selectedRoomId) ?? null,
+    [roomsQuery.data, selectedRoomId],
+  );
+
+  const roomConflicts = useMemo(() => {
+    if (!selectedRoomId || !isTimeValid) return [];
+    return relevantConflicts.filter((booking) =>
+      booking.resources.some(
+        (res) =>
+          res.brRoomId === selectedRoomId ||
+          (selectedRoom?.rName && res.brRoomName?.toLowerCase() === selectedRoom.rName.toLowerCase()),
+      ),
+    );
+  }, [selectedRoomId, relevantConflicts, selectedRoom, isTimeValid]);
+
+  const engineerConflicts = useMemo(() => {
+    if (!engineerName.trim() || !isTimeValid) return [];
+    const engineerLower = engineerName.trim().toLowerCase();
+    return relevantConflicts.filter((booking) =>
+      booking.resources.some((res) => res.brRole.toLowerCase().includes('engineer') && res.brRoomName.toLowerCase() === engineerLower),
+    );
+  }, [engineerName, relevantConflicts, isTimeValid]);
+
+  const formatRange = (isoStart: string, isoEnd: string) =>
+    `${DateTime.fromISO(isoStart).setZone(BOOKING_ZONE).toFormat("dd LLL yyyy, HH:mm")} - ${DateTime.fromISO(isoEnd)
+      .setZone(BOOKING_ZONE)
+      .toFormat("HH:mm")}`;
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!parsedStart.isValid || !parsedEnd.isValid) {
+        throw new Error('Revisa la fecha y hora seleccionadas.');
+      }
+      if (!contactName.trim() || !email.trim()) {
+        throw new Error('Agrega nombre y correo para continuar.');
+      }
+      const party = await Parties.create({
+        cDisplayName: contactName.trim(),
+        cIsOrg: false,
+        cPrimaryEmail: email.trim(),
+        cPrimaryPhone: phone.trim() || null,
+      });
+      const augmentedNotes = [
+        `Solicitud web (Records CMS)`,
+        `Servicio: ${serviceType}`,
+        selectedRoom?.rName ? `Sala: ${selectedRoom.rName}` : null,
+        engineerName.trim() ? `Ingeniero solicitado: ${engineerName.trim()}` : null,
+        phone ? `Teléfono: ${phone}` : null,
+        notes ? `Notas: ${notes}` : null,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+
+      if (email.trim()) {
+        try {
+          await Admin.createUser({
+            partyId: party.partyId,
+            username: email.trim(),
+            roles: ['Customer'],
+          });
+        } catch (err) {
+          console.warn('No se pudo crear el usuario, continuando con la reserva', err);
+        }
+      }
+
+      const startIso = parsedStart.toUTC().toISO();
+      const endIso = parsedEnd.toUTC().toISO();
+
+      return Bookings.create({
+        cbTitle: `${serviceType} - ${contactName}`,
+        cbStartsAt: startIso ?? '',
+        cbEndsAt: endIso ?? '',
+        cbStatus: 'Tentative',
+        cbNotes: augmentedNotes || null,
+        cbServiceType: serviceType,
+        cbPartyId: party.partyId,
+        cbResourceIds: selectedRoomId ? [selectedRoomId] : null,
+      });
+    },
+    onSuccess: (created) => {
+      setSuccessMessage(`Sesión creada para ${created.title} el ${DateTime.fromISO(created.startsAt).setZone(BOOKING_ZONE).toFormat("dd LLL yyyy, HH:mm")}.`);
+      setFormError(null);
+      void qc.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (err) => {
+      setFormError(err instanceof Error ? err.message : 'No se pudo reservar la sesión.');
+    },
+  });
+
+  const handleSubmit = (evt: React.FormEvent) => {
+    evt.preventDefault();
+    if (!hasToken) {
+      setFormError('No hay token de API configurado para procesar reservas.');
+      return;
+    }
+    if (!parsedStart.isValid || !parsedEnd.isValid || parsedEnd <= parsedStart) {
+      setFormError('Revisa las fechas y duración.');
+      return;
+    }
+    if (!Number.isFinite(duration) || duration <= 0) {
+      setFormError('La duración debe ser mayor a 0 minutos.');
+      return;
+    }
+    if (roomConflicts.length > 0) {
+      const first = roomConflicts[0]!;
+      setFormError(
+        `La sala ${selectedRoom?.rName ?? ''} no está disponible (${formatRange(first.startsAt, first.endsAt)}). Elige otro horario o sala.`,
+      );
+      return;
+    }
+    if (engineerConflicts.length > 0) {
+      const first = engineerConflicts[0]!;
+      setFormError(
+        `El ingeniero ${engineerName} tiene un cruce (${formatRange(first.startsAt, first.endsAt)}). Ajusta el horario o elige otro ingeniero.`,
+      );
+      return;
+    }
+    if (relevantConflicts.length > 0) {
+      const first = relevantConflicts[0]!;
+      setFormError(`Hay un cruce con otra reserva (${first.title}) en ${formatRange(first.startsAt, first.endsAt)}. Ajusta la hora.`);
+      return;
+    }
+    mutation.mutate();
+  };
+
+  const resetAndClose = () => {
+    if (mutation.isPending) return;
+    setFormError(null);
+    setSuccessMessage(null);
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onClose={resetAndClose} maxWidth="md" fullWidth>
+      <form onSubmit={handleSubmit}>
+        <DialogTitle>Reservar sesión en el estudio</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            {!hasToken && (
+              <Alert severity="warning">
+                Configura VITE_PUBLIC_BOOKING_TOKEN o VITE_API_DEMO_TOKEN para habilitar la reserva directa.
+              </Alert>
+            )}
+            {successMessage && <Alert severity="success">{successMessage}</Alert>}
+            {roomConflicts.length > 0 && (
+              <Alert severity="warning">
+                La sala {selectedRoom?.rName ?? ''} ya está reservada en este horario. Ajusta la hora o elige otra sala.
+              </Alert>
+            )}
+            {engineerConflicts.length > 0 && (
+              <Alert severity="warning">
+                El ingeniero {engineerName} ya tiene sesión en ese horario. Ajusta la hora o elige otra persona.
+              </Alert>
+            )}
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                label="Nombre / artista"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                required
+                fullWidth
+              />
+              <TextField
+                label="Correo"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                fullWidth
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                label="Teléfono"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Servicio"
+                select
+                value={serviceType}
+                onChange={(e) => setServiceType(e.target.value)}
+                fullWidth
+                helperText="Usa nombres predefinidos para reservar cabinas por defecto."
+                SelectProps={{ native: true }}
+              >
+                {SERVICE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </TextField>
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                label="Inicio"
+                type="datetime-local"
+                value={startInput}
+                onChange={(e) => setStartInput(e.target.value)}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Duración (min)"
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                fullWidth
+                inputProps={{ min: 30, step: 15 }}
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                label="Sala"
+                select
+                value={selectedRoomId}
+                onChange={(e) => setSelectedRoomId(e.target.value)}
+                fullWidth
+                SelectProps={{ native: true }}
+                helperText={
+                  selectedRoom
+                    ? `Seleccionaste ${selectedRoom.rName}`
+                    : roomsQuery.data && roomsQuery.data.length
+                      ? 'Elige una sala para validar disponibilidad.'
+                      : undefined
+                }
+              >
+                <option value="">Cualquier sala disponible</option>
+                {(roomsQuery.data ?? []).map((room) => (
+                  <option key={room.roomId} value={room.roomId}>
+                    {room.rName}
+                  </option>
+                ))}
+              </TextField>
+              <Autocomplete
+                options={ENGINEER_ROSTER}
+                freeSolo
+                value={engineerName}
+                onInputChange={(_, value) => setEngineerName(value)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Ingeniero (opcional)"
+                    placeholder="Selecciona o escribe para validar choques"
+                    fullWidth
+                  />
+                )}
+              />
+            </Stack>
+            <TextField
+              label="Notas adicionales"
+              multiline
+              minRows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              fullWidth
+            />
+            {formError && <Alert severity="error">{formError}</Alert>}
+            {relevantConflicts.length > 0 && !formError && (
+              <Alert severity="warning">
+                Hay cruces en el horario elegido. Ajusta la hora para evitar conflictos.
+              </Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={resetAndClose} disabled={mutation.isPending}>
+            Cancelar
+          </Button>
+          <Button variant="contained" type="submit" disabled={mutation.isPending || !hasToken}>
+            {mutation.isPending ? 'Reservando…' : 'Confirmar reserva'}
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
+  );
+}
 
 const SectionTitle = ({ title, kicker }: { title: string; kicker?: string }) => (
   <Stack spacing={1} direction="row" alignItems="center" sx={{ mb: 2 }}>
@@ -234,6 +602,28 @@ export default function RecordsPublicPage() {
   const sessionsQuery = useCmsContents('records-session-', 'es');
   const releasesQuery = useCmsContents('records-release-', 'es');
   const recordingsQuery = useCmsContents('records-recording-', 'es');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const bookingToken =
+    import.meta.env['VITE_PUBLIC_BOOKING_TOKEN'] ?? import.meta.env['VITE_API_DEMO_TOKEN'] ?? '';
+  const hasBookingToken = Boolean(bookingToken);
+  const { session, login, setApiToken } = useSession();
+
+  useEffect(() => {
+    if (!bookingToken) return;
+    if (!session) {
+      login(
+        {
+          username: 'records-public',
+          displayName: 'Records Public',
+          roles: [],
+          apiToken: bookingToken,
+        },
+        { remember: false },
+      );
+    } else if (!session.apiToken) {
+      setApiToken(bookingToken);
+    }
+  }, [bookingToken, session, login, setApiToken]);
 
   const sessions: SessionItem[] = useMemo(() => {
     const mapped = (sessionsQuery.data?.map((entry) => {
@@ -250,6 +640,9 @@ export default function RecordsPublicPage() {
       }).filter(Boolean) as SessionItem[] | undefined) ?? [];
     return mapped.length ? mapped : defaultSessions;
   }, [sessionsQuery.data]);
+
+  const [firstDefaultRelease] = defaultReleases;
+  const defaultReleaseCover = firstDefaultRelease?.cover ?? '';
 
   const releases: ReleaseItem[] = useMemo(() => {
     const mapped = (releasesQuery.data?.map((entry) => {
@@ -273,7 +666,7 @@ export default function RecordsPublicPage() {
           artist: p.artist ?? 'TDF House Band',
           releasedOn: p.releasedOn ?? p.date ?? '',
           blurb: p.description ?? p.blurb ?? '',
-          cover: p.cover ?? p.image ?? defaultReleases[0]?.cover ?? '',
+          cover: p.cover ?? p.image ?? defaultReleaseCover,
           links,
         } as ReleaseItem;
       }).filter(Boolean) as ReleaseItem[] | undefined) ?? [];
@@ -300,7 +693,6 @@ export default function RecordsPublicPage() {
   const heroSubtitle: string =
     'Mantén al día la página pública de TDF Records con fotos, lanzamientos y videos curados desde el CMS.';
   const heroCta = 'Reservar sesión';
-  const heroCtaLink = 'https://wa.me/573135205493';
   const heroSecondaryCta = 'Ver lanzamientos';
 
   return (
@@ -322,6 +714,7 @@ export default function RecordsPublicPage() {
             'linear-gradient(135deg, rgba(12,18,28,0.9), rgba(12,18,28,0.6)), url(https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?auto=format&fit=crop&w=1800&q=80) center/cover',
         }}
       >
+        <BookingRequestDialog open={dialogOpen} onClose={() => setDialogOpen(false)} hasToken={hasBookingToken} />
         <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
             <PublicBrandBar tagline="TDF Records · Estudio · Label · Sessions" />
@@ -346,15 +739,15 @@ export default function RecordsPublicPage() {
               <Button
                 variant="contained"
                 size="large"
-                href={heroCtaLink}
                 sx={{
                   bgcolor: '#7c3aed',
                   color: '#f8fafc',
-                  fontWeight: 800,
-                  px: 3,
-                  textTransform: 'none',
-                  '&:hover': { bgcolor: '#6d28d9' },
-                }}
+                fontWeight: 800,
+                px: 3,
+                textTransform: 'none',
+                '&:hover': { bgcolor: '#6d28d9' },
+              }}
+                onClick={() => setDialogOpen(true)}
               >
                 {heroCta}
               </Button>
@@ -370,6 +763,20 @@ export default function RecordsPublicPage() {
               >
                 {heroSecondaryCta}
               </Button>
+              <Button
+                component={RouterLink}
+                to="/fans"
+                variant="text"
+                size="large"
+                sx={{ color: '#e5e7eb', textTransform: 'none' }}
+              >
+                Fan Hub
+              </Button>
+              {!hasBookingToken && (
+                <Typography variant="body2" color="rgba(226,232,240,0.8)">
+                  Para agendar automáticamente, agrega VITE_PUBLIC_BOOKING_TOKEN o usa el token demo.
+                </Typography>
+              )}
             </Stack>
           </Stack>
           <Stack

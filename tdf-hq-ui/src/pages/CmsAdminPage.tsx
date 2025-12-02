@@ -2,9 +2,13 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
+  AlertTitle,
   Box,
   Button,
+  Card,
+  CardContent,
   Chip,
+  Divider,
   Grid,
   LinearProgress,
   MenuItem,
@@ -55,10 +59,18 @@ export default function CmsAdminPage() {
     queryFn: () => Cms.list({ slug: slugFilter, locale: localeFilter }),
   });
 
+  const liveQuery = useQuery({
+    queryKey: ['cms-public', slugFilter, localeFilter],
+    queryFn: () => Cms.getPublic(slugFilter, localeFilter),
+    retry: 1,
+    enabled: Boolean(slugFilter && localeFilter),
+  });
+
   const createMutation = useMutation({
     mutationFn: (input: CmsContentIn) => Cms.create(input),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['cms-content'] });
+      void qc.invalidateQueries({ queryKey: ['cms-public'] });
     },
   });
 
@@ -66,6 +78,7 @@ export default function CmsAdminPage() {
     mutationFn: (id: number) => Cms.publish(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['cms-content'] });
+      void qc.invalidateQueries({ queryKey: ['cms-public'] });
     },
   });
 
@@ -73,10 +86,12 @@ export default function CmsAdminPage() {
     mutationFn: (id: number) => Cms.remove(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['cms-content'] });
+      void qc.invalidateQueries({ queryKey: ['cms-public'] });
     },
   });
 
   const versions: CmsContentDTO[] = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+  const liveContent = liveQuery.data;
 
   const handleCreate = () => {
     let parsed: unknown = null;
@@ -96,6 +111,18 @@ export default function CmsAdminPage() {
     setEditingFromId(null);
   };
 
+  const handleLoadLive = () => {
+    if (!liveContent) return;
+    setTitle(liveContent.ccdTitle ?? '');
+    setStatus((liveContent.ccdStatus as 'draft' | 'published') ?? 'draft');
+    setEditingFromId(liveContent.ccdId);
+    try {
+      setPayload(JSON.stringify(liveContent.ccdPayload ?? {}, null, 2));
+    } catch (_err) {
+      setPayload('{}');
+    }
+  };
+
   const handleLoadVersion = (v: CmsContentDTO) => {
     setSlugFilter(v.ccdSlug);
     setLocaleFilter(v.ccdLocale);
@@ -110,6 +137,14 @@ export default function CmsAdminPage() {
   };
 
   const liveUrl = `${PUBLIC_BASE}${livePathForSlug(slugFilter)}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`;
+  const livePayloadPretty = useMemo(() => {
+    if (!liveContent) return '';
+    try {
+      return JSON.stringify(liveContent.ccdPayload ?? {}, null, 2);
+    } catch (_err) {
+      return String(liveContent.ccdPayload ?? '');
+    }
+  }, [liveContent]);
 
   return (
     <Stack spacing={3}>
@@ -122,12 +157,12 @@ export default function CmsAdminPage() {
           </Typography>
         </Box>
         <Button variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
-          Ver contenido en vivo
+          Abrir página en vivo
         </Button>
       </Stack>
 
       <Paper variant="outlined" sx={{ p: 2.5 }}>
-        <Stack spacing={2}>
+        <Stack spacing={2.5}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <TextField
@@ -166,43 +201,102 @@ export default function CmsAdminPage() {
             </Grid>
           </Grid>
 
-          <Stack spacing={1}>
-              <TextField
-                label="Título"
-                fullWidth
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            <TextField
-              label="Payload JSON"
-              fullWidth
-              multiline
-              minRows={8}
-              value={payload}
-              onChange={(e) => setPayload(e.target.value)}
-            />
-            <TextField
-              select
-              label="Estado"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
-              sx={{ width: 240 }}
-            >
-              <MenuItem value="draft">Borrador</MenuItem>
-              <MenuItem value="published">Publicado</MenuItem>
-            </TextField>
-            <Stack direction="row" spacing={1}>
-              <Button variant="contained" onClick={handleCreate} disabled={createMutation.isPending}>
-                Crear versión
-              </Button>
-              {createMutation.isError && (
-                <Alert severity="error">
-                  {createMutation.error instanceof Error ? createMutation.error.message : 'Error al crear.'}
-                </Alert>
-              )}
-              {createMutation.isSuccess && <Alert severity="success">Versión creada.</Alert>}
-            </Stack>
-          </Stack>
+          <Divider flexItem />
+
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={5}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Typography variant="subtitle1" fontWeight={700}>Contenido en vivo</Typography>
+                      <Chip label={localeFilter} size="small" />
+                    </Stack>
+                    {liveQuery.isLoading && <LinearProgress />}
+                    {liveQuery.isError && (
+                      <Alert severity="warning">
+                        <AlertTitle>Sin contenido publicado</AlertTitle>
+                        Publica una versión para ver la vista previa en vivo.
+                      </Alert>
+                    )}
+                    {liveContent && (
+                      <Stack spacing={1}>
+                        <Typography fontWeight={700}>{liveContent.ccdTitle || liveContent.ccdSlug}</Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          <Chip label={`v${liveContent.ccdVersion}`} size="small" />
+                          <Chip label={liveContent.ccdStatus} size="small" color={liveContent.ccdStatus === 'published' ? 'success' : 'default'} />
+                          {liveContent.ccdPublishedAt && (
+                            <Chip
+                              label={`Publicado: ${new Date(liveContent.ccdPublishedAt).toLocaleString()}`}
+                              size="small"
+                              variant="outlined"
+                            />
+                          )}
+                        </Stack>
+                        <TextField
+                          label="Payload actual"
+                          value={livePayloadPretty}
+                          multiline
+                          minRows={8}
+                          InputProps={{ readOnly: true }}
+                        />
+                        <Stack direction="row" spacing={1}>
+                          <Button size="small" variant="contained" onClick={handleLoadLive} disabled={!liveContent}>
+                            Cargar en formulario
+                          </Button>
+                          <Button size="small" variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
+                            Ver en vivo
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    )}
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={7}>
+              <Stack spacing={1}>
+                <Typography variant="subtitle1" fontWeight={700}>Editar / crear versión</Typography>
+                <TextField
+                  label="Título"
+                  fullWidth
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+                <TextField
+                  label="Payload JSON"
+                  fullWidth
+                  multiline
+                  minRows={10}
+                  value={payload}
+                  onChange={(e) => setPayload(e.target.value)}
+                />
+                <TextField
+                  select
+                  label="Estado"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
+                  sx={{ width: 240 }}
+                >
+                  <MenuItem value="draft">Borrador</MenuItem>
+                  <MenuItem value="published">Publicado</MenuItem>
+                </TextField>
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                  <Button variant="contained" onClick={handleCreate} disabled={createMutation.isPending}>
+                    Guardar versión
+                  </Button>
+                  {editingFromId && <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />}
+                  {createMutation.isError && (
+                    <Alert severity="error" sx={{ flexGrow: 1 }}>
+                      {createMutation.error instanceof Error ? createMutation.error.message : 'Error al crear.'}
+                    </Alert>
+                  )}
+                  {createMutation.isSuccess && <Alert severity="success">Versión creada.</Alert>}
+                </Stack>
+              </Stack>
+            </Grid>
+          </Grid>
         </Stack>
       </Paper>
 
@@ -214,11 +308,11 @@ export default function CmsAdminPage() {
             {editingFromId && (
               <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />
             )}
-          </Stack>
-          {listQuery.isLoading && <LinearProgress />}
-          {listQuery.error && (
-            <Alert severity="error">
-              {listQuery.error instanceof Error ? listQuery.error.message : 'Error al cargar contenido.'}
+            </Stack>
+            {listQuery.isLoading && <LinearProgress />}
+            {listQuery.error && (
+              <Alert severity="error">
+                {listQuery.error instanceof Error ? listQuery.error.message : 'Error al cargar contenido.'}
             </Alert>
           )}
           <Stack spacing={1.5}>
@@ -238,7 +332,12 @@ export default function CmsAdminPage() {
                     </Stack>
                   </Box>
                   <Stack direction="row" spacing={1}>
-                    <Button size="small" variant="outlined" onClick={() => publishMutation.mutate(v.ccdId)} disabled={publishMutation.isPending}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => publishMutation.mutate(v.ccdId)}
+                      disabled={publishMutation.isPending}
+                    >
                       Publicar
                     </Button>
                     <Button

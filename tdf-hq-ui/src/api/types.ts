@@ -207,3 +207,32 @@ export interface ArtistProfileUpsert {
   apuGenres?: string | null;
   apuHighlights?: string | null;
 }
+
+export interface PaymentDTO {
+  payId: number;
+  payPartyId: number;
+  payOrderId?: number | null;
+  payInvoiceId?: number | null;
+  payAmountCents: number;
+  payCurrency: string;
+  payMethod: string;
+  payReference?: string | null;
+  payPaidAt: string;
+  payConcept: string;
+  payPeriod?: string | null;
+  payAttachment?: string | null;
+}
+
+export interface PaymentCreate {
+  pcPartyId: number;
+  pcOrderId?: number | null;
+  pcInvoiceId?: number | null;
+  pcAmountCents: number;
+  pcCurrency: string;
+  pcMethod: string;
+  pcReference?: string | null;
+  pcPaidAt: string;
+  pcConcept: string;
+  pcPeriod?: string | null;
+  pcAttachmentUrl?: string | null;
+}

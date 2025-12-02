@@ -84,6 +84,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Cotizaciones', path: '/finanzas/cotizaciones' },
       { label: 'Facturas', path: '/finanzas/facturas' },
       { label: 'Cobros', path: '/finanzas/cobros' },
+      { label: 'Pagos', path: '/finanzas/pagos' },
       { label: 'Recibos', path: '/finanzas/recibos' },
       { label: 'Regalías', path: '/finanzas/regalias' },
     ],

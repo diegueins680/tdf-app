@@ -24,7 +24,13 @@ export interface SessionContextValue {
 }
 
 export const SESSION_STORAGE_KEY = 'tdf-hq-ui/session';
-export const DEFAULT_DEMO_TOKEN = import.meta.env.VITE_API_DEMO_TOKEN ?? '';
+const inferredDemoToken =
+  import.meta.env.VITE_API_DEMO_TOKEN && import.meta.env.VITE_API_DEMO_TOKEN.length > 0
+    ? import.meta.env.VITE_API_DEMO_TOKEN
+    : typeof window !== 'undefined' && window.location.hostname === 'tdf-app.pages.dev'
+      ? 'admin-token'
+      : '';
+export const DEFAULT_DEMO_TOKEN = inferredDemoToken;
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
@@ -117,7 +123,7 @@ export function getStoredSessionToken(): string | null {
     return currentSession.apiToken;
   }
   const stored = readStoredSession();
-  return stored?.apiToken ?? null;
+  return stored?.apiToken ?? (DEFAULT_DEMO_TOKEN || null);
 }
 
 export function getActiveSession(): SessionUser | null {

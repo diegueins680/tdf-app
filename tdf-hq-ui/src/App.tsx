@@ -29,6 +29,7 @@ import LiveSessionPublicPage from './pages/LiveSessionPublicPage';
 import TeachersPage from './pages/TeachersPage';
 import TrialLessonsPage from './pages/TrialLessonsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
+import LabelArtistsPage from './pages/LabelArtistsPage';
 import ServiceTypesPage from './pages/ServiceTypesPage';
 import InventoryPage from './pages/InventoryPage';
 import InventoryScanPage from './pages/InventoryScanPage';
@@ -37,6 +38,7 @@ import CmsAdminPage from './pages/CmsAdminPage';
 import FeedbackPage from './pages/FeedbackPage';
 import CompaniesPage from './pages/CompaniesPage';
 import LeadsPage from './pages/LeadsPage';
+import PaymentsPage from './pages/PaymentsPage';
 
 function Shell() {
   const { session } = useSession();
@@ -190,7 +192,7 @@ export default function App() {
         </Route>
 
         <Route path="/label" element={<Outlet />}>
-          <Route path="artistas" element={<BasicFeaturePage title="Label / Artistas" storageKey="label-artistas" />} />
+          <Route path="artistas" element={<LabelArtistsPage />} />
           <Route path="proyectos" element={<BasicFeaturePage title="Label / Proyectos" storageKey="label-proyectos" />} />
           <Route path="releases" element={<BasicFeaturePage title="Label / Releases" storageKey="label-releases" />} />
           <Route path="tracks" element={<BasicFeaturePage title="Label / Tracks" storageKey="label-tracks" />} />
@@ -230,6 +232,7 @@ export default function App() {
           <Route path="cotizaciones" element={<BasicFeaturePage title="Finanzas / Cotizaciones" storageKey="finanzas-cotizaciones" />} />
           <Route path="facturas" element={<BasicFeaturePage title="Finanzas / Facturas" storageKey="finanzas-facturas" />} />
           <Route path="cobros" element={<BasicFeaturePage title="Finanzas / Cobros" storageKey="finanzas-cobros" />} />
+          <Route path="pagos" element={<PaymentsPage />} />
           <Route path="recibos" element={<BasicFeaturePage title="Finanzas / Recibos" storageKey="finanzas-recibos" />} />
           <Route path="regalias" element={<BasicFeaturePage title="Finanzas / Regalías" storageKey="finanzas-regalias" />} />
           <Route index element={<Navigate to="cotizaciones" replace />} />
