@@ -446,6 +446,16 @@ PaymentSplit
     payerId          PartyId
     amountCents      Int
     deriving Show Generic
+
+InstagramMessage
+    externalId       Text
+    senderId         Text
+    senderName       Text Maybe
+    text             Text Maybe
+    direction        Text
+    createdAt        UTCTime
+    UniqueInstagramMessage externalId
+    deriving Show Generic
 ExternalCalendarMapping
     resourceId       ResourceId
     googleCalendarId Text

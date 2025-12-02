@@ -970,13 +970,16 @@ parseMethod t =
     "crypto" -> CryptoM
     _ -> BankTransferM
 
--- Minimal Instagram server (stub): logs webhook payload and returns a canned response.
+-- Minimal Instagram server (stub): logs webhook payload, stores messages, returns canned responses.
 instagramServer
-  :: (MonadIO m)
+  :: ( MonadIO m
+     , MonadReader Env m
+     )
   => ServerT IG.InstagramAPI m
 instagramServer =
        handleWebhook
   :<|> handleReply
+  :<|> listMessages
   where
     handleWebhook payload = liftIO $ do
       hPutStrLn stderr "[instagram] received webhook payload"
@@ -984,12 +987,39 @@ instagramServer =
       pure NoContent
 
     handleReply req = do
+      now <- liftIO getCurrentTime
+      -- store outgoing message (stub)
+      Env{..} <- ask
+      liftIO $ flip runSqlPool envPool $ do
+        _ <- upsert (InstagramMessage (IG.irSenderId req <> "-out-" <> T.pack (show now))
+                         (IG.irSenderId req)
+                         Nothing
+                         (Just (IG.irMessage req))
+                         "outgoing"
+                         now)
+             [ InstagramMessageText =. Just (IG.irMessage req)
+             , InstagramMessageDirection =. "outgoing"
+             ]
+        pure ()
       let msg = T.concat
             [ "Respuesta automática: Hola! Gracias por escribir. "
             , "Recibimos: \"", T.take 200 (T.strip (IG.irMessage req)), "\". "
             , "Pronto te contactaremos. (stub local)"
             ]
       pure (object ["status" .= ("ok" :: Text), "message" .= msg, "echoRecipient" .= IG.irSenderId req])
+
+    listMessages = do
+      Env{..} <- ask
+      rows <- liftIO $ flip runSqlPool envPool $ selectList [] [Desc InstagramMessageCreatedAt, LimitTo 100]
+      let toObj (Entity _ m) = object
+            [ "externalId" .= instagramMessageExternalId m
+            , "senderId"   .= instagramMessageSenderId m
+            , "senderName" .= instagramMessageSenderName m
+            , "text"       .= instagramMessageText m
+            , "direction"  .= instagramMessageDirection m
+            , "createdAt"  .= instagramMessageCreatedAt m
+            ]
+      pure (A.toJSON (map toObj rows))
 
 -- Shared helpers ----------------------------------------------------------
 
