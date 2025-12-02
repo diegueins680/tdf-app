@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -7,13 +8,13 @@
 
 module TDF.ServerExtra where
 
-import           Control.Monad              (filterM, unless, when)
+import           Control.Monad              (filterM, forM, unless, when)
 import           Control.Monad.Except       (MonadError, throwError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Foldable              (for_)
 import qualified Data.Map.Strict            as Map
-import           Data.Maybe                 (catMaybes, fromMaybe, isJust)
+import           Data.Maybe                 (catMaybes, fromMaybe, isJust, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -34,9 +35,9 @@ import           TDF.API.Rooms              (RoomsAPI)
 import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Types
 import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
-import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..))
+import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import           TDF.DB                     (Env(..))
-import           TDF.Models                 (Party(..))
+import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
 import           TDF.ModelsExtra
 import qualified TDF.ModelsExtra as ME
@@ -896,7 +897,7 @@ paymentsServer
      , MonadError ServerError m
      )
   => AuthedUser
-  -> ServerT TDF.API.Payments.PaymentsAPI m
+  -> ServerT PaymentsAPI m
 paymentsServer user =
        listPaymentsH
   :<|> createPaymentH
