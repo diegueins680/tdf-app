@@ -29,6 +29,7 @@ import LiveSessionPublicPage from './pages/LiveSessionPublicPage';
 import TeachersPage from './pages/TeachersPage';
 import TrialLessonsPage from './pages/TrialLessonsPage';
 import ClassesPage from './pages/ClassesPage';
+import ReportsPage from './pages/ReportsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
 import ServiceTypesPage from './pages/ServiceTypesPage';
@@ -40,6 +41,7 @@ import FeedbackPage from './pages/FeedbackPage';
 import CompaniesPage from './pages/CompaniesPage';
 import LeadsPage from './pages/LeadsPage';
 import PaymentsPage from './pages/PaymentsPage';
+import CalendarSyncPage from './pages/CalendarSyncPage';
 
 function Shell() {
   const { session } = useSession();
@@ -187,7 +189,7 @@ export default function App() {
           <Route path="live-sessions" element={<LiveSessionIntakePage />} />
           <Route
             path="reportes"
-            element={<BasicFeaturePage title="Estudio / Reportes" storageKey="estudio-reportes" />}
+            element={<ReportsPage />}
           />
           <Route index element={<Navigate to="calendario" replace />} />
         </Route>
@@ -268,6 +270,7 @@ export default function App() {
           <Route path="sedes" element={<BasicFeaturePage title="Configuración / Sedes" storageKey="configuracion-sedes" />} />
           <Route path="marcas" element={<BasicFeaturePage title="Configuración / Marcas" storageKey="configuracion-marcas" />} />
           <Route path="integraciones" element={<BasicFeaturePage title="Configuración / Integraciones" storageKey="configuracion-integraciones" />} />
+          <Route path="integraciones/calendario" element={<CalendarSyncPage />} />
           <Route path="cms" element={<CmsAdminPage />} />
           <Route path="preferencias" element={<SystemPage />} />
           <Route index element={<Navigate to="roles-permisos" replace />} />
