@@ -55,7 +55,6 @@ interface SongEntry {
   bpm: string;
   songKey: string;
   lyrics: string;
-  inputList: string;
   micAssetId?: string | null;
   preampAssetId?: string | null;
   interfaceAssetId?: string | null;
@@ -67,7 +66,6 @@ const emptySong = (): SongEntry => ({
   bpm: '',
   songKey: '',
   lyrics: '',
-  inputList: '',
   micAssetId: null,
   preampAssetId: null,
   interfaceAssetId: null,
@@ -134,6 +132,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const [contactPhone, setContactPhone] = useState('');
   const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [availableDates, setAvailableDates] = useState('');
+  const [sessionInputList, setSessionInputList] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [musicians, setMusicians] = useState<MusicianEntry[]>([emptyMusician()]);
   const [setlist, setSetlist] = useState<SongEntry[]>([emptySong()]);
@@ -241,7 +240,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
               bpm: Number.isFinite(bpmValue) ? bpmValue : null,
               songKey: asNullableString(song.songKey),
               lyrics: asNullableString(song.lyrics),
-              inputList: asNullableString(song.inputList),
+              inputList: asNullableString(sessionInputList),
               micId: asNullableString(song.micAssetId ?? undefined),
               preampId: asNullableString(song.preampAssetId ?? undefined),
               interfaceId: asNullableString(song.interfaceAssetId ?? undefined),
@@ -509,8 +508,17 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
             </Button>
           </Stack>
           <Typography variant="body2" color="text.secondary">
-            Define el setlist con BPM, tonalidad, letra y el input list por canción para anticipar microfonía y ruteo.
+            Define el setlist con BPM, tonalidad y letra. Usa el input list general para toda la sesión y así anticipar microfonía y ruteo.
           </Typography>
+          <TextField
+            label="Input list / microfonía de la sesión"
+            value={sessionInputList}
+            onChange={(e) => setSessionInputList(e.target.value)}
+            placeholder="Kick IN - Beta91, Kick OUT - D112, Snare - SM57, Guitarra DI + SM57, Voz - SM7..."
+            fullWidth
+            multiline
+            minRows={2}
+          />
 
           <Stack spacing={2}>
             {setlist.map((song, idx) => (
@@ -616,15 +624,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField
-                      label="Input list / microfonía para esta canción"
-                      value={song.inputList}
-                      onChange={(e) => handleSongChange(song.id, { inputList: e.target.value })}
-                      placeholder="Kick IN - Beta91, Kick OUT - D112, Snare - SM57, Guitarra DI + SM57, Voz - SM7..."
-                      fullWidth
-                      multiline
-                      minRows={2}
-                    />
                   </Grid>
                 </Grid>
               </Paper>
