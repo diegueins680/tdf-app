@@ -196,6 +196,7 @@ LiveSessionIntake
     bandName     Text
     bandDescription Text Maybe
     primaryGenre Text Maybe
+    inputList    Text Maybe
     contactEmail Text Maybe
     contactPhone Text Maybe
     sessionDate  Day Maybe
@@ -226,10 +227,6 @@ LiveSessionSong
     bpm         Int Maybe
     songKey     Text Maybe
     lyrics      Text Maybe
-    inputList   Text Maybe
-    micId       AssetId Maybe
-    preampId    AssetId Maybe
-    interfaceId AssetId Maybe
     sortOrder   Int default=0
     deriving Show Generic
 

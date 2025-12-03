@@ -59,6 +59,7 @@ liveSessionsServer user = intakeHandler
         { ME.liveSessionIntakeBandName     = bandName
         , ME.liveSessionIntakeBandDescription = lsiBandDescription payload
         , ME.liveSessionIntakePrimaryGenre = lsiPrimaryGenre payload
+        , ME.liveSessionIntakeInputList    = lsiInputList payload
         , ME.liveSessionIntakeContactEmail = T.strip <$> lsiContactEmail payload
         , ME.liveSessionIntakeContactPhone = T.strip <$> lsiContactPhone payload
         , ME.liveSessionIntakeSessionDate  = lsiSessionDate payload
@@ -75,11 +76,7 @@ liveSessionsServer user = intakeHandler
           let title = T.strip (lssTitle song)
           if T.null title
             then pure Nothing
-            else do
-              micKey       <- parseAssetId (lssMicId song)
-              preampKey    <- parseAssetId (lssPreampId song)
-              interfaceKey <- parseAssetId (lssInterfaceId song)
-              pure $ Just (idx, title, micKey, preampKey, interfaceKey, song)
+            else pure $ Just (idx, title, song)
 
       withPool $
         forM_ (zip partyKeys (lsiMusicians payload)) $ \(partyKey, m) ->
@@ -95,17 +92,13 @@ liveSessionsServer user = intakeHandler
             }
 
       withPool $
-        forM_ preparedSongs $ \(idx, title, micKey, preampKey, interfaceKey, song) ->
+        forM_ preparedSongs $ \(idx, title, song) ->
           insert_ ME.LiveSessionSong
             { ME.liveSessionSongIntakeId  = intakeId
             , ME.liveSessionSongTitle     = title
             , ME.liveSessionSongBpm       = lssBpm song
             , ME.liveSessionSongSongKey   = fmap T.strip (lssSongKey song)
             , ME.liveSessionSongLyrics    = lssLyrics song
-            , ME.liveSessionSongInputList = lssInputList song
-            , ME.liveSessionSongMicId     = micKey
-            , ME.liveSessionSongPreampId  = preampKey
-            , ME.liveSessionSongInterfaceId = interfaceKey
             , ME.liveSessionSongSortOrder = idx
             }
 
@@ -222,16 +215,6 @@ liveSessionsServer user = intakeHandler
     sanitize :: Text -> Text
     sanitize = T.filter (\c -> c /= '/' && c /= '\\')
 
-    parseAssetId :: Maybe Text -> m (Maybe (Key ME.Asset))
-    parseAssetId mRaw =
-      case fmap T.strip mRaw of
-        Nothing -> pure Nothing
-        Just trimmed ->
-          if T.null trimmed
-            then pure Nothing
-            else case fromPathPiece trimmed of
-                   Nothing  -> throwError err400 { errBody = "Invalid asset reference" }
-                   Just key -> pure (Just key)
 
 withPool
   :: (MonadReader Env m, MonadIO m)

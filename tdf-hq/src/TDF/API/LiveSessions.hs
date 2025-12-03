@@ -52,10 +52,6 @@ data LiveSessionSongPayload = LiveSessionSongPayload
   , lssBpm       :: Maybe Int
   , lssSongKey   :: Maybe Text
   , lssLyrics    :: Maybe Text
-  , lssInputList :: Maybe Text
-  , lssMicId     :: Maybe Text
-  , lssPreampId  :: Maybe Text
-  , lssInterfaceId :: Maybe Text
   , lssSortOrder :: Maybe Int
   } deriving (Show, Generic)
 
@@ -65,6 +61,7 @@ data LiveSessionIntakePayload = LiveSessionIntakePayload
   { lsiBandName     :: Text
   , lsiBandDescription :: Maybe Text
   , lsiPrimaryGenre :: Maybe Text
+  , lsiInputList    :: Maybe Text
   , lsiContactEmail :: Maybe Text
   , lsiContactPhone :: Maybe Text
   , lsiSessionDate  :: Maybe Day
@@ -81,6 +78,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
     bandName <- lookupText "bandName" multipart
     bandDescription <- optionalText "bandDescription" multipart
     primaryGenre <- optionalText "primaryGenre" multipart
+    inputList <- optionalText "inputList" multipart
     contactEmail <- optionalText "contactEmail" multipart
     contactPhone <- optionalText "contactPhone" multipart
     let riderFile    = lookupFile "rider" multipart
@@ -96,6 +94,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       { lsiBandName     = T.strip bandName
       , lsiBandDescription = fmap T.strip bandDescription
       , lsiPrimaryGenre = fmap T.strip primaryGenre
+      , lsiInputList    = fmap T.strip inputList
       , lsiContactEmail = fmap T.strip contactEmail
       , lsiContactPhone = fmap T.strip contactPhone
       , lsiSessionDate  = sessionDate

@@ -22,7 +22,7 @@ import { Parties } from '../api/parties';
 import type { PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
 import type { Role } from '../api/generated/client';
-import { listInputInventory, submitLiveSessionIntake, type InputInventoryItem } from '../api/liveSessions';
+import { submitLiveSessionIntake } from '../api/liveSessions';
 import { getStoredSessionToken } from '../session/SessionContext';
 
 interface MusicianEntry {
@@ -55,9 +55,6 @@ interface SongEntry {
   bpm: string;
   songKey: string;
   lyrics: string;
-  micAssetId?: string | null;
-  preampAssetId?: string | null;
-  interfaceAssetId?: string | null;
 }
 
 const emptySong = (): SongEntry => ({
@@ -66,9 +63,6 @@ const emptySong = (): SongEntry => ({
   bpm: '',
   songKey: '',
   lyrics: '',
-  micAssetId: null,
-  preampAssetId: null,
-  interfaceAssetId: null,
 });
 
 const GENRE_OPTIONS = [
@@ -112,19 +106,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     queryFn: () => Parties.list(),
     enabled: hasToken,
   });
-  const { data: micInventory = [] } = useQuery({
-    queryKey: ['input-inventory', 'mic'],
-    queryFn: () => listInputInventory('mic'),
-  });
-  const { data: preampInventory = [] } = useQuery({
-    queryKey: ['input-inventory', 'preamp'],
-    queryFn: () => listInputInventory('preamp'),
-  });
-  const { data: interfaceInventory = [] } = useQuery({
-    queryKey: ['input-inventory', 'interface'],
-    queryFn: () => listInputInventory('interface'),
-  });
-
   const [bandName, setBandName] = useState('');
   const [bandDescription, setBandDescription] = useState('');
   const [primaryGenre, setPrimaryGenre] = useState('');
@@ -148,15 +129,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       })),
     [parties],
   );
-  const toInventoryOptions = (items: InputInventoryItem[]) =>
-    items.map((item) => ({
-      id: item.id,
-      label: [item.name, item.brand, item.model].filter(Boolean).join(' · '),
-      category: item.category,
-    }));
-  const micOptions = useMemo(() => toInventoryOptions(micInventory), [micInventory]);
-  const preampOptions = useMemo(() => toInventoryOptions(preampInventory), [preampInventory]);
-  const interfaceOptions = useMemo(() => toInventoryOptions(interfaceInventory), [interfaceInventory]);
 
   const createPartyAndUser = async (entry: MusicianEntry): Promise<PartyDTO> => {
     const created = await Parties.create({
@@ -225,6 +197,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
         bandName,
         bandDescription: asNullableString(bandDescription),
         primaryGenre: asNullableString(primaryGenre),
+        inputList: asNullableString(sessionInputList),
         contactEmail: asNullableString(contactEmail),
         contactPhone: asNullableString(contactPhone),
         sessionDate: asNullableString(sessionDate),
@@ -240,10 +213,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
               bpm: Number.isFinite(bpmValue) ? bpmValue : null,
               songKey: asNullableString(song.songKey),
               lyrics: asNullableString(song.lyrics),
-              inputList: asNullableString(sessionInputList),
-              micId: asNullableString(song.micAssetId ?? undefined),
-              preampId: asNullableString(song.preampAssetId ?? undefined),
-              interfaceId: asNullableString(song.interfaceAssetId ?? undefined),
               sortOrder: idx,
             };
           })
@@ -565,51 +534,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                       onChange={(e) => handleSongChange(song.id, { songKey: e.target.value })}
                       placeholder="Ej: C#m, Bb, F# menor"
                       fullWidth
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <Autocomplete
-                      options={micOptions}
-                      value={micOptions.find((opt) => opt.id === song.micAssetId) ?? null}
-                      isOptionEqualToValue={(opt, val) => opt.id === val.id}
-                      onChange={(_, value) => handleSongChange(song.id, { micAssetId: value?.id ?? null })}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Mic del inventario"
-                          placeholder="SM7B, KM184..."
-                        />
-                      )}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <Autocomplete
-                      options={preampOptions}
-                      value={preampOptions.find((opt) => opt.id === song.preampAssetId) ?? null}
-                      isOptionEqualToValue={(opt, val) => opt.id === val.id}
-                      onChange={(_, value) => handleSongChange(song.id, { preampAssetId: value?.id ?? null })}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Preamp"
-                          placeholder="API, Neve, Avalon..."
-                        />
-                      )}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <Autocomplete
-                      options={interfaceOptions}
-                      value={interfaceOptions.find((opt) => opt.id === song.interfaceAssetId) ?? null}
-                      isOptionEqualToValue={(opt, val) => opt.id === val.id}
-                      onChange={(_, value) => handleSongChange(song.id, { interfaceAssetId: value?.id ?? null })}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Interfaz / converter"
-                          placeholder="Red 8Pre, Apollo..."
-                        />
-                      )}
                     />
                   </Grid>
                   <Grid item xs={12}>

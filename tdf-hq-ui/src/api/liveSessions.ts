@@ -15,10 +15,6 @@ export interface LiveSessionSongInput {
   bpm?: number | null;
   songKey?: string | null;
   lyrics?: string | null;
-  inputList?: string | null;
-  micId?: string | null;
-  preampId?: string | null;
-  interfaceId?: string | null;
   sortOrder?: number;
 }
 
@@ -26,6 +22,7 @@ export interface LiveSessionIntakePayload {
   bandName: string;
   bandDescription?: string | null;
   primaryGenre?: string | null;
+  inputList?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
   sessionDate?: string | null;
@@ -54,6 +51,7 @@ export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload)
   form.append('bandName', payload.bandName);
   if (payload.bandDescription) form.append('bandDescription', payload.bandDescription);
   if (payload.primaryGenre) form.append('primaryGenre', payload.primaryGenre);
+  if (payload.inputList) form.append('inputList', payload.inputList);
   if (payload.contactEmail) form.append('contactEmail', payload.contactEmail);
   if (payload.contactPhone) form.append('contactPhone', payload.contactPhone);
   if (payload.sessionDate) form.append('sessionDate', payload.sessionDate);
