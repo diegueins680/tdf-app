@@ -69,6 +69,7 @@ type InventoryOption = {
   id: string;
   label: string;
   category: string;
+  channelCount: number;
 };
 
 const GENRE_OPTIONS = [
@@ -293,6 +294,19 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     setInputChannels((prev) => [...prev, { id: crypto.randomUUID(), channel: `Ch ${next}`, source: '', micId: null, preampId: null, interfaceId: null, notes: '' }]);
   };
 
+  const parseChannelCount = (item: InputInventoryItem): number => {
+    const haystack = `${item.name} ${item.model}`.toLowerCase();
+    const match = haystack.match(/(\d+)\s*(ch|canal|ch\.)?/);
+    if (match) {
+      const parsed = Number.parseInt(match[1], 10);
+      if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    }
+    if (haystack.includes('8pre') || haystack.includes('mp8') || haystack.includes('bad8')) return 8;
+    if (haystack.includes('b4')) return 4;
+    if (haystack.includes('2-') || haystack.includes('dual') || haystack.includes('stereo')) return 2;
+    return 1;
+  };
+
   const handleRemoveChannel = (id: string) => {
     setInputChannels((prev) => (prev.length <= 1 ? prev : prev.filter((ch) => ch.id !== id)));
   };
@@ -337,12 +351,27 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     );
   };
 
+  const usageCounts = useMemo(() => {
+    const counts = {
+      mic: new Map<string, number>(),
+      pre: new Map<string, number>(),
+      int: new Map<string, number>(),
+    };
+    inputChannels.forEach((ch) => {
+      if (ch.micId) counts.mic.set(ch.micId, (counts.mic.get(ch.micId) ?? 0) + 1);
+      if (ch.preampId) counts.pre.set(ch.preampId, (counts.pre.get(ch.preampId) ?? 0) + 1);
+      if (ch.interfaceId) counts.int.set(ch.interfaceId, (counts.int.get(ch.interfaceId) ?? 0) + 1);
+    });
+    return counts;
+  }, [inputChannels]);
+
   const inventoryOptions = useMemo<InventoryOption[]>(
     () =>
       (inventoryQuery.data ?? []).map((item: InputInventoryItem) => ({
         id: item.id,
         label: [item.name, item.brand, item.model].filter(Boolean).join(' · '),
         category: item.category?.toLowerCase() ?? '',
+        channelCount: parseChannelCount(item),
       })),
     [inventoryQuery.data],
   );
@@ -354,19 +383,29 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   );
 
   const availableMics = (currentId?: string | null) =>
-    inventoryOptions.filter(
-      (i) => i.category.includes('mic') && (!selectedMicIds.has(i.id) || i.id === (currentId ?? '')),
-    );
+    inventoryOptions.filter((i) => {
+      if (!i.category.includes('mic')) return false;
+      const used = usageCounts.mic.get(i.id) ?? 0;
+      const cap = i.channelCount;
+      if (i.id === (currentId ?? '')) return true;
+      return used < cap;
+    });
   const availablePreamps = (currentId?: string | null) =>
-    inventoryOptions.filter(
-      (i) => i.category.includes('pre') && (!selectedPreampIds.has(i.id) || i.id === (currentId ?? '')),
-    );
+    inventoryOptions.filter((i) => {
+      if (!i.category.includes('pre')) return false;
+      const used = usageCounts.pre.get(i.id) ?? 0;
+      const cap = i.channelCount;
+      if (i.id === (currentId ?? '')) return true;
+      return used < cap;
+    });
   const availableInterfaces = (currentId?: string | null) =>
-    inventoryOptions.filter(
-      (i) =>
-        (i.category.includes('interface') || i.category.includes('conversor')) &&
-        (!selectedInterfaceIds.has(i.id) || i.id === (currentId ?? '')),
-    );
+    inventoryOptions.filter((i) => {
+      if (!(i.category.includes('interface') || i.category.includes('conversor'))) return false;
+      const used = usageCounts.int.get(i.id) ?? 0;
+      const cap = i.channelCount;
+      if (i.id === (currentId ?? '')) return true;
+      return used < cap;
+    });
 
   const riderLabel = riderFile ? `${riderFile.name} (${Math.round(riderFile.size / 1024)} KB)` : 'Subir rider técnico (PDF, DOCX)';
 
