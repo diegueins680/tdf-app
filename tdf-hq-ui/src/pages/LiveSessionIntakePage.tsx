@@ -308,7 +308,33 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       notes?: string;
     }>,
   ) => {
-    setInputChannels((prev) => prev.map((ch) => (ch.id === id ? { ...ch, ...patch } : ch)));
+    setInputChannels((prev) =>
+      prev.map((ch) => {
+        if (ch.id !== id) return ch;
+        const next = { ...ch, ...patch };
+
+        // Si el preamp elegido también es interfaz/conversor, autocompleta la interfaz (si está vacía).
+        if (patch.preampId !== undefined) {
+          const selectedPre = inventoryOptions.find((i) => i.id === patch.preampId);
+          const isAlsoInterface =
+            selectedPre && (selectedPre.category.includes('interface') || selectedPre.category.includes('conversor'));
+          if (isAlsoInterface && !next.interfaceId) {
+            next.interfaceId = selectedPre.id;
+          }
+        }
+
+        // Si la interfaz elegida también es preamp, autocompleta el preamp (si está vacío).
+        if (patch.interfaceId !== undefined) {
+          const selectedInt = inventoryOptions.find((i) => i.id === patch.interfaceId);
+          const isAlsoPreamp = selectedInt && selectedInt.category.includes('pre');
+          if (isAlsoPreamp && !next.preampId) {
+            next.preampId = selectedInt.id;
+          }
+        }
+
+        return next;
+      }),
+    );
   };
 
   const inventoryOptions = useMemo<InventoryOption[]>(
