@@ -263,18 +263,21 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const handleRemoveMusician = (id: string) => setMusicians((prev) => prev.filter((m) => m.id !== id));
 
   const handleSelectParty = (id: string, party: PartyDTO | null) => {
+    const current = musicians.find((m) => m.id === id);
+
     if (!party) {
-      handleMusicianChange(id, { partyId: undefined, mode: 'new', name: '', email: '', phone: '', instagram: '' });
+      handleMusicianChange(id, { partyId: undefined, mode: 'new', name: '', email: '', phone: '', instagram: '', notes: '' });
       return;
     }
 
     handleMusicianChange(id, {
       partyId: party.partyId,
-      name: party.displayName,
-      email: party.primaryEmail ?? '',
-      phone: party.primaryPhone ?? '',
-      instagram: party.instagram ?? '',
       mode: 'existing',
+      name: party.displayName || current?.name || '',
+      email: party.primaryEmail ?? current?.email ?? '',
+      phone: party.primaryPhone ?? party.whatsapp ?? current?.phone ?? '',
+      instagram: party.instagram ?? current?.instagram ?? '',
+      notes: party.notes ?? current?.notes ?? '',
     });
   };
 
@@ -317,6 +320,27 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       })),
     [inventoryQuery.data],
   );
+  const selectedMicIds = useMemo(() => new Set(inputChannels.map((c) => c.micId).filter(Boolean)), [inputChannels]);
+  const selectedPreampIds = useMemo(() => new Set(inputChannels.map((c) => c.preampId).filter(Boolean)), [inputChannels]);
+  const selectedInterfaceIds = useMemo(
+    () => new Set(inputChannels.map((c) => c.interfaceId).filter(Boolean)),
+    [inputChannels],
+  );
+
+  const availableMics = (currentId?: string | null) =>
+    inventoryOptions.filter(
+      (i) => i.category.includes('mic') && (!selectedMicIds.has(i.id) || i.id === (currentId ?? '')),
+    );
+  const availablePreamps = (currentId?: string | null) =>
+    inventoryOptions.filter(
+      (i) => i.category.includes('pre') && (!selectedPreampIds.has(i.id) || i.id === (currentId ?? '')),
+    );
+  const availableInterfaces = (currentId?: string | null) =>
+    inventoryOptions.filter(
+      (i) =>
+        (i.category.includes('interface') || i.category.includes('conversor')) &&
+        (!selectedInterfaceIds.has(i.id) || i.id === (currentId ?? '')),
+    );
 
   const riderLabel = riderFile ? `${riderFile.name} (${Math.round(riderFile.size / 1024)} KB)` : 'Subir rider técnico (PDF, DOCX)';
 
@@ -587,7 +611,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                 <Grid container spacing={1} sx={{ mt: 1 }}>
                   <Grid item xs={12} md={4}>
                     <Autocomplete
-                      options={inventoryOptions.filter((i) => i.category.includes('mic'))}
+                      options={availableMics(ch.micId)}
                       value={inventoryOptions.find((i) => i.id === ch.micId) ?? null}
                       onChange={(_, option) => handleChannelChange(ch.id, { micId: option?.id ?? null })}
                       renderInput={(params) => <TextField {...params} label="Micrófono" placeholder="SM7, Beta91, 57..." />}
@@ -595,7 +619,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                   </Grid>
                   <Grid item xs={12} md={4}>
                     <Autocomplete
-                      options={inventoryOptions.filter((i) => i.category.includes('pre'))}
+                      options={availablePreamps(ch.preampId)}
                       value={inventoryOptions.find((i) => i.id === ch.preampId) ?? null}
                       onChange={(_, option) => handleChannelChange(ch.id, { preampId: option?.id ?? null })}
                       renderInput={(params) => <TextField {...params} label="Preamp" placeholder="Neve, API..." />}
@@ -603,7 +627,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                   </Grid>
                   <Grid item xs={12} md={4}>
                     <Autocomplete
-                      options={inventoryOptions.filter((i) => i.category.includes('interface') || i.category.includes('conversor'))}
+                      options={availableInterfaces(ch.interfaceId)}
                       value={inventoryOptions.find((i) => i.id === ch.interfaceId) ?? null}
                       onChange={(_, option) => handleChannelChange(ch.id, { interfaceId: option?.id ?? null })}
                       renderInput={(params) => <TextField {...params} label="Interface / Conversor" placeholder="Apollo, Clarett..." />}
