@@ -263,7 +263,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const handleAddMusician = () => setMusicians((prev) => [...prev, emptyMusician()]);
   const handleRemoveMusician = (id: string) => setMusicians((prev) => prev.filter((m) => m.id !== id));
 
-  const handleSelectParty = (id: string, party: PartyDTO | null) => {
+  const handleSelectParty = async (id: string, party: PartyDTO | null) => {
     const current = musicians.find((m) => m.id === id);
 
     if (!party) {
@@ -271,7 +271,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       return;
     }
 
-    handleMusicianChange(id, {
+    const basePatch: Partial<MusicianEntry> = {
       partyId: party.partyId,
       mode: 'existing',
       name: party.displayName || current?.name || '',
@@ -279,7 +279,21 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       phone: party.primaryPhone ?? party.whatsapp ?? current?.phone ?? '',
       instagram: party.instagram ?? current?.instagram ?? '',
       notes: party.notes ?? current?.notes ?? '',
-    });
+    };
+
+    handleMusicianChange(id, basePatch);
+
+    try {
+      const full = await Parties.getOne(party.partyId);
+      handleMusicianChange(id, {
+        email: full.primaryEmail ?? basePatch.email,
+        phone: full.primaryPhone ?? full.whatsapp ?? basePatch.phone,
+        instagram: full.instagram ?? basePatch.instagram,
+        notes: full.notes ?? basePatch.notes,
+      });
+    } catch (err) {
+      console.error('No se pudo cargar datos completos del contacto', err);
+    }
   };
 
   const handleSongChange = (id: string, patch: Partial<SongEntry>) => {
@@ -298,7 +312,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     const haystack = `${item.name} ${item.model}`.toLowerCase();
     const match = haystack.match(/(\d+)\s*(ch|canal|ch\.)?/);
     if (match) {
-      const parsed = Number.parseInt(match[1], 10);
+      const parsed = Number.parseInt(match[1] ?? '', 10);
       if (Number.isFinite(parsed) && parsed > 0) return parsed;
     }
     if (haystack.includes('8pre') || haystack.includes('mp8') || haystack.includes('bad8')) return 8;
