@@ -22,7 +22,7 @@ import { Parties } from '../api/parties';
 import type { PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
 import type { Role } from '../api/generated/client';
-import { submitLiveSessionIntake } from '../api/liveSessions';
+import { submitLiveSessionIntake, listInputInventory, type InputInventoryItem } from '../api/liveSessions';
 import { getStoredSessionToken } from '../session/SessionContext';
 
 interface MusicianEntry {
@@ -64,6 +64,12 @@ const emptySong = (): SongEntry => ({
   songKey: '',
   lyrics: '',
 });
+
+type InventoryOption = {
+  id: string;
+  label: string;
+  category: string;
+};
 
 const GENRE_OPTIONS = [
   'Rock',
@@ -302,9 +308,9 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     setInputChannels((prev) => prev.map((ch) => (ch.id === id ? { ...ch, ...patch } : ch)));
   };
 
-  const inventoryOptions = useMemo(
+  const inventoryOptions = useMemo<InventoryOption[]>(
     () =>
-      (inventoryQuery.data ?? []).map((item) => ({
+      (inventoryQuery.data ?? []).map((item: InputInventoryItem) => ({
         id: item.id,
         label: [item.name, item.brand, item.model].filter(Boolean).join(' · '),
         category: item.category?.toLowerCase() ?? '',
