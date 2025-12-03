@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  Autocomplete,
   Alert,
   Avatar,
   Box,
+  Button,
   Card,
   CardActionArea,
   CardContent,
@@ -48,21 +50,6 @@ interface ClassRow {
   location?: string;
   notes?: string;
 }
-
-const demoSubjects: TrialSubject[] = [
-  { subjectId: 1, name: 'Producción Musical', active: true, roomIds: [] },
-  { subjectId: 2, name: 'Guitarra', active: true, roomIds: [] },
-  { subjectId: 3, name: 'Canto', active: true, roomIds: [] },
-  { subjectId: 4, name: 'Piano / Teoría', active: true, roomIds: [] },
-  { subjectId: 5, name: 'DJ & Live', active: true, roomIds: [] },
-];
-
-const demoTeachers: TeacherProfile[] = [
-  { id: 101, name: 'Esteban Muñoz', subjects: [1, 5], headline: 'Productor & Ableton mentor', focus: 'Beats · Mezcla · Live', color: '#6366f1' },
-  { id: 102, name: 'Emily Ríos', subjects: [3, 4], headline: 'Voz moderna & armonía', focus: 'Canto · Armonía · Ear training', color: '#ec4899' },
-  { id: 103, name: 'Carlos Vega', subjects: [2, 5], headline: 'Guitarra & performance', focus: 'Ritmo · Técnica · Ensamble', color: '#22c55e' },
-  { id: 104, name: 'Sofía Naranjo', subjects: [4], headline: 'Piano clásico & pop', focus: 'Lectura · Interpretación', color: '#06b6d4' },
-];
 
 const statusMeta: Record<ClassStatus, { label: string; color: string; bg: string; border: string; icon: JSX.Element }> = {
   programada: {
@@ -290,6 +277,7 @@ const buildClassesFromDTO = (classes: ClassSessionDTO[]): ClassRow[] =>
   }));
 
 export default function TeachersPage() {
+  const qc = useQueryClient();
   const subjectsQuery = useQuery({
     queryKey: ['trial-subjects-for-teachers'],
     queryFn: Trials.listSubjects,
@@ -305,21 +293,16 @@ export default function TeachersPage() {
 
   const subjects = useMemo<TrialSubject[]>(() => {
     const activeSubjects = (subjectsQuery.data ?? []).filter((s) => s.active);
-    return activeSubjects.length ? activeSubjects : demoSubjects;
+    return activeSubjects;
   }, [subjectsQuery.data]);
   const subjectMap = useMemo(() => new Map(subjects.map((s) => [s.subjectId, s.name])), [subjects]);
 
   const teachersFromDTO = useMemo(() => buildTeachersFromDTO(teachersQuery.data ?? []), [teachersQuery.data]);
   const teachersFromSlots = useMemo(() => buildTeachersFromSlots(slotsQuery.data ?? []), [slotsQuery.data]);
-  const teachers = teachersFromDTO.length
-    ? teachersFromDTO
-    : teachersFromSlots.length
-      ? teachersFromSlots
-      : demoTeachers;
-  const usingDemoTeachers = teachersFromDTO.length === 0 && teachersFromSlots.length === 0;
+  const teachers = teachersFromDTO.length ? teachersFromDTO : teachersFromSlots;
+  const usingDemoTeachers = teachers.length === 0;
 
   const classesFromSlots = useMemo(() => buildClassesFromSlots(slotsQuery.data ?? [], subjectMap), [slotsQuery.data, subjectMap]);
-  const demoClasses = useMemo(buildDemoClasses, []);
   const dateWindow = useMemo(() => {
     const now = new Date();
     const from = new Date(now);
@@ -331,6 +314,8 @@ export default function TeachersPage() {
 
   const [subjectFilter, setSubjectFilter] = useState<number | 'all'>('all');
   const [search, setSearch] = useState('');
+  const [isEditingSubjects, setIsEditingSubjects] = useState(false);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
 
   const filteredTeachers = useMemo(() => {
     const bySubject = (teacher: TeacherProfile) =>
@@ -366,14 +351,18 @@ export default function TeachersPage() {
     () => buildClassesFromDTO(teacherClassesQuery.data ?? []),
     [teacherClassesQuery.data],
   );
-  const classes = classesFromApi.length
-    ? classesFromApi
-    : classesFromSlots.length
-      ? classesFromSlots
-      : demoClasses;
-  const usingDemoClasses = classesFromApi.length === 0 && classesFromSlots.length === 0;
+  const classes = classesFromApi.length ? classesFromApi : classesFromSlots;
+  const usingDemoClasses = classes.length === 0;
 
   const selectedTeacher = filteredTeachers.find((t) => t.id === selectedTeacherId) ?? null;
+  useEffect(() => {
+    if (selectedTeacher) {
+      setSelectedSubjectIds(selectedTeacher.subjects);
+      setIsEditingSubjects(false);
+    } else {
+      setSelectedSubjectIds([]);
+    }
+  }, [selectedTeacher?.id]);
 
   const teacherClasses = useMemo(() => {
     if (!selectedTeacherId) return [];
@@ -389,6 +378,19 @@ export default function TeachersPage() {
   const history = teacherClasses.filter((c) => c.status === 'realizada' || c.status === 'cancelada');
 
   const loading = subjectsQuery.isLoading || slotsQuery.isLoading || teachersQuery.isLoading || teacherClassesQuery.isFetching;
+  const canEditSubjects = Boolean(selectedTeacherId) && !usingDemoTeachers;
+
+  const updateSubjectsMutation = useMutation({
+    mutationFn: (subjectIds: number[]) =>
+      Trials.updateTeacherSubjects(selectedTeacherId!, { subjectIds }),
+    onSuccess: (data) => {
+      setIsEditingSubjects(false);
+      setSelectedSubjectIds(data.subjects.map((s) => s.subjectId));
+      void qc.invalidateQueries({ queryKey: ['trial-teachers'] });
+      void qc.invalidateQueries({ queryKey: ['trial-slots-teachers'] });
+      void qc.invalidateQueries({ queryKey: ['teacher-classes'] });
+    },
+  });
 
   return (
     <Stack spacing={3}>
@@ -430,7 +432,7 @@ export default function TeachersPage() {
 
       {(usingDemoTeachers || usingDemoClasses) && (
         <Alert severity="info" sx={{ borderRadius: 2 }}>
-          Datos de ejemplo mientras conectamos el endpoint de profesores/clases. El filtro por materia ya usa la lista real si está disponible.
+          No hay datos todavía para profesores o clases. Agrega profesores (rol Teacher) y clases en el módulo de escuela para verlos aquí.
         </Alert>
       )}
 
@@ -570,6 +572,65 @@ export default function TeachersPage() {
                         variant="outlined"
                       />
                     </Stack>
+                  </Stack>
+
+                  <Stack spacing={1}>
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      Materias
+                    </Typography>
+                    {isEditingSubjects ? (
+                      <Stack spacing={1}>
+                        <Autocomplete
+                          multiple
+                          disableCloseOnSelect
+                          options={subjects}
+                          getOptionLabel={(option) => option.name}
+                          value={subjects.filter((s) => selectedSubjectIds.includes(s.subjectId))}
+                          onChange={(_e, value) => setSelectedSubjectIds(value.map((v) => v.subjectId))}
+                          renderInput={(params) => <TextField {...params} label="Materias asignadas" placeholder="Selecciona materias" />}
+                        />
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            variant="contained"
+                            onClick={() => updateSubjectsMutation.mutate(selectedSubjectIds)}
+                            disabled={updateSubjectsMutation.isPending}
+                          >
+                            Guardar materias
+                          </Button>
+                          <Button
+                            variant="text"
+                            onClick={() => {
+                              setSelectedSubjectIds(selectedTeacher.subjects);
+                              setIsEditingSubjects(false);
+                            }}
+                          >
+                            Cancelar
+                          </Button>
+                        </Stack>
+                        {updateSubjectsMutation.isError && (
+                          <Alert severity="error">
+                            {updateSubjectsMutation.error instanceof Error
+                              ? updateSubjectsMutation.error.message
+                              : 'No se pudo actualizar las materias.'}
+                          </Alert>
+                        )}
+                        {updateSubjectsMutation.isSuccess && <Alert severity="success">Materias actualizadas.</Alert>}
+                      </Stack>
+                    ) : (
+                      <Stack direction="row" spacing={0.5} flexWrap="wrap" alignItems="center">
+                        {selectedTeacher.subjects.map((sid) => (
+                          <Chip key={sid} label={subjectMap.get(sid) ?? `Materia ${sid}`} size="small" />
+                        ))}
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => setIsEditingSubjects(true)}
+                          disabled={!canEditSubjects}
+                        >
+                          Editar materias
+                        </Button>
+                      </Stack>
+                    )}
                   </Stack>
 
                   <Divider />
