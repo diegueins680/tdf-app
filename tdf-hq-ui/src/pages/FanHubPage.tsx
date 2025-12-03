@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type ChangeEvent } from 'react';
 import {
   Alert,
   Avatar,
@@ -11,6 +11,7 @@ import {
   Chip,
   CircularProgress,
   Grid,
+  IconButton,
   Link,
   Stack,
   TextField,
@@ -21,6 +22,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import EditIcon from '@mui/icons-material/Edit';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
@@ -53,6 +55,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session } = useSession();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const isFan = useMemo(() => {
     const roles = session?.roles ?? [];
     return roles.some((role) => {
@@ -235,13 +238,27 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
   };
 
-  const handleSaveProfile = () => {
-    updateProfileMutation.mutate(profileDraft);
-  };
   const normalizeField = (value?: string | null) => {
     const trimmed = value?.trim();
     return trimmed && trimmed.length > 0 ? trimmed : null;
   };
+
+  const handleSaveProfile = () => {
+    updateProfileMutation.mutate(profileDraft);
+  };
+
+  const handleAvatarFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: reader.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
 
   const handleHeroImageFileChange = (file: File | null) => {
     if (!file) {
@@ -517,11 +534,36 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             }
           >
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="flex-start">
-              <Avatar
-                src={profileDraft.fpuAvatarUrl ?? undefined}
-                alt={profileDraft.fpuDisplayName ?? session?.displayName ?? ''}
-                sx={{ width: 80, height: 80 }}
-              />
+              <Box sx={{ position: 'relative', width: 88, height: 88 }}>
+                <Avatar
+                  src={profileDraft.fpuAvatarUrl ?? undefined}
+                  alt={profileDraft.fpuDisplayName ?? session?.displayName ?? ''}
+                  sx={{ width: 88, height: 88 }}
+                />
+                <IconButton
+                  size="small"
+                  onClick={() => avatarInputRef.current?.click()}
+                  sx={{
+                    position: 'absolute',
+                    bottom: -6,
+                    right: -6,
+                    bgcolor: 'primary.main',
+                    color: '#fff',
+                    boxShadow: 2,
+                    '&:hover': { bgcolor: 'primary.dark' },
+                  }}
+                  aria-label="Editar avatar"
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={avatarInputRef}
+                  onChange={handleAvatarFileChange}
+                  style={{ display: 'none' }}
+                />
+              </Box>
               <Stack flex={1} spacing={2}>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                   <TextField
