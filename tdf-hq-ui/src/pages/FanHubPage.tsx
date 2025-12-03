@@ -28,6 +28,8 @@ import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { Link as RouterLink } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
+import StreamingPlayer from '../components/StreamingPlayer';
+import { buildReleaseStreamingSources } from '../utils/media';
 
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
@@ -243,37 +245,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return trimmed && trimmed.length > 0 ? trimmed : null;
   };
 
-  const normalizeYoutubeEmbed = (raw?: string | null): string | null => {
-    if (!raw) return null;
-    try {
-      const url = new URL(raw);
-      const host = url.hostname.toLowerCase();
-      if (host.includes('youtube.com')) {
-        const v = url.searchParams.get('v');
-        if (v) return `https://www.youtube.com/embed/${v}`;
-        const parts = url.pathname.split('/').filter(Boolean);
-        const shortsIdx = parts.findIndex((p) => p === 'shorts');
-        if (shortsIdx >= 0 && parts[shortsIdx + 1]) {
-          return `https://www.youtube.com/embed/${parts[shortsIdx + 1]}`;
-        }
-        const embedIdx = parts.findIndex((p) => p === 'embed');
-        if (embedIdx >= 0 && parts[embedIdx + 1]) {
-          return `https://www.youtube.com/embed/${parts[embedIdx + 1]}`;
-        }
-        if (parts.length >= 1 && parts[parts.length - 1]) {
-          return `https://www.youtube.com/embed/${parts[parts.length - 1]}`;
-        }
-      }
-      if (host.includes('youtu.be')) {
-        const id = url.pathname.replace('/', '').trim();
-        return id ? `https://www.youtube.com/embed/${id}` : null;
-      }
-    } catch {
-      // ignore parse errors
-    }
-    return null;
-  };
-
   const handleSaveProfile = () => {
     updateProfileMutation.mutate(profileDraft);
   };
@@ -396,7 +367,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 {isFan && <Chip label={`${releaseFeed.length} lanzamientos`} size="small" />}
               </Stack>
               <Typography variant="body2" color="text.secondary">
-                Conecta reproducciones directo desde el hub: si hay una URL de Spotify o YouTube la abrimos en otra pestaña.
+                Reproduce lanzamientos sin salir del hub: si hay enlaces de Spotify o YouTube los cargamos en el reproductor
+                embebido.
               </Typography>
               {!isFan && (
                 <Alert severity="info">Inicia sesión con rol Fan/Customer para ver lanzamientos personalizados.</Alert>
@@ -411,59 +383,75 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               )}
               {isFan && releaseFeed.length > 0 && (
                 <Stack spacing={1.5}>
-                  {releaseFeed.slice(0, 4).map((release) => (
-                    <Box
-                      key={`${release.arArtistId}-${release.arReleaseId}`}
-                      sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        bgcolor: 'background.paper',
-                      }}
-                    >
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            {release.arTitle}
+                  {releaseFeed.slice(0, 4).map((release) => {
+                    const releaseSources = buildReleaseStreamingSources(release);
+                    return (
+                      <Box
+                        key={`${release.arArtistId}-${release.arReleaseId}`}
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          bgcolor: 'background.paper',
+                        }}
+                      >
+                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                          <Box>
+                            <Typography variant="subtitle1" fontWeight={700}>
+                              {release.arTitle}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {release.artistName}
+                            </Typography>
+                          </Box>
+                          <Chip label={formatReleaseDate(release.arReleaseDate)} size="small" />
+                        </Stack>
+                        {release.arDescription && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {release.arDescription.length > 140
+                              ? `${release.arDescription.slice(0, 140)}…`
+                              : release.arDescription}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {release.artistName}
-                          </Typography>
-                        </Box>
-                        <Chip label={formatReleaseDate(release.arReleaseDate)} size="small" />
-                      </Stack>
-                      {release.arDescription && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          {release.arDescription.length > 140 ? `${release.arDescription.slice(0, 140)}…` : release.arDescription}
-                        </Typography>
-                      )}
-                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          component="a"
-                          href={release.arSpotifyUrl ?? undefined}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          disabled={!release.arSpotifyUrl}
-                        >
-                          Escuchar en Spotify
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          component="a"
-                          href={release.arYoutubeUrl ?? undefined}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          disabled={!release.arYoutubeUrl}
-                        >
-                          Ver en YouTube
-                        </Button>
-                      </Stack>
-                    </Box>
-                  ))}
+                        )}
+                        {releaseSources.length > 0 && (
+                          <Box sx={{ mt: 1.5 }}>
+                            <StreamingPlayer
+                              title={release.arTitle}
+                              artist={release.artistName}
+                              posterUrl={release.arCoverImageUrl}
+                              sources={releaseSources}
+                              variant="compact"
+                            />
+                          </Box>
+                        )}
+                        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            component="a"
+                            href={release.arSpotifyUrl ?? undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            disabled={!release.arSpotifyUrl}
+                          >
+                            Escuchar en Spotify
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            component="a"
+                            href={release.arYoutubeUrl ?? undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            disabled={!release.arYoutubeUrl}
+                          >
+                            Ver en YouTube
+                          </Button>
+                        </Stack>
+                      </Box>
+                    );
+                  })}
                 </Stack>
               )}
             </Card>
@@ -849,6 +837,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             const youtubeButtonProps = youtubeUrl
               ? { component: 'a', href: youtubeUrl, target: '_blank', rel: 'noopener noreferrer' }
               : {};
+            const featuredSources = artist.apFeaturedVideoUrl
+              ? [
+                  {
+                    url: artist.apFeaturedVideoUrl,
+                    provider: 'youtube' as const,
+                    label: 'YouTube',
+                    posterUrl: artist.apHeroImageUrl,
+                  },
+                ]
+              : [];
             return (
               <Grid item xs={12} md={6} key={artist.apArtistId}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -919,33 +917,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           </Button>
                         </Stack>
                       </Box>
-                      {normalizeYoutubeEmbed(artist.apFeaturedVideoUrl) && (
-                        (() => {
-                          const embedSrc = normalizeYoutubeEmbed(artist.apFeaturedVideoUrl);
-                          if (!embedSrc) return null;
-                          return (
-                        <Box
-                          sx={{
-                            width: { xs: '100%', md: 240 },
-                            aspectRatio: '16 / 9',
-                            borderRadius: 2,
-                            overflow: 'hidden',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            bgcolor: 'background.paper',
-                          }}
-                        >
-                          <Box
-                            component="iframe"
-                            src={embedSrc}
-                            title={`${artist.apDisplayName} preview`}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            sx={{ width: '100%', height: '100%', border: 'none' }}
+                      {featuredSources.length > 0 && (
+                        <Box sx={{ minWidth: { xs: '100%', md: 260 }, flexGrow: 1 }}>
+                          <StreamingPlayer
+                            title={`${artist.apDisplayName} — Destacado`}
+                            artist={artist.apDisplayName}
+                            posterUrl={artist.apHeroImageUrl}
+                            sources={featuredSources}
+                            variant="compact"
                           />
                         </Box>
-                          );
-                        })()
                       )}
                     </Stack>
                   </CardContent>
