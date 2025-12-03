@@ -318,7 +318,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
           const selectedPre = inventoryOptions.find((i) => i.id === patch.preampId);
           const isAlsoInterface =
             selectedPre && (selectedPre.category.includes('interface') || selectedPre.category.includes('conversor'));
-          if (isAlsoInterface && !next.interfaceId) {
+          if (isAlsoInterface) {
             next.interfaceId = selectedPre.id;
           }
         }
@@ -327,7 +327,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
         if (patch.interfaceId !== undefined) {
           const selectedInt = inventoryOptions.find((i) => i.id === patch.interfaceId);
           const isAlsoPreamp = selectedInt && selectedInt.category.includes('pre');
-          if (isAlsoPreamp && !next.preampId) {
+          if (isAlsoPreamp) {
             next.preampId = selectedInt.id;
           }
         }
