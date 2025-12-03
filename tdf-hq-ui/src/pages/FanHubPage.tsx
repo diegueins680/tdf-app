@@ -250,6 +250,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const handleAvatarFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    const maxBytes = 3 * 1024 * 1024; // 3 MB
+    if (file.size > maxBytes) {
+      alert('El archivo supera 3 MB. Usa una imagen más liviana.'); // small UX guard; avoid bigger error plumbing here
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {

@@ -43,6 +43,7 @@ import CompaniesPage from './pages/CompaniesPage';
 import LeadsPage from './pages/LeadsPage';
 import PaymentsPage from './pages/PaymentsPage';
 import CalendarSyncPage from './pages/CalendarSyncPage';
+import SecurityPage from './pages/SecurityPage';
 
 function Shell() {
   const { session } = useSession();
@@ -164,16 +165,7 @@ export default function App() {
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/acerca" element={<AboutPage />} />
         <Route path="/manual" element={<ManualPage />} />
-        <Route
-          path="/seguridad"
-          element={
-            <BasicFeaturePage
-              title="Seguridad"
-              description="Notas de seguridad y pendientes de hardening."
-              storageKey="seguridad"
-            />
-          }
-        />
+        <Route path="/seguridad" element={<SecurityPage />} />
 
         <Route path="/crm" element={<Outlet />}>
           <Route path="contactos" element={<PartiesPage />} />
