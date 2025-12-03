@@ -35,6 +35,7 @@ import           TDF.Routes.Academy (AcademyAPI)
 import           TDF.Routes.Courses (CoursesPublicAPI, WhatsAppWebhookAPI)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 import           TDF.API.Feedback    (FeedbackAPI)
+import           TDF.API.Calendar    (CalendarAPI)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -176,6 +177,7 @@ type ProtectedAPI =
   :<|> "instagram" :> InstagramAPI
   :<|> "social" :> SocialAPI
   :<|> AdsAdminAPI
+  :<|> "calendar" :> CalendarAPI
   :<|> CmsAdminAPI
   :<|> "stubs"    :> FutureAPI
 

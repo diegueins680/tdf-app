@@ -13,7 +13,7 @@ module TDF.Server where
 
 import           Control.Applicative ((<|>))
 import           Control.Exception (SomeException, try)
-import           Control.Monad (forM, forM_, void, when, unless)
+import           Control.Monad (forM, forM_, void, when, unless, (>=>))
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans.Class (lift)
@@ -24,18 +24,23 @@ import           Data.Char (isDigit, isSpace, isAlphaNum)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
-import           Data.Aeson (Value, object, (.=))
+import           Data.Aeson (Value, object, (.=), decode, eitherDecode, FromJSON(..))
+import           Data.Aeson.Types (parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime)
 import           Data.Time.Format (defaultTimeLocale, formatTime)
+import           Data.Time.Format.ISO8601 (iso8601ParseM)
+import           GHC.Generics (Generic)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
 import           System.IO (hPutStrLn, stderr)
-import           Network.Wai (Request)
+import qualified Network.Wai as Wai (Request)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler)
 import           Text.Printf (printf)
@@ -104,17 +109,54 @@ import           TDF.WhatsApp.Types ( WAMetaWebhook(..)
                                     )
 import qualified TDF.WhatsApp.Types as WA
 import           TDF.WhatsApp.Client (sendText)
-import           Network.HTTP.Client (newManager)
+import           Network.HTTP.Client (Manager, RequestBody(..), newManager, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
-import           Network.HTTP.Types.URI (urlEncode)
+import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
+import           Network.HTTP.Types.Status (statusCode)
 import           System.Environment (lookupEnv)
 import qualified TDF.Trials.Models as Trials
 import qualified TDF.CMS.Models as CMS
+import qualified TDF.Calendar.Models as Cal
+import qualified TDF.API.Calendar as CalAPI
 import           Database.Persist.Sql (toSqlKey, fromSqlKey)
 import           Data.Function (on)
 import           TDF.API.Instagram (InstagramAPI)
 
 type AppM = ReaderT Env Handler
+
+data GoogleToken = GoogleToken
+  { access_token  :: Text
+  , refresh_token :: Maybe Text
+  , expires_in    :: Maybe Int
+  , token_type    :: Maybe Text
+  } deriving (Generic, Show)
+instance FromJSON GoogleToken
+
+data GoogleEventsPage = GoogleEventsPage
+  { items         :: [Value]
+  , nextPageToken :: Maybe Text
+  , nextSyncToken :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON GoogleEventsPage where
+  parseJSON = withObject "GoogleEventsPage" $ \o ->
+    GoogleEventsPage
+      <$> o .:? "items" .!= []
+      <*> o .:? "nextPageToken"
+      <*> o .:? "nextSyncToken"
+
+data ParsedEvent = ParsedEvent
+  { peGoogleId   :: Text
+  , peStatus     :: Text
+  , peSummary    :: Maybe Text
+  , peDescription :: Maybe Text
+  , peLocation   :: Maybe Text
+  , peStartAt    :: Maybe UTCTime
+  , peEndAt      :: Maybe UTCTime
+  , peUpdatedAt  :: Maybe UTCTime
+  , peHtmlLink   :: Maybe Text
+  , peAttendees  :: Maybe CMS.AesonValue
+  , peRawPayload :: Maybe CMS.AesonValue
+  }
 
 runDB :: SqlPersistT IO a -> AppM a
 runDB action = do
@@ -127,7 +169,7 @@ mkApp :: Env -> Application
 mkApp env =
   let apiProxy = Proxy :: Proxy API
       combinedProxy = Proxy :: Proxy CombinedAPI
-      ctxProxy = Proxy :: Proxy '[AuthHandler Request AuthedUser]
+      ctxProxy = Proxy :: Proxy '[AuthHandler Wai.Request AuthedUser]
       ctx      = authContext env
       trials   = trialsServer (envPool env)
       apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) server
@@ -366,8 +408,356 @@ protectedServer user =
   :<|> instagramServer
   :<|> socialServer user
   :<|> adsAdminServer user
+  :<|> calendarServer user
   :<|> cmsAdminServer user
   :<|> futureServer
+
+calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
+calendarServer user =
+       calendarAuthUrlH
+  :<|> calendarTokenExchangeH
+  :<|> calendarSyncH
+  :<|> calendarEventsH
+  where
+    requireAdmin = unless (hasRole Admin user) $ throwError err403
+
+    loadGoogleEnv :: Maybe Text -> AppM (Text, Text, Text)
+    loadGoogleEnv mRedirect = do
+      mCid <- liftIO $ lookupEnv "GOOGLE_CLIENT_ID"
+      mSecret <- liftIO $ lookupEnv "GOOGLE_CLIENT_SECRET"
+      mRedirectEnv <- liftIO $ lookupEnv "GOOGLE_REDIRECT_URI"
+      let cid = fmap T.strip (T.pack <$> mCid)
+          secret = fmap T.strip (T.pack <$> mSecret)
+          redirect = case mRedirect of
+            Just txt | not (T.null (T.strip txt)) -> Just (T.strip txt)
+            _ -> fmap T.strip (T.pack <$> mRedirectEnv)
+      case (cid, secret, redirect) of
+        (Just cid', Just sec', Just redir') -> pure (cid', sec', redir')
+        _ -> throwError err500 { errBody = "Faltan variables GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REDIRECT_URI" }
+
+    calendarAuthUrlH :: AppM CalAPI.AuthUrlResponse
+    calendarAuthUrlH = do
+      requireAdmin
+      (cid, _sec, redirect) <- loadGoogleEnv Nothing
+      let scope = urlEncode True "https://www.googleapis.com/auth/calendar.readonly"
+          url = T.concat
+            [ "https://accounts.google.com/o/oauth2/v2/auth?response_type=code"
+            , "&client_id=", cid
+            , "&redirect_uri=", redirect
+            , "&scope=", TE.decodeUtf8 scope
+            , "&access_type=offline&prompt=consent"
+            ]
+      pure (CalAPI.AuthUrlResponse url)
+
+    calendarTokenExchangeH :: CalAPI.TokenExchangeIn -> AppM CalAPI.CalendarConfigDTO
+    calendarTokenExchangeH CalAPI.TokenExchangeIn{..} = do
+      requireAdmin
+      (cid, sec, redirect) <- loadGoogleEnv redirectUri
+      manager <- liftIO $ newManager tlsManagerSettings
+      req0 <- liftIO $ parseRequest "https://oauth2.googleapis.com/token"
+      let form =
+            renderSimpleQuery False
+              [ ("code", TE.encodeUtf8 code)
+              , ("client_id", TE.encodeUtf8 cid)
+              , ("client_secret", TE.encodeUtf8 sec)
+              , ("redirect_uri", TE.encodeUtf8 redirect)
+              , ("grant_type", "authorization_code")
+              ]
+          req = req0
+            { method = "POST"
+            , requestBody = RequestBodyLBS (BL.fromStrict form)
+            , requestHeaders =
+                [ ("Content-Type", "application/x-www-form-urlencoded")
+                ]
+            }
+      resp <- liftIO $ httpLbs req manager
+      let codeStatus = statusCode (responseStatus resp)
+      when (codeStatus >= 400) $
+        throwError err502 { errBody = "Intercambio de token falló con Google." }
+      token <- case eitherDecode (responseBody resp) of
+        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token: " <> err) }
+        Right tok -> pure tok
+      now <- liftIO getCurrentTime
+      let expiresAt = addUTCTime . fromIntegral <$> expires_in token <*> pure now
+      mExisting <- runDB $ getBy (Cal.UniqueCalendar calendarId)
+      cfgId <- case mExisting of
+        Nothing -> runDB $ insert Cal.GoogleCalendarConfig
+          { Cal.googleCalendarConfigOwnerId = Just (auPartyId user)
+          , Cal.googleCalendarConfigCalendarId = calendarId
+          , Cal.googleCalendarConfigAccessToken = Just (access_token token)
+          , Cal.googleCalendarConfigRefreshToken = refresh_token token
+          , Cal.googleCalendarConfigTokenType = token_type token
+          , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
+          , Cal.googleCalendarConfigSyncCursor = Nothing
+          , Cal.googleCalendarConfigSyncedAt = Nothing
+          , Cal.googleCalendarConfigCreatedAt = now
+          , Cal.googleCalendarConfigUpdatedAt = now
+          }
+        Just (Entity eid oldCfg) -> do
+          runDB $ update eid
+            [ Cal.GoogleCalendarConfigAccessToken =. Just (access_token token)
+            , Cal.GoogleCalendarConfigRefreshToken =. (refresh_token token <|> Cal.googleCalendarConfigRefreshToken oldCfg)
+            , Cal.GoogleCalendarConfigTokenType =. token_type token
+            , Cal.GoogleCalendarConfigTokenExpiresAt =. expiresAt
+            , Cal.GoogleCalendarConfigUpdatedAt =. now
+            ]
+          pure eid
+      pure CalAPI.CalendarConfigDTO
+        { configId = fromIntegral (fromSqlKey cfgId)
+        , calendarId = calendarId
+        , syncCursor = Nothing
+        , syncedAt = Nothing
+        }
+
+    calendarSyncH :: CalAPI.SyncRequest -> AppM CalAPI.SyncResult
+    calendarSyncH CalAPI.SyncRequest{..} = do
+      requireAdmin
+      (cidEnv, secEnv, redirectEnv) <- loadGoogleEnv Nothing
+      mCfg <- runDB $ getBy (Cal.UniqueCalendar calendarId)
+      case mCfg of
+        Nothing -> throwError err404
+        Just (Entity cfgId cfg) -> do
+          now <- liftIO getCurrentTime
+          cfgFresh <- ensureAccessToken cidEnv secEnv redirectEnv cfg now
+          (createdCount, updatedCount, cancelledCount, newCursor) <-
+            syncFromGoogle cfgFresh from to now
+          runDB $ update cfgId
+            [ Cal.GoogleCalendarConfigSyncedAt =. Just now
+            , Cal.GoogleCalendarConfigSyncCursor =. newCursor
+            ]
+          pure CalAPI.SyncResult
+            { created = createdCount
+            , updated = updatedCount
+            , deleted = cancelledCount
+            , cursor = newCursor
+            }
+
+    calendarEventsH :: Maybe Text -> Maybe UTCTime -> Maybe UTCTime -> Maybe Text -> AppM [CalAPI.CalendarEventDTO]
+    calendarEventsH mCal fromTs toTs mStatus = do
+      requireAdmin
+      let baseFilters = maybe [] (\cid -> [Cal.GoogleCalendarEventCalendarId ==. cid]) mCal
+          dateFilters =
+            maybe [] (\fromVal -> [Cal.GoogleCalendarEventStartAt >=. Just fromVal]) fromTs
+            ++ maybe [] (\toVal -> [Cal.GoogleCalendarEventStartAt <=. Just toVal]) toTs
+          statusFilters = maybe [] (\st -> [Cal.GoogleCalendarEventStatus ==. st]) mStatus
+          filters = baseFilters ++ dateFilters ++ statusFilters
+      rows <- runDB $ selectList filters [Desc Cal.GoogleCalendarEventStartAt, Desc Cal.GoogleCalendarEventUpdatedLocal]
+      pure (map toEventDTO rows)
+
+    toEventDTO :: Entity Cal.GoogleCalendarEvent -> CalAPI.CalendarEventDTO
+    toEventDTO (Entity eid e) =
+      CalAPI.CalendarEventDTO
+        { eventId = entityKeyInt eid
+        , googleId = Cal.googleCalendarEventGoogleId e
+        , calendarId = Cal.googleCalendarEventCalendarId e
+        , status = Cal.googleCalendarEventStatus e
+        , summary = Cal.googleCalendarEventSummary e
+        , description = Cal.googleCalendarEventDescription e
+        , location = Cal.googleCalendarEventLocation e
+        , startAt = Cal.googleCalendarEventStartAt e
+        , endAt = Cal.googleCalendarEventEndAt e
+        , updatedAt = Cal.googleCalendarEventUpdatedAt e
+        , htmlLink = Cal.googleCalendarEventHtmlLink e
+        , rawPayload = CMS.unAesonValue <$> Cal.googleCalendarEventRawPayload e
+        }
+
+    ensureAccessToken :: Text -> Text -> Text -> Cal.GoogleCalendarConfig -> UTCTime -> AppM Cal.GoogleCalendarConfig
+    ensureAccessToken cid sec redirect cfg now =
+      case Cal.googleCalendarConfigTokenExpiresAt cfg of
+        Just expAt | expAt > addUTCTime 60 now -> pure cfg
+        _ -> do
+          case Cal.googleCalendarConfigRefreshToken cfg of
+            Nothing -> throwError err401 { errBody = "No hay refresh_token para Google Calendar." }
+            Just rt -> refreshAccessToken cid sec redirect cfg rt now
+
+    refreshAccessToken :: Text -> Text -> Text -> Cal.GoogleCalendarConfig -> Text -> UTCTime -> AppM Cal.GoogleCalendarConfig
+    refreshAccessToken cid sec redirect cfg rt now = do
+      manager <- liftIO $ newManager tlsManagerSettings
+      req0 <- liftIO $ parseRequest "https://oauth2.googleapis.com/token"
+      let form =
+            renderSimpleQuery False
+              [ ("client_id", TE.encodeUtf8 cid)
+              , ("client_secret", TE.encodeUtf8 sec)
+              , ("refresh_token", TE.encodeUtf8 rt)
+              , ("grant_type", "refresh_token")
+              , ("redirect_uri", TE.encodeUtf8 redirect)
+              ]
+          req = req0
+            { method = "POST"
+            , requestBody = RequestBodyLBS (BL.fromStrict form)
+            , requestHeaders = [("Content-Type", "application/x-www-form-urlencoded")]
+            }
+      resp <- liftIO $ httpLbs req manager
+      let codeStatus = statusCode (responseStatus resp)
+      when (codeStatus >= 400) $
+        throwError err502 { errBody = "Refresh token falló con Google." }
+      token <- case eitherDecode (responseBody resp) of
+        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear refresh token: " <> err) }
+        Right tok -> pure tok
+      let expiresAt = addUTCTime . fromIntegral <$> expires_in token <*> pure now
+          updatedCfg = cfg
+            { Cal.googleCalendarConfigAccessToken = Just (access_token token)
+            , Cal.googleCalendarConfigTokenType = token_type token
+            , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
+            , Cal.googleCalendarConfigUpdatedAt = now
+            }
+      _ <- runDB $ updateWhere
+        [Cal.GoogleCalendarConfigCalendarId ==. Cal.googleCalendarConfigCalendarId cfg]
+        [ Cal.GoogleCalendarConfigAccessToken =. Cal.googleCalendarConfigAccessToken updatedCfg
+        , Cal.GoogleCalendarConfigTokenType =. Cal.googleCalendarConfigTokenType updatedCfg
+        , Cal.GoogleCalendarConfigTokenExpiresAt =. Cal.googleCalendarConfigTokenExpiresAt updatedCfg
+        , Cal.GoogleCalendarConfigUpdatedAt =. now
+        ]
+      pure updatedCfg
+
+    syncFromGoogle :: Cal.GoogleCalendarConfig -> Maybe UTCTime -> Maybe UTCTime -> UTCTime -> AppM (Int, Int, Int, Maybe Text)
+    syncFromGoogle cfg fromTs toTs now = do
+      manager <- liftIO $ newManager tlsManagerSettings
+      let token = Cal.googleCalendarConfigAccessToken cfg
+      case token of
+        Nothing -> throwError err401 { errBody = "No hay access_token para Google Calendar." }
+        Just tok -> do
+          (events, cursor) <- fetchAllPages manager tok (Cal.googleCalendarConfigCalendarId cfg) (Cal.googleCalendarConfigSyncCursor cfg) fromTs toTs Nothing []
+          results <- mapM (upsertEvent now (Cal.googleCalendarConfigCalendarId cfg)) events
+          let createdCount = length (filter (== "created") results)
+              updatedCount = length (filter (== "updated") results)
+              deletedCount = length (filter (== "cancelled") results)
+          pure (createdCount, updatedCount, deletedCount, cursor)
+
+    fetchAllPages
+      :: Manager
+      -> Text
+      -> Text
+      -> Maybe Text
+      -> Maybe UTCTime
+      -> Maybe UTCTime
+      -> Maybe Text
+      -> [Value]
+      -> AppM ([Value], Maybe Text)
+    fetchAllPages manager token calendarId mSync mFrom mTo mPage acc = do
+      let baseUrl = T.unpack $ "https://www.googleapis.com/calendar/v3/calendars/" <> calendarId <> "/events"
+          timeParams =
+            case mSync of
+              Just _ -> []
+              Nothing ->
+                [ ("singleEvents", Just "true")
+                , ("showDeleted", Just "true")
+                , ("maxResults", Just "2000")
+                ] ++ maybe [] (\fromVal -> [("timeMin", Just (formatTime' fromVal))]) mFrom
+                  ++ maybe [] (\toVal -> [("timeMax", Just (formatTime' toVal))]) mTo
+          syncParams = maybe [] (\st -> [("syncToken", Just (TE.encodeUtf8 st))]) mSync
+          pageParams = maybe [] (\pt -> [("pageToken", Just (TE.encodeUtf8 pt))]) mPage
+          params = timeParams ++ syncParams ++ pageParams
+          query = renderQuery True params
+      req0 <- liftIO $ parseRequest (baseUrl ++ BL8.unpack (BL.fromStrict query))
+      let req = req0 { requestHeaders = [("Authorization", "Bearer " <> TE.encodeUtf8 token)] }
+      resp <- liftIO $ httpLbs req manager
+      let codeStatus = statusCode (responseStatus resp)
+      if codeStatus == 410
+        then fetchAllPages manager token calendarId Nothing mFrom mTo Nothing acc
+        else do
+          when (codeStatus >= 400) $
+            throwError err502 { errBody = "Google Calendar devolvió error al sincronizar." }
+          page <- case eitherDecode (responseBody resp) of
+            Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear eventos: " <> err) }
+            Right val -> pure val
+          let GoogleEventsPage items nextPage nextSync = page
+              acc' = acc <> items
+          case nextPage of
+            Just p -> fetchAllPages manager token calendarId mSync mFrom mTo (Just p) acc'
+            Nothing -> pure (acc', nextSync)
+
+    upsertEvent :: UTCTime -> Text -> Value -> AppM Text
+    upsertEvent now calendarId eventVal =
+      case parseEvent calendarId eventVal of
+        Nothing -> pure "skipped"
+        Just ev -> do
+          let keyFilter =
+                [ Cal.GoogleCalendarEventCalendarId ==. calendarId
+                , Cal.GoogleCalendarEventGoogleId ==. peGoogleId ev
+                ]
+          existing <- runDB $ selectFirst keyFilter []
+          case existing of
+            Nothing -> do
+              _ <- runDB $ insert Cal.GoogleCalendarEvent
+                { Cal.googleCalendarEventCalendarId = calendarId
+                , Cal.googleCalendarEventGoogleId = peGoogleId ev
+                , Cal.googleCalendarEventStatus = peStatus ev
+                , Cal.googleCalendarEventSummary = peSummary ev
+                , Cal.googleCalendarEventDescription = peDescription ev
+                , Cal.googleCalendarEventLocation = peLocation ev
+                , Cal.googleCalendarEventStartAt = peStartAt ev
+                , Cal.googleCalendarEventEndAt = peEndAt ev
+                , Cal.googleCalendarEventUpdatedAt = peUpdatedAt ev
+                , Cal.googleCalendarEventHtmlLink = peHtmlLink ev
+                , Cal.googleCalendarEventAttendees = peAttendees ev
+                , Cal.googleCalendarEventRawPayload = peRawPayload ev
+                , Cal.googleCalendarEventCreatedAt = now
+                , Cal.googleCalendarEventUpdatedLocal = now
+                }
+              pure (if peStatus ev == "cancelled" then "cancelled" else "created")
+            Just (Entity eid _) -> do
+              runDB $ update eid
+                [ Cal.GoogleCalendarEventStatus =. peStatus ev
+                , Cal.GoogleCalendarEventSummary =. peSummary ev
+                , Cal.GoogleCalendarEventDescription =. peDescription ev
+                , Cal.GoogleCalendarEventLocation =. peLocation ev
+                , Cal.GoogleCalendarEventStartAt =. peStartAt ev
+                , Cal.GoogleCalendarEventEndAt =. peEndAt ev
+                , Cal.GoogleCalendarEventUpdatedAt =. peUpdatedAt ev
+                , Cal.GoogleCalendarEventHtmlLink =. peHtmlLink ev
+                , Cal.GoogleCalendarEventAttendees =. peAttendees ev
+                , Cal.GoogleCalendarEventRawPayload =. peRawPayload ev
+                , Cal.GoogleCalendarEventUpdatedLocal =. now
+                ]
+              pure (if peStatus ev == "cancelled" then "cancelled" else "updated")
+
+    parseEvent :: Text -> Value -> Maybe ParsedEvent
+    parseEvent calendarId val =
+      parseMaybe (withObject "GoogleEvent" $ \o -> do
+        gid <- o .: "id"
+        status <- o .:? "status" .!= "confirmed"
+        summary <- o .:? "summary"
+        description <- o .:? "description"
+        location <- o .:? "location"
+        htmlLink <- o .:? "htmlLink"
+        updatedRaw <- o .:? "updated"
+        attendeesVal <- o .:? "attendees"
+        startObj <- o .:? "start"
+        endObj <- o .:? "end"
+        let startAt = startObj >>= parseDateFields
+            endAt = endObj >>= parseDateFields
+            updatedAt = updatedRaw >>= parseIso
+        pure ParsedEvent
+          { peGoogleId = gid
+          , peStatus = status
+          , peSummary = summary
+          , peDescription = description
+          , peLocation = location
+          , peStartAt = startAt
+          , peEndAt = endAt
+          , peUpdatedAt = updatedAt
+          , peHtmlLink = htmlLink
+          , peAttendees = CMS.AesonValue <$> attendeesVal
+          , peRawPayload = Just (CMS.AesonValue val)
+          }) val
+
+    parseDateFields :: Value -> Maybe UTCTime
+    parseDateFields =
+      parseMaybe (withObject "DateTime" $ \o -> do
+        dateTime <- o .:? "dateTime"
+        dateOnly <- o .:? "date"
+        case (dateTime :: Maybe Text, dateOnly :: Maybe Text) of
+          (Just dt, _) -> pure dt
+          (Nothing, Just d) -> pure (d <> "T00:00:00Z")
+          _ -> fail "no date"
+      ) >=> parseIso
+
+    parseIso :: Text -> Maybe UTCTime
+    parseIso txt = iso8601ParseM (T.unpack txt)
+
+    formatTime' :: UTCTime -> ByteString
+    formatTime' t = TE.encodeUtf8 (T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" t))
 
 productionCourseSlug :: Text
 productionCourseSlug = "produccion-musical-dic-2025"

@@ -8,7 +8,7 @@
 module TDF.Trials.Server where
 
 import           Control.Exception      (throwIO)
-import           Control.Monad          (forM, unless, void, when)
+import           Control.Monad          (forM, forM_, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
 import           Data.Char              (isAlphaNum, isDigit, isSpace)
@@ -448,6 +448,7 @@ privateTrialsServer user@AuthedUser{..} =
     :<|> commissionsH
     :<|> teachersH
     :<|> teacherClassesH
+    :<|> teacherSubjectsUpdateH
     :<|> studentsListH
     :<|> studentCreateH
   where
@@ -1023,6 +1024,57 @@ privateTrialsServer user@AuthedUser{..} =
                   ++ maybe [] (\endTo -> [ClassSessionStartAt <=. endTo]) mTo
       sessions <- selectList filters [Asc ClassSessionStartAt]
       buildClassSessionDTOs sessions
+
+    teacherSubjectsUpdateH :: Int -> TeacherSubjectsUpdate -> AppM TeacherDTO
+    teacherSubjectsUpdateH teacherId TeacherSubjectsUpdate{..} = do
+      ensureModuleAccess ModuleAdmin
+      let subjectIdsDistinct = distinct (filter (> 0) subjectIds)
+          teacherKey = intKey teacherId :: PartyId
+      mTeacher <- get teacherKey
+      case mTeacher of
+        Nothing -> liftIO $ throwIO err404
+        Just party -> do
+          subjectEntities <- if null subjectIdsDistinct
+            then pure []
+            else selectList [SubjectId <-. map intKey subjectIdsDistinct] []
+          when (not (null subjectIdsDistinct) && length subjectEntities /= length subjectIdsDistinct) $
+            liftIO $ throwIO err404 { errBody = "Una o más materias no existen." }
+
+          existingLinks <- selectList [TeacherSubjectTeacherId ==. teacherKey] []
+          let existingIds = map (teacherSubjectSubjectId . entityVal) existingLinks
+              desiredKeys = map entityKey subjectEntities
+              toAdd = filter (`notElem` existingIds) desiredKeys
+              toRemove = filter (`notElem` desiredKeys) existingIds
+
+          unless (null toRemove) $
+            deleteWhere [ TeacherSubjectTeacherId ==. teacherKey
+                        , TeacherSubjectSubjectId <-. toRemove
+                        ]
+
+          forM_ toAdd $ \sid ->
+            void $ insertUnique TeacherSubject
+              { teacherSubjectTeacherId = teacherKey
+              , teacherSubjectSubjectId = sid
+              , teacherSubjectLevelMin  = Nothing
+              , teacherSubjectLevelMax  = Nothing
+              }
+
+          when (not (null desiredKeys) || not (null existingIds)) $
+            void $ upsert (PartyRole teacherKey Teacher True) [Models.PartyRoleActive =. True]
+
+          let subjectMap = Map.fromList [ (entityKey s, entityVal s) | s <- subjectEntities ]
+              subjectsDTO =
+                [ SubjectBriefDTO
+                    { subjectId = entityKeyInt sid
+                    , name      = Trials.subjectName subj
+                    }
+                | (sid, subj) <- Map.toList subjectMap
+                ]
+          pure TeacherDTO
+            { teacherId = teacherId
+            , teacherName = partyDisplayName party
+            , subjects = subjectsDTO
+            }
 
     classStatusLabel :: UTCTime -> Bool -> UTCTime -> Maybe Models.Booking -> Text
     classStatusLabel now attended startAt mBooking =

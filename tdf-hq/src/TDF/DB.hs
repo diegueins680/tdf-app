@@ -9,6 +9,7 @@ import           Data.ByteString (ByteString)
 import           TDF.Config
 import           TDF.Trials.Models (migrateTrials)
 import           TDF.CMS.Models (migrateCMS)
+import           TDF.Calendar.Models (migrateCalendar)
 
 data Env = Env
   { envPool   :: ConnectionPool
@@ -19,4 +20,4 @@ makePool :: ByteString -> IO ConnectionPool
 makePool conn = runStdoutLoggingT $ createPostgresqlPool conn 10
 
 runMigrations :: SqlPersistT IO () -> SqlPersistT IO ()
-runMigrations base = base >> runMigration migrateTrials >> runMigration migrateCMS
+runMigrations base = base >> runMigration migrateTrials >> runMigration migrateCMS >> runMigration migrateCalendar

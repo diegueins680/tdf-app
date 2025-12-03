@@ -47,6 +47,7 @@ type PrivateTrialsAPI =
         :> QueryParam "from" UTCTime
         :> QueryParam "to" UTCTime
         :> Get '[JSON] [ClassSessionDTO]
+  :<|> "teachers" :> Capture "id" Int :> "subjects" :> ReqBody '[JSON] TeacherSubjectsUpdate :> Put '[JSON] TeacherDTO
   :<|> "students" :> Get '[JSON] [StudentDTO]
   :<|> "students" :> ReqBody '[JSON] StudentCreate :> PostCreated '[JSON] StudentDTO
 

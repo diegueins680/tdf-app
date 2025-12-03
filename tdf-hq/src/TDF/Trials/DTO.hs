@@ -101,6 +101,12 @@ data TeacherDTO = TeacherDTO
 instance ToJSON TeacherDTO
 instance FromJSON TeacherDTO
 
+data TeacherSubjectsUpdate = TeacherSubjectsUpdate
+  { subjectIds :: [Int]
+  } deriving (Show, Generic)
+instance ToJSON TeacherSubjectsUpdate
+instance FromJSON TeacherSubjectsUpdate
+
 data ClassSessionDTO = ClassSessionDTO
   { classSessionId :: Int
   , teacherId      :: Int
