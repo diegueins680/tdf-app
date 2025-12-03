@@ -26,7 +26,6 @@ import           Servant.Multipart          (FileData(..), Tmp)
 import           System.Directory           (createDirectoryIfMissing)
 import           System.FilePath            ((</>), takeFileName)
 import qualified Data.ByteString.Lazy       as BL
-import           Web.PathPieces             (fromPathPiece)
 
 import           TDF.API.LiveSessions
 import           TDF.Auth                   (AuthedUser, auPartyId)

@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module TDF.Handlers.InputList
   ( InventoryItem
@@ -28,11 +27,9 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.IO               as TIO
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Aeson                 (ToJSON(..), object, (.=))
 import           Data.Time                  (UTCTime)
 import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT)
-import           Web.PathPieces             (toPathPiece)
 import           System.Directory           (createDirectoryIfMissing, removeFile)
 import           System.Exit                (ExitCode(..))
 import           System.FilePath            ((</>))
@@ -63,36 +60,6 @@ parseAssetField raw =
     "interface"   -> Just AssetFieldInterface
     "converter"   -> Just AssetFieldInterface
     _             -> Nothing
-
-instance ToJSON (Entity InventoryItem) where
-  toJSON (Entity key item) = object
-    [ "id"        .= toPathPiece key
-    , "name"      .= ME.assetName item
-    , "category"  .= ME.assetCategory item
-    , "brand"     .= ME.assetBrand item
-    , "model"     .= ME.assetModel item
-    , "status"    .= T.pack (show (ME.assetStatus item))
-    , "locationId" .= fmap toPathPiece (ME.assetLocationId item)
-    ]
-
-instance ToJSON (Entity InputListEntry) where
-  toJSON (Entity key row) = object
-    [ "id"             .= toPathPiece key
-    , "channel"        .= ME.inputRowChannelNumber row
-    , "trackName"      .= ME.inputRowTrackName row
-    , "instrument"     .= ME.inputRowInstrument row
-    , "micId"          .= fmap toPathPiece (ME.inputRowMicId row)
-    , "standId"        .= fmap toPathPiece (ME.inputRowStandId row)
-    , "cableId"        .= fmap toPathPiece (ME.inputRowCableId row)
-    , "preampId"       .= fmap toPathPiece (ME.inputRowPreampId row)
-    , "insertOutboard" .= fmap toPathPiece (ME.inputRowInsertOutboardId row)
-    , "converter"      .= ME.inputRowConverterChannel row
-    , "phantom"        .= ME.inputRowPhantom row
-    , "polarity"       .= ME.inputRowPolarity row
-    , "hpf"            .= ME.inputRowHpf row
-    , "pad"            .= ME.inputRowPad row
-    , "notes"          .= ME.inputRowNotes row
-    ]
 
 listInventoryDB
   :: Maybe AssetField

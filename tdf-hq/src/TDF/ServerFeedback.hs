@@ -10,8 +10,7 @@ module TDF.ServerFeedback
 import           Control.Monad              (when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import           Control.Monad.Reader       (MonadReader, ask, asks)
-import           Data.Maybe                 (fromMaybe)
+import           Control.Monad.Reader       (MonadReader, ask)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import           Data.Time                  (getCurrentTime)
@@ -29,7 +28,6 @@ import           TDF.API.Feedback
 import           TDF.Auth                   (AuthedUser(..))
 import           TDF.DB                     (Env(..))
 import           TDF.ModelsExtra            (Feedback(..))
-import qualified TDF.ModelsExtra            as ME
 import qualified TDF.Services               as Services
 import qualified TDF.Email.Service          as EmailSvc
 

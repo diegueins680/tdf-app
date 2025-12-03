@@ -24,7 +24,7 @@ import           Data.Char (isDigit, isSpace, isAlphaNum)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
-import           Data.Aeson (Value, object, (.=), decode, eitherDecode, FromJSON(..))
+import           Data.Aeson (Value, object, (.=), eitherDecode, FromJSON(..))
 import           Data.Aeson.Types (parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -48,7 +48,7 @@ import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           Database.Persist
-import           Database.Persist.Sql
+import           Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
@@ -118,9 +118,6 @@ import qualified TDF.Trials.Models as Trials
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.API.Calendar as CalAPI
-import           Database.Persist.Sql (toSqlKey, fromSqlKey)
-import           Data.Function (on)
-import           TDF.API.Instagram (InstagramAPI)
 
 type AppM = ReaderT Env Handler
 
@@ -713,7 +710,7 @@ calendarServer user =
               pure (if peStatus ev == "cancelled" then "cancelled" else "updated")
 
     parseEvent :: Text -> Value -> Maybe ParsedEvent
-    parseEvent calendarId val =
+    parseEvent _ val =
       parseMaybe (withObject "GoogleEvent" $ \o -> do
         gid <- o .: "id"
         status <- o .:? "status" .!= "confirmed"
@@ -3026,8 +3023,8 @@ cmsPublicServer = cmsGet :<|> cmsList
         , CMS.CmsContentLocale ==. locale
         , CMS.CmsContentStatus ==. "published"
         ] [Desc CMS.CmsContentVersion]
-      content <- case mPublished of
-        Just ent -> pure ent
+      contentDTO <- case mPublished of
+        Just ent -> pure (toCmsDTO ent)
         Nothing -> do
           mDraft <- runDB $ selectFirst
             [ CMS.CmsContentSlug ==. slug
@@ -3035,7 +3032,7 @@ cmsPublicServer = cmsGet :<|> cmsList
             ]
             [Desc CMS.CmsContentVersion]
           maybe (fallbackContent slug locale) (pure . toCmsDTO) mDraft
-      pure (toCmsDTO content)
+      pure contentDTO
 
     cmsList mLocale mPrefix = do
       let locale = fromMaybe "es" mLocale
@@ -3142,5 +3139,5 @@ toCmsDTO (Entity cid c) =
     , ccdPublishedAt = CMS.cmsContentPublishedAt c
     }
 
-entityKeyInt :: (PersistEntity record, PersistEntityBackend record ~ SqlBackend, ToBackendKey SqlBackend record) => Key record -> Int
+entityKeyInt :: ToBackendKey SqlBackend record => Key record -> Int
 entityKeyInt = fromIntegral . fromSqlKey

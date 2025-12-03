@@ -8,13 +8,13 @@
 
 module TDF.ServerExtra where
 
-import           Control.Monad              (filterM, forM, unless, when)
-import           Control.Monad.Except       (MonadError, throwError)
+import           Control.Monad              (filterM, unless, when)
+import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask, asks)
 import           Data.Foldable              (for_)
 import qualified Data.Map.Strict            as Map
-import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
+import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -23,8 +23,7 @@ import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
 import           Data.UUID.V4               (nextRandom)
-import qualified Data.Text.Read             as TR
-import           Data.Aeson                 (Value, object, (.=))
+import           Data.Aeson                 (object, (.=))
 import qualified Data.Aeson                as A
 import           System.IO                  (hPutStrLn, stderr)
 import           Database.Persist        hiding (Active)
@@ -169,7 +168,7 @@ inventoryServer user =
       ensureModule ModuleAdmin user
       assetKey <- parseKey @Asset rawId
       asset <- withPool $ get assetKey
-      maybe (throwError err404) pure asset
+      _ <- maybe (throwError err404) pure asset
       now <- liftIO getCurrentTime
       let targetKind = maybe TargetParty parseTarget (coTargetKind req)
           targetRoomKey = coTargetRoom req >>= parseKeyMaybe @Room

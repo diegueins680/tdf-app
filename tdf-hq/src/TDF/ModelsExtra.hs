@@ -15,12 +15,15 @@
 
 module TDF.ModelsExtra where
 
-import           Data.Text          (Text)
+import           Data.Aeson        (ToJSON(..), (.=), object)
+import           Data.Text         (Text)
+import qualified Data.Text         as T
 import           Data.Time          (Day, UTCTime)
 import           Data.UUID          (UUID)
 import           Database.Persist.Sql
 import           Database.Persist.TH
 import           GHC.Generics       (Generic)
+import           Web.PathPieces     (toPathPiece)
 
 import           TDF.Models         (PartyId, ServiceKind)
 import           TDF.UUIDInstances  ()
@@ -400,3 +403,33 @@ StockMovement
     deriving Show Generic
 
 |]
+
+instance ToJSON (Entity Asset) where
+  toJSON (Entity key asset) = object
+    [ "id"         .= toPathPiece key
+    , "name"       .= assetName asset
+    , "category"   .= assetCategory asset
+    , "brand"      .= assetBrand asset
+    , "model"      .= assetModel asset
+    , "status"     .= T.pack (show (assetStatus asset))
+    , "locationId" .= fmap toPathPiece (assetLocationId asset)
+    ]
+
+instance ToJSON (Entity InputRow) where
+  toJSON (Entity key row) = object
+    [ "id"             .= toPathPiece key
+    , "channel"        .= inputRowChannelNumber row
+    , "trackName"      .= inputRowTrackName row
+    , "instrument"     .= inputRowInstrument row
+    , "micId"          .= fmap toPathPiece (inputRowMicId row)
+    , "standId"        .= fmap toPathPiece (inputRowStandId row)
+    , "cableId"        .= fmap toPathPiece (inputRowCableId row)
+    , "preampId"       .= fmap toPathPiece (inputRowPreampId row)
+    , "insertOutboard" .= fmap toPathPiece (inputRowInsertOutboardId row)
+    , "converter"      .= inputRowConverterChannel row
+    , "phantom"        .= inputRowPhantom row
+    , "polarity"       .= inputRowPolarity row
+    , "hpf"            .= inputRowHpf row
+    , "pad"            .= inputRowPad row
+    , "notes"          .= inputRowNotes row
+    ]
