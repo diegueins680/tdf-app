@@ -3004,6 +3004,20 @@ sendAutoReplies cfg AdsInquiry{..} mCourse = do
 cmsPublicServer :: ServerT CmsPublicAPI AppM
 cmsPublicServer = cmsGet :<|> cmsList
   where
+    fallbackContent slug locale = do
+      now <- liftIO getCurrentTime
+      pure CmsContentDTO
+        { ccdId          = 0
+        , ccdSlug        = slug
+        , ccdLocale      = locale
+        , ccdVersion     = 0
+        , ccdStatus      = "missing"
+        , ccdTitle       = Nothing
+        , ccdPayload     = Nothing
+        , ccdCreatedAt   = now
+        , ccdPublishedAt = Nothing
+        }
+
     cmsGet mSlug mLocale = do
       slug <- maybe (throwError err400 { errBody = "slug requerido" }) pure mSlug
       let locale = fromMaybe "es" mLocale
@@ -3020,7 +3034,7 @@ cmsPublicServer = cmsGet :<|> cmsList
             , CMS.CmsContentLocale ==. locale
             ]
             [Desc CMS.CmsContentVersion]
-          maybe (throwError err404) pure mDraft
+          maybe (fallbackContent slug locale) (pure . toCmsDTO) mDraft
       pure (toCmsDTO content)
 
     cmsList mLocale mPrefix = do
