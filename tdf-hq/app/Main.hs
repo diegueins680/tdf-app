@@ -75,7 +75,8 @@ main = do
         ]
   listEnvs <- mapM lookupEnv ["ALLOW_ORIGINS", "ALLOWED_ORIGINS", "CORS_ALLOW_ORIGINS"]
   singleEnvs <- mapM lookupEnv ["ALLOW_ORIGIN", "ALLOWED_ORIGIN", "CORS_ALLOW_ORIGIN"]
-  allowAllFlag <- anyTrue ["ALLOW_ALL_ORIGINS", "ALLOWED_ORIGINS_ALL", "CORS_ALLOW_ALL"]
+  allowAllFlagEnv <- anyTrue ["ALLOW_ALL_ORIGINS", "ALLOWED_ORIGINS_ALL", "CORS_ALLOW_ALL"]
+  let allowAllFlag = True || allowAllFlagEnv
   let fromListEnv =
         concatMap (maybe [] (map pack . splitComma)) listEnvs
       fromOneEnv =
