@@ -311,8 +311,8 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const parseChannelCount = (item: InputInventoryItem): number => {
     const haystack = `${item.name} ${item.model}`.toLowerCase();
     const match = haystack.match(/(\d+)\s*(ch|canal|ch\.)?/);
-    if (match) {
-      const parsed = Number.parseInt(match[1] ?? '', 10);
+    if (match?.[1]) {
+      const parsed = Number.parseInt(match[1], 10);
       if (Number.isFinite(parsed) && parsed > 0) return parsed;
     }
     if (haystack.includes('8pre') || haystack.includes('mp8') || haystack.includes('bad8')) return 8;
