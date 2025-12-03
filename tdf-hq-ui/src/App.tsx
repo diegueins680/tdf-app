@@ -30,6 +30,7 @@ import TeachersPage from './pages/TeachersPage';
 import TrialLessonsPage from './pages/TrialLessonsPage';
 import ClassesPage from './pages/ClassesPage';
 import ReportsPage from './pages/ReportsPage';
+import ManualPage from './pages/ManualPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
 import ServiceTypesPage from './pages/ServiceTypesPage';
@@ -162,6 +163,7 @@ export default function App() {
         <Route path="/inicio" element={<FanHubPage />} />
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/acerca" element={<AboutPage />} />
+        <Route path="/manual" element={<ManualPage />} />
         <Route
           path="/seguridad"
           element={

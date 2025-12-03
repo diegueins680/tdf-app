@@ -122,6 +122,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Sedes', path: '/configuracion/sedes' },
       { label: 'Marcas', path: '/configuracion/marcas' },
       { label: 'Integraciones', path: '/configuracion/integraciones' },
+      { label: 'Calendario Google', path: '/configuracion/integraciones/calendario' },
       { label: 'CMS', path: '/configuracion/cms' },
       { label: 'Preferencias', path: '/configuracion/preferencias' },
     ],
@@ -135,6 +136,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Fan Hub', path: '/fans' },
       { label: 'Sugerencias', path: '/feedback' },
+      { label: 'Manual', path: '/manual' },
     ],
   },
 ];
