@@ -243,6 +243,37 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return trimmed && trimmed.length > 0 ? trimmed : null;
   };
 
+  const normalizeYoutubeEmbed = (raw?: string | null): string | null => {
+    if (!raw) return null;
+    try {
+      const url = new URL(raw);
+      const host = url.hostname.toLowerCase();
+      if (host.includes('youtube.com')) {
+        const v = url.searchParams.get('v');
+        if (v) return `https://www.youtube.com/embed/${v}`;
+        const parts = url.pathname.split('/').filter(Boolean);
+        const shortsIdx = parts.findIndex((p) => p === 'shorts');
+        if (shortsIdx >= 0 && parts[shortsIdx + 1]) {
+          return `https://www.youtube.com/embed/${parts[shortsIdx + 1]}`;
+        }
+        const embedIdx = parts.findIndex((p) => p === 'embed');
+        if (embedIdx >= 0 && parts[embedIdx + 1]) {
+          return `https://www.youtube.com/embed/${parts[embedIdx + 1]}`;
+        }
+        if (parts.length >= 1 && parts[parts.length - 1]) {
+          return `https://www.youtube.com/embed/${parts[parts.length - 1]}`;
+        }
+      }
+      if (host.includes('youtu.be')) {
+        const id = url.pathname.replace('/', '').trim();
+        return id ? `https://www.youtube.com/embed/${id}` : null;
+      }
+    } catch {
+      // ignore parse errors
+    }
+    return null;
+  };
+
   const handleSaveProfile = () => {
     updateProfileMutation.mutate(profileDraft);
   };
@@ -888,7 +919,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           </Button>
                         </Stack>
                       </Box>
-                      {artist.apFeaturedVideoUrl && (
+                      {normalizeYoutubeEmbed(artist.apFeaturedVideoUrl) && (
+                        (() => {
+                          const embedSrc = normalizeYoutubeEmbed(artist.apFeaturedVideoUrl);
+                          if (!embedSrc) return null;
+                          return (
                         <Box
                           sx={{
                             width: { xs: '100%', md: 240 },
@@ -902,13 +937,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         >
                           <Box
                             component="iframe"
-                            src={artist.apFeaturedVideoUrl}
+                            src={embedSrc}
                             title={`${artist.apDisplayName} preview`}
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                             sx={{ width: '100%', height: '100%', border: 'none' }}
                           />
                         </Box>
+                          );
+                        })()
                       )}
                     </Stack>
                   </CardContent>
