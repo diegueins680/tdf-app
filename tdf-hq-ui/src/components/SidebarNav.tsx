@@ -353,14 +353,12 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
             Sin coincidencias.
           </Typography>
         )}
-        {(() => {
-          let itemCursor = -1;
-          return filteredNavGroups.map((group) => {
-            const isSearching = filter.trim().length > 0;
-            const isExpanded = isSearching || expandedGroups.has(group.title);
-            return (
-              <Box key={group.title} sx={{ px: 1 }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
+        {filteredNavGroups.map((group, groupIdx) => {
+          const isSearching = filter.trim().length > 0;
+          const isExpanded = isSearching || expandedGroups.has(group.title);
+          return (
+            <Box key={group.title} sx={{ px: 1 }}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
                 <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.55)', letterSpacing: 1 }}>
                   {group.title}
                 </Typography>
@@ -372,18 +370,18 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
               </Stack>
               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                 <List disablePadding>
-                  {group.items.map((item) => {
-                    itemCursor += 1;
+                  {group.items.map((item, itemIdx) => {
+                    const flatIndex = flatFilteredItems.findIndex((flat) => flat.path === item.path);
                     const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
-                    const hot = itemCursor === highlightIndex;
+                    const hot = flatIndex === highlightIndex;
                     const renderLabel = () => {
-                      const query = filter.trim();
-                      if (!query) return item.label;
-                      const idx = item.label.toLowerCase().indexOf(query.toLowerCase());
+                      const q = filter.trim();
+                      if (!q) return item.label;
+                      const idx = item.label.toLowerCase().indexOf(q.toLowerCase());
                       if (idx === -1) return item.label;
                       const before = item.label.slice(0, idx);
-                      const match = item.label.slice(idx, idx + query.length);
-                      const after = item.label.slice(idx + query.length);
+                      const match = item.label.slice(idx, idx + q.length);
+                      const after = item.label.slice(idx + q.length);
                       return (
                         <span>
                           {before}
@@ -394,7 +392,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                     };
                     return (
                       <ListItemButton
-                        key={item.path}
+                        key={`${groupIdx}-${itemIdx}-${item.path}`}
                         component={RouterLink}
                         to={item.path}
                         onClick={onNavigate}
@@ -421,7 +419,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
               </Collapse>
             </Box>
           );
-        })()}
+        })}
       </List>
     </Box>
   );
