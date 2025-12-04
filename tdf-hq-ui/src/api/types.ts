@@ -84,6 +84,8 @@ export interface MarketplaceItemDTO {
   miCategory: string;
   miBrand?: string | null;
   miModel?: string | null;
+  miPhotoUrl?: string | null;
+  miStatus?: string | null;
   miPriceUsdCents: number;
   miPriceDisplay: string;
   miMarkupPct: number;

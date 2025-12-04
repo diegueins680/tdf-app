@@ -34,6 +34,8 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   MarketplaceCartDTO,
@@ -338,6 +340,26 @@ export default function MarketplacePage() {
             >
               Copiar ID: {lastOrder.moOrderId}
             </Button>
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => {
+                const summary = lastOrder.moItems
+                  .map((it) => `${it.moiQuantity} x ${it.moiTitle} - ${it.moiSubtotalDisplay}`)
+                  .join('\n');
+                const text = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summary}`;
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pedido-${lastOrder.moOrderId}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                setCopyToast('Resumen descargado');
+              }}
+            >
+              Descargar resumen
+            </Button>
           </Stack>
         </CardContent>
       </Card>
@@ -452,9 +474,26 @@ export default function MarketplacePage() {
                         {item.miModel && <Chip size="small" label={item.miModel} variant="outlined" />}
                         <Chip size="small" label={item.miCategory} color="default" variant="outlined" />
                       </Stack>
+                      {item.miPhotoUrl && (
+                        <Box
+                          component="img"
+                          src={item.miPhotoUrl}
+                          alt={item.miTitle}
+                          sx={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 1.5, border: '1px solid', borderColor: 'divider' }}
+                          loading="lazy"
+                        />
+                      )}
                       <Typography variant="h5" fontWeight={800}>
                         {item.miPriceDisplay}
                       </Typography>
+                      {item.miStatus && (
+                        <Chip
+                          size="small"
+                          color={item.miStatus.toLowerCase().includes('stock') ? 'success' : 'warning'}
+                          icon={item.miStatus.toLowerCase().includes('stock') ? <CheckCircleIcon /> : <WarningAmberIcon />}
+                          label={item.miStatus}
+                        />
+                      )}
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 'auto' }}>
                         <Button
                           variant="contained"
