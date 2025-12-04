@@ -428,7 +428,12 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                         }}
                       >
                         <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5 }} />
-                        <ListItemText primaryTypographyProps={{ fontSize: 14 }} primary={renderLabel()} />
+                        <ListItemText
+                          primaryTypographyProps={{ fontSize: 14 }}
+                          secondaryTypographyProps={{ fontSize: 11, color: 'rgba(226,232,240,0.75)' }}
+                          primary={renderLabel()}
+                          secondary={filter.trim() ? group.title : undefined}
+                        />
                       </ListItemButton>
                     );
                   })}
