@@ -185,6 +185,75 @@ data MarketplaceItemDTO = MarketplaceItemDTO
 instance ToJSON MarketplaceItemDTO
 instance FromJSON MarketplaceItemDTO
 
+data MarketplaceCartItemDTO = MarketplaceCartItemDTO
+  { mciListingId         :: Text
+  , mciTitle             :: Text
+  , mciCategory          :: Text
+  , mciBrand             :: Maybe Text
+  , mciModel             :: Maybe Text
+  , mciQuantity          :: Int
+  , mciUnitPriceUsdCents :: Int
+  , mciSubtotalCents     :: Int
+  , mciUnitPriceDisplay  :: Text
+  , mciSubtotalDisplay   :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCartItemDTO
+instance FromJSON MarketplaceCartItemDTO
+
+data MarketplaceCartDTO = MarketplaceCartDTO
+  { mcCartId          :: Text
+  , mcItems           :: [MarketplaceCartItemDTO]
+  , mcCurrency        :: Text
+  , mcSubtotalCents   :: Int
+  , mcSubtotalDisplay :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCartDTO
+instance FromJSON MarketplaceCartDTO
+
+data MarketplaceCartItemUpdate = MarketplaceCartItemUpdate
+  { mciuListingId :: Text
+  , mciuQuantity  :: Int
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceCartItemUpdate
+instance ToJSON MarketplaceCartItemUpdate
+
+data MarketplaceCheckoutReq = MarketplaceCheckoutReq
+  { mcrBuyerName  :: Text
+  , mcrBuyerEmail :: Text
+  , mcrBuyerPhone :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceCheckoutReq
+instance ToJSON MarketplaceCheckoutReq
+
+data MarketplaceOrderItemDTO = MarketplaceOrderItemDTO
+  { moiListingId         :: Text
+  , moiTitle             :: Text
+  , moiQuantity          :: Int
+  , moiUnitPriceUsdCents :: Int
+  , moiSubtotalCents     :: Int
+  , moiUnitPriceDisplay  :: Text
+  , moiSubtotalDisplay   :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceOrderItemDTO
+instance FromJSON MarketplaceOrderItemDTO
+
+data MarketplaceOrderDTO = MarketplaceOrderDTO
+  { moOrderId       :: Text
+  , moCurrency      :: Text
+  , moTotalUsdCents :: Int
+  , moTotalDisplay  :: Text
+  , moStatus        :: Text
+  , moItems         :: [MarketplaceOrderItemDTO]
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceOrderDTO
+instance FromJSON MarketplaceOrderDTO
+
 data AssetCreate = AssetCreate
   { cName     :: Text
   , cCategory :: Text

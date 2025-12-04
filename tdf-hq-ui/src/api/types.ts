@@ -57,6 +57,59 @@ export interface AssetDTO {
   qrToken?: string | null;
 }
 
+export interface MarketplaceItemDTO {
+  miListingId: string;
+  miAssetId: string;
+  miTitle: string;
+  miCategory: string;
+  miBrand?: string | null;
+  miModel?: string | null;
+  miPriceUsdCents: number;
+  miPriceDisplay: string;
+  miMarkupPct: number;
+  miCurrency: string;
+}
+
+export interface MarketplaceCartItemDTO {
+  mciListingId: string;
+  mciTitle: string;
+  mciCategory: string;
+  mciBrand?: string | null;
+  mciModel?: string | null;
+  mciQuantity: number;
+  mciUnitPriceUsdCents: number;
+  mciSubtotalCents: number;
+  mciUnitPriceDisplay: string;
+  mciSubtotalDisplay: string;
+}
+
+export interface MarketplaceCartDTO {
+  mcCartId: string;
+  mcItems: MarketplaceCartItemDTO[];
+  mcCurrency: string;
+  mcSubtotalCents: number;
+  mcSubtotalDisplay: string;
+}
+
+export interface MarketplaceOrderItemDTO {
+  moiListingId: string;
+  moiTitle: string;
+  moiQuantity: number;
+  moiUnitPriceUsdCents: number;
+  moiSubtotalCents: number;
+  moiUnitPriceDisplay: string;
+  moiSubtotalDisplay: string;
+}
+
+export interface MarketplaceOrderDTO {
+  moOrderId: string;
+  moCurrency: string;
+  moTotalUsdCents: number;
+  moTotalDisplay: string;
+  moStatus: string;
+  moItems: MarketplaceOrderItemDTO[];
+}
+
 export interface AssetCheckoutDTO {
   checkoutId: string;
   assetId: string;

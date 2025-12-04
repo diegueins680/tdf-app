@@ -52,7 +52,7 @@ import           Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawS
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
-import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..))
+import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceCheckoutReq(..))
 import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI)
 import           TDF.Config (AppConfig(..))
@@ -3052,7 +3052,14 @@ cmsPublicServer = cmsGet :<|> cmsList
       pure (map toCmsDTO filtered)
 
 marketplacePublicServer :: ServerT MarketplaceAPI AppM
-marketplacePublicServer = listMarketplace :<|> getMarketplaceItem
+marketplacePublicServer =
+       listMarketplace
+  :<|> getMarketplaceItem
+  :<|> createCart
+  :<|> getCart
+  :<|> upsertCartItem
+  :<|> checkoutCart
+  :<|> getOrder
 
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do
@@ -3096,6 +3103,208 @@ toMarketplaceDTO (lid, listing, Just asset) =
     , miMarkupPct      = ME.marketplaceListingMarkupPct listing
     , miCurrency       = ME.marketplaceListingCurrency listing
     }
+
+createCart :: AppM MarketplaceCartDTO
+createCart = do
+  now <- liftIO getCurrentTime
+  Env{..} <- ask
+  cartId <- liftIO $ flip runSqlPool envPool $ insert $ ME.MarketplaceCart now now
+  cartDto <- liftIO $ flip runSqlPool envPool $ loadCartDTO cartId
+  maybe (throwError err500) pure cartDto
+
+getCart :: Text -> AppM MarketplaceCartDTO
+getCart rawId = do
+  cartKey <- parseCartId rawId
+  Env{..} <- ask
+  mCart <- liftIO $ flip runSqlPool envPool $ loadCartDTO cartKey
+  maybe (throwError err404) pure mCart
+
+upsertCartItem :: Text -> MarketplaceCartItemUpdate -> AppM MarketplaceCartDTO
+upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
+  cartKey <- parseCartId rawId
+  listingKey <- parseListingId mciuListingId
+  when (mciuQuantity < 0) $ throwBadRequest "quantity must be non-negative"
+  now <- liftIO getCurrentTime
+  Env{..} <- ask
+  mDto <- liftIO $ flip runSqlPool envPool $ do
+    mListing <- get listingKey
+    case mListing of
+      Nothing -> pure Nothing
+      Just _ -> do
+        existing <- selectFirst [ME.MarketplaceCartItemCartId ==. cartKey, ME.MarketplaceCartItemListingId ==. listingKey] []
+        case existing of
+          Nothing ->
+            if mciuQuantity == 0
+              then pure ()
+              else void $ insert ME.MarketplaceCartItem
+                     { ME.marketplaceCartItemCartId = cartKey
+                     , ME.marketplaceCartItemListingId = listingKey
+                     , ME.marketplaceCartItemQuantity = mciuQuantity
+                     }
+          Just (Entity itemId _) ->
+            if mciuQuantity == 0
+              then delete itemId
+              else update itemId [ME.MarketplaceCartItemQuantity =. mciuQuantity]
+        update cartKey [ME.MarketplaceCartUpdatedAt =. now]
+        loadCartDTO cartKey
+  maybe (throwError err404) pure mDto
+
+checkoutCart :: Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
+checkoutCart rawId MarketplaceCheckoutReq{..} = do
+  when (T.null (T.strip mcrBuyerName)) $ throwBadRequest "buyerName requerido"
+  when (T.null (T.strip mcrBuyerEmail)) $ throwBadRequest "buyerEmail requerido"
+  cartKey <- parseCartId rawId
+  now <- liftIO getCurrentTime
+  Env{..} <- ask
+  mOrder <- liftIO $ flip runSqlPool envPool $ do
+    mCart <- get cartKey
+    case mCart of
+      Nothing -> pure Nothing
+      Just _ -> do
+        cartItems <- loadCartLines cartKey
+        if null cartItems
+          then pure Nothing
+          else do
+            let totalCents = sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
+                                 | (_, listing, _, qty) <- cartItems
+                                 ]
+                currency = maybe "USD" ME.marketplaceListingCurrency (listToMaybe [entityVal listing | (_, listing, _, _) <- cartItems])
+            orderId <- insert ME.MarketplaceOrder
+              { ME.marketplaceOrderCartId        = Just cartKey
+              , ME.marketplaceOrderBuyerName     = T.strip mcrBuyerName
+              , ME.marketplaceOrderBuyerEmail    = T.strip mcrBuyerEmail
+              , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
+              , ME.marketplaceOrderTotalUsdCents = totalCents
+              , ME.marketplaceOrderCurrency      = currency
+              , ME.marketplaceOrderStatus        = "pending"
+              , ME.marketplaceOrderCreatedAt     = now
+              }
+            forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+              let listing   = entityVal listingEnt
+                  unitPrice = ME.marketplaceListingPriceUsdCents listing
+                  subtotal  = unitPrice * qty
+              void $ insert ME.MarketplaceOrderItem
+                { ME.marketplaceOrderItemOrderId           = orderId
+                , ME.marketplaceOrderItemListingId         = entityKey listingEnt
+                , ME.marketplaceOrderItemQuantity          = qty
+                , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+                , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
+                }
+            loadOrderDTO orderId
+  maybe (throwError err404) pure mOrder
+
+getOrder :: Text -> AppM MarketplaceOrderDTO
+getOrder rawId = do
+  orderKey <- case fromPathPiece rawId of
+    Nothing -> throwBadRequest "Invalid order id"
+    Just k  -> pure k
+  Env{..} <- ask
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  maybe (throwError err404) pure mDto
+
+parseCartId :: Text -> AppM (Key ME.MarketplaceCart)
+parseCartId rawId =
+  case fromPathPiece rawId of
+    Nothing -> throwBadRequest "Invalid cart id"
+    Just k  -> pure k
+
+parseListingId :: Text -> AppM (Key ME.MarketplaceListing)
+parseListingId rawId =
+  case fromPathPiece rawId of
+    Nothing -> throwBadRequest "Invalid listing id"
+    Just k  -> pure k
+
+loadCartDTO :: Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
+loadCartDTO cartId = do
+  mCart <- get cartId
+  case mCart of
+    Nothing -> pure Nothing
+    Just _ -> do
+      items <- loadCartLines cartId
+      pure (Just (cartToDTO cartId items))
+
+loadCartLines
+  :: Key ME.MarketplaceCart
+  -> SqlPersistT IO [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+loadCartLines cartId = do
+  cartItems <- selectList [ME.MarketplaceCartItemCartId ==. cartId] [Asc ME.MarketplaceCartItemId]
+  forM cartItems $ \ent@(Entity _ ci) -> do
+    listing <- getJustEntity (ME.marketplaceCartItemListingId ci)
+    asset   <- getJustEntity (ME.marketplaceListingAssetId (entityVal listing))
+    let qty = ME.marketplaceCartItemQuantity ci
+    pure (ent, listing, asset, qty)
+
+cartToDTO
+  :: Key ME.MarketplaceCart
+  -> [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+  -> MarketplaceCartDTO
+cartToDTO cartId items =
+  let currency = maybe "USD" (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
+      subtotal = sum [ ME.marketplaceListingPriceUsdCents (entityVal listing) * qty
+                     | (_, listing, _, qty) <- items
+                     ]
+      itemDtos = flip map items $ \(_, listingEnt, assetEnt, qty) ->
+        let listing = entityVal listingEnt
+            asset   = entityVal assetEnt
+            unitPrice = ME.marketplaceListingPriceUsdCents listing
+            subtotalC = unitPrice * qty
+        in MarketplaceCartItemDTO
+            { mciListingId         = toPathPiece (entityKey listingEnt)
+            , mciTitle             = ME.marketplaceListingTitle listing
+            , mciCategory          = ME.assetCategory asset
+            , mciBrand             = ME.assetBrand asset
+            , mciModel             = ME.assetModel asset
+            , mciQuantity          = qty
+            , mciUnitPriceUsdCents = unitPrice
+            , mciSubtotalCents     = subtotalC
+            , mciUnitPriceDisplay  = formatUsd unitPrice currency
+            , mciSubtotalDisplay   = formatUsd subtotalC currency
+            }
+  in MarketplaceCartDTO
+      { mcCartId          = toPathPiece cartId
+      , mcItems           = itemDtos
+      , mcCurrency        = currency
+      , mcSubtotalCents   = subtotal
+      , mcSubtotalDisplay = formatUsd subtotal currency
+      }
+
+loadOrderDTO :: Key ME.MarketplaceOrder -> SqlPersistT IO (Maybe MarketplaceOrderDTO)
+loadOrderDTO orderId = do
+  mOrder <- getEntity orderId
+  case mOrder of
+    Nothing -> pure Nothing
+    Just orderEnt -> do
+      orderItems <- selectList [ME.MarketplaceOrderItemOrderId ==. orderId] [Asc ME.MarketplaceOrderItemId]
+      listings <- forM orderItems $ \(Entity _ oi) -> do
+        mListing <- get (ME.marketplaceOrderItemListingId oi)
+        pure (oi, mListing)
+      pure (Just (orderToDTO orderEnt listings))
+
+orderToDTO
+  :: Entity ME.MarketplaceOrder
+  -> [(ME.MarketplaceOrderItem, Maybe ME.MarketplaceListing)]
+  -> MarketplaceOrderDTO
+orderToDTO (Entity oid order) items =
+  let currency = ME.marketplaceOrderCurrency order
+      itemDtos = flip map items $ \(oi, mListing) ->
+        let titleTxt = maybe "Listado" ME.marketplaceListingTitle mListing
+        in MarketplaceOrderItemDTO
+              { moiListingId         = toPathPiece (ME.marketplaceOrderItemListingId oi)
+              , moiTitle             = titleTxt
+              , moiQuantity          = ME.marketplaceOrderItemQuantity oi
+              , moiUnitPriceUsdCents = ME.marketplaceOrderItemUnitPriceUsdCents oi
+              , moiSubtotalCents     = ME.marketplaceOrderItemSubtotalUsdCents oi
+              , moiUnitPriceDisplay  = formatUsd (ME.marketplaceOrderItemUnitPriceUsdCents oi) currency
+              , moiSubtotalDisplay   = formatUsd (ME.marketplaceOrderItemSubtotalUsdCents oi) currency
+              }
+  in MarketplaceOrderDTO
+      { moOrderId       = toPathPiece oid
+      , moCurrency      = currency
+      , moTotalUsdCents = ME.marketplaceOrderTotalUsdCents order
+      , moTotalDisplay  = formatUsd (ME.marketplaceOrderTotalUsdCents order) currency
+      , moStatus        = ME.marketplaceOrderStatus order
+      , moItems         = itemDtos
+      }
 
 formatUsd :: Int -> Text -> Text
 formatUsd cents currency =
