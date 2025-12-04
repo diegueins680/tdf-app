@@ -319,18 +319,19 @@ const getOrderStatusMeta = (status: string) => {
   return { label: status || 'Estado', color: 'default' as const, desc: '' };
 };
 
-const orderSummary = useMemo(() => {
-  if (!lastOrder) return null;
-  const summaryLines = lastOrder.moItems
-    .map((item) => `${item.moiQuantity} × ${item.moiTitle || 'Ítem'} — ${item.moiSubtotalDisplay}`)
-    .join('\n');
-  const orderText = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summaryLines}`;
-  const statusMeta = getOrderStatusMeta(lastOrder.moStatus);
-  return (
-    <Card variant="outlined">
-      <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
-      <CardContent>
-        <Stack spacing={1}>
+  const orderSummary = useMemo(() => {
+    if (!lastOrder) return null;
+    const summaryLines = lastOrder.moItems
+      .map((item) => `${item.moiQuantity} × ${item.moiTitle || 'Ítem'} — ${item.moiSubtotalDisplay}`)
+      .join('\n');
+    const orderText = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summaryLines}`;
+    const statusMeta = getOrderStatusMeta(lastOrder.moStatus);
+    const history = lastOrder.moStatusHistory ?? [];
+    return (
+      <Card variant="outlined">
+        <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
+        <CardContent>
+          <Stack spacing={1}>
             {lastOrder.moItems.map((item) => (
               <Stack
                 key={item.moiListingId}
@@ -354,6 +355,18 @@ const orderSummary = useMemo(() => {
               <Typography variant="caption" color="text.secondary">
                 {statusMeta.desc}
               </Typography>
+            )}
+            {history.length > 0 && (
+              <Stack spacing={0.5}>
+                <Typography variant="caption" color="text.secondary">
+                  Historial de estado
+                </Typography>
+                {history.map(([st, ts]) => (
+                  <Typography key={`${st}-${ts}`} variant="caption" color="text.secondary">
+                    {new Date(ts).toLocaleString()} — {st}
+                  </Typography>
+                ))}
+              </Stack>
             )}
             <Button
               size="small"
@@ -524,11 +537,11 @@ const orderSummary = useMemo(() => {
                           justifyContent: 'center',
                         }}
                       >
-                        {item.miPhotoUrl ? (
-                          <Box
-                            component="img"
-                            src={item.miPhotoUrl}
-                            alt={item.miTitle}
+                      {item.miPhotoUrl ? (
+                        <Box
+                          component="img"
+                          src={item.miPhotoUrl}
+                          alt={item.miTitle}
                             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             loading="lazy"
                           />
@@ -546,15 +559,22 @@ const orderSummary = useMemo(() => {
                       </Typography>
                       {(() => {
                         const props = getStatusChipProps(item.miStatus);
-                        return props ? (
-                          <Chip
-                            size="small"
-                            color={props.color}
-                            icon={props.icon}
-                            label={item.miStatus}
-                            sx={{ alignSelf: 'flex-start' }}
-                          />
-                        ) : null;
+                        return (
+                          <Stack direction="row" spacing={1} flexWrap="wrap">
+                            {props && (
+                              <Chip
+                                size="small"
+                                color={props.color}
+                                icon={props.icon}
+                                label={item.miStatus}
+                                sx={{ alignSelf: 'flex-start' }}
+                              />
+                            )}
+                            {item.miCondition && (
+                              <Chip size="small" label={`Condición: ${item.miCondition}`} variant="outlined" />
+                            )}
+                          </Stack>
+                        );
                       })()}
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 'auto' }}>
                         <Button

@@ -55,6 +55,7 @@ export interface AssetDTO {
   model?: string | null;
   location?: string | null;
   qrToken?: string | null;
+  photoUrl?: string | null;
 }
 
 export interface PageResponse<T> {
@@ -67,6 +68,7 @@ export interface PageResponse<T> {
 export interface AssetCreate {
   cName: string;
   cCategory: string;
+  cPhotoUrl?: string | null;
 }
 
 export interface AssetUpdate {
@@ -75,6 +77,7 @@ export interface AssetUpdate {
   uStatus?: string;
   uLocationId?: string | null;
   uNotes?: string | null;
+  uPhotoUrl?: string | null;
 }
 
 export interface MarketplaceItemDTO {
@@ -86,6 +89,7 @@ export interface MarketplaceItemDTO {
   miModel?: string | null;
   miPhotoUrl?: string | null;
   miStatus?: string | null;
+  miCondition?: string | null;
   miPriceUsdCents: number;
   miPriceDisplay: string;
   miMarkupPct: number;
@@ -129,6 +133,7 @@ export interface MarketplaceOrderDTO {
   moTotalUsdCents: number;
   moTotalDisplay: string;
   moStatus: string;
+  moStatusHistory: [string, string][];
   moItems: MarketplaceOrderItemDTO[];
 }
 
