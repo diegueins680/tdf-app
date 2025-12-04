@@ -28,6 +28,13 @@ import { Marketplace } from '../api/marketplace';
 
 const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
 const CART_META_KEY = 'tdf-marketplace-cart-meta';
+const CART_EVENT = 'tdf-cart-updated';
+
+const fireCartMetaEvent = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(CART_EVENT));
+  }
+};
 
 export default function MarketplacePage() {
   const qc = useQueryClient();
@@ -41,14 +48,16 @@ export default function MarketplacePage() {
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
+  const isValidEmail = useMemo(() => /\S+@\S+\.\S+/.test(buyerEmail.trim()), [buyerEmail]);
+  const isValidName = useMemo(() => buyerName.trim().length > 1, [buyerName]);
 
   const listingsQuery = useQuery({
     queryKey: ['marketplace-listings'],
     queryFn: Marketplace.list,
   });
 
-  const cartQuery = useQuery({
-    queryKey: ['marketplace-cart', cartId],
+  const cartQuery = useQuery<MarketplaceCartDTO>({
+    queryKey: ['marketplace-cart', cartId ?? ''],
     enabled: Boolean(cartId),
     queryFn: async () => {
       if (!cartId) throw new Error('no-cart');
@@ -85,6 +94,7 @@ export default function MarketplacePage() {
       const count = data.mcItems.reduce((acc, it) => acc + it.mciQuantity, 0);
       localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: data.mcCartId, count }));
       setToast('Carrito actualizado');
+      fireCartMetaEvent();
     },
   });
 
@@ -104,6 +114,7 @@ export default function MarketplacePage() {
       void qc.invalidateQueries({ queryKey: ['marketplace-cart', cartId] });
       localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartId ?? '', count: 0 }));
       setToast('Pedido enviado');
+      fireCartMetaEvent();
     },
   });
 
@@ -315,6 +326,8 @@ export default function MarketplacePage() {
                       value={buyerName}
                       onChange={(e) => setBuyerName(e.target.value)}
                       fullWidth
+                      error={Boolean(buyerName) && !isValidName}
+                      helperText={Boolean(buyerName) && !isValidName ? 'Ingresa tu nombre' : undefined}
                     />
                     <TextField
                       label="Email"
@@ -322,6 +335,8 @@ export default function MarketplacePage() {
                       onChange={(e) => setBuyerEmail(e.target.value)}
                       type="email"
                       fullWidth
+                      error={Boolean(buyerEmail) && !isValidEmail}
+                      helperText={Boolean(buyerEmail) && !isValidEmail ? 'Correo no válido' : undefined}
                     />
                     <TextField
                       label="Teléfono (opcional)"
@@ -331,7 +346,7 @@ export default function MarketplacePage() {
                     />
                     <Button
                       variant="contained"
-                      disabled={!hasCartItems || checkoutMutation.isPending}
+                      disabled={!hasCartItems || checkoutMutation.isPending || !isValidName || !isValidEmail}
                       onClick={() => checkoutMutation.mutate()}
                     >
                       {checkoutMutation.isPending ? 'Enviando pedido…' : 'Confirmar pedido'}

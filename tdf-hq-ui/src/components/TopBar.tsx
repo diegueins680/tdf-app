@@ -13,6 +13,7 @@ interface TopBarProps {
 }
 
 const CART_META_KEY = 'tdf-marketplace-cart-meta';
+const CART_EVENT = 'tdf-cart-updated';
 
 const readCartMeta = () => {
   try {
@@ -42,7 +43,11 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
     setCartCount(readCartMeta().count);
     const handler = () => setCartCount(readCartMeta().count);
     window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
+    window.addEventListener(CART_EVENT, handler as EventListener);
+    return () => {
+      window.removeEventListener('storage', handler);
+      window.removeEventListener(CART_EVENT, handler as EventListener);
+    };
   }, []);
 
   const handleLogout = () => {
