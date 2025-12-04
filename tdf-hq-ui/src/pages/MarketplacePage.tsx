@@ -34,6 +34,7 @@ import { Marketplace } from '../api/marketplace';
 const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
 const CART_META_KEY = 'tdf-marketplace-cart-meta';
 const CART_EVENT = 'tdf-cart-updated';
+const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 
 const fireCartMetaEvent = () => {
   if (typeof window !== 'undefined') {
@@ -77,6 +78,20 @@ export default function MarketplacePage() {
       localStorage.setItem(CART_STORAGE_KEY, cartId);
     }
   }, [cartId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(BUYER_INFO_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      setBuyerName(parsed?.name ?? '');
+      setBuyerEmail(parsed?.email ?? '');
+      setBuyerPhone(parsed?.phone ?? '');
+    } catch {
+      // ignore malformed payloads
+    }
+  }, []);
 
   useEffect(() => {
     if (!cartQuery.data) return;
@@ -165,12 +180,23 @@ export default function MarketplacePage() {
   }, [filteredListings, sort]);
   const cart = cartQuery.data;
   const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
+  const cartItemCount = cartItems.reduce((acc, it) => acc + it.mciQuantity, 0);
 
   const cartSubtotal = cart?.mcSubtotalDisplay ?? 'USD $0.00';
   const resetFilters = () => {
     setSearch('');
     setCategory('all');
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone };
+      localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
+  }, [buyerName, buyerEmail, buyerPhone]);
 
   const handleAdd = (listing: MarketplaceItemDTO) => {
     const currentQty =
@@ -183,6 +209,16 @@ export default function MarketplacePage() {
   };
 
   const hasCartItems = cartItems.length > 0;
+  const clearCart = async () => {
+    if (!hasCartItems) return;
+    const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
+    setCartId(ensuredCart);
+    for (const item of cartItems) {
+      // eslint-disable-next-line no-await-in-loop
+      await upsertItemMutation.mutateAsync({ listingId: item.mciListingId, quantity: 0 });
+    }
+    setToast('Carrito vacío');
+  };
 
   const orderSummary = useMemo(() => {
     if (!lastOrder) return null;
@@ -339,7 +375,11 @@ export default function MarketplacePage() {
               <Card variant="outlined">
                 <CardHeader
                   title="Carrito"
-                  subheader={hasCartItems ? `${cartItems.length} productos` : 'Sin productos aún'}
+                  subheader={
+                    hasCartItems
+                      ? `${cartItems.length} productos · ${cartItemCount} en total`
+                      : 'Sin productos aún'
+                  }
                   action={<ShoppingCartIcon />}
                 />
                 <CardContent>
@@ -403,6 +443,18 @@ export default function MarketplacePage() {
                         {cartSubtotal}
                       </Typography>
                     </Stack>
+                    {hasCartItems && (
+                      <Button
+                        variant="text"
+                        color="inherit"
+                        size="small"
+                        onClick={() => clearCart()}
+                        disabled={upsertItemMutation.isPending}
+                        sx={{ alignSelf: 'flex-start' }}
+                      >
+                        Vaciar carrito
+                      </Button>
+                    )}
                   </Stack>
                 </CardContent>
               </Card>
