@@ -36,6 +36,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import InventoryIcon from '@mui/icons-material/Inventory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   MarketplaceCartDTO,
@@ -290,6 +291,15 @@ export default function MarketplacePage() {
     () => listings.filter((item) => compareIds.includes(item.miListingId)),
     [listings, compareIds],
   );
+
+  const getStatusChipProps = (status?: string | null) => {
+    if (!status) return null;
+    const lower = status.toLowerCase();
+    if (lower.includes('stock')) return { color: 'success' as const, icon: <CheckCircleIcon /> };
+    if (lower.includes('reserva') || lower.includes('reservado')) return { color: 'warning' as const, icon: <InventoryIcon /> };
+    if (lower.includes('mantenimiento')) return { color: 'warning' as const, icon: <WarningAmberIcon /> };
+    return { color: 'default' as const, icon: undefined };
+  };
   const formatLastSaved = () => {
     if (!savedCartMeta?.updatedAt) return null;
     const diffMs = Date.now() - savedCartMeta.updatedAt;
@@ -484,26 +494,52 @@ export default function MarketplacePage() {
                         {item.miModel && <Chip size="small" label={item.miModel} variant="outlined" />}
                         <Chip size="small" label={item.miCategory} color="default" variant="outlined" />
                       </Stack>
-                      {item.miPhotoUrl && (
-                        <Box
-                          component="img"
-                          src={item.miPhotoUrl}
-                          alt={item.miTitle}
-                          sx={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 1.5, border: '1px solid', borderColor: 'divider' }}
-                          loading="lazy"
-                        />
-                      )}
+                      <Box
+                        sx={{
+                          width: '100%',
+                          maxHeight: 140,
+                          borderRadius: 1.5,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          overflow: 'hidden',
+                          bgcolor: 'rgba(148,163,184,0.08)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {item.miPhotoUrl ? (
+                          <Box
+                            component="img"
+                            src={item.miPhotoUrl}
+                            alt={item.miTitle}
+                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <Stack spacing={0.5} alignItems="center" py={3}>
+                            <InventoryIcon sx={{ color: 'text.secondary' }} />
+                            <Typography variant="caption" color="text.secondary">
+                              Sin foto
+                            </Typography>
+                          </Stack>
+                        )}
+                      </Box>
                       <Typography variant="h5" fontWeight={800}>
                         {item.miPriceDisplay}
                       </Typography>
-                      {item.miStatus && (
-                        <Chip
-                          size="small"
-                          color={item.miStatus.toLowerCase().includes('stock') ? 'success' : 'warning'}
-                          icon={item.miStatus.toLowerCase().includes('stock') ? <CheckCircleIcon /> : <WarningAmberIcon />}
-                          label={item.miStatus}
-                        />
-                      )}
+                      {(() => {
+                        const props = getStatusChipProps(item.miStatus);
+                        return props ? (
+                          <Chip
+                            size="small"
+                            color={props.color}
+                            icon={props.icon}
+                            label={item.miStatus}
+                            sx={{ alignSelf: 'flex-start' }}
+                          />
+                        ) : null;
+                      })()}
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 'auto' }}>
                         <Button
                           variant="contained"
