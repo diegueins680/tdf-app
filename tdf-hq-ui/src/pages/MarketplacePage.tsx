@@ -94,6 +94,9 @@ export default function MarketplacePage() {
     },
   });
 
+  const cart = cartQuery.data;
+  const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
+
   useEffect(() => {
     if (cartId) {
       localStorage.setItem(CART_STORAGE_KEY, cartId);
@@ -210,8 +213,6 @@ export default function MarketplacePage() {
         return list;
     }
   }, [filteredListings, sort]);
-  const cart = cartQuery.data;
-  const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
   const cartItemCount = cartItems.reduce((acc, it) => acc + it.mciQuantity, 0);
 
   const cartSubtotal = cart?.mcSubtotalDisplay ?? 'USD $0.00';
