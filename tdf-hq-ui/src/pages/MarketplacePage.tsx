@@ -63,10 +63,6 @@ export default function MarketplacePage() {
       if (!cartId) throw new Error('no-cart');
       return Marketplace.getCart(cartId);
     },
-    onSuccess: (data) => {
-      const count = data.mcItems.reduce((acc, it) => acc + it.mciQuantity, 0);
-      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: data.mcCartId, count }));
-    },
   });
 
   useEffect(() => {
@@ -75,15 +71,24 @@ export default function MarketplacePage() {
     }
   }, [cartId]);
 
-  const createCartMutation = useMutation({
+  useEffect(() => {
+    if (!cartQuery.data) return;
+    const count = cartQuery.data.mcItems.reduce(
+      (acc: number, it: MarketplaceCartItemDTO) => acc + it.mciQuantity,
+      0,
+    );
+    localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartQuery.data.mcCartId, count }));
+  }, [cartQuery.data]);
+
+  const createCartMutation = useMutation<MarketplaceCartDTO, Error, void>({
     mutationFn: Marketplace.createCart,
     onSuccess: (data) => {
       setCartId(data.mcCartId);
     },
   });
 
-  const upsertItemMutation = useMutation({
-    mutationFn: async ({ listingId, quantity }: { listingId: string; quantity: number }) => {
+  const upsertItemMutation = useMutation<MarketplaceCartDTO, Error, { listingId: string; quantity: number }>({
+    mutationFn: async ({ listingId, quantity }) => {
       const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
       const nextId = cartId ?? ensuredCart;
       setCartId(nextId);
@@ -125,6 +130,7 @@ export default function MarketplacePage() {
     return haystack.includes(search.trim().toLowerCase());
   });
   const cart = cartQuery.data;
+  const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
 
   const cartSubtotal = cart?.mcSubtotalDisplay ?? 'USD $0.00';
 
@@ -138,7 +144,7 @@ export default function MarketplacePage() {
     upsertItemMutation.mutate({ listingId: item.mciListingId, quantity });
   };
 
-  const hasCartItems = (cart?.mcItems?.length ?? 0) > 0;
+  const hasCartItems = cartItems.length > 0;
 
   const orderSummary = useMemo(() => {
     if (!lastOrder) return null;
@@ -218,7 +224,7 @@ export default function MarketplacePage() {
                         <Chip label={item.miCategory} size="small" />
                       </Stack>
                       <Typography variant="body2" color="text.secondary">
-                        {item.miBrand || 'Sin marca'} {item.miModel || ''}
+                        {item.miBrand ?? 'Sin marca'} {item.miModel ?? ''}
                       </Typography>
                       <Typography variant="h5" fontWeight={800}>
                         {item.miPriceDisplay}
@@ -249,7 +255,7 @@ export default function MarketplacePage() {
               <Card variant="outlined">
                 <CardHeader
                   title="Carrito"
-                  subheader={hasCartItems ? `${cart?.mcItems.length} productos` : 'Sin productos aún'}
+                  subheader={hasCartItems ? `${cartItems.length} productos` : 'Sin productos aún'}
                   action={<ShoppingCartIcon />}
                 />
                 <CardContent>
@@ -264,7 +270,7 @@ export default function MarketplacePage() {
                     </Typography>
                   )}
                   <Stack spacing={1.5}>
-                    {cart?.mcItems.map((item) => (
+                    {cartItems.map((item) => (
                       <Box
                         key={item.mciListingId}
                         sx={{

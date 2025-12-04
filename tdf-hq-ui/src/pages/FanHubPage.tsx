@@ -75,8 +75,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     ),
     [session?.partyId, session?.roles],
   );
+  interface FanCmsPayload {
+    heroTitle?: string;
+    heroSubtitle?: string;
+  }
   const cmsQuery = useCmsContent('fan-hub', 'es');
-  const cmsPayload = useMemo<unknown>(() => cmsQuery.data?.ccdPayload ?? null, [cmsQuery.data]);
+  const cmsPayload = useMemo<FanCmsPayload>(() => {
+    const payload = cmsQuery.data?.ccdPayload as FanCmsPayload | undefined;
+    return payload ?? {};
+  }, [cmsQuery.data]);
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
 
   const artistsQuery = useQuery({
