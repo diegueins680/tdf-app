@@ -13,6 +13,7 @@ module TDF.Server where
 
 import           Control.Applicative ((<|>))
 import           Control.Exception (SomeException, try)
+import           Control.Concurrent (forkIO)
 import           Control.Monad (forM, forM_, void, when, unless, (>=>))
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
@@ -3208,6 +3209,16 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
                 }
             loadOrderDTO orderId
   maybe (throwError err404) pure mOrder
+  >>= \orderDto -> do
+    -- fire-and-forget email confirmation
+    let emailSvc = EmailSvc.mkEmailService envConfig
+        buyerNameTxt = T.strip mcrBuyerName
+        buyerEmailTxt = T.strip mcrBuyerEmail
+        itemsSummary = map (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi) (moItems orderDto)
+    liftIO $ void $ forkIO $ do
+      _ <- try $ EmailSvc.sendMarketplaceOrder emailSvc buyerNameTxt buyerEmailTxt (moOrderId orderDto) (moTotalDisplay orderDto) itemsSummary
+      pure ()
+    pure orderDto
 
 getOrder :: Text -> AppM MarketplaceOrderDTO
 getOrder rawId = do
