@@ -57,6 +57,26 @@ export interface AssetDTO {
   qrToken?: string | null;
 }
 
+export interface PageResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+export interface AssetCreate {
+  cName: string;
+  cCategory: string;
+}
+
+export interface AssetUpdate {
+  uName?: string;
+  uCategory?: string;
+  uStatus?: string;
+  uLocationId?: string | null;
+  uNotes?: string | null;
+}
+
 export interface MarketplaceItemDTO {
   miListingId: string;
   miAssetId: string;
@@ -108,6 +128,15 @@ export interface MarketplaceOrderDTO {
   moTotalDisplay: string;
   moStatus: string;
   moItems: MarketplaceOrderItemDTO[];
+}
+
+export interface LabelTrackDTO {
+  ltId: string;
+  ltTitle: string;
+  ltNote?: string | null;
+  ltStatus: string;
+  ltCreatedAt: string;
+  ltUpdatedAt: string;
 }
 
 export interface AssetCheckoutDTO {
@@ -217,6 +246,16 @@ export interface ArtistReleaseDTO {
   arCoverImageUrl?: string | null;
   arSpotifyUrl?: string | null;
   arYoutubeUrl?: string | null;
+}
+
+export interface ArtistReleaseUpsert {
+  aruArtistId: number;
+  aruTitle: string;
+  aruReleaseDate?: string | null;
+  aruDescription?: string | null;
+  aruCoverImageUrl?: string | null;
+  aruSpotifyUrl?: string | null;
+  aruYoutubeUrl?: string | null;
 }
 
 export interface FanProfileDTO {

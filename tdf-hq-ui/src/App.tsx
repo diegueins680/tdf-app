@@ -34,6 +34,7 @@ import ManualPage from './pages/ManualPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
 import LabelProjectsPage from './pages/LabelProjectsPage';
+import LabelReleasesPage from './pages/LabelReleasesPage';
 import ServiceTypesPage from './pages/ServiceTypesPage';
 import InventoryPage from './pages/InventoryPage';
 import InventoryScanPage from './pages/InventoryScanPage';
@@ -194,7 +195,7 @@ export default function App() {
         <Route path="/label" element={<Outlet />}>
           <Route path="artistas" element={<LabelArtistsPage />} />
           <Route path="proyectos" element={<LabelProjectsPage />} />
-          <Route path="releases" element={<BasicFeaturePage title="Label / Releases" storageKey="label-releases" />} />
+          <Route path="releases" element={<LabelReleasesPage />} />
           <Route path="tracks" element={<BasicFeaturePage title="Label / Tracks" storageKey="label-tracks" />} />
           <Route path="assets" element={<BasicFeaturePage title="Label / Assets" storageKey="label-assets" />} />
           <Route path="metadata" element={<BasicFeaturePage title="Label / Metadata" storageKey="label-metadata" />} />
