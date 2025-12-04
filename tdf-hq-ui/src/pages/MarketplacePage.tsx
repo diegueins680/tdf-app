@@ -29,6 +29,7 @@ const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
 
 export default function MarketplacePage() {
   const qc = useQueryClient();
+  const [search, setSearch] = useState('');
   const [cartId, setCartId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem(CART_STORAGE_KEY);
@@ -95,6 +96,11 @@ export default function MarketplacePage() {
   });
 
   const listings = listingsQuery.data ?? [];
+  const filteredListings = listings.filter((item) => {
+    if (!search.trim()) return true;
+    const haystack = `${item.miTitle} ${item.miBrand ?? ''} ${item.miModel ?? ''}`.toLowerCase();
+    return haystack.includes(search.trim().toLowerCase());
+  });
   const cart = cartQuery.data;
 
   const cartSubtotal = cart?.mcSubtotalDisplay ?? 'USD $0.00';
@@ -167,8 +173,18 @@ export default function MarketplacePage() {
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center" sx={{ mb: 1 }}>
+              <TextField
+                label="Buscar equipo"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                size="small"
+                fullWidth
+              />
+              <Chip label={`${filteredListings.length} resultados`} size="small" />
+            </Stack>
             <Grid container spacing={2}>
-              {listings.map((item) => (
+              {filteredListings.map((item) => (
                 <Grid item xs={12} sm={6} key={item.miListingId}>
                   <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, flexGrow: 1 }}>

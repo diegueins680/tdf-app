@@ -110,6 +110,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   });
   const [artistDraft, setArtistDraft] = useState<ArtistProfileUpsert>({
     apuArtistId: session?.partyId ?? 0,
+    apuDisplayName: '',
     apuSlug: '',
     apuBio: '',
     apuCity: '',
@@ -125,6 +126,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   });
   const [heroImageFileName, setHeroImageFileName] = useState<string>('');
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
+  const [expandedFeatured, setExpandedFeatured] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
     if (profileQuery.data) {
@@ -142,6 +144,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       const dto = artistProfileQuery.data;
       setArtistDraft({
         apuArtistId: session.partyId,
+        apuDisplayName: dto.apDisplayName ?? '',
         apuSlug: dto.apSlug ?? '',
         apuBio: dto.apBio ?? '',
         apuCity: dto.apCity ?? '',
@@ -298,6 +301,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     if (!session?.partyId) return;
     const payload: ArtistProfileUpsert = {
       apuArtistId: session.partyId,
+      apuDisplayName: normalizeField(artistDraft.apuDisplayName),
       apuSlug: normalizeField(artistDraft.apuSlug),
       apuBio: normalizeField(artistDraft.apuBio),
       apuCity: normalizeField(artistDraft.apuCity),
@@ -659,18 +663,24 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               <Stack spacing={2}>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                   <TextField
+                    label="Nombre artístico"
+                    value={artistDraft.apuDisplayName ?? ''}
+                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuDisplayName: event.target.value }))}
+                    fullWidth
+                  />
+                  <TextField
                     label="Slug público"
                     value={artistDraft.apuSlug ?? ''}
                     onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSlug: event.target.value }))}
                     fullWidth
                   />
-                  <TextField
-                    label="Ciudad"
-                    value={artistDraft.apuCity ?? ''}
-                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuCity: event.target.value }))}
-                    fullWidth
-                  />
                 </Stack>
+                <TextField
+                  label="Ciudad"
+                  value={artistDraft.apuCity ?? ''}
+                  onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuCity: event.target.value }))}
+                  fullWidth
+                />
                 <TextField
                   label="Bio"
                   multiline
@@ -847,6 +857,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   },
                 ]
               : [];
+            const isFeaturedOpen = expandedFeatured.has(artist.apArtistId);
             return (
               <Grid item xs={12} md={6} key={artist.apArtistId}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -932,13 +943,31 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             maxWidth: '100%',
                           }}
                         >
-                          <StreamingPlayer
-                            title={`${artist.apDisplayName} — Destacado`}
-                            artist={artist.apDisplayName}
-                            posterUrl={artist.apHeroImageUrl}
-                            sources={featuredSources}
-                            variant="compact"
-                          />
+                          <Stack spacing={1}>
+                            <Button
+                              size="small"
+                              variant={isFeaturedOpen ? 'outlined' : 'contained'}
+                              onClick={() =>
+                                setExpandedFeatured((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(artist.apArtistId)) next.delete(artist.apArtistId);
+                                  else next.add(artist.apArtistId);
+                                  return next;
+                                })
+                              }
+                            >
+                              {isFeaturedOpen ? 'Ocultar video' : 'Ver video destacado'}
+                            </Button>
+                            {isFeaturedOpen && (
+                              <StreamingPlayer
+                                title={`${artist.apDisplayName} — Destacado`}
+                                artist={artist.apDisplayName}
+                                posterUrl={artist.apHeroImageUrl}
+                                sources={featuredSources}
+                                variant="compact"
+                              />
+                            )}
+                          </Stack>
                         </Box>
                       )}
                     </Stack>
