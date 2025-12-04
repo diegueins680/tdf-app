@@ -30,6 +30,9 @@ export default function LabelTracksPage() {
   const [note, setNote] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'done'>('all');
   const [query, setQuery] = useState('');
+  const [timeFilter, setTimeFilter] = useState<'any' | 'today' | 'week'>('any');
+  const [quickEditId, setQuickEditId] = useState<string | null>(null);
+  const [quickEditValue, setQuickEditValue] = useState<string>('');
   const [editing, setEditing] = useState<LabelTrackDTO | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editNote, setEditNote] = useState('');
@@ -74,13 +77,29 @@ export default function LabelTracksPage() {
   const filteredTracks = useMemo(() => {
     const byStatus = statusFilter === 'all' ? tracks : tracks.filter((t) => t.ltStatus === statusFilter);
     const q = query.trim().toLowerCase();
-    if (!q) return byStatus;
-    return byStatus.filter(
+    const byTime = byStatus.filter((t) => {
+      if (timeFilter === 'any') return true;
+      const created = new Date(t.ltCreatedAt);
+      const now = new Date();
+      if (timeFilter === 'today') {
+        const isToday =
+          created.getFullYear() === now.getFullYear() &&
+          created.getMonth() === now.getMonth() &&
+          created.getDate() === now.getDate();
+        return isToday;
+      }
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      return created >= startOfWeek;
+    });
+    if (!q) return byTime;
+    return byTime.filter(
       (t) =>
         t.ltTitle.toLowerCase().includes(q) ||
         (t.ltNote ?? '').toLowerCase().includes(q),
     );
-  }, [tracks, statusFilter, query]);
+  }, [tracks, statusFilter, query, timeFilter]);
 
   const handleAdd = () => {
     if (!input.trim()) return;
@@ -180,6 +199,20 @@ export default function LabelTracksPage() {
             />
           ))}
         </Stack>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="body2" color="text.secondary">
+            Creación:
+          </Typography>
+          {(['any', 'today', 'week'] as const).map((key) => (
+            <Chip
+              key={key}
+              label={key === 'any' ? 'Todas' : key === 'today' ? 'Hoy' : 'Últimos 7 días'}
+              variant={timeFilter === key ? 'filled' : 'outlined'}
+              size="small"
+              onClick={() => setTimeFilter(key)}
+            />
+          ))}
+        </Stack>
         <TextField
           size="small"
           label="Buscar por título o nota"
@@ -192,6 +225,7 @@ export default function LabelTracksPage() {
       <Stack spacing={1.5}>
         {filteredTracks.map((track) => {
           const isDone = track.ltStatus === 'done';
+          const isQuickEditing = quickEditId === track.ltId;
           return (
             <Card key={track.ltId} variant="outlined">
               <CardContent>
@@ -212,6 +246,36 @@ export default function LabelTracksPage() {
                         {track.ltNote}
                       </Typography>
                     )}
+                    {isQuickEditing && (
+                      <Stack spacing={1} mt={1}>
+                        <TextField
+                          size="small"
+                          label="Editar nota rápido"
+                          value={quickEditValue}
+                          onChange={(e) => setQuickEditValue(e.target.value)}
+                          multiline
+                          minRows={2}
+                        />
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => {
+                              updateMutation.mutate({
+                                id: track.ltId,
+                                note: quickEditValue.trim(),
+                              });
+                              setQuickEditId(null);
+                            }}
+                          >
+                            Guardar nota
+                          </Button>
+                          <Button size="small" onClick={() => setQuickEditId(null)}>
+                            Cancelar
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    )}
                     <Stack direction="row" spacing={1} mt={1}>
                       <Chip
                         size="small"
@@ -223,9 +287,21 @@ export default function LabelTracksPage() {
                       </Typography>
                     </Stack>
                   </Box>
-                  <Button variant="text" size="small" onClick={() => openEdit(track)}>
-                    Editar
-                  </Button>
+                  <Stack direction="row" spacing={1}>
+                    <Button variant="text" size="small" onClick={() => openEdit(track)}>
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        setQuickEditId(track.ltId);
+                        setQuickEditValue(track.ltNote ?? '');
+                      }}
+                    >
+                      Editar nota rápido
+                    </Button>
+                  </Stack>
                   <IconButton size="small" onClick={() => deleteMutation.mutate(track.ltId)}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>

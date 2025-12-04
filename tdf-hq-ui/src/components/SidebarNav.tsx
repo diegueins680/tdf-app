@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography, TextField, InputAdornment } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -141,6 +141,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('');
   const [highlightIndex, setHighlightIndex] = useState<number>(-1);
+  const searchRef = useRef<HTMLInputElement | null>(null);
   const deriveModulesFromRoles = (roles: string[] | undefined): string[] => {
     if (!roles || roles.length === 0) return [];
     const lowerRoles = roles.map((r) => r.toLowerCase());
@@ -259,6 +260,21 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     setHighlightIndex(0);
   }, [filter, flatFilteredItems.length]);
 
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const activeTag = (event.target as HTMLElement | null)?.tagName?.toLowerCase();
+      if (activeTag === 'input' || activeTag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable) {
+        return;
+      }
+      if (event.key === '/' || (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey))) {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
@@ -300,6 +316,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         <TextField
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
+          inputRef={searchRef}
           onKeyDown={(event) => {
             if (flatFilteredItems.length === 0) return;
             if (event.key === 'ArrowDown') {

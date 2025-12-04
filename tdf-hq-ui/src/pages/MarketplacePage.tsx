@@ -59,6 +59,7 @@ export default function MarketplacePage() {
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
+  const [contactPref, setContactPref] = useState<'email' | 'phone'>('email');
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
   const isValidEmail = useMemo(() => /\S+@\S+\.\S+/.test(buyerEmail.trim()), [buyerEmail]);
   const isValidName = useMemo(() => buyerName.trim().length > 1, [buyerName]);
@@ -92,6 +93,7 @@ export default function MarketplacePage() {
       setBuyerName(parsed?.name ?? '');
       setBuyerEmail(parsed?.email ?? '');
       setBuyerPhone(parsed?.phone ?? '');
+      setContactPref(parsed?.pref ?? 'email');
     } catch {
       // ignore malformed payloads
     }
@@ -107,7 +109,10 @@ export default function MarketplacePage() {
       title: it.mciTitle,
       subtotal: it.mciSubtotalDisplay,
     }));
-    localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartQuery.data.mcCartId, count, preview }));
+    localStorage.setItem(
+      CART_META_KEY,
+      JSON.stringify({ cartId: cartQuery.data.mcCartId, count, preview, updatedAt: Date.now() }),
+    );
     fireCartMetaEvent();
   }, [cartQuery.data]);
 
@@ -132,7 +137,10 @@ export default function MarketplacePage() {
         title: it.mciTitle,
         subtotal: it.mciSubtotalDisplay,
       }));
-      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: data.mcCartId, count, preview }));
+      localStorage.setItem(
+        CART_META_KEY,
+        JSON.stringify({ cartId: data.mcCartId, count, preview, updatedAt: Date.now() }),
+      );
       setToast('Carrito actualizado');
       fireCartMetaEvent();
     },
@@ -152,8 +160,12 @@ export default function MarketplacePage() {
     onSuccess: (order) => {
       setLastOrder(order);
       void qc.invalidateQueries({ queryKey: ['marketplace-cart', cartId] });
-      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartId ?? '', count: 0, preview: [] }));
-      setToast('Pedido enviado');
+      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartId ?? '', count: 0, preview: [], updatedAt: Date.now() }));
+      setToast(
+        `Pedido enviado. Te contactaremos por ${
+          contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'
+        } en menos de 24 h.`,
+      );
       fireCartMetaEvent();
     },
   });
@@ -195,12 +207,12 @@ export default function MarketplacePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone };
+      const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref };
       localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
     } catch {
       // ignore storage errors
     }
-  }, [buyerName, buyerEmail, buyerPhone]);
+  }, [buyerName, buyerEmail, buyerPhone, contactPref]);
 
   const handleAdd = (listing: MarketplaceItemDTO) => {
     const currentQty =
@@ -226,6 +238,27 @@ export default function MarketplacePage() {
 
   const handleCheckout = () => {
     checkoutMutation.mutate();
+  };
+  const savedMeta = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem(CART_META_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed.updatedAt === 'number' ? parsed.updatedAt : null;
+    } catch {
+      return null;
+    }
+  }, [cartId, cartItems.length]);
+
+  const formatLastSaved = () => {
+    if (!savedMeta) return null;
+    const diffMs = Date.now() - savedMeta;
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 1) return 'Actualizado hace <1 min';
+    if (minutes < 60) return `Actualizado hace ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    return `Actualizado hace ${hours} h`;
   };
 
   const orderSummary = useMemo(() => {
@@ -494,6 +527,11 @@ export default function MarketplacePage() {
                         Vaciar carrito
                       </Button>
                     )}
+                    {formatLastSaved() && (
+                      <Typography variant="caption" color="text.secondary">
+                        {formatLastSaved()}
+                      </Typography>
+                    )}
                   </Stack>
                 </CardContent>
               </Card>
@@ -525,6 +563,30 @@ export default function MarketplacePage() {
                       onChange={(e) => setBuyerPhone(e.target.value)}
                       fullWidth
                     />
+                    <Stack spacing={0.5}>
+                      <Typography variant="caption" color="text.secondary">
+                        Preferencia de contacto
+                      </Typography>
+                      <Stack direction="row" spacing={1}>
+                        <Chip
+                          label="Email"
+                          color={contactPref === 'email' ? 'primary' : 'default'}
+                          size="small"
+                          variant={contactPref === 'email' ? 'filled' : 'outlined'}
+                          onClick={() => setContactPref('email')}
+                        />
+                        <Chip
+                          label="Teléfono / WhatsApp"
+                          color={contactPref === 'phone' ? 'primary' : 'default'}
+                          size="small"
+                          variant={contactPref === 'phone' ? 'filled' : 'outlined'}
+                          onClick={() => setContactPref('phone')}
+                        />
+                      </Stack>
+                      <Typography variant="caption" color="text.secondary">
+                        Te contactaremos por {contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'} en menos de 24 h para coordinar pago y entrega.
+                      </Typography>
+                    </Stack>
                     <Button
                       variant="contained"
                       disabled={
