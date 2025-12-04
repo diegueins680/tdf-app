@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography } from '@mui/material';
+import { Box, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography, TextField, InputAdornment } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 
@@ -135,6 +137,7 @@ interface SidebarNavProps {
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
   const { session } = useSession();
+  const [filter, setFilter] = useState('');
   const deriveModulesFromRoles = (roles: string[] | undefined): string[] => {
     if (!roles || roles.length === 0) return [];
     const lowerRoles = roles.map((r) => r.toLowerCase());
@@ -194,6 +197,21 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       return { ...group, items: filteredItems };
     }).filter((group) => group.items.length > 0);
   }, [modules]);
+
+  const filteredNavGroups = useMemo(() => {
+    const query = filter.trim().toLowerCase();
+    if (!query) return allowedNavGroups;
+    return allowedNavGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter(
+          (item) =>
+            item.label.toLowerCase().includes(query) ||
+            item.path.toLowerCase().includes(query),
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [allowedNavGroups, filter]);
 
   const ensureExpandedDefaults = (groups: NavGroup[]) => {
     const next = new Set<string>();
@@ -263,10 +281,42 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.6)', letterSpacing: 2 }}>
           MENÚ
         </Typography>
+        <TextField
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          size="small"
+          placeholder="Buscar sección"
+          fullWidth
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: 'rgba(248,250,252,0.55)' }} />
+              </InputAdornment>
+            ),
+            endAdornment: filter ? (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => setFilter('')} sx={{ color: 'rgba(248,250,252,0.7)' }}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
+            sx: {
+              '& input': { color: '#e2e8f0' },
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.08)' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.16)' },
+            },
+          }}
+        />
       </Stack>
       <List disablePadding sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
-        {allowedNavGroups.map((group) => {
-          const isExpanded = expandedGroups.has(group.title);
+        {filteredNavGroups.length === 0 && (
+          <Typography variant="body2" sx={{ px: 3, py: 1.5, color: 'rgba(248,250,252,0.6)' }}>
+            Sin coincidencias.
+          </Typography>
+        )}
+        {filteredNavGroups.map((group) => {
+          const isSearching = filter.trim().length > 0;
+          const isExpanded = isSearching || expandedGroups.has(group.title);
           return (
             <Box key={group.title} sx={{ px: 1 }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
