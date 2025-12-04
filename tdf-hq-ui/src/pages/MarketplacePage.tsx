@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -43,6 +43,7 @@ import type {
   MarketplaceCartItemDTO,
   MarketplaceItemDTO,
   MarketplaceOrderDTO,
+  DatafastCheckoutDTO,
 } from '../api/types';
 import { Marketplace } from '../api/marketplace';
 import { formatLastSavedTimestamp, getOrderStatusMeta } from '../utils/marketplace';
@@ -52,6 +53,7 @@ declare global {
     paypal?: {
       Buttons: (options: any) => { render: (selector: string | HTMLElement) => Promise<void>; close?: () => void };
     };
+    wpwlOptions?: Record<string, unknown>;
   }
 }
 const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
@@ -88,6 +90,10 @@ export default function MarketplacePage() {
   const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
   const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string } | null>(null);
   const [paypalError, setPaypalError] = useState<string | null>(null);
+  const datafastFormRef = useRef<HTMLDivElement>(null);
+  const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
+  const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
+  const [datafastError, setDatafastError] = useState<string | null>(null);
   const cartQuery = useQuery<MarketplaceCartDTO>({
     queryKey: ['marketplace-cart', cartId ?? ''],
     enabled: Boolean(cartId),
@@ -114,6 +120,12 @@ export default function MarketplacePage() {
       return null;
     }
   }, [cartId, cartItems.length]);
+  const datafastReturnUrl = useMemo(() => {
+    if (!datafastCheckout || typeof window === 'undefined') return '';
+    const url = new URL('/marketplace/pago-datafast', window.location.origin);
+    url.searchParams.set('orderId', datafastCheckout.dcOrderId);
+    return url.toString();
+  }, [datafastCheckout]);
   const isValidEmail = useMemo(() => /\S+@\S+\.\S+/.test(buyerEmail.trim()), [buyerEmail]);
   const isValidName = useMemo(() => buyerName.trim().length > 1, [buyerName]);
 
@@ -159,6 +171,22 @@ export default function MarketplacePage() {
       document.body.removeChild(script);
     };
   }, [paypalClientId]);
+
+  useEffect(() => {
+    if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
+    window.wpwlOptions = {
+      locale: 'es',
+      style: 'card',
+    };
+    const script = document.createElement('script');
+    script.src = datafastCheckout.dcWidgetUrl;
+    script.async = true;
+    script.onerror = () => setDatafastError('No se pudo cargar el formulario de pago.');
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, [datafastCheckout, datafastDialogOpen]);
 
   useEffect(() => {
     if (!cartQuery.data) return;
@@ -229,6 +257,24 @@ export default function MarketplacePage() {
       );
       fireCartMetaEvent();
     },
+  });
+
+  const datafastCheckoutMutation = useMutation<DatafastCheckoutDTO, Error, void>({
+    mutationFn: async () => {
+      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
+      setCartId(ensuredCart);
+      return Marketplace.datafastCheckout(ensuredCart, {
+        mcrBuyerName: buyerName,
+        mcrBuyerEmail: buyerEmail,
+        mcrBuyerPhone: buyerPhone || undefined,
+      });
+    },
+    onSuccess: (dto) => {
+      setDatafastCheckout(dto);
+      setDatafastDialogOpen(true);
+      setDatafastError(null);
+    },
+    onError: () => setDatafastError('No pudimos iniciar el pago con tarjeta. Revisa tus datos.'),
   });
 
   const createPaypalOrderMutation = useMutation({
@@ -367,6 +413,15 @@ export default function MarketplacePage() {
     checkoutMutation.mutate();
   };
 
+  const handleDatafastCheckout = () => {
+    setDatafastError(null);
+    if (!hasCartItems || !isValidName || !isValidEmail || cartItemCount === 0) {
+      setDatafastError('Completa tu nombre y correo para pagar con tarjeta.');
+      return;
+    }
+    datafastCheckoutMutation.mutate();
+  };
+
   const handlePaypalCheckout = () => {
     setPaypalError(null);
     if (!hasCartItems || !isValidName || !isValidEmail) {
@@ -415,6 +470,7 @@ export default function MarketplacePage() {
     const orderText = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summaryLines}`;
     const statusMeta = getOrderStatusMeta(lastOrder.moStatus);
     const history = lastOrder.moStatusHistory ?? [];
+    const lastUpdatedAt = lastOrder.moUpdatedAt ?? (history.length > 0 ? history[history.length - 1][1] : null);
     return (
       <Card variant="outlined">
         <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
@@ -896,6 +952,20 @@ export default function MarketplacePage() {
                       </Button>
                       <Button
                         variant="contained"
+                        color="primary"
+                        disabled={
+                          !hasCartItems ||
+                          !isValidName ||
+                          !isValidEmail ||
+                          cartItemCount === 0 ||
+                          datafastCheckoutMutation.isPending
+                        }
+                        onClick={handleDatafastCheckout}
+                      >
+                        {datafastCheckoutMutation.isPending ? 'Abriendo pago…' : 'Pagar con tarjeta'}
+                      </Button>
+                      <Button
+                        variant="contained"
                         color="secondary"
                         disabled={
                           !paypalClientId ||
@@ -923,6 +993,11 @@ export default function MarketplacePage() {
                     </Stack>
                     {checkoutMutation.isError && (
                       <Alert severity="error">No pudimos crear el pedido. Revisa tus datos.</Alert>
+                    )}
+                    {datafastError && (
+                      <Alert severity="warning" onClose={() => setDatafastError(null)}>
+                        {datafastError}
+                      </Alert>
                     )}
                     {paypalError && (
                       <Alert severity="warning" onClose={() => setPaypalError(null)}>
@@ -957,6 +1032,52 @@ export default function MarketplacePage() {
           {copyToast}
         </Alert>
       </Snackbar>
+      <Dialog
+        open={datafastDialogOpen}
+        onClose={() => {
+          setDatafastDialogOpen(false);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Pagar con tarjeta</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1}>
+            <Typography variant="body2" color="text.secondary">
+              Paga con tarjeta de crédito o débito. Al finalizar serás redirigido para confirmar tu pedido.
+            </Typography>
+            {datafastError && (
+              <Alert severity="warning" onClose={() => setDatafastError(null)}>
+                {datafastError}
+              </Alert>
+            )}
+            {datafastCheckout && datafastReturnUrl && (
+              <Box ref={datafastFormRef}>
+                <form
+                  action={datafastReturnUrl}
+                  className="paymentWidgets"
+                  data-brands="VISA MASTER DINERS AMEX DISCOVER"
+                ></form>
+              </Box>
+            )}
+            {datafastCheckout && (
+              <Alert severity="info" variant="outlined">
+                Total: {datafastCheckout.dcAmount}
+              </Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setDatafastDialogOpen(false);
+            }}
+            color="inherit"
+          >
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog
         open={paypalDialogOpen}
         onClose={() => {
