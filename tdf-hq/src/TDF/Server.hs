@@ -3116,6 +3116,7 @@ toMarketplaceDTO (lid, listing, Just asset) =
     , miModel          = ME.assetModel asset
     , miPhotoUrl       = ME.assetPhotoUrl asset
     , miStatus         = Just (assetStatusLabel (ME.assetStatus asset))
+    , miCondition      = Just (assetConditionLabel (ME.assetCondition asset))
     , miPriceUsdCents  = ME.marketplaceListingPriceUsdCents listing
     , miPriceDisplay   = formatUsd (ME.marketplaceListingPriceUsdCents listing) (ME.marketplaceListingCurrency listing)
     , miMarkupPct      = ME.marketplaceListingMarkupPct listing
@@ -3214,7 +3215,8 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
   maybe (throwError err404) pure mOrder
   >>= \orderDto -> do
     -- fire-and-forget email confirmation
-    let emailSvc = EmailSvc.mkEmailService envConfig
+    let cfg = envConfig
+        emailSvc = EmailSvc.mkEmailService cfg
         buyerNameTxt = T.strip mcrBuyerName
         buyerEmailTxt = T.strip mcrBuyerEmail
         itemsSummary = map (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi) (moItems orderDto)
@@ -3349,6 +3351,14 @@ assetStatusLabel st =
     ME.Booked            -> "Reservado"
     ME.OutForMaintenance -> "Mantenimiento"
     ME.Retired           -> "No disponible"
+
+assetConditionLabel :: ME.AssetCondition -> Text
+assetConditionLabel cond =
+  case cond of
+    ME.NewC -> "Nuevo"
+    ME.Good -> "Bueno"
+    ME.Fair -> "Regular"
+    ME.Poor -> "Usado"
 
 listLabelTracks :: AppM [LabelTrackDTO]
 listLabelTracks = do
