@@ -18,6 +18,7 @@ import qualified Data.Set                  as Set
 import           Data.List                 (foldl')
 import           Data.Maybe                (listToMaybe)
 import           Data.Text                 (Text)
+import qualified Data.Text                 as T
 import           Data.Time                 (UTCTime, getCurrentTime)
 import           Database.Persist
 import           Database.Persist.Sql      (SqlPersistT, fromSqlKey)
@@ -35,6 +36,14 @@ upsertArtistProfileRecord
   -> UTCTime
   -> SqlPersistT m ArtistProfileDTO
 upsertArtistProfileRecord artistKey ArtistProfileUpsert{..} now = do
+  let trimmedDisplay = fmap T.strip apuDisplayName
+      displayUpdate =
+        case trimmedDisplay of
+          Just name | not (T.null name) -> Just (M.PartyDisplayName =. name)
+          _                             -> Nothing
+  case displayUpdate of
+    Just upd -> update artistKey [upd]
+    Nothing  -> pure ()
   _ <- upsert
     ArtistProfile
       { artistProfileArtistPartyId    = artistKey

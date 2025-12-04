@@ -286,6 +286,7 @@ export interface FanFollowDTO {
 
 export interface ArtistProfileUpsert {
   apuArtistId: number;
+  apuDisplayName?: string | null;
   apuSlug?: string | null;
   apuBio?: string | null;
   apuCity?: string | null;

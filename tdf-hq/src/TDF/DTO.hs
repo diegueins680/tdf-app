@@ -60,6 +60,7 @@ instance ToJSON ArtistProfileDTO
 
 data ArtistProfileUpsert = ArtistProfileUpsert
   { apuArtistId        :: Int64
+  , apuDisplayName     :: Maybe Text
   , apuSlug            :: Maybe Text
   , apuBio             :: Maybe Text
   , apuCity            :: Maybe Text

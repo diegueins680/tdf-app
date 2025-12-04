@@ -76,7 +76,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     [session?.partyId, session?.roles],
   );
   const cmsQuery = useCmsContent('fan-hub', 'es');
-  const cmsPayload = useMemo(() => (cmsQuery.data?.ccdPayload as any) ?? null, [cmsQuery.data]);
+  const cmsPayload = useMemo<unknown>(() => cmsQuery.data?.ccdPayload ?? null, [cmsQuery.data]);
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
 
   const artistsQuery = useQuery({
@@ -203,7 +203,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     },
   });
 
-  const follows = followsQuery.data ?? [];
+  const follows = useMemo(() => followsQuery.data ?? [], [followsQuery.data]);
   const followedArtistIds = useMemo(
     () => follows.map((follow) => follow.ffArtistId).sort((a, b) => a - b),
     [follows],
@@ -318,7 +318,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     updateArtistProfileMutation.mutate(payload);
   };
 
-  const artists = artistsQuery.data ?? [];
+  const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
   const suggestedArtists = useMemo(() => {
     if (!artists.length) return [];
     const followed = new Set(follows.map((f) => f.ffArtistId));
