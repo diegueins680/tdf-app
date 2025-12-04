@@ -998,7 +998,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           {!isFeaturedOpen && hasPreview && (
                             <Box
                               component="img"
-                              src={artist.apHeroImageUrl}
+                              src={artist.apHeroImageUrl ?? undefined}
                               alt={`${artist.apDisplayName} preview`}
                               sx={{
                                 width: '100%',
