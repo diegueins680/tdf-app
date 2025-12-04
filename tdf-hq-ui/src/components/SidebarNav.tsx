@@ -17,10 +17,10 @@ export interface NavGroup {
 }
 
 export const NAV_GROUPS: NavGroup[] = [
-  { title: 'INICIO', items: [{ label: 'Inicio', path: '/inicio' }] },
   {
-    title: 'MARKETPLACE',
+    title: 'PÚBLICO',
     items: [
+      { label: 'Inicio', path: '/inicio' },
       { label: 'Marketplace', path: '/marketplace' },
       { label: 'Fan Hub', path: '/fans' },
       { label: 'Records', path: '/records' },
@@ -62,17 +62,6 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'OPERACIÓN',
-    items: [
-      { label: 'Inventario', path: '/operacion/inventario' },
-      { label: 'Calendario domo', path: '/operacion/calendario-domo' },
-      { label: 'Reservas equipo', path: '/operacion/reservas-equipo' },
-      { label: 'Mantenimiento', path: '/operacion/mantenimiento' },
-      { label: 'Paquetes', path: '/operacion/paquetes' },
-      { label: 'Paquetes / Resumen', path: '/operacion/paquetes/resumen' },
-    ],
-  },
-  {
     title: 'LABEL',
     items: [
       { label: 'Artistas', path: '/label/artistas' },
@@ -87,14 +76,14 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'FINANZAS',
+    title: 'OPERACIÓN',
     items: [
-      { label: 'Cotizaciones', path: '/finanzas/cotizaciones' },
-      { label: 'Facturas', path: '/finanzas/facturas' },
-      { label: 'Cobros', path: '/finanzas/cobros' },
-      { label: 'Pagos', path: '/finanzas/pagos' },
-      { label: 'Recibos', path: '/finanzas/recibos' },
-      { label: 'Regalías', path: '/finanzas/regalias' },
+      { label: 'Inventario', path: '/operacion/inventario' },
+      { label: 'Calendario domo', path: '/operacion/calendario-domo' },
+      { label: 'Reservas equipo', path: '/operacion/reservas-equipo' },
+      { label: 'Mantenimiento', path: '/operacion/mantenimiento' },
+      { label: 'Paquetes', path: '/operacion/paquetes' },
+      { label: 'Paquetes / Resumen', path: '/operacion/paquetes/resumen' },
     ],
   },
   {
@@ -113,6 +102,17 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Calendario Google', path: '/configuracion/integraciones/calendario' },
       { label: 'CMS', path: '/configuracion/cms' },
       { label: 'Preferencias', path: '/configuracion/preferencias' },
+    ],
+  },
+  {
+    title: 'FINANZAS',
+    items: [
+      { label: 'Cotizaciones', path: '/finanzas/cotizaciones' },
+      { label: 'Facturas', path: '/finanzas/facturas' },
+      { label: 'Cobros', path: '/finanzas/cobros' },
+      { label: 'Pagos', path: '/finanzas/pagos' },
+      { label: 'Recibos', path: '/finanzas/recibos' },
+      { label: 'Regalías', path: '/finanzas/regalias' },
     ],
   },
   {
