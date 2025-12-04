@@ -13,6 +13,7 @@ import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as TE
 import           Data.Time              (NominalDiffTime, UTCTime(..), addUTCTime, fromGregorian, getCurrentTime,
                                          secondsToDiffTime)
+import qualified Data.Map.Strict       as Map
 import           TDF.Models
 import           TDF.ModelsExtra        (DropdownOption(..))
 import qualified TDF.ModelsExtra       as ME
@@ -190,6 +191,7 @@ seedAll = do
   mapM_ (ensureDropdownOption now) dropdowns
 
   seedInventoryAssets
+  seedMarketplaceListings
   seedHolgerSession now
   seedAcademy now
 
@@ -663,6 +665,42 @@ ensureInventoryAsset (nameTxt, brandTxt, modelTxt, categoryTxt) = do
         }
       pure ()
 
+seedMarketplaceListings :: SqlPersistT IO ()
+seedMarketplaceListings = do
+  now <- liftIO getCurrentTime
+  assets <- selectList [] [Asc ME.AssetName]
+  forM_ assets $ \(Entity assetId asset) -> do
+    case Map.lookup (ME.assetName asset) marketplacePriceCents of
+      Nothing -> pure () -- inventory entry has no researched price; skip
+      Just baseCents -> do
+        let listingPrice = applyMarketplaceMarkup baseCents
+            titleTxt = ME.assetName asset
+        existing <- getBy (ME.UniqueMarketplaceAsset assetId)
+        case existing of
+          Just (Entity listingId listing) -> do
+            let updates = catMaybes
+                  [ if ME.marketplaceListingPriceUsdCents listing == listingPrice
+                      then Nothing else Just (ME.MarketplaceListingPriceUsdCents =. listingPrice)
+                  , if ME.marketplaceListingTitle listing == titleTxt
+                      then Nothing else Just (ME.MarketplaceListingTitle =. titleTxt)
+                  , if ME.marketplaceListingActive listing
+                      then Nothing else Just (ME.MarketplaceListingActive =. True)
+                  , Just (ME.MarketplaceListingUpdatedAt =. now)
+                  ]
+            unless (null updates) (update listingId updates)
+          Nothing -> do
+            void $ insert ME.MarketplaceListing
+              { ME.marketplaceListingAssetId       = assetId
+              , ME.marketplaceListingTitle         = titleTxt
+              , ME.marketplaceListingPriceUsdCents = listingPrice
+              , ME.marketplaceListingMarkupPct     = 25
+              , ME.marketplaceListingCurrency      = "USD"
+              , ME.marketplaceListingActive        = True
+              , ME.marketplaceListingCreatedAt     = now
+              , ME.marketplaceListingUpdatedAt     = now
+              }
+        pure ()
+
 inventorySeeds :: [(Text, Maybe Text, Maybe Text, Text)]
 inventorySeeds =
   [ ("AKG D112", Just "AKG", Just "D112", "mic")
@@ -689,6 +727,37 @@ inventorySeeds =
   , ("PSM-900", Just "Shure", Just "PSM-900", "iem")
   , ("Shure SM58", Just "Shure", Just "SM58", "mic")
   ]
+
+-- Approximate 2025 USD street prices (before markup). Each listing is published at +25%.
+marketplacePriceCents :: Map.Map Text Int
+marketplacePriceCents = Map.fromList
+  [ ("AKG D112", 19900)
+  , ("Shure SM57", 9900)
+  , ("Sennheiser MD421", 37900)
+  , ("AKG C414", 109900)
+  , ("Electro-Voice RE20", 44900)
+  , ("Neumann KM184", 84900)
+  , ("Royer R121", 139500)
+  , ("Sennheiser e906", 18900)
+  , ("Sennheiser e835", 9900)
+  , ("Sennheiser MKE600", 32900)
+  , ("Neumann KU-100", 899900)
+  , ("Neve RNDI", 26900)
+  , ("Aguilar ToneHammer", 29900)
+  , ("Avalon 737sp", 299500)
+  , ("UA 2-610", 299900)
+  , ("API 512v", 119500)
+  , ("Chandler Limited REDD.47", 299500)
+  , ("Burl BAD8", 359900)
+  , ("Burl B4", 249900)
+  , ("RedNet MP8R", 449900)
+  , ("Red 8Pre", 299900)
+  , ("PSM-900", 99900)
+  , ("Shure SM58", 9900)
+  ]
+
+applyMarketplaceMarkup :: Int -> Int
+applyMarketplaceMarkup baseCents = (baseCents * 125) `div` 100
 
 seedHolgerSession :: UTCTime -> SqlPersistT IO ()
 seedHolgerSession now = do

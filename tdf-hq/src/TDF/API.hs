@@ -36,6 +36,7 @@ import           TDF.Routes.Courses (CoursesPublicAPI, WhatsAppWebhookAPI)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 import           TDF.API.Feedback    (FeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
+import           TDF.API.Marketplace (MarketplaceAPI)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -197,6 +198,7 @@ type API =
   :<|> "input-list" :> InputListAPI
   :<|> AdsPublicAPI
   :<|> CmsPublicAPI
+  :<|> "marketplace" :> MarketplaceAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
 data HealthStatus = HealthStatus { status :: String, db :: String }

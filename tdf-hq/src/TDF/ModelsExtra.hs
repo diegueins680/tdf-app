@@ -402,6 +402,19 @@ StockMovement
     notes         Text Maybe
     deriving Show Generic
 
+MarketplaceListing
+    Id             UUID default=gen_random_uuid()
+    assetId        AssetId
+    title          Text
+    priceUsdCents  Int
+    markupPct      Int default=25
+    currency       Text default="USD"
+    active         Bool default=True
+    createdAt      UTCTime default=now()
+    updatedAt      UTCTime default=now()
+    UniqueMarketplaceAsset assetId
+    deriving Show Generic
+
 |]
 
 instance ToJSON (Entity Asset) where

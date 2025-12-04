@@ -52,8 +52,9 @@ import           Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawS
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
-import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..))
+import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..))
 import qualified TDF.API      as Api
+import           TDF.API.Marketplace (MarketplaceAPI)
 import           TDF.Config (AppConfig(..))
 import           TDF.DB
 import           TDF.Models
@@ -192,6 +193,7 @@ server =
   :<|> inputListServer
   :<|> adsInquiryPublic
   :<|> cmsPublicServer
+  :<|> marketplacePublicServer
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -3048,6 +3050,57 @@ cmsPublicServer = cmsGet :<|> cmsList
             Nothing -> entries
             Just prefix -> filter (\(Entity _ c) -> prefix `T.isPrefixOf` CMS.cmsContentSlug c) entries
       pure (map toCmsDTO filtered)
+
+marketplacePublicServer :: ServerT MarketplaceAPI AppM
+marketplacePublicServer = listMarketplace :<|> getMarketplaceItem
+
+listMarketplace :: AppM [MarketplaceItemDTO]
+listMarketplace = do
+  Env{..} <- ask
+  rows <- liftIO $ flip runSqlPool envPool $ do
+    listings <- selectList [ME.MarketplaceListingActive ==. True] [Asc ME.MarketplaceListingTitle]
+    forM listings $ \(Entity lid listing) -> do
+      mAsset <- get (ME.marketplaceListingAssetId listing)
+      pure (lid, listing, mAsset)
+  pure (mapMaybe toMarketplaceDTO rows)
+
+getMarketplaceItem :: Text -> AppM MarketplaceItemDTO
+getMarketplaceItem rawId = do
+  listingKey <- case fromPathPiece rawId of
+    Nothing -> throwBadRequest "Invalid listing id"
+    Just k  -> pure k
+  Env{..} <- ask
+  mDto <- liftIO $ flip runSqlPool envPool $ do
+    mListing <- get listingKey
+    case mListing of
+      Nothing -> pure Nothing
+      Just listing -> do
+        mAsset <- get (ME.marketplaceListingAssetId listing)
+        pure (toMarketplaceDTO (listingKey, listing, mAsset))
+  maybe (throwError err404) pure mDto
+
+toMarketplaceDTO
+  :: (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
+  -> Maybe MarketplaceItemDTO
+toMarketplaceDTO (_, _, Nothing) = Nothing
+toMarketplaceDTO (lid, listing, Just asset) =
+  Just MarketplaceItemDTO
+    { miListingId      = toPathPiece lid
+    , miAssetId        = toPathPiece (ME.marketplaceListingAssetId listing)
+    , miTitle          = ME.marketplaceListingTitle listing
+    , miCategory       = ME.assetCategory asset
+    , miBrand          = ME.assetBrand asset
+    , miModel          = ME.assetModel asset
+    , miPriceUsdCents  = ME.marketplaceListingPriceUsdCents listing
+    , miPriceDisplay   = formatUsd (ME.marketplaceListingPriceUsdCents listing) (ME.marketplaceListingCurrency listing)
+    , miMarkupPct      = ME.marketplaceListingMarkupPct listing
+    , miCurrency       = ME.marketplaceListingCurrency listing
+    }
+
+formatUsd :: Int -> Text -> Text
+formatUsd cents currency =
+  let amount = (fromIntegral cents :: Double) / 100
+  in T.pack (printf "%s $%.2f" (T.unpack (T.toUpper currency)) amount)
 
 cmsAdminServer :: AuthedUser -> ServerT CmsAdminAPI AppM
 cmsAdminServer user =

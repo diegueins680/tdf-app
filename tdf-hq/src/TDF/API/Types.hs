@@ -169,6 +169,22 @@ data AssetDTO = AssetDTO
 instance ToJSON AssetDTO
 instance FromJSON AssetDTO
 
+data MarketplaceItemDTO = MarketplaceItemDTO
+  { miListingId      :: Text
+  , miAssetId        :: Text
+  , miTitle          :: Text
+  , miCategory       :: Text
+  , miBrand          :: Maybe Text
+  , miModel          :: Maybe Text
+  , miPriceUsdCents  :: Int
+  , miPriceDisplay   :: Text
+  , miMarkupPct      :: Int
+  , miCurrency       :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceItemDTO
+instance FromJSON MarketplaceItemDTO
+
 data AssetCreate = AssetCreate
   { cName     :: Text
   , cCategory :: Text
