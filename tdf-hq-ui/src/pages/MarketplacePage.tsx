@@ -11,6 +11,7 @@ import {
   FormControl,
   Grid,
   IconButton,
+  ButtonGroup,
   InputLabel,
   MenuItem,
   Select,
@@ -22,6 +23,8 @@ import {
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   MarketplaceCartDTO,
@@ -440,6 +443,14 @@ export default function MarketplacePage() {
                           </IconButton>
                         </Stack>
                         <Stack direction="row" spacing={1} alignItems="center" mt={1}>
+                          <IconButton
+                            aria-label="Disminuir cantidad"
+                            size="small"
+                            onClick={() => handleUpdateQty(item, Math.max(0, item.mciQuantity - 1))}
+                            disabled={upsertItemMutation.isPending}
+                          >
+                            <RemoveIcon fontSize="small" />
+                          </IconButton>
                           <TextField
                             type="number"
                             size="small"
@@ -449,8 +460,16 @@ export default function MarketplacePage() {
                               handleUpdateQty(item, Math.max(0, parseInt(e.target.value || '0', 10)))
                             }
                             inputProps={{ min: 0, max: 99 }}
-                            sx={{ width: 110 }}
+                            sx={{ width: 120 }}
                           />
+                          <IconButton
+                            aria-label="Incrementar cantidad"
+                            size="small"
+                            onClick={() => handleUpdateQty(item, Math.min(99, item.mciQuantity + 1))}
+                            disabled={upsertItemMutation.isPending}
+                          >
+                            <AddIcon fontSize="small" />
+                          </IconButton>
                           <Typography variant="body2" fontWeight={700} sx={{ ml: 'auto' }}>
                             {item.mciSubtotalDisplay}
                           </Typography>
