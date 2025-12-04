@@ -10,6 +10,12 @@ export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
   if (norm.includes('paid') || norm.includes('paypal')) {
     return { label: 'Pagado', color: 'success', desc: 'Pago recibido vía PayPal.' };
   }
+  if (norm.includes('datafast')) {
+    if (norm.includes('fail')) {
+      return { label: 'Pago rechazado', color: 'default', desc: 'El pago con tarjeta fue rechazado.' };
+    }
+    return { label: 'Pago en curso', color: 'warning', desc: 'Esperando confirmación del pago con tarjeta.' };
+  }
   if (norm.includes('pending')) {
     return { label: 'Pendiente', color: 'warning', desc: 'Recibido, a la espera de confirmación.' };
   }

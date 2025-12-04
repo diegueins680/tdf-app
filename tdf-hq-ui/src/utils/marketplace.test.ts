@@ -16,6 +16,11 @@ describe('getOrderStatusMeta', () => {
     expect(getOrderStatusMeta('cancelled').color).toBe('default');
     expect(getOrderStatusMeta('delivered').color).toBe('success');
   });
+
+  it('handles datafast statuses', () => {
+    expect(getOrderStatusMeta('datafast_pending').color).toBe('warning');
+    expect(getOrderStatusMeta('datafast_failed').label.toLowerCase()).toContain('rechazado');
+  });
 });
 
 describe('formatLastSavedTimestamp', () => {

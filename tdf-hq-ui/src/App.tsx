@@ -49,6 +49,7 @@ import SecurityPage from './pages/SecurityPage';
 import MarketplacePage from './pages/MarketplacePage';
 import GoogleDriveCallbackPage from './pages/GoogleDriveCallbackPage';
 import MarketplaceOrdersPage from './pages/MarketplaceOrdersPage';
+import DatafastReturnPage from './pages/DatafastReturnPage';
 
 function Shell() {
   const { session } = useSession();
@@ -147,6 +148,7 @@ export default function App() {
       <Route path="/fans" element={<FanHubPage />} />
       <Route path="/mi-artista" element={<FanHubPage focusArtist />} />
       <Route path="/marketplace" element={<MarketplacePage />} />
+      <Route path="/marketplace/pago-datafast" element={<DatafastReturnPage />} />
       <Route path="/oauth/google-drive/callback" element={<GoogleDriveCallbackPage />} />
       <Route path="/curso/produccion-musical-dic-2025" element={<CourseProductionLandingPage />} />
       <Route path="/inscripcion/:slug" element={<InscripcionPage />} />

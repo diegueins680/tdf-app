@@ -154,6 +154,14 @@ export interface MarketplaceOrderUpdatePayload {
   mouPaidAt?: string | null;
 }
 
+export interface DatafastCheckoutDTO {
+  dcOrderId: string;
+  dcCheckoutId: string;
+  dcWidgetUrl: string;
+  dcAmount: string;
+  dcCurrency: string;
+}
+
 export interface PaypalCreateDTO {
   pcOrderId: string;
   pcPaypalOrderId: string;

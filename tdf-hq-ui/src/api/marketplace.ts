@@ -7,6 +7,7 @@ import type {
   PaypalCreateDTO,
   PaypalCaptureRequest,
   MarketplaceOrderUpdatePayload,
+  DatafastCheckoutDTO,
 } from './types';
 
 export interface CartItemUpdate {
@@ -29,6 +30,14 @@ export const Marketplace = {
     post<MarketplaceCartDTO>(`/marketplace/cart/${cartId}/items`, payload),
   checkout: (cartId: string, payload: CheckoutRequest) =>
     post<MarketplaceOrderDTO>(`/marketplace/cart/${cartId}/checkout`, payload),
+  datafastCheckout: (cartId: string, payload: CheckoutRequest) =>
+    post<DatafastCheckoutDTO>(`/marketplace/cart/${cartId}/datafast/checkout`, payload),
+  confirmDatafastPayment: (orderId: string, resourcePath: string) => {
+    const qs = new URLSearchParams();
+    qs.set('orderId', orderId);
+    qs.set('resourcePath', resourcePath);
+    return get<MarketplaceOrderDTO>(`/marketplace/datafast/status?${qs.toString()}`);
+  },
   createPaypalOrder: (cartId: string, payload: CheckoutRequest) =>
     post<PaypalCreateDTO>(`/marketplace/cart/${cartId}/paypal/create`, payload),
   capturePaypalOrder: (payload: PaypalCaptureRequest) =>
