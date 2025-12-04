@@ -44,6 +44,7 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   assets: 'Assets',
   operacion: 'Operación',
   inventario: 'Inventario',
+  'ordenes-marketplace': 'Órdenes marketplace',
   'calendario-domo': 'Calendario domo',
   'reservas-equipo': 'Reservas equipo',
   mantenimiento: 'Mantenimiento',

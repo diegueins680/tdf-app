@@ -48,6 +48,7 @@ import CalendarSyncPage from './pages/CalendarSyncPage';
 import SecurityPage from './pages/SecurityPage';
 import MarketplacePage from './pages/MarketplacePage';
 import GoogleDriveCallbackPage from './pages/GoogleDriveCallbackPage';
+import MarketplaceOrdersPage from './pages/MarketplaceOrdersPage';
 
 function Shell() {
   const { session } = useSession();
@@ -251,6 +252,7 @@ export default function App() {
 
         <Route path="/operacion" element={<Outlet />}>
           <Route path="inventario" element={<InventoryPage />} />
+          <Route path="ordenes-marketplace" element={<MarketplaceOrdersPage />} />
           <Route path="calendario-domo" element={<BasicFeaturePage title="Operación / Calendario del domo" storageKey="operacion-calendario-domo" />} />
           <Route path="reservas-equipo" element={<BasicFeaturePage title="Operación / Reservas de equipo" storageKey="operacion-reservas-equipo" />} />
           <Route path="mantenimiento" element={<BasicFeaturePage title="Operación / Mantenimiento" storageKey="operacion-mantenimiento" />} />

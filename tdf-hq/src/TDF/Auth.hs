@@ -145,6 +145,7 @@ modulesForRole Vendor     = Set.singleton ModulePackages
 modulesForRole Customer   = Set.singleton ModulePackages
 modulesForRole ReadOnly   = Set.singleton ModuleCRM
 modulesForRole Fan        = Set.empty
+modulesForRole Maintenance = Set.fromList [ModulePackages, ModuleScheduling]
 
 -- Ensure every authenticated user has baseline Fan and Customer roles active.
 defaultRoles :: [RoleEnum]

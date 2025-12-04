@@ -36,7 +36,7 @@ import           TDF.Routes.Courses (CoursesPublicAPI, WhatsAppWebhookAPI)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 import           TDF.API.Feedback    (FeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
-import           TDF.API.Marketplace (MarketplaceAPI)
+import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 
 type InventoryItem = ME.Asset
@@ -175,6 +175,7 @@ type ProtectedAPI =
   :<|> RoomsAPI
   :<|> LiveSessionsAPI
   :<|> FeedbackAPI
+  :<|> "marketplace" :> MarketplaceAdminAPI
   :<|> "payments" :> PaymentsAPI
   :<|> "instagram" :> InstagramAPI
   :<|> "social" :> SocialAPI

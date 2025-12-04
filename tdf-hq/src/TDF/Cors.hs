@@ -9,10 +9,8 @@ import Data.Char (isSpace, toLower)
 corsPolicy :: IO Middleware
 corsPolicy = do
   originsEnv <- lookupEnv "ALLOWED_ORIGINS"
-  allowAllEnv <- lookupEnv "ALLOW_ALL_ORIGINS"
-  let allowAll = maybe False asBool allowAllEnv
-      origins  = maybe ["http://localhost:5173","https://tdfui.pages.dev","https://tdf-app.pages.dev"] splitComma originsEnv
-      originSetting = if allowAll then Nothing else Just (map BS.pack origins, True)
+  let origins  = maybe ["http://localhost:5173","https://tdfui.pages.dev","https://tdf-app.pages.dev"] splitComma originsEnv
+      originSetting = Just (map BS.pack origins, True)
       policy = simpleCorsResourcePolicy
         { corsOrigins            = originSetting
         , corsRequestHeaders     = "authorization":"content-type":"x-requested-with":simpleHeaders
