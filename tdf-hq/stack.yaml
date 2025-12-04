@@ -2,3 +2,7 @@ resolver: ./stack-snapshot.yaml
 packages: [ . ]
 extra-deps:
   - smtp-mail-0.5.0.0
+
+# Disable hackage index downloads in CI to avoid hash verification issues.
+# All dependencies are pinned via the snapshot/extra-deps pantry data.
+package-indices: []
