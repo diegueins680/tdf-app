@@ -18,14 +18,15 @@ const CART_EVENT = 'tdf-cart-updated';
 const readCartMeta = () => {
   try {
     const raw = localStorage.getItem(CART_META_KEY);
-    if (!raw) return { cartId: '', count: 0 };
+    if (!raw) return { cartId: '', count: 0, preview: [] as { title: string; subtotal: string }[] };
     const parsed = JSON.parse(raw);
     return {
       cartId: typeof parsed?.cartId === 'string' ? parsed.cartId : '',
       count: typeof parsed?.count === 'number' ? parsed.count : 0,
+      preview: Array.isArray(parsed?.preview) ? parsed.preview : [],
     };
   } catch {
-    return { cartId: '', count: 0 };
+    return { cartId: '', count: 0, preview: [] };
   }
 };
 
@@ -61,7 +62,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
     if (parts.length === 0) return null;
     const label = parts
       .map((p) => p.replace(/-/g, ' '))
-      .map((p) => (p.length > 0 ? p[0].toUpperCase() + p.slice(1) : p))
+      .map((p) => (p.length > 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p))
       .join(' / ');
     return (
       <Typography
