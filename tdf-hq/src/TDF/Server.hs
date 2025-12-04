@@ -3240,7 +3240,14 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
         buyerEmailTxt = T.strip mcrBuyerEmail
         itemsSummary = map (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi) (moItems orderDto)
     liftIO $ void $ forkIO $ do
-      _ <- try $ EmailSvc.sendMarketplaceOrder emailSvc buyerNameTxt buyerEmailTxt (moOrderId orderDto) (moTotalDisplay orderDto) itemsSummary
+      _ <- try @SomeException $
+        EmailSvc.sendMarketplaceOrder
+          emailSvc
+          buyerNameTxt
+          buyerEmailTxt
+          (moOrderId orderDto)
+          (moTotalDisplay orderDto)
+          itemsSummary
       pure ()
     pure orderDto
 
