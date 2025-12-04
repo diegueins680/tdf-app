@@ -30,10 +30,11 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
-import type { ArtistProfileDTO, ArtistProfileUpsert, PartyDTO } from '../api/types';
+import type { ArtistProfileDTO, ArtistProfileUpsert } from '../api/types';
 
 interface ArtistFormState {
   partyId: number | null;
@@ -198,7 +199,7 @@ export default function LabelArtistsPage() {
       await Parties.update(partyId, { uNotes: note.trim() ? note.trim() : null });
       return partyId;
     },
-    onSuccess: async (pid) => {
+    onSuccess: async () => {
       setBannerMessage('Nota guardada.');
       await qc.invalidateQueries({ queryKey: ['parties'] });
       setNoteDrafts((prev) => prev);
@@ -454,7 +455,7 @@ export default function LabelArtistsPage() {
                             <Typography variant="body2" color="text.secondary">
                               ID {artist.apArtistId}
                             </Typography>
-                            {(artist.apGenres || artist.apHighlights) && (
+                            {(artist.apGenres ?? artist.apHighlights) && (
                               <Typography variant="body2" color="text.secondary">
                                 {[artist.apGenres, artist.apHighlights].filter(Boolean).join(' · ')}
                               </Typography>
@@ -551,6 +552,19 @@ export default function LabelArtistsPage() {
               minRows={3}
               value={form.bio}
               onChange={(event) => setForm((prev) => ({ ...prev, bio: event.target.value }))}
+            />
+            <GoogleDriveUploadWidget
+              label="Subir portada a Drive"
+              helperText="Sube la imagen principal a Google Drive; guardaremos el enlace."
+              onComplete={(files) => {
+                const link = files[0]?.webViewLink ?? files[0]?.webContentLink;
+                if (link) {
+                  setForm((prev) => ({ ...prev, heroImageUrl: link }));
+                  setHeroImageFileName('Imagen en Drive');
+                }
+              }}
+              accept="image/*"
+              dense
             />
             <Stack spacing={1}>
               <Typography variant="body2" fontWeight={700}>

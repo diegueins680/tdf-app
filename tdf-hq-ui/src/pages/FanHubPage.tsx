@@ -23,6 +23,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import EditIcon from '@mui/icons-material/Edit';
+import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
@@ -682,6 +683,19 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     fullWidth
                   />
                 </Stack>
+                <GoogleDriveUploadWidget
+                  label="Subir portada a Drive"
+                  helperText="Carga la portada en Drive; guardaremos el enlace automáticamente."
+                  onComplete={(files) => {
+                    const link = files[0]?.webViewLink ?? files[0]?.webContentLink;
+                    if (link) {
+                      setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
+                      setHeroImageFileName('Imagen en Drive');
+                    }
+                  }}
+                  accept="image/*"
+                  dense
+                />
                 <TextField
                   label="Ciudad"
                   value={artistDraft.apuCity ?? ''}

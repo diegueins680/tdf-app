@@ -37,12 +37,15 @@ import type { AssetCheckoutDTO, AssetDTO, AssetUpdate, PageResponse, RoomDTO } f
 import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest, type AssetQrDTO } from '../api/inventory';
 import { Rooms } from '../api/rooms';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
+import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 
 interface AssetFormState {
   name: string;
   category: string;
   status: string;
   locationId: string;
+  photoUrl: string;
+  notes: string;
 }
 
 type AssetsPayload = PageResponse<AssetDTO> | { items: AssetDTO[] } | AssetDTO[];
@@ -58,6 +61,8 @@ function buildEmptyForm(): AssetFormState {
     category: '',
     status: 'Active',
     locationId: '',
+    photoUrl: '',
+    notes: '',
   };
 }
 
@@ -67,6 +72,8 @@ function formFromAsset(asset: AssetDTO): AssetFormState {
     category: asset.category,
     status: asset.status ?? 'Active',
     locationId: asset.location ?? '',
+    photoUrl: '',
+    notes: '',
   };
 }
 
@@ -158,6 +165,7 @@ export default function LabelAssetsPage() {
       const updates: AssetUpdate = {};
       if (draft.status && draft.status !== created.status) updates.uStatus = draft.status;
       if (draft.locationId) updates.uLocationId = draft.locationId;
+      if (draft.notes) updates.uNotes = draft.notes;
       if (Object.keys(updates).length > 0) {
         return Inventory.update(created.assetId, updates);
       }
@@ -180,6 +188,7 @@ export default function LabelAssetsPage() {
         uCategory: draft.category.trim(),
         uStatus: draft.status,
         uLocationId: draft.locationId ? draft.locationId : null,
+        uNotes: draft.notes.trim() ? draft.notes.trim() : null,
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['assets'] });
@@ -306,6 +315,8 @@ export default function LabelAssetsPage() {
       category: trimmedCategory,
       status: assetForm.status,
       locationId: assetForm.locationId,
+      photoUrl: assetForm.photoUrl,
+      notes: assetForm.notes,
     };
     if (editingAsset) {
       updateMutation.mutate({ assetId: editingAsset.assetId, draft });
@@ -585,6 +596,25 @@ export default function LabelAssetsPage() {
                 </MenuItem>
               ))}
             </TextField>
+            <GoogleDriveUploadWidget
+              label="Subir foto a Drive"
+              helperText="Adjunta una foto y guardaremos el link en notas."
+              onComplete={(files) => {
+                const link = files[0]?.webViewLink ?? files[0]?.webContentLink;
+                if (link) {
+                  setAssetForm((prev) => ({ ...prev, notes: link, photoUrl: link }));
+                }
+              }}
+              accept="image/*"
+              dense
+            />
+            <TextField
+              label="Notas / link de Drive"
+              value={assetForm.notes}
+              onChange={(e) => setAssetForm((prev) => ({ ...prev, notes: e.target.value }))}
+              fullWidth
+              placeholder="Link de Drive u otras notas"
+            />
             <TextField
               select
               label="Estado"

@@ -47,6 +47,7 @@ import PaymentsPage from './pages/PaymentsPage';
 import CalendarSyncPage from './pages/CalendarSyncPage';
 import SecurityPage from './pages/SecurityPage';
 import MarketplacePage from './pages/MarketplacePage';
+import GoogleDriveCallbackPage from './pages/GoogleDriveCallbackPage';
 
 function Shell() {
   const { session } = useSession();
@@ -145,6 +146,7 @@ export default function App() {
       <Route path="/fans" element={<FanHubPage />} />
       <Route path="/mi-artista" element={<FanHubPage focusArtist />} />
       <Route path="/marketplace" element={<MarketplacePage />} />
+      <Route path="/oauth/google-drive/callback" element={<GoogleDriveCallbackPage />} />
       <Route path="/curso/produccion-musical-dic-2025" element={<CourseProductionLandingPage />} />
       <Route path="/inscripcion/:slug" element={<InscripcionPage />} />
       <Route path="/trials" element={<TrialsPage />} />
