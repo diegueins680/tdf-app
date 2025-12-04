@@ -302,6 +302,10 @@ export default function MarketplacePage() {
 
   const orderSummary = useMemo(() => {
     if (!lastOrder) return null;
+    const summaryLines = lastOrder.moItems
+      .map((item) => `${item.moiQuantity} × ${item.moiTitle || 'Ítem'} — ${item.moiSubtotalDisplay}`)
+      .join('\n');
+    const orderText = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summaryLines}`;
     return (
       <Card variant="outlined">
         <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
@@ -344,11 +348,7 @@ export default function MarketplacePage() {
               size="small"
               variant="text"
               onClick={() => {
-                const summary = lastOrder.moItems
-                  .map((it) => `${it.moiQuantity} x ${it.moiTitle} - ${it.moiSubtotalDisplay}`)
-                  .join('\n');
-                const text = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summary}`;
-                const blob = new Blob([text], { type: 'text/plain' });
+                const blob = new Blob([orderText], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -359,6 +359,20 @@ export default function MarketplacePage() {
               }}
             >
               Descargar resumen
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(orderText);
+                  setCopyToast('Resumen copiado');
+                } catch {
+                  setCopyToast('No se pudo copiar el resumen');
+                }
+              }}
+            >
+              Copiar resumen
             </Button>
           </Stack>
         </CardContent>
