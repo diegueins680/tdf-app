@@ -454,7 +454,7 @@ LabelTrack
     Id          UUID default=gen_random_uuid()
     title       Text
     note        Text Maybe
-    status      Text default="open"
+    status      Text default='open'
     createdAt   UTCTime default=now()
     updatedAt   UTCTime default=now()
     deriving Show Generic
