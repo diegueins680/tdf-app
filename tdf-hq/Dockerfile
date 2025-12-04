@@ -2,8 +2,8 @@
 ARG SOURCE_COMMIT=dev
 ARG BUILD_TIME=unknown
 
-# Move to a newer base to avoid upstream cache corruption on 9.6 bullseye.
-FROM haskell:9.8-bullseye AS builder
+# Use the GHC version required by the resolver to avoid Stack downloading a full toolchain.
+FROM haskell:9.6-bullseye AS builder
 ARG SOURCE_COMMIT
 ARG BUILD_TIME
 WORKDIR /app
