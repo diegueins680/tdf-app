@@ -63,7 +63,7 @@ import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO
 import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, moduleName, loadAuthedUser)
-import           TDF.Seed       (seedAll)
+import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsServer, sessionsServer)
@@ -3069,12 +3069,21 @@ labelPublicServer = listLabelTracks :<|> createLabelTrack :<|> updateLabelTrack 
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do
   Env{..} <- ask
-  rows <- liftIO $ flip runSqlPool envPool $ do
-    listings <- selectList [ME.MarketplaceListingActive ==. True] [Asc ME.MarketplaceListingTitle]
-    forM listings $ \(Entity lid listing) -> do
-      mAsset <- get (ME.marketplaceListingAssetId listing)
-      pure (lid, listing, mAsset)
-  pure (mapMaybe toMarketplaceDTO rows)
+  let loadListings = do
+        listings <- selectList [ME.MarketplaceListingActive ==. True] [Asc ME.MarketplaceListingTitle]
+        forM listings $ \(Entity lid listing) -> do
+          mAsset <- get (ME.marketplaceListingAssetId listing)
+          pure (lid, listing, mAsset)
+  rows <- liftIO $ flip runSqlPool envPool loadListings
+  if not (null rows)
+    then pure (mapMaybe toMarketplaceDTO rows)
+    else do
+      -- Auto-publish demo inventory so the public marketplace is never empty.
+      liftIO $ flip runSqlPool envPool $ do
+        seedInventoryAssets
+        seedMarketplaceListings
+      seeded <- liftIO $ flip runSqlPool envPool loadListings
+      pure (mapMaybe toMarketplaceDTO seeded)
 
 getMarketplaceItem :: Text -> AppM MarketplaceItemDTO
 getMarketplaceItem rawId = do
@@ -3103,6 +3112,8 @@ toMarketplaceDTO (lid, listing, Just asset) =
     , miCategory       = ME.assetCategory asset
     , miBrand          = ME.assetBrand asset
     , miModel          = ME.assetModel asset
+    , miPhotoUrl       = ME.assetPhotoUrl asset
+    , miStatus         = Just (assetStatusLabel (ME.assetStatus asset))
     , miPriceUsdCents  = ME.marketplaceListingPriceUsdCents listing
     , miPriceDisplay   = formatUsd (ME.marketplaceListingPriceUsdCents listing) (ME.marketplaceListingCurrency listing)
     , miMarkupPct      = ME.marketplaceListingMarkupPct listing
@@ -3315,6 +3326,14 @@ formatUsd :: Int -> Text -> Text
 formatUsd cents currency =
   let amount = (fromIntegral cents :: Double) / 100
   in T.pack (printf "%s $%.2f" (T.unpack (T.toUpper currency)) amount)
+
+assetStatusLabel :: ME.AssetStatus -> Text
+assetStatusLabel st =
+  case st of
+    ME.Active            -> "En stock"
+    ME.Booked            -> "Reservado"
+    ME.OutForMaintenance -> "Mantenimiento"
+    ME.Retired           -> "No disponible"
 
 listLabelTracks :: AppM [LabelTrackDTO]
 listLabelTracks = do

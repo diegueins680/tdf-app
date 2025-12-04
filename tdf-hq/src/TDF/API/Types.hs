@@ -176,6 +176,8 @@ data MarketplaceItemDTO = MarketplaceItemDTO
   , miCategory       :: Text
   , miBrand          :: Maybe Text
   , miModel          :: Maybe Text
+  , miPhotoUrl       :: Maybe Text
+  , miStatus         :: Maybe Text
   , miPriceUsdCents  :: Int
   , miPriceDisplay   :: Text
   , miMarkupPct      :: Int
