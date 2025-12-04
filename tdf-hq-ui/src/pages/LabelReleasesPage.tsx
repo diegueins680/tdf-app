@@ -188,6 +188,8 @@ export default function LabelReleasesPage() {
   const totalArtistsWithReleases = new Set(releases.map((r) => r.artistName)).size;
   const upcomingOrRecent = releases.filter((r) => parseDate(r.arReleaseDate) >= Date.now() - 30 * 24 * 60 * 60 * 1000).length;
 
+  const alertMessage = error ?? banner;
+
   return (
     <Stack spacing={3}>
       <Stack spacing={0.5}>
@@ -199,9 +201,9 @@ export default function LabelReleasesPage() {
         </Typography>
       </Stack>
 
-      {(banner || error) && (
+      {alertMessage && (
         <Alert severity={error ? 'error' : 'success'} onClose={() => (error ? setError(null) : setBanner(null))}>
-          {error ?? banner}
+          {alertMessage}
         </Alert>
       )}
 
@@ -215,7 +217,7 @@ export default function LabelReleasesPage() {
                   <Button
                     size="small"
                     startIcon={<RefreshIcon />}
-                    onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'artist-releases'] })}
+                    onClick={() => void qc.invalidateQueries({ queryKey: ['admin', 'artist-releases'] })}
                   >
                     Recargar
                   </Button>
@@ -372,7 +374,7 @@ export default function LabelReleasesPage() {
                     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                       <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         <Stack direction="row" spacing={2}>
-                          {(release.arCoverImageUrl || release.artistHeroImageUrl) && (
+                          {(release.arCoverImageUrl ?? release.artistHeroImageUrl) && (
                             <CardMedia
                               component="img"
                               image={release.arCoverImageUrl ?? release.artistHeroImageUrl ?? undefined}

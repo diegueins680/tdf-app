@@ -19,6 +19,14 @@ export interface NavGroup {
 export const NAV_GROUPS: NavGroup[] = [
   { title: 'INICIO', items: [{ label: 'Inicio', path: '/inicio' }] },
   {
+    title: 'MARKETPLACE',
+    items: [
+      { label: 'Marketplace', path: '/marketplace' },
+      { label: 'Fan Hub', path: '/fans' },
+      { label: 'Records', path: '/records' },
+    ],
+  },
+  {
     title: 'CRM',
     items: [
       { label: 'Contactos', path: '/crm/contactos' },
@@ -39,31 +47,6 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'LABEL',
-    items: [
-      { label: 'Artistas', path: '/label/artistas' },
-      { label: 'Proyectos', path: '/label/proyectos' },
-      { label: 'Releases', path: '/label/releases' },
-      { label: 'Tracks', path: '/label/tracks' },
-      { label: 'Assets', path: '/label/assets' },
-      { label: 'Metadata', path: '/label/metadata' },
-      { label: 'Contratos', path: '/label/contratos' },
-      { label: 'Regalías', path: '/label/regalias' },
-      { label: 'Marketing', path: '/label/marketing' },
-    ],
-  },
-  {
-    title: 'EVENTOS',
-    items: [
-      { label: 'Agenda', path: '/eventos/agenda' },
-      { label: 'Fechas y tours', path: '/eventos/fechas-y-tours' },
-      { label: 'Venues', path: '/eventos/venues' },
-      { label: 'Staff', path: '/eventos/staff' },
-      { label: 'Presupuestos', path: '/eventos/presupuestos' },
-      { label: 'Post-mortem', path: '/eventos/post-mortem' },
-    ],
-  },
-  {
     title: 'ESCUELA',
     items: [
       { label: 'Profesores', path: '/escuela/profesores' },
@@ -79,26 +62,6 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'FINANZAS',
-    items: [
-      { label: 'Cotizaciones', path: '/finanzas/cotizaciones' },
-      { label: 'Facturas', path: '/finanzas/facturas' },
-      { label: 'Cobros', path: '/finanzas/cobros' },
-      { label: 'Pagos', path: '/finanzas/pagos' },
-      { label: 'Recibos', path: '/finanzas/recibos' },
-      { label: 'Regalías', path: '/finanzas/regalias' },
-    ],
-  },
-  {
-    title: 'BAR',
-    items: [
-      { label: 'Sell', path: '/bar/sell' },
-      { label: 'Register', path: '/bar/register' },
-      { label: 'Inventory', path: '/bar/inventory' },
-      { label: 'Staff', path: '/bar/staff' },
-    ],
-  },
-  {
     title: 'OPERACIÓN',
     items: [
       { label: 'Inventario', path: '/operacion/inventario' },
@@ -107,6 +70,31 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Mantenimiento', path: '/operacion/mantenimiento' },
       { label: 'Paquetes', path: '/operacion/paquetes' },
       { label: 'Paquetes / Resumen', path: '/operacion/paquetes/resumen' },
+    ],
+  },
+  {
+    title: 'LABEL',
+    items: [
+      { label: 'Artistas', path: '/label/artistas' },
+      { label: 'Proyectos', path: '/label/proyectos' },
+      { label: 'Releases', path: '/label/releases' },
+      { label: 'Tracks', path: '/label/tracks' },
+      { label: 'Assets', path: '/label/assets' },
+      { label: 'Metadata', path: '/label/metadata' },
+      { label: 'Contratos', path: '/label/contratos' },
+      { label: 'Regalías', path: '/label/regalias' },
+      { label: 'Marketing', path: '/label/marketing' },
+    ],
+  },
+  {
+    title: 'FINANZAS',
+    items: [
+      { label: 'Cotizaciones', path: '/finanzas/cotizaciones' },
+      { label: 'Facturas', path: '/finanzas/facturas' },
+      { label: 'Cobros', path: '/finanzas/cobros' },
+      { label: 'Pagos', path: '/finanzas/pagos' },
+      { label: 'Recibos', path: '/finanzas/recibos' },
+      { label: 'Regalías', path: '/finanzas/regalias' },
     ],
   },
   {
@@ -127,14 +115,12 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Preferencias', path: '/configuracion/preferencias' },
     ],
   },
-  { title: 'INSIGHTS', items: [{ label: 'Insights', path: '/insights' }] },
   {
     title: 'RECURSOS',
     items: [
       { label: 'Documentación', path: '/docs' },
       { label: 'Acerca de', path: '/acerca' },
       { label: 'Seguridad', path: '/seguridad' },
-      { label: 'Fan Hub', path: '/fans' },
       { label: 'Sugerencias', path: '/feedback' },
       { label: 'Manual', path: '/manual' },
     ],

@@ -37,6 +37,7 @@ import           TDF.API.LiveSessions (LiveSessionsAPI)
 import           TDF.API.Feedback    (FeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI)
+import           TDF.API.Label (LabelAPI)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -199,6 +200,7 @@ type API =
   :<|> AdsPublicAPI
   :<|> CmsPublicAPI
   :<|> "marketplace" :> MarketplaceAPI
+  :<|> "label" :> LabelAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
 data HealthStatus = HealthStatus { status :: String, db :: String }

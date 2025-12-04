@@ -254,6 +254,35 @@ data MarketplaceOrderDTO = MarketplaceOrderDTO
 instance ToJSON MarketplaceOrderDTO
 instance FromJSON MarketplaceOrderDTO
 
+data LabelTrackDTO = LabelTrackDTO
+  { ltId        :: Text
+  , ltTitle     :: Text
+  , ltNote      :: Maybe Text
+  , ltStatus    :: Text
+  , ltCreatedAt :: UTCTime
+  , ltUpdatedAt :: UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON LabelTrackDTO
+instance FromJSON LabelTrackDTO
+
+data LabelTrackCreate = LabelTrackCreate
+  { ltcTitle :: Text
+  , ltcNote  :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON LabelTrackCreate
+instance FromJSON LabelTrackCreate
+
+data LabelTrackUpdate = LabelTrackUpdate
+  { ltuTitle  :: Maybe Text
+  , ltuNote   :: Maybe Text
+  , ltuStatus :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON LabelTrackUpdate
+instance FromJSON LabelTrackUpdate
+
 data AssetCreate = AssetCreate
   { cName     :: Text
   , cCategory :: Text

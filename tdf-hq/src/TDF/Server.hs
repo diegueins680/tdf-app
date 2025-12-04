@@ -52,9 +52,10 @@ import           Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawS
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
-import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceCheckoutReq(..))
+import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceCheckoutReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..))
 import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI)
+import           TDF.API.Label (LabelAPI)
 import           TDF.Config (AppConfig(..))
 import           TDF.DB
 import           TDF.Models
@@ -194,6 +195,7 @@ server =
   :<|> adsInquiryPublic
   :<|> cmsPublicServer
   :<|> marketplacePublicServer
+  :<|> labelPublicServer
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -3061,6 +3063,9 @@ marketplacePublicServer =
   :<|> checkoutCart
   :<|> getOrder
 
+labelPublicServer :: ServerT LabelAPI AppM
+labelPublicServer = listLabelTracks :<|> createLabelTrack :<|> updateLabelTrack :<|> deleteLabelTrack
+
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do
   Env{..} <- ask
@@ -3310,6 +3315,79 @@ formatUsd :: Int -> Text -> Text
 formatUsd cents currency =
   let amount = (fromIntegral cents :: Double) / 100
   in T.pack (printf "%s $%.2f" (T.unpack (T.toUpper currency)) amount)
+
+listLabelTracks :: AppM [LabelTrackDTO]
+listLabelTracks = do
+  Env{..} <- ask
+  rows <- liftIO $ flip runSqlPool envPool $ selectList [] [Desc ME.LabelTrackCreatedAt]
+  pure (map toLabelTrackDTO rows)
+
+createLabelTrack :: LabelTrackCreate -> AppM LabelTrackDTO
+createLabelTrack LabelTrackCreate{..} = do
+  when (T.null (T.strip ltcTitle)) $ throwBadRequest "Título requerido"
+  now <- liftIO getCurrentTime
+  Env{..} <- ask
+  let record = ME.LabelTrack
+        { ME.labelTrackTitle     = T.strip ltcTitle
+        , ME.labelTrackNote      = T.strip <$> ltcNote
+        , ME.labelTrackStatus    = "open"
+        , ME.labelTrackCreatedAt = now
+        , ME.labelTrackUpdatedAt = now
+        }
+  dto <- liftIO $ flip runSqlPool envPool $ do
+    key <- insert record
+    pure (toLabelTrackDTO (Entity key record))
+  pure dto
+
+updateLabelTrack :: Text -> LabelTrackUpdate -> AppM LabelTrackDTO
+updateLabelTrack rawId LabelTrackUpdate{..} = do
+  key <- case (fromPathPiece rawId :: Maybe (Key ME.LabelTrack)) of
+    Nothing -> throwBadRequest "Invalid track id"
+    Just k  -> pure k
+  now <- liftIO getCurrentTime
+  Env{..} <- ask
+  mDto <- liftIO $ flip runSqlPool envPool $ do
+    mTrack <- get key
+    case mTrack of
+      Nothing -> pure Nothing
+      Just _ -> do
+        let updates = catMaybes
+              [ (ME.LabelTrackTitle =.) . T.strip <$> ltuTitle
+              , case ltuNote of
+                  Nothing -> Nothing
+                  Just n  -> Just (ME.LabelTrackNote =. if T.null (T.strip n) then Nothing else Just (T.strip n))
+              , (ME.LabelTrackStatus =.) <$> ltuStatus
+              , Just (ME.LabelTrackUpdatedAt =. now)
+              ]
+        unless (null updates) (update key updates)
+        track' <- getJustEntity key
+        pure (Just (toLabelTrackDTO track'))
+  maybe (throwError err404) pure mDto
+
+deleteLabelTrack :: Text -> AppM NoContent
+deleteLabelTrack rawId = do
+  key <- case (fromPathPiece rawId :: Maybe (Key ME.LabelTrack)) of
+    Nothing -> throwBadRequest "Invalid track id"
+    Just k  -> pure k
+  Env{..} <- ask
+  deleted <- liftIO $ flip runSqlPool envPool $ do
+    mTrack <- get key
+    case mTrack of
+      Nothing -> pure False
+      Just _  -> delete key >> pure True
+  unless deleted (throwError err404)
+  pure NoContent
+
+toLabelTrackDTO :: Entity ME.LabelTrack -> LabelTrackDTO
+toLabelTrackDTO (Entity key t) =
+  LabelTrackDTO
+    { ltId        = toPathPiece key
+    , ltTitle     = ME.labelTrackTitle t
+    , ltNote      = ME.labelTrackNote t
+    , ltStatus    = ME.labelTrackStatus t
+    , ltCreatedAt = ME.labelTrackCreatedAt t
+    , ltUpdatedAt = ME.labelTrackUpdatedAt t
+    }
 
 cmsAdminServer :: AuthedUser -> ServerT CmsAdminAPI AppM
 cmsAdminServer user =
