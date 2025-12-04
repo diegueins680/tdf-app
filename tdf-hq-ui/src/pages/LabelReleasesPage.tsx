@@ -414,28 +414,36 @@ export default function LabelReleasesPage() {
                               </Typography>
                             )}
                             <Stack direction="row" spacing={1} flexWrap="wrap">
-                              <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={<PlayArrowIcon />}
-                                href={release.arSpotifyUrl ?? undefined}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                disabled={!release.arSpotifyUrl}
-                              >
-                                Spotify
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<YouTubeIcon />}
-                                href={release.arYoutubeUrl ?? undefined}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                disabled={!release.arYoutubeUrl}
-                              >
-                                YouTube
-                              </Button>
+                              {(() => {
+                                const spotifyProps = release.arSpotifyUrl
+                                  ? { component: 'a' as const, href: release.arSpotifyUrl, target: '_blank', rel: 'noopener noreferrer' }
+                                  : {};
+                                const youtubeProps = release.arYoutubeUrl
+                                  ? { component: 'a' as const, href: release.arYoutubeUrl, target: '_blank', rel: 'noopener noreferrer' }
+                                  : {};
+                                return (
+                                  <>
+                                    <Button
+                                      {...spotifyProps}
+                                      variant="contained"
+                                      size="small"
+                                      startIcon={<PlayArrowIcon />}
+                                      disabled={!release.arSpotifyUrl}
+                                    >
+                                      Spotify
+                                    </Button>
+                                    <Button
+                                      {...youtubeProps}
+                                      variant="outlined"
+                                      size="small"
+                                      startIcon={<YouTubeIcon />}
+                                      disabled={!release.arYoutubeUrl}
+                                    >
+                                      YouTube
+                                    </Button>
+                                  </>
+                                );
+                              })()}
                             </Stack>
                           </Stack>
                         </Stack>
