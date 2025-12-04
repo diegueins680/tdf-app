@@ -15,6 +15,67 @@ interface TopBarProps {
 const CART_META_KEY = 'tdf-marketplace-cart-meta';
 const CART_EVENT = 'tdf-cart-updated';
 
+const FRIENDLY_SEGMENTS: Record<string, string> = {
+  inicio: 'Inicio',
+  marketplace: 'Marketplace',
+  fans: 'Fan Hub',
+  records: 'Records',
+  crm: 'CRM',
+  contactos: 'Contactos',
+  empresas: 'Empresas',
+  leads: 'Leads',
+  estudio: 'Estudio',
+  salas: 'Salas',
+  ordenes: 'Órdenes',
+  servicios: 'Servicios',
+  pipelines: 'Pipelines',
+  'live-sessions': 'Live Sessions',
+  reportes: 'Reportes',
+  escuela: 'Escuela',
+  profesores: 'Profesores',
+  clases: 'Clases',
+  'trial-lessons': 'Trial Lessons',
+  'trial-queue': 'Trial Queue',
+  label: 'Label',
+  artistas: 'Artistas',
+  proyectos: 'Proyectos',
+  releases: 'Releases',
+  tracks: 'Tracks',
+  assets: 'Assets',
+  operacion: 'Operación',
+  inventario: 'Inventario',
+  'calendario-domo': 'Calendario domo',
+  'reservas-equipo': 'Reservas equipo',
+  mantenimiento: 'Mantenimiento',
+  paquetes: 'Paquetes',
+  configuracion: 'Configuración',
+  'inscripciones-curso': 'Inscripciones curso',
+  logs: 'Logs',
+  estado: 'Estado sistema',
+  'usuarios-admin': 'Usuarios admin',
+  'roles-permisos': 'Roles y permisos',
+  'impuestos-series': 'Impuestos y series',
+  'unidades-negocio': 'Unidades de negocio',
+  sedes: 'Sedes',
+  marcas: 'Marcas',
+  integraciones: 'Integraciones',
+  calendario: 'Calendario Google',
+  cms: 'CMS',
+  preferencias: 'Preferencias',
+  finanzas: 'Finanzas',
+  cotizaciones: 'Cotizaciones',
+  facturas: 'Facturas',
+  cobros: 'Cobros',
+  pagos: 'Pagos',
+  recibos: 'Recibos',
+  regalias: 'Regalías',
+  docs: 'Documentación',
+  acerca: 'Acerca de',
+  seguridad: 'Seguridad',
+  feedback: 'Sugerencias',
+  manual: 'Manual',
+};
+
 const readCartMeta = () => {
   try {
     const raw = localStorage.getItem(CART_META_KEY);
@@ -75,7 +136,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
     const parts = location.pathname.split('/').filter(Boolean);
     if (parts.length === 0) return null;
     const label = parts
-      .map((p) => p.replace(/-/g, ' '))
+      .map((p) => FRIENDLY_SEGMENTS[p] || p.replace(/-/g, ' '))
       .map((p) => (p.length > 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p))
       .join(' / ');
     return (
