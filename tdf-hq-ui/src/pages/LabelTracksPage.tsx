@@ -29,6 +29,7 @@ export default function LabelTracksPage() {
   const [input, setInput] = useState('');
   const [note, setNote] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'done'>('all');
+  const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<LabelTrackDTO | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editNote, setEditNote] = useState('');
@@ -71,9 +72,15 @@ export default function LabelTracksPage() {
 
   const tracks = useMemo(() => tracksQuery.data ?? [], [tracksQuery.data]);
   const filteredTracks = useMemo(() => {
-    if (statusFilter === 'all') return tracks;
-    return tracks.filter((t) => t.ltStatus === statusFilter);
-  }, [tracks, statusFilter]);
+    const byStatus = statusFilter === 'all' ? tracks : tracks.filter((t) => t.ltStatus === statusFilter);
+    const q = query.trim().toLowerCase();
+    if (!q) return byStatus;
+    return byStatus.filter(
+      (t) =>
+        t.ltTitle.toLowerCase().includes(q) ||
+        (t.ltNote ?? '').toLowerCase().includes(q),
+    );
+  }, [tracks, statusFilter, query]);
 
   const handleAdd = () => {
     if (!input.trim()) return;
@@ -157,20 +164,29 @@ export default function LabelTracksPage() {
         <Typography color="text.secondary">No hay notas aún.</Typography>
       )}
 
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Typography variant="body2" color="text.secondary">
-          Filtrar:
-        </Typography>
-        {(['all', 'open', 'done'] as const).map((key) => (
-          <Chip
-            key={key}
-            label={key === 'all' ? 'Todos' : key === 'open' ? 'Abiertos' : 'Cerrados'}
-            variant={statusFilter === key ? 'filled' : 'outlined'}
-            color={key === 'done' ? 'success' : 'default'}
-            size="small"
-            onClick={() => setStatusFilter(key)}
-          />
-        ))}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="body2" color="text.secondary">
+            Filtrar:
+          </Typography>
+          {(['all', 'open', 'done'] as const).map((key) => (
+            <Chip
+              key={key}
+              label={key === 'all' ? 'Todos' : key === 'open' ? 'Abiertos' : 'Cerrados'}
+              variant={statusFilter === key ? 'filled' : 'outlined'}
+              color={key === 'done' ? 'success' : 'default'}
+              size="small"
+              onClick={() => setStatusFilter(key)}
+            />
+          ))}
+        </Stack>
+        <TextField
+          size="small"
+          label="Buscar por título o nota"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          sx={{ minWidth: { xs: '100%', sm: 260 } }}
+        />
       </Stack>
 
       <Stack spacing={1.5}>

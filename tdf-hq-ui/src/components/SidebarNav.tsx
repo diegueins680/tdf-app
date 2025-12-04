@@ -6,6 +6,7 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 
 export interface NavItem {
@@ -137,7 +138,9 @@ interface SidebarNavProps {
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
   const { session } = useSession();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('');
+  const [highlightIndex, setHighlightIndex] = useState<number>(-1);
   const deriveModulesFromRoles = (roles: string[] | undefined): string[] => {
     if (!roles || roles.length === 0) return [];
     const lowerRoles = roles.map((r) => r.toLowerCase());
@@ -213,6 +216,11 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       .filter((group) => group.items.length > 0);
   }, [allowedNavGroups, filter]);
 
+  const flatFilteredItems = useMemo(
+    () => filteredNavGroups.flatMap((group) => group.items),
+    [filteredNavGroups],
+  );
+
   const ensureExpandedDefaults = (groups: NavGroup[]) => {
     const next = new Set<string>();
     groups.forEach((group) => {
@@ -242,6 +250,14 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       return next;
     });
   }, [allowedNavGroups, location.pathname]);
+
+  useEffect(() => {
+    if (flatFilteredItems.length === 0) {
+      setHighlightIndex(-1);
+      return;
+    }
+    setHighlightIndex(0);
+  }, [filter, flatFilteredItems.length]);
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) => {
@@ -284,6 +300,29 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         <TextField
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
+          onKeyDown={(event) => {
+            if (flatFilteredItems.length === 0) return;
+            if (event.key === 'ArrowDown') {
+              event.preventDefault();
+              setHighlightIndex((prev) => {
+                const next = prev + 1;
+                return next >= flatFilteredItems.length ? 0 : next;
+              });
+            } else if (event.key === 'ArrowUp') {
+              event.preventDefault();
+              setHighlightIndex((prev) => {
+                if (prev <= 0) return flatFilteredItems.length - 1;
+                return prev - 1;
+              });
+            } else if (event.key === 'Enter' && highlightIndex >= 0) {
+              event.preventDefault();
+              const target = flatFilteredItems[highlightIndex];
+              if (target) {
+                navigate(target.path);
+                onNavigate?.();
+              }
+            }
+          }}
           size="small"
           placeholder="Buscar sección"
           fullWidth
@@ -314,12 +353,14 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
             Sin coincidencias.
           </Typography>
         )}
-        {filteredNavGroups.map((group) => {
-          const isSearching = filter.trim().length > 0;
-          const isExpanded = isSearching || expandedGroups.has(group.title);
-          return (
-            <Box key={group.title} sx={{ px: 1 }}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
+        {(() => {
+          let itemCursor = -1;
+          return filteredNavGroups.map((group) => {
+            const isSearching = filter.trim().length > 0;
+            const isExpanded = isSearching || expandedGroups.has(group.title);
+            return (
+              <Box key={group.title} sx={{ px: 1 }}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
                 <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.55)', letterSpacing: 1 }}>
                   {group.title}
                 </Typography>
@@ -332,24 +373,47 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                 <List disablePadding>
                   {group.items.map((item) => {
+                    itemCursor += 1;
                     const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+                    const hot = itemCursor === highlightIndex;
+                    const renderLabel = () => {
+                      const query = filter.trim();
+                      if (!query) return item.label;
+                      const idx = item.label.toLowerCase().indexOf(query.toLowerCase());
+                      if (idx === -1) return item.label;
+                      const before = item.label.slice(0, idx);
+                      const match = item.label.slice(idx, idx + query.length);
+                      const after = item.label.slice(idx + query.length);
+                      return (
+                        <span>
+                          {before}
+                          <span style={{ color: '#93c5fd', fontWeight: 700 }}>{match}</span>
+                          {after}
+                        </span>
+                      );
+                    };
                     return (
                       <ListItemButton
                         key={item.path}
                         component={RouterLink}
                         to={item.path}
                         onClick={onNavigate}
+                        selected={hot}
                         sx={{
                           borderRadius: 2,
                           mx: 1.5,
                           mb: 0.5,
                           color: active ? '#ffffff' : 'rgba(248,250,252,0.6)',
-                          bgcolor: active ? 'rgba(59,130,246,0.2)' : 'transparent',
+                          bgcolor: hot
+                            ? 'rgba(148, 163, 184, 0.12)'
+                            : active
+                              ? 'rgba(59,130,246,0.2)'
+                              : 'transparent',
                           '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
                         }}
                       >
                         <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5 }} />
-                        <ListItemText primaryTypographyProps={{ fontSize: 14 }} primary={item.label} />
+                        <ListItemText primaryTypographyProps={{ fontSize: 14 }} primary={renderLabel()} />
                       </ListItemButton>
                     );
                   })}
@@ -357,7 +421,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
               </Collapse>
             </Box>
           );
-        })}
+        })()}
       </List>
     </Box>
   );
