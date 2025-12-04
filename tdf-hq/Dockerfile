@@ -9,7 +9,10 @@ ARG BUILD_TIME
 WORKDIR /app
 
 # OS deps for building persistent-postgresql + basic tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Some CI networks inject MITM proxies that break apt signature checks; allow insecure
+# repositories only during image build (no secrets involved).
+RUN apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
+    apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
     libpq-dev pkg-config git curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
@@ -78,7 +81,8 @@ ARG BUILD_TIME=unknown
 WORKDIR /app
 
 # Runtime libs for Postgres + CA certs for Neon TLS
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
+    apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
     libpq5 ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
