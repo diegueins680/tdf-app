@@ -439,6 +439,7 @@ MarketplaceOrder
     currency        Text default='USD'
     status          Text default='pending'
     createdAt       UTCTime default=now()
+    updatedAt       UTCTime default=now()
     deriving Show Generic
 
 MarketplaceOrderItem

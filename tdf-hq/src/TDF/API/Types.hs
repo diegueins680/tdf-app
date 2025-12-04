@@ -250,6 +250,7 @@ data MarketplaceOrderDTO = MarketplaceOrderDTO
   , moTotalUsdCents :: Int
   , moTotalDisplay  :: Text
   , moStatus        :: Text
+  , moStatusHistory :: [(Text, UTCTime)]
   , moItems         :: [MarketplaceOrderItemDTO]
   } deriving (Show, Generic)
 

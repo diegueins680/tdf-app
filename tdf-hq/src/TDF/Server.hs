@@ -68,6 +68,7 @@ import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceLi
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsServer, sessionsServer)
+import qualified Data.Map.Strict            as Map
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.ServerFeedback (feedbackServer)
@@ -3186,6 +3187,7 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
                                  | (_, listing, _, qty) <- cartItems
                                  ]
                 currency = maybe "USD" ME.marketplaceListingCurrency (listToMaybe [entityVal listing | (_, listing, _, _) <- cartItems])
+                statusTxt = if totalCents > 0 then "pending" else "contact"
             orderId <- insert ME.MarketplaceOrder
               { ME.marketplaceOrderCartId        = Just cartKey
               , ME.marketplaceOrderBuyerName     = T.strip mcrBuyerName
@@ -3193,8 +3195,9 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
               , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
               , ME.marketplaceOrderTotalUsdCents = totalCents
               , ME.marketplaceOrderCurrency      = currency
-              , ME.marketplaceOrderStatus        = "pending"
+              , ME.marketplaceOrderStatus        = statusTxt
               , ME.marketplaceOrderCreatedAt     = now
+              , ME.marketplaceOrderUpdatedAt     = now
               }
             forM_ cartItems $ \(_, listingEnt, _, qty) -> do
               let listing   = entityVal listingEnt
@@ -3321,15 +3324,16 @@ orderToDTO (Entity oid order) items =
               , moiQuantity          = ME.marketplaceOrderItemQuantity oi
               , moiUnitPriceUsdCents = ME.marketplaceOrderItemUnitPriceUsdCents oi
               , moiSubtotalCents     = ME.marketplaceOrderItemSubtotalUsdCents oi
-              , moiUnitPriceDisplay  = formatUsd (ME.marketplaceOrderItemUnitPriceUsdCents oi) currency
-              , moiSubtotalDisplay   = formatUsd (ME.marketplaceOrderItemSubtotalUsdCents oi) currency
-              }
+      , moiUnitPriceDisplay  = formatUsd (ME.marketplaceOrderItemUnitPriceUsdCents oi) currency
+      , moiSubtotalDisplay   = formatUsd (ME.marketplaceOrderItemSubtotalUsdCents oi) currency
+      }
   in MarketplaceOrderDTO
       { moOrderId       = toPathPiece oid
       , moCurrency      = currency
       , moTotalUsdCents = ME.marketplaceOrderTotalUsdCents order
       , moTotalDisplay  = formatUsd (ME.marketplaceOrderTotalUsdCents order) currency
       , moStatus        = ME.marketplaceOrderStatus order
+      , moStatusHistory = [ (ME.marketplaceOrderStatus order, ME.marketplaceOrderUpdatedAt order) ]
       , moItems         = itemDtos
       }
 
