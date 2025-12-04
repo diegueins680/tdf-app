@@ -849,7 +849,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               : [];
             return (
               <Grid item xs={12} md={6} key={artist.apArtistId}>
-                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                   <CardActionArea
                     onClick={() => {
                       if (artist.apSlug) {
@@ -864,7 +864,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     )}
                   </CardActionArea>
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                    <Stack
+                      direction={{ xs: 'column', md: 'row' }}
+                      spacing={2}
+                      flexWrap="wrap"
+                      alignItems="flex-start"
+                      rowGap={2}
+                    >
                       <Box flex={1} minWidth={0}>
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
                           <Typography variant="h5">{artist.apDisplayName}</Typography>
@@ -918,7 +924,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         </Stack>
                       </Box>
                       {featuredSources.length > 0 && (
-                        <Box sx={{ minWidth: { xs: '100%', md: 260 }, flexGrow: 1 }}>
+                        <Box
+                          sx={{
+                            minWidth: { xs: '100%', md: 260 },
+                            flexGrow: 1,
+                            flexBasis: { xs: '100%', md: 280 },
+                            maxWidth: '100%',
+                          }}
+                        >
                           <StreamingPlayer
                             title={`${artist.apDisplayName} — Destacado`}
                             artist={artist.apDisplayName}
