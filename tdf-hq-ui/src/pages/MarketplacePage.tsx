@@ -50,6 +50,7 @@ export default function MarketplacePage() {
     return localStorage.getItem(CART_STORAGE_KEY);
   });
   const [category, setCategory] = useState<string>('all');
+  const [sort, setSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'title-asc'>('relevance');
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -149,6 +150,19 @@ export default function MarketplacePage() {
     const haystack = `${item.miTitle} ${item.miBrand ?? ''} ${item.miModel ?? ''}`.toLowerCase();
     return matchesCategory && haystack.includes(search.trim().toLowerCase());
   });
+  const sortedListings = useMemo(() => {
+    const list = [...filteredListings];
+    switch (sort) {
+      case 'price-asc':
+        return list.sort((a, b) => a.miPriceUsdCents - b.miPriceUsdCents);
+      case 'price-desc':
+        return list.sort((a, b) => b.miPriceUsdCents - a.miPriceUsdCents);
+      case 'title-asc':
+        return list.sort((a, b) => a.miTitle.localeCompare(b.miTitle));
+      default:
+        return list;
+    }
+  }, [filteredListings, sort]);
   const cart = cartQuery.data;
   const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
 
@@ -250,6 +264,22 @@ export default function MarketplacePage() {
                   ))}
                 </Select>
               </FormControl>
+              <FormControl size="small" sx={{ minWidth: 180 }}>
+                <InputLabel id="marketplace-sort-label">Ordenar por</InputLabel>
+                <Select
+                  labelId="marketplace-sort-label"
+                  value={sort}
+                  label="Ordenar por"
+                  onChange={(event: SelectChangeEvent<'relevance' | 'price-asc' | 'price-desc' | 'title-asc'>) =>
+                    setSort(event.target.value as typeof sort)
+                  }
+                >
+                  <MenuItem value="relevance">Relevancia</MenuItem>
+                  <MenuItem value="price-asc">Precio: bajo a alto</MenuItem>
+                  <MenuItem value="price-desc">Precio: alto a bajo</MenuItem>
+                  <MenuItem value="title-asc">Título A-Z</MenuItem>
+                </Select>
+              </FormControl>
               <Chip label={`${filteredListings.length} resultados`} size="small" />
             </Stack>
             <Grid container spacing={2}>
@@ -267,7 +297,7 @@ export default function MarketplacePage() {
                   </Alert>
                 </Grid>
               )}
-              {filteredListings.map((item) => (
+              {sortedListings.map((item) => (
                 <Grid item xs={12} sm={6} key={item.miListingId}>
                   <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, flexGrow: 1 }}>
