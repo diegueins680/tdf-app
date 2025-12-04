@@ -7,7 +7,12 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -23,6 +28,11 @@ export default function LabelTracksPage() {
   const qc = useQueryClient();
   const [input, setInput] = useState('');
   const [note, setNote] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'done'>('all');
+  const [editing, setEditing] = useState<LabelTrackDTO | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [toast, setToast] = useState<string | null>(null);
 
   const tracksQuery = useQuery({
     queryKey: ['label-tracks'],
@@ -39,10 +49,15 @@ export default function LabelTracksPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      Label.updateTrack(id, { ltuStatus: status }),
+    mutationFn: ({ id, status, title, note: noteVal }: { id: string; status?: string; title?: string; note?: string }) =>
+      Label.updateTrack(id, {
+        ...(status ? { ltuStatus: status } : {}),
+        ...(title ? { ltuTitle: title } : {}),
+        ...(typeof noteVal !== 'undefined' ? { ltuNote: noteVal } : {}),
+      }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['label-tracks'] });
+      setToast('Guardado');
     },
   });
 
@@ -50,19 +65,41 @@ export default function LabelTracksPage() {
     mutationFn: (id: string) => Label.deleteTrack(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['label-tracks'] });
+      setToast('Eliminado');
     },
   });
 
   const tracks = useMemo(() => tracksQuery.data ?? [], [tracksQuery.data]);
+  const filteredTracks = useMemo(() => {
+    if (statusFilter === 'all') return tracks;
+    return tracks.filter((t) => t.ltStatus === statusFilter);
+  }, [tracks, statusFilter]);
 
   const handleAdd = () => {
     if (!input.trim()) return;
     createMutation.mutate();
+    setToast('Agregado');
   };
 
   const handleToggle = (track: LabelTrackDTO) => {
     const next = track.ltStatus === 'done' ? 'open' : 'done';
     updateMutation.mutate({ id: track.ltId, status: next });
+  };
+
+  const openEdit = (track: LabelTrackDTO) => {
+    setEditing(track);
+    setEditTitle(track.ltTitle);
+    setEditNote(track.ltNote ?? '');
+  };
+
+  const submitEdit = () => {
+    if (!editing) return;
+    updateMutation.mutate({
+      id: editing.ltId,
+      title: editTitle.trim(),
+      note: editNote.trim(),
+    });
+    setEditing(null);
   };
 
   return (
@@ -120,8 +157,24 @@ export default function LabelTracksPage() {
         <Typography color="text.secondary">No hay notas aún.</Typography>
       )}
 
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Typography variant="body2" color="text.secondary">
+          Filtrar:
+        </Typography>
+        {(['all', 'open', 'done'] as const).map((key) => (
+          <Chip
+            key={key}
+            label={key === 'all' ? 'Todos' : key === 'open' ? 'Abiertos' : 'Cerrados'}
+            variant={statusFilter === key ? 'filled' : 'outlined'}
+            color={key === 'done' ? 'success' : 'default'}
+            size="small"
+            onClick={() => setStatusFilter(key)}
+          />
+        ))}
+      </Stack>
+
       <Stack spacing={1.5}>
-        {tracks.map((track) => {
+        {filteredTracks.map((track) => {
           const isDone = track.ltStatus === 'done';
           return (
             <Card key={track.ltId} variant="outlined">
@@ -154,6 +207,9 @@ export default function LabelTracksPage() {
                       </Typography>
                     </Stack>
                   </Box>
+                  <Button variant="text" size="small" onClick={() => openEdit(track)}>
+                    Editar
+                  </Button>
                   <IconButton size="small" onClick={() => deleteMutation.mutate(track.ltId)}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
@@ -163,6 +219,49 @@ export default function LabelTracksPage() {
           );
         })}
       </Stack>
+
+      <Dialog open={Boolean(editing)} onClose={() => setEditing(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>Editar track</DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Stack spacing={2}>
+            <TextField
+              label="Título"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              fullWidth
+              size="small"
+            />
+            <TextField
+              label="Nota"
+              value={editNote}
+              onChange={(e) => setEditNote(e.target.value)}
+              fullWidth
+              size="small"
+              multiline
+              minRows={2}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditing(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button onClick={submitEdit} variant="contained" disabled={updateMutation.isPending}>
+            Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={Boolean(toast)}
+        autoHideDuration={2500}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setToast(null)} sx={{ width: '100%' }}>
+          {toast}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }
