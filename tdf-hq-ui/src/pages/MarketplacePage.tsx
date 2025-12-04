@@ -12,6 +12,15 @@ import {
   Grid,
   IconButton,
   ButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
   InputLabel,
   MenuItem,
   Select,
@@ -61,6 +70,8 @@ export default function MarketplacePage() {
   const [buyerPhone, setBuyerPhone] = useState('');
   const [contactPref, setContactPref] = useState<'email' | 'phone'>('email');
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
   const savedCartMeta = useMemo(() => {
     if (typeof window === 'undefined') return null;
     try {
@@ -263,6 +274,22 @@ export default function MarketplacePage() {
     void qc.invalidateQueries({ queryKey: ['marketplace-cart', savedCartMeta.cartId] });
     setToast('Carrito restaurado');
   };
+
+  const toggleCompare = (id: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 3) {
+        setToast('Máximo 3 artículos en el comparador');
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
+  const compareItems = useMemo(
+    () => listings.filter((item) => compareIds.includes(item.miListingId)),
+    [listings, compareIds],
+  );
   const formatLastSaved = () => {
     if (!savedCartMeta?.updatedAt) return null;
     const diffMs = Date.now() - savedCartMeta.updatedAt;
@@ -385,6 +412,14 @@ export default function MarketplacePage() {
                 </Select>
               </FormControl>
               <Chip label={`${filteredListings.length} resultados`} size="small" />
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={compareIds.length === 0}
+                onClick={() => setCompareOpen(true)}
+              >
+                Comparar ({compareIds.length})
+              </Button>
             </Stack>
             <Grid container spacing={2}>
               {!listingsQuery.isLoading && filteredListings.length === 0 && (
@@ -432,6 +467,13 @@ export default function MarketplacePage() {
                         >
                           Agregar
                         </Button>
+                        <Chip
+                          label={compareIds.includes(item.miListingId) ? 'En comparador' : 'Comparar'}
+                          size="small"
+                          color={compareIds.includes(item.miListingId) ? 'primary' : 'default'}
+                          onClick={() => toggleCompare(item.miListingId)}
+                          variant={compareIds.includes(item.miListingId) ? 'filled' : 'outlined'}
+                        />
                         <Typography variant="caption" color="text.secondary">
                           Incluye markup {item.miMarkupPct}% sobre precio referencia.
                         </Typography>
@@ -655,6 +697,50 @@ export default function MarketplacePage() {
           {copyToast}
         </Alert>
       </Snackbar>
+      <Dialog open={compareOpen} onClose={() => setCompareOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Comparar artículos</DialogTitle>
+        <DialogContent dividers>
+          {compareItems.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              Agrega hasta 3 artículos al comparador.
+            </Typography>
+          )}
+          {compareItems.length > 0 && (
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Título</TableCell>
+                  <TableCell>Categoría</TableCell>
+                  <TableCell>Marca</TableCell>
+                  <TableCell>Modelo</TableCell>
+                  <TableCell align="right">Precio</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {compareItems.map((item) => (
+                  <TableRow key={item.miListingId}>
+                    <TableCell>{item.miTitle}</TableCell>
+                    <TableCell>{item.miCategory}</TableCell>
+                    <TableCell>{item.miBrand ?? '-'}</TableCell>
+                    <TableCell>{item.miModel ?? '-'}</TableCell>
+                    <TableCell align="right">{item.miPriceDisplay}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {compareItems.length > 0 && (
+            <Button onClick={() => setCompareIds([])} color="inherit">
+              Limpiar
+            </Button>
+          )}
+          <Button onClick={() => setCompareOpen(false)} variant="contained">
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   </Box>
 );
