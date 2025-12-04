@@ -72,6 +72,8 @@ export default function MarketplacePage() {
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  const cart = cartQuery.data;
+  const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
   const savedCartMeta = useMemo(() => {
     if (typeof window === 'undefined') return null;
     try {
@@ -104,9 +106,6 @@ export default function MarketplacePage() {
       return Marketplace.getCart(cartId);
     },
   });
-
-  const cart = cartQuery.data;
-  const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
 
   useEffect(() => {
     if (cartId) {
