@@ -8,8 +8,13 @@ import {
   CardHeader,
   Chip,
   CircularProgress,
+  FormControl,
   Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  type SelectChangeEvent,
   Snackbar,
   Stack,
   TextField,
@@ -44,6 +49,7 @@ export default function MarketplacePage() {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem(CART_STORAGE_KEY);
   });
+  const [category, setCategory] = useState<string>('all');
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -133,10 +139,15 @@ export default function MarketplacePage() {
   });
 
   const listings = listingsQuery.data ?? [];
+  const categories = useMemo(
+    () => Array.from(new Set(listings.map((item) => item.miCategory).filter(Boolean))),
+    [listings],
+  );
   const filteredListings = listings.filter((item) => {
-    if (!search.trim()) return true;
+    const matchesCategory = category === 'all' ? true : item.miCategory === category;
+    if (!search.trim()) return matchesCategory;
     const haystack = `${item.miTitle} ${item.miBrand ?? ''} ${item.miModel ?? ''}`.toLowerCase();
-    return haystack.includes(search.trim().toLowerCase());
+    return matchesCategory && haystack.includes(search.trim().toLowerCase());
   });
   const cart = cartQuery.data;
   const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
@@ -219,6 +230,22 @@ export default function MarketplacePage() {
                 size="small"
                 fullWidth
               />
+              <FormControl size="small" sx={{ minWidth: 160 }}>
+                <InputLabel id="marketplace-category-label">Categoría</InputLabel>
+                <Select
+                  labelId="marketplace-category-label"
+                  value={category}
+                  label="Categoría"
+                  onChange={(event: SelectChangeEvent<string>) => setCategory(event.target.value)}
+                >
+                  <MenuItem value="all">Todas</MenuItem>
+                  {categories.map((cat) => (
+                    <MenuItem key={cat} value={cat}>
+                      {cat}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <Chip label={`${filteredListings.length} resultados`} size="small" />
             </Stack>
             <Grid container spacing={2}>
