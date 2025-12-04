@@ -408,11 +408,46 @@ MarketplaceListing
     title          Text
     priceUsdCents  Int
     markupPct      Int default=25
-    currency       Text default="USD"
+    currency       Text default='USD'
     active         Bool default=True
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
     UniqueMarketplaceAsset assetId
+    deriving Show Generic
+
+MarketplaceCart
+    Id        UUID default=gen_random_uuid()
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
+
+MarketplaceCartItem
+    Id         UUID default=gen_random_uuid()
+    cartId     MarketplaceCartId
+    listingId  MarketplaceListingId
+    quantity   Int default=1
+    UniqueMarketplaceCartItem cartId listingId
+    deriving Show Generic
+
+MarketplaceOrder
+    Id              UUID default=gen_random_uuid()
+    cartId          MarketplaceCartId Maybe
+    buyerName       Text
+    buyerEmail      Text
+    buyerPhone      Text Maybe
+    totalUsdCents   Int
+    currency        Text default='USD'
+    status          Text default='pending'
+    createdAt       UTCTime default=now()
+    deriving Show Generic
+
+MarketplaceOrderItem
+    Id                UUID default=gen_random_uuid()
+    orderId           MarketplaceOrderId
+    listingId         MarketplaceListingId
+    quantity          Int
+    unitPriceUsdCents Int
+    subtotalUsdCents  Int
     deriving Show Generic
 
 |]
