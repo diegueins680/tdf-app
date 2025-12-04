@@ -300,27 +300,37 @@ export default function MarketplacePage() {
     if (lower.includes('mantenimiento')) return { color: 'warning' as const, icon: <WarningAmberIcon /> };
     return { color: 'default' as const, icon: undefined };
   };
-  const formatLastSaved = () => {
-    if (!savedCartMeta?.updatedAt) return null;
-    const diffMs = Date.now() - savedCartMeta.updatedAt;
-    const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 1) return 'Actualizado hace <1 min';
-    if (minutes < 60) return `Actualizado hace ${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    return `Actualizado hace ${hours} h`;
-  };
+const formatLastSaved = () => {
+  if (!savedCartMeta?.updatedAt) return null;
+  const diffMs = Date.now() - savedCartMeta.updatedAt;
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return 'Actualizado hace <1 min';
+  if (minutes < 60) return `Actualizado hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  return `Actualizado hace ${hours} h`;
+};
 
-  const orderSummary = useMemo(() => {
-    if (!lastOrder) return null;
-    const summaryLines = lastOrder.moItems
-      .map((item) => `${item.moiQuantity} × ${item.moiTitle || 'Ítem'} — ${item.moiSubtotalDisplay}`)
-      .join('\n');
-    const orderText = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summaryLines}`;
-    return (
-      <Card variant="outlined">
-        <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
-        <CardContent>
-          <Stack spacing={1}>
+const getOrderStatusMeta = (status: string) => {
+  const norm = status.toLowerCase();
+  if (norm.includes('pending')) return { label: 'Pendiente', color: 'warning' as const, desc: 'Recibido, a la espera de confirmación.' };
+  if (norm.includes('process') || norm.includes('contact')) return { label: 'En proceso', color: 'info' as const, desc: 'Estamos coordinando pago/entrega.' };
+  if (norm.includes('delivered') || norm.includes('complete')) return { label: 'Completado', color: 'success' as const, desc: 'Pedido entregado.' };
+  if (norm.includes('cancel')) return { label: 'Cancelado', color: 'default' as const, desc: 'Pedido cancelado.' };
+  return { label: status || 'Estado', color: 'default' as const, desc: '' };
+};
+
+const orderSummary = useMemo(() => {
+  if (!lastOrder) return null;
+  const summaryLines = lastOrder.moItems
+    .map((item) => `${item.moiQuantity} × ${item.moiTitle || 'Ítem'} — ${item.moiSubtotalDisplay}`)
+    .join('\n');
+  const orderText = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summaryLines}`;
+  const statusMeta = getOrderStatusMeta(lastOrder.moStatus);
+  return (
+    <Card variant="outlined">
+      <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
+      <CardContent>
+        <Stack spacing={1}>
             {lastOrder.moItems.map((item) => (
               <Stack
                 key={item.moiListingId}
@@ -339,6 +349,12 @@ export default function MarketplacePage() {
             <Typography variant="body2" color="text.secondary">
               Estado: {lastOrder.moStatus}
             </Typography>
+            <Chip label={statusMeta.label} color={statusMeta.color} size="small" />
+            {statusMeta.desc && (
+              <Typography variant="caption" color="text.secondary">
+                {statusMeta.desc}
+              </Typography>
+            )}
             <Button
               size="small"
               variant="outlined"
