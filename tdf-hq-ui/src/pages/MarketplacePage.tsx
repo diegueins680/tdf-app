@@ -220,6 +220,10 @@ export default function MarketplacePage() {
     setToast('Carrito vacío');
   };
 
+  const handleCheckout = () => {
+    checkoutMutation.mutate();
+  };
+
   const orderSummary = useMemo(() => {
     if (!lastOrder) return null;
     return (
@@ -488,8 +492,14 @@ export default function MarketplacePage() {
                     />
                     <Button
                       variant="contained"
-                      disabled={!hasCartItems || checkoutMutation.isPending || !isValidName || !isValidEmail}
-                      onClick={() => checkoutMutation.mutate()}
+                      disabled={
+                        !hasCartItems ||
+                        checkoutMutation.isPending ||
+                        !isValidName ||
+                        !isValidEmail ||
+                        cartItemCount === 0
+                      }
+                      onClick={handleCheckout}
                     >
                       {checkoutMutation.isPending ? 'Enviando pedido…' : 'Confirmar pedido'}
                     </Button>
