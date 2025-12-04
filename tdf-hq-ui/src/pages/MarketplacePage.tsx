@@ -61,6 +61,22 @@ export default function MarketplacePage() {
   const [buyerPhone, setBuyerPhone] = useState('');
   const [contactPref, setContactPref] = useState<'email' | 'phone'>('email');
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
+  const savedCartMeta = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem(CART_META_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed?.cartId) return null;
+      return {
+        cartId: parsed.cartId as string,
+        count: typeof parsed.count === 'number' ? parsed.count : 0,
+        updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : null,
+      };
+    } catch {
+      return null;
+    }
+  }, [cartId, cartItems.length]);
   const isValidEmail = useMemo(() => /\S+@\S+\.\S+/.test(buyerEmail.trim()), [buyerEmail]);
   const isValidName = useMemo(() => buyerName.trim().length > 1, [buyerName]);
 
@@ -239,21 +255,16 @@ export default function MarketplacePage() {
   const handleCheckout = () => {
     checkoutMutation.mutate();
   };
-  const savedMeta = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const raw = localStorage.getItem(CART_META_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed.updatedAt === 'number' ? parsed.updatedAt : null;
-    } catch {
-      return null;
-    }
-  }, [cartId, cartItems.length]);
 
+  const handleRestoreCart = () => {
+    if (!savedCartMeta?.cartId) return;
+    setCartId(savedCartMeta.cartId);
+    void qc.invalidateQueries({ queryKey: ['marketplace-cart', savedCartMeta.cartId] });
+    setToast('Carrito restaurado');
+  };
   const formatLastSaved = () => {
-    if (!savedMeta) return null;
-    const diffMs = Date.now() - savedMeta;
+    if (!savedCartMeta?.updatedAt) return null;
+    const diffMs = Date.now() - savedCartMeta.updatedAt;
     const minutes = Math.floor(diffMs / 60000);
     if (minutes < 1) return 'Actualizado hace <1 min';
     if (minutes < 60) return `Actualizado hace ${minutes} min`;
@@ -402,6 +413,11 @@ export default function MarketplacePage() {
                       <Typography variant="body2" color="text.secondary">
                         {item.miBrand ?? 'Sin marca'} {item.miModel ?? ''}
                       </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        {item.miBrand && <Chip size="small" label={item.miBrand} variant="outlined" />}
+                        {item.miModel && <Chip size="small" label={item.miModel} variant="outlined" />}
+                        <Chip size="small" label={item.miCategory} color="default" variant="outlined" />
+                      </Stack>
                       <Typography variant="h5" fontWeight={800}>
                         {item.miPriceDisplay}
                       </Typography>
@@ -445,9 +461,16 @@ export default function MarketplacePage() {
                     </Box>
                   )}
                   {!hasCartItems && !cartQuery.isLoading && (
-                    <Typography variant="body2" color="text.secondary">
-                      Agrega artículos para continuar al checkout.
-                    </Typography>
+                    <Stack spacing={1}>
+                      <Typography variant="body2" color="text.secondary">
+                        Agrega artículos para continuar al checkout.
+                      </Typography>
+                      {savedCartMeta?.count > 0 && savedCartMeta?.cartId && (
+                        <Button size="small" variant="outlined" onClick={handleRestoreCart}>
+                          Recuperar carrito guardado ({savedCartMeta.count} productos)
+                        </Button>
+                      )}
+                    </Stack>
                   )}
                   <Stack spacing={1.5}>
                     {cartItems.map((item) => (
