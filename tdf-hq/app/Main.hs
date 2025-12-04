@@ -3,6 +3,7 @@ module Main where
 
 import qualified Network.Wai.Handler.Warp as Warp
 import           Control.Monad            (forM_, when)
+import qualified Data.ByteString.Char8    as BS
 import           Data.Int                (Int64)
 import           Data.Maybe               (mapMaybe)
 import           Data.Text                (Text)
@@ -31,7 +32,7 @@ main = do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   cfg  <- loadConfig
-  pool <- makePool (pack (dbConnString cfg))
+  pool <- makePool (BS.pack (dbConnString cfg))
   if resetDb cfg
     then do
       putStrLn "Resetting DB schema..."
