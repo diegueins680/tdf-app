@@ -373,10 +373,6 @@ export default function MarketplacePage() {
           <Typography variant="h4" fontWeight={800}>
             Marketplace de Inventario
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Publicamos equipo del inventario con un margen del 25% sobre el valor de referencia. Compra sin
-            iniciar sesión: agrega al carrito y deja tus datos para coordinar pago y entrega.
-          </Typography>
         </Stack>
 
         {listingsQuery.isLoading && (

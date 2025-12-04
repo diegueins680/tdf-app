@@ -23,6 +23,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
@@ -879,6 +880,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 ]
               : [];
             const isFeaturedOpen = expandedFeatured.has(artist.apArtistId);
+            const hasPreview = artist.apFeaturedVideoUrl && artist.apHeroImageUrl;
             return (
               <Grid item xs={12} md={6} key={artist.apArtistId}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -956,15 +958,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         </Stack>
                       </Box>
                       {featuredSources.length > 0 && (
-                        <Box
-                          sx={{
-                            minWidth: { xs: '100%', md: 260 },
-                            flexGrow: 1,
-                            flexBasis: { xs: '100%', md: 280 },
-                            maxWidth: '100%',
-                          }}
-                        >
-                          <Stack spacing={1}>
+                      <Box
+                        sx={{
+                          minWidth: { xs: '100%', md: 260 },
+                          flexGrow: 1,
+                          flexBasis: { xs: '100%', md: 280 },
+                          maxWidth: '100%',
+                        }}
+                      >
+                        <Stack spacing={1}>
+                          <Stack direction="row" spacing={1}>
                             <Button
                               size="small"
                               variant={isFeaturedOpen ? 'outlined' : 'contained'}
@@ -979,22 +982,50 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             >
                               {isFeaturedOpen ? 'Ocultar video' : 'Ver video destacado'}
                             </Button>
-                            {isFeaturedOpen && (
-                              <StreamingPlayer
-                                title={`${artist.apDisplayName} — Destacado`}
-                                artist={artist.apDisplayName}
-                                posterUrl={artist.apHeroImageUrl}
-                                sources={featuredSources}
-                                variant="compact"
+                            {hasPreview && !isFeaturedOpen && (
+                              <Chip
+                                icon={<VisibilityIcon />}
+                                label="Vista previa"
+                                color="secondary"
+                                size="small"
+                                clickable
+                                onClick={() =>
+                                  setExpandedFeatured((prev) => new Set(prev).add(artist.apArtistId))
+                                }
                               />
                             )}
                           </Stack>
-                        </Box>
-                      )}
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
+                          {!isFeaturedOpen && hasPreview && (
+                            <Box
+                              component="img"
+                              src={artist.apHeroImageUrl}
+                              alt={`${artist.apDisplayName} preview`}
+                              sx={{
+                                width: '100%',
+                                borderRadius: 2,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                objectFit: 'cover',
+                              }}
+                              loading="lazy"
+                            />
+                          )}
+                          {isFeaturedOpen && (
+                            <StreamingPlayer
+                              title={`${artist.apDisplayName} — Destacado`}
+                              artist={artist.apDisplayName}
+                              posterUrl={artist.apHeroImageUrl}
+                              sources={featuredSources}
+                              variant="compact"
+                            />
+                          )}
+                        </Stack>
+                      </Box>
+                    )}
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
             );
           })}
         </Grid>

@@ -20,6 +20,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import KeyboardIcon from '@mui/icons-material/Keyboard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Label } from '../api/label';
 import type { LabelTrackDTO } from '../api/types';
@@ -37,6 +38,7 @@ export default function LabelTracksPage() {
   const [editTitle, setEditTitle] = useState('');
   const [editNote, setEditNote] = useState('');
   const [toast, setToast] = useState<string | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const tracksQuery = useQuery({
     queryKey: ['label-tracks'],
@@ -72,6 +74,27 @@ export default function LabelTracksPage() {
       setToast('Eliminado');
     },
   });
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const activeTag = (event.target as HTMLElement | null)?.tagName?.toLowerCase();
+      if (activeTag === 'input' || activeTag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable) {
+        return;
+      }
+      if (event.key.toLowerCase() === 'n') {
+        event.preventDefault();
+        const titleInput = document.getElementById('track-title-input');
+        if (titleInput instanceof HTMLElement) titleInput.focus();
+      }
+      if (event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        const searchInput = document.getElementById('track-search-input');
+        if (searchInput instanceof HTMLElement) searchInput.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const tracks = useMemo(() => tracksQuery.data ?? [], [tracksQuery.data]);
   const filteredTracks = useMemo(() => {
@@ -144,6 +167,7 @@ export default function LabelTracksPage() {
           <Stack spacing={2}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
               <TextField
+                id="track-title-input"
                 label="Título"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -214,11 +238,19 @@ export default function LabelTracksPage() {
           ))}
         </Stack>
         <TextField
+          id="track-search-input"
           size="small"
           label="Buscar por título o nota"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           sx={{ minWidth: { xs: '100%', sm: 260 } }}
+        />
+        <Chip
+          icon={<KeyboardIcon />}
+          label="Atajos: N (nuevo), F (buscar)"
+          variant={showShortcuts ? 'filled' : 'outlined'}
+          onClick={() => setShowShortcuts((prev) => !prev)}
+          size="small"
         />
       </Stack>
 
