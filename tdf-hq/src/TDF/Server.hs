@@ -781,237 +781,6 @@ calendarServer user =
     parseIso :: Text -> Maybe UTCTime
     parseIso txt = iso8601ParseM (T.unpack txt)
 
-    -- Datafast / OPPWA types
-    data DFResult = DFResult
-      { dfrCode        :: Text
-      , dfrDescription :: Maybe Text
-      } deriving (Show, Generic)
-    instance FromJSON DFResult where
-      parseJSON = withObject "DFResult" $ \o ->
-        DFResult <$> o .: "code" <*> o .:? "description"
-
-    data DFCheckoutRes = DFCheckoutRes
-      { dfcId     :: Text
-      , dfcResult :: DFResult
-      } deriving (Show, Generic)
-    instance FromJSON DFCheckoutRes where
-      parseJSON = withObject "DFCheckoutRes" $ \o ->
-        DFCheckoutRes <$> o .: "id" <*> o .: "result"
-
-    data DFResultDetails = DFResultDetails
-      { dfrdAuthCode     :: Maybe Text
-      , dfrdAcquirerCode :: Maybe Text
-      } deriving (Show, Generic)
-    instance FromJSON DFResultDetails where
-      parseJSON = withObject "DFResultDetails" $ \o ->
-        DFResultDetails
-          <$> o .:? "AuthCode"
-          <*> o .:? "AcquirerCode"
-
-    data DFPaymentStatus = DFPaymentStatus
-      { dfpId            :: Maybe Text
-      , dfpPaymentType   :: Maybe Text
-      , dfpPaymentBrand  :: Maybe Text
-      , dfpAmount        :: Maybe Text
-      , dfpCurrency      :: Maybe Text
-      , dfpResult        :: DFResult
-      , dfpResultDetails :: Maybe DFResultDetails
-      } deriving (Show, Generic)
-    instance FromJSON DFPaymentStatus where
-      parseJSON = withObject "DFPaymentStatus" $ \o ->
-        DFPaymentStatus
-          <$> o .:? "id"
-          <*> o .:? "paymentType"
-          <*> o .:? "paymentBrand"
-          <*> o .:? "amount"
-          <*> o .:? "currency"
-          <*> o .:  "result"
-          <*> o .:? "resultDetails"
-
-    data DatafastEnv = DatafastEnv
-      { dfEntityId     :: Text
-      , dfBearerToken  :: Text
-      , dfBaseUrl      :: String
-      , dfTestMode     :: Maybe Text
-      , dfExtraParams  :: [(ByteString, ByteString)]
-      } deriving (Show)
-
-    loadDatafastEnv :: AppM DatafastEnv
-    loadDatafastEnv = do
-      mEntity <- liftIO $ lookupEnv "DATAFAST_ENTITY_ID"
-      mBearer <- liftIO $ lookupEnv "DATAFAST_BEARER_TOKEN"
-      mBase   <- liftIO $ lookupEnv "DATAFAST_BASE_URL"
-      mTest   <- liftIO $ lookupEnv "DATAFAST_TEST_MODE"
-      mMid    <- liftIO $ lookupEnv "DATAFAST_MID"
-      mTid    <- liftIO $ lookupEnv "DATAFAST_TID"
-      mPserv  <- liftIO $ lookupEnv "DATAFAST_PSERV"
-      mUserData2 <- liftIO $ lookupEnv "DATAFAST_USER_DATA2"
-      mVersionDf <- liftIO $ lookupEnv "DATAFAST_VERSIONDF"
-      let entityId = fmap (T.strip . T.pack) mEntity
-          bearer   = fmap (T.strip . T.pack) mBearer
-          baseUrl  = maybe "https://test.oppwa.com" id mBase
-          testModeVal = mTest >>= (\v -> let t = T.strip (T.pack v) in if T.null t then Nothing else Just t)
-          optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
-          extras =
-            catMaybes
-              [ optPair "customParameters[SHOPPER_MID]" (T.strip . T.pack <$> mMid)
-              , optPair "customParameters[SHOPPER_TID]" (T.strip . T.pack <$> mTid)
-              , optPair "customParameters[SHOPPER_PSERV]" (T.strip . T.pack <$> mPserv)
-              , optPair "risk.parameters[USER_DATA2]" (T.strip . T.pack <$> mUserData2)
-              , optPair "customParameters[SHOPPER_VERSIONDF]" (Just (maybe "2" (T.pack) mVersionDf))
-              ]
-      case (entityId, bearer) of
-        (Just eid, Just tok) ->
-          pure DatafastEnv
-            { dfEntityId = eid
-            , dfBearerToken = tok
-            , dfBaseUrl = baseUrl
-            , dfTestMode = testModeVal
-            , dfExtraParams = extras
-            }
-        _ -> throwError err500 { errBody = "Faltan DATAFAST_ENTITY_ID / DATAFAST_BEARER_TOKEN" }
-
-    data PayPalLink = PayPalLink
-      { pplRel  :: Text
-      , pplHref :: Text
-      } deriving (Show, Generic)
-    instance FromJSON PayPalLink where
-      parseJSON = withObject "PayPalLink" $ \o ->
-        PayPalLink <$> o .: "rel" <*> o .: "href"
-
-    data PayPalCreateResponse = PayPalCreateResponse
-      { pcrId    :: Text
-      , pcrLinks :: [PayPalLink]
-      } deriving (Show, Generic)
-    instance FromJSON PayPalCreateResponse where
-      parseJSON = withObject "PayPalCreateResponse" $ \o ->
-        PayPalCreateResponse
-          <$> o .: "id"
-          <*> o .:? "links" .!= []
-
-    data PayPalToken = PayPalToken
-      { access_token :: Text
-      } deriving (Show, Generic)
-    instance FromJSON PayPalToken
-
-    data PayPalCaptureOutcome = PayPalCaptureOutcome
-      { pcoStatus :: Text
-      , pcoPayerEmail :: Maybe Text
-      } deriving (Show, Generic)
-
-    loadPaypalEnv :: AppM (Text, Text, String)
-    loadPaypalEnv = do
-      mCid <- liftIO $ lookupEnv "PAYPAL_CLIENT_ID"
-      mSecret <- liftIO $ lookupEnv "PAYPAL_CLIENT_SECRET"
-      mEnv <- liftIO $ lookupEnv "PAYPAL_ENV"
-      let cid = fmap (T.strip . T.pack) mCid
-          secret = fmap (T.strip . T.pack) mSecret
-          baseUrl = case fmap (map toLower) mEnv of
-            Just envTxt | envTxt == "live" || envTxt == "prod" -> "https://api-m.paypal.com"
-            _ -> "https://api-m.sandbox.paypal.com"
-      case (cid, secret) of
-        (Just cid', Just sec') -> pure (cid', sec', baseUrl)
-        _ -> throwError err500 { errBody = "Faltan PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET" }
-
-    paypalAccessToken :: Manager -> Text -> Text -> String -> AppM Text
-    paypalAccessToken manager cid sec baseUrl = do
-      req0 <- liftIO $ parseRequest (baseUrl ++ "/v1/oauth2/token")
-      let authVal = BS8.pack "Basic " <> B64.encode (BS8.pack (T.unpack cid <> ":" <> T.unpack sec))
-          req = req0
-            { method = "POST"
-            , requestBody = RequestBodyLBS (BL8.pack "grant_type=client_credentials")
-            , requestHeaders =
-                [ ("Content-Type", "application/x-www-form-urlencoded")
-                , ("Authorization", authVal)
-                ]
-            }
-      resp <- liftIO $ httpLbs req manager
-      when (statusCode (responseStatus resp) >= 400) $
-        throwError err502 { errBody = "PayPal token request failed." }
-      token <- case eitherDecode (responseBody resp) of
-        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token PayPal: " <> err) }
-        Right tok -> pure tok
-      pure (access_token token)
-
-    createPaypalOrderRemote
-      :: Manager
-      -> Text
-      -> Text
-      -> String
-      -> Int
-      -> Text
-      -> Text
-      -> Text
-      -> AppM (Text, Maybe Text)
-    createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName buyerEmail = do
-      token <- paypalAccessToken manager cid sec baseUrl
-      req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders")
-      let amountStr = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
-          body = object
-            [ "intent" .= ("CAPTURE" :: Text)
-            , "purchase_units" .=
-                [ object
-                    [ "amount" .= object ["currency_code" .= T.toUpper currency, "value" .= amountStr]
-                    ]
-                ]
-            , "payer" .= object
-                [ "name" .= object ["given_name" .= buyerName]
-                , "email_address" .= buyerEmail
-                ]
-            , "application_context" .= object ["shipping_preference" .= ("NO_SHIPPING" :: Text)]
-            ]
-          req = req0
-            { method = "POST"
-            , requestBody = RequestBodyLBS (encode body)
-            , requestHeaders =
-                [ ("Content-Type", "application/json")
-                , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
-                ]
-            }
-      resp <- liftIO $ httpLbs req manager
-      when (statusCode (responseStatus resp) >= 400) $
-        throwError err502 { errBody = "PayPal create order falló." }
-      resObj <- case eitherDecode (responseBody resp) of
-        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear respuesta PayPal: " <> err) }
-        Right val -> pure (val :: PayPalCreateResponse)
-      let approval = fmap pplHref . find (\lnk -> pplRel lnk == "approve") $ pcrLinks resObj
-      pure (pcrId resObj, approval)
-
-    capturePaypalOrderRemote
-      :: Manager
-      -> Text
-      -> Text
-      -> String
-      -> Text
-      -> AppM PayPalCaptureOutcome
-    capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
-      token <- paypalAccessToken manager cid sec baseUrl
-      req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack paypalOrderId ++ "/capture")
-      let req = req0
-            { method = "POST"
-            , requestBody = RequestBodyLBS "{}"
-            , requestHeaders =
-                [ ("Content-Type", "application/json")
-                , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
-                ]
-            }
-      resp <- liftIO $ httpLbs req manager
-      when (statusCode (responseStatus resp) >= 400) $
-        throwError err502 { errBody = "PayPal capture falló." }
-      parsed <- case eitherDecode (responseBody resp) of
-        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear captura PayPal: " <> err) }
-        Right (val :: Value) -> pure val
-      let statusTxt = fromMaybe "unknown" $ parseMaybe (withObject "PayPalCapture" (\o -> o .:? "status")) parsed
-          payerEmail = parseMaybe (withObject "PayPalCapture" $ \o -> do
-            payerObj <- o .:? "payer"
-            case payerObj of
-              Nothing -> pure Nothing
-              Just po -> po .:? "email_address") parsed
-      pure PayPalCaptureOutcome
-        { pcoStatus = statusTxt
-        , pcoPayerEmail = join payerEmail
-        }
-
     formatTime' :: UTCTime -> ByteString
     formatTime' t = TE.encodeUtf8 (T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" t))
 
@@ -3475,302 +3244,301 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
                 , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
                 }
             loadOrderDTO orderId
-  maybe (throwError err404) pure mOrder
-  >>= \orderDto -> do
-    env <- ask
-    -- fire-and-forget email confirmation
-    let emailSvc = EmailSvc.mkEmailService (envConfig env)
-        buyerNameTxt = T.strip mcrBuyerName
-        buyerEmailTxt = T.strip mcrBuyerEmail
-        itemsSummary = map (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi) (moItems orderDto)
-    liftIO $ void $ forkIO $ do
-      _ <- (try $
-        EmailSvc.sendMarketplaceOrder
-          emailSvc
-          buyerNameTxt
-          buyerEmailTxt
-          (moOrderId orderDto)
-          (moTotalDisplay orderDto)
-          itemsSummary) :: IO (Either SomeException ())
-      pure ()
-    pure orderDto
+  orderDto <- maybe (throwError err404) pure mOrder
+  env <- ask
+  -- fire-and-forget email confirmation
+  let emailSvc = EmailSvc.mkEmailService (envConfig env)
+      buyerNameTxt = T.strip mcrBuyerName
+      buyerEmailTxt = T.strip mcrBuyerEmail
+      itemsSummary = map (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi) (moItems orderDto)
+  liftIO $ void $ forkIO $ do
+    _ <- (try $
+      EmailSvc.sendMarketplaceOrder
+        emailSvc
+        buyerNameTxt
+        buyerEmailTxt
+        (moOrderId orderDto)
+        (moTotalDisplay orderDto)
+        itemsSummary) :: IO (Either SomeException ())
+    pure ()
+  pure orderDto
 
-  createDatafastCheckout :: Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
-  createDatafastCheckout rawId MarketplaceCheckoutReq{..} = do
-    let nameTxt = T.strip mcrBuyerName
-        emailTxt = T.strip mcrBuyerEmail
-        phoneTxt = fmap T.strip mcrBuyerPhone
-    when (T.null nameTxt) $ throwBadRequest "buyerName requerido"
-    when (T.null emailTxt) $ throwBadRequest "buyerEmail requerido"
-    cartKey <- parseCartId rawId
-    now <- liftIO getCurrentTime
-    Env{ envPool } <- ask
-    mTotals <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-    case mTotals of
-      Nothing -> throwError err404
-      Just (cartItems, totalCents, currency) -> do
-        when (totalCents <= 0) $ throwBadRequest "El carrito está vacío."
-        orderKey <- liftIO $ flip runSqlPool envPool $ do
-          oid <- insert ME.MarketplaceOrder
-            { ME.marketplaceOrderCartId        = Just cartKey
-            , ME.marketplaceOrderBuyerName     = nameTxt
-            , ME.marketplaceOrderBuyerEmail    = emailTxt
-            , ME.marketplaceOrderBuyerPhone    = phoneTxt
-            , ME.marketplaceOrderTotalUsdCents = totalCents
-            , ME.marketplaceOrderCurrency      = currency
-            , ME.marketplaceOrderStatus        = "datafast_init"
-            , ME.marketplaceOrderPaymentProvider = Just "datafast"
-            , ME.marketplaceOrderPaypalOrderId = Nothing
-            , ME.marketplaceOrderPaypalPayerEmail = Nothing
-            , ME.marketplaceOrderDatafastCheckoutId = Nothing
-            , ME.marketplaceOrderDatafastResourcePath = Nothing
-            , ME.marketplaceOrderDatafastPaymentId = Nothing
-            , ME.marketplaceOrderDatafastResultCode = Nothing
-            , ME.marketplaceOrderDatafastResultDescription = Nothing
-            , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-            , ME.marketplaceOrderDatafastAuthCode = Nothing
-            , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-            , ME.marketplaceOrderPaidAt        = Nothing
-            , ME.marketplaceOrderCreatedAt     = now
-            , ME.marketplaceOrderUpdatedAt     = now
-            }
-          forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-            let listing   = entityVal listingEnt
-                unitPrice = ME.marketplaceListingPriceUsdCents listing
-                subtotal  = unitPrice * qty
-            void $ insert ME.MarketplaceOrderItem
-              { ME.marketplaceOrderItemOrderId           = oid
-              , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-              , ME.marketplaceOrderItemQuantity          = qty
-              , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-              , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-              }
-          pure oid
-        (checkoutId, widgetUrl) <- requestDatafastCheckout orderKey totalCents currency nameTxt emailTxt phoneTxt
-        now2 <- liftIO getCurrentTime
-        liftIO $ flip runSqlPool envPool $
-          update orderKey
-            [ ME.MarketplaceOrderStatus =. "datafast_pending"
-            , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
-            , ME.MarketplaceOrderDatafastCheckoutId =. Just checkoutId
-            , ME.MarketplaceOrderUpdatedAt =. now2
-            ]
-        pure DatafastCheckoutDTO
-          { dcOrderId    = toPathPiece orderKey
-          , dcCheckoutId = checkoutId
-          , dcWidgetUrl  = T.pack widgetUrl
-          , dcAmount     = formatUsd totalCents currency
-          , dcCurrency   = currency
+createDatafastCheckout :: Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
+createDatafastCheckout rawId payload = do
+  let nameTxt = T.strip (mcrBuyerName payload)
+      emailTxt = T.strip (mcrBuyerEmail payload)
+      phoneTxt = fmap T.strip (mcrBuyerPhone payload)
+  when (T.null nameTxt) $ throwBadRequest "buyerName requerido"
+  when (T.null emailTxt) $ throwBadRequest "buyerEmail requerido"
+  cartKey <- parseCartId rawId
+  now <- liftIO getCurrentTime
+  Env{ envPool } <- ask
+  mTotals <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
+  case mTotals of
+    Nothing -> throwError err404
+    Just (cartItems, totalCents, currency) -> do
+      when (totalCents <= 0) $ throwBadRequest "El carrito está vacío."
+      orderKey <- liftIO $ flip runSqlPool envPool $ do
+        oid <- insert ME.MarketplaceOrder
+          { ME.marketplaceOrderCartId        = Just cartKey
+          , ME.marketplaceOrderBuyerName     = nameTxt
+          , ME.marketplaceOrderBuyerEmail    = emailTxt
+          , ME.marketplaceOrderBuyerPhone    = phoneTxt
+          , ME.marketplaceOrderTotalUsdCents = totalCents
+          , ME.marketplaceOrderCurrency      = currency
+          , ME.marketplaceOrderStatus        = "datafast_init"
+          , ME.marketplaceOrderPaymentProvider = Just "datafast"
+          , ME.marketplaceOrderPaypalOrderId = Nothing
+          , ME.marketplaceOrderPaypalPayerEmail = Nothing
+          , ME.marketplaceOrderDatafastCheckoutId = Nothing
+          , ME.marketplaceOrderDatafastResourcePath = Nothing
+          , ME.marketplaceOrderDatafastPaymentId = Nothing
+          , ME.marketplaceOrderDatafastResultCode = Nothing
+          , ME.marketplaceOrderDatafastResultDescription = Nothing
+          , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+          , ME.marketplaceOrderDatafastAuthCode = Nothing
+          , ME.marketplaceOrderDatafastAcquirerCode = Nothing
+          , ME.marketplaceOrderPaidAt        = Nothing
+          , ME.marketplaceOrderCreatedAt     = now
+          , ME.marketplaceOrderUpdatedAt     = now
           }
-
-  confirmDatafastPayment :: Maybe Text -> Maybe Text -> AppM MarketplaceOrderDTO
-  confirmDatafastPayment mOrderId mResourcePath = do
-    resourcePathTxt <- case fmap T.strip mResourcePath of
-      Just rp | not (T.null rp) -> pure rp
-      _ -> throwBadRequest "resourcePath requerido"
-    orderKey <- case mOrderId of
-      Just oid -> parseOrderId oid
-      Nothing  -> throwBadRequest "orderId requerido"
-    Env{ envPool } <- ask
-    mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
-    order <- maybe (throwError err404) pure mOrder
-    dfEnv <- loadDatafastEnv
-    statusResp <- datafastPaymentStatus dfEnv resourcePathTxt
-    now <- liftIO getCurrentTime
-    let code = dfrCode (dfpResult statusResp)
-        success = isDfPaymentSuccess code
-        pending = isDfPaymentPending code
-        nextStatus
-          | success = "paid"
-          | pending = "datafast_pending"
-          | otherwise = "datafast_failed"
-        paidAtVal = if success then Just now else ME.marketplaceOrderPaidAt order
-        updateFields =
-          [ ME.MarketplaceOrderStatus =. nextStatus
+        forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+          let listing   = entityVal listingEnt
+              unitPrice = ME.marketplaceListingPriceUsdCents listing
+              subtotal  = unitPrice * qty
+          void $ insert ME.MarketplaceOrderItem
+            { ME.marketplaceOrderItemOrderId           = oid
+            , ME.marketplaceOrderItemListingId         = entityKey listingEnt
+            , ME.marketplaceOrderItemQuantity          = qty
+            , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+            , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
+            }
+        pure oid
+      (checkoutId, widgetUrl) <- requestDatafastCheckout orderKey totalCents currency nameTxt emailTxt phoneTxt
+      now2 <- liftIO getCurrentTime
+      liftIO $ flip runSqlPool envPool $
+        update orderKey
+          [ ME.MarketplaceOrderStatus =. "datafast_pending"
           , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
-          , ME.MarketplaceOrderPaidAt =. paidAtVal
-          , ME.MarketplaceOrderUpdatedAt =. now
-          , ME.MarketplaceOrderDatafastResourcePath =. Just resourcePathTxt
-          , ME.MarketplaceOrderDatafastPaymentId =. dfpId statusResp
-          , ME.MarketplaceOrderDatafastResultCode =. Just code
-          , ME.MarketplaceOrderDatafastResultDescription =. dfrDescription (dfpResult statusResp)
-          , ME.MarketplaceOrderDatafastPaymentBrand =. dfpPaymentBrand statusResp
-          , ME.MarketplaceOrderDatafastAuthCode =. (dfpResultDetails statusResp >>= dfrdAuthCode)
-          , ME.MarketplaceOrderDatafastAcquirerCode =. (dfpResultDetails statusResp >>= dfrdAcquirerCode)
+          , ME.MarketplaceOrderDatafastCheckoutId =. Just checkoutId
+          , ME.MarketplaceOrderUpdatedAt =. now2
           ]
-        finalUpdates =
-          if isJust (ME.marketplaceOrderDatafastCheckoutId order)
-            then updateFields
-            else (ME.MarketplaceOrderDatafastCheckoutId =. dfpId statusResp) : updateFields
-    liftIO $ flip runSqlPool envPool $ update orderKey finalUpdates
-    mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-    maybe (throwError err500) pure mDto
+      pure DatafastCheckoutDTO
+        { dcOrderId    = toPathPiece orderKey
+        , dcCheckoutId = checkoutId
+        , dcWidgetUrl  = T.pack widgetUrl
+        , dcAmount     = formatUsd totalCents currency
+        , dcCurrency   = currency
+        }
 
-  createPaypalOrder :: Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
-  createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
-    let nameTxt = T.strip mcrBuyerName
-        emailTxt = T.strip mcrBuyerEmail
-    when (T.null nameTxt) $ throwBadRequest "buyerName requerido"
-    when (T.null emailTxt) $ throwBadRequest "buyerEmail requerido"
-    cartKey <- parseCartId rawId
-    now <- liftIO getCurrentTime
-    Env{ envPool } <- ask
-    mTotals <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-    case mTotals of
-      Nothing -> throwError err404
-      Just (cartItems, totalCents, currency) -> do
-        (cid, sec, baseUrl) <- loadPaypalEnv
-        manager <- liftIO $ newManager tlsManagerSettings
-        (ppOrderId, approvalUrl) <- createPaypalOrderRemote manager cid sec baseUrl totalCents currency nameTxt emailTxt
-        orderId <- liftIO $ flip runSqlPool envPool $ do
-          oid <- insert ME.MarketplaceOrder
-            { ME.marketplaceOrderCartId        = Just cartKey
-            , ME.marketplaceOrderBuyerName     = nameTxt
-            , ME.marketplaceOrderBuyerEmail    = emailTxt
-            , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
-            , ME.marketplaceOrderTotalUsdCents = totalCents
-            , ME.marketplaceOrderCurrency      = currency
-            , ME.marketplaceOrderStatus        = "paypal_pending"
-            , ME.marketplaceOrderPaymentProvider = Just "paypal"
-            , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
-            , ME.marketplaceOrderPaypalPayerEmail = Nothing
-            , ME.marketplaceOrderPaidAt        = Nothing
-            , ME.marketplaceOrderCreatedAt     = now
-            , ME.marketplaceOrderUpdatedAt     = now
+confirmDatafastPayment :: Maybe Text -> Maybe Text -> AppM MarketplaceOrderDTO
+confirmDatafastPayment mOrderId mResourcePath = do
+  resourcePathTxt <- case fmap T.strip mResourcePath of
+    Just rp | not (T.null rp) -> pure rp
+    _ -> throwBadRequest "resourcePath requerido"
+  orderKey <- case mOrderId of
+    Just oid -> parseOrderId oid
+    Nothing  -> throwBadRequest "orderId requerido"
+  Env{ envPool } <- ask
+  mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
+  order <- maybe (throwError err404) pure mOrder
+  dfEnv <- loadDatafastEnv
+  statusResp <- datafastPaymentStatus dfEnv resourcePathTxt
+  now <- liftIO getCurrentTime
+  let code = dfrCode (dfpResult statusResp)
+      success = isDfPaymentSuccess code
+      pending = isDfPaymentPending code
+      nextStatus
+        | success = "paid"
+        | pending = "datafast_pending"
+        | otherwise = "datafast_failed"
+      paidAtVal = if success then Just now else ME.marketplaceOrderPaidAt order
+      updateFields =
+        [ ME.MarketplaceOrderStatus =. nextStatus
+        , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
+        , ME.MarketplaceOrderPaidAt =. paidAtVal
+        , ME.MarketplaceOrderUpdatedAt =. now
+        , ME.MarketplaceOrderDatafastResourcePath =. Just resourcePathTxt
+        , ME.MarketplaceOrderDatafastPaymentId =. dfpId statusResp
+        , ME.MarketplaceOrderDatafastResultCode =. Just code
+        , ME.MarketplaceOrderDatafastResultDescription =. dfrDescription (dfpResult statusResp)
+        , ME.MarketplaceOrderDatafastPaymentBrand =. dfpPaymentBrand statusResp
+        , ME.MarketplaceOrderDatafastAuthCode =. (dfpResultDetails statusResp >>= dfrdAuthCode)
+        , ME.MarketplaceOrderDatafastAcquirerCode =. (dfpResultDetails statusResp >>= dfrdAcquirerCode)
+        ]
+      finalUpdates =
+        if isJust (ME.marketplaceOrderDatafastCheckoutId order)
+          then updateFields
+          else (ME.MarketplaceOrderDatafastCheckoutId =. dfpId statusResp) : updateFields
+  liftIO $ flip runSqlPool envPool $ update orderKey finalUpdates
+  mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+  maybe (throwError err500) pure mDto
+
+createPaypalOrder :: Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
+createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
+  let nameTxt = T.strip mcrBuyerName
+      emailTxt = T.strip mcrBuyerEmail
+  when (T.null nameTxt) $ throwBadRequest "buyerName requerido"
+  when (T.null emailTxt) $ throwBadRequest "buyerEmail requerido"
+  cartKey <- parseCartId rawId
+  now <- liftIO getCurrentTime
+  Env{ envPool } <- ask
+  mTotals <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
+  case mTotals of
+    Nothing -> throwError err404
+    Just (cartItems, totalCents, currency) -> do
+      (cid, sec, baseUrl) <- loadPaypalEnv
+      manager <- liftIO $ newManager tlsManagerSettings
+      (ppOrderId, approvalUrl) <- createPaypalOrderRemote manager cid sec baseUrl totalCents currency nameTxt emailTxt
+      orderId <- liftIO $ flip runSqlPool envPool $ do
+        oid <- insert ME.MarketplaceOrder
+          { ME.marketplaceOrderCartId        = Just cartKey
+          , ME.marketplaceOrderBuyerName     = nameTxt
+          , ME.marketplaceOrderBuyerEmail    = emailTxt
+          , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
+          , ME.marketplaceOrderTotalUsdCents = totalCents
+          , ME.marketplaceOrderCurrency      = currency
+          , ME.marketplaceOrderStatus        = "paypal_pending"
+          , ME.marketplaceOrderPaymentProvider = Just "paypal"
+          , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
+          , ME.marketplaceOrderPaypalPayerEmail = Nothing
+          , ME.marketplaceOrderPaidAt        = Nothing
+          , ME.marketplaceOrderCreatedAt     = now
+          , ME.marketplaceOrderUpdatedAt     = now
+          }
+        forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+          let listing   = entityVal listingEnt
+              unitPrice = ME.marketplaceListingPriceUsdCents listing
+              subtotal  = unitPrice * qty
+          void $ insert ME.MarketplaceOrderItem
+            { ME.marketplaceOrderItemOrderId           = oid
+            , ME.marketplaceOrderItemListingId         = entityKey listingEnt
+            , ME.marketplaceOrderItemQuantity          = qty
+            , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+            , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
             }
-          forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-            let listing   = entityVal listingEnt
-                unitPrice = ME.marketplaceListingPriceUsdCents listing
-                subtotal  = unitPrice * qty
-            void $ insert ME.MarketplaceOrderItem
-              { ME.marketplaceOrderItemOrderId           = oid
-              , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-              , ME.marketplaceOrderItemQuantity          = qty
-              , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-              , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-              }
-          pure oid
-        pure PaypalCreateDTO
-          { pcOrderId = toPathPiece orderId
-          , pcPaypalOrderId = ppOrderId
-          , pcApprovalUrl = approvalUrl
-          }
+        pure oid
+      pure PaypalCreateDTO
+        { pcOrderId = toPathPiece orderId
+        , pcPaypalOrderId = ppOrderId
+        , pcApprovalUrl = approvalUrl
+        }
 
-  capturePaypalOrder :: PaypalCaptureReq -> AppM MarketplaceOrderDTO
-  capturePaypalOrder PaypalCaptureReq{..} = do
-    orderKey <- parseOrderId pcCaptureOrderId
-    Env{ envPool } <- ask
-    mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
-    case mOrder of
-      Nothing -> throwError err404
-      Just order -> do
-        (cid, sec, baseUrl) <- loadPaypalEnv
-        manager <- liftIO $ newManager tlsManagerSettings
-        PayPalCaptureOutcome statusTxt payerEmail <- capturePaypalOrderRemote manager cid sec baseUrl pcCapturePaypalId
-        now <- liftIO getCurrentTime
-        let nextStatus = if T.toUpper statusTxt == "COMPLETED" then "paid" else T.toLower statusTxt
-            paidAtVal  = if T.toUpper statusTxt == "COMPLETED" then Just now else ME.marketplaceOrderPaidAt order
-        liftIO $ flip runSqlPool envPool $ update orderKey
-          [ ME.MarketplaceOrderStatus =. nextStatus
-          , ME.MarketplaceOrderPaypalOrderId =. Just pcCapturePaypalId
-          , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
-          , ME.MarketplaceOrderPaypalPayerEmail =. payerEmail <|> ME.marketplaceOrderPaypalPayerEmail order
-          , ME.MarketplaceOrderPaidAt =. paidAtVal
-          , ME.MarketplaceOrderUpdatedAt =. now
-          ]
-        mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-        maybe (throwError err500) pure mDto
+capturePaypalOrder :: PaypalCaptureReq -> AppM MarketplaceOrderDTO
+capturePaypalOrder PaypalCaptureReq{..} = do
+  orderKey <- parseOrderId pcCaptureOrderId
+  Env{ envPool } <- ask
+  mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
+  case mOrder of
+    Nothing -> throwError err404
+    Just order -> do
+      (cid, sec, baseUrl) <- loadPaypalEnv
+      manager <- liftIO $ newManager tlsManagerSettings
+      PayPalCaptureOutcome statusTxt payerEmail <- capturePaypalOrderRemote manager cid sec baseUrl pcCapturePaypalId
+      now <- liftIO getCurrentTime
+      let nextStatus = if T.toUpper statusTxt == "COMPLETED" then "paid" else T.toLower statusTxt
+          paidAtVal  = if T.toUpper statusTxt == "COMPLETED" then Just now else ME.marketplaceOrderPaidAt order
+      liftIO $ flip runSqlPool envPool $ update orderKey
+        [ ME.MarketplaceOrderStatus =. nextStatus
+        , ME.MarketplaceOrderPaypalOrderId =. Just pcCapturePaypalId
+        , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
+        , ME.MarketplaceOrderPaypalPayerEmail =. payerEmail <|> ME.marketplaceOrderPaypalPayerEmail order
+        , ME.MarketplaceOrderPaidAt =. paidAtVal
+        , ME.MarketplaceOrderUpdatedAt =. now
+        ]
+      mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+      maybe (throwError err500) pure mDto
 
-  requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
-  requestDatafastCheckout orderKey totalCents currency name email mPhone = do
-    dfEnv <- loadDatafastEnv
-    manager <- liftIO $ newManager tlsManagerSettings
-    let amountTxt = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
-        currencyTxt = T.toUpper (T.strip currency)
-        (givenName, surname) = splitName name
-        baseParams =
-          [ ("entityId", TE.encodeUtf8 (dfEntityId dfEnv))
-          , ("amount", TE.encodeUtf8 amountTxt)
-          , ("currency", TE.encodeUtf8 currencyTxt)
-          , ("paymentType", "DB")
-          , ("merchantTransactionId", TE.encodeUtf8 (toPathPiece orderKey))
-          , ("customer.givenName", TE.encodeUtf8 givenName)
-          , ("customer.surname", TE.encodeUtf8 surname)
-          , ("customer.email", TE.encodeUtf8 email)
-          ]
-        phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
-        testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (dfTestMode dfEnv)
-        allParams = baseParams <> phoneParam <> testModeParam <> dfExtraParams dfEnv
-        body = RequestBodyBS (renderSimpleQuery False allParams)
-        baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
-    req0 <- liftIO $ parseRequest (baseUrlClean ++ "/v1/checkouts")
-    let req = req0
-          { method = "POST"
-          , requestBody = body
-          , requestHeaders =
-              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (dfBearerToken dfEnv))
-              , ("Content-Type", "application/x-www-form-urlencoded")
-              ]
-          }
-    resp <- liftIO $ httpLbs req manager
-    when (statusCode (responseStatus resp) >= 400) $
-      throwError err502 { errBody = "Datafast checkout request failed." }
-    case eitherDecode (responseBody resp) of
-      Left _ -> throwError err502 { errBody = "No pudimos interpretar la respuesta de Datafast." }
-      Right dfResp -> do
-        let code = dfrCode (dfcResult dfResp)
-        unless (isDfCheckoutSuccess code) $
-          throwError err502 { errBody = "Datafast rechazó la solicitud de pago." }
-        let checkoutId = dfcId dfResp
-            widgetUrl = baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
-        pure (checkoutId, widgetUrl)
+requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
+requestDatafastCheckout orderKey totalCents currency name email mPhone = do
+  dfEnv <- loadDatafastEnv
+  manager <- liftIO $ newManager tlsManagerSettings
+  let amountTxt = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
+      currencyTxt = T.toUpper (T.strip currency)
+      (givenName, surname) = splitName name
+      baseParams =
+        [ ("entityId", TE.encodeUtf8 (dfEntityId dfEnv))
+        , ("amount", TE.encodeUtf8 amountTxt)
+        , ("currency", TE.encodeUtf8 currencyTxt)
+        , ("paymentType", "DB")
+        , ("merchantTransactionId", TE.encodeUtf8 (toPathPiece orderKey))
+        , ("customer.givenName", TE.encodeUtf8 givenName)
+        , ("customer.surname", TE.encodeUtf8 surname)
+        , ("customer.email", TE.encodeUtf8 email)
+        ]
+      phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
+      testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (dfTestMode dfEnv)
+      allParams = baseParams <> phoneParam <> testModeParam <> dfExtraParams dfEnv
+      body = RequestBodyBS (renderSimpleQuery False allParams)
+      baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
+  req0 <- liftIO $ parseRequest (baseUrlClean ++ "/v1/checkouts")
+  let req = req0
+        { method = "POST"
+        , requestBody = body
+        , requestHeaders =
+            [ ("Authorization", "Bearer " <> TE.encodeUtf8 (dfBearerToken dfEnv))
+            , ("Content-Type", "application/x-www-form-urlencoded")
+            ]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "Datafast checkout request failed." }
+  case eitherDecode (responseBody resp) of
+    Left _ -> throwError err502 { errBody = "No pudimos interpretar la respuesta de Datafast." }
+    Right dfResp -> do
+      let code = dfrCode (dfcResult dfResp)
+      unless (isDfCheckoutSuccess code) $
+        throwError err502 { errBody = "Datafast rechazó la solicitud de pago." }
+      let checkoutId = dfcId dfResp
+          widgetUrl = baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
+      pure (checkoutId, widgetUrl)
 
-  datafastPaymentStatus :: DatafastEnv -> Text -> AppM DFPaymentStatus
-  datafastPaymentStatus dfEnv resourcePathTxt = do
-    manager <- liftIO $ newManager tlsManagerSettings
-    let rp = T.unpack (T.strip resourcePathTxt)
-        baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
-        basePath =
-          if "http" `isPrefixOf` rp
-            then rp
-            else baseUrlClean ++ rp
-        sep = if '?' `elem` basePath then "&" else "?"
-        fullUrl = basePath ++ sep ++ "entityId=" ++ T.unpack (dfEntityId dfEnv)
-    req0 <- liftIO $ parseRequest fullUrl
-    let req = req0
-          { method = "GET"
-          , requestHeaders = [("Authorization", "Bearer " <> TE.encodeUtf8 (dfBearerToken dfEnv))]
-          }
-    resp <- liftIO $ httpLbs req manager
-    when (statusCode (responseStatus resp) >= 400) $
-      throwError err502 { errBody = "Datafast status request failed." }
-    case eitherDecode (responseBody resp) of
-      Left _ -> throwError err502 { errBody = "No pudimos leer el estado del pago de Datafast." }
-      Right statusResp -> pure statusResp
+datafastPaymentStatus :: DatafastEnv -> Text -> AppM DFPaymentStatus
+datafastPaymentStatus dfEnv resourcePathTxt = do
+  manager <- liftIO $ newManager tlsManagerSettings
+  let rp = T.unpack (T.strip resourcePathTxt)
+      baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
+      basePath =
+        if "http" `isPrefixOf` rp
+          then rp
+          else baseUrlClean ++ rp
+      sep = if '?' `elem` basePath then "&" else "?"
+      fullUrl = basePath ++ sep ++ "entityId=" ++ T.unpack (dfEntityId dfEnv)
+  req0 <- liftIO $ parseRequest fullUrl
+  let req = req0
+        { method = "GET"
+        , requestHeaders = [("Authorization", "Bearer " <> TE.encodeUtf8 (dfBearerToken dfEnv))]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "Datafast status request failed." }
+  case eitherDecode (responseBody resp) of
+    Left _ -> throwError err502 { errBody = "No pudimos leer el estado del pago de Datafast." }
+    Right statusResp -> pure statusResp
 
-  splitName :: Text -> (Text, Text)
-  splitName raw =
-    let parts = T.words raw
-    in case parts of
-      []       -> ("Cliente", "TDF")
-      [x]      -> (x, x)
-      (x:rest) -> (x, T.unwords rest)
+splitName :: Text -> (Text, Text)
+splitName raw =
+  let parts = T.words raw
+  in case parts of
+    []       -> ("Cliente", "TDF")
+    [x]      -> (x, x)
+    (x:rest) -> (x, T.unwords rest)
 
-  normalizeBaseUrl :: String -> String
-  normalizeBaseUrl url =
-    case reverse url of
-      ('/':rest) -> reverse rest
-      _          -> url
+normalizeBaseUrl :: String -> String
+normalizeBaseUrl url =
+  case reverse url of
+    ('/':rest) -> reverse rest
+    _          -> url
 
-  isDfCheckoutSuccess :: Text -> Bool
-  isDfCheckoutSuccess code = "000." `T.isPrefixOf` code
+isDfCheckoutSuccess :: Text -> Bool
+isDfCheckoutSuccess code = "000." `T.isPrefixOf` code
 
-  isDfPaymentSuccess :: Text -> Bool
-  isDfPaymentSuccess code =
-    "000.000" `T.isPrefixOf` code || "000.100" `T.isPrefixOf` code
+isDfPaymentSuccess :: Text -> Bool
+isDfPaymentSuccess code =
+  "000.000" `T.isPrefixOf` code || "000.100" `T.isPrefixOf` code
 
-  isDfPaymentPending :: Text -> Bool
-  isDfPaymentPending code = code == "000.200.000"
+isDfPaymentPending :: Text -> Bool
+isDfPaymentPending code = code == "000.200.000"
 
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do
@@ -3860,33 +3628,33 @@ requireMarketplaceAccess user =
     throwError err403
 
 loadCartDTO :: Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
-  loadCartDTO cartId = do
-    mCart <- get cartId
-    case mCart of
-      Nothing -> pure Nothing
-      Just _ -> do
-        items <- loadCartLines cartId
-        pure (Just (cartToDTO cartId items))
+loadCartDTO cartId = do
+  mCart <- get cartId
+  case mCart of
+    Nothing -> pure Nothing
+    Just _ -> do
+      items <- loadCartLines cartId
+      pure (Just (cartToDTO cartId items))
 
-  loadCartTotals
-    :: Key ME.MarketplaceCart
-    -> SqlPersistT IO (Maybe ([(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)], Int, Text))
-  loadCartTotals cartId = do
-    items <- loadCartLines cartId
-    if null items
-      then pure Nothing
-      else do
-        let totalCents = sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
-                             | (_, listing, _, qty) <- items
-                             ]
-            currency = maybe "USD" (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
-        pure (Just (items, totalCents, currency))
+loadCartTotals
+  :: Key ME.MarketplaceCart
+  -> SqlPersistT IO (Maybe ([(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)], Int, Text))
+loadCartTotals cartId = do
+  items <- loadCartLines cartId
+  if null items
+    then pure Nothing
+    else do
+      let totalCents = sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
+                           | (_, listing, _, qty) <- items
+                           ]
+          currency = maybe "USD" (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
+      pure (Just (items, totalCents, currency))
 
-  loadCartLines
-    :: Key ME.MarketplaceCart
-    -> SqlPersistT IO [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
-  loadCartLines cartId = do
-    cartItems <- selectList [ME.MarketplaceCartItemCartId ==. cartId] [Asc ME.MarketplaceCartItemId]
+loadCartLines
+  :: Key ME.MarketplaceCart
+  -> SqlPersistT IO [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+loadCartLines cartId = do
+  cartItems <- selectList [ME.MarketplaceCartItemCartId ==. cartId] [Asc ME.MarketplaceCartItemId]
   forM cartItems $ \ent@(Entity _ ci) -> do
     listing <- getJustEntity (ME.marketplaceCartItemListingId ci)
     asset   <- getJustEntity (ME.marketplaceListingAssetId (entityVal listing))
@@ -3953,9 +3721,9 @@ orderToDTO (Entity oid order) items =
               , moiQuantity          = ME.marketplaceOrderItemQuantity oi
               , moiUnitPriceUsdCents = ME.marketplaceOrderItemUnitPriceUsdCents oi
               , moiSubtotalCents     = ME.marketplaceOrderItemSubtotalUsdCents oi
-               , moiUnitPriceDisplay  = formatUsd (ME.marketplaceOrderItemUnitPriceUsdCents oi) currency
-               , moiSubtotalDisplay   = formatUsd (ME.marketplaceOrderItemSubtotalUsdCents oi) currency
-               }
+              , moiUnitPriceDisplay  = formatUsd (ME.marketplaceOrderItemUnitPriceUsdCents oi) currency
+              , moiSubtotalDisplay   = formatUsd (ME.marketplaceOrderItemSubtotalUsdCents oi) currency
+              }
   in MarketplaceOrderDTO
       { moOrderId         = toPathPiece oid
       , moCartId          = toPathPiece <$> ME.marketplaceOrderCartId order
@@ -3965,21 +3733,253 @@ orderToDTO (Entity oid order) items =
       , moStatus          = ME.marketplaceOrderStatus order
       , moStatusHistory   = [ (ME.marketplaceOrderStatus order, ME.marketplaceOrderUpdatedAt order) ]
       , moBuyerName       = ME.marketplaceOrderBuyerName order
-      , moBuyerEmail      = ME.marketplaceOrderBuyerEmail order
-      , moBuyerPhone      = ME.marketplaceOrderBuyerPhone order
-      , moPaymentProvider = ME.marketplaceOrderPaymentProvider order
-      , moPaypalOrderId   = ME.marketplaceOrderPaypalOrderId order
-      , moPaypalPayerEmail = ME.marketplaceOrderPaypalPayerEmail order
-      , moPaidAt          = ME.marketplaceOrderPaidAt order
-      , moCreatedAt       = ME.marketplaceOrderCreatedAt order
-      , moUpdatedAt       = ME.marketplaceOrderUpdatedAt order
-      , moItems           = itemDtos
-      }
+    , moBuyerEmail      = ME.marketplaceOrderBuyerEmail order
+    , moBuyerPhone      = ME.marketplaceOrderBuyerPhone order
+    , moPaymentProvider = ME.marketplaceOrderPaymentProvider order
+    , moPaypalOrderId   = ME.marketplaceOrderPaypalOrderId order
+    , moPaypalPayerEmail = ME.marketplaceOrderPaypalPayerEmail order
+    , moPaidAt          = ME.marketplaceOrderPaidAt order
+    , moCreatedAt       = ME.marketplaceOrderCreatedAt order
+    , moUpdatedAt       = ME.marketplaceOrderUpdatedAt order
+    , moItems           = itemDtos
+    }
 
 formatUsd :: Int -> Text -> Text
 formatUsd cents currency =
   let amount = (fromIntegral cents :: Double) / 100
   in T.pack (printf "%s $%.2f" (T.unpack (T.toUpper currency)) amount)
+
+-- Datafast / OPPWA types and helpers
+data DFResult = DFResult
+  { dfrCode        :: Text
+  , dfrDescription :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON DFResult where
+  parseJSON = withObject "DFResult" $ \o ->
+    DFResult <$> o .: "code" <*> o .:? "description"
+
+data DFCheckoutRes = DFCheckoutRes
+  { dfcId     :: Text
+  , dfcResult :: DFResult
+  } deriving (Show, Generic)
+instance FromJSON DFCheckoutRes where
+  parseJSON = withObject "DFCheckoutRes" $ \o ->
+    DFCheckoutRes <$> o .: "id" <*> o .: "result"
+
+data DFResultDetails = DFResultDetails
+  { dfrdAuthCode     :: Maybe Text
+  , dfrdAcquirerCode :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON DFResultDetails where
+  parseJSON = withObject "DFResultDetails" $ \o ->
+    DFResultDetails
+      <$> o .:? "AuthCode"
+      <*> o .:? "AcquirerCode"
+
+data DFPaymentStatus = DFPaymentStatus
+  { dfpId            :: Maybe Text
+  , dfpPaymentType   :: Maybe Text
+  , dfpPaymentBrand  :: Maybe Text
+  , dfpAmount        :: Maybe Text
+  , dfpCurrency      :: Maybe Text
+  , dfpResult        :: DFResult
+  , dfpResultDetails :: Maybe DFResultDetails
+  } deriving (Show, Generic)
+instance FromJSON DFPaymentStatus where
+  parseJSON = withObject "DFPaymentStatus" $ \o ->
+    DFPaymentStatus
+      <$> o .:? "id"
+      <*> o .:? "paymentType"
+      <*> o .:? "paymentBrand"
+      <*> o .:? "amount"
+      <*> o .:? "currency"
+      <*> o .:  "result"
+      <*> o .:? "resultDetails"
+
+data DatafastEnv = DatafastEnv
+  { dfEntityId     :: Text
+  , dfBearerToken  :: Text
+  , dfBaseUrl      :: String
+  , dfTestMode     :: Maybe Text
+  , dfExtraParams  :: [(ByteString, ByteString)]
+  } deriving (Show)
+
+loadDatafastEnv :: AppM DatafastEnv
+loadDatafastEnv = do
+  mEntity <- liftIO $ lookupEnv "DATAFAST_ENTITY_ID"
+  mBearer <- liftIO $ lookupEnv "DATAFAST_BEARER_TOKEN"
+  mBase   <- liftIO $ lookupEnv "DATAFAST_BASE_URL"
+  mTest   <- liftIO $ lookupEnv "DATAFAST_TEST_MODE"
+  mMid    <- liftIO $ lookupEnv "DATAFAST_MID"
+  mTid    <- liftIO $ lookupEnv "DATAFAST_TID"
+  mPserv  <- liftIO $ lookupEnv "DATAFAST_PSERV"
+  mUserData2 <- liftIO $ lookupEnv "DATAFAST_USER_DATA2"
+  mVersionDf <- liftIO $ lookupEnv "DATAFAST_VERSIONDF"
+  let entityId = fmap (T.strip . T.pack) mEntity
+      bearer   = fmap (T.strip . T.pack) mBearer
+      baseUrl  = maybe "https://test.oppwa.com" id mBase
+      testModeVal = mTest >>= (\v -> let t = T.strip (T.pack v) in if T.null t then Nothing else Just t)
+      optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
+      extras =
+        catMaybes
+          [ optPair "customParameters[SHOPPER_MID]" (T.strip . T.pack <$> mMid)
+          , optPair "customParameters[SHOPPER_TID]" (T.strip . T.pack <$> mTid)
+          , optPair "customParameters[SHOPPER_PSERV]" (T.strip . T.pack <$> mPserv)
+          , optPair "risk.parameters[USER_DATA2]" (T.strip . T.pack <$> mUserData2)
+          , optPair "customParameters[SHOPPER_VERSIONDF]" (Just (maybe "2" (T.pack) mVersionDf))
+          ]
+  case (entityId, bearer) of
+    (Just eid, Just tok) ->
+      pure DatafastEnv
+        { dfEntityId = eid
+        , dfBearerToken = tok
+        , dfBaseUrl = baseUrl
+        , dfTestMode = testModeVal
+        , dfExtraParams = extras
+        }
+    _ -> throwError err500 { errBody = "Faltan DATAFAST_ENTITY_ID / DATAFAST_BEARER_TOKEN" }
+
+data PayPalLink = PayPalLink
+  { pplRel  :: Text
+  , pplHref :: Text
+  } deriving (Show, Generic)
+instance FromJSON PayPalLink where
+  parseJSON = withObject "PayPalLink" $ \o ->
+    PayPalLink <$> o .: "rel" <*> o .: "href"
+
+data PayPalCreateResponse = PayPalCreateResponse
+  { pcrId    :: Text
+  , pcrLinks :: [PayPalLink]
+  } deriving (Show, Generic)
+instance FromJSON PayPalCreateResponse where
+  parseJSON = withObject "PayPalCreateResponse" $ \o ->
+    PayPalCreateResponse
+      <$> o .: "id"
+      <*> o .:? "links" .!= []
+
+data PayPalToken = PayPalToken
+  { access_token :: Text
+  } deriving (Show, Generic)
+instance FromJSON PayPalToken
+
+data PayPalCaptureOutcome = PayPalCaptureOutcome
+  { pcoStatus :: Text
+  , pcoPayerEmail :: Maybe Text
+  } deriving (Show, Generic)
+
+loadPaypalEnv :: AppM (Text, Text, String)
+loadPaypalEnv = do
+  mCid <- liftIO $ lookupEnv "PAYPAL_CLIENT_ID"
+  mSecret <- liftIO $ lookupEnv "PAYPAL_CLIENT_SECRET"
+  mEnv <- liftIO $ lookupEnv "PAYPAL_ENV"
+  let cid = fmap (T.strip . T.pack) mCid
+      secret = fmap (T.strip . T.pack) mSecret
+      baseUrl = case fmap (map toLower) mEnv of
+        Just envTxt | envTxt == "live" || envTxt == "prod" -> "https://api-m.paypal.com"
+        _ -> "https://api-m.sandbox.paypal.com"
+  case (cid, secret) of
+    (Just cid', Just sec') -> pure (cid', sec', baseUrl)
+    _ -> throwError err500 { errBody = "Faltan PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET" }
+
+paypalAccessToken :: Manager -> Text -> Text -> String -> AppM Text
+paypalAccessToken manager cid sec baseUrl = do
+  req0 <- liftIO $ parseRequest (baseUrl ++ "/v1/oauth2/token")
+  let authVal = BS8.pack "Basic " <> B64.encode (BS8.pack (T.unpack cid <> ":" <> T.unpack sec))
+      req = req0
+        { method = "POST"
+        , requestBody = RequestBodyLBS (BL8.pack "grant_type=client_credentials")
+        , requestHeaders =
+            [ ("Content-Type", "application/x-www-form-urlencoded")
+            , ("Authorization", authVal)
+            ]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "PayPal token request failed." }
+  token <- case eitherDecode (responseBody resp) of
+    Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token PayPal: " <> err) }
+    Right tok -> pure tok
+  pure (access_token token)
+
+createPaypalOrderRemote
+  :: Manager
+  -> Text
+  -> Text
+  -> String
+  -> Int
+  -> Text
+  -> Text
+  -> Text
+  -> AppM (Text, Maybe Text)
+createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName buyerEmail = do
+  token <- paypalAccessToken manager cid sec baseUrl
+  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders")
+  let amountStr = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
+      body = object
+        [ "intent" .= ("CAPTURE" :: Text)
+        , "purchase_units" .=
+            [ object
+                [ "amount" .= object ["currency_code" .= T.toUpper currency, "value" .= amountStr]
+                ]
+            ]
+        , "payer" .= object
+            [ "name" .= object ["given_name" .= buyerName]
+            , "email_address" .= buyerEmail
+            ]
+        , "application_context" .= object ["shipping_preference" .= ("NO_SHIPPING" :: Text)]
+        ]
+      req = req0
+        { method = "POST"
+        , requestBody = RequestBodyLBS (encode body)
+        , requestHeaders =
+            [ ("Content-Type", "application/json")
+            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+            ]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "PayPal create order falló." }
+  resObj <- case eitherDecode (responseBody resp) of
+    Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear respuesta PayPal: " <> err) }
+    Right val -> pure (val :: PayPalCreateResponse)
+  let approval = fmap pplHref . find (\lnk -> pplRel lnk == "approve") $ pcrLinks resObj
+  pure (pcrId resObj, approval)
+
+capturePaypalOrderRemote
+  :: Manager
+  -> Text
+  -> Text
+  -> String
+  -> Text
+  -> AppM PayPalCaptureOutcome
+capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
+  token <- paypalAccessToken manager cid sec baseUrl
+  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack paypalOrderId ++ "/capture")
+  let req = req0
+        { method = "POST"
+        , requestBody = RequestBodyLBS "{}"
+        , requestHeaders =
+            [ ("Content-Type", "application/json")
+            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+            ]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "PayPal capture falló." }
+  parsed <- case eitherDecode (responseBody resp) of
+    Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear captura PayPal: " <> err) }
+    Right (val :: Value) -> pure val
+  let statusTxt = fromMaybe "unknown" $ parseMaybe (withObject "PayPalCapture" (\o -> o .:? "status")) parsed
+      payerEmail = parseMaybe (withObject "PayPalCapture" $ \o -> do
+        payerObj <- o .:? "payer"
+        case payerObj of
+          Nothing -> pure Nothing
+          Just po -> po .:? "email_address") parsed
+  pure PayPalCaptureOutcome
+    { pcoStatus = statusTxt
+    , pcoPayerEmail = join payerEmail
+    }
+
 
 assetStatusLabel :: ME.AssetStatus -> Text
 assetStatusLabel st =

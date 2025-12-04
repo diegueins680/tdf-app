@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveGeneric #-}
 module TDF.Seed where
 
 import           Control.Applicative   ((<|>))
@@ -8,7 +10,7 @@ import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHa
 import           Database.Persist
 import           Database.Persist.Sql
 import           Data.Maybe             (catMaybes, fromMaybe)
-import           Data.Aeson             (decode)
+import           Data.Aeson             (decode, FromJSON)
 import qualified Data.ByteString.Lazy  as BL
 import           Data.Text              (Text)
 import qualified Data.Text             as T
@@ -17,6 +19,7 @@ import           Data.Time              (NominalDiffTime, UTCTime(..), addUTCTim
                                          secondsToDiffTime)
 import qualified Data.Map.Strict       as Map
 import           System.Directory       (doesFileExist)
+import           GHC.Generics           (Generic)
 import           TDF.Models
 import           TDF.ModelsExtra        (DropdownOption(..))
 import qualified TDF.ModelsExtra       as ME
