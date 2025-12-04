@@ -1,7 +1,7 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { useEffect, useMemo, useState } from 'react';
-import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge, Typography } from '@mui/material';
+import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider } from '@mui/material';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
@@ -36,14 +36,22 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const location = useLocation();
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [cartPreview, setCartPreview] = useState<{ title: string; subtotal: string }[]>([]);
+  const [cartAnchor, setCartAnchor] = useState<HTMLElement | null>(null);
   const hasAdmin = useMemo(
     () => (session?.modules ?? []).some((m) => m.toLowerCase() === 'admin'),
     [session?.modules],
   );
 
   useEffect(() => {
-    setCartCount(readCartMeta().count);
-    const handler = () => setCartCount(readCartMeta().count);
+    const meta = readCartMeta();
+    setCartCount(meta.count);
+    setCartPreview(meta.preview);
+    const handler = () => {
+      const next = readCartMeta();
+      setCartCount(next.count);
+      setCartPreview(next.preview);
+    };
     window.addEventListener('storage', handler);
     window.addEventListener(CART_EVENT, handler as EventListener);
     return () => {
@@ -56,6 +64,12 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
     logout();
     navigate('/login', { replace: true });
   };
+
+  const handleOpenCart = (event: React.MouseEvent<HTMLElement>) => {
+    setCartAnchor(event.currentTarget);
+  };
+  const handleCloseCart = () => setCartAnchor(null);
+  const cartOpen = Boolean(cartAnchor);
 
   const renderBreadcrumb = () => {
     const parts = location.pathname.split('/').filter(Boolean);
@@ -140,6 +154,8 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             component={RouterLink}
             to="/marketplace"
             sx={{ textTransform: 'none', position: 'relative' }}
+            onMouseEnter={handleOpenCart}
+            onClick={handleOpenCart}
           >
             <Badge
               color="secondary"
@@ -207,6 +223,46 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           )}
         </Stack>
       </Toolbar>
+      <Popover
+        open={cartOpen}
+        anchorEl={cartAnchor}
+        onClose={handleCloseCart}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{ sx: { mt: 1, minWidth: 240, p: 1 } }}
+      >
+        <Typography variant="subtitle2" sx={{ px: 1, py: 0.5, fontWeight: 700 }}>
+          Carrito
+        </Typography>
+        <Divider />
+        {cartPreview.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 1 }}>
+            Vacío. Explora el marketplace.
+          </Typography>
+        ) : (
+          <Stack sx={{ px: 1, py: 1 }} spacing={0.5}>
+            {cartPreview.map((item, idx) => (
+              <Stack key={`${item.title}-${idx}`} direction="row" justifyContent="space-between">
+                <Typography variant="body2" sx={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {item.title}
+                </Typography>
+                <Typography variant="body2" fontWeight={700}>
+                  {item.subtotal}
+                </Typography>
+              </Stack>
+            ))}
+            <Button
+              size="small"
+              variant="contained"
+              component={RouterLink}
+              to="/marketplace"
+              onClick={handleCloseCart}
+            >
+              Ir al carrito
+            </Button>
+          </Stack>
+        )}
+      </Popover>
       <ApiTokenDialog open={tokenDialogOpen} onClose={() => setTokenDialogOpen(false)} />
     </AppBar>
   );

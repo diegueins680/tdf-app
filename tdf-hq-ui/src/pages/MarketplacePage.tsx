@@ -77,7 +77,12 @@ export default function MarketplacePage() {
       (acc: number, it: MarketplaceCartItemDTO) => acc + it.mciQuantity,
       0,
     );
-    localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartQuery.data.mcCartId, count }));
+    const preview = cartQuery.data.mcItems.slice(0, 3).map((it) => ({
+      title: it.mciTitle,
+      subtotal: it.mciSubtotalDisplay,
+    }));
+    localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartQuery.data.mcCartId, count, preview }));
+    fireCartMetaEvent();
   }, [cartQuery.data]);
 
   const createCartMutation = useMutation<MarketplaceCartDTO, Error, void>({
@@ -97,7 +102,11 @@ export default function MarketplacePage() {
     onSuccess: (data) => {
       qc.setQueryData(['marketplace-cart', data.mcCartId], data);
       const count = data.mcItems.reduce((acc, it) => acc + it.mciQuantity, 0);
-      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: data.mcCartId, count }));
+      const preview = data.mcItems.slice(0, 3).map((it) => ({
+        title: it.mciTitle,
+        subtotal: it.mciSubtotalDisplay,
+      }));
+      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: data.mcCartId, count, preview }));
       setToast('Carrito actualizado');
       fireCartMetaEvent();
     },
@@ -117,7 +126,7 @@ export default function MarketplacePage() {
     onSuccess: (order) => {
       setLastOrder(order);
       void qc.invalidateQueries({ queryKey: ['marketplace-cart', cartId] });
-      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartId ?? '', count: 0 }));
+      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartId ?? '', count: 0, preview: [] }));
       setToast('Pedido enviado');
       fireCartMetaEvent();
     },
