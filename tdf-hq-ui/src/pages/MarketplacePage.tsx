@@ -153,6 +153,10 @@ export default function MarketplacePage() {
   const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
 
   const cartSubtotal = cart?.mcSubtotalDisplay ?? 'USD $0.00';
+  const resetFilters = () => {
+    setSearch('');
+    setCategory('all');
+  };
 
   const handleAdd = (listing: MarketplaceItemDTO) => {
     const currentQty =
@@ -249,6 +253,20 @@ export default function MarketplacePage() {
               <Chip label={`${filteredListings.length} resultados`} size="small" />
             </Stack>
             <Grid container spacing={2}>
+              {!listingsQuery.isLoading && filteredListings.length === 0 && (
+                <Grid item xs={12}>
+                  <Alert
+                    severity="info"
+                    action={
+                      <Button color="inherit" size="small" onClick={resetFilters}>
+                        Limpiar filtros
+                      </Button>
+                    }
+                  >
+                    No encontramos resultados con estos filtros.
+                  </Alert>
+                </Grid>
+              )}
               {filteredListings.map((item) => (
                 <Grid item xs={12} sm={6} key={item.miListingId}>
                   <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
