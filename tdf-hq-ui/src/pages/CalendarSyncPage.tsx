@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -16,23 +16,133 @@ import {
 import SyncIcon from '@mui/icons-material/Sync';
 import LinkIcon from '@mui/icons-material/Link';
 import EventIcon from '@mui/icons-material/Event';
+import { DateTime } from 'luxon';
 import { CalendarApi } from '../api/calendar';
 
 export default function CalendarSyncPage() {
+  const zone = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
   const [calendarId, setCalendarId] = useState('');
   const [code, setCode] = useState('');
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
+  const [fromInput, setFromInput] = useState('');
+  const [toInput, setToInput] = useState('');
+  const [connectedCalendar, setConnectedCalendar] = useState<string | null>(null);
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
+  const [showValidation, setShowValidation] = useState(false);
+  const [appliedRemoteConfig, setAppliedRemoteConfig] = useState(false);
+
+  const trimmedCalendarId = calendarId.trim();
+
+  const formatForInput = useCallback(
+    (dt: DateTime) => dt.setZone(zone).toFormat("yyyy-LL-dd'T'HH:mm"),
+    [zone],
+  );
+
+  const toUtcIso = useCallback(
+    (value: string) => {
+      if (!value) return null;
+      const dt = DateTime.fromFormat(value, "yyyy-LL-dd'T'HH:mm", { zone });
+      return dt.isValid ? dt.toUTC().toISO() : null;
+    },
+    [zone],
+  );
+
+  type RangePreset = 'next30' | 'last30' | 'thisMonth';
+
+  const applyRangePreset = useCallback(
+    (preset: RangePreset) => {
+      const now = DateTime.now().setZone(zone);
+      const ranges: Record<RangePreset, { start: DateTime; end: DateTime }> = {
+        next30: { start: now.startOf('day'), end: now.plus({ days: 30 }).endOf('day') },
+        last30: { start: now.minus({ days: 30 }).startOf('day'), end: now.endOf('day') },
+        thisMonth: { start: now.startOf('month'), end: now.endOf('month') },
+      };
+      const range = ranges[preset];
+      setFromInput(formatForInput(range.start));
+      setToInput(formatForInput(range.end));
+    },
+    [formatForInput, zone],
+  );
+
+  const clearRange = useCallback(() => {
+    setFromInput('');
+    setToInput('');
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storedId = window.localStorage.getItem('calendar-sync.calendarId');
+    const storedRange = window.localStorage.getItem('calendar-sync.range');
+    const storedConnected = window.localStorage.getItem('calendar-sync.connected');
+    const storedLastSync = window.localStorage.getItem('calendar-sync.lastSyncAt');
+
+    if (storedId) setCalendarId(storedId);
+    if (storedConnected) setConnectedCalendar(storedConnected);
+    if (storedLastSync) setLastSyncAt(storedLastSync);
+
+    if (storedRange) {
+      try {
+        const parsed = JSON.parse(storedRange);
+        if (parsed.from) setFromInput(parsed.from);
+        if (parsed.to) setToInput(parsed.to);
+      } catch {
+        applyRangePreset('next30');
+      }
+    } else {
+      applyRangePreset('next30');
+    }
+  }, [applyRangePreset]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('calendar-sync.calendarId', calendarId);
+  }, [calendarId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('calendar-sync.range', JSON.stringify({ from: fromInput, to: toInput }));
+  }, [fromInput, toInput]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (connectedCalendar) window.localStorage.setItem('calendar-sync.connected', connectedCalendar);
+  }, [connectedCalendar]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (lastSyncAt) window.localStorage.setItem('calendar-sync.lastSyncAt', lastSyncAt);
+  }, [lastSyncAt]);
+
+  const fromIso = useMemo(() => toUtcIso(fromInput), [fromInput, toUtcIso]);
+  const toIso = useMemo(() => toUtcIso(toInput), [toInput, toUtcIso]);
+
+  const rangeError = useMemo(() => {
+    if (fromIso && toIso) {
+      return DateTime.fromISO(fromIso) > DateTime.fromISO(toIso)
+        ? 'La fecha "Desde" no puede ser mayor a "Hasta".'
+        : null;
+    }
+    return null;
+  }, [fromIso, toIso]);
 
   const eventsQuery = useQuery({
-    queryKey: ['calendar-events', calendarId, from, to],
+    queryKey: ['calendar-events', trimmedCalendarId, fromIso, toIso],
     queryFn: () =>
       CalendarApi.listEvents({
-        calendarId: calendarId.trim() || undefined,
-        from: from || undefined,
-        to: to || undefined,
+        calendarId: trimmedCalendarId || undefined,
+        from: fromIso || undefined,
+        to: toIso || undefined,
       }),
-    enabled: Boolean(calendarId.trim()),
+    enabled:
+      Boolean(trimmedCalendarId) &&
+      !rangeError &&
+      (!fromInput || Boolean(fromIso)) &&
+      (!toInput || Boolean(toIso)),
+  });
+
+  const configQuery = useQuery({
+    queryKey: ['calendar-config'],
+    queryFn: () => CalendarApi.getConfig(),
+    staleTime: 5 * 60 * 1000,
   });
 
   const authUrlMutation = useMutation({
@@ -45,9 +155,12 @@ export default function CalendarSyncPage() {
   });
 
   const exchangeMutation = useMutation({
-    mutationFn: () => CalendarApi.exchangeCode({ code: code.trim(), calendarId: calendarId.trim() }),
+    mutationFn: () => CalendarApi.exchangeCode({ code: code.trim(), calendarId: trimmedCalendarId }),
     onSuccess: () => {
       setCode('');
+      setShowValidation(false);
+      setConnectedCalendar(trimmedCalendarId);
+      setLastSyncAt(null);
       void eventsQuery.refetch();
     },
   });
@@ -55,14 +168,45 @@ export default function CalendarSyncPage() {
   const syncMutation = useMutation({
     mutationFn: () =>
       CalendarApi.sync({
-        calendarId: calendarId.trim(),
-        from: from || undefined,
-        to: to || undefined,
+        calendarId: trimmedCalendarId,
+        from: fromIso || undefined,
+        to: toIso || undefined,
       }),
-    onSuccess: () => void eventsQuery.refetch(),
+    onSuccess: () => {
+      setShowValidation(false);
+      setLastSyncAt(new Date().toISOString());
+      void eventsQuery.refetch();
+    },
   });
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
+  const calendarIdError = showValidation && !trimmedCalendarId ? 'Ingresa el Calendar ID o usa "primary".' : '';
+  const codeError = showValidation && !code.trim() ? 'Pega el code que te devuelve Google tras consentir.' : '';
+
+  const handleSaveTokens = () => {
+    setShowValidation(true);
+    if (!trimmedCalendarId || !code.trim()) return;
+    exchangeMutation.mutate();
+  };
+
+  const handleSync = () => {
+    setShowValidation(true);
+    if (!trimmedCalendarId || rangeError || (fromInput && !fromIso) || (toInput && !toIso)) return;
+    syncMutation.mutate();
+  };
+
+  useEffect(() => {
+    if (!configQuery.isSuccess || appliedRemoteConfig) return;
+    const cfg = configQuery.data;
+    if (!cfg) {
+      setAppliedRemoteConfig(true);
+      return;
+    }
+    setConnectedCalendar(cfg.calendarId);
+    setCalendarId((prev) => (prev.trim() ? prev : cfg.calendarId));
+    setLastSyncAt(cfg.syncedAt ?? null);
+    setAppliedRemoteConfig(true);
+  }, [appliedRemoteConfig, configQuery.data, configQuery.isSuccess]);
 
   return (
     <Stack spacing={3}>
@@ -72,9 +216,28 @@ export default function CalendarSyncPage() {
             Integración Google Calendar
           </Typography>
           <Typography color="text.secondary">
-            Conecta tu calendario y sincroniza eventos a la base de datos para usarlos en reportes, agenda interna y posteriores
-            automatizaciones.
+            Conecta tu calendario y sincroniza eventos a la base de datos para usarlos en reportes, agenda interna y
+            posteriores automatizaciones. Usa los pasos: 1) abre la URL de consentimiento, 2) pega el code, 3) sincroniza.
           </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap">
+            <Chip
+              color={connectedCalendar ? 'success' : 'default'}
+              label={connectedCalendar ? `Tokens guardados para ${connectedCalendar}` : 'Tokens pendientes'}
+              size="small"
+            />
+            <Chip variant="outlined" label={`Zona local: ${zone}`} size="small" />
+            {lastSyncAt && (
+              <Chip
+                variant="outlined"
+                color="secondary"
+                size="small"
+                label={`Última sync: ${new Date(lastSyncAt).toLocaleString()}`}
+              />
+            )}
+          </Stack>
+          {configQuery.isError && (
+            <Alert severity="warning">No pudimos leer la configuración guardada. Intenta recargar o revisar permisos.</Alert>
+          )}
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <TextField
@@ -82,25 +245,39 @@ export default function CalendarSyncPage() {
                 fullWidth
                 value={calendarId}
                 onChange={(e) => setCalendarId(e.target.value)}
-                helperText="Ej: primary o calendar-id@group.calendar.google.com"
+                helperText={calendarIdError || 'Ej: primary o calendar-id@group.calendar.google.com'}
+                required
+                error={Boolean(calendarIdError)}
+                FormHelperTextProps={calendarIdError ? { sx: { color: 'error.main' } } : undefined}
+                placeholder="primary"
               />
             </Grid>
             <Grid item xs={12} md={4}>
               <TextField
-                label="Desde (opcional, ISO)"
+                label="Desde (opcional)"
                 fullWidth
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                placeholder="2025-12-01T00:00:00Z"
+                type="datetime-local"
+                value={fromInput}
+                onChange={(e) => setFromInput(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                error={Boolean(fromInput && !fromIso)}
+                helperText={
+                  fromInput && !fromIso
+                    ? 'Fecha inválida, usa el selector.'
+                    : 'Se convierte a UTC automáticamente.'
+                }
               />
             </Grid>
             <Grid item xs={12} md={4}>
               <TextField
-                label="Hasta (opcional, ISO)"
+                label="Hasta (opcional)"
                 fullWidth
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                placeholder="2026-01-31T23:59:59Z"
+                type="datetime-local"
+                value={toInput}
+                onChange={(e) => setToInput(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                error={Boolean(toInput && !toIso)}
+                helperText={toInput && !toIso ? 'Fecha inválida, usa el selector.' : 'Déjalo vacío para traer todo.'}
               />
             </Grid>
           </Grid>
@@ -118,11 +295,13 @@ export default function CalendarSyncPage() {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               sx={{ minWidth: 320 }}
+              error={Boolean(codeError)}
+              helperText={codeError || 'Se genera al aceptar en la ventana de Google.'}
             />
             <Button
               variant="contained"
-              onClick={() => exchangeMutation.mutate()}
-              disabled={!code.trim() || !calendarId.trim() || exchangeMutation.isPending}
+              onClick={handleSaveTokens}
+              disabled={!code.trim() || !trimmedCalendarId || exchangeMutation.isPending}
             >
               Guardar tokens
             </Button>
@@ -130,8 +309,8 @@ export default function CalendarSyncPage() {
               variant="contained"
               color="secondary"
               startIcon={<SyncIcon />}
-              onClick={() => syncMutation.mutate()}
-              disabled={!calendarId.trim() || syncMutation.isPending}
+              onClick={handleSync}
+              disabled={!trimmedCalendarId || syncMutation.isPending || Boolean(rangeError)}
             >
               Sincronizar ahora
             </Button>
@@ -146,6 +325,31 @@ export default function CalendarSyncPage() {
               Sync OK: {syncMutation.data.updated} actualizados, {syncMutation.data.created} creados, {syncMutation.data.deleted} cancelados.
             </Alert>
           )}
+          <Divider />
+          <Stack spacing={1}>
+            <Typography variant="h6" fontWeight={700}>
+              Rango a sincronizar (opcional)
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap">
+              <Button size="small" variant="outlined" onClick={() => applyRangePreset('next30')}>
+                Próximos 30 días
+              </Button>
+              <Button size="small" variant="outlined" onClick={() => applyRangePreset('last30')}>
+                Últimos 30 días
+              </Button>
+              <Button size="small" variant="outlined" onClick={() => applyRangePreset('thisMonth')}>
+                Mes en curso
+              </Button>
+              <Button size="small" onClick={clearRange}>
+                Sin filtro
+              </Button>
+            </Stack>
+            {rangeError && <Alert severity="warning">{rangeError}</Alert>}
+            <Typography variant="body2" color="text.secondary">
+              Las fechas usan tu zona local ({zone}) y se guardan en UTC. Deja ambos campos vacíos para sincronizar todos los
+              eventos disponibles.
+            </Typography>
+          </Stack>
         </Stack>
       </Paper>
 

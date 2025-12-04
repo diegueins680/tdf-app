@@ -419,6 +419,7 @@ calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
 calendarServer user =
        calendarAuthUrlH
   :<|> calendarTokenExchangeH
+  :<|> calendarConfigH
   :<|> calendarSyncH
   :<|> calendarEventsH
   where
@@ -512,6 +513,15 @@ calendarServer user =
         , syncedAt = Nothing
         }
 
+    calendarConfigH :: Maybe Text -> AppM (Maybe CalAPI.CalendarConfigDTO)
+    calendarConfigH mCalendarId = do
+      requireAdmin
+      let mTrimmed = fmap T.strip mCalendarId
+      mCfg <- case mTrimmed of
+        Just cid | not (T.null cid) -> runDB $ getBy (Cal.UniqueCalendar cid)
+        _ -> listToMaybe <$> runDB (selectList [] [Desc Cal.GoogleCalendarConfigUpdatedAt, LimitTo 1])
+      pure (toCfgDTO <$> mCfg)
+
     calendarSyncH :: CalAPI.SyncRequest -> AppM CalAPI.SyncResult
     calendarSyncH CalAPI.SyncRequest{..} = do
       requireAdmin
@@ -546,6 +556,15 @@ calendarServer user =
           filters = baseFilters ++ dateFilters ++ statusFilters
       rows <- runDB $ selectList filters [Desc Cal.GoogleCalendarEventStartAt, Desc Cal.GoogleCalendarEventUpdatedLocal]
       pure (map toEventDTO rows)
+
+    toCfgDTO :: Entity Cal.GoogleCalendarConfig -> CalAPI.CalendarConfigDTO
+    toCfgDTO (Entity cfgId cfg) =
+      CalAPI.CalendarConfigDTO
+        { configId = fromIntegral (fromSqlKey cfgId)
+        , calendarId = Cal.googleCalendarConfigCalendarId cfg
+        , syncCursor = Cal.googleCalendarConfigSyncCursor cfg
+        , syncedAt = Cal.googleCalendarConfigSyncedAt cfg
+        }
 
     toEventDTO :: Entity Cal.GoogleCalendarEvent -> CalAPI.CalendarEventDTO
     toEventDTO (Entity eid e) =
@@ -3174,7 +3193,7 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
   when (T.null (T.strip mcrBuyerEmail)) $ throwBadRequest "buyerEmail requerido"
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
-  Env{..} <- ask
+  Env{ envPool } <- ask
   mOrder <- liftIO $ flip runSqlPool envPool $ do
     mCart <- get cartKey
     case mCart of
@@ -3214,9 +3233,9 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
             loadOrderDTO orderId
   maybe (throwError err404) pure mOrder
   >>= \orderDto -> do
+    env <- ask
     -- fire-and-forget email confirmation
-    let cfg = envConfig
-        emailSvc = EmailSvc.mkEmailService cfg
+    let emailSvc = EmailSvc.mkEmailService (envConfig env)
         buyerNameTxt = T.strip mcrBuyerName
         buyerEmailTxt = T.strip mcrBuyerEmail
         itemsSummary = map (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi) (moItems orderDto)

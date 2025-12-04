@@ -3,10 +3,7 @@ module Main where
 
 import qualified Network.Wai.Handler.Warp as Warp
 import           Control.Monad            (forM_, when)
-import           Data.ByteString.Char8    (pack)
-import           Data.Char                (isSpace, toLower)
 import           Data.Int                (Int64)
-import           Data.List               (dropWhileEnd)
 import           Data.Maybe               (mapMaybe)
 import           Data.Text                (Text)
 import qualified Data.Text               as T
@@ -14,17 +11,11 @@ import           Database.Persist         ( (=.), upsert )
 import           Database.Persist.Sql     (SqlPersistT, Single(..), rawExecute, rawSql, runMigration,
                                            runSqlPool, toSqlKey)
 import           Database.Persist.Types   (PersistValue (PersistText))
-import           System.Environment       (lookupEnv)
 import           System.IO                (hSetEncoding, stdout, stderr)
 import           GHC.IO.Encoding          (utf8, setLocaleEncoding)
 import           Text.Read                (readMaybe)
 
-import           Network.Wai.Middleware.Cors
-                 ( cors
-                 , simpleCorsResourcePolicy
-                 , CorsResourcePolicy(..)
-                 , simpleHeaders
-                 )
+import           TDF.Cors                 (corsPolicy)
 
 import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
 import           TDF.Cron       (startCoursePaymentReminderJob)
@@ -59,72 +50,11 @@ main = do
   putStrLn ("Starting server on port " <> show (appPort cfg))
 
   let env = Env{ envPool = pool, envConfig = cfg }
-      allowedOriginsBase =
-        [ "http://localhost:5173"
-        , "http://127.0.0.1:5173"
-        , "http://localhost:4173"
-        , "http://127.0.0.1:4173"
-        , "http://localhost:3000"
-        , "http://127.0.0.1:3000"
-        , "http://localhost:5174"
-        , "http://127.0.0.1:5174"
-        , "https://tdf-ui.onrender.com"
-        , "https://tdf-7t2qa.onrender.com"
-        , "https://tdfui.pages.dev"
-        , "https://tdf-app.pages.dev"
-        ]
-  listEnvs <- mapM lookupEnv ["ALLOW_ORIGINS", "ALLOWED_ORIGINS", "CORS_ALLOW_ORIGINS"]
-  singleEnvs <- mapM lookupEnv ["ALLOW_ORIGIN", "ALLOWED_ORIGIN", "CORS_ALLOW_ORIGIN"]
-  allowAllFlagEnv <- anyTrue ["ALLOW_ALL_ORIGINS", "ALLOWED_ORIGINS_ALL", "CORS_ALLOW_ALL"]
-  let allowAllFlag = True || allowAllFlagEnv
-  let fromListEnv =
-        concatMap (maybe [] (map pack . splitComma)) listEnvs
-      fromOneEnv =
-        concatMap (maybe [] (\origin -> [pack origin])) singleEnvs
-      allowedOrigins = allowedOriginsBase <> fromListEnv <> fromOneEnv
-      allowedHeaders =
-        "Authorization"
-        : "Content-Type"
-        : "X-Requested-With"
-        : simpleHeaders
-      corsPolicy =
-        simpleCorsResourcePolicy
-          { corsRequestHeaders = allowedHeaders
-          , corsMethods        = ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
-          , corsOrigins        = if allowAllFlag then Nothing else Just (allowedOrigins, True)
-          }
-      app = mkApp env
+  appCors <- corsPolicy
+  let app = mkApp env
 
   startCoursePaymentReminderJob env
-  Warp.run (appPort cfg) (cors (const $ Just corsPolicy) app)
-
--- | Split a comma-separated list into trimmed entries.
-splitComma :: String -> [String]
-splitComma = go . dropWhile isSpace
-  where
-    go [] = []
-    go s =
-      let (h, t) = break (== ',') s
-          h'     = trim h
-      in if null t
-           then [h']
-           else h' : go (drop 1 t)
-    trim = dropWhileEnd isSpace . dropWhile isSpace
-
-anyTrue :: [String] -> IO Bool
-anyTrue names = do
-  vals <- mapM lookupEnv names
-  pure (any (maybe False parseBool) vals)
-
-parseBool :: String -> Bool
-parseBool val =
-  case map toLower (dropWhile isSpace val) of
-    ""      -> False
-    "true"  -> True
-    "1"     -> True
-    "yes"   -> True
-    "on"    -> True
-    _       -> False
+  Warp.run (appPort cfg) (appCors app)
 
 resetSchema :: SqlPersistT IO ()
 resetSchema = do

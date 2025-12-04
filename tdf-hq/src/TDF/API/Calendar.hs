@@ -65,5 +65,6 @@ instance ToJSON CalendarEventDTO
 type CalendarAPI =
        "v1" :> "auth-url" :> Post '[JSON] AuthUrlResponse
   :<|> "v1" :> "tokens"   :> ReqBody '[JSON] TokenExchangeIn :> Post '[JSON] CalendarConfigDTO
+  :<|> "v1" :> "config"   :> QueryParam "calendarId" Text :> Get '[JSON] (Maybe CalendarConfigDTO)
   :<|> "v1" :> "sync"     :> ReqBody '[JSON] SyncRequest :> Post '[JSON] SyncResult
   :<|> "v1" :> "events"   :> QueryParam "calendarId" Text :> QueryParam "from" UTCTime :> QueryParam "to" UTCTime :> QueryParam "status" Text :> Get '[JSON] [CalendarEventDTO]

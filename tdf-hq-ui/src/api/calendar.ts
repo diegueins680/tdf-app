@@ -48,6 +48,12 @@ export interface CalendarEventDTO {
 export const CalendarApi = {
   getAuthUrl: () => post<AuthUrlResponse>('/calendar/v1/auth-url', {}),
   exchangeCode: (payload: TokenExchangeIn) => post<CalendarConfigDTO>('/calendar/v1/tokens', payload),
+  getConfig: (calendarId?: string) => {
+    const search = new URLSearchParams();
+    if (calendarId) search.set('calendarId', calendarId);
+    const qs = search.toString();
+    return get<CalendarConfigDTO | null>(`/calendar/v1/config${qs ? `?${qs}` : ''}`);
+  },
   sync: (payload: SyncRequest) => post<SyncResult>('/calendar/v1/sync', payload),
   listEvents: (params?: { calendarId?: string; from?: string; to?: string; status?: string }) => {
     const search = new URLSearchParams();
