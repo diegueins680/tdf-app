@@ -72,6 +72,14 @@ export default function MarketplacePage() {
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  const cartQuery = useQuery<MarketplaceCartDTO>({
+    queryKey: ['marketplace-cart', cartId ?? ''],
+    enabled: Boolean(cartId),
+    queryFn: async () => {
+      if (!cartId) throw new Error('no-cart');
+      return Marketplace.getCart(cartId);
+    },
+  });
   const cart = cartQuery.data;
   const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
   const savedCartMeta = useMemo(() => {
@@ -96,15 +104,6 @@ export default function MarketplacePage() {
   const listingsQuery = useQuery({
     queryKey: ['marketplace-listings'],
     queryFn: Marketplace.list,
-  });
-
-  const cartQuery = useQuery<MarketplaceCartDTO>({
-    queryKey: ['marketplace-cart', cartId ?? ''],
-    enabled: Boolean(cartId),
-    queryFn: async () => {
-      if (!cartId) throw new Error('no-cart');
-      return Marketplace.getCart(cartId);
-    },
   });
 
   useEffect(() => {
