@@ -46,6 +46,7 @@ export default function MarketplacePage() {
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);
+  const [copyToast, setCopyToast] = useState<string | null>(null);
   const [cartId, setCartId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem(CART_STORAGE_KEY);
@@ -249,6 +250,21 @@ export default function MarketplacePage() {
             <Typography variant="body2" color="text.secondary">
               Estado: {lastOrder.moStatus}
             </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(lastOrder.moOrderId);
+                  setCopyToast('ID de pedido copiado');
+                } catch {
+                  setCopyToast('No se pudo copiar el ID');
+                }
+              }}
+              sx={{ alignSelf: 'flex-start', mt: 1 }}
+            >
+              Copiar ID: {lastOrder.moOrderId}
+            </Button>
           </Stack>
         </CardContent>
       </Card>
@@ -522,6 +538,16 @@ export default function MarketplacePage() {
       >
         <Alert severity="success" onClose={() => setToast(null)} sx={{ width: '100%' }}>
           {toast}
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={Boolean(copyToast)}
+        autoHideDuration={2000}
+        onClose={() => setCopyToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" onClose={() => setCopyToast(null)} sx={{ width: '100%' }}>
+          {copyToast}
         </Alert>
       </Snackbar>
     </Stack>
