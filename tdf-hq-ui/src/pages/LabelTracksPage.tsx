@@ -323,6 +323,15 @@ export default function LabelTracksPage() {
                     <Button variant="text" size="small" onClick={() => openEdit(track)}>
                       Editar
                     </Button>
+                    {!isDone && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => updateMutation.mutate({ id: track.ltId, status: 'done' })}
+                      >
+                        Cerrar hoy
+                      </Button>
+                    )}
                     <Button
                       variant="outlined"
                       size="small"

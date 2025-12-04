@@ -8,12 +8,15 @@ import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHa
 import           Database.Persist
 import           Database.Persist.Sql
 import           Data.Maybe             (catMaybes, fromMaybe)
+import           Data.Aeson             (decode)
+import qualified Data.ByteString.Lazy  as BL
 import           Data.Text              (Text)
 import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as TE
 import           Data.Time              (NominalDiffTime, UTCTime(..), addUTCTime, fromGregorian, getCurrentTime,
                                          secondsToDiffTime)
 import qualified Data.Map.Strict       as Map
+import           System.Directory       (doesFileExist)
 import           TDF.Models
 import           TDF.ModelsExtra        (DropdownOption(..))
 import qualified TDF.ModelsExtra       as ME
@@ -665,40 +668,129 @@ ensureInventoryAsset (nameTxt, brandTxt, modelTxt, categoryTxt) = do
         }
       pure ()
 
+data RentSaleRow = RentSaleRow
+  { code             :: Text
+  , name             :: Text
+  , category         :: Text
+  , rent_recommended :: Maybe Double
+  , sale_recommended :: Maybe Double
+  , source           :: Maybe Text
+  , note             :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON RentSaleRow
+
+loadRentSaleRows :: IO (Maybe [RentSaleRow])
+loadRentSaleRows = do
+  exists <- doesFileExist "data/inventory_rent_sale.json"
+  if not exists
+    then pure Nothing
+    else do
+      raw <- BL.readFile "data/inventory_rent_sale.json"
+      pure (decode raw :: Maybe [RentSaleRow])
+
 seedMarketplaceListings :: SqlPersistT IO ()
 seedMarketplaceListings = do
   now <- liftIO getCurrentTime
-  assets <- selectList [] [Asc ME.AssetName]
-  forM_ assets $ \(Entity assetId asset) -> do
-    case Map.lookup (ME.assetName asset) marketplacePriceCents of
-      Nothing -> pure () -- inventory entry has no researched price; skip
-      Just baseCents -> do
-        let listingPrice = applyMarketplaceMarkup baseCents
-            titleTxt = ME.assetName asset
-        existing <- getBy (ME.UniqueMarketplaceAsset assetId)
-        case existing of
-          Just (Entity listingId listing) -> do
-            let updates = catMaybes
-                  [ if ME.marketplaceListingPriceUsdCents listing == listingPrice
-                      then Nothing else Just (ME.MarketplaceListingPriceUsdCents =. listingPrice)
-                  , if ME.marketplaceListingTitle listing == titleTxt
-                      then Nothing else Just (ME.MarketplaceListingTitle =. titleTxt)
-                  , if ME.marketplaceListingActive listing
-                      then Nothing else Just (ME.MarketplaceListingActive =. True)
-                  , Just (ME.MarketplaceListingUpdatedAt =. now)
-                  ]
-            unless (null updates) (update listingId updates)
+  mRows <- liftIO loadRentSaleRows
+  case mRows of
+    Nothing -> seedFromStatic now
+    Just rows -> do
+      forM_ rows $ \RentSaleRow{..} -> do
+        let nameClean = T.strip name
+            catClean  = T.toLower (T.strip category)
+        mExisting <- selectFirst [ME.AssetName ==. nameClean] []
+        assetId <- case mExisting of
+          Just (Entity aid _) -> pure aid
           Nothing -> do
-            void $ insert ME.MarketplaceListing
-              { ME.marketplaceListingAssetId       = assetId
-              , ME.marketplaceListingTitle         = titleTxt
-              , ME.marketplaceListingPriceUsdCents = listingPrice
-              , ME.marketplaceListingMarkupPct     = 25
-              , ME.marketplaceListingCurrency      = "USD"
-              , ME.marketplaceListingActive        = True
-              , ME.marketplaceListingCreatedAt     = now
-              , ME.marketplaceListingUpdatedAt     = now
+            aid <- insert ME.Asset
+              { ME.assetName                  = nameClean
+              , ME.assetCategory              = catClean
+              , ME.assetBrand                 = Nothing
+              , ME.assetModel                 = Nothing
+              , ME.assetSerialNumber          = Nothing
+              , ME.assetPurchaseDate          = Nothing
+              , ME.assetPurchasePriceUsdCents = Nothing
+              , ME.assetCondition             = ME.Good
+              , ME.assetStatus                = ME.Active
+              , ME.assetLocationId            = Nothing
+              , ME.assetOwner                 = "TDF"
+              , ME.assetQrCode                = Nothing
+              , ME.assetPhotoUrl              = Nothing
+              , ME.assetNotes                 = note
+              , ME.assetWarrantyExpires       = Nothing
+              , ME.assetMaintenancePolicy     = ME.None
+              , ME.assetNextMaintenanceDue    = Nothing
               }
+            pure aid
+        let upsertListing purpose price maybeMarkup = do
+              let priceCents = maybe 0 id price
+                  titleTxt   = nameClean
+                  mk         = maybe 40 id maybeMarkup
+              when (priceCents > 0) $ do
+                existing <- getBy (ME.UniqueMarketplaceAsset assetId purpose)
+                case existing of
+                  Just (Entity lid listing) -> do
+                    let updates = catMaybes
+                          [ if ME.marketplaceListingPriceUsdCents listing == priceCents
+                              then Nothing else Just (ME.MarketplaceListingPriceUsdCents =. priceCents)
+                          , if ME.marketplaceListingTitle listing == titleTxt
+                              then Nothing else Just (ME.MarketplaceListingTitle =. titleTxt)
+                          , if ME.marketplaceListingMarkupPct listing == mk
+                              then Nothing else Just (ME.MarketplaceListingMarkupPct =. mk)
+                          , if ME.marketplaceListingActive listing
+                              then Nothing else Just (ME.MarketplaceListingActive =. True)
+                          , Just (ME.MarketplaceListingUpdatedAt =. now)
+                          ]
+                    unless (null updates) (update lid updates)
+                  Nothing -> void $ insert ME.MarketplaceListing
+                    { ME.marketplaceListingAssetId       = assetId
+                    , ME.marketplaceListingTitle         = titleTxt
+                    , ME.marketplaceListingPurpose       = purpose
+                    , ME.marketplaceListingPriceUsdCents = priceCents
+                    , ME.marketplaceListingMarkupPct     = mk
+                    , ME.marketplaceListingCurrency      = "USD"
+                    , ME.marketplaceListingActive        = True
+                    , ME.marketplaceListingCreatedAt     = now
+                    , ME.marketplaceListingUpdatedAt     = now
+                    }
+        let rentPrice = fmap (\r -> round (r * 1.4 * 100)) rent_recommended
+            salePrice = fmap (\s -> round (s * 1.4 * 100)) sale_recommended
+        upsertListing "rent" rentPrice (Just 40)
+        upsertListing "sale" salePrice (Just 40)
+  where
+    seedFromStatic now = do
+      assets <- selectList [] [Asc ME.AssetName]
+      forM_ assets $ \(Entity assetId asset) -> do
+        case Map.lookup (ME.assetName asset) marketplacePriceCents of
+          Nothing -> pure ()
+          Just baseCents -> do
+            let listingPrice = applyMarketplaceMarkup baseCents
+                titleTxt = ME.assetName asset
+            existing <- getBy (ME.UniqueMarketplaceAsset assetId "sale")
+            case existing of
+              Just (Entity listingId listing) -> do
+                let updates = catMaybes
+                      [ if ME.marketplaceListingPriceUsdCents listing == listingPrice
+                          then Nothing else Just (ME.MarketplaceListingPriceUsdCents =. listingPrice)
+                      , if ME.marketplaceListingTitle listing == titleTxt
+                          then Nothing else Just (ME.MarketplaceListingTitle =. titleTxt)
+                      , if ME.marketplaceListingActive listing
+                          then Nothing else Just (ME.MarketplaceListingActive =. True)
+                      , Just (ME.MarketplaceListingUpdatedAt =. now)
+                      ]
+                unless (null updates) (update listingId updates)
+              Nothing -> do
+                void $ insert ME.MarketplaceListing
+                  { ME.marketplaceListingAssetId       = assetId
+                  , ME.marketplaceListingTitle         = titleTxt
+                  , ME.marketplaceListingPurpose       = "sale"
+                  , ME.marketplaceListingPriceUsdCents = listingPrice
+                  , ME.marketplaceListingMarkupPct     = 25
+                  , ME.marketplaceListingCurrency      = "USD"
+                  , ME.marketplaceListingActive        = True
+                  , ME.marketplaceListingCreatedAt     = now
+                  , ME.marketplaceListingUpdatedAt     = now
+                  }
         pure ()
 
 inventorySeeds :: [(Text, Maybe Text, Maybe Text, Text)]

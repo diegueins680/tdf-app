@@ -62,6 +62,7 @@ data RoleEnum
   | ReadOnly
   | Customer
   | Fan
+  | Maintenance
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
 derivePersistField "RoleEnum"
 
@@ -158,6 +159,7 @@ roleToText Vendor        = "Vendor"
 roleToText ReadOnly      = "ReadOnly"
 roleToText Customer      = "Customer"
 roleToText Fan           = "Fan"
+roleToText Maintenance   = "Maintenance"
 
 roleFromText :: Text -> Maybe RoleEnum
 roleFromText raw = 
@@ -199,6 +201,7 @@ roleFromText raw =
     "readonly"     -> Just ReadOnly
     "customer"     -> Just Customer
     "fan"          -> Just Fan
+    "maintenance"  -> Just Maintenance
     _              -> Nothing
 instance ToJSON StockTxnReason
 instance FromJSON StockTxnReason

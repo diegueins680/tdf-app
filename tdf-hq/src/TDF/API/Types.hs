@@ -174,6 +174,7 @@ data MarketplaceItemDTO = MarketplaceItemDTO
   { miListingId      :: Text
   , miAssetId        :: Text
   , miTitle          :: Text
+  , miPurpose        :: Text
   , miCategory       :: Text
   , miBrand          :: Maybe Text
   , miModel          :: Maybe Text
@@ -248,16 +249,52 @@ instance FromJSON MarketplaceOrderItemDTO
 
 data MarketplaceOrderDTO = MarketplaceOrderDTO
   { moOrderId       :: Text
+  , moCartId        :: Maybe Text
   , moCurrency      :: Text
   , moTotalUsdCents :: Int
   , moTotalDisplay  :: Text
   , moStatus        :: Text
   , moStatusHistory :: [(Text, UTCTime)]
+  , moBuyerName     :: Text
+  , moBuyerEmail    :: Text
+  , moBuyerPhone    :: Maybe Text
+  , moPaymentProvider :: Maybe Text
+  , moPaypalOrderId :: Maybe Text
+  , moPaypalPayerEmail :: Maybe Text
+  , moPaidAt        :: Maybe UTCTime
+  , moCreatedAt     :: UTCTime
+  , moUpdatedAt     :: UTCTime
   , moItems         :: [MarketplaceOrderItemDTO]
   } deriving (Show, Generic)
 
 instance ToJSON MarketplaceOrderDTO
 instance FromJSON MarketplaceOrderDTO
+
+data MarketplaceOrderUpdate = MarketplaceOrderUpdate
+  { mouStatus          :: Maybe Text
+  , mouPaymentProvider :: Maybe (Maybe Text)
+  , mouPaidAt          :: Maybe (Maybe UTCTime)
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceOrderUpdate
+instance FromJSON MarketplaceOrderUpdate
+
+data PaypalCreateDTO = PaypalCreateDTO
+  { pcOrderId       :: Text
+  , pcPaypalOrderId :: Text
+  , pcApprovalUrl   :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON PaypalCreateDTO
+instance FromJSON PaypalCreateDTO
+
+data PaypalCaptureReq = PaypalCaptureReq
+  { pcCaptureOrderId   :: Text
+  , pcCapturePaypalId  :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON PaypalCaptureReq
+instance FromJSON PaypalCaptureReq
 
 data LabelTrackDTO = LabelTrackDTO
   { ltId        :: Text

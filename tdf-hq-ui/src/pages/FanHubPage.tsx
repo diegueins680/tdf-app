@@ -242,6 +242,18 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   });
 
   const releaseFeed = releaseFeedQuery.data ?? [];
+  const latestReleaseByArtist = useMemo(() => {
+    const map = new Map<number, ReleaseFeedItem>();
+    releaseFeed.forEach((r) => {
+      const current = map.get(r.arArtistId);
+      const ts = r.arReleaseDate ? Date.parse(r.arReleaseDate) : 0;
+      const tsCurrent = current?.arReleaseDate ? Date.parse(current.arReleaseDate) : 0;
+      if (!current || ts > tsCurrent) {
+        map.set(r.arArtistId, r);
+      }
+    });
+    return map;
+  }, [releaseFeed]);
 
   const handleFollowToggle = (artistId: number, currentlyFollowing: boolean) => {
     if (!viewerId) return;
@@ -881,6 +893,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               : [];
             const isFeaturedOpen = expandedFeatured.has(artist.apArtistId);
             const hasPreview = artist.apFeaturedVideoUrl && artist.apHeroImageUrl;
+            const latestRelease = latestReleaseByArtist.get(artist.apArtistId);
+            const latestLink = latestRelease?.arSpotifyUrl ?? latestRelease?.arYoutubeUrl ?? null;
             return (
               <Grid item xs={12} md={6} key={artist.apArtistId}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -955,6 +969,18 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           >
                             {isFollowing ? 'Siguiendo' : 'Seguir'}
                           </Button>
+                          {latestLink && (
+                            <Button
+                              variant="text"
+                              size="small"
+                              component="a"
+                              href={latestLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Último release
+                            </Button>
+                          )}
                         </Stack>
                       </Box>
                       {featuredSources.length > 0 && (

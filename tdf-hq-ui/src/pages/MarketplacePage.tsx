@@ -45,7 +45,15 @@ import type {
   MarketplaceOrderDTO,
 } from '../api/types';
 import { Marketplace } from '../api/marketplace';
+import { formatLastSavedTimestamp, getOrderStatusMeta } from '../utils/marketplace';
 
+declare global {
+  interface Window {
+    paypal?: {
+      Buttons: (options: any) => { render: (selector: string | HTMLElement) => Promise<void>; close?: () => void };
+    };
+  }
+}
 const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
 const CART_META_KEY = 'tdf-marketplace-cart-meta';
 const CART_EVENT = 'tdf-cart-updated';
@@ -59,6 +67,7 @@ const fireCartMetaEvent = () => {
 
 export default function MarketplacePage() {
   const qc = useQueryClient();
+  const paypalClientId = import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '';
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [copyToast, setCopyToast] = useState<string | null>(null);
@@ -75,6 +84,10 @@ export default function MarketplacePage() {
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
+  const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string } | null>(null);
+  const [paypalError, setPaypalError] = useState<string | null>(null);
   const cartQuery = useQuery<MarketplaceCartDTO>({
     queryKey: ['marketplace-cart', cartId ?? ''],
     enabled: Boolean(cartId),
@@ -129,6 +142,23 @@ export default function MarketplacePage() {
       // ignore malformed payloads
     }
   }, []);
+
+  useEffect(() => {
+    if (!paypalClientId || typeof window === 'undefined') return;
+    if (window.paypal) {
+      setPaypalReady(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${paypalClientId}&currency=USD`;
+    script.async = true;
+    script.onload = () => setPaypalReady(true);
+    script.onerror = () => setPaypalError('No se pudo cargar PayPal. Intenta de nuevo.');
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, [paypalClientId]);
 
   useEffect(() => {
     if (!cartQuery.data) return;
@@ -201,6 +231,46 @@ export default function MarketplacePage() {
     },
   });
 
+  const createPaypalOrderMutation = useMutation({
+    mutationFn: async () => {
+      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
+      setCartId(ensuredCart);
+      return Marketplace.createPaypalOrder(ensuredCart, {
+        mcrBuyerName: buyerName,
+        mcrBuyerEmail: buyerEmail,
+        mcrBuyerPhone: buyerPhone || undefined,
+      });
+    },
+    onSuccess: (data) => {
+      setPaypalOrder({ orderId: data.pcOrderId, paypalOrderId: data.pcPaypalOrderId });
+      setPaypalDialogOpen(true);
+      setPaypalError(null);
+    },
+    onError: () => setPaypalError('No pudimos crear la orden PayPal. Revisa tus datos.'),
+  });
+
+  const capturePaypalMutation = useMutation<
+    MarketplaceOrderDTO,
+    Error,
+    { orderId: string; paypalOrderId: string }
+  >({
+    mutationFn: ({ orderId, paypalOrderId }) =>
+      Marketplace.capturePaypalOrder({ pcCaptureOrderId: orderId, pcCapturePaypalId: paypalOrderId }),
+    onSuccess: (order) => {
+      setLastOrder(order);
+      setPaypalDialogOpen(false);
+      setPaypalOrder(null);
+      void qc.invalidateQueries({ queryKey: ['marketplace-cart', cartId] });
+      localStorage.setItem(
+        CART_META_KEY,
+        JSON.stringify({ cartId: cartId ?? '', count: 0, preview: [], updatedAt: Date.now() }),
+      );
+      setToast('Pago recibido con PayPal. Gracias por tu compra.');
+      fireCartMetaEvent();
+    },
+    onError: () => setPaypalError('No pudimos confirmar el pago. Intenta de nuevo.'),
+  });
+
   const listings = listingsQuery.data ?? [];
   const categories = useMemo(
     () => Array.from(new Set(listings.map((item) => item.miCategory).filter(Boolean))),
@@ -243,6 +313,34 @@ export default function MarketplacePage() {
     }
   }, [buyerName, buyerEmail, buyerPhone, contactPref]);
 
+  useEffect(() => {
+    if (!paypalDialogOpen || !paypalOrder || !paypalReady || typeof window === 'undefined' || !window.paypal) return;
+    const container = document.getElementById('paypal-button-container');
+    if (!container) return;
+    container.innerHTML = '';
+    const buttons = window.paypal.Buttons({
+      style: { layout: 'vertical' },
+      createOrder: () => paypalOrder.paypalOrderId,
+      onApprove: async (data: any) => {
+        const orderId = data?.orderID ?? paypalOrder.paypalOrderId;
+        await capturePaypalMutation.mutateAsync({ orderId: paypalOrder.orderId, paypalOrderId: orderId });
+      },
+      onCancel: () => {
+        setToast('Pago cancelado.');
+        setPaypalDialogOpen(false);
+      },
+      onError: () => {
+        setPaypalError('Error con PayPal. Intenta nuevamente.');
+        setPaypalDialogOpen(false);
+      },
+    });
+    void buttons.render(container);
+    return () => {
+      if (buttons.close) buttons.close();
+      container.innerHTML = '';
+    };
+  }, [capturePaypalMutation, paypalDialogOpen, paypalOrder, paypalReady]);
+
   const handleAdd = (listing: MarketplaceItemDTO) => {
     const currentQty =
       cart?.mcItems.find((item) => item.mciListingId === listing.miListingId)?.mciQuantity ?? 0;
@@ -267,6 +365,15 @@ export default function MarketplacePage() {
 
   const handleCheckout = () => {
     checkoutMutation.mutate();
+  };
+
+  const handlePaypalCheckout = () => {
+    setPaypalError(null);
+    if (!hasCartItems || !isValidName || !isValidEmail) {
+      setPaypalError('Completa tu nombre y correo para pagar con PayPal.');
+      return;
+    }
+    createPaypalOrderMutation.mutate();
   };
 
   const handleRestoreCart = () => {
@@ -300,25 +407,6 @@ export default function MarketplacePage() {
     if (lower.includes('mantenimiento')) return { color: 'warning' as const, icon: <WarningAmberIcon /> };
     return { color: 'default' as const, icon: undefined };
   };
-const formatLastSaved = () => {
-  if (!savedCartMeta?.updatedAt) return null;
-  const diffMs = Date.now() - savedCartMeta.updatedAt;
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return 'Actualizado hace <1 min';
-  if (minutes < 60) return `Actualizado hace ${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  return `Actualizado hace ${hours} h`;
-};
-
-const getOrderStatusMeta = (status: string) => {
-  const norm = status.toLowerCase();
-  if (norm.includes('pending')) return { label: 'Pendiente', color: 'warning' as const, desc: 'Recibido, a la espera de confirmación.' };
-  if (norm.includes('process') || norm.includes('contact')) return { label: 'En proceso', color: 'info' as const, desc: 'Estamos coordinando pago/entrega.' };
-  if (norm.includes('delivered') || norm.includes('complete')) return { label: 'Completado', color: 'success' as const, desc: 'Pedido entregado.' };
-  if (norm.includes('cancel')) return { label: 'Cancelado', color: 'default' as const, desc: 'Pedido cancelado.' };
-  return { label: status || 'Estado', color: 'default' as const, desc: '' };
-};
-
   const orderSummary = useMemo(() => {
     if (!lastOrder) return null;
     const summaryLines = lastOrder.moItems
@@ -327,6 +415,7 @@ const getOrderStatusMeta = (status: string) => {
     const orderText = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summaryLines}`;
     const statusMeta = getOrderStatusMeta(lastOrder.moStatus);
     const history = lastOrder.moStatusHistory ?? [];
+    const lastUpdatedAt = history.length > 0 ? history[history.length - 1][1] : null;
     return (
       <Card variant="outlined">
         <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
@@ -356,6 +445,16 @@ const getOrderStatusMeta = (status: string) => {
                 {statusMeta.desc}
               </Typography>
             )}
+            {lastOrder.moPaymentProvider && (
+              <Typography variant="caption" color="text.secondary">
+                Pago: {lastOrder.moPaymentProvider?.toUpperCase()} {lastOrder.moPaypalOrderId ? ` · ${lastOrder.moPaypalOrderId}` : ''}
+              </Typography>
+            )}
+            {lastOrder.moPaidAt && (
+              <Typography variant="caption" color="text.secondary">
+                Pagado el {new Date(lastOrder.moPaidAt).toLocaleString()}
+              </Typography>
+            )}
             {history.length > 0 && (
               <Stack spacing={0.5}>
                 <Typography variant="caption" color="text.secondary">
@@ -367,6 +466,11 @@ const getOrderStatusMeta = (status: string) => {
                   </Typography>
                 ))}
               </Stack>
+            )}
+            {lastUpdatedAt && (
+              <Typography variant="caption" color="text.secondary">
+                Última actualización: {new Date(lastUpdatedAt).toLocaleString()}
+              </Typography>
             )}
             <Button
               size="small"
@@ -522,6 +626,11 @@ const getOrderStatusMeta = (status: string) => {
                         {item.miBrand && <Chip size="small" label={item.miBrand} variant="outlined" />}
                         {item.miModel && <Chip size="small" label={item.miModel} variant="outlined" />}
                         <Chip size="small" label={item.miCategory} color="default" variant="outlined" />
+                        <Chip
+                          size="small"
+                          color={item.miPurpose === 'rent' ? 'warning' : 'primary'}
+                          label={item.miPurpose === 'rent' ? 'Renta' : 'Venta'}
+                        />
                       </Stack>
                       <Box
                         sx={{
@@ -584,7 +693,7 @@ const getOrderStatusMeta = (status: string) => {
                           onClick={() => handleAdd(item)}
                           disabled={upsertItemMutation.isPending}
                         >
-                          Agregar
+                          {item.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
                         </Button>
                         <Chip
                           label={compareIds.includes(item.miListingId) ? 'En comparador' : 'Comparar'}
@@ -712,9 +821,9 @@ const getOrderStatusMeta = (status: string) => {
                         Vaciar carrito
                       </Button>
                     )}
-                    {formatLastSaved() && (
+                    {formatLastSavedTimestamp(savedCartMeta?.updatedAt) && (
                       <Typography variant="caption" color="text.secondary">
-                        {formatLastSaved()}
+                        {formatLastSavedTimestamp(savedCartMeta?.updatedAt)}
                       </Typography>
                     )}
                   </Stack>
@@ -772,21 +881,54 @@ const getOrderStatusMeta = (status: string) => {
                         Te contactaremos por {contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'} en menos de 24 h para coordinar pago y entrega.
                       </Typography>
                     </Stack>
-                    <Button
-                      variant="contained"
-                      disabled={
-                        !hasCartItems ||
-                        checkoutMutation.isPending ||
-                        !isValidName ||
-                        !isValidEmail ||
-                        cartItemCount === 0
-                      }
-                      onClick={handleCheckout}
-                    >
-                      {checkoutMutation.isPending ? 'Enviando pedido…' : 'Confirmar pedido'}
-                    </Button>
+                    <Stack spacing={1}>
+                      <Button
+                        variant="contained"
+                        disabled={
+                          !hasCartItems ||
+                          checkoutMutation.isPending ||
+                          !isValidName ||
+                          !isValidEmail ||
+                          cartItemCount === 0
+                        }
+                        onClick={handleCheckout}
+                      >
+                        {checkoutMutation.isPending ? 'Enviando pedido…' : 'Confirmar pedido'}
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        disabled={
+                          !paypalClientId ||
+                          !hasCartItems ||
+                          !isValidName ||
+                          !isValidEmail ||
+                          cartItemCount === 0 ||
+                          !paypalReady ||
+                          createPaypalOrderMutation.isPending ||
+                          capturePaypalMutation.isPending
+                        }
+                        onClick={handlePaypalCheckout}
+                      >
+                        {capturePaypalMutation.isPending
+                          ? 'Confirmando pago…'
+                          : createPaypalOrderMutation.isPending
+                            ? 'Abriendo PayPal…'
+                            : 'Pagar con PayPal'}
+                      </Button>
+                      {!paypalClientId && (
+                        <Typography variant="caption" color="text.secondary">
+                          Configura VITE_PAYPAL_CLIENT_ID para habilitar PayPal.
+                        </Typography>
+                      )}
+                    </Stack>
                     {checkoutMutation.isError && (
                       <Alert severity="error">No pudimos crear el pedido. Revisa tus datos.</Alert>
+                    )}
+                    {paypalError && (
+                      <Alert severity="warning" onClose={() => setPaypalError(null)}>
+                        {paypalError}
+                      </Alert>
                     )}
                   </Stack>
                 </CardContent>
@@ -816,6 +958,37 @@ const getOrderStatusMeta = (status: string) => {
           {copyToast}
         </Alert>
       </Snackbar>
+      <Dialog
+        open={paypalDialogOpen}
+        onClose={() => {
+          setPaypalDialogOpen(false);
+          setPaypalOrder(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Pagar con PayPal</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1}>
+            <Typography variant="body2" color="text.secondary">
+              Confirma tu pago de {cartSubtotal}. Se procesará con PayPal de forma segura.
+            </Typography>
+            {!paypalReady && <Alert severity="info">Cargando PayPal...</Alert>}
+            <Box id="paypal-button-container" sx={{ mt: 1 }} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setPaypalDialogOpen(false);
+              setPaypalOrder(null);
+            }}
+            color="inherit"
+          >
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={compareOpen} onClose={() => setCompareOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Comparar artículos</DialogTitle>
         <DialogContent dividers>

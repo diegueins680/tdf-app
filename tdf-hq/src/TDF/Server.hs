@@ -14,23 +14,25 @@ module TDF.Server where
 import           Control.Applicative ((<|>))
 import           Control.Exception (SomeException, try)
 import           Control.Concurrent (forkIO)
-import           Control.Monad (forM, forM_, void, when, unless, (>=>))
+import           Control.Monad (forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Data.Int (Int64)
 import           Data.List (find, foldl', nub)
 import           Data.Foldable (for_)
-import           Data.Char (isDigit, isSpace, isAlphaNum)
+import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
-import           Data.Aeson (Value, object, (.=), eitherDecode, FromJSON(..))
+import           Data.Aeson (Value, object, (.=), eitherDecode, FromJSON(..), encode)
 import           Data.Aeson.Types (parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BS8
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime)
@@ -53,9 +55,9 @@ import           Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawS
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
-import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceCheckoutReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..))
+import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..))
 import qualified TDF.API      as Api
-import           TDF.API.Marketplace (MarketplaceAPI)
+import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.Config (AppConfig(..))
 import           TDF.DB
@@ -407,6 +409,7 @@ protectedServer user =
   :<|> roomsServer user
   :<|> liveSessionsServer user
   :<|> feedbackServer user
+  :<|> marketplaceAdminServer user
   :<|> paymentsServer user
   :<|> instagramServer
   :<|> socialServer user
@@ -777,6 +780,147 @@ calendarServer user =
 
     parseIso :: Text -> Maybe UTCTime
     parseIso txt = iso8601ParseM (T.unpack txt)
+
+    data PayPalLink = PayPalLink
+      { pplRel  :: Text
+      , pplHref :: Text
+      } deriving (Show, Generic)
+    instance FromJSON PayPalLink where
+      parseJSON = withObject "PayPalLink" $ \o ->
+        PayPalLink <$> o .: "rel" <*> o .: "href"
+
+    data PayPalCreateResponse = PayPalCreateResponse
+      { pcrId    :: Text
+      , pcrLinks :: [PayPalLink]
+      } deriving (Show, Generic)
+    instance FromJSON PayPalCreateResponse where
+      parseJSON = withObject "PayPalCreateResponse" $ \o ->
+        PayPalCreateResponse
+          <$> o .: "id"
+          <*> o .:? "links" .!= []
+
+    data PayPalToken = PayPalToken
+      { access_token :: Text
+      } deriving (Show, Generic)
+    instance FromJSON PayPalToken
+
+    data PayPalCaptureOutcome = PayPalCaptureOutcome
+      { pcoStatus :: Text
+      , pcoPayerEmail :: Maybe Text
+      } deriving (Show, Generic)
+
+    loadPaypalEnv :: AppM (Text, Text, String)
+    loadPaypalEnv = do
+      mCid <- liftIO $ lookupEnv "PAYPAL_CLIENT_ID"
+      mSecret <- liftIO $ lookupEnv "PAYPAL_CLIENT_SECRET"
+      mEnv <- liftIO $ lookupEnv "PAYPAL_ENV"
+      let cid = fmap (T.strip . T.pack) mCid
+          secret = fmap (T.strip . T.pack) mSecret
+          baseUrl = case fmap (map toLower) mEnv of
+            Just envTxt | envTxt == "live" || envTxt == "prod" -> "https://api-m.paypal.com"
+            _ -> "https://api-m.sandbox.paypal.com"
+      case (cid, secret) of
+        (Just cid', Just sec') -> pure (cid', sec', baseUrl)
+        _ -> throwError err500 { errBody = "Faltan PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET" }
+
+    paypalAccessToken :: Manager -> Text -> Text -> String -> AppM Text
+    paypalAccessToken manager cid sec baseUrl = do
+      req0 <- liftIO $ parseRequest (baseUrl ++ "/v1/oauth2/token")
+      let authVal = BS8.pack "Basic " <> B64.encode (BS8.pack (T.unpack cid <> ":" <> T.unpack sec))
+          req = req0
+            { method = "POST"
+            , requestBody = RequestBodyLBS (BL8.pack "grant_type=client_credentials")
+            , requestHeaders =
+                [ ("Content-Type", "application/x-www-form-urlencoded")
+                , ("Authorization", authVal)
+                ]
+            }
+      resp <- liftIO $ httpLbs req manager
+      when (statusCode (responseStatus resp) >= 400) $
+        throwError err502 { errBody = "PayPal token request failed." }
+      token <- case eitherDecode (responseBody resp) of
+        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token PayPal: " <> err) }
+        Right tok -> pure tok
+      pure (access_token token)
+
+    createPaypalOrderRemote
+      :: Manager
+      -> Text
+      -> Text
+      -> String
+      -> Int
+      -> Text
+      -> Text
+      -> Text
+      -> AppM (Text, Maybe Text)
+    createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName buyerEmail = do
+      token <- paypalAccessToken manager cid sec baseUrl
+      req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders")
+      let amountStr = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
+          body = object
+            [ "intent" .= ("CAPTURE" :: Text)
+            , "purchase_units" .=
+                [ object
+                    [ "amount" .= object ["currency_code" .= T.toUpper currency, "value" .= amountStr]
+                    ]
+                ]
+            , "payer" .= object
+                [ "name" .= object ["given_name" .= buyerName]
+                , "email_address" .= buyerEmail
+                ]
+            , "application_context" .= object ["shipping_preference" .= ("NO_SHIPPING" :: Text)]
+            ]
+          req = req0
+            { method = "POST"
+            , requestBody = RequestBodyLBS (encode body)
+            , requestHeaders =
+                [ ("Content-Type", "application/json")
+                , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+                ]
+            }
+      resp <- liftIO $ httpLbs req manager
+      when (statusCode (responseStatus resp) >= 400) $
+        throwError err502 { errBody = "PayPal create order falló." }
+      resObj <- case eitherDecode (responseBody resp) of
+        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear respuesta PayPal: " <> err) }
+        Right val -> pure (val :: PayPalCreateResponse)
+      let approval = fmap pplHref . find (\lnk -> pplRel lnk == "approve") $ pcrLinks resObj
+      pure (pcrId resObj, approval)
+
+    capturePaypalOrderRemote
+      :: Manager
+      -> Text
+      -> Text
+      -> String
+      -> Text
+      -> AppM PayPalCaptureOutcome
+    capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
+      token <- paypalAccessToken manager cid sec baseUrl
+      req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack paypalOrderId ++ "/capture")
+      let req = req0
+            { method = "POST"
+            , requestBody = RequestBodyLBS "{}"
+            , requestHeaders =
+                [ ("Content-Type", "application/json")
+                , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+                ]
+            }
+      resp <- liftIO $ httpLbs req manager
+      when (statusCode (responseStatus resp) >= 400) $
+        throwError err502 { errBody = "PayPal capture falló." }
+      parsed <- case eitherDecode (responseBody resp) of
+        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear captura PayPal: " <> err) }
+        Right (val :: Value) -> pure val
+      let statusTxt = fromMaybe "unknown" $ parseMaybe (withObject "PayPalCapture" (\o -> o .:? "status")) parsed
+          payerEmail = parseMaybe (withObject "PayPalCapture" $ \o -> do
+            payerObj <- o .:? "payer"
+            case payerObj of
+              Nothing -> pure Nothing
+              Just po -> po .:? "email_address") parsed
+      pure PayPalCaptureOutcome
+        { pcoStatus = statusTxt
+        , pcoPayerEmail = join payerEmail
+        }
 
     formatTime' :: UTCTime -> ByteString
     formatTime' t = TE.encodeUtf8 (T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" t))
@@ -3082,7 +3226,14 @@ marketplacePublicServer =
   :<|> getCart
   :<|> upsertCartItem
   :<|> checkoutCart
+  :<|> createPaypalOrder
+  :<|> capturePaypalOrder
   :<|> getOrder
+
+marketplaceAdminServer :: AuthedUser -> ServerT MarketplaceAdminAPI AppM
+marketplaceAdminServer user =
+       listMarketplaceOrders user
+  :<|> updateMarketplaceOrder user
 
 labelPublicServer :: ServerT LabelAPI AppM
 labelPublicServer = listLabelTracks :<|> createLabelTrack :<|> updateLabelTrack :<|> deleteLabelTrack
@@ -3130,6 +3281,7 @@ toMarketplaceDTO (lid, listing, Just asset) =
     { miListingId      = toPathPiece lid
     , miAssetId        = toPathPiece (ME.marketplaceListingAssetId listing)
     , miTitle          = ME.marketplaceListingTitle listing
+    , miPurpose        = ME.marketplaceListingPurpose listing
     , miCategory       = ME.assetCategory asset
     , miBrand          = ME.assetBrand asset
     , miModel          = ME.assetModel asset
@@ -3199,15 +3351,11 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
     case mCart of
       Nothing -> pure Nothing
       Just _ -> do
-        cartItems <- loadCartLines cartKey
-        if null cartItems
-          then pure Nothing
-          else do
-            let totalCents = sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
-                                 | (_, listing, _, qty) <- cartItems
-                                 ]
-                currency = maybe "USD" ME.marketplaceListingCurrency (listToMaybe [entityVal listing | (_, listing, _, _) <- cartItems])
-                statusTxt = if totalCents > 0 then "pending" else "contact"
+        mTotals <- loadCartTotals cartKey
+        case mTotals of
+          Nothing -> pure Nothing
+          Just (cartItems, totalCents, currency) -> do
+            let statusTxt = if totalCents > 0 then "pending" else "contact"
             orderId <- insert ME.MarketplaceOrder
               { ME.marketplaceOrderCartId        = Just cartKey
               , ME.marketplaceOrderBuyerName     = T.strip mcrBuyerName
@@ -3216,6 +3364,10 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
               , ME.marketplaceOrderTotalUsdCents = totalCents
               , ME.marketplaceOrderCurrency      = currency
               , ME.marketplaceOrderStatus        = statusTxt
+              , ME.marketplaceOrderPaymentProvider = Nothing
+              , ME.marketplaceOrderPaypalOrderId = Nothing
+              , ME.marketplaceOrderPaypalPayerEmail = Nothing
+              , ME.marketplaceOrderPaidAt        = Nothing
               , ME.marketplaceOrderCreatedAt     = now
               , ME.marketplaceOrderUpdatedAt     = now
               }
@@ -3251,14 +3403,150 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
       pure ()
     pure orderDto
 
+  createPaypalOrder :: Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
+  createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
+    let nameTxt = T.strip mcrBuyerName
+        emailTxt = T.strip mcrBuyerEmail
+    when (T.null nameTxt) $ throwBadRequest "buyerName requerido"
+    when (T.null emailTxt) $ throwBadRequest "buyerEmail requerido"
+    cartKey <- parseCartId rawId
+    now <- liftIO getCurrentTime
+    Env{ envPool } <- ask
+    mTotals <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
+    case mTotals of
+      Nothing -> throwError err404
+      Just (cartItems, totalCents, currency) -> do
+        (cid, sec, baseUrl) <- loadPaypalEnv
+        manager <- liftIO $ newManager tlsManagerSettings
+        (ppOrderId, approvalUrl) <- createPaypalOrderRemote manager cid sec baseUrl totalCents currency nameTxt emailTxt
+        orderId <- liftIO $ flip runSqlPool envPool $ do
+          oid <- insert ME.MarketplaceOrder
+            { ME.marketplaceOrderCartId        = Just cartKey
+            , ME.marketplaceOrderBuyerName     = nameTxt
+            , ME.marketplaceOrderBuyerEmail    = emailTxt
+            , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
+            , ME.marketplaceOrderTotalUsdCents = totalCents
+            , ME.marketplaceOrderCurrency      = currency
+            , ME.marketplaceOrderStatus        = "paypal_pending"
+            , ME.marketplaceOrderPaymentProvider = Just "paypal"
+            , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
+            , ME.marketplaceOrderPaypalPayerEmail = Nothing
+            , ME.marketplaceOrderPaidAt        = Nothing
+            , ME.marketplaceOrderCreatedAt     = now
+            , ME.marketplaceOrderUpdatedAt     = now
+            }
+          forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+            let listing   = entityVal listingEnt
+                unitPrice = ME.marketplaceListingPriceUsdCents listing
+                subtotal  = unitPrice * qty
+            void $ insert ME.MarketplaceOrderItem
+              { ME.marketplaceOrderItemOrderId           = oid
+              , ME.marketplaceOrderItemListingId         = entityKey listingEnt
+              , ME.marketplaceOrderItemQuantity          = qty
+              , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+              , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
+              }
+          pure oid
+        pure PaypalCreateDTO
+          { pcOrderId = toPathPiece orderId
+          , pcPaypalOrderId = ppOrderId
+          , pcApprovalUrl = approvalUrl
+          }
+
+  capturePaypalOrder :: PaypalCaptureReq -> AppM MarketplaceOrderDTO
+  capturePaypalOrder PaypalCaptureReq{..} = do
+    orderKey <- parseOrderId pcCaptureOrderId
+    Env{ envPool } <- ask
+    mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
+    case mOrder of
+      Nothing -> throwError err404
+      Just order -> do
+        (cid, sec, baseUrl) <- loadPaypalEnv
+        manager <- liftIO $ newManager tlsManagerSettings
+        PayPalCaptureOutcome statusTxt payerEmail <- capturePaypalOrderRemote manager cid sec baseUrl pcCapturePaypalId
+        now <- liftIO getCurrentTime
+        let nextStatus = if T.toUpper statusTxt == "COMPLETED" then "paid" else T.toLower statusTxt
+            paidAtVal  = if T.toUpper statusTxt == "COMPLETED" then Just now else ME.marketplaceOrderPaidAt order
+        liftIO $ flip runSqlPool envPool $ update orderKey
+          [ ME.MarketplaceOrderStatus =. nextStatus
+          , ME.MarketplaceOrderPaypalOrderId =. Just pcCapturePaypalId
+          , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
+          , ME.MarketplaceOrderPaypalPayerEmail =. payerEmail <|> ME.marketplaceOrderPaypalPayerEmail order
+          , ME.MarketplaceOrderPaidAt =. paidAtVal
+          , ME.MarketplaceOrderUpdatedAt =. now
+          ]
+        mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
+        maybe (throwError err500) pure mDto
+
+listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
+listMarketplaceOrders user mStatus mLimit mOffset = do
+  requireMarketplaceAccess user
+  let normalizedStatus = mStatus >>= nonEmpty
+      limitCount = maybe 50 (max 1 . min 200) mLimit
+      offsetCount = max 0 (fromMaybe 0 mOffset)
+      filters = maybe [] (\st -> [ME.MarketplaceOrderStatus ==. st]) normalizedStatus
+  Env{..} <- ask
+  liftIO $ flip runSqlPool envPool $ do
+    orders <- selectList filters [Desc ME.MarketplaceOrderCreatedAt, OffsetBy offsetCount, LimitTo limitCount]
+    catMaybes <$> mapM (loadOrderDTO . entityKey) orders
+  where
+    nonEmpty t =
+      let trimmed = T.strip t
+      in if T.null trimmed then Nothing else Just trimmed
+
+updateMarketplaceOrder :: AuthedUser -> Text -> MarketplaceOrderUpdate -> AppM MarketplaceOrderDTO
+updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
+  requireMarketplaceAccess user
+  orderKey <- parseOrderId rawId
+  now <- liftIO getCurrentTime
+  Env{..} <- ask
+  mDto <- liftIO $ flip runSqlPool envPool $ do
+    mOrder <- get orderKey
+    case mOrder of
+      Nothing -> pure Nothing
+      Just order -> do
+        let cleanTxt txt =
+              let trimmed = T.strip txt
+              in if T.null trimmed then Nothing else Just trimmed
+            nextStatus   = mouStatus >>= cleanTxt
+            nextProvider = mouPaymentProvider >>= \mp -> pure (mp >>= cleanTxt)
+            paidAtInput  = mouPaidAt
+            paidAtBase   = case paidAtInput of
+              Nothing -> ME.marketplaceOrderPaidAt order
+              Just v  -> v
+            paidAtFinal  =
+              if isNothing paidAtInput
+                 && maybe False (\s -> T.toLower s == "paid") nextStatus
+                 && isNothing (ME.marketplaceOrderPaidAt order)
+                then Just now
+                else paidAtBase
+            updates = catMaybes
+              [ fmap (ME.MarketplaceOrderStatus =.) nextStatus
+              , fmap (ME.MarketplaceOrderPaymentProvider =.) nextProvider
+              , if paidAtFinal /= ME.marketplaceOrderPaidAt order
+                  then Just (ME.MarketplaceOrderPaidAt =. paidAtFinal)
+                  else Nothing
+              ]
+            updatesWithTimestamp =
+              if null updates
+                then []
+                else updates ++ [ME.MarketplaceOrderUpdatedAt =. now]
+        unless (null updatesWithTimestamp) $ update orderKey updatesWithTimestamp
+        loadOrderDTO orderKey
+  maybe (throwError err404) pure mDto
+
 getOrder :: Text -> AppM MarketplaceOrderDTO
 getOrder rawId = do
-  orderKey <- case fromPathPiece rawId of
-    Nothing -> throwBadRequest "Invalid order id"
-    Just k  -> pure k
+  orderKey <- parseOrderId rawId
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
   maybe (throwError err404) pure mDto
+
+parseOrderId :: Text -> AppM (Key ME.MarketplaceOrder)
+parseOrderId rawId =
+  case fromPathPiece rawId of
+    Nothing -> throwBadRequest "Invalid order id"
+    Just k  -> pure k
 
 parseCartId :: Text -> AppM (Key ME.MarketplaceCart)
 parseCartId rawId =
@@ -3272,20 +3560,39 @@ parseListingId rawId =
     Nothing -> throwBadRequest "Invalid listing id"
     Just k  -> pure k
 
-loadCartDTO :: Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
-loadCartDTO cartId = do
-  mCart <- get cartId
-  case mCart of
-    Nothing -> pure Nothing
-    Just _ -> do
-      items <- loadCartLines cartId
-      pure (Just (cartToDTO cartId items))
+requireMarketplaceAccess :: AuthedUser -> AppM ()
+requireMarketplaceAccess user =
+  unless (hasModuleAccess ModuleAdmin user || hasModuleAccess ModulePackages user) $
+    throwError err403
 
-loadCartLines
-  :: Key ME.MarketplaceCart
-  -> SqlPersistT IO [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
-loadCartLines cartId = do
-  cartItems <- selectList [ME.MarketplaceCartItemCartId ==. cartId] [Asc ME.MarketplaceCartItemId]
+loadCartDTO :: Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
+  loadCartDTO cartId = do
+    mCart <- get cartId
+    case mCart of
+      Nothing -> pure Nothing
+      Just _ -> do
+        items <- loadCartLines cartId
+        pure (Just (cartToDTO cartId items))
+
+  loadCartTotals
+    :: Key ME.MarketplaceCart
+    -> SqlPersistT IO (Maybe ([(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)], Int, Text))
+  loadCartTotals cartId = do
+    items <- loadCartLines cartId
+    if null items
+      then pure Nothing
+      else do
+        let totalCents = sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
+                             | (_, listing, _, qty) <- items
+                             ]
+            currency = maybe "USD" (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
+        pure (Just (items, totalCents, currency))
+
+  loadCartLines
+    :: Key ME.MarketplaceCart
+    -> SqlPersistT IO [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
+  loadCartLines cartId = do
+    cartItems <- selectList [ME.MarketplaceCartItemCartId ==. cartId] [Asc ME.MarketplaceCartItemId]
   forM cartItems $ \ent@(Entity _ ci) -> do
     listing <- getJustEntity (ME.marketplaceCartItemListingId ci)
     asset   <- getJustEntity (ME.marketplaceListingAssetId (entityVal listing))
@@ -3352,17 +3659,27 @@ orderToDTO (Entity oid order) items =
               , moiQuantity          = ME.marketplaceOrderItemQuantity oi
               , moiUnitPriceUsdCents = ME.marketplaceOrderItemUnitPriceUsdCents oi
               , moiSubtotalCents     = ME.marketplaceOrderItemSubtotalUsdCents oi
-      , moiUnitPriceDisplay  = formatUsd (ME.marketplaceOrderItemUnitPriceUsdCents oi) currency
-      , moiSubtotalDisplay   = formatUsd (ME.marketplaceOrderItemSubtotalUsdCents oi) currency
-      }
+               , moiUnitPriceDisplay  = formatUsd (ME.marketplaceOrderItemUnitPriceUsdCents oi) currency
+               , moiSubtotalDisplay   = formatUsd (ME.marketplaceOrderItemSubtotalUsdCents oi) currency
+               }
   in MarketplaceOrderDTO
-      { moOrderId       = toPathPiece oid
-      , moCurrency      = currency
-      , moTotalUsdCents = ME.marketplaceOrderTotalUsdCents order
-      , moTotalDisplay  = formatUsd (ME.marketplaceOrderTotalUsdCents order) currency
-      , moStatus        = ME.marketplaceOrderStatus order
-      , moStatusHistory = [ (ME.marketplaceOrderStatus order, ME.marketplaceOrderUpdatedAt order) ]
-      , moItems         = itemDtos
+      { moOrderId         = toPathPiece oid
+      , moCartId          = toPathPiece <$> ME.marketplaceOrderCartId order
+      , moCurrency        = currency
+      , moTotalUsdCents   = ME.marketplaceOrderTotalUsdCents order
+      , moTotalDisplay    = formatUsd (ME.marketplaceOrderTotalUsdCents order) currency
+      , moStatus          = ME.marketplaceOrderStatus order
+      , moStatusHistory   = [ (ME.marketplaceOrderStatus order, ME.marketplaceOrderUpdatedAt order) ]
+      , moBuyerName       = ME.marketplaceOrderBuyerName order
+      , moBuyerEmail      = ME.marketplaceOrderBuyerEmail order
+      , moBuyerPhone      = ME.marketplaceOrderBuyerPhone order
+      , moPaymentProvider = ME.marketplaceOrderPaymentProvider order
+      , moPaypalOrderId   = ME.marketplaceOrderPaypalOrderId order
+      , moPaypalPayerEmail = ME.marketplaceOrderPaypalPayerEmail order
+      , moPaidAt          = ME.marketplaceOrderPaidAt order
+      , moCreatedAt       = ME.marketplaceOrderCreatedAt order
+      , moUpdatedAt       = ME.marketplaceOrderUpdatedAt order
+      , moItems           = itemDtos
       }
 
 formatUsd :: Int -> Text -> Text

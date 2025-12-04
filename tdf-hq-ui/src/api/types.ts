@@ -83,6 +83,7 @@ export interface AssetUpdate {
 export interface MarketplaceItemDTO {
   miListingId: string;
   miAssetId: string;
+  miPurpose: string;
   miTitle: string;
   miCategory: string;
   miBrand?: string | null;
@@ -129,12 +130,39 @@ export interface MarketplaceOrderItemDTO {
 
 export interface MarketplaceOrderDTO {
   moOrderId: string;
+  moCartId?: string | null;
   moCurrency: string;
   moTotalUsdCents: number;
   moTotalDisplay: string;
   moStatus: string;
   moStatusHistory: [string, string][];
+  moBuyerName: string;
+  moBuyerEmail: string;
+  moBuyerPhone?: string | null;
+  moPaymentProvider?: string | null;
+  moPaypalOrderId?: string | null;
+  moPaypalPayerEmail?: string | null;
+  moPaidAt?: string | null;
+  moCreatedAt: string;
+  moUpdatedAt: string;
   moItems: MarketplaceOrderItemDTO[];
+}
+
+export interface MarketplaceOrderUpdatePayload {
+  mouStatus?: string;
+  mouPaymentProvider?: string | null;
+  mouPaidAt?: string | null;
+}
+
+export interface PaypalCreateDTO {
+  pcOrderId: string;
+  pcPaypalOrderId: string;
+  pcApprovalUrl?: string | null;
+}
+
+export interface PaypalCaptureRequest {
+  pcCaptureOrderId: string;
+  pcCapturePaypalId: string;
 }
 
 export interface LabelTrackDTO {

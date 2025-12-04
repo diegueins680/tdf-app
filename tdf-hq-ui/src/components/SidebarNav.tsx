@@ -82,6 +82,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: 'OPERACIÓN',
     items: [
       { label: 'Inventario', path: '/operacion/inventario' },
+      { label: 'Órdenes marketplace', path: '/operacion/ordenes-marketplace' },
       { label: 'Calendario domo', path: '/operacion/calendario-domo' },
       { label: 'Reservas equipo', path: '/operacion/reservas-equipo' },
       { label: 'Mantenimiento', path: '/operacion/mantenimiento' },
@@ -167,6 +168,9 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         moduleSet.add('scheduling');
       } else if (role.includes('packages') || role.includes('package')) {
         moduleSet.add('packages');
+      } else if (role.includes('maintenance')) {
+        moduleSet.add('packages');
+        moduleSet.add('scheduling');
       }
     });
     return Array.from(moduleSet);

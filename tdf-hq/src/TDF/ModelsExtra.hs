@@ -406,13 +406,14 @@ MarketplaceListing
     Id             UUID default=gen_random_uuid()
     assetId        AssetId
     title          Text
+    purpose        Text default='sale'
     priceUsdCents  Int
     markupPct      Int default=25
     currency       Text default='USD'
     active         Bool default=True
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
-    UniqueMarketplaceAsset assetId
+    UniqueMarketplaceAsset assetId purpose
     deriving Show Generic
 
 MarketplaceCart
@@ -438,6 +439,10 @@ MarketplaceOrder
     totalUsdCents   Int
     currency        Text default='USD'
     status          Text default='pending'
+    paymentProvider Text Maybe
+    paypalOrderId   Text Maybe
+    paypalPayerEmail Text Maybe
+    paidAt          UTCTime Maybe
     createdAt       UTCTime default=now()
     updatedAt       UTCTime default=now()
     deriving Show Generic
