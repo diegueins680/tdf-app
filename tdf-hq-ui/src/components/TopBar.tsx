@@ -1,8 +1,8 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { useEffect, useMemo, useState } from 'react';
-import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge, Typography } from '@mui/material';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import ApiTokenDialog from './ApiTokenDialog';
@@ -32,6 +32,7 @@ const readCartMeta = () => {
 export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const { session, logout } = useSession();
   const navigate = useNavigate();
+  const location = useLocation();
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const hasAdmin = useMemo(
@@ -53,6 +54,23 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
+  };
+
+  const renderBreadcrumb = () => {
+    const parts = location.pathname.split('/').filter(Boolean);
+    if (parts.length === 0) return null;
+    const label = parts
+      .map((p) => p.replace(/-/g, ' '))
+      .map((p) => (p.length > 0 ? p[0].toUpperCase() + p.slice(1) : p))
+      .join(' / ');
+    return (
+      <Typography
+        variant="caption"
+        sx={{ color: '#cbd5e1', letterSpacing: 0.3, textTransform: 'uppercase' }}
+      >
+        {label}
+      </Typography>
+    );
   };
 
   return (
@@ -96,6 +114,9 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               filter: 'brightness(0) invert(1) drop-shadow(0 10px 26px rgba(0,0,0,0.45))',
             }}
           />
+        </Box>
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'column', ml: 2 }}>
+          {renderBreadcrumb()}
         </Box>
 
         <Stack
