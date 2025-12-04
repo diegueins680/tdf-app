@@ -105,7 +105,7 @@ inventoryServer user =
           , assetLocationId            = Nothing
           , assetOwner                 = "TDF"
           , assetQrCode                = Nothing
-          , assetPhotoUrl              = Nothing
+          , assetPhotoUrl              = cPhotoUrl req
           , assetNotes                 = Nothing
           , assetWarrantyExpires       = Nothing
           , assetMaintenancePolicy     = None
@@ -131,6 +131,7 @@ inventoryServer user =
             , (AssetStatus =.) <$> statusValue
             , fmap (\rid -> AssetLocationId =. Just rid) locationKey
             , fmap (\noteTxt -> AssetNotes =. Just noteTxt) (uNotes req)
+            , fmap (\url -> AssetPhotoUrl =. Just url) (uPhotoUrl req)
             ]
       result <- withPool $ do
         mEntity <- getEntity assetKey
@@ -162,6 +163,7 @@ inventoryServer user =
       , model    = assetModel asset
       , location = fmap toPathPiece (assetLocationId asset)
       , qrToken  = assetQrCode asset
+      , photoUrl = assetPhotoUrl asset
       }
 
     checkoutAssetH rawId req = do

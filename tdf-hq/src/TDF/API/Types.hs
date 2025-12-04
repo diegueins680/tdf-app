@@ -164,6 +164,7 @@ data AssetDTO = AssetDTO
   , model    :: Maybe Text
   , location :: Maybe Text
   , qrToken  :: Maybe Text
+  , photoUrl :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON AssetDTO
@@ -290,6 +291,7 @@ instance FromJSON LabelTrackUpdate
 data AssetCreate = AssetCreate
   { cName     :: Text
   , cCategory :: Text
+  , cPhotoUrl :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON AssetCreate
@@ -301,6 +303,7 @@ data AssetUpdate = AssetUpdate
   , uStatus     :: Maybe Text
   , uLocationId :: Maybe Text
   , uNotes      :: Maybe Text
+  , uPhotoUrl   :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON AssetUpdate
