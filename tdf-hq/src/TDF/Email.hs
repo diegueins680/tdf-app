@@ -6,6 +6,7 @@ module TDF.Email
   , sendPasswordResetEmail
   , sendCourseRegistrationEmail
   , sendCoursePaymentReminderEmail
+  , sendMarketplaceOrderEmail
   , sendTestEmail
   ) where
 
