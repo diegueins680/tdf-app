@@ -279,6 +279,17 @@ data MarketplaceOrderUpdate = MarketplaceOrderUpdate
 instance ToJSON MarketplaceOrderUpdate
 instance FromJSON MarketplaceOrderUpdate
 
+data DatafastCheckoutDTO = DatafastCheckoutDTO
+  { dcOrderId     :: Text
+  , dcCheckoutId  :: Text
+  , dcWidgetUrl   :: Text
+  , dcAmount      :: Text
+  , dcCurrency    :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON DatafastCheckoutDTO
+instance FromJSON DatafastCheckoutDTO
+
 data PaypalCreateDTO = PaypalCreateDTO
   { pcOrderId       :: Text
   , pcPaypalOrderId :: Text

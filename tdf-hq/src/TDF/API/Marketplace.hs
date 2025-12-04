@@ -13,6 +13,7 @@ import           TDF.API.Types
   , MarketplaceCheckoutReq
   , MarketplaceOrderDTO
   , MarketplaceOrderUpdate
+  , DatafastCheckoutDTO
   , PaypalCreateDTO
   , PaypalCaptureReq
   )
@@ -24,6 +25,8 @@ type MarketplaceAPI =
   :<|> "cart" :> Capture "cartId" Text :> Get '[JSON] MarketplaceCartDTO
   :<|> "cart" :> Capture "cartId" Text :> "items" :> ReqBody '[JSON] MarketplaceCartItemUpdate :> Post '[JSON] MarketplaceCartDTO
   :<|> "cart" :> Capture "cartId" Text :> "checkout" :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] MarketplaceOrderDTO
+  :<|> "cart" :> Capture "cartId" Text :> "datafast" :> "checkout" :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] DatafastCheckoutDTO
+  :<|> "datafast" :> "status" :> QueryParam "orderId" Text :> QueryParam "resourcePath" Text :> Get '[JSON] MarketplaceOrderDTO
   :<|> "cart" :> Capture "cartId" Text :> "paypal" :> "create" :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] PaypalCreateDTO
   :<|> "paypal" :> "capture" :> ReqBody '[JSON] PaypalCaptureReq :> Post '[JSON] MarketplaceOrderDTO
   :<|> "orders" :> Capture "orderId" Text :> Get '[JSON] MarketplaceOrderDTO

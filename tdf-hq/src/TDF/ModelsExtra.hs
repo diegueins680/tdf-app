@@ -442,6 +442,14 @@ MarketplaceOrder
     paymentProvider Text Maybe
     paypalOrderId   Text Maybe
     paypalPayerEmail Text Maybe
+    datafastCheckoutId Text Maybe
+    datafastResourcePath Text Maybe
+    datafastPaymentId   Text Maybe
+    datafastResultCode  Text Maybe
+    datafastResultDescription Text Maybe
+    datafastPaymentBrand Text Maybe
+    datafastAuthCode     Text Maybe
+    datafastAcquirerCode Text Maybe
     paidAt          UTCTime Maybe
     createdAt       UTCTime default=now()
     updatedAt       UTCTime default=now()
