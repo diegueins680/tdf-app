@@ -10,6 +10,7 @@ import {
   CircularProgress,
   Grid,
   IconButton,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -26,10 +27,12 @@ import type {
 import { Marketplace } from '../api/marketplace';
 
 const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
+const CART_META_KEY = 'tdf-marketplace-cart-meta';
 
 export default function MarketplacePage() {
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
+  const [toast, setToast] = useState<string | null>(null);
   const [cartId, setCartId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem(CART_STORAGE_KEY);
@@ -50,6 +53,10 @@ export default function MarketplacePage() {
     queryFn: async () => {
       if (!cartId) throw new Error('no-cart');
       return Marketplace.getCart(cartId);
+    },
+    onSuccess: (data) => {
+      const count = data.mcItems.reduce((acc, it) => acc + it.mciQuantity, 0);
+      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: data.mcCartId, count }));
     },
   });
 
@@ -75,6 +82,9 @@ export default function MarketplacePage() {
     },
     onSuccess: (data) => {
       qc.setQueryData(['marketplace-cart', data.mcCartId], data);
+      const count = data.mcItems.reduce((acc, it) => acc + it.mciQuantity, 0);
+      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: data.mcCartId, count }));
+      setToast('Carrito actualizado');
     },
   });
 
@@ -92,6 +102,8 @@ export default function MarketplacePage() {
     onSuccess: (order) => {
       setLastOrder(order);
       void qc.invalidateQueries({ queryKey: ['marketplace-cart', cartId] });
+      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartId ?? '', count: 0 }));
+      setToast('Pedido enviado');
     },
   });
 
@@ -333,9 +345,19 @@ export default function MarketplacePage() {
 
               {orderSummary}
             </Stack>
-          </Grid>
-        </Grid>
-      </Stack>
-    </Box>
-  );
+      </Grid>
+    </Grid>
+      <Snackbar
+        open={Boolean(toast)}
+        autoHideDuration={2200}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setToast(null)} sx={{ width: '100%' }}>
+          {toast}
+        </Alert>
+      </Snackbar>
+    </Stack>
+  </Box>
+);
 }

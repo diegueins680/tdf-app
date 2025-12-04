@@ -1,7 +1,7 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import { useMemo, useState } from 'react';
-import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar } from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
+import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
@@ -12,14 +12,38 @@ interface TopBarProps {
   onToggleSidebar?: () => void;
 }
 
+const CART_META_KEY = 'tdf-marketplace-cart-meta';
+
+const readCartMeta = () => {
+  try {
+    const raw = localStorage.getItem(CART_META_KEY);
+    if (!raw) return { cartId: '', count: 0 };
+    const parsed = JSON.parse(raw);
+    return {
+      cartId: typeof parsed?.cartId === 'string' ? parsed.cartId : '',
+      count: typeof parsed?.count === 'number' ? parsed.count : 0,
+    };
+  } catch {
+    return { cartId: '', count: 0 };
+  }
+};
+
 export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const { session, logout } = useSession();
   const navigate = useNavigate();
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const hasAdmin = useMemo(
     () => (session?.modules ?? []).some((m) => m.toLowerCase() === 'admin'),
     [session?.modules],
   );
+
+  useEffect(() => {
+    setCartCount(readCartMeta().count);
+    const handler = () => setCartCount(readCartMeta().count);
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -83,6 +107,21 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           </Button>
           <Button color="inherit" component={RouterLink} to="/seguridad" sx={{ textTransform: 'none' }}>
             Seguridad
+          </Button>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/marketplace"
+            sx={{ textTransform: 'none', position: 'relative' }}
+          >
+            <Badge
+              color="secondary"
+              badgeContent={cartCount > 9 ? '9+' : cartCount}
+              invisible={cartCount <= 0}
+              sx={{ '& .MuiBadge-badge': { right: -6, top: 6 } }}
+            >
+              Carrito
+            </Badge>
           </Button>
 
           {hasAdmin ? (
