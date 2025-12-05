@@ -21,6 +21,7 @@ import {
   MenuItem,
   Paper,
   Select,
+  Snackbar,
   Stack,
   Table,
   TableBody,
@@ -96,6 +97,7 @@ export default function MarketplaceOrdersPage() {
   const [statusInput, setStatusInput] = useState<string>('');
   const [paymentProviderInput, setPaymentProviderInput] = useState<string>('');
   const [paidAtInput, setPaidAtInput] = useState<string>('');
+  const [toast, setToast] = useState<string | null>(null);
 
   const ordersQuery = useQuery<MarketplaceOrderDTO[], Error>({
     queryKey: ['marketplace-orders', statusFilter],
@@ -122,6 +124,12 @@ export default function MarketplaceOrdersPage() {
     setPaymentProviderInput(selectedOrder.moPaymentProvider ?? '');
     setPaidAtInput(formatInputDate(selectedOrder.moPaidAt));
   }, [selectedOrder]);
+
+  useEffect(() => {
+    if (statusInput === 'paid' && !paidAtInput) {
+      setPaidAtInput(DateTime.now().toFormat("yyyy-LL-dd'T'HH:mm"));
+    }
+  }, [statusInput, paidAtInput]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -159,26 +167,34 @@ export default function MarketplaceOrdersPage() {
     (fromDate ? 1 : 0) +
     (toDate ? 1 : 0);
 
-  const exportCsv = async () => {
-    const header = ['Pedido', 'Cliente', 'Email', 'Total', 'Estado', 'Pago', 'Creado', 'Pagado'];
+  const exportCsv = () => {
+    if (filtered.length === 0) return;
+    const header = ['pedido', 'estado', 'pago', 'total', 'moneda', 'comprador', 'email', 'teléfono', 'creado', 'pagado', 'items'];
+    const escape = (val: string | number | null | undefined) => {
+      const safe = val ?? '';
+      return `"${String(safe).replace(/"/g, '""')}"`;
+    };
     const rows = filtered.map((o) => [
       o.moOrderId,
-      o.moBuyerName ?? '',
-      o.moBuyerEmail ?? '',
-      o.moTotalDisplay,
       o.moStatus,
       o.moPaymentProvider ?? '',
-      formatDate(o.moCreatedAt),
-      formatDate(o.moPaidAt),
+      o.moTotalDisplay,
+      o.moCurrency,
+      o.moBuyerName,
+      o.moBuyerEmail,
+      o.moBuyerPhone ?? '',
+      o.moCreatedAt,
+      o.moPaidAt ?? '',
+      summarizeItems(o.moItems),
     ]);
-    const csv = [header, ...rows]
-      .map((cols) => cols.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    try {
-      await navigator.clipboard.writeText(csv);
-    } catch {
-      // ignore clipboard failures
-    }
+    const csv = [header, ...rows].map((cols) => cols.map(escape).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ordenes-marketplace-${Date.now()}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const updateMutation = useMutation<MarketplaceOrderDTO, Error, { id: string; payload: MarketplaceOrderUpdatePayload }>({
@@ -188,6 +204,8 @@ export default function MarketplaceOrdersPage() {
         prev ? prev.map((o) => (o.moOrderId === data.moOrderId ? data : o)) : prev,
       );
       void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+      setToast('Orden actualizada');
+      closeDialog();
     },
   });
 
@@ -414,6 +432,15 @@ export default function MarketplaceOrdersPage() {
           Tarjeta pendiente
         </Button>
         <Box flex={1} />
+        {statusFilter !== 'all' && (
+          <Chip size="small" label={`Estado: ${statusFilter}`} onDelete={() => setStatusFilter('all')} />
+        )}
+        {providerFilter !== 'all' && (
+          <Chip size="small" label={`Pago: ${providerFilter}`} onDelete={() => setProviderFilter('all')} />
+        )}
+        {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
+        {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
+        {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
         {filtersActiveCount > 0 && (
           <Chip label={`${filtersActiveCount} filtro${filtersActiveCount === 1 ? '' : 's'} activos`} size="small" />
         )}
@@ -440,7 +467,7 @@ export default function MarketplaceOrdersPage() {
                 color="warning"
                 variant="outlined"
               />
-              <Button size="small" variant="outlined" onClick={exportCsv}>
+              <Button size="small" variant="outlined" onClick={exportCsv} disabled={filtered.length === 0}>
                 Exportar CSV
               </Button>
               {filtersDirty && (
@@ -644,6 +671,11 @@ export default function MarketplaceOrdersPage() {
                           </Typography>
                           <Chip size="small" label={statusLabel(selectedOrder.moStatus)} color={statusColor(selectedOrder.moStatus)} />
                         </Stack>
+                        {selectedOrder.moStatusHistory.length > 0 && (
+                          <Typography variant="body2" color="text.secondary">
+                            Último cambio: {formatDate(selectedOrder.moStatusHistory[selectedOrder.moStatusHistory.length - 1]?.[1])}
+                          </Typography>
+                        )}
                         <Typography variant="body2">
                           <strong>Creado:</strong> {formatDate(selectedOrder.moCreatedAt)}
                         </Typography>
@@ -755,6 +787,16 @@ export default function MarketplaceOrdersPage() {
           </>
         )}
       </Dialog>
+      <Snackbar
+        open={Boolean(toast)}
+        autoHideDuration={2500}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setToast(null)} severity="success" sx={{ width: '100%' }}>
+          {toast}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
