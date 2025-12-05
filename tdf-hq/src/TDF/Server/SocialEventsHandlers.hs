@@ -79,8 +79,27 @@ socialEventsServer = eventsServer
       rows <- liftIO $ runSqlPool (selectList [] [Desc SocialEventStartTime, LimitTo 200]) envPool
       pure $ toJSON (map eventToValue rows)
 
-    createEvent :: Value -> m Value
-    createEvent _ = throwError err501 { errBody = "Not implemented: createEvent" }
+    createEvent :: EventDTO -> m EventDTO
+    createEvent dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      let title = eventTitle dto
+      -- Insert minimal event record; TODO: validate fields and link artists
+      key <- liftIO $ runSqlPool (insert SocialEvent
+        { socialEventOrganizerPartyId = Nothing
+        , socialEventTitle = eventTitle dto
+        , socialEventDescription = eventDescription dto
+        , socialEventVenueId = Nothing
+        , socialEventStartTime = eventStart dto
+        , socialEventEndTime = eventEnd dto
+        , socialEventPriceCents = eventPriceCents dto
+        , socialEventCapacity = eventCapacity dto
+        , socialEventMetadata = Nothing
+        , socialEventCreatedAt = now
+        , socialEventUpdatedAt = now
+        }) envPool
+      let createdDto = dto { eventId = Just (T.pack (show (fromSqlKey key))) }
+      pure createdDto
 
     getEvent :: String -> m Value
     getEvent rawId = do
@@ -115,8 +134,24 @@ socialEventsServer = eventsServer
       rows <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 200]) envPool
       pure $ toJSON (map venueToValue rows)
 
-    createVenue :: Value -> m Value
-    createVenue _ = throwError err501 { errBody = "Not implemented: createVenue" }
+    createVenue :: VenueDTO -> m VenueDTO
+    createVenue dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      key <- liftIO $ runSqlPool (insert Venue
+        { venueName = venueName dto
+        , venueAddress = venueAddress dto
+        , venueCity = venueCity dto
+        , venueCountry = venueCountry dto
+        , venueLatitude = venueLat dto
+        , venueLongitude = venueLng dto
+        , venueCapacity = venueCapacity dto
+        , venueContact = venueContact dto
+        , venueCreatedAt = now
+        , venueUpdatedAt = now
+        }) envPool
+      let created = dto { venueId = Just (T.pack (show (fromSqlKey key))) }
+      pure created
 
     getVenue :: String -> m Value
     getVenue rawId = do
