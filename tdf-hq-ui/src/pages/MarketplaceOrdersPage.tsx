@@ -416,16 +416,17 @@ export default function MarketplaceOrdersPage() {
                     <TableCell>Cliente</TableCell>
                     <TableCell>Contacto</TableCell>
                     <TableCell>Estado</TableCell>
-                    <TableCell align="right">Total</TableCell>
-                    <TableCell>Pago</TableCell>
-                    <TableCell>Creado</TableCell>
-                    <TableCell>Pagado</TableCell>
-                    <TableCell>Items</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filtered.map((order) => (
-                    <TableRow
+                  <TableCell align="right">Total</TableCell>
+                  <TableCell>Pago</TableCell>
+                  <TableCell>Creado</TableCell>
+                  <TableCell>Pagado</TableCell>
+                  <TableCell>Items</TableCell>
+                  <TableCell align="right">Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filtered.map((order) => (
+                  <TableRow
                       key={order.moOrderId}
                       hover
                       onClick={() => openOrder(order.moOrderId)}
@@ -518,6 +519,19 @@ export default function MarketplaceOrdersPage() {
                         <Typography variant="caption" color="text.secondary">
                           {summarizeItems(order.moItems)}
                         </Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title="Copiar fila (TSV)">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void copyRow(order);
+                            }}
+                          >
+                            <ContentCopyIcon fontSize="inherit" />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}

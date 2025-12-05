@@ -371,8 +371,8 @@ export default function MarketplacePage() {
     () => Array.from(new Set(listings.map((item) => item.miCategory).filter(Boolean))),
     [listings],
   );
-  const conditions = useMemo(
-    () => Array.from(new Set(listings.map((item) => item.miCondition).filter(Boolean))),
+  const conditions: string[] = useMemo(
+    () => Array.from(new Set(listings.map((item) => item.miCondition).filter((v): v is string => Boolean(v)))),
     [listings],
   );
   const filteredListings = useMemo(() => {
