@@ -101,7 +101,10 @@ const normalizeText = (value: string) =>
   value
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 const normalizePhone = (value: string) => {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
@@ -152,6 +155,7 @@ export default function MarketplacePage() {
   const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
   const showTokenRates = Boolean(adaUsdRate ?? sedUsdRate);
   const normalizedSearchTerm = useMemo(() => normalizeText(search.trim()), [search]);
+  const searchTokens = useMemo(() => normalizedSearchTerm.split(' ').filter(Boolean), [normalizedSearchTerm]);
   const cartQuery = useQuery<MarketplaceCartDTO>({
     queryKey: ['marketplace-cart', cartId ?? ''],
     enabled: Boolean(cartId),
@@ -425,7 +429,7 @@ export default function MarketplacePage() {
       const matchesCategory = category === 'all' ? true : item.miCategory === category;
       const matchesPurpose = purpose === 'all' ? true : item.miPurpose === purpose;
       const matchesCondition = condition === 'all' ? true : item.miCondition === condition;
-      if (!normalizedSearchTerm) return matchesCategory && matchesPurpose && matchesCondition;
+      if (searchTokens.length === 0) return matchesCategory && matchesPurpose && matchesCondition;
       const haystack = [
         item.miTitle,
         item.miBrand,
@@ -436,9 +440,11 @@ export default function MarketplacePage() {
       ]
         .filter(Boolean)
         .join(' ');
-      return matchesCategory && matchesPurpose && matchesCondition && normalizeText(haystack).includes(normalizedSearchTerm);
+      const haystackNormalized = normalizeText(haystack);
+      const matchesText = searchTokens.every((token) => haystackNormalized.includes(token));
+      return matchesCategory && matchesPurpose && matchesCondition && matchesText;
     });
-  }, [category, condition, listings, normalizedSearchTerm, purpose]);
+  }, [category, condition, listings, purpose, searchTokens]);
   const computeRelevanceScore = useCallback((item: MarketplaceItemDTO) => {
     const status = (item.miStatus ?? '').toLowerCase();
     const isInStock = status.includes('stock') || status.includes('disponible');
