@@ -145,6 +145,29 @@ export default function RadioWidget() {
   );
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
 
+  // Hydrate prompts from localStorage to keep user submissions across reloads.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem('radio-prompts');
+      if (!raw) return;
+      const saved: Record<string, Prompt[]> = JSON.parse(raw);
+      setPromptState((prev) => ({ ...prev, ...saved }));
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  // Persist prompts to localStorage when they change.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-prompts', JSON.stringify(promptState));
+    } catch {
+      // ignore quota errors
+    }
+  }, [promptState]);
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -250,6 +273,9 @@ export default function RadioWidget() {
                 variant="indeterminate"
                 sx={{ height: 6, borderRadius: 999, bgcolor: 'rgba(148,163,184,0.2)' }}
               />
+              <Typography variant="caption" color="text.secondary">
+                Streams de muestra; agrega tus prompts para escuchar nuevas variaciones.
+              </Typography>
               <Typography variant="subtitle2">Prompts en uso</Typography>
               <PromptList prompts={promptsWithCode} />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
