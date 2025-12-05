@@ -1,21 +1,37 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module TDF.Server.SocialEventsHandlers
   ( socialEventsServer
   ) where
 
-import Servant
-import Servant.Server
-import RIO
-import Data.Aeson (Value, object, (.=))
-import qualified Network.HTTP.Types.Status as Status
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Reader (ask)
+import           Control.Monad.Except (throwError)
+import           Data.Aeson (Value, object, (.=), toJSON)
+import qualified Data.Text as T
+import           Text.Read (readMaybe)
 
-import TDF.API.SocialEventsAPI
+import           Servant
+import           Servant.Server
 
--- | Handler placeholders for Social Events API. Implementations should
--- call into DB layer (TDF.Models.SocialEventsModels) and convert to DTOs.
+import           Database.Persist (Entity(..), SelectOpt(..), selectList, selectFirst)
+import           Database.Persist.Sql (runSqlPool, fromSqlKey)
 
-socialEventsServer :: Server SocialEventsAPI
+import           TDF.API.SocialEventsAPI
+import           TDF.DB (Env(..))
+import           TDF.Models.SocialEventsModels
+
+-- | Social Events server implemented with access to the application's Env.
+-- Returns JSON 'Value' for flexibility; replace with typed DTOs later.
+socialEventsServer
+  :: forall m.
+     ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => ServerT SocialEventsAPI m
 socialEventsServer = eventsServer
                  :<|> venuesServer
                  :<|> artistsServer
@@ -23,81 +39,132 @@ socialEventsServer = eventsServer
                  :<|> invitationsServer
 
   where
+    -- Helper to convert Venue entity to JSON-like Value
+    venueToValue :: Entity Venue -> Value
+    venueToValue (Entity vid v) = object
+      [ "id" .= (fromSqlKey vid)
+      , "name" .= venueName v
+      , "address" .= venueAddress v
+      , "city" .= venueCity v
+      , "country" .= venueCountry v
+      , "latitude" .= venueLatitude v
+      , "longitude" .= venueLongitude v
+      , "capacity" .= venueCapacity v
+      , "contact" .= venueContact v
+      ]
+
+    eventToValue :: Entity SocialEvent -> Value
+    eventToValue (Entity eid e) = object
+      [ "id" .= (fromSqlKey eid)
+      , "title" .= socialEventTitle e
+      , "description" .= socialEventDescription e
+      , "start_time" .= socialEventStartTime e
+      , "end_time" .= socialEventEndTime e
+      , "venue_id" .= socialEventVenueId e
+      , "price_cents" .= socialEventPriceCents e
+      , "capacity" .= socialEventCapacity e
+      ]
+
     -- Events
-    eventsServer :: Server EventsRoutes
+    eventsServer :: ServerT EventsRoutes m
     eventsServer = listEvents
               :<|> createEvent
               :<|> getEvent
               :<|> updateEvent
               :<|> deleteEvent
 
-    listEvents :: Maybe String -> Maybe String -> Handler Value
-    listEvents _ _ = throwError err501 { errBody = "Not implemented: listEvents" }
+    listEvents :: Maybe String -> Maybe String -> m Value
+    listEvents _mCity _mStartAfter = do
+      Env{..} <- ask
+      rows <- liftIO $ runSqlPool (selectList [] [Desc SocialEventStartTime, LimitTo 200]) envPool
+      pure $ toJSON (map eventToValue rows)
 
-    createEvent :: Value -> Handler Value
+    createEvent :: Value -> m Value
     createEvent _ = throwError err501 { errBody = "Not implemented: createEvent" }
 
-    getEvent :: String -> Handler Value
-    getEvent _ = throwError err501 { errBody = "Not implemented: getEvent" }
+    getEvent :: String -> m Value
+    getEvent rawId = do
+      Env{..} <- ask
+      case readMaybe (T.unpack (T.strip (T.pack rawId))) of
+        Nothing -> throwError err400 { errBody = "Invalid event id" }
+        Just (_ :: Int) -> do
+          mRow <- liftIO $ runSqlPool (selectFirst [] []) envPool
+          case mRow of
+            Nothing -> throwError err404 { errBody = "Event not found" }
+            Just r  -> pure $ eventToValue r
 
-    updateEvent :: String -> Value -> Handler Value
+    updateEvent :: String -> Value -> m Value
     updateEvent _ _ = throwError err501 { errBody = "Not implemented: updateEvent" }
 
-    deleteEvent :: String -> Handler NoContent
+    deleteEvent :: String -> m NoContent
     deleteEvent _ = throwError err501 { errBody = "Not implemented: deleteEvent" }
 
     -- Venues
-    venuesServer :: Server VenuesRoutes
+    venuesServer :: ServerT VenuesRoutes m
     venuesServer = listVenues
               :<|> createVenue
               :<|> getVenue
               :<|> updateVenue
 
-    listVenues :: Maybe String -> Maybe String -> Handler Value
-    listVenues _ _ = throwError err501 { errBody = "Not implemented: listVenues" }
+    listVenues :: Maybe String -> Maybe String -> m Value
+    listVenues mCity _mNear = do
+      Env{..} <- ask
+      let filters = case mCity of
+                      Just c | not (T.null (T.strip (T.pack c))) -> [VenueCity ==. Just (T.pack c)]
+                      _ -> []
+      rows <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 200]) envPool
+      pure $ toJSON (map venueToValue rows)
 
-    createVenue :: Value -> Handler Value
+    createVenue :: Value -> m Value
     createVenue _ = throwError err501 { errBody = "Not implemented: createVenue" }
 
-    getVenue :: String -> Handler Value
-    getVenue _ = throwError err501 { errBody = "Not implemented: getVenue" }
+    getVenue :: String -> m Value
+    getVenue rawId = do
+      Env{..} <- ask
+      case readMaybe (T.unpack (T.strip (T.pack rawId))) of
+        Nothing -> throwError err400 { errBody = "Invalid venue id" }
+        Just (_ :: Int) -> do
+          mRow <- liftIO $ runSqlPool (selectFirst [] []) envPool
+          case mRow of
+            Nothing -> throwError err404 { errBody = "Venue not found" }
+            Just r  -> pure $ venueToValue r
 
-    updateVenue :: String -> Value -> Handler Value
+    updateVenue :: String -> Value -> m Value
     updateVenue _ _ = throwError err501 { errBody = "Not implemented: updateVenue" }
 
-    -- Artists
-    artistsServer :: Server ArtistsRoutes
+    -- Artists (left as not-implemented for now, reuse artist utilities later)
+    artistsServer :: ServerT ArtistsRoutes m
     artistsServer = listArtists
                :<|> createArtist
                :<|> getArtist
                :<|> updateArtist
 
-    listArtists :: Maybe String -> Maybe String -> Handler Value
+    listArtists :: Maybe String -> Maybe String -> m Value
     listArtists _ _ = throwError err501 { errBody = "Not implemented: listArtists" }
 
-    createArtist :: Value -> Handler Value
+    createArtist :: Value -> m Value
     createArtist _ = throwError err501 { errBody = "Not implemented: createArtist" }
 
-    getArtist :: String -> Handler Value
+    getArtist :: String -> m Value
     getArtist _ = throwError err501 { errBody = "Not implemented: getArtist" }
 
-    updateArtist :: String -> Value -> Handler Value
+    updateArtist :: String -> Value -> m Value
     updateArtist _ _ = throwError err501 { errBody = "Not implemented: updateArtist" }
 
     -- RSVPs
-    rsvpsServer :: Server RsvpRoutes
+    rsvpsServer :: ServerT RsvpRoutes m
     rsvpsServer = listRsvps
              :<|> createRsvp
 
-    listRsvps :: String -> Handler Value
+    listRsvps :: String -> m Value
     listRsvps _ = throwError err501 { errBody = "Not implemented: listRsvps" }
 
-    createRsvp :: String -> Value -> Handler Value
+    createRsvp :: String -> Value -> m Value
     createRsvp _ _ = throwError err501 { errBody = "Not implemented: createRsvp" }
 
     -- Invitations
-    invitationsServer :: Server InvitationsRoutes
+    invitationsServer :: ServerT InvitationsRoutes m
     invitationsServer = createInvitation
 
-    createInvitation :: String -> Value -> Handler Value
+    createInvitation :: String -> Value -> m Value
     createInvitation _ _ = throwError err501 { errBody = "Not implemented: createInvitation" }
