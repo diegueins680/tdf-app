@@ -22,6 +22,7 @@ import           Data.Int (Int64)
 import           Data.Time (getCurrentTime)
 
 import           TDF.API.SocialEventsAPI
+import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..))
 import           Data.Maybe (isNothing)
 import           TDF.DB (Env(..))
 import           TDF.Models.SocialEventsModels
@@ -76,11 +77,29 @@ socialEventsServer = eventsServer
               :<|> updateEvent
               :<|> deleteEvent
 
-    listEvents :: Maybe String -> Maybe String -> m Value
+    listEvents :: Maybe Text -> Maybe Text -> m [EventDTO]
     listEvents _mCity _mStartAfter = do
       Env{..} <- ask
       rows <- liftIO $ runSqlPool (selectList [] [Desc SocialEventStartTime, LimitTo 200]) envPool
-      pure $ toJSON (map eventToValue rows)
+      -- Populate artists for each event
+      forM rows $ \(Entity eid e) -> do
+        artistLinks <- liftIO $ runSqlPool (selectList [EventArtistEventId ==. eid] []) envPool
+        artists <- forM artistLinks $ \(Entity _ link) -> do
+          mArtist <- liftIO $ runSqlPool (get (eventArtistArtistId link)) envPool
+          pure $ case mArtist of
+            Nothing -> ArtistDTO { artistId = Nothing, artistName = "(unknown)", artistGenres = [] }
+            Just a -> ArtistDTO { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link)))), artistName = artistProfileName a, artistGenres = maybe [] id (artistProfileGenres a) }
+        pure EventDTO
+          { eventId = Just (T.pack (show (fromSqlKey eid)))
+          , eventTitle = socialEventTitle e
+          , eventDescription = socialEventDescription e
+          , eventStart = socialEventStartTime e
+          , eventEnd = socialEventEndTime e
+          , eventVenueId = fmap (T.pack . show . fromSqlKey) (socialEventVenueId e)
+          , eventPriceCents = socialEventPriceCents e
+          , eventCapacity = socialEventCapacity e
+          , eventArtists = artists
+          }
 
     createEvent :: EventDTO -> m EventDTO
     createEvent dto = do
