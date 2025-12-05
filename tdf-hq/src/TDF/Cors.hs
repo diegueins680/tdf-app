@@ -5,6 +5,7 @@ import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
 import Data.Char (isSpace, toLower)
+import Control.Applicative ((<|>))
 
 corsPolicy :: IO Middleware
 corsPolicy = do
