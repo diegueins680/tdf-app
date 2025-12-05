@@ -171,6 +171,8 @@ export default function MarketplaceOrdersPage() {
     (fromDate ? 1 : 0) +
     (toDate ? 1 : 0) +
     (paidOnly ? 1 : 0);
+  const paidTotal = orders.filter((o) => o.moStatus === 'paid').length;
+  const paidVisible = filtered.filter((o) => o.moStatus === 'paid').length;
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -502,6 +504,11 @@ export default function MarketplaceOrdersPage() {
           Limpiar filtros
         </Button>
       </Stack>
+      {paidTotal > 0 && paidVisible === 0 && filtersDirty && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Hay órdenes pagadas, pero no coinciden con los filtros actuales. Ajusta los filtros o desmarca "Solo con pago".
+        </Alert>
+      )}
 
       <Card variant="outlined">
         <CardHeader
