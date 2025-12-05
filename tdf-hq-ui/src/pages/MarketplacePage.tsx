@@ -1116,9 +1116,6 @@ export default function MarketplacePage() {
                               : null}
                           </Typography>
                         )}
-                        <Typography variant="caption" color="text.secondary">
-                          Incluye markup {item.miMarkupPct}% sobre precio referencia.
-                        </Typography>
                       </Stack>
                       {(() => {
                         const props = getStatusChipProps(item.miStatus);
@@ -1599,9 +1596,6 @@ export default function MarketplacePage() {
                 </Typography>
               ))}
             </Stack>
-            <Typography variant="caption" color="text.secondary">
-              Los precios mostrados incluyen el markup indicado en cada artículo.
-            </Typography>
             <Typography variant="body2" color="text.secondary">
               Método de pago: {paymentMethod === 'paypal' ? 'PayPal' : paymentMethod === 'card' ? 'Tarjeta (Datafast)' : 'Coordinar por correo/WhatsApp'}
             </Typography>
@@ -1705,9 +1699,6 @@ export default function MarketplacePage() {
               <Stack spacing={0.25}>
                 <Typography variant="h5" fontWeight={800}>
                   {selectedListing.miPriceDisplay}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Incluye markup {selectedListing.miMarkupPct}% sobre precio referencia.
                 </Typography>
               </Stack>
               <Stack direction="row" spacing={1}>
