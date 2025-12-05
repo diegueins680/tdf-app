@@ -28,6 +28,9 @@
     "invoicing",
     "music-studio"
   ],
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "overrides": {
     "react-native-reanimated": "~4.1.1"
   },

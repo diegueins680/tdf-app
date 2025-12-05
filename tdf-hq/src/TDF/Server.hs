@@ -117,7 +117,7 @@ import           TDF.WhatsApp.Types ( WAMetaWebhook(..)
                                     )
 import qualified TDF.WhatsApp.Types as WA
 import           TDF.WhatsApp.Client (sendText)
-import           Network.HTTP.Client (Manager, RequestBody(..), newManager, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
+import           Network.HTTP.Client (Manager, RequestBody(..), Response, newManager, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
 import           System.Environment (lookupEnv)
