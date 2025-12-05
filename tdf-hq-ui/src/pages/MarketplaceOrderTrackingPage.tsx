@@ -55,7 +55,7 @@ export default function MarketplaceOrderTrackingPage() {
     if (typeof window === 'undefined') return;
     const url = window.location.href;
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(url).catch(() => {});
+      navigator.clipboard.writeText(url).catch((err) => console.warn('No se pudo copiar el enlace de seguimiento', err));
     }
   };
 

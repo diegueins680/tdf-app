@@ -160,7 +160,6 @@ export default function BookingsPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               fullWidth
-              autoFocus
             />
             <TextField
               label="Inicio"

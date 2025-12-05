@@ -42,7 +42,7 @@ export interface CalendarEventDTO {
   endAt?: string | null;
   updatedAt?: string | null;
   htmlLink?: string | null;
-  rawPayload?: any;
+  rawPayload?: unknown;
 }
 
 export const CalendarApi = {

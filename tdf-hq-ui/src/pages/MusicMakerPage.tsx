@@ -46,7 +46,7 @@ export default function MusicMakerPage() {
         clearInterval(intervalRef.current);
       }
       if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current.close().catch((err) => console.warn('No se pudo cerrar el AudioContext', err));
       }
     };
   }, []);
@@ -77,7 +77,8 @@ export default function MusicMakerPage() {
       audioCtxRef.current = ctx;
       masterGainRef.current = masterGain;
     }
-    const ctx = audioCtxRef.current!;
+    if (!audioCtxRef.current) return;
+    const ctx = audioCtxRef.current;
     void ctx.resume();
 
     const seed = hashPrompt(prompt);
@@ -106,14 +107,14 @@ export default function MusicMakerPage() {
     setIsPlaying(false);
   };
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(tidal.code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      setCopied(false);
-    }
+  const handleCopy = () => {
+    navigator.clipboard.writeText(tidal.code).then(
+      () => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1500);
+      },
+      () => setCopied(false),
+    );
   };
 
   return (
@@ -180,7 +181,9 @@ export default function MusicMakerPage() {
                   variant="outlined"
                   size="small"
                   startIcon={<ContentCopyIcon fontSize="small" />}
-                  onClick={handleCopy}
+                  onClick={() => {
+                    handleCopy();
+                  }}
                 >
                   {copied ? 'Copiado' : 'Copiar'}
                 </Button>

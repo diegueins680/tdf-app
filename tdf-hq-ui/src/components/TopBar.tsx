@@ -1,7 +1,7 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import { useEffect, useMemo, useState } from 'react';
-import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider, Tooltip } from '@mui/material';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider, Tooltip, Dialog, DialogTitle, DialogContent, TextField, InputAdornment, List, ListItemButton, ListItemText } from '@mui/material';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
@@ -9,6 +9,8 @@ import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import ApiTokenDialog from './ApiTokenDialog';
 import BrandLogo from './BrandLogo';
+import SearchIcon from '@mui/icons-material/Search';
+import { NAV_GROUPS, deriveModulesFromRoles, pathRequiresModule } from './SidebarNav';
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
@@ -82,11 +84,15 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   'creador-musical': 'Creador musical',
 };
 
-const readCartMeta = () => {
+interface CartPreviewItem {
+  title: string;
+  subtotal: string;
+}
+const readCartMeta = (): { cartId: string; count: number; preview: CartPreviewItem[] } => {
   try {
     const raw = localStorage.getItem(CART_META_KEY);
-    if (!raw) return { cartId: '', count: 0, preview: [] as { title: string; subtotal: string }[] };
-    const parsed = JSON.parse(raw);
+    if (!raw) return { cartId: '', count: 0, preview: [] };
+    const parsed = JSON.parse(raw) as Partial<{ cartId: string; count: number; preview: CartPreviewItem[] }>;
     return {
       cartId: typeof parsed?.cartId === 'string' ? parsed.cartId : '',
       count: typeof parsed?.count === 'number' ? parsed.count : 0,
@@ -102,6 +108,9 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
+  const [quickNavOpen, setQuickNavOpen] = useState(false);
+  const [quickQuery, setQuickQuery] = useState('');
+  const [quickHighlight, setQuickHighlight] = useState(0);
   const [cartCount, setCartCount] = useState(0);
   const [cartPreview, setCartPreview] = useState<{ title: string; subtotal: string }[]>([]);
   const [cartAnchor, setCartAnchor] = useState<HTMLElement | null>(null);
@@ -133,6 +142,67 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
     navigate('/login', { replace: true });
   };
 
+  const modules = useMemo(() => {
+    const provided = session?.modules ?? [];
+    const fromRoles = deriveModulesFromRoles(session?.roles);
+    return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+  }, [session?.modules, session?.roles]);
+
+  const quickNavItems = useMemo(() => {
+    return NAV_GROUPS.flatMap((group) =>
+      group.items
+        .filter((item) => {
+          const required = pathRequiresModule(item.path);
+          if (!required) return true;
+          return modules.has(required);
+        })
+        .map((item) => ({ ...item, group: group.title })),
+    );
+  }, [modules]);
+
+  const filteredQuickItems = useMemo(() => {
+    const query = quickQuery.trim().toLowerCase();
+    if (!query) return quickNavItems;
+    return quickNavItems.filter(
+      (item) => item.label.toLowerCase().includes(query) || item.path.toLowerCase().includes(query),
+    );
+  }, [quickNavItems, quickQuery]);
+
+  const openQuickNav = useCallback(() => {
+    setQuickNavOpen(true);
+    setQuickQuery('');
+    setQuickHighlight(0);
+  }, []);
+
+  const closeQuickNav = () => {
+    setQuickNavOpen(false);
+    setQuickQuery('');
+  };
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const tag = (event.target as HTMLElement | null)?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable) return;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        openQuickNav();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [openQuickNav]);
+
+  useEffect(() => {
+    setQuickHighlight(0);
+  }, [quickQuery]);
+
+  const handleSelectQuick = (idx: number) => {
+    const target = filteredQuickItems[idx];
+    if (!target) return;
+    navigate(target.path);
+    closeQuickNav();
+  };
+
   const handleOpenCart = (event: React.MouseEvent<HTMLElement>) => {
     setCartAnchor(event.currentTarget);
   };
@@ -144,7 +214,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
     const parts = location.pathname.split('/').filter(Boolean);
     if (parts.length === 0) return null;
     const label = parts
-      .map((p) => FRIENDLY_SEGMENTS[p] || p.replace(/-/g, ' '))
+      .map((p) => FRIENDLY_SEGMENTS[p] ?? p.replace(/-/g, ' '))
       .map((p) => (p.length > 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p))
       .join(' / ');
     return (
@@ -209,6 +279,17 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           alignItems="center"
           sx={{ ml: 'auto' }}
         >
+          <Tooltip title="Cmd/Ctrl + K para saltar a una sección">
+            <Button
+              color="inherit"
+              variant="outlined"
+              onClick={openQuickNav}
+              startIcon={<SearchIcon fontSize="small" />}
+              sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.4)' }}
+            >
+              Ir a...
+            </Button>
+          </Tooltip>
           <Tooltip title="Alt+R abre recursos">
             <Button
               color="inherit"
@@ -338,7 +419,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
                 variant="outlined"
                 component={RouterLink}
                 to="/marketplace"
-                onClick={(e) => {
+                onClick={() => {
                   handleCloseCart();
                   localStorage.setItem('tdf-marketplace-payment', 'card');
                 }}
@@ -349,6 +430,71 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           </Stack>
         )}
       </Popover>
+      <Dialog
+        open={quickNavOpen}
+        onClose={closeQuickNav}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Ir a otra sección</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            placeholder="Escribe para buscar (ej: inventario, leads, marketplace)"
+            value={quickQuery}
+            onChange={(e) => setQuickQuery(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                setQuickHighlight((prev) => (prev + 1) % Math.max(filteredQuickItems.length, 1));
+              } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                setQuickHighlight((prev) => {
+                  if (filteredQuickItems.length === 0) return 0;
+                  return prev <= 0 ? filteredQuickItems.length - 1 : prev - 1;
+                });
+              } else if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSelectQuick(quickHighlight);
+              } else if (event.key === 'Escape') {
+                closeQuickNav();
+              }
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 2 }}
+          />
+          {filteredQuickItems.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              Sin coincidencias. Prueba con otra palabra clave.
+            </Typography>
+          ) : (
+            <List dense>
+              {filteredQuickItems.slice(0, 30).map((item, idx) => (
+                <ListItemButton
+                  key={`${item.path}-${idx}`}
+                  selected={idx === quickHighlight}
+                  onClick={() => handleSelectQuick(idx)}
+                >
+                  <ListItemText
+                    primary={item.label}
+                    secondary={item.group}
+                    primaryTypographyProps={{ fontWeight: idx === quickHighlight ? 700 : 500 }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    {item.path}
+                  </Typography>
+                </ListItemButton>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+      </Dialog>
       <Menu
         anchorEl={resourcesAnchor}
         open={resourcesOpen}

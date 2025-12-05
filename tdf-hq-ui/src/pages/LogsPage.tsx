@@ -135,7 +135,7 @@ export default function LogsPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {logsQuery.data && logsQuery.data.length === 0 && (
+              {logsQuery.data?.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} align="center">
                     <Typography variant="body2" color="text.secondary">

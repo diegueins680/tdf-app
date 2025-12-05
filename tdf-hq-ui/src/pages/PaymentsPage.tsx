@@ -283,7 +283,9 @@ export default function PaymentsPage() {
           />
           <Button
             startIcon={<RefreshIcon />}
-            onClick={() => paymentsQuery.refetch()}
+            onClick={() => {
+              void paymentsQuery.refetch();
+            }}
             disabled={paymentsQuery.isFetching}
             variant="outlined"
           >

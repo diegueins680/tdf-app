@@ -47,6 +47,18 @@ const badgeStyle = {
   letterSpacing: 0.4,
 };
 
+interface CourseCmsPayload {
+  hero?: {
+    title?: string;
+    subtitle?: string;
+    cta?: string;
+    whatsappCta?: string;
+    badge1?: string;
+    badge2?: string;
+    badge3?: string;
+  };
+}
+
 export default function CourseProductionLandingPage() {
   const formRef = useRef<HTMLDivElement | null>(null);
   const [fullName, setFullName] = useState('');
@@ -59,7 +71,16 @@ export default function CourseProductionLandingPage() {
     queryFn: () => Courses.getMetadata(COURSE_SLUG),
   });
   const cmsQuery = useCmsContent('course-production', 'es');
-  const cmsPayload = useMemo(() => (cmsQuery.data?.ccdPayload as any) ?? null, [cmsQuery.data]);
+  const cmsPayload = useMemo<CourseCmsPayload | null>(() => {
+    const payload = cmsQuery.data?.ccdPayload;
+    if (payload && typeof payload === 'object') {
+      const hero = (payload as { hero?: unknown }).hero;
+      if (hero && typeof hero === 'object') {
+        return { hero: hero as CourseCmsPayload['hero'] };
+      }
+    }
+    return null;
+  }, [cmsQuery.data]);
 
   const utmParams = useMemo(() => {
     if (typeof window === 'undefined') return undefined;
@@ -222,6 +243,16 @@ function InstructorCard() {
   );
 }
 
+interface HeroOverrides {
+  title?: string;
+  subtitle?: string;
+  cta?: string;
+  whatsappCta?: string;
+  badge1?: string;
+  badge2?: string;
+  badge3?: string;
+}
+
 function Hero({
   meta,
   loading,
@@ -233,7 +264,7 @@ function Hero({
   loading: boolean;
   onPrimaryClick: () => void;
   whatsappHref: string;
-  heroOverride?: any;
+  heroOverride?: HeroOverrides;
 }) {
   const title = loading ? 'Cargando curso…' : heroOverride?.title ?? meta?.title ?? 'Curso de Producción Musical';
   const subtitle = loading ? 'Preparando detalles...' : heroOverride?.subtitle ?? meta?.subtitle ?? 'Presencial · 4 sábados · 16 horas';

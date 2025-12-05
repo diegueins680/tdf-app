@@ -205,15 +205,15 @@ export default function CompaniesPage() {
 
   const companies = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return (data || [])
+    return (data ?? [])
       .filter((p) => p.isOrg)
       .filter((p) => {
         if (!term) return true;
         return (
           p.displayName.toLowerCase().includes(term) ||
-          (p.legalName && p.legalName.toLowerCase().includes(term)) ||
-          (p.primaryEmail && p.primaryEmail.toLowerCase().includes(term)) ||
-          (p.taxId && p.taxId.toLowerCase().includes(term))
+          (p.legalName?.toLowerCase().includes(term) ?? false) ||
+          (p.primaryEmail?.toLowerCase().includes(term) ?? false) ||
+          (p.taxId?.toLowerCase().includes(term) ?? false)
         );
       });
   }, [data, search]);
@@ -251,7 +251,7 @@ export default function CompaniesPage() {
       </Paper>
 
       <Paper sx={{ p: 2, borderRadius: 3, boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
-        {isError && <Alert severity="error">{error?.message || 'No se pudieron cargar las empresas'}</Alert>}
+        {isError && <Alert severity="error">{error?.message ?? 'No se pudieron cargar las empresas'}</Alert>}
         {isLoading ? (
           <Typography>Cargando...</Typography>
         ) : companies.length === 0 ? (
@@ -278,10 +278,10 @@ export default function CompaniesPage() {
                       {c.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
                     </Stack>
                   </TableCell>
-                  <TableCell>{c.primaryEmail || '—'}</TableCell>
-                  <TableCell>{c.primaryPhone || '—'}</TableCell>
-                  <TableCell>{c.taxId || '—'}</TableCell>
-                  <TableCell>{c.notes || '—'}</TableCell>
+                  <TableCell>{c.primaryEmail ?? '—'}</TableCell>
+                  <TableCell>{c.primaryPhone ?? '—'}</TableCell>
+                  <TableCell>{c.taxId ?? '—'}</TableCell>
+                  <TableCell>{c.notes ?? '—'}</TableCell>
                   <TableCell align="right">
                     <Button
                       size="small"

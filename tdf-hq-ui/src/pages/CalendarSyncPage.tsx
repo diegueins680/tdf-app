@@ -20,7 +20,7 @@ import { DateTime } from 'luxon';
 import { CalendarApi } from '../api/calendar';
 
 export default function CalendarSyncPage() {
-  const zone = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
+  const zone: string = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
   const [calendarId, setCalendarId] = useState('');
   const [code, setCode] = useState('');
   const [fromInput, setFromInput] = useState('');
@@ -81,9 +81,11 @@ export default function CalendarSyncPage() {
 
     if (storedRange) {
       try {
-        const parsed = JSON.parse(storedRange);
-        if (parsed.from) setFromInput(parsed.from);
-        if (parsed.to) setToInput(parsed.to);
+        const parsed = JSON.parse(storedRange) as Partial<{ from: unknown; to: unknown }>;
+        const fromVal = typeof parsed.from === 'string' ? parsed.from : '';
+        const toVal = typeof parsed.to === 'string' ? parsed.to : '';
+        if (fromVal) setFromInput(fromVal);
+        if (toVal) setToInput(toVal);
       } catch {
         applyRangePreset('next30');
       }
@@ -128,9 +130,9 @@ export default function CalendarSyncPage() {
     queryKey: ['calendar-events', trimmedCalendarId, fromIso, toIso],
     queryFn: () =>
       CalendarApi.listEvents({
-        calendarId: trimmedCalendarId || undefined,
-        from: fromIso || undefined,
-        to: toIso || undefined,
+        calendarId: trimmedCalendarId ?? undefined,
+        from: fromIso ?? undefined,
+        to: toIso ?? undefined,
       }),
     enabled:
       Boolean(trimmedCalendarId) &&
@@ -169,8 +171,8 @@ export default function CalendarSyncPage() {
     mutationFn: () =>
       CalendarApi.sync({
         calendarId: trimmedCalendarId,
-        from: fromIso || undefined,
-        to: toIso || undefined,
+        from: fromIso ?? undefined,
+        to: toIso ?? undefined,
       }),
     onSuccess: () => {
       setShowValidation(false);
@@ -370,7 +372,7 @@ export default function CalendarSyncPage() {
               <Paper key={ev.eventId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between">
                   <Box sx={{ flexGrow: 1 }}>
-                    <Typography fontWeight={700}>{ev.summary || '(Sin título)'}</Typography>
+                    <Typography fontWeight={700}>{ev.summary ?? '(Sin título)'}</Typography>
                     <Typography variant="body2" color="text.secondary">
                       {ev.startAt ? new Date(ev.startAt).toLocaleString() : 'Sin fecha'} —{' '}
                       {ev.endAt ? new Date(ev.endAt).toLocaleString() : 'Sin fin'}

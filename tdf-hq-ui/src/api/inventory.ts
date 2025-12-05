@@ -1,11 +1,11 @@
 import { del, get, patch, post } from './client';
 import type { AssetCheckoutDTO, AssetCreate, AssetDTO, AssetUpdate, PageResponse } from './types';
 
-type AssetListParams = {
+interface AssetListParams {
   q?: string;
   page?: number;
   pageSize?: number;
-};
+}
 
 type AssetListResponse = PageResponse<AssetDTO> | { items: AssetDTO[] } | AssetDTO[];
 

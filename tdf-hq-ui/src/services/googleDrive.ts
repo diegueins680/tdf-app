@@ -215,7 +215,7 @@ export const uploadToDrive = async (
             const resp = JSON.parse(xhr.responseText);
             resolve(resp as DriveFileInfo);
           } catch (err) {
-            reject(err);
+            reject(err instanceof Error ? err : new Error('No se pudo parsear la respuesta de Drive'));
           }
         } else {
           reject(new Error(`Upload failed (${xhr.status})`));

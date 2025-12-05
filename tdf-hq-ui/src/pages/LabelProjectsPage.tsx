@@ -31,9 +31,10 @@ const locale = 'es';
 function parsePayload(content?: CmsContentDTO): ProjectNote[] {
   if (!content) return [];
   try {
-    const payload = (content.ccdPayload ?? {}) as any;
-    if (Array.isArray(payload.items)) {
-      return payload.items as ProjectNote[];
+    const payload = content.ccdPayload;
+    if (payload && typeof payload === 'object' && Array.isArray((payload as { items?: unknown }).items)) {
+      const items = (payload as { items?: unknown }).items as ProjectNote[];
+      return items;
     }
     return [];
   } catch {

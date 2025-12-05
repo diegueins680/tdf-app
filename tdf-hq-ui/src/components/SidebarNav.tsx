@@ -111,19 +111,12 @@ interface SidebarNavProps {
   onNavigate?: () => void;
 }
 
-export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
-  const location = useLocation();
-  const { session } = useSession();
-  const navigate = useNavigate();
-  const [filter, setFilter] = useState('');
-  const [highlightIndex, setHighlightIndex] = useState<number>(-1);
-  const searchRef = useRef<HTMLInputElement | null>(null);
-  const deriveModulesFromRoles = (roles: string[] | undefined): string[] => {
-    if (!roles || roles.length === 0) return [];
-    const lowerRoles = roles.map((r) => r.toLowerCase());
-    const moduleSet = new Set<string>();
-    lowerRoles.forEach((role) => {
-      if (role.includes('admin')) {
+export const deriveModulesFromRoles = (roles: string[] | undefined): string[] => {
+  if (!roles || roles.length === 0) return [];
+  const lowerRoles = roles.map((r) => r.toLowerCase());
+  const moduleSet = new Set<string>();
+  lowerRoles.forEach((role) => {
+    if (role.includes('admin')) {
         moduleSet.add('admin');
         moduleSet.add('crm');
         moduleSet.add('scheduling');
@@ -146,28 +139,36 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       } else if (role.includes('maintenance')) {
         moduleSet.add('packages');
         moduleSet.add('scheduling');
-      }
-    });
-    return Array.from(moduleSet);
-  };
+    }
+  });
+  return Array.from(moduleSet);
+};
+
+export const pathRequiresModule = (path: string): string | null => {
+  if (path.startsWith('/crm')) return 'crm';
+  if (path.startsWith('/estudio')) return 'scheduling';
+  if (path.startsWith('/finanzas')) return 'invoicing';
+  if (path.startsWith('/configuracion')) return 'admin';
+  if (path.startsWith('/operacion')) return 'packages';
+  if (path.startsWith('/label')) return 'packages';
+  if (path.startsWith('/escuela')) return 'scheduling';
+  if (path.startsWith('/eventos')) return 'scheduling';
+  return null;
+};
+
+export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
+  const location = useLocation();
+  const { session } = useSession();
+  const navigate = useNavigate();
+  const [filter, setFilter] = useState('');
+  const [highlightIndex, setHighlightIndex] = useState<number>(-1);
+  const searchRef = useRef<HTMLInputElement | null>(null);
 
   const modules = useMemo(() => {
     const provided = session?.modules ?? [];
     const fromRoles = deriveModulesFromRoles(session?.roles);
     return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
   }, [session?.modules, session?.roles]);
-
-  const pathRequiresModule = (path: string): string | null => {
-    if (path.startsWith('/crm')) return 'crm';
-    if (path.startsWith('/estudio')) return 'scheduling';
-    if (path.startsWith('/finanzas')) return 'invoicing';
-    if (path.startsWith('/configuracion')) return 'admin';
-    if (path.startsWith('/operacion')) return 'packages';
-    if (path.startsWith('/label')) return 'packages';
-    if (path.startsWith('/escuela')) return 'scheduling';
-    if (path.startsWith('/eventos')) return 'scheduling';
-    return null;
-  };
 
   const allowedNavGroups = useMemo(() => {
     return NAV_GROUPS.map((group) => {

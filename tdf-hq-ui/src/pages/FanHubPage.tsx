@@ -241,7 +241,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     },
   });
 
-  const releaseFeed = releaseFeedQuery.data ?? [];
+  const releaseFeed = useMemo(() => releaseFeedQuery.data ?? [], [releaseFeedQuery.data]);
   const latestReleaseByArtist = useMemo(() => {
     const map = new Map<number, ReleaseFeedItem>();
     releaseFeed.forEach((r) => {

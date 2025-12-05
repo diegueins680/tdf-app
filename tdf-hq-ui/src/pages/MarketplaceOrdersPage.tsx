@@ -202,6 +202,25 @@ export default function MarketplaceOrdersPage() {
     URL.revokeObjectURL(url);
   };
 
+  const copyFiltersLink = () => {
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    params.set('status', statusFilter);
+    params.set('provider', providerFilter);
+    params.set('paidOnly', paidOnly ? '1' : '0');
+    if (search.trim()) params.set('q', search.trim());
+    else params.delete('q');
+    if (fromDate) params.set('from', fromDate);
+    else params.delete('from');
+    if (toDate) params.set('to', toDate);
+    else params.delete('to');
+    url.search = params.toString();
+    void navigator.clipboard.writeText(url.toString()).then(
+      () => setToast('Enlace de filtros copiado'),
+      () => setToast('No se pudo copiar el enlace'),
+    );
+  };
+
   const updateMutation = useMutation<MarketplaceOrderDTO, Error, { id: string; payload: MarketplaceOrderUpdatePayload }>({
     mutationFn: ({ id, payload }) => Marketplace.updateOrder(id, payload),
     onSuccess: (data) => {
@@ -461,6 +480,11 @@ export default function MarketplaceOrdersPage() {
           Tarjeta pendiente
         </Button>
         <Box flex={1} />
+        {filtersActiveCount > 0 && (
+          <Button size="small" onClick={copyFiltersLink}>
+            Copiar enlace de filtros
+          </Button>
+        )}
         {statusFilter !== 'all' && (
           <Chip size="small" label={`Estado: ${statusFilter}`} onDelete={() => setStatusFilter('all')} />
         )}

@@ -212,15 +212,15 @@ export default function LeadsPage() {
 
   const leads = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return (data || [])
+    return (data ?? [])
       .filter((p) => !p.isOrg)
       .filter((p) => {
         if (!term) return true;
         return (
           p.displayName.toLowerCase().includes(term) ||
-          (p.primaryEmail && p.primaryEmail.toLowerCase().includes(term)) ||
-          (p.notes && p.notes.toLowerCase().includes(term)) ||
-          (p.primaryPhone && p.primaryPhone.toLowerCase().includes(term))
+          (p.primaryEmail?.toLowerCase().includes(term) ?? false) ||
+          (p.notes?.toLowerCase().includes(term) ?? false) ||
+          (p.primaryPhone?.toLowerCase().includes(term) ?? false)
         );
       });
   }, [data, search]);
@@ -256,7 +256,7 @@ export default function LeadsPage() {
       </Paper>
 
       <Paper sx={{ p: 2, borderRadius: 3, boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
-        {isError && <Alert severity="error">{error?.message || 'No se pudieron cargar los leads'}</Alert>}
+        {isError && <Alert severity="error">{error?.message ?? 'No se pudieron cargar los leads'}</Alert>}
         {isLoading ? (
           <Typography>Cargando...</Typography>
         ) : leads.length === 0 ? (
@@ -281,9 +281,9 @@ export default function LeadsPage() {
                       {l.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
                     </Stack>
                   </TableCell>
-                  <TableCell>{l.primaryEmail || '—'}</TableCell>
-                  <TableCell>{l.primaryPhone || '—'}</TableCell>
-                  <TableCell>{l.notes || '—'}</TableCell>
+                  <TableCell>{l.primaryEmail ?? '—'}</TableCell>
+                  <TableCell>{l.primaryPhone ?? '—'}</TableCell>
+                  <TableCell>{l.notes ?? '—'}</TableCell>
                   <TableCell align="right">
                     <Button
                       size="small"

@@ -12,16 +12,20 @@ export default function DonationPage() {
   const [copyMsg, setCopyMsg] = useState<string | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
   const memoNote = 'Donación TDF';
+  const notifyCopy = (message: string) => {
+    setCopyMsg(message);
+    window.setTimeout(() => setCopyMsg(null), 2000);
+  };
 
   useEffect(() => {
     const buildQr = async () => {
       try {
-        const url = await QRCode.toDataURL(CARDANO_ADDRESS, {
+        const url = (await QRCode.toDataURL(CARDANO_ADDRESS, {
           errorCorrectionLevel: 'M',
           width: 320,
           margin: 1,
           color: { dark: '#0f172a', light: '#f8fafc' },
-        });
+        })) as string;
         setQrDataUrl(url);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'No pudimos generar el QR.';
@@ -34,11 +38,9 @@ export default function DonationPage() {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(CARDANO_ADDRESS);
-      setCopyMsg('Dirección copiada');
+      notifyCopy('Dirección copiada');
     } catch {
-      setCopyMsg('No se pudo copiar, copia manualmente.');
-    } finally {
-      setTimeout(() => setCopyMsg(null), 2000);
+      notifyCopy('No se pudo copiar, copia manualmente.');
     }
   };
 
@@ -102,7 +104,12 @@ export default function DonationPage() {
                   <Button
                     size="small"
                     variant="outlined"
-                    onClick={() => navigator.clipboard.writeText(memoNote).catch(() => {})}
+                    onClick={() => {
+                      void navigator.clipboard.writeText(memoNote).then(
+                        () => notifyCopy('Memo copiado'),
+                        () => notifyCopy('No se pudo copiar el memo'),
+                      );
+                    }}
                   >
                     Copiar memo
                   </Button>

@@ -56,16 +56,16 @@ export default function AdminUsersPage() {
           {usersQuery.error && (
             <Typography color="error">Error al cargar usuarios</Typography>
           )}
-          {usersQuery.data && usersQuery.data.length === 0 && (
+          {usersQuery.data?.length === 0 && (
             <Typography color="text.secondary">No hay usuarios.</Typography>
           )}
-          {usersQuery.data && usersQuery.data.length > 0 && (
+          {usersQuery.data?.length ? (
             <Stack spacing={1.5}>
               {usersQuery.data.map((u) => (
                 <UserRow key={u.userId} user={u} />
               ))}
             </Stack>
-          )}
+          ) : null}
         </CardContent>
       </Card>
     </Stack>

@@ -1,8 +1,8 @@
-export type OrderStatusMeta = {
+export interface OrderStatusMeta {
   label: string;
   color: 'success' | 'warning' | 'info' | 'default';
   desc: string;
-};
+}
 
 // Map backend order status to badge copy and color.
 export const getOrderStatusMeta = (status: string): OrderStatusMeta => {

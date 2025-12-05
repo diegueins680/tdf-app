@@ -326,13 +326,13 @@ function BookingRequestDialog({
                 onChange={(e) => setSelectedRoomId(e.target.value)}
                 fullWidth
                 SelectProps={{ native: true }}
-                helperText={
-                  selectedRoom
-                    ? `Seleccionaste ${selectedRoom.rName}`
-                    : roomsQuery.data && roomsQuery.data.length
-                      ? 'Elige una sala para validar disponibilidad.'
-                      : undefined
-                }
+          helperText={
+            selectedRoom
+              ? `Seleccionaste ${selectedRoom.rName}`
+              : roomsQuery.data?.length
+                ? 'Elige una sala para validar disponibilidad.'
+                : undefined
+          }
               >
                 <option value="">Cualquier sala disponible</option>
                 {(roomsQuery.data ?? []).map((room) => (
@@ -626,71 +626,113 @@ export default function RecordsPublicPage() {
   }, [bookingToken, session, login, setApiToken]);
 
   const sessions: SessionItem[] = useMemo(() => {
-    const mapped = (sessionsQuery.data?.map((entry) => {
-        const p = (entry.ccdPayload as any) ?? {};
-        const youtubeId = p.youtubeId ?? p.youtubeID ?? p.id;
-        if (!youtubeId) return null;
-        return {
-          youtubeId,
-          title: p.title ?? entry.ccdTitle ?? 'TDF Session',
-          duration: p.duration ?? '',
-          guests: p.guests ?? '',
-          description: p.description ?? '',
-        } as SessionItem;
-      }).filter(Boolean) as SessionItem[] | undefined) ?? [];
-    return mapped.length ? mapped : defaultSessions;
+    const mapped =
+      sessionsQuery.data
+        ?.map((entry) => {
+          const payload = entry.ccdPayload;
+          if (!payload || typeof payload !== 'object') return null;
+          const p = payload as Partial<{
+            youtubeId: string;
+            youtubeID: string;
+            id: string;
+            title: string;
+            duration: string;
+            guests: string;
+            description: string;
+          }>;
+          const youtubeId = p.youtubeId ?? p.youtubeID ?? p.id;
+          if (!youtubeId) return null;
+          return {
+            youtubeId,
+            title: p.title ?? entry.ccdTitle ?? 'TDF Session',
+            duration: p.duration ?? '',
+            guests: p.guests ?? '',
+            description: p.description ?? '',
+          };
+        })
+        .filter(Boolean) ?? [];
+    return (mapped as SessionItem[]).length ? (mapped as SessionItem[]) : defaultSessions;
   }, [sessionsQuery.data]);
 
   const [firstDefaultRelease] = defaultReleases;
   const defaultReleaseCover = firstDefaultRelease?.cover ?? '';
 
   const releases: ReleaseItem[] = useMemo(() => {
-    const mapped = (releasesQuery.data?.map((entry) => {
-        const p = (entry.ccdPayload as any) ?? {};
-        const linksRaw = Array.isArray(p.links) ? p.links : [];
-        const links =
-          linksRaw
-            .map((l: any) =>
-              l?.url
-                ? {
-                    platform: l.platform ?? 'Link',
-                    url: l.url,
-                    accent: l.accent ?? '#a5b4fc',
-                  }
-                : null,
-            )
-            .filter(Boolean) ?? [];
-        if (!p.title && !entry.ccdTitle) return null;
-        return {
-          title: p.title ?? entry.ccdTitle ?? 'Release',
-          artist: p.artist ?? 'TDF House Band',
-          releasedOn: p.releasedOn ?? p.date ?? '',
-          blurb: p.description ?? p.blurb ?? '',
-          cover: p.cover ?? p.image ?? defaultReleaseCover,
-          links,
-        } as ReleaseItem;
-      }).filter(Boolean) as ReleaseItem[] | undefined) ?? [];
-    return mapped.length ? mapped : defaultReleases;
-  }, [releasesQuery.data]);
+    const mapped =
+      releasesQuery.data
+        ?.map((entry) => {
+          const payload = entry.ccdPayload;
+          if (!payload || typeof payload !== 'object') return null;
+          const p = payload as Partial<{
+            links: Array<{ platform?: string; url?: string; accent?: string }>;
+            title: string;
+            artist: string;
+            releasedOn: string;
+            date: string;
+            description: string;
+            blurb: string;
+            cover: string;
+            image: string;
+          }>;
+          const linksRaw = Array.isArray(p.links) ? p.links : [];
+          const links =
+            linksRaw
+              .map((l) =>
+                l?.url
+                  ? {
+                      platform: l.platform ?? 'Link',
+                      url: l.url,
+                      accent: l.accent ?? '#a5b4fc',
+                    }
+                  : null,
+              )
+              .filter(Boolean) ?? [];
+          if (!p.title && !entry.ccdTitle) return null;
+          return {
+            title: p.title ?? entry.ccdTitle ?? 'Release',
+            artist: p.artist ?? 'TDF House Band',
+            releasedOn: p.releasedOn ?? p.date ?? '',
+            blurb: p.description ?? p.blurb ?? '',
+            cover: p.cover ?? p.image ?? defaultReleaseCover,
+            links,
+          };
+        })
+        .filter(Boolean) ?? [];
+    return (mapped as ReleaseItem[]).length ? (mapped as ReleaseItem[]) : defaultReleases;
+  }, [releasesQuery.data, defaultReleaseCover]);
 
   const recordings: RecordingItem[] = useMemo(() => {
-    const mapped = (recordingsQuery.data?.map((entry) => {
-        const p = (entry.ccdPayload as any) ?? {};
-        if (!p.title || !p.image) return null;
-        return {
-          title: p.title,
-          artist: p.artist ?? '',
-          recordedAt: p.recordedAt ?? p.date ?? '',
-          vibe: p.vibe ?? p.tag ?? 'Live',
-          description: p.description ?? '',
-          image: p.image,
-        } as RecordingItem;
-      }).filter(Boolean) as RecordingItem[] | undefined) ?? [];
-    return mapped.length ? mapped : defaultRecordings;
+    const mapped =
+      recordingsQuery.data
+        ?.map((entry) => {
+          const payload = entry.ccdPayload;
+          if (!payload || typeof payload !== 'object') return null;
+          const p = payload as Partial<{
+            title: string;
+            image: string;
+            artist: string;
+            recordedAt: string;
+            date: string;
+            vibe: string;
+            tag: string;
+            description: string;
+          }>;
+          if (!p.title || !p.image) return null;
+          return {
+            title: p.title,
+            artist: p.artist ?? '',
+            recordedAt: p.recordedAt ?? p.date ?? '',
+            vibe: p.vibe ?? p.tag ?? 'Live',
+            description: p.description ?? '',
+            image: p.image,
+          };
+        })
+        .filter(Boolean) ?? [];
+    return (mapped as RecordingItem[]).length ? (mapped as RecordingItem[]) : defaultRecordings;
   }, [recordingsQuery.data]);
 
-  const heroTitle: string = 'Historias desde el estudio, releases y TDF Sessions en un solo lugar.';
-  const heroSubtitle: string =
+  const heroTitle = 'Historias desde el estudio, releases y TDF Sessions en un solo lugar.';
+  const heroSubtitle =
     'Mantén al día la página pública de TDF Records con fotos, lanzamientos y videos curados desde el CMS.';
   const heroCta = 'Reservar sesión';
   const heroSecondaryCta = 'Ver lanzamientos';

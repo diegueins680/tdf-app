@@ -36,13 +36,13 @@ describe('serviceTypesStore', () => {
   });
 
   it('is SSR-safe and falls back to defaults when window is undefined', () => {
-    const realWindow = (globalThis as any).window;
-    (globalThis as any).window = undefined;
+    const realWindow = (globalThis as { window?: unknown }).window;
+    (globalThis as { window?: unknown }).window = undefined;
     try {
       const result = loadServiceTypes();
       expect(result).toEqual(defaultServiceTypes);
     } finally {
-      (globalThis as any).window = realWindow;
+      (globalThis as { window?: unknown }).window = realWindow;
     }
   });
 });

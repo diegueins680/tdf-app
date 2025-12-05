@@ -89,6 +89,7 @@ const statusMeta: Record<ClassStatus, { label: string; color: string; bg: string
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const buildDemoClasses = (): ClassRow[] => {
   const base = new Date();
   const dateAt = (daysFromNow: number, hour: number, minute: number, durationMinutes: number) => {

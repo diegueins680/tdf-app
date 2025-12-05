@@ -2,7 +2,6 @@ import { get, post, put } from './client';
 import type {
   MarketplaceItemDTO,
   MarketplaceCartDTO,
-  MarketplaceCartItemDTO,
   MarketplaceOrderDTO,
   PaypalCreateDTO,
   PaypalCaptureRequest,

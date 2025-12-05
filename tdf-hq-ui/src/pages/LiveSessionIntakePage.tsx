@@ -65,12 +65,12 @@ const emptySong = (): SongEntry => ({
   lyrics: '',
 });
 
-type InventoryOption = {
+interface InventoryOption {
   id: string;
   label: string;
   category: string;
   channelCount: number;
-};
+}
 
 const GENRE_OPTIONS = [
   'Rock',
@@ -274,7 +274,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     const basePatch: Partial<MusicianEntry> = {
       partyId: party.partyId,
       mode: 'existing',
-      name: party.displayName || current?.name || '',
+      name: party.displayName ?? current?.name ?? '',
       email: party.primaryEmail ?? current?.email ?? '',
       phone: party.primaryPhone ?? party.whatsapp ?? current?.phone ?? '',
       instagram: party.instagram ?? current?.instagram ?? '',
@@ -310,7 +310,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
 
   const parseChannelCount = (item: InputInventoryItem): number => {
     const haystack = `${item.name} ${item.model}`.toLowerCase();
-    const match = haystack.match(/(\d+)\s*(ch|canal|ch\.)?/);
+    const match = /(\d+)\s*(ch|canal|ch\.)?/i.exec(haystack);
     if (match?.[1]) {
       const parsed = Number.parseInt(match[1], 10);
       if (Number.isFinite(parsed) && parsed > 0) return parsed;
@@ -354,8 +354,8 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
         // Si la interfaz elegida también es preamp, autocompleta el preamp (si está vacío).
         if (patch.interfaceId !== undefined) {
           const selectedInt = inventoryOptions.find((i) => i.id === patch.interfaceId);
-          const isAlsoPreamp = selectedInt && selectedInt.category.includes('pre');
-          if (isAlsoPreamp) {
+          const isAlsoPreamp = selectedInt?.category.includes('pre');
+          if (isAlsoPreamp && selectedInt) {
             next.preampId = selectedInt.id;
           }
         }
@@ -388,12 +388,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
         channelCount: parseChannelCount(item),
       })),
     [inventoryQuery.data],
-  );
-  const selectedMicIds = useMemo(() => new Set(inputChannels.map((c) => c.micId).filter(Boolean)), [inputChannels]);
-  const selectedPreampIds = useMemo(() => new Set(inputChannels.map((c) => c.preampId).filter(Boolean)), [inputChannels]);
-  const selectedInterfaceIds = useMemo(
-    () => new Set(inputChannels.map((c) => c.interfaceId).filter(Boolean)),
-    [inputChannels],
   );
 
   const availableMics = (currentId?: string | null) =>

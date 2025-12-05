@@ -15,7 +15,7 @@ const allowedLine = (line: string) => {
 };
 
 export const extractTidalCode = (text: string): string | null => {
-  const fenceMatch = text.match(/```(?:tidal)?\s*([\s\S]*?)```/i);
+  const fenceMatch = /```(?:tidal)?\s*([\s\S]*?)```/i.exec(text);
   const body = fenceMatch ? fenceMatch[1] ?? '' : text;
   const lines = body
     .split('\n')
@@ -34,11 +34,11 @@ export interface TidalAgentConfig {
 
 export const buildDefaultConfig = (): { config: TidalAgentConfig | null; error?: string } => {
   const apiUrl =
-    import.meta.env['VITE_TIDAL_AGENT_API_URL'] ||
-    import.meta.env['VITE_OPENAI_API_URL'] ||
+    import.meta.env['VITE_TIDAL_AGENT_API_URL'] ??
+    import.meta.env['VITE_OPENAI_API_URL'] ??
     'https://api.openai.com/v1/chat/completions';
-  const apiKey = import.meta.env['VITE_TIDAL_AGENT_API_KEY'] || import.meta.env['VITE_OPENAI_API_KEY'] || '';
-  const model = import.meta.env['VITE_TIDAL_AGENT_MODEL'] || 'gpt-4o-mini';
+  const apiKey = import.meta.env['VITE_TIDAL_AGENT_API_KEY'] ?? import.meta.env['VITE_OPENAI_API_KEY'] ?? '';
+  const model = import.meta.env['VITE_TIDAL_AGENT_MODEL'] ?? 'gpt-4o-mini';
   if (!apiKey) {
     return { config: null, error: 'Falta configurar VITE_TIDAL_AGENT_API_KEY (o VITE_OPENAI_API_KEY).' };
   }

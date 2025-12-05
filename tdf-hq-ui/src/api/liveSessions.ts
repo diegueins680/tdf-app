@@ -86,5 +86,6 @@ export async function listInputInventory(field?: 'mic' | 'preamp' | 'interface')
   if (!res.ok) {
     throw new Error('No se pudo cargar el inventario para input list.');
   }
-  return res.json();
+  const json = (await res.json()) as unknown;
+  return Array.isArray(json) ? (json as InputInventoryItem[]) : [];
 }

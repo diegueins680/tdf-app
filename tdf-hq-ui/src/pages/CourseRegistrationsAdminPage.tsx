@@ -177,10 +177,10 @@ export default function CourseRegistrationsAdminPage() {
           </Typography>
         )}
         {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
-        {!regsQuery.isLoading && regsQuery.data && regsQuery.data.length === 0 && (
+        {!regsQuery.isLoading && regsQuery.data?.length === 0 && (
           <Typography color="text.secondary">No hay inscripciones para estos filtros.</Typography>
         )}
-        {regsQuery.data && regsQuery.data.length > 0 && (
+        {regsQuery.data?.length ? (
           <Stack divider={<Divider flexItem />} spacing={2}>
             {regsQuery.data.map((reg) => (
               <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>

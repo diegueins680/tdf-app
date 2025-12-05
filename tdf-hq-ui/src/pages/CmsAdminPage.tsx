@@ -97,14 +97,15 @@ export default function CmsAdminPage() {
     let parsed: unknown = null;
     try {
       parsed = JSON.parse(payload);
-    } catch (err) {
+    } catch {
       alert('Payload no es JSON válido.');
       return;
     }
+    const normalizedTitle = title.trim();
     createMutation.mutate({
       cciSlug: slugFilter,
       cciLocale: localeFilter,
-      cciTitle: title || undefined,
+      cciTitle: normalizedTitle.length > 0 ? normalizedTitle : undefined,
       cciStatus: status,
       cciPayload: parsed,
     });
@@ -118,7 +119,7 @@ export default function CmsAdminPage() {
     setEditingFromId(liveContent.ccdId);
     try {
       setPayload(JSON.stringify(liveContent.ccdPayload ?? {}, null, 2));
-    } catch (_err) {
+    } catch {
       setPayload('{}');
     }
   };
@@ -131,7 +132,7 @@ export default function CmsAdminPage() {
     setEditingFromId(v.ccdId);
     try {
       setPayload(JSON.stringify(v.ccdPayload ?? {}, null, 2));
-    } catch (_err) {
+    } catch {
       setPayload('{}');
     }
   };
@@ -141,8 +142,9 @@ export default function CmsAdminPage() {
     if (!liveContent) return '';
     try {
       return JSON.stringify(liveContent.ccdPayload ?? {}, null, 2);
-    } catch (_err) {
-      return String(liveContent.ccdPayload ?? '');
+    } catch {
+      if (typeof liveContent.ccdPayload === 'string') return liveContent.ccdPayload;
+      return JSON.stringify(liveContent.ccdPayload ?? {});
     }
   }, [liveContent]);
 
@@ -176,7 +178,7 @@ export default function CmsAdminPage() {
                 {defaultSlugs.map((slug) => (
                   <MenuItem key={slug} value={slug}>{slug}</MenuItem>
                 ))}
-                <MenuItem value={slugFilter || ''}>Otro… escribe abajo</MenuItem>
+                <MenuItem value={slugFilter ?? ''}>Otro… escribe abajo</MenuItem>
               </TextField>
               <TextField
                 fullWidth
@@ -221,7 +223,7 @@ export default function CmsAdminPage() {
                     )}
                     {liveContent && (
                       <Stack spacing={1}>
-                        <Typography fontWeight={700}>{liveContent.ccdTitle || liveContent.ccdSlug}</Typography>
+                        <Typography fontWeight={700}>{liveContent.ccdTitle ?? liveContent.ccdSlug}</Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap">
                           <Chip label={`v${liveContent.ccdVersion}`} size="small" />
                           <Chip label={liveContent.ccdStatus} size="small" color={liveContent.ccdStatus === 'published' ? 'success' : 'default'} />
@@ -320,7 +322,7 @@ export default function CmsAdminPage() {
                       <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                           <Box sx={{ flexGrow: 1 }}>
-                            <Typography fontWeight={700}>{v.ccdTitle || v.ccdSlug}</Typography>
+                            <Typography fontWeight={700}>{v.ccdTitle ?? v.ccdSlug}</Typography>
                             <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
                       <Chip label={v.ccdSlug} size="small" />
                       <Chip label={v.ccdLocale} size="small" />
