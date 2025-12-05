@@ -22,6 +22,7 @@ import           Data.Int (Int64)
 import           Data.Time (getCurrentTime)
 
 import           TDF.API.SocialEventsAPI
+import           Data.Maybe (isNothing)
 import           TDF.DB (Env(..))
 import           TDF.Models.SocialEventsModels
 
@@ -119,22 +120,71 @@ socialEventsServer = eventsServer
       let createdDto = dto { eventId = Just (T.pack (show (fromSqlKey key))) }
       pure createdDto
 
-    getEvent :: String -> m Value
+    -- Get a single event by id
+    getEvent :: Text -> m EventDTO
     getEvent rawId = do
       Env{..} <- ask
-      case readMaybe (T.unpack (T.strip (T.pack rawId))) of
+      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
         Nothing -> throwError err400 { errBody = "Invalid event id" }
-        Just (_ :: Int) -> do
-          mRow <- liftIO $ runSqlPool (selectFirst [] []) envPool
-          case mRow of
+        Just num -> do
+          let key = toSqlKey num
+          mEnt <- liftIO $ runSqlPool (get key) envPool
+          case mEnt of
             Nothing -> throwError err404 { errBody = "Event not found" }
-            Just r  -> pure $ eventToValue r
+            Just e  -> pure $ EventDTO
+              { eventId = Just (T.pack (show num))
+              , eventTitle = socialEventTitle e
+              , eventDescription = socialEventDescription e
+              , eventStart = socialEventStartTime e
+              , eventEnd = socialEventEndTime e
+              , eventVenueId = fmap (T.pack . show . fromSqlKey) (socialEventVenueId e)
+              , eventPriceCents = socialEventPriceCents e
+              , eventCapacity = socialEventCapacity e
+              , eventArtists = []
+              }
 
-    updateEvent :: String -> Value -> m Value
-    updateEvent _ _ = throwError err501 { errBody = "Not implemented: updateEvent" }
+    updateEvent :: Text -> EventDTO -> m EventDTO
+    updateEvent rawId dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
+        Nothing -> throwError err400 { errBody = "Invalid event id" }
+        Just num -> do
+          let key = toSqlKey num
+          mExisting <- liftIO $ runSqlPool (get key) envPool
+          when (isNothing mExisting) $ throwError err404 { errBody = "Event not found" }
+          -- validate title and time range
+          when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
+          when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
+          -- resolve venue
+          mVenueKey <- case eventVenueId dto of
+            Nothing -> pure Nothing
+            Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
+              Nothing -> throwError err400 { errBody = "Invalid venue id" }
+              Just vnum -> pure (Just (toSqlKey vnum))
+          liftIO $ runSqlPool (update key
+            [ SocialEventTitle =. eventTitle dto
+            , SocialEventDescription =. eventDescription dto
+            , SocialEventVenueId =. mVenueKey
+            , SocialEventStartTime =. eventStart dto
+            , SocialEventEndTime =. eventEnd dto
+            , SocialEventPriceCents =. eventPriceCents dto
+            , SocialEventCapacity =. eventCapacity dto
+            , SocialEventUpdatedAt =. now
+            ]) envPool
+          pure (dto { eventId = Just rawId })
 
-    deleteEvent :: String -> m NoContent
-    deleteEvent _ = throwError err501 { errBody = "Not implemented: deleteEvent" }
+    deleteEvent :: Text -> m NoContent
+    deleteEvent rawId = do
+      Env{..} <- ask
+      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
+        Nothing -> throwError err400 { errBody = "Invalid event id" }
+        Just num -> do
+          let key = toSqlKey num
+          mExisting <- liftIO $ runSqlPool (get key) envPool
+          when (isNothing mExisting) $ throwError err404 { errBody = "Event not found" }
+          liftIO $ runSqlPool (delete key) envPool
+          pure NoContent
 
     -- Venues
     venuesServer :: ServerT VenuesRoutes m
@@ -184,6 +234,27 @@ socialEventsServer = eventsServer
 
     updateVenue :: String -> Value -> m Value
     updateVenue _ _ = throwError err501 { errBody = "Not implemented: updateVenue" }
+    updateVenue :: Text -> VenueDTO -> m VenueDTO
+    updateVenue rawId dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
+        Nothing -> throwError err400 { errBody = "Invalid venue id" }
+        Just num -> do
+          let key = toSqlKey num
+          mExisting <- liftIO $ runSqlPool (get key) envPool
+          when (isNothing mExisting) $ throwError err404 { errBody = "Venue not found" }
+          liftIO $ runSqlPool (update key
+            [ VenueName =. venueName dto
+            , VenueAddress =. venueAddress dto
+            , VenueCity =. venueCity dto
+            , VenueCountry =. venueCountry dto
+            , VenueLatitude =. venueLat dto
+            , VenueLongitude =. venueLng dto
+            , VenueCapacity =. venueCapacity dto
+            , VenueContact =. venueContact dto
+            ]) envPool
+          pure (dto { venueId = Just rawId })
 
     -- Artists (left as not-implemented for now, reuse artist utilities later)
     artistsServer :: ServerT ArtistsRoutes m
