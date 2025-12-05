@@ -23,17 +23,23 @@ import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { generateTidalCode } from '../utils/tidalAgent';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
-type Prompt = { text: string; author?: string; createdAt?: string; code?: string };
+interface Prompt {
+  text: string;
+  author?: string;
+  createdAt?: string;
+  code?: string;
+}
 
-type Station = {
+interface Station {
   id: string;
   name: string;
   streamUrl: string;
   region?: string;
   mood: string;
   prompts: Prompt[];
-};
+}
 
 const CURATED_STATIONS: Station[] = [
   {
@@ -148,7 +154,9 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
                       size="small"
                       onClick={() => {
                         if (navigator?.clipboard?.writeText) {
-                          navigator.clipboard.writeText(p.code ?? '').catch(() => {});
+                          navigator.clipboard
+                            .writeText(p.code ?? '')
+                            .catch((err) => console.warn('No se pudo copiar las instrucciones Tidal', err));
                         }
                       }}
                     >
@@ -167,13 +175,17 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 
 export default function RadioWidget() {
   const [customStations, setCustomStations] = useState<Station[]>([]);
-  const defaultStation: Station = CURATED_STATIONS[0] ?? {
-    id: 'fallback',
-    name: 'Radio',
-    mood: 'Live',
-    streamUrl: '',
-    prompts: [],
-  };
+  const defaultStation = useMemo<Station>(
+    () =>
+      CURATED_STATIONS[0] ?? {
+        id: 'fallback',
+        name: 'Radio',
+        mood: 'Live',
+        streamUrl: '',
+        prompts: [],
+      },
+    [],
+  );
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [activeId, setActiveId] = useState<string>(defaultStation.id);
@@ -186,7 +198,7 @@ export default function RadioWidget() {
   const availableStations = useMemo<Station[]>(() => [...CURATED_STATIONS, ...customStations], [customStations]);
   const activeStation = useMemo<Station>(
     () => availableStations.find((s) => s.id === activeId) ?? defaultStation,
-    [activeId, availableStations],
+    [activeId, availableStations, defaultStation],
   );
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
 
@@ -278,7 +290,10 @@ export default function RadioWidget() {
   const addCustomStation = () => {
     const name = newStationName.trim();
     const url = newStationUrl.trim();
-    if (!name || !url) return;
+    if (!name || !url) {
+      setTestResult('Ingresa nombre y URL de la radio.');
+      return;
+    }
     const id = `custom-${Math.random().toString(36).slice(2, 8)}`;
     const station: Station = { id, name, streamUrl: url, mood: 'Custom', prompts: [] };
     setCustomStations((prev) => [...prev, station]);
@@ -297,6 +312,29 @@ export default function RadioWidget() {
     });
     if (activeId === id) {
       setActiveId(defaultStation.id);
+    }
+  };
+
+  const [testResult, setTestResult] = useState<string | null>(null);
+  const testStream = async () => {
+    const url = newStationUrl.trim();
+    if (!url) {
+      setTestResult('Ingresa una URL para probar.');
+      return;
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    try {
+      const res = await fetch(url, { method: 'HEAD', signal: controller.signal });
+      if (res.ok) {
+        setTestResult('Stream disponible ✅');
+      } else {
+        setTestResult('No pudimos validar el stream. Verifica la URL.');
+      }
+    } catch {
+      setTestResult('No pudimos validar el stream. Verifica la URL.');
+    } finally {
+      clearTimeout(timeout);
     }
   };
 
@@ -400,10 +438,32 @@ export default function RadioWidget() {
                     placeholder="https://"
                     fullWidth
                   />
-                  <Button variant="contained" onClick={addCustomStation} disabled={!newStationName.trim() || !newStationUrl.trim()}>
-                    Agregar
-                  </Button>
+                  <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1} sx={{ minWidth: { sm: 160 } }}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => {
+                        void testStream();
+                      }}
+                    >
+                      Probar stream
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={addCustomStation}
+                      disabled={!newStationName.trim() || !newStationUrl.trim()}
+                    >
+                      Guardar
+                    </Button>
+                  </Stack>
                 </Stack>
+                {testResult && (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <WarningAmberIcon fontSize="small" color={testResult.includes('✅') ? 'success' : 'warning'} />
+                    <Typography variant="caption" color="text.secondary">
+                      {testResult}
+                    </Typography>
+                  </Stack>
+                )}
               </Stack>
               <LinearProgress
                 variant="indeterminate"
@@ -435,7 +495,9 @@ export default function RadioWidget() {
           </CardContent>
         </Collapse>
       </Card>
-      <audio ref={audioRef} preload="none" />
+      {/* Audio is programmatically controlled; captions are not available for live streams. */}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <audio ref={audioRef} preload="none" aria-hidden="true" />
     </Box>
   );
 }

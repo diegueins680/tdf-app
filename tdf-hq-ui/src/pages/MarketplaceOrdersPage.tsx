@@ -160,7 +160,7 @@ export default function MarketplaceOrdersPage() {
         .toLowerCase();
       return haystack.includes(term);
     });
-  }, [sortedOrders, search, providerFilter, statusFilter, fromDate, toDate]);
+  }, [sortedOrders, search, providerFilter, statusFilter, fromDate, toDate, paidOnly]);
 
   const filtersDirty =
     statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
@@ -301,7 +301,7 @@ export default function MarketplaceOrdersPage() {
       `Estado: ${statusLabel(order.moStatus)}`,
       `Total: ${order.moTotalDisplay} (${order.moCurrency.toUpperCase()})`,
       `Pago: ${order.moPaymentProvider ?? '—'}`,
-      `Comprador: ${order.moBuyerName} (${order.moBuyerEmail || 'sin email'})`,
+      `Comprador: ${order.moBuyerName} (${order.moBuyerEmail ?? 'sin email'})`,
       `Items: ${summarizeItems(order.moItems)}`,
     ];
     try {
@@ -336,8 +336,8 @@ export default function MarketplaceOrdersPage() {
     return window.confirm(`¿Confirmas cambiar el estado a "${nextStatus}"?`);
   };
 
-  const effectiveStatus = (statusInput || selectedOrder?.moStatus || '').trim();
-  const effectiveProvider = (paymentProviderInput || selectedOrder?.moPaymentProvider || '').trim();
+  const effectiveStatus = (statusInput ?? selectedOrder?.moStatus ?? '').trim();
+  const effectiveProvider = (paymentProviderInput ?? selectedOrder?.moPaymentProvider ?? '').trim();
   const warnMissingProvider = Boolean(selectedOrder && !effectiveProvider);
   const warnMissingPaidAt = Boolean(selectedOrder && effectiveStatus === 'paid' && !paidAtInput);
   const blockSave =
@@ -695,10 +695,10 @@ export default function MarketplaceOrdersPage() {
                           <strong>Email:</strong> {selectedOrder.moBuyerEmail}
                         </Typography>
                         <Typography variant="body2">
-                          <strong>Teléfono:</strong> {selectedOrder.moBuyerPhone || '—'}
+                          <strong>Teléfono:</strong> {selectedOrder.moBuyerPhone ?? '—'}
                         </Typography>
                         <Typography variant="body2">
-                          <strong>Carrito:</strong> {selectedOrder.moCartId || '—'}
+                          <strong>Carrito:</strong> {selectedOrder.moCartId ?? '—'}
                         </Typography>
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Typography variant="body2">
@@ -715,7 +715,7 @@ export default function MarketplaceOrdersPage() {
                           <strong>Creado:</strong> {formatDate(selectedOrder.moCreatedAt)}
                         </Typography>
                         <Typography variant="body2">
-                          <strong>Pago:</strong> {selectedOrder.moPaymentProvider || '—'}
+                          <strong>Pago:</strong> {selectedOrder.moPaymentProvider ?? '—'}
                         </Typography>
                         {selectedOrder.moPaypalOrderId && (
                           <Typography variant="caption" color="text.secondary">
@@ -783,7 +783,9 @@ export default function MarketplaceOrdersPage() {
                           </Button>
                           <Button
                             variant="contained"
-                            onClick={handleSave}
+                            onClick={() => {
+                              void handleSave();
+                            }}
                             disabled={updateMutation.isPending || blockSave}
                           >
                             Guardar cambios

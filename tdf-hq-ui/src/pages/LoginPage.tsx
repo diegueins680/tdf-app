@@ -114,7 +114,7 @@ export default function LoginPage() {
     enabled: signupDialogOpen,
     staleTime: 5 * 60 * 1000,
   });
-  const fanArtists = fanArtistsQuery.data ?? [];
+  const fanArtists = useMemo(() => fanArtistsQuery.data ?? [], [fanArtistsQuery.data]);
   const claimableArtists = useMemo(
     () => fanArtists.filter((artist) => artist.apHasUserAccount === false),
     [fanArtists],
@@ -415,6 +415,9 @@ export default function LoginPage() {
               }
               label="Recordarme en este dispositivo"
             />
+            <Typography variant="caption" color="text.secondary">
+              Si lo activas, mantendremos tu sesión iniciada en este navegador.
+            </Typography>
 
             {formError && <Alert severity="warning">{formError}</Alert>}
 

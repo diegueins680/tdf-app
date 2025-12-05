@@ -975,6 +975,22 @@ export default function MarketplacePage() {
               <Button variant="text" size="small" onClick={resetFilters}>
                 Limpiar filtros
               </Button>
+              {filtersActiveCount > 0 && (
+                <Link
+                  component="button"
+                  variant="body2"
+                  onClick={() => {
+                    const url = window.location.href;
+                    void navigator.clipboard.writeText(url).then(
+                      () => setToast('Enlace de filtros copiado'),
+                      () => setToast('No se pudo copiar el enlace'),
+                    );
+                  }}
+                  sx={{ textDecoration: 'none' }}
+                >
+                  Copiar enlace de filtros
+                </Link>
+              )}
             </Stack>
             {filtersActiveCount > 0 && (
               <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ mb: 1 }}>
@@ -1114,8 +1130,10 @@ export default function MarketplacePage() {
                               variant="outlined"
                               onClick={() => {
                                 const link = `${window.location.origin}/marketplace?listing=${item.miListingId}`;
-                                navigator.clipboard.writeText(link).catch(() => {});
-                                setToast('Enlace copiado');
+                                void navigator.clipboard.writeText(link).then(
+                                  () => setToast('Enlace copiado'),
+                                  () => setToast('No se pudo copiar el enlace'),
+                                );
                               }}
                             >
                               Copiar enlace
@@ -1166,6 +1184,19 @@ export default function MarketplacePage() {
 
           <Grid item xs={12} md={4}>
             <Stack spacing={2}>
+              {showRestoreBanner && savedCartMeta && (
+                <Alert
+                  severity="info"
+                  action={
+                    <Button size="small" onClick={handleRestoreCart}>
+                      Recuperar
+                    </Button>
+                  }
+                  onClose={() => setShowRestoreBanner(false)}
+                >
+                  Tienes un carrito guardado con {savedCartMeta.count} productos.
+                </Alert>
+              )}
               <Card variant="outlined">
                 <CardHeader
                   title="Carrito"
@@ -1533,13 +1564,16 @@ export default function MarketplacePage() {
             <Typography variant="subtitle1" fontWeight={700}>
               Total: {cartSubtotal}
             </Typography>
-              <Stack spacing={0.5}>
-                {cartItems.map((item) => (
-                  <Typography key={item.mciListingId} variant="body2">
-                    {item.mciQuantity} × {item.mciTitle} — {item.mciSubtotalDisplay} ({item.mciUnitPriceDisplay} c/u)
-                  </Typography>
-                ))}
-              </Stack>
+            <Stack spacing={0.5}>
+              {cartItems.map((item) => (
+                <Typography key={item.mciListingId} variant="body2">
+                  {item.mciQuantity} × {item.mciTitle} — {item.mciSubtotalDisplay} ({item.mciUnitPriceDisplay} c/u)
+                </Typography>
+              ))}
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              Los precios mostrados incluyen el markup indicado en cada artículo.
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               Método de pago: {paymentMethod === 'paypal' ? 'PayPal' : paymentMethod === 'card' ? 'Tarjeta (Datafast)' : 'Coordinar por correo/WhatsApp'}
             </Typography>
