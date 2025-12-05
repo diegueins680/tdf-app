@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -192,6 +192,7 @@ export default function RadioWidget() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [promptDraft, setPromptDraft] = useState('');
+  const promptInputRef = useRef<HTMLInputElement | null>(null);
   const [promptState, setPromptState] = useState<Record<string, Prompt[]>>(() =>
     Object.fromEntries(CURATED_STATIONS.map((s) => [s.id, [...s.prompts]])),
   );
@@ -354,6 +355,14 @@ export default function RadioWidget() {
     setPromptDraft('');
   };
 
+  const openAndFocusPrompt = useCallback(() => {
+    setExpanded(true);
+    // focus after collapse anim completes
+    setTimeout(() => {
+      promptInputRef.current?.focus();
+    }, 120);
+  }, []);
+
   return (
     <Box
       sx={{
@@ -365,7 +374,15 @@ export default function RadioWidget() {
       }}
     >
       <Card elevation={6} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-        <CardContent sx={{ p: 2 }}>
+        <CardContent
+          sx={{ p: 2, cursor: 'pointer' }}
+          onClick={(e) => {
+            // Avoid toggling when clicking control buttons
+            const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+            if (tag === 'button' || tag === 'svg' || tag === 'path') return;
+            openAndFocusPrompt();
+          }}
+        >
           <Stack direction="row" alignItems="center" spacing={1}>
             <RadioIcon color="secondary" />
             <Box flex={1}>
@@ -386,7 +403,15 @@ export default function RadioWidget() {
                 {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
               </IconButton>
             </Tooltip>
-            <IconButton onClick={() => setExpanded((p) => !p)} color="inherit">
+            <IconButton
+              onClick={() => {
+                setExpanded((p) => !p);
+                if (!expanded) {
+                  setTimeout(() => promptInputRef.current?.focus(), 120);
+                }
+              }}
+              color="inherit"
+            >
               {expanded ? <ExpandMoreIcon /> : <ExpandLessIcon />}
             </IconButton>
           </Stack>
@@ -481,6 +506,7 @@ export default function RadioWidget() {
                   placeholder="Escribe tu prompt (ej. dembow con quenas y delay granular)"
                   value={promptDraft}
                   onChange={(e) => setPromptDraft(e.target.value)}
+                  inputRef={promptInputRef}
                 />
                 <Button variant="contained" onClick={handleAddPrompt} disabled={!promptDraft.trim()}>
                   Generar Tidal
