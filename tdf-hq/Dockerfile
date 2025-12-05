@@ -47,7 +47,14 @@ COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
 
 # Make sure Stack installs the correct compiler for the resolver
 # Also, be explicit and avoid any global "system-ghc" config
-RUN stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc setup && \
+RUN set -e; \
+    # Update index with a clean pantry if hash verification fails (Hackage mirror flakiness)
+    if ! stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc update; then \
+      echo "Stack update failed, clearing pantry cache and retrying..." >&2; \
+      rm -rf /root/.stack/pantry/hackage; \
+      stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc update; \
+    fi; \
+    stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc setup && \
     stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc build --only-dependencies
 
 # Copy sources (git metadata is provided via build args when available)
