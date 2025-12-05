@@ -1,4 +1,5 @@
 import { Box, Container, Stack } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import type { ReactNode } from 'react';
 
@@ -15,11 +16,18 @@ export default function PublicBranding({ children }: { children: ReactNode }) {
       >
         <Container maxWidth="xl">
           <Stack direction="row" alignItems="center" spacing={2}>
-            <BrandLogo
-              variant="wordmark"
-              size={48}
-              sx={{ filter: 'brightness(0) invert(1)' }}
-            />
+            <Box
+              component={RouterLink}
+              to="/inicio"
+              sx={{ display: 'inline-flex', alignItems: 'center' }}
+              aria-label="Ir al inicio"
+            >
+              <BrandLogo
+                variant="wordmark"
+                size={48}
+                sx={{ filter: 'brightness(0) invert(1)' }}
+              />
+            </Box>
           </Stack>
         </Container>
       </Box>
