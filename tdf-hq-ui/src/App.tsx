@@ -19,6 +19,7 @@ import { useSession } from './session/SessionContext';
 import SidebarNav from './components/SidebarNav';
 import ApiStatusChip from './components/ApiStatusChip';
 import RadioWidget from './components/RadioWidget';
+import PublicBranding from './components/PublicBranding';
 import InscripcionPage from './pages/inscripcion/InscripcionPage';
 import LiveSessionIntakePage from './pages/LiveSessionIntakePage';
 import CourseProductionLandingPage from './pages/CourseProductionLandingPage';
@@ -150,21 +151,21 @@ export default function App() {
   return (
     <>
       <Routes>
-        <Route path="/fans" element={<FanHubPage />} />
-        <Route path="/mi-artista" element={<FanHubPage focusArtist />} />
-        <Route path="/marketplace" element={<MarketplacePage />} />
-        <Route path="/marketplace/orden/:orderId" element={<MarketplaceOrderTrackingPage />} />
-        <Route path="/marketplace/pago-datafast" element={<DatafastReturnPage />} />
-        <Route path="/oauth/google-drive/callback" element={<GoogleDriveCallbackPage />} />
-        <Route path="/curso/produccion-musical-dic-2025" element={<CourseProductionLandingPage />} />
-        <Route path="/inscripcion/:slug" element={<InscripcionPage />} />
-        <Route path="/trials" element={<TrialsPage />} />
-        <Route path="/live-sessions/registro" element={<LiveSessionPublicPage />} />
-        <Route path="/feedback" element={<FeedbackPage />} />
-        <Route path="/records" element={<RecordsPublicPage />} />
-        <Route path="/inventario/scan/:token" element={<InventoryScanPage />} />
-        <Route path="/donar" element={<DonationPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
+        <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />
+        <Route path="/marketplace" element={<PublicBranding><MarketplacePage /></PublicBranding>} />
+        <Route path="/marketplace/orden/:orderId" element={<PublicBranding><MarketplaceOrderTrackingPage /></PublicBranding>} />
+        <Route path="/marketplace/pago-datafast" element={<PublicBranding><DatafastReturnPage /></PublicBranding>} />
+        <Route path="/oauth/google-drive/callback" element={<PublicBranding><GoogleDriveCallbackPage /></PublicBranding>} />
+        <Route path="/curso/produccion-musical-dic-2025" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
+        <Route path="/inscripcion/:slug" element={<PublicBranding><InscripcionPage /></PublicBranding>} />
+        <Route path="/trials" element={<PublicBranding><TrialsPage /></PublicBranding>} />
+        <Route path="/live-sessions/registro" element={<PublicBranding><LiveSessionPublicPage /></PublicBranding>} />
+        <Route path="/feedback" element={<PublicBranding><FeedbackPage /></PublicBranding>} />
+        <Route path="/records" element={<PublicBranding><RecordsPublicPage /></PublicBranding>} />
+        <Route path="/inventario/scan/:token" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />
+        <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
+        <Route path="/login" element={<PublicBranding><LoginPage /></PublicBranding>} />
         <Route element={<Shell />}>
           <Route path="/" element={<Navigate to="/inicio" replace />} />
 
