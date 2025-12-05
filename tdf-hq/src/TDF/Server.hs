@@ -71,6 +71,7 @@ import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasMod
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
+import           TDF.Server.SocialEventsHandlers (socialEventsServer)
 import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsServer, sessionsServer)
 import qualified Data.Map.Strict            as Map
 import           TDF.ServerFuture (futureServer)
@@ -203,6 +204,7 @@ server =
   :<|> cmsPublicServer
   :<|> marketplacePublicServer
   :<|> labelPublicServer
+  :<|> socialEventsServer
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
