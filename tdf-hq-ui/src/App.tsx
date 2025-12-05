@@ -45,6 +45,7 @@ import FeedbackPage from './pages/FeedbackPage';
 import CompaniesPage from './pages/CompaniesPage';
 import LeadsPage from './pages/LeadsPage';
 import DonationPage from './pages/DonationPage';
+import TidalAgentPage from './pages/TidalAgentPage';
 import PaymentsPage from './pages/PaymentsPage';
 import CalendarSyncPage from './pages/CalendarSyncPage';
 import SecurityPage from './pages/SecurityPage';
@@ -177,11 +178,12 @@ export default function App() {
           <Route path="/inicio" element={<FanHubPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/acerca" element={<AboutPage />} />
-          <Route path="/manual" element={<ManualPage />} />
-          <Route path="/seguridad" element={<SecurityPage />} />
+        <Route path="/manual" element={<ManualPage />} />
+        <Route path="/seguridad" element={<SecurityPage />} />
+        <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
 
-          <Route path="/crm" element={<Outlet />}>
-            <Route path="contactos" element={<PartiesPage />} />
+        <Route path="/crm" element={<Outlet />}>
+          <Route path="contactos" element={<PartiesPage />} />
             <Route path="empresas" element={<CompaniesPage />} />
             <Route path="leads" element={<LeadsPage />} />
             <Route index element={<Navigate to="contactos" replace />} />

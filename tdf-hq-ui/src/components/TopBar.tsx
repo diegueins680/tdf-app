@@ -75,6 +75,8 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   seguridad: 'Seguridad',
   feedback: 'Sugerencias',
   manual: 'Manual',
+  herramientas: 'Herramientas',
+  'tidal-agent': 'Tidal Agent',
 };
 
 const readCartMeta = () => {
@@ -210,6 +212,9 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           </Button>
           <Button color="inherit" component={RouterLink} to="/donar" sx={{ textTransform: 'none' }}>
             Donar
+          </Button>
+          <Button color="inherit" component={RouterLink} to="/herramientas/tidal-agent" sx={{ textTransform: 'none' }}>
+            Tidal
           </Button>
           <Button color="inherit" component={RouterLink} to="/seguridad" sx={{ textTransform: 'none' }}>
             Seguridad
