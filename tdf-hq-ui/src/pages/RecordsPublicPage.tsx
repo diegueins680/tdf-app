@@ -638,8 +638,8 @@ export default function RecordsPublicPage() {
   const recordingsQuery = useCmsContents('records-recording-', 'es');
   const [dialogOpen, setDialogOpen] = useState(false);
   const bookingToken =
-    import.meta.env['VITE_PUBLIC_BOOKING_TOKEN'] ??
-    import.meta.env['VITE_API_DEMO_TOKEN'] ??
+    import.meta.env.VITE_PUBLIC_BOOKING_TOKEN ??
+    import.meta.env.VITE_API_DEMO_TOKEN ??
     '';
   const hasBookingToken = Boolean(bookingToken);
   const { session, login, setApiToken } = useSession();

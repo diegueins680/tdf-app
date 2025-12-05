@@ -125,7 +125,7 @@ export default function LabelAssetsPage() {
 
   const qrMutation = useMutation({
     mutationFn: (assetId: string) => Inventory.generateQr(assetId),
-    onSuccess: async (data: AssetQrDTO) => {
+    onSuccess: (data: AssetQrDTO) => {
       const url = data.qrUrl;
       const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}`;
       setQrDataUrl(qrImg);
@@ -230,7 +230,7 @@ export default function LabelAssetsPage() {
     setDialogOpen('checkin');
   };
 
-  const openQr = async (asset: AssetDTO) => {
+  const openQr = (asset: AssetDTO) => {
     setSelected(asset);
     if (asset.qrToken) {
       const url = `https://tdf-app.pages.dev/inventario/scan/${asset.qrToken}`;
