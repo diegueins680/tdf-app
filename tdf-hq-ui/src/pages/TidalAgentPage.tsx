@@ -28,6 +28,7 @@ export default function TidalAgentPage() {
   const [copied, setCopied] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showRaw, setShowRaw] = useState(false);
+  const [historyMode, setHistoryMode] = useState<'full' | 'code'>('full');
 
   const handleSubmit = async () => {
     if (!config) return;
@@ -137,11 +138,30 @@ export default function TidalAgentPage() {
                   <Typography variant="subtitle2" color="text.secondary">
                     Historial rápido
                   </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Button
+                      size="small"
+                      variant={historyMode === 'full' ? 'contained' : 'outlined'}
+                      onClick={() => setHistoryMode('full')}
+                    >
+                      Prompt + código
+                    </Button>
+                    <Button
+                      size="small"
+                      variant={historyMode === 'code' ? 'contained' : 'outlined'}
+                      onClick={() => setHistoryMode('code')}
+                    >
+                      Solo código
+                    </Button>
+                    <Button size="small" onClick={() => setHistory([])}>
+                      Limpiar historial
+                    </Button>
+                  </Stack>
                   <Stack spacing={1}>
                     {history.map((item, idx) => (
                       <Card key={`${item.prompt}-${idx}`} variant="outlined">
                         <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                          <Typography variant="body2">{item.prompt}</Typography>
+                          {historyMode === 'full' && <Typography variant="body2">{item.prompt}</Typography>}
                           <Box
                             sx={{
                               bgcolor: 'rgba(148,163,184,0.08)',
@@ -171,6 +191,16 @@ export default function TidalAgentPage() {
                             }}
                           >
                             Usar prompt
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => {
+                              navigator.clipboard.writeText(item.code).catch(() => {});
+                              setShowRaw(false);
+                            }}
+                          >
+                            Copiar y cerrar raw
                           </Button>
                         </CardContent>
                       </Card>

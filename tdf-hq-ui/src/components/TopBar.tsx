@@ -212,6 +212,9 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             color="inherit"
             onClick={(e) => setResourcesAnchor(e.currentTarget)}
             sx={{ textTransform: 'none' }}
+            aria-haspopup="true"
+            aria-expanded={resourcesOpen ? 'true' : undefined}
+            aria-label="Abrir recursos"
           >
             Recursos
           </Button>
@@ -317,15 +320,29 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
                 </Typography>
               </Stack>
             ))}
-            <Button
-              size="small"
-              variant="contained"
-              component={RouterLink}
-              to="/marketplace"
-              onClick={handleCloseCart}
-            >
-              Ir al carrito
-            </Button>
+            <Stack spacing={0.5}>
+              <Button
+                size="small"
+                variant="contained"
+                component={RouterLink}
+                to="/marketplace"
+                onClick={handleCloseCart}
+              >
+                Ir al carrito
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                component={RouterLink}
+                to="/marketplace"
+                onClick={(e) => {
+                  handleCloseCart();
+                  localStorage.setItem('tdf-marketplace-payment', 'card');
+                }}
+              >
+                Pagar con tarjeta
+              </Button>
+            </Stack>
           </Stack>
         )}
       </Popover>

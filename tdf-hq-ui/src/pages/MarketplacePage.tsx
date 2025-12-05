@@ -103,7 +103,11 @@ export default function MarketplacePage() {
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastError, setDatafastError] = useState<string | null>(null);
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<'contact' | 'card' | 'paypal'>('contact');
+  const [paymentMethod, setPaymentMethod] = useState<'contact' | 'card' | 'paypal'>(() => {
+    if (typeof window === 'undefined') return 'contact';
+    const saved = localStorage.getItem('tdf-marketplace-payment');
+    return saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
+  });
   const [reviewOpen, setReviewOpen] = useState(false);
   const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
   const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
@@ -153,6 +157,11 @@ export default function MarketplacePage() {
       localStorage.setItem(CART_STORAGE_KEY, cartId);
     }
   }, [cartId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('tdf-marketplace-payment', paymentMethod);
+  }, [paymentMethod]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1149,7 +1158,7 @@ export default function MarketplacePage() {
               </Alert>
             )}
             {datafastCheckout && datafastReturnUrl && (
-              <Box ref={datafastFormRef} key={datafastWidgetKey}>
+              <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360, '& form': { width: '100%' } }}>
                 <form
                   action={datafastReturnUrl}
                   className="paymentWidgets"
