@@ -25,14 +25,14 @@ instance FromMultipart Tmp DriveUploadForm where
   fromMultipart multipart = do
     file <- lookupFile "file" multipart
     let folder = case lookupInput "folderId" multipart of
-          Right (Input _ v _) -> Just (T.strip v)
-          _                   -> Nothing
+          Right (Input _ v) -> Just (T.strip v)
+          _                 -> Nothing
         nameTxt = case lookupInput "name" multipart of
-          Right (Input _ v _) -> Just (T.strip v)
-          _                   -> Nothing
+          Right (Input _ v) -> Just (T.strip v)
+          _                 -> Nothing
         token = case lookupInput "accessToken" multipart of
-          Right (Input _ v _) -> Just (T.strip v)
-          _                   -> Nothing
+          Right (Input _ v) -> Just (T.strip v)
+          _                 -> Nothing
     pure DriveUploadForm
       { duFile = file
       , duFolderId = folder
