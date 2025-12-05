@@ -485,15 +485,21 @@ calendarServer user =
         Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token: " <> err) }
         Right tok -> pure tok
       now <- liftIO getCurrentTime
-      let expiresAt = addUTCTime . fromIntegral <$> expires_in token <*> pure now
+      let GoogleToken
+            { access_token = gAccessToken
+            , refresh_token = gRefreshToken
+            , expires_in = gExpiresIn
+            , token_type = gTokenType
+            } = token
+          expiresAt = addUTCTime . fromIntegral <$> gExpiresIn <*> pure now
       mExisting <- runDB $ getBy (Cal.UniqueCalendar calendarId)
       cfgId <- case mExisting of
         Nothing -> runDB $ insert Cal.GoogleCalendarConfig
           { Cal.googleCalendarConfigOwnerId = Just (auPartyId user)
           , Cal.googleCalendarConfigCalendarId = calendarId
-          , Cal.googleCalendarConfigAccessToken = Just (access_token token)
-          , Cal.googleCalendarConfigRefreshToken = refresh_token token
-          , Cal.googleCalendarConfigTokenType = token_type token
+          , Cal.googleCalendarConfigAccessToken = Just gAccessToken
+          , Cal.googleCalendarConfigRefreshToken = gRefreshToken
+          , Cal.googleCalendarConfigTokenType = gTokenType
           , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
           , Cal.googleCalendarConfigSyncCursor = Nothing
           , Cal.googleCalendarConfigSyncedAt = Nothing
@@ -502,9 +508,9 @@ calendarServer user =
           }
         Just (Entity eid oldCfg) -> do
           runDB $ update eid
-            [ Cal.GoogleCalendarConfigAccessToken =. Just (access_token token)
-            , Cal.GoogleCalendarConfigRefreshToken =. (refresh_token token <|> Cal.googleCalendarConfigRefreshToken oldCfg)
-            , Cal.GoogleCalendarConfigTokenType =. token_type token
+            [ Cal.GoogleCalendarConfigAccessToken =. Just gAccessToken
+            , Cal.GoogleCalendarConfigRefreshToken =. (gRefreshToken <|> Cal.googleCalendarConfigRefreshToken oldCfg)
+            , Cal.GoogleCalendarConfigTokenType =. gTokenType
             , Cal.GoogleCalendarConfigTokenExpiresAt =. expiresAt
             , Cal.GoogleCalendarConfigUpdatedAt =. now
             ]
@@ -619,10 +625,15 @@ calendarServer user =
       token <- case eitherDecode (responseBody resp) of
         Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear refresh token: " <> err) }
         Right tok -> pure tok
-      let expiresAt = addUTCTime . fromIntegral <$> expires_in token <*> pure now
+      let GoogleToken
+            { access_token = gAccessToken
+            , expires_in = gExpiresIn
+            , token_type = gTokenType
+            } = token
+          expiresAt = addUTCTime . fromIntegral <$> gExpiresIn <*> pure now
           updatedCfg = cfg
-            { Cal.googleCalendarConfigAccessToken = Just (access_token token)
-            , Cal.googleCalendarConfigTokenType = token_type token
+            { Cal.googleCalendarConfigAccessToken = Just gAccessToken
+            , Cal.googleCalendarConfigTokenType = gTokenType
             , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
             , Cal.googleCalendarConfigUpdatedAt = now
             }
@@ -3228,6 +3239,14 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
               , ME.marketplaceOrderPaymentProvider = Nothing
               , ME.marketplaceOrderPaypalOrderId = Nothing
               , ME.marketplaceOrderPaypalPayerEmail = Nothing
+              , ME.marketplaceOrderDatafastCheckoutId = Nothing
+              , ME.marketplaceOrderDatafastResourcePath = Nothing
+              , ME.marketplaceOrderDatafastPaymentId = Nothing
+              , ME.marketplaceOrderDatafastResultCode = Nothing
+              , ME.marketplaceOrderDatafastResultDescription = Nothing
+              , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+              , ME.marketplaceOrderDatafastAuthCode = Nothing
+              , ME.marketplaceOrderDatafastAcquirerCode = Nothing
               , ME.marketplaceOrderPaidAt        = Nothing
               , ME.marketplaceOrderCreatedAt     = now
               , ME.marketplaceOrderUpdatedAt     = now
@@ -3402,6 +3421,14 @@ createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
           , ME.marketplaceOrderPaymentProvider = Just "paypal"
           , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
           , ME.marketplaceOrderPaypalPayerEmail = Nothing
+          , ME.marketplaceOrderDatafastCheckoutId = Nothing
+          , ME.marketplaceOrderDatafastResourcePath = Nothing
+          , ME.marketplaceOrderDatafastPaymentId = Nothing
+          , ME.marketplaceOrderDatafastResultCode = Nothing
+          , ME.marketplaceOrderDatafastResultDescription = Nothing
+          , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+          , ME.marketplaceOrderDatafastAuthCode = Nothing
+          , ME.marketplaceOrderDatafastAcquirerCode = Nothing
           , ME.marketplaceOrderPaidAt        = Nothing
           , ME.marketplaceOrderCreatedAt     = now
           , ME.marketplaceOrderUpdatedAt     = now
@@ -3442,7 +3469,7 @@ capturePaypalOrder PaypalCaptureReq{..} = do
         [ ME.MarketplaceOrderStatus =. nextStatus
         , ME.MarketplaceOrderPaypalOrderId =. Just pcCapturePaypalId
         , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
-        , ME.MarketplaceOrderPaypalPayerEmail =. payerEmail <|> ME.marketplaceOrderPaypalPayerEmail order
+        , ME.MarketplaceOrderPaypalPayerEmail =. (payerEmail <|> ME.marketplaceOrderPaypalPayerEmail order)
         , ME.MarketplaceOrderPaidAt =. paidAtVal
         , ME.MarketplaceOrderUpdatedAt =. now
         ]
@@ -3817,7 +3844,7 @@ loadDatafastEnv = do
   mVersionDf <- liftIO $ lookupEnv "DATAFAST_VERSIONDF"
   let entityId = fmap (T.strip . T.pack) mEntity
       bearer   = fmap (T.strip . T.pack) mBearer
-      baseUrl  = maybe "https://test.oppwa.com" id mBase
+      baseUrl  = fromMaybe "https://test.oppwa.com" mBase
       testModeVal = mTest >>= (\v -> let t = T.strip (T.pack v) in if T.null t then Nothing else Just t)
       optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
       extras =
@@ -3858,9 +3885,11 @@ instance FromJSON PayPalCreateResponse where
       <*> o .:? "links" .!= []
 
 data PayPalToken = PayPalToken
-  { access_token :: Text
+  { payPalAccessToken :: Text
   } deriving (Show, Generic)
-instance FromJSON PayPalToken
+instance FromJSON PayPalToken where
+  parseJSON = withObject "PayPalToken" $ \o ->
+    PayPalToken <$> o .: "access_token"
 
 data PayPalCaptureOutcome = PayPalCaptureOutcome
   { pcoStatus :: Text
@@ -3899,7 +3928,7 @@ paypalAccessToken manager cid sec baseUrl = do
   token <- case eitherDecode (responseBody resp) of
     Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token PayPal: " <> err) }
     Right tok -> pure tok
-  pure (access_token token)
+  pure (payPalAccessToken token)
 
 createPaypalOrderRemote
   :: Manager
@@ -3968,8 +3997,8 @@ capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
     throwError err502 { errBody = "PayPal capture falló." }
   parsed <- case eitherDecode (responseBody resp) of
     Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear captura PayPal: " <> err) }
-    Right (val :: Value) -> pure val
-  let statusTxt = fromMaybe "unknown" $ parseMaybe (withObject "PayPalCapture" (\o -> o .:? "status")) parsed
+    Right val -> pure val
+  let statusTxt = fromMaybe "unknown" . join $ parseMaybe (withObject "PayPalCapture" (\o -> o .:? "status")) parsed
       payerEmail = parseMaybe (withObject "PayPalCapture" $ \o -> do
         payerObj <- o .:? "payer"
         case payerObj of
