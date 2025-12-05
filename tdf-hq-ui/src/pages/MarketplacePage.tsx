@@ -37,6 +37,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   MarketplaceCartDTO,
@@ -110,6 +111,7 @@ export default function MarketplacePage() {
   const [paymentMethod, setPaymentMethod] = useState<'contact' | 'card' | 'paypal'>('contact');
   const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
   const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
+  const showTokenRates = Boolean(adaUsdRate || sedUsdRate);
   const cartQuery = useQuery<MarketplaceCartDTO>({
     queryKey: ['marketplace-cart', cartId ?? ''],
     enabled: Boolean(cartId),
@@ -554,6 +556,23 @@ export default function MarketplacePage() {
             >
               Ver seguimiento público
             </Button>
+            <Button
+              variant="text"
+              size="small"
+              startIcon={<ContentCopyIcon fontSize="small" />}
+              sx={{ alignSelf: 'flex-start', px: 0 }}
+              onClick={() => {
+                const link = `${window.location.origin}/marketplace/orden/${lastOrder.moOrderId}`;
+                if (navigator?.clipboard?.writeText) {
+                  navigator.clipboard.writeText(link).then(
+                    () => setToast('Enlace de seguimiento copiado'),
+                    () => setToast('No pudimos copiar el enlace'),
+                  );
+                }
+              }}
+            >
+              Copiar enlace
+            </Button>
             {lastOrder.moPaymentProvider && (
               <Typography variant="caption" color="text.secondary">
                 Pago: {lastOrder.moPaymentProvider?.toUpperCase()} {lastOrder.moPaypalOrderId ? ` · ${lastOrder.moPaypalOrderId}` : ''}
@@ -694,6 +713,11 @@ export default function MarketplacePage() {
                 </Select>
               </FormControl>
               <Chip label={`${filteredListings.length} resultados`} size="small" />
+              {!showTokenRates && (
+                <Typography variant="caption" color="text.secondary">
+                  Configura VITE_ADA_USD_RATE / VITE_SED_USD_RATE para ver equivalentes en ADA/SED.
+                </Typography>
+              )}
               <Button
                 variant="outlined"
                 size="small"
@@ -776,14 +800,15 @@ export default function MarketplacePage() {
                         <Typography variant="h5" fontWeight={800}>
                           {item.miPriceDisplay}
                         </Typography>
-                        {(adaUsdRate || sedUsdRate) && (
+                        {showTokenRates && (
                           <Typography variant="body2" color="text.secondary">
                             {adaUsdRate
                               ? `≈ ${formatTokenAmount(item.miPriceUsdCents, adaUsdRate) ?? '—'} ADA`
-                              : 'ADA n/d'}
+                              : null}
+                            {adaUsdRate && sedUsdRate ? ' · ' : null}
                             {sedUsdRate
-                              ? ` · ≈ ${formatTokenAmount(item.miPriceUsdCents, sedUsdRate) ?? '—'} SED`
-                              : ''}
+                              ? `≈ ${formatTokenAmount(item.miPriceUsdCents, sedUsdRate) ?? '—'} SED`
+                              : null}
                           </Typography>
                         )}
                       </Stack>
@@ -1200,8 +1225,8 @@ export default function MarketplacePage() {
                           <TableCell>Marca</TableCell>
                           <TableCell>Modelo</TableCell>
                           <TableCell align="right">USD</TableCell>
-                          {adaUsdRate && <TableCell align="right">ADA</TableCell>}
-                          {sedUsdRate && <TableCell align="right">SED</TableCell>}
+                          {adaUsdRate && <TableCell align="right">ADA (≈ {adaUsdRate} USD)</TableCell>}
+                          {sedUsdRate && <TableCell align="right">SED (≈ {sedUsdRate} USD)</TableCell>}
                         </TableRow>
                       </TableHead>
                       <TableBody>

@@ -6,13 +6,17 @@ import {
   Card,
   CardContent,
   Divider,
+  FormControlLabel,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { buildDefaultConfig, extractTidalCode, tidalAgentRequest } from '../utils/tidalAgent';
+
+type HistoryItem = { prompt: string; code: string };
 
 export default function TidalAgentPage() {
   const { config, error: configError } = useMemo(buildDefaultConfig, []);
@@ -22,6 +26,8 @@ export default function TidalAgentPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [showRaw, setShowRaw] = useState(false);
 
   const handleSubmit = async () => {
     if (!config) return;
@@ -41,6 +47,7 @@ export default function TidalAgentPage() {
         setError('La respuesta no contiene código Tidal utilizable.');
       } else {
         setCode(extracted);
+        setHistory((prev) => [{ prompt: prompt.trim(), code: extracted }, ...prev].slice(0, 5));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo generar código.');
@@ -125,13 +132,58 @@ export default function TidalAgentPage() {
                 />
               </Stack>
 
-              {raw && (
+              {history.length > 0 && (
+                <Stack spacing={1}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Historial rápido
+                  </Typography>
+                  <Stack spacing={1}>
+                    {history.map((item, idx) => (
+                      <Card key={`${item.prompt}-${idx}`} variant="outlined">
+                        <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                          <Typography variant="body2">{item.prompt}</Typography>
+                          <Box
+                            sx={{
+                              bgcolor: 'rgba(148,163,184,0.08)',
+                              border: '1px dashed',
+                              borderColor: 'divider',
+                              borderRadius: 1,
+                              p: 1,
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              whiteSpace: 'pre-line',
+                            }}
+                          >
+                            {item.code}
+                          </Box>
+                          <Button
+                            size="small"
+                            startIcon={<ContentCopyIcon fontSize="small" />}
+                            onClick={() => navigator.clipboard.writeText(item.code).catch(() => {})}
+                          >
+                            Copiar
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Stack>
+                </Stack>
+              )}
+
+              {raw && showRaw && (
                 <Stack spacing={1}>
                   <Typography variant="subtitle2" color="text.secondary">
                     Respuesta completa del modelo (depuración)
                   </Typography>
                   <TextField value={raw} multiline minRows={4} fullWidth InputProps={{ readOnly: true }} />
                 </Stack>
+              )}
+
+              {raw && (
+                <FormControlLabel
+                  control={<Switch checked={showRaw} onChange={(e) => setShowRaw(e.target.checked)} />}
+                  label="Ver respuesta completa"
+                />
               )}
             </Stack>
           </CardContent>

@@ -66,7 +66,7 @@ export default function DonationPage() {
                   Dirección
                 </Typography>
                 <TextField value={CARDANO_ADDRESS} multiline minRows={2} fullWidth InputProps={{ readOnly: true }} />
-                <Stack direction="row" spacing={1}>
+                <Stack direction="row" spacing={1} alignItems="center">
                   <Button
                     variant="contained"
                     startIcon={<ContentCopyIcon />}
@@ -77,11 +77,19 @@ export default function DonationPage() {
                     Copiar dirección
                   </Button>
                   {copyMsg && (
-                    <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
                       {copyMsg}
                     </Typography>
                   )}
                 </Stack>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  href={`web+cardano:${CARDANO_ADDRESS}`}
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Abrir en wallet
+                </Button>
                 <Alert severity="info" variant="outlined">
                   Usa red Cardano. No envíes otros activos o monedas. Las donaciones son no reembolsables.
                 </Alert>

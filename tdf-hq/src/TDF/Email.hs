@@ -173,27 +173,34 @@ formatUsd amount =
 -- Send marketplace order confirmation to buyer.
 sendMarketplaceOrderEmail
   :: Maybe EmailConfig
+  -> Maybe Text -- ^ optional app base URL
   -> Text   -- ^ recipient name
   -> Text   -- ^ recipient email
   -> Text   -- ^ order id
   -> Text   -- ^ order total display
   -> [Text] -- ^ item summaries
   -> IO ()
-sendMarketplaceOrderEmail Nothing _name _email _orderId _total _items =
+sendMarketplaceOrderEmail Nothing _base _name _email _orderId _total _items =
   putStrLn "[Email] SMTP not configured; skipped marketplace order confirmation."
-sendMarketplaceOrderEmail (Just cfg) name email orderId totalDisplay items = do
+sendMarketplaceOrderEmail (Just cfg) mBase name email orderId totalDisplay items = do
   let subject   = "Confirmamos tu pedido en TDF Marketplace"
       preheader = "Recibimos tu pedido. Te contactaremos para coordinar pago y entrega."
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      baseUrl   = fromMaybe "https://tdf-app.pages.dev" mBase
+      sanitized =
+        let trimmed = T.dropWhileEnd (== '/') baseUrl
+        in if T.null trimmed then baseUrl else trimmed
+      tracking  = sanitized <> "/marketplace/orden/" <> orderId
       bodyLines =
         [ "Gracias por tu pedido. Lo estamos procesando y te escribiremos para coordinar pago y entrega."
         , "ID de pedido: " <> orderId
         , "Total: " <> totalDisplay
+        , "Sigue el estado en línea: " <> tracking
         , "Detalle:"
         ]
         <> map ("• " <>) items
       toAddr = Address (Just name) email
-      mail = buildMail cfg toAddr subject preheader greeting bodyLines Nothing
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just tracking)
   sendMailWithLogging cfg toAddr subject mail
 
 -- Send a test/custom email for diagnostics.

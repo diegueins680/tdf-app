@@ -71,4 +71,4 @@ sendTestEmail svc name email subject bodyLines mCtaUrl =
 
 sendMarketplaceOrder :: EmailService -> Text -> Text -> Text -> Text -> [Text] -> IO ()
 sendMarketplaceOrder svc name email orderId totalDisplay items =
-  Email.sendMarketplaceOrderEmail (esConfig svc) name email orderId totalDisplay items
+  Email.sendMarketplaceOrderEmail (esConfig svc) (esAppBase svc) name email orderId totalDisplay items
