@@ -83,8 +83,22 @@ npm run dev
 # 5. Mobile setup (new terminal)
 cd tdf-mobile
 # Set EXPO_PUBLIC_API_BASE=http://localhost:8080
+# Set EXPO_PUBLIC_UPLOAD_URL=http://localhost:8080/drive/upload (for inventory photos)
 npm run start
 ```
+
+### Inventory photos (Google Drive proxy)
+- Backend exposes `POST /drive/upload` (uses Google Drive token). Configure in `tdf-hq/.env`:
+  ```
+  DRIVE_ACCESS_TOKEN=<Google access token with drive.file scope>
+  DRIVE_UPLOAD_FOLDER_ID=<optional target folder>
+  ```
+- Mobile needs:
+  ```
+  EXPO_PUBLIC_UPLOAD_URL=http://<api-host>:8080/drive/upload
+  EXPO_PUBLIC_API_TOKEN="Bearer <your-api-token>"
+  ```
+  Inventory will upload camera/galería photos via that endpoint and store the returned URL on assets.
 
 ### Using Docker Compose
 
