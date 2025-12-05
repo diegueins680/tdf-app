@@ -363,7 +363,7 @@ export default function TeachersPage() {
     } else {
       setSelectedSubjectIds([]);
     }
-  }, [selectedTeacher?.id]);
+  }, [selectedTeacher]);
 
   const teacherClasses = useMemo(() => {
     if (!selectedTeacherId) return [];

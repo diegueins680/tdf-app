@@ -24,7 +24,9 @@ import type { TrialSubject } from '../api/trials';
 import { Trials } from '../api/trials';
 import PublicBrandBar from '../components/PublicBrandBar';
 
-type SlotInput = { start: string };
+interface SlotInput {
+  start: string;
+}
 
 const emptySlots: SlotInput[] = [{ start: '' }, { start: '' }, { start: '' }];
 

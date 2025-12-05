@@ -549,7 +549,9 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                     <Autocomplete
                       options={partyOptions}
                       loading={partiesLoading}
-                      onChange={(_, value) => handleSelectParty(musician.id, value?.party ?? null)}
+                      onChange={(_, value) => {
+                        void handleSelectParty(musician.id, value?.party ?? null);
+                      }}
                       renderInput={(params) => (
                         <TextField {...params} label="Seleccionar contacto existente" placeholder="Buscar por nombre o email" />
                       )}

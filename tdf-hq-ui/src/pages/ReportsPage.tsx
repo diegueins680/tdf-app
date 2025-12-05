@@ -48,9 +48,9 @@ export default function ReportsPage() {
       }),
   });
 
-  const bookings = bookingsQuery.data ?? [];
-  const payments = paymentsQuery.data ?? [];
-  const classes = classesQuery.data ?? [];
+  const bookings = useMemo(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
+  const payments = useMemo(() => paymentsQuery.data ?? [], [paymentsQuery.data]);
+  const classes = useMemo(() => classesQuery.data ?? [], [classesQuery.data]);
 
   const now = useMemo(() => new Date(), []);
   const sevenDaysOut = useMemo(() => {
@@ -91,7 +91,7 @@ export default function ReportsPage() {
   }, [bookings, classes, payments, now, sevenDaysOut]);
 
   const summaryLoading = bookingsQuery.isLoading || paymentsQuery.isLoading || classesQuery.isLoading;
-  const summaryError = bookingsQuery.error || paymentsQuery.error || classesQuery.error;
+  const summaryError = bookingsQuery.error ?? paymentsQuery.error ?? classesQuery.error ?? null;
 
   const topBookings = bookings
     .filter((b) => new Date(b.startsAt) >= now)
@@ -167,10 +167,10 @@ export default function ReportsPage() {
                 {topBookings.length === 0 && <Typography color="text.secondary">No hay reservas próximas.</Typography>}
                 {topBookings.map((b) => (
                   <Box key={b.bookingId} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.25 }}>
-                    <Typography fontWeight={700}>{b.title || b.serviceOrderTitle || 'Reserva'}</Typography>
+                  <Typography fontWeight={700}>{b.title ?? b.serviceOrderTitle ?? 'Reserva'}</Typography>
                     <Typography variant="body2" color="text.secondary">{formatDateTime(b.startsAt)}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {b.partyDisplayName || b.customerName || 'Cliente no asignado'} · {b.status}
+                    {b.partyDisplayName ?? b.customerName ?? 'Cliente no asignado'} · {b.status}
                     </Typography>
                   </Box>
                 ))}

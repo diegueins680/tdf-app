@@ -28,7 +28,6 @@ import type {
   ClassSessionDTO,
   ClassSessionUpdate,
   TrialSubject,
-  TeacherDTO,
   ClassSessionCreate,
 } from '../api/trials';
 import { Trials } from '../api/trials';
@@ -164,18 +163,18 @@ export default function TrialLessonsPage() {
   const [studentDialogOpen, setStudentDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ClassSessionDTO | null>(null);
   const [form, setForm] = useState<{
-    studentId: number | '';
-    teacherId: number | '';
-    subjectId: number | '';
-    roomId: string | '';
+    studentId: number | null;
+    teacherId: number | null;
+    subjectId: number | null;
+    roomId: string | null;
     startAt: string;
     endAt: string;
     notes: string;
   }>({
-    studentId: '',
-    teacherId: '',
-    subjectId: '',
-    roomId: '',
+    studentId: null,
+    teacherId: null,
+    subjectId: null,
+    roomId: null,
     startAt: '',
     endAt: '',
     notes: '',
@@ -187,10 +186,10 @@ export default function TrialLessonsPage() {
     const now = new Date();
     const startLocal = toLocalInput(now.toISOString());
     setForm({
-      studentId: '',
-      teacherId: '',
-      subjectId: '',
-      roomId: '',
+      studentId: null,
+      teacherId: null,
+      subjectId: null,
+      roomId: null,
       startAt: startLocal,
       endAt: toLocalInput(addMinutes(now.toISOString(), 45)),
       notes: '',
@@ -202,10 +201,10 @@ export default function TrialLessonsPage() {
     setFormError(null);
     setEditing(cls);
     setForm({
-      studentId: cls.studentId ?? '',
-      teacherId: cls.teacherId ?? '',
-      subjectId: cls.subjectId ?? '',
-      roomId: cls.roomId ?? '',
+      studentId: cls.studentId ?? null,
+      teacherId: cls.teacherId ?? null,
+      subjectId: cls.subjectId ?? null,
+      roomId: cls.roomId ?? null,
       startAt: toLocalInput(cls.startAt),
       endAt: toLocalInput(cls.endAt),
       notes: cls.notes ?? '',
@@ -455,7 +454,7 @@ export default function TrialLessonsPage() {
             <TextField
               select
               label="Alumno"
-              value={form.studentId}
+              value={form.studentId ?? ''}
               onChange={(e) => setForm((prev) => ({ ...prev, studentId: Number(e.target.value) }))}
               fullWidth
             >
@@ -468,7 +467,7 @@ export default function TrialLessonsPage() {
             <TextField
               select
               label="Materia"
-              value={form.subjectId}
+              value={form.subjectId ?? ''}
               onChange={(e) => setForm((prev) => ({ ...prev, subjectId: Number(e.target.value) }))}
               fullWidth
             >
@@ -481,7 +480,7 @@ export default function TrialLessonsPage() {
             <TextField
               select
               label="Profesor"
-              value={form.teacherId}
+              value={form.teacherId ?? ''}
               onChange={(e) => setForm((prev) => ({ ...prev, teacherId: Number(e.target.value) }))}
               fullWidth
             >
@@ -494,7 +493,7 @@ export default function TrialLessonsPage() {
             <TextField
               select
               label="Sala"
-              value={form.roomId}
+              value={form.roomId ?? ''}
               onChange={(e) => setForm((prev) => ({ ...prev, roomId: e.target.value }))}
               fullWidth
             >
@@ -600,15 +599,17 @@ export default function TrialLessonsPage() {
           <Button onClick={closeStudentDialog}>Cancelar</Button>
           <Button
             variant="contained"
-            onClick={async () => {
-              const payload = {
-                fullName: studentForm.fullName.trim(),
-                email: studentForm.email.trim(),
-                phone: studentForm.phone.trim() || undefined,
-                notes: studentForm.notes.trim() || undefined,
-              };
-              await studentMutation.mutateAsync(payload);
-              closeStudentDialog();
+            onClick={() => {
+              void (async () => {
+                const payload = {
+                  fullName: studentForm.fullName.trim(),
+                  email: studentForm.email.trim(),
+                  phone: studentForm.phone.trim() || undefined,
+                  notes: studentForm.notes.trim() || undefined,
+                };
+                await studentMutation.mutateAsync(payload);
+                closeStudentDialog();
+              })();
             }}
             disabled={studentMutation.isPending}
           >

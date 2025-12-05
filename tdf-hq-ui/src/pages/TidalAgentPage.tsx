@@ -21,7 +21,10 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { buildDefaultConfig, extractTidalCode, tidalAgentRequest } from '../utils/tidalAgent';
 
-type HistoryItem = { prompt: string; code: string };
+interface HistoryItem {
+  prompt: string;
+  code: string;
+}
 
 export default function TidalAgentPage() {
   const { config, error: configError } = useMemo(buildDefaultConfig, []);
@@ -109,13 +112,21 @@ export default function TidalAgentPage() {
                 <Button
                   variant="contained"
                   startIcon={<PlayArrowIcon />}
-                  onClick={handleSubmit}
+                  onClick={() => {
+                    void handleSubmit();
+                  }}
                   disabled={loading || !config}
                 >
                   {loading ? 'Generando…' : 'Generar código'}
                 </Button>
                 {code && (
-                  <Button variant="outlined" startIcon={<ContentCopyIcon />} onClick={handleCopy}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<ContentCopyIcon />}
+                    onClick={() => {
+                      void handleCopy();
+                    }}
+                  >
                     {copied ? 'Copiado' : 'Copiar'}
                   </Button>
                 )}
@@ -214,7 +225,11 @@ export default function TidalAgentPage() {
                           <Button
                             size="small"
                             startIcon={<ContentCopyIcon fontSize="small" />}
-                            onClick={() => navigator.clipboard.writeText(item.code).catch(() => {})}
+                            onClick={() => {
+                              navigator.clipboard
+                                .writeText(item.code)
+                                .catch((err) => console.warn('No se pudo copiar el historial', err));
+                            }}
                           >
                             Copiar
                           </Button>
@@ -232,7 +247,9 @@ export default function TidalAgentPage() {
                             variant="outlined"
                             onClick={() => {
                               const wrapped = `${target} $ (${item.code})`;
-                              navigator.clipboard.writeText(wrapped).catch(() => {});
+                              navigator.clipboard
+                                .writeText(wrapped)
+                                .catch((err) => console.warn('No se pudo copiar con destino', err));
                               setShowRaw(false);
                             }}
                           >

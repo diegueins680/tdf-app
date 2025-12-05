@@ -1183,7 +1183,7 @@ export default function MarketplacePage() {
           </Grid>
 
           <Grid item xs={12} md={4}>
-            <Stack spacing={2}>
+            <Stack spacing={2} sx={{ position: { md: 'sticky' }, top: { md: 16 }, alignSelf: { md: 'flex-start' } }}>
               {showRestoreBanner && savedCartMeta && (
                 <Alert
                   severity="info"
