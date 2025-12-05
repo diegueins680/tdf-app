@@ -96,7 +96,6 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: 'RECURSOS',
     items: [
-      { label: 'Documentación', path: '/docs' },
       { label: 'Acerca de', path: '/acerca' },
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Sugerencias', path: '/feedback' },

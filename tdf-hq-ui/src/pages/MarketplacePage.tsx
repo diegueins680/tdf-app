@@ -74,6 +74,7 @@ const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
 const CART_META_KEY = 'tdf-marketplace-cart-meta';
 const CART_EVENT = 'tdf-cart-updated';
 const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
+const PAYMENT_PREF_KEY = 'tdf-marketplace-payment-pref';
 const FILTERS_KEY = 'tdf-marketplace-filters';
 
 interface SavedFilters {
@@ -148,7 +149,7 @@ export default function MarketplacePage() {
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'contact' | 'card' | 'paypal'>(() => {
     if (typeof window === 'undefined') return 'contact';
-    const saved = localStorage.getItem('tdf-marketplace-payment');
+    const saved = localStorage.getItem(PAYMENT_PREF_KEY);
     return saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
   });
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -208,7 +209,7 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('tdf-marketplace-payment', paymentMethod);
+    localStorage.setItem(PAYMENT_PREF_KEY, paymentMethod);
   }, [paymentMethod]);
 
   useEffect(() => {
