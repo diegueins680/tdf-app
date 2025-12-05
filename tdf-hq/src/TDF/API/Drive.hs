@@ -9,7 +9,7 @@ module TDF.API.Drive where
 import           Data.Text          (Text)
 import           GHC.Generics       (Generic)
 import           Servant
-import           Servant.Multipart  (MultipartForm, Tmp, FromMultipart(..), lookupFile, lookupInput, FileData)
+import           Servant.Multipart  (MultipartForm, Tmp, FromMultipart(..), lookupFile, lookupInput, FileData, Input(..))
 import qualified Data.Text         as T
 
 import           TDF.API.Types      (DriveUploadDTO)
@@ -24,9 +24,15 @@ data DriveUploadForm = DriveUploadForm
 instance FromMultipart Tmp DriveUploadForm where
   fromMultipart multipart = do
     file <- lookupFile "file" multipart
-    let folder = either (const Nothing) (Just . T.strip . T.pack) (lookupInput "folderId" multipart)
-        nameTxt = either (const Nothing) (Just . T.strip . T.pack) (lookupInput "name" multipart)
-        token = either (const Nothing) (Just . T.strip . T.pack) (lookupInput "accessToken" multipart)
+    let folder = case lookupInput "folderId" multipart of
+          Right (Input _ v _) -> Just (T.strip v)
+          _                   -> Nothing
+        nameTxt = case lookupInput "name" multipart of
+          Right (Input _ v _) -> Just (T.strip v)
+          _                   -> Nothing
+        token = case lookupInput "accessToken" multipart of
+          Right (Input _ v _) -> Just (T.strip v)
+          _                   -> Nothing
     pure DriveUploadForm
       { duFile = file
       , duFolderId = folder
