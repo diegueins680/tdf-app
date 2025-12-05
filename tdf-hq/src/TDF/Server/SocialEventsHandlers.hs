@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -9,86 +11,54 @@ module TDF.Server.SocialEventsHandlers
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ask)
 import           Control.Monad.Except (throwError)
-import           Data.Aeson (Value, object, (.=), toJSON)
 import qualified Data.Text as T
 import           Text.Read (readMaybe)
-
-import           Servant
-import           Servant.Server
-
-import           Database.Persist (Entity(..), SelectOpt(..), selectList, selectFirst, insert, insert_)
-import           Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
 import           Data.Int (Int64)
 import           Data.Time (getCurrentTime)
+import           Data.Maybe (isNothing)
+import           Control.Monad (forM, forM_, when)
+
+import           Servant
+
+import           Database.Persist (Entity(..), SelectOpt(..), selectList, get, insert, insert_, update, delete)
+import           Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
 
 import           TDF.API.SocialEventsAPI
 import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..))
-import           Data.Maybe (isNothing)
-import           TDF.DB (Env(..))
+import           TDF.DB (AppM, Env(..))
 import           TDF.Models.SocialEventsModels
+import           TDF.Auth (AuthedUser)
 
--- | Social Events server implemented with access to the application's Env.
--- Returns JSON 'Value' for flexibility; replace with typed DTOs later.
-socialEventsServer
-  :: forall m.
-     ( MonadReader Env m
-     , MonadIO m
-     , MonadError ServerError m
-     )
-  => ServerT SocialEventsAPI m
-socialEventsServer = eventsServer
-                 :<|> venuesServer
-                 :<|> artistsServer
-                 :<|> rsvpsServer
-                 :<|> invitationsServer
-
+socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
+socialEventsServer _user = eventsServer
+                       :<|> venuesServer
+                       :<|> artistsServer
+                       :<|> rsvpsServer
+                       :<|> invitationsServer
   where
-    -- Helper to convert Venue entity to JSON-like Value
-    venueToValue :: Entity Venue -> Value
-    venueToValue (Entity vid v) = object
-      [ "id" .= (fromSqlKey vid)
-      , "name" .= venueName v
-      , "address" .= venueAddress v
-      , "city" .= venueCity v
-      , "country" .= venueCountry v
-      , "latitude" .= venueLatitude v
-      , "longitude" .= venueLongitude v
-      , "capacity" .= venueCapacity v
-      , "contact" .= venueContact v
-      ]
-
-    eventToValue :: Entity SocialEvent -> Value
-    eventToValue (Entity eid e) = object
-      [ "id" .= (fromSqlKey eid)
-      , "title" .= socialEventTitle e
-      , "description" .= socialEventDescription e
-      , "start_time" .= socialEventStartTime e
-      , "end_time" .= socialEventEndTime e
-      , "venue_id" .= socialEventVenueId e
-      , "price_cents" .= socialEventPriceCents e
-      , "capacity" .= socialEventCapacity e
-      ]
-
     -- Events
-    eventsServer :: ServerT EventsRoutes m
+    eventsServer :: ServerT EventsRoutes AppM
     eventsServer = listEvents
-              :<|> createEvent
-              :<|> getEvent
-              :<|> updateEvent
-              :<|> deleteEvent
+               :<|> createEvent
+               :<|> getEvent
+               :<|> updateEvent
+               :<|> deleteEvent
 
-    listEvents :: Maybe Text -> Maybe Text -> m [EventDTO]
+    listEvents :: Maybe T.Text -> Maybe T.Text -> AppM [EventDTO]
     listEvents _mCity _mStartAfter = do
       Env{..} <- ask
       rows <- liftIO $ runSqlPool (selectList [] [Desc SocialEventStartTime, LimitTo 200]) envPool
-      -- Populate artists for each event
       forM rows $ \(Entity eid e) -> do
         artistLinks <- liftIO $ runSqlPool (selectList [EventArtistEventId ==. eid] []) envPool
         artists <- forM artistLinks $ \(Entity _ link) -> do
           mArtist <- liftIO $ runSqlPool (get (eventArtistArtistId link)) envPool
           pure $ case mArtist of
             Nothing -> ArtistDTO { artistId = Nothing, artistName = "(unknown)", artistGenres = [] }
-            Just a -> ArtistDTO { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link)))), artistName = artistProfileName a, artistGenres = maybe [] id (artistProfileGenres a) }
+            Just a -> ArtistDTO 
+              { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link))))
+              , artistName = artistProfileName a
+              , artistGenres = maybe [] id (artistProfileGenres a)
+              }
         pure EventDTO
           { eventId = Just (T.pack (show (fromSqlKey eid)))
           , eventTitle = socialEventTitle e
@@ -101,18 +71,15 @@ socialEventsServer = eventsServer
           , eventArtists = artists
           }
 
-    createEvent :: EventDTO -> m EventDTO
+    createEvent :: EventDTO -> AppM EventDTO
     createEvent dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
-      -- Resolve venue id (if provided) to Persistent key
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
         Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
           Nothing -> throwError err400 { errBody = "Invalid venue id" }
           Just vnum -> pure (Just (toSqlKey vnum))
-
-      -- Insert event
       key <- liftIO $ runSqlPool (insert SocialEvent
         { socialEventOrganizerPartyId = Nothing
         , socialEventTitle = eventTitle dto
@@ -126,8 +93,6 @@ socialEventsServer = eventsServer
         , socialEventCreatedAt = now
         , socialEventUpdatedAt = now
         }) envPool
-
-      -- Link artists if provided (best-effort: ignore invalid artist ids)
       let artists = eventArtists dto
       liftIO $ runSqlPool (forM_ artists $ \a ->
         case artistId a of
@@ -135,12 +100,10 @@ socialEventsServer = eventsServer
           Just atxt -> case readMaybe (T.unpack atxt) :: Maybe Int64 of
             Nothing -> pure ()
             Just anum -> insert_ (EventArtist key (toSqlKey anum) Nothing)) envPool
-
       let createdDto = dto { eventId = Just (T.pack (show (fromSqlKey key))) }
       pure createdDto
 
-    -- Get a single event by id
-    getEvent :: Text -> m EventDTO
+    getEvent :: T.Text -> AppM EventDTO
     getEvent rawId = do
       Env{..} <- ask
       case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
@@ -150,19 +113,30 @@ socialEventsServer = eventsServer
           mEnt <- liftIO $ runSqlPool (get key) envPool
           case mEnt of
             Nothing -> throwError err404 { errBody = "Event not found" }
-            Just e  -> pure $ EventDTO
-              { eventId = Just (T.pack (show num))
-              , eventTitle = socialEventTitle e
-              , eventDescription = socialEventDescription e
-              , eventStart = socialEventStartTime e
-              , eventEnd = socialEventEndTime e
-              , eventVenueId = fmap (T.pack . show . fromSqlKey) (socialEventVenueId e)
-              , eventPriceCents = socialEventPriceCents e
-              , eventCapacity = socialEventCapacity e
-              , eventArtists = []
-              }
+            Just e  -> do
+              artistLinks <- liftIO $ runSqlPool (selectList [EventArtistEventId ==. key] []) envPool
+              artists <- forM artistLinks $ \(Entity _ link) -> do
+                mArtist <- liftIO $ runSqlPool (get (eventArtistArtistId link)) envPool
+                pure $ case mArtist of
+                  Nothing -> ArtistDTO { artistId = Nothing, artistName = "(unknown)", artistGenres = [] }
+                  Just a -> ArtistDTO 
+                    { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link))))
+                    , artistName = artistProfileName a
+                    , artistGenres = maybe [] id (artistProfileGenres a)
+                    }
+              pure $ EventDTO
+                { eventId = Just (T.pack (show num))
+                , eventTitle = socialEventTitle e
+                , eventDescription = socialEventDescription e
+                , eventStart = socialEventStartTime e
+                , eventEnd = socialEventEndTime e
+                , eventVenueId = fmap (T.pack . show . fromSqlKey) (socialEventVenueId e)
+                , eventPriceCents = socialEventPriceCents e
+                , eventCapacity = socialEventCapacity e
+                , eventArtists = artists
+                }
 
-    updateEvent :: Text -> EventDTO -> m EventDTO
+    updateEvent :: T.Text -> EventDTO -> AppM EventDTO
     updateEvent rawId dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
@@ -172,10 +146,8 @@ socialEventsServer = eventsServer
           let key = toSqlKey num
           mExisting <- liftIO $ runSqlPool (get key) envPool
           when (isNothing mExisting) $ throwError err404 { errBody = "Event not found" }
-          -- validate title and time range
           when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
           when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
-          -- resolve venue
           mVenueKey <- case eventVenueId dto of
             Nothing -> pure Nothing
             Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
@@ -193,7 +165,7 @@ socialEventsServer = eventsServer
             ]) envPool
           pure (dto { eventId = Just rawId })
 
-    deleteEvent :: Text -> m NoContent
+    deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
       Env{..} <- ask
       case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
@@ -206,22 +178,32 @@ socialEventsServer = eventsServer
           pure NoContent
 
     -- Venues
-    venuesServer :: ServerT VenuesRoutes m
+    venuesServer :: ServerT VenuesRoutes AppM
     venuesServer = listVenues
-              :<|> createVenue
-              :<|> getVenue
-              :<|> updateVenue
+               :<|> createVenue
+               :<|> getVenue
+               :<|> updateVenue
 
-    listVenues :: Maybe String -> Maybe String -> m Value
+    listVenues :: Maybe String -> Maybe String -> AppM [VenueDTO]
     listVenues mCity _mNear = do
       Env{..} <- ask
       let filters = case mCity of
                       Just c | not (T.null (T.strip (T.pack c))) -> [VenueCity ==. Just (T.pack c)]
                       _ -> []
       rows <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 200]) envPool
-      pure $ toJSON (map venueToValue rows)
+      pure $ map (\(Entity vid v) -> VenueDTO
+        { venueId = Just (T.pack (show (fromSqlKey vid)))
+        , venueName = venueName v
+        , venueAddress = venueAddress v
+        , venueCity = venueCity v
+        , venueCountry = venueCountry v
+        , venueLat = venueLatitude v
+        , venueLng = venueLongitude v
+        , venueCapacity = venueCapacity v
+        , venueContact = venueContact v
+        }) rows
 
-    createVenue :: VenueDTO -> m VenueDTO
+    createVenue :: VenueDTO -> AppM VenueDTO
     createVenue dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
@@ -240,20 +222,29 @@ socialEventsServer = eventsServer
       let created = dto { venueId = Just (T.pack (show (fromSqlKey key))) }
       pure created
 
-    getVenue :: String -> m Value
+    getVenue :: T.Text -> AppM VenueDTO
     getVenue rawId = do
       Env{..} <- ask
-      case readMaybe (T.unpack (T.strip (T.pack rawId))) of
+      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
         Nothing -> throwError err400 { errBody = "Invalid venue id" }
-        Just (_ :: Int) -> do
-          mRow <- liftIO $ runSqlPool (selectFirst [] []) envPool
-          case mRow of
+        Just num -> do
+          let key = toSqlKey num
+          mEnt <- liftIO $ runSqlPool (get key) envPool
+          case mEnt of
             Nothing -> throwError err404 { errBody = "Venue not found" }
-            Just r  -> pure $ venueToValue r
+            Just v -> pure VenueDTO
+              { venueId = Just (T.pack (show num))
+              , venueName = venueName v
+              , venueAddress = venueAddress v
+              , venueCity = venueCity v
+              , venueCountry = venueCountry v
+              , venueLat = venueLatitude v
+              , venueLng = venueLongitude v
+              , venueCapacity = venueCapacity v
+              , venueContact = venueContact v
+              }
 
-    updateVenue :: String -> Value -> m Value
-    updateVenue _ _ = throwError err501 { errBody = "Not implemented: updateVenue" }
-    updateVenue :: Text -> VenueDTO -> m VenueDTO
+    updateVenue :: T.Text -> VenueDTO -> AppM VenueDTO
     updateVenue rawId dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
@@ -272,42 +263,32 @@ socialEventsServer = eventsServer
             , VenueLongitude =. venueLng dto
             , VenueCapacity =. venueCapacity dto
             , VenueContact =. venueContact dto
+            , VenueUpdatedAt =. now
             ]) envPool
           pure (dto { venueId = Just rawId })
 
-    -- Artists (left as not-implemented for now, reuse artist utilities later)
-    artistsServer :: ServerT ArtistsRoutes m
-    artistsServer = listArtists
-               :<|> createArtist
-               :<|> getArtist
-               :<|> updateArtist
-
-    listArtists :: Maybe String -> Maybe String -> m Value
+    -- Artists (not implemented)
+    artistsServer :: ServerT ArtistsRoutes AppM
+    artistsServer = listArtists :<|> createArtist :<|> getArtist :<|> updateArtist
+    listArtists :: Maybe String -> Maybe String -> AppM [ArtistDTO]
     listArtists _ _ = throwError err501 { errBody = "Not implemented: listArtists" }
-
-    createArtist :: Value -> m Value
+    createArtist :: ArtistDTO -> AppM ArtistDTO
     createArtist _ = throwError err501 { errBody = "Not implemented: createArtist" }
-
-    getArtist :: String -> m Value
+    getArtist :: String -> AppM ArtistDTO
     getArtist _ = throwError err501 { errBody = "Not implemented: getArtist" }
-
-    updateArtist :: String -> Value -> m Value
+    updateArtist :: String -> ArtistDTO -> AppM ArtistDTO
     updateArtist _ _ = throwError err501 { errBody = "Not implemented: updateArtist" }
 
-    -- RSVPs
-    rsvpsServer :: ServerT RsvpRoutes m
-    rsvpsServer = listRsvps
-             :<|> createRsvp
-
-    listRsvps :: String -> m Value
+    -- RSVPs (not implemented)
+    rsvpsServer :: ServerT RsvpRoutes AppM
+    rsvpsServer = listRsvps :<|> createRsvp
+    listRsvps :: String -> AppM T.Text
     listRsvps _ = throwError err501 { errBody = "Not implemented: listRsvps" }
-
-    createRsvp :: String -> Value -> m Value
+    createRsvp :: String -> T.Text -> AppM T.Text
     createRsvp _ _ = throwError err501 { errBody = "Not implemented: createRsvp" }
 
-    -- Invitations
-    invitationsServer :: ServerT InvitationsRoutes m
+    -- Invitations (not implemented)
+    invitationsServer :: ServerT InvitationsRoutes AppM
     invitationsServer = createInvitation
-
-    createInvitation :: String -> Value -> m Value
+    createInvitation :: String -> T.Text -> AppM T.Text
     createInvitation _ _ = throwError err501 { errBody = "Not implemented: createInvitation" }
