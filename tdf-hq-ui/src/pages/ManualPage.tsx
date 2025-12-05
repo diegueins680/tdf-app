@@ -47,7 +47,6 @@ const sectionsByModule: Record<string, ManualItem[]> = {
   packages: [
     { title: 'Label / Artistas', path: '/label/artistas', description: 'Catálogo de artistas (label). Datos biográficos, lanzamientos y enlaces.' },
     { title: 'Operación / Paquetes', path: '/operacion/paquetes', description: 'Paquetes y combinaciones de servicios (incluye resumen y pricing).' },
-    { title: 'Bar / Inventory', path: '/bar/inventory', description: 'Inventario de bar / punto de venta. Control de stock y escaneo QR.' },
   ],
 };
 

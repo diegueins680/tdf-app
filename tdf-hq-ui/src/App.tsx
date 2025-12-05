@@ -252,17 +252,9 @@ export default function App() {
             <Route index element={<Navigate to="cotizaciones" replace />} />
           </Route>
 
-          <Route path="/bar" element={<Outlet />}>
-            <Route path="sell" element={<BasicFeaturePage title="Bar / Sell" storageKey="bar-sell" />} />
-            <Route path="register" element={<BasicFeaturePage title="Bar / Register" storageKey="bar-register" />} />
-            <Route path="inventory" element={<BasicFeaturePage title="Bar / Inventory" storageKey="bar-inventory" />} />
-            <Route path="staff" element={<BasicFeaturePage title="Bar / Staff" storageKey="bar-staff" />} />
-            <Route index element={<Navigate to="sell" replace />} />
-          </Route>
-
-          <Route path="/operacion" element={<Outlet />}>
-            <Route path="inventario" element={<InventoryPage />} />
-            <Route path="ordenes-marketplace" element={<MarketplaceOrdersPage />} />
+        <Route path="/operacion" element={<Outlet />}>
+          <Route path="inventario" element={<InventoryPage />} />
+          <Route path="ordenes-marketplace" element={<MarketplaceOrdersPage />} />
             <Route path="calendario-domo" element={<BasicFeaturePage title="Operación / Calendario del domo" storageKey="operacion-calendario-domo" />} />
             <Route path="reservas-equipo" element={<BasicFeaturePage title="Operación / Reservas de equipo" storageKey="operacion-reservas-equipo" />} />
             <Route path="mantenimiento" element={<BasicFeaturePage title="Operación / Mantenimiento" storageKey="operacion-mantenimiento" />} />

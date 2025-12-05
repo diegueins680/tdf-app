@@ -189,7 +189,6 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     if (path.startsWith('/configuracion')) return 'admin';
     if (path.startsWith('/operacion')) return 'packages';
     if (path.startsWith('/label')) return 'packages';
-    if (path.startsWith('/bar')) return 'packages';
     if (path.startsWith('/escuela')) return 'scheduling';
     if (path.startsWith('/eventos')) return 'scheduling';
     return null;

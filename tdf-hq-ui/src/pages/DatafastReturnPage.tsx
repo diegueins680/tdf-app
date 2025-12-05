@@ -137,6 +137,16 @@ export default function DatafastReturnPage() {
         {status === 'error' && (
           <Alert severity="error">
             {message} Revisa tu conexión y vuelve a intentar desde el marketplace.
+            {orderId && (
+              <Button
+                size="small"
+                sx={{ mt: 1 }}
+                variant="outlined"
+                onClick={() => navigate(`/marketplace/orden/${orderId}`)}
+              >
+                Verificar pedido
+              </Button>
+            )}
           </Alert>
         )}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -151,6 +161,15 @@ export default function DatafastReturnPage() {
           >
             Necesito ayuda
           </Button>
+          {order && (
+            <Button
+              variant="text"
+              onClick={() => navigate(`/marketplace/orden/${order.moOrderId}`)}
+              fullWidth
+            >
+              Ver mi pedido
+            </Button>
+          )}
         </Stack>
       </Stack>
     </Box>

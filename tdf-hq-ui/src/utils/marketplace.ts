@@ -14,7 +14,7 @@ export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
     if (norm.includes('fail')) {
       return { label: 'Pago rechazado', color: 'default', desc: 'El pago con tarjeta fue rechazado.' };
     }
-    return { label: 'Pago en curso', color: 'warning', desc: 'Esperando confirmación del pago con tarjeta.' };
+    return { label: 'Pago en revisión', color: 'warning', desc: 'Pago con tarjeta en revisión. Si no se confirma en minutos, contáctanos.' };
   }
   if (norm.includes('pending')) {
     return { label: 'Pendiente', color: 'warning', desc: 'Recibido, a la espera de confirmación.' };
