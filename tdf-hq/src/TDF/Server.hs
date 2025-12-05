@@ -402,7 +402,8 @@ driveServer _ mAccessToken DriveUploadForm{..} = do
   accessToken <- maybe (throwError err400 { errBody = "X-Goog-Access-Token requerido" }) pure tokenTxt
   mFolderEnv <- liftIO $ lookupEnv "DRIVE_UPLOAD_FOLDER_ID"
   let folder = duFolderId <|> fmap (T.strip . T.pack) mFolderEnv
-      nameOverride = duName <|> (T.pack <$> fdFileName duFile)
+      fallbackName = let raw = T.strip (fdFileName duFile) in if T.null raw then Nothing else Just raw
+      nameOverride = duName <|> fallbackName
   manager <- liftIO $ newManager tlsManagerSettings
   dto <- liftIO $ uploadToDrive manager accessToken duFile nameOverride folder
   pure dto
@@ -4233,10 +4234,13 @@ uploadToDrive manager accessToken file mName mFolder = do
   let boundary = "tdf-boundary-" <> T.replace "-" "" (toText uuid)
       dashBoundary = "--" <> boundary
       fileName = fromMaybe (fdFileName file) mName
-      mimeType = if BS8.null (fdFileCType file) then "application/octet-stream" else fdFileCType file
+      mimeTypeTxt =
+        let raw = T.strip (fdFileCType file)
+        in if T.null raw then "application/octet-stream" else raw
+      mimeTypeBS = TE.encodeUtf8 mimeTypeTxt
       meta = object $
         [ "name" .= fileName
-        , "mimeType" .= TE.decodeUtf8 mimeType
+        , "mimeType" .= mimeTypeTxt
         ] <> maybe [] (\f -> ["parents" .= [f]]) mFolder
 
   fileBytes <- BL.readFile (fdPayload file)
@@ -4248,7 +4252,7 @@ uploadToDrive manager accessToken file mName mFolder = do
         ]
       filePart = BL.intercalate "\r\n"
         [ BL.fromStrict (TE.encodeUtf8 dashBoundary)
-        , BL.fromStrict $ "Content-Type: " <> mimeType
+        , BL.fromStrict $ "Content-Type: " <> mimeTypeBS
         , ""
         , fileBytes
         ]
