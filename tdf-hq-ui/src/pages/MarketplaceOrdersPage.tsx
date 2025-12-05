@@ -74,6 +74,7 @@ const summarizeItems = (items: MarketplaceOrderDTO['moItems']) =>
 export default function MarketplaceOrdersPage() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [providerFilter, setProviderFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusInput, setStatusInput] = useState<string>('');
@@ -115,9 +116,13 @@ export default function MarketplaceOrdersPage() {
       ]
         .join(' ')
         .toLowerCase();
-      return haystack.includes(term);
+      const matchesProvider =
+        providerFilter === 'all'
+          ? true
+          : (order.moPaymentProvider ?? '').toLowerCase() === providerFilter.toLowerCase();
+      return haystack.includes(term) && matchesProvider;
     });
-  }, [orders, search]);
+  }, [orders, search, providerFilter]);
 
   const updateMutation = useMutation<MarketplaceOrderDTO, Error, { id: string; payload: MarketplaceOrderUpdatePayload }>({
     mutationFn: ({ id, payload }) => Marketplace.updateOrder(id, payload),
@@ -190,7 +195,7 @@ export default function MarketplaceOrdersPage() {
       </Stack>
 
       <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} md={6} lg={4}>
+        <Grid item xs={12} md={5} lg={4}>
           <TextField
             fullWidth
             label="Buscar por comprador, email o ID"
@@ -198,7 +203,7 @@ export default function MarketplaceOrdersPage() {
             onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12} md={6} lg={4}>
+        <Grid item xs={12} md={4} lg={3}>
           <FormControl fullWidth>
             <InputLabel id="status-filter-label">Estado</InputLabel>
             <Select
@@ -213,6 +218,22 @@ export default function MarketplaceOrdersPage() {
                   {st.label}
                 </MenuItem>
               ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} md={3} lg={3}>
+          <FormControl fullWidth>
+            <InputLabel id="provider-filter-label">Método de pago</InputLabel>
+            <Select
+              labelId="provider-filter-label"
+              label="Método de pago"
+              value={providerFilter}
+              onChange={(e) => setProviderFilter(e.target.value)}
+            >
+              <MenuItem value="all">Todos</MenuItem>
+              <MenuItem value="paypal">PayPal</MenuItem>
+              <MenuItem value="datafast">Tarjeta (Datafast)</MenuItem>
+              <MenuItem value="contact">Manual/otros</MenuItem>
             </Select>
           </FormControl>
         </Grid>
