@@ -2,6 +2,8 @@
 module Main where
 
 import qualified Network.Wai.Handler.Warp as Warp
+import           Control.Concurrent      (threadDelay)
+import           Control.Exception       (SomeException, try)
 import           Control.Monad            (forM_, when)
 import qualified Data.ByteString.Char8    as BS
 import           Data.Int                (Int64)
@@ -21,6 +23,7 @@ import           TDF.Cors                 (corsPolicy)
 import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
 import           TDF.Cron       (startCoursePaymentReminderJob)
 import           TDF.DB         (Env(..), makePool)
+import qualified TDF.DB         as DB
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
 import           TDF.Trials.Models (migrateTrials)
@@ -32,7 +35,7 @@ main = do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   cfg  <- loadConfig
-  pool <- makePool (BS.pack (dbConnString cfg))
+  pool <- makePoolWithRetry 5 (BS.pack (dbConnString cfg))
   if resetDb cfg
     then do
       putStrLn "Resetting DB schema..."
@@ -122,6 +125,22 @@ restoreLegacyPartyRoles [] = pure ()
 restoreLegacyPartyRoles roles =
   forM_ roles $ \(pid, role) ->
     upsert (PartyRole pid role True) [PartyRoleActive =. True]
+
+-- Retry DB pool creation to avoid failing fast on boot when the DB is not ready yet.
+makePoolWithRetry :: Int -> BS.ByteString -> IO DB.ConnectionPool
+makePoolWithRetry retries connStr = do
+  result <- try (makePool connStr) :: IO (Either SomeException DB.ConnectionPool)
+  case result of
+    Right pool -> pure pool
+    Left err ->
+      if retries <= 0
+        then do
+          putStrLn "Failed to connect to database after retries. Crashing."
+          error (show err)
+        else do
+          putStrLn $ "DB connection failed, retrying... attempts left: " <> show retries
+          threadDelay (5 * 1000 * 1000)
+          makePoolWithRetry (retries - 1) connStr
 
 columnExists :: Text -> SqlPersistT IO Bool
 columnExists column = do
