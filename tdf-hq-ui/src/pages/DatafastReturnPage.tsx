@@ -4,15 +4,15 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Marketplace } from '../api/marketplace';
 import type { MarketplaceOrderDTO } from '../api/types';
 
-function useQueryParam(name: string): string | null {
+function getQueryParam(name: string): string | null {
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const value = params.get(name);
   return value && value.trim() !== '' ? value : null;
 }
 
 export default function DatafastReturnPage() {
-  const orderId = useQueryParam('orderId');
-  const resourcePath = useQueryParam('resourcePath') ?? useQueryParam('id');
+  const orderId = getQueryParam('orderId');
+  const resourcePath = getQueryParam('resourcePath') ?? getQueryParam('id');
   const navigate = useNavigate();
   const location = useLocation();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');

@@ -43,6 +43,7 @@ import CmsAdminPage from './pages/CmsAdminPage';
 import FeedbackPage from './pages/FeedbackPage';
 import CompaniesPage from './pages/CompaniesPage';
 import LeadsPage from './pages/LeadsPage';
+import DonationPage from './pages/DonationPage';
 import PaymentsPage from './pages/PaymentsPage';
 import CalendarSyncPage from './pages/CalendarSyncPage';
 import SecurityPage from './pages/SecurityPage';
@@ -157,6 +158,7 @@ export default function App() {
       <Route path="/feedback" element={<FeedbackPage />} />
       <Route path="/records" element={<RecordsPublicPage />} />
       <Route path="/inventario/scan/:token" element={<InventoryScanPage />} />
+      <Route path="/donar" element={<DonationPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Shell />}>
         <Route path="/" element={<Navigate to="/inicio" replace />} />

@@ -208,6 +208,9 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           <Button color="inherit" component={RouterLink} to="/acerca" sx={{ textTransform: 'none' }}>
             Acerca de
           </Button>
+          <Button color="inherit" component={RouterLink} to="/donar" sx={{ textTransform: 'none' }}>
+            Donar
+          </Button>
           <Button color="inherit" component={RouterLink} to="/seguridad" sx={{ textTransform: 'none' }}>
             Seguridad
           </Button>
