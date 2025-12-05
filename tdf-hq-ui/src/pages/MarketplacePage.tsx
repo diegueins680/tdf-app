@@ -34,6 +34,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ShareIcon from '@mui/icons-material/Share';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   MarketplaceCartDTO,
@@ -707,10 +708,10 @@ export default function MarketplacePage() {
   const getStatusChipProps = (status?: string | null) => {
     if (!status) return null;
     const lower = status.toLowerCase();
-    if (lower.includes('stock')) return { color: 'success' as const, icon: <CheckCircleIcon /> };
-    if (lower.includes('reserva') || lower.includes('reservado')) return { color: 'warning' as const, icon: <InventoryIcon /> };
-    if (lower.includes('mantenimiento')) return { color: 'warning' as const, icon: <WarningAmberIcon /> };
-    return { color: 'default' as const, icon: undefined };
+    if (lower.includes('stock')) return { color: 'success' as const, icon: <CheckCircleIcon />, label: 'En stock' };
+    if (lower.includes('reserva') || lower.includes('reservado')) return { color: 'warning' as const, icon: <InventoryIcon />, label: 'Reservado' };
+    if (lower.includes('mantenimiento')) return { color: 'warning' as const, icon: <WarningAmberIcon />, label: 'Mantenimiento' };
+    return { color: 'default' as const, icon: undefined, label: status };
   };
   const isListingAvailable = (status?: string | null) => {
     if (!status) return true;
@@ -1152,6 +1153,7 @@ export default function MarketplacePage() {
                                 );
                               }}
                             >
+                              <ShareIcon fontSize="small" sx={{ mr: 0.5 }} />
                               Copiar enlace
                             </Button>
                             {props && (
@@ -1159,7 +1161,7 @@ export default function MarketplacePage() {
                                 size="small"
                                 color={props.color}
                                 icon={props.icon}
-                                label={item.miStatus}
+                                label={props.label ?? item.miStatus}
                                 sx={{ alignSelf: 'flex-start' }}
                               />
                             )}
@@ -1186,10 +1188,10 @@ export default function MarketplacePage() {
                               onClick={() => handleAdd(item)}
                               disabled={upsertItemMutation.isPending || !isListingAvailable(item.miStatus)}
                             >
-                              {item.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
-                            </Button>
-                          </span>
-                        </Tooltip>
+                    {item.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
+                  </Button>
+                </span>
+              </Tooltip>
                       </Stack>
                     </CardContent>
                   </Card>
