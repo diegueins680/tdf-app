@@ -397,7 +397,8 @@ socialServer user =
 
 driveServer :: AuthedUser -> ServerT DriveAPI AppM
 driveServer _ mAccessToken DriveUploadForm{..} = do
-  let tokenTxt = fmap T.strip mAccessToken <|> duAccessToken
+  mEnvToken <- liftIO $ lookupEnv "DRIVE_ACCESS_TOKEN"
+  let tokenTxt = fmap T.strip mAccessToken <|> duAccessToken <|> fmap (T.strip . T.pack) mEnvToken
   accessToken <- maybe (throwError err400 { errBody = "X-Goog-Access-Token requerido" }) pure tokenTxt
   mFolderEnv <- liftIO $ lookupEnv "DRIVE_UPLOAD_FOLDER_ID"
   let folder = duFolderId <|> fmap (T.strip . T.pack) mFolderEnv
