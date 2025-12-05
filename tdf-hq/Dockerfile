@@ -21,12 +21,15 @@ ENV GIT_SHA=${SOURCE_COMMIT}
 ENV BUILD_TIME=${BUILD_TIME}
 ENV STACK_ROOT=/root/.stack
 ENV STACK_SETUP_PATH=/tmp/stack-setup-2.yaml
-ENV STACK_SETUP_URL=https://api.github.com/repos/commercialhaskell/stackage-content/contents/stack/stack-setup-2.yaml?ref=master
+# Prefer raw.githubusercontent.com to avoid GitHub API 403 rate limits; fall back to the API if needed.
+ENV STACK_SETUP_URL_PRIMARY=https://raw.githubusercontent.com/commercialhaskell/stackage-content/master/stack/stack-setup-2.yaml
+ENV STACK_SETUP_URL_FALLBACK=https://api.github.com/repos/commercialhaskell/stackage-content/contents/stack/stack-setup-2.yaml?ref=master
 
 # Pre-fetch stack setup info with simple retries to avoid GitHub rate limits during stack setup
 RUN set -e; \
     for i in $(seq 1 8); do \
-      if curl -fsSL -H "Accept: application/vnd.github.v3.raw" "$STACK_SETUP_URL" -o "$STACK_SETUP_PATH"; then break; fi; \
+      if curl -fsSL "$STACK_SETUP_URL_PRIMARY" -o "$STACK_SETUP_PATH"; then break; fi; \
+      if curl -fsSL -H "Accept: application/vnd.github.v3.raw" "$STACK_SETUP_URL_FALLBACK" -o "$STACK_SETUP_PATH"; then break; fi; \
       echo "Retrying stack-setup-2.yaml download ($i/8)..." >&2; \
       sleep 10; \
     done; \
