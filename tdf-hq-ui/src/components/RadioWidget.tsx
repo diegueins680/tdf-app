@@ -124,23 +124,30 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 }
 
 export default function RadioWidget() {
+  const defaultStation: Station = STATIONS[0] ?? {
+    id: 'fallback',
+    name: 'Radio',
+    mood: 'Live',
+    streamUrl: '',
+    prompts: [],
+  };
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [activeId, setActiveId] = useState<string>(STATIONS[0].id);
+  const [activeId, setActiveId] = useState<string>(defaultStation.id);
   const [isPlaying, setIsPlaying] = useState(false);
   const [promptDraft, setPromptDraft] = useState('');
   const [promptState, setPromptState] = useState<Record<string, Prompt[]>>(() =>
     Object.fromEntries(STATIONS.map((s) => [s.id, [...s.prompts]])),
   );
   const activeStation = useMemo<Station>(
-    () => STATIONS.find((s) => s.id === activeId) ?? STATIONS[0],
+    () => STATIONS.find((s) => s.id === activeId) ?? defaultStation,
     [activeId],
   );
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !activeStation) return;
+    if (!audio) return;
     audio.src = activeStation.streamUrl;
     if (isPlaying) {
       void audio.play().catch(() => setIsPlaying(false));
