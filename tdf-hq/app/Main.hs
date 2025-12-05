@@ -22,7 +22,7 @@ import           TDF.Cors                 (corsPolicy)
 
 import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
 import           TDF.Cron       (startCoursePaymentReminderJob)
-import           TDF.DB         (Env(..), makePool)
+import           TDF.DB         (Env(..), ConnectionPool, makePool)
 import qualified TDF.DB         as DB
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
@@ -127,9 +127,9 @@ restoreLegacyPartyRoles roles =
     upsert (PartyRole pid role True) [PartyRoleActive =. True]
 
 -- Retry DB pool creation to avoid failing fast on boot when the DB is not ready yet.
-makePoolWithRetry :: Int -> BS.ByteString -> IO DB.ConnectionPool
+makePoolWithRetry :: Int -> BS.ByteString -> IO ConnectionPool
 makePoolWithRetry retries connStr = do
-  result <- try (makePool connStr) :: IO (Either SomeException DB.ConnectionPool)
+  result <- try (makePool connStr) :: IO (Either SomeException ConnectionPool)
   case result of
     Right pool -> pure pool
     Left err ->
