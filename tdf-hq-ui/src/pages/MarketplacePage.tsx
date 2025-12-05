@@ -61,6 +61,12 @@ const CART_META_KEY = 'tdf-marketplace-cart-meta';
 const CART_EVENT = 'tdf-cart-updated';
 const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 
+const normalizeText = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
 const fireCartMetaEvent = () => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(CART_EVENT));
@@ -322,12 +328,24 @@ export default function MarketplacePage() {
     () => Array.from(new Set(listings.map((item) => item.miCategory).filter(Boolean))),
     [listings],
   );
-  const filteredListings = listings.filter((item) => {
-    const matchesCategory = category === 'all' ? true : item.miCategory === category;
-    if (!search.trim()) return matchesCategory;
-    const haystack = `${item.miTitle} ${item.miBrand ?? ''} ${item.miModel ?? ''}`.toLowerCase();
-    return matchesCategory && haystack.includes(search.trim().toLowerCase());
-  });
+  const filteredListings = useMemo(() => {
+    const normalizedSearch = normalizeText(search.trim());
+    return listings.filter((item) => {
+      const matchesCategory = category === 'all' ? true : item.miCategory === category;
+      if (!normalizedSearch) return matchesCategory;
+      const haystack = [
+        item.miTitle,
+        item.miBrand,
+        item.miModel,
+        item.miCategory,
+        item.miListingId,
+        item.miAssetId,
+      ]
+        .filter(Boolean)
+        .join(' ');
+      return matchesCategory && normalizeText(haystack).includes(normalizedSearch);
+    });
+  }, [category, listings, search]);
   const sortedListings = useMemo(() => {
     const list = [...filteredListings];
     switch (sort) {
