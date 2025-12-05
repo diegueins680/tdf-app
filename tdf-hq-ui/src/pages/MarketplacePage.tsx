@@ -1127,6 +1127,7 @@ export default function MarketplacePage() {
         open={datafastDialogOpen}
         onClose={() => {
           setDatafastDialogOpen(false);
+          setDatafastError(null);
         }}
         maxWidth="xs"
         fullWidth
@@ -1135,7 +1136,8 @@ export default function MarketplacePage() {
         <DialogContent dividers>
           <Stack spacing={1}>
             <Typography variant="body2" color="text.secondary">
-              Paga con tarjeta de crédito o débito. Al finalizar serás redirigido para confirmar tu pedido.
+              Paga con tarjeta de crédito o débito. Al finalizar serás redirigido para confirmar tu pedido. Si no
+              ves el formulario, pulsa “Reintentar” y revisa tu conexión.
             </Typography>
             {datafastError && (
               <Alert severity="warning" onClose={() => setDatafastError(null)}>
@@ -1143,7 +1145,7 @@ export default function MarketplacePage() {
               </Alert>
             )}
             {datafastCheckout && datafastReturnUrl && (
-              <Box ref={datafastFormRef}>
+              <Box ref={datafastFormRef} key={datafastWidgetKey}>
                 <form
                   action={datafastReturnUrl}
                   className="paymentWidgets"
@@ -1156,9 +1158,22 @@ export default function MarketplacePage() {
                 Total: {datafastCheckout.dcAmount}
               </Alert>
             )}
+            {!datafastCheckout && (
+              <Alert severity="info" variant="outlined">
+                Preparando el pago…
+              </Alert>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
+          <Button
+            onClick={() => {
+              setDatafastError(null);
+              setDatafastWidgetKey((k) => k + 1);
+            }}
+          >
+            Reintentar
+          </Button>
           <Button
             onClick={() => {
               setDatafastDialogOpen(false);
