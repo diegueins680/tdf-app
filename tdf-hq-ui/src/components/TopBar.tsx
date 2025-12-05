@@ -79,6 +79,7 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   manual: 'Manual',
   herramientas: 'Herramientas',
   'tidal-agent': 'Tidal Agent',
+  'creador-musical': 'Creador musical',
 };
 
 const readCartMeta = () => {
@@ -367,6 +368,9 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         </MenuItem>
         <MenuItem component={RouterLink} to="/herramientas/tidal-agent" onClick={() => setResourcesAnchor(null)}>
           Tidal Agent
+        </MenuItem>
+        <MenuItem component={RouterLink} to="/herramientas/creador-musical" onClick={() => setResourcesAnchor(null)}>
+          Creador musical
         </MenuItem>
         <MenuItem component={RouterLink} to="/seguridad" onClick={() => setResourcesAnchor(null)}>
           Seguridad

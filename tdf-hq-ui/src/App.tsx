@@ -40,6 +40,7 @@ import ServiceTypesPage from './pages/ServiceTypesPage';
 import InventoryPage from './pages/InventoryPage';
 import InventoryScanPage from './pages/InventoryScanPage';
 import ReservasEquipoPage from './pages/ReservasEquipoPage';
+import MusicMakerPage from './pages/MusicMakerPage';
 import AdsInboxPage from './pages/AdsInboxPage';
 import CmsAdminPage from './pages/CmsAdminPage';
 import FeedbackPage from './pages/FeedbackPage';
@@ -165,6 +166,7 @@ export default function App() {
         <Route path="/inventario/scan/:token" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />
         <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
         <Route path="/login" element={<PublicBranding><LoginPage /></PublicBranding>} />
+        <Route path="/herramientas/creador-musical" element={<PublicBranding><MusicMakerPage /></PublicBranding>} />
         <Route element={<Shell />}>
           <Route path="/" element={<Navigate to="/inicio" replace />} />
 

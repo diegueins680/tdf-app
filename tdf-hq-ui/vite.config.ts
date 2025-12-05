@@ -38,7 +38,14 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (!id.includes('node_modules')) return;
+          if (!id.includes('node_modules')) {
+            if (id.includes('/src/pages/')) {
+              const parts = id.split('/src/pages/')[1]?.split('/');
+              const page = parts?.[0];
+              if (page) return `page-${page}`;
+            }
+            return;
+          }
           if (id.includes('@mui')) return 'mui';
           if (id.includes('react-router')) return 'router';
           if (id.includes('@tanstack')) return 'tanstack';
