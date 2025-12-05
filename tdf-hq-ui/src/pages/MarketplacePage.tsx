@@ -1004,6 +1004,9 @@ export default function MarketplacePage() {
                               : null}
                           </Typography>
                         )}
+                        <Typography variant="caption" color="text.secondary">
+                          Incluye markup {item.miMarkupPct}% sobre precio referencia.
+                        </Typography>
                       </Stack>
                       {(() => {
                         const props = getStatusChipProps(item.miStatus);
@@ -1072,9 +1075,6 @@ export default function MarketplacePage() {
                             </Button>
                           </span>
                         </Tooltip>
-                        <Typography variant="caption" color="text.secondary">
-                          Incluye markup {item.miMarkupPct}% sobre precio referencia.
-                        </Typography>
                       </Stack>
                     </CardContent>
                   </Card>

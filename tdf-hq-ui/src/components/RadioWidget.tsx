@@ -30,11 +30,12 @@ type Station = {
   id: string;
   name: string;
   streamUrl: string;
+  region?: string;
   mood: string;
   prompts: Prompt[];
 };
 
-const STATIONS: Station[] = [
+const CURATED_STATIONS: Station[] = [
   {
     id: 'cosmic-cycles',
     name: 'Cosmic Cycles',
@@ -64,6 +65,46 @@ const STATIONS: Station[] = [
       { text: 'Polirritmias 5/4 con hats abiertos', createdAt: '2025-12-03' },
       { text: 'Bajos en sinusoide sidechain con pads brillantes' },
     ],
+  },
+  {
+    id: 'bbc-6music',
+    name: 'BBC Radio 6 Music (UK)',
+    region: 'UK / Alt',
+    mood: 'Indie / Eclectic',
+    streamUrl: 'https://stream.live.vc.bbcmedia.co.uk/bbc_6music',
+    prompts: [],
+  },
+  {
+    id: 'kexp',
+    name: 'KEXP Seattle',
+    region: 'US / Alt',
+    mood: 'Indie / Live Sessions',
+    streamUrl: 'https://kexp-mp3-128.streamguys1.com/kexp128.mp3',
+    prompts: [],
+  },
+  {
+    id: 'cafe-del-mar',
+    name: 'Café del Mar',
+    region: 'ES / Chill',
+    mood: 'Balearic / Chill',
+    streamUrl: 'https://s3.voscast.com:8151/stream',
+    prompts: [],
+  },
+  {
+    id: 'wnyc',
+    name: 'WNYC FM',
+    region: 'US / News',
+    mood: 'News / Talk',
+    streamUrl: 'https://fm939.wnyc.org/wnycfm-web',
+    prompts: [],
+  },
+  {
+    id: 'lofi-hiphop',
+    name: 'Lofi Hip Hop Radio',
+    region: 'Global',
+    mood: 'Lofi / Beats',
+    streamUrl: 'https://streams.radio.co/s8d88a3b0a/listen',
+    prompts: [],
   },
 ];
 
@@ -125,7 +166,8 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 }
 
 export default function RadioWidget() {
-  const defaultStation: Station = STATIONS[0] ?? {
+  const [customStations, setCustomStations] = useState<Station[]>([]);
+  const defaultStation: Station = CURATED_STATIONS[0] ?? {
     id: 'fallback',
     name: 'Radio',
     mood: 'Live',
@@ -139,11 +181,12 @@ export default function RadioWidget() {
   const [muted, setMuted] = useState(false);
   const [promptDraft, setPromptDraft] = useState('');
   const [promptState, setPromptState] = useState<Record<string, Prompt[]>>(() =>
-    Object.fromEntries(STATIONS.map((s) => [s.id, [...s.prompts]])),
+    Object.fromEntries(CURATED_STATIONS.map((s) => [s.id, [...s.prompts]])),
   );
+  const availableStations = useMemo<Station[]>(() => [...CURATED_STATIONS, ...customStations], [customStations]);
   const activeStation = useMemo<Station>(
-    () => STATIONS.find((s) => s.id === activeId) ?? defaultStation,
-    [activeId],
+    () => availableStations.find((s) => s.id === activeId) ?? defaultStation,
+    [activeId, availableStations],
   );
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
 
@@ -151,6 +194,11 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
+      const rawStations = window.localStorage.getItem('radio-stations');
+      if (rawStations) {
+        const parsedStations: Station[] = JSON.parse(rawStations);
+        setCustomStations(parsedStations);
+      }
       const raw = window.localStorage.getItem('radio-prompts');
       if (!raw) return;
       const saved: Record<string, Prompt[]> = JSON.parse(raw);
@@ -190,10 +238,11 @@ export default function RadioWidget() {
         muted,
       };
       window.localStorage.setItem('radio-settings', JSON.stringify(settings));
+      window.localStorage.setItem('radio-stations', JSON.stringify(customStations));
     } catch {
       // ignore
     }
-  }, [activeStation.id, isPlaying, muted]);
+  }, [activeStation.id, isPlaying, muted, customStations]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -223,6 +272,33 @@ export default function RadioWidget() {
       code: p.code ?? generateTidalCode(p.text, activeStation.mood).code,
     }));
   }, [activeStation, stationPrompts]);
+
+  const [newStationName, setNewStationName] = useState('');
+  const [newStationUrl, setNewStationUrl] = useState('');
+  const addCustomStation = () => {
+    const name = newStationName.trim();
+    const url = newStationUrl.trim();
+    if (!name || !url) return;
+    const id = `custom-${Math.random().toString(36).slice(2, 8)}`;
+    const station: Station = { id, name, streamUrl: url, mood: 'Custom', prompts: [] };
+    setCustomStations((prev) => [...prev, station]);
+    setPromptState((prev) => ({ ...prev, [id]: [] }));
+    setActiveId(id);
+    setNewStationName('');
+    setNewStationUrl('');
+  };
+
+  const removeCustomStation = (id: string) => {
+    setCustomStations((prev) => prev.filter((s) => s.id !== id));
+    setPromptState((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    if (activeId === id) {
+      setActiveId(defaultStation.id);
+    }
+  };
 
   const handleAddPrompt = () => {
     const value = promptDraft.trim();
@@ -290,18 +366,44 @@ export default function RadioWidget() {
           <CardContent sx={{ p: 2 }}>
             <Stack spacing={1.5}>
               <Typography variant="body2" color="text.secondary">
-                Estaciones (Tidal Cycles, audio embebido):
+                Estaciones del mundo (usa el widget para escuchar):
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap">
-                {STATIONS.map((station) => (
+                {availableStations.map((station) => (
                   <Chip
                     key={station.id}
-                    label={station.name}
+                    label={station.region ? `${station.name} · ${station.region}` : station.name}
                     color={station.id === activeId ? 'primary' : 'default'}
                     onClick={() => setActiveId(station.id)}
                     variant={station.id === activeId ? 'filled' : 'outlined'}
+                    onDelete={station.id.startsWith('custom-') ? () => removeCustomStation(station.id) : undefined}
                   />
                 ))}
+              </Stack>
+              <Stack spacing={1}>
+                <Typography variant="caption" color="text.secondary">
+                  Pega una URL de radio (ej. onlineradiobox.com) y guárdala para escucharla aquí.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <TextField
+                    size="small"
+                    label="Nombre de la radio"
+                    value={newStationName}
+                    onChange={(e) => setNewStationName(e.target.value)}
+                    fullWidth
+                  />
+                  <TextField
+                    size="small"
+                    label="URL del stream"
+                    value={newStationUrl}
+                    onChange={(e) => setNewStationUrl(e.target.value)}
+                    placeholder="https://"
+                    fullWidth
+                  />
+                  <Button variant="contained" onClick={addCustomStation} disabled={!newStationName.trim() || !newStationUrl.trim()}>
+                    Agregar
+                  </Button>
+                </Stack>
               </Stack>
               <LinearProgress
                 variant="indeterminate"
