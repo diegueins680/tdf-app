@@ -100,7 +100,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Acerca de', path: '/acerca' },
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Sugerencias', path: '/feedback' },
-      { label: 'Manual', path: '/manual' },
       { label: 'Creador musical', path: '/herramientas/creador-musical' },
     ],
   },
