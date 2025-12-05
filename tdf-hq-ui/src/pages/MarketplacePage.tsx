@@ -525,28 +525,6 @@ export default function MarketplacePage() {
     if (!Number.isFinite(amount)) return null;
     return amount.toFixed(4);
   };
-  const copyCompareTable = async () => {
-    const header = ['Título', 'Categoría', 'Marca', 'Modelo', 'USD'];
-    const tokenHeaders = [
-      adaUsdRate ? 'ADA' : null,
-      sedUsdRate ? 'SED' : null,
-    ].filter(Boolean) as string[];
-    const rows = compareItems.map((item) => {
-      const base = [item.miTitle, item.miCategory, item.miBrand ?? '-', item.miModel ?? '-', item.miPriceDisplay];
-      const tokenVals = [
-        adaUsdRate ? `≈ ${formatTokenAmount(item.miPriceUsdCents, adaUsdRate) ?? '—'} ADA` : null,
-        sedUsdRate ? `≈ ${formatTokenAmount(item.miPriceUsdCents, sedUsdRate) ?? '—'} SED` : null,
-      ].filter(Boolean) as string[];
-      return [...base, ...tokenVals].join('\t');
-    });
-    const payload = [header.join('\t'), ...rows].join('\n');
-    try {
-      await navigator.clipboard.writeText(payload);
-      setToast('Tabla copiada');
-    } catch {
-      setToast('No se pudo copiar la tabla');
-    }
-  };
   const orderSummary = useMemo(() => {
     if (!lastOrder) return null;
     const summaryLines = lastOrder.moItems
@@ -577,15 +555,12 @@ export default function MarketplacePage() {
                 </Typography>
               </Stack>
             ))}
-            <Typography variant="body2" color="text.secondary">
-              Estado: {lastOrder.moStatus}
-            </Typography>
-            <Chip label={statusMeta.label} color={statusMeta.color} size="small" />
-            {statusMeta.desc && (
-              <Typography variant="caption" color="text.secondary">
-                {statusMeta.desc}
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip label={statusMeta.label} color={statusMeta.color} size="small" />
+              <Typography variant="body2" color="text.secondary">
+                {statusMeta.desc || lastOrder.moStatus}
               </Typography>
-            )}
+            </Stack>
             <Button
               variant="text"
               size="small"
@@ -978,16 +953,29 @@ export default function MarketplacePage() {
                       </Typography>
                     </Stack>
                     {hasCartItems && (
-                      <Button
-                        variant="text"
-                        color="inherit"
-                        size="small"
-                        onClick={() => clearCart()}
-                        disabled={upsertItemMutation.isPending}
-                        sx={{ alignSelf: 'flex-start' }}
-                      >
-                        Vaciar carrito
-                      </Button>
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          variant="text"
+                          color="inherit"
+                          size="small"
+                          onClick={() => clearCart()}
+                          disabled={upsertItemMutation.isPending}
+                          sx={{ alignSelf: 'flex-start' }}
+                        >
+                          Vaciar carrito
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            setPaymentMethod('card');
+                            openReview();
+                          }}
+                          disabled={!isValidName || !isValidEmail || cartItemCount === 0}
+                        >
+                          Pagar con tarjeta
+                        </Button>
+                      </Stack>
                     )}
                     {formatLastSavedTimestamp(savedCartMeta?.updatedAt) && (
                       <Typography variant="caption" color="text.secondary">
