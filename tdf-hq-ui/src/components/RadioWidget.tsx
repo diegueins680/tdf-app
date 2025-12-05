@@ -132,7 +132,7 @@ export default function RadioWidget() {
   const [promptState, setPromptState] = useState<Record<string, Prompt[]>>(() =>
     Object.fromEntries(STATIONS.map((s) => [s.id, [...s.prompts]])),
   );
-  const activeStation = useMemo(
+  const activeStation = useMemo<Station>(
     () => STATIONS.find((s) => s.id === activeId) ?? STATIONS[0],
     [activeId],
   );
@@ -159,7 +159,6 @@ export default function RadioWidget() {
   };
 
   const promptsWithCode = useMemo(() => {
-    if (!activeStation) return [];
     return stationPrompts.map((p) => ({
       ...p,
       code: p.code ?? generateTidalCode(p.text, activeStation.mood).code,
@@ -168,7 +167,7 @@ export default function RadioWidget() {
 
   const handleAddPrompt = () => {
     const value = promptDraft.trim();
-    if (!value || !activeStation) return;
+    if (!value) return;
     const newPrompt: Prompt = {
       text: value,
       author: 'Tú',
