@@ -2,6 +2,8 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 module TDF.API.Drive where
 
 import           Data.Text          (Text)
@@ -22,9 +24,9 @@ data DriveUploadForm = DriveUploadForm
 instance FromMultipart Tmp DriveUploadForm where
   fromMultipart multipart = do
     file <- lookupFile "file" multipart
-    let folder = fmap (T.strip . T.pack) (lookupInput "folderId" multipart)
-        nameTxt = fmap (T.strip . T.pack) (lookupInput "name" multipart)
-        token = fmap (T.strip . T.pack) (lookupInput "accessToken" multipart)
+    let folder = either (const Nothing) (Just . T.strip . T.pack) (lookupInput "folderId" multipart)
+        nameTxt = either (const Nothing) (Just . T.strip . T.pack) (lookupInput "name" multipart)
+        token = either (const Nothing) (Just . T.strip . T.pack) (lookupInput "accessToken" multipart)
     pure DriveUploadForm
       { duFile = file
       , duFolderId = folder
