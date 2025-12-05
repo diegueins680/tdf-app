@@ -16,8 +16,10 @@ import           Text.Read (readMaybe)
 import           Servant
 import           Servant.Server
 
-import           Database.Persist (Entity(..), SelectOpt(..), selectList, selectFirst)
-import           Database.Persist.Sql (runSqlPool, fromSqlKey)
+import           Database.Persist (Entity(..), SelectOpt(..), selectList, selectFirst, insert, insert_)
+import           Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
+import           Data.Int (Int64)
+import           Data.Time (getCurrentTime)
 
 import           TDF.API.SocialEventsAPI
 import           TDF.DB (Env(..))
@@ -83,13 +85,19 @@ socialEventsServer = eventsServer
     createEvent dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
-      let title = eventTitle dto
-      -- Insert minimal event record; TODO: validate fields and link artists
+      -- Resolve venue id (if provided) to Persistent key
+      mVenueKey <- case eventVenueId dto of
+        Nothing -> pure Nothing
+        Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
+          Nothing -> throwError err400 { errBody = "Invalid venue id" }
+          Just vnum -> pure (Just (toSqlKey vnum))
+
+      -- Insert event
       key <- liftIO $ runSqlPool (insert SocialEvent
         { socialEventOrganizerPartyId = Nothing
         , socialEventTitle = eventTitle dto
         , socialEventDescription = eventDescription dto
-        , socialEventVenueId = Nothing
+        , socialEventVenueId = mVenueKey
         , socialEventStartTime = eventStart dto
         , socialEventEndTime = eventEnd dto
         , socialEventPriceCents = eventPriceCents dto
@@ -98,6 +106,16 @@ socialEventsServer = eventsServer
         , socialEventCreatedAt = now
         , socialEventUpdatedAt = now
         }) envPool
+
+      -- Link artists if provided (best-effort: ignore invalid artist ids)
+      let artists = eventArtists dto
+      liftIO $ runSqlPool (forM_ artists $ \a ->
+        case artistId a of
+          Nothing -> pure ()
+          Just atxt -> case readMaybe (T.unpack atxt) :: Maybe Int64 of
+            Nothing -> pure ()
+            Just anum -> insert_ (EventArtist key (toSqlKey anum) Nothing)) envPool
+
       let createdDto = dto { eventId = Just (T.pack (show (fromSqlKey key))) }
       pure createdDto
 
