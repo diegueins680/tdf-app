@@ -8,17 +8,27 @@ import Data.Char (isSpace, toLower)
 
 corsPolicy :: IO Middleware
 corsPolicy = do
-  originsEnv <- lookupEnv "ALLOWED_ORIGINS" <|> lookupEnv "ALLOW_ORIGINS"
+  originsEnv <- lookupEnv "ALLOWED_ORIGINS"
+            <|> lookupEnv "ALLOW_ORIGINS"
+            <|> lookupEnv "CORS_ALLOW_ORIGINS"
   allowAllEnv <- lookupEnv "ALLOW_ALL_ORIGINS"
+             <|> lookupEnv "ALLOW_ORIGINS_ALL"
+             <|> lookupEnv "CORS_ALLOW_ALL"
   let defaults =
         [ "http://localhost:5173"
         , "http://127.0.0.1:5173"
         , "https://tdfui.pages.dev"
         , "https://tdf-app.pages.dev"
         ]
-      allowAll = maybe False asBool allowAllEnv
-      origins  = maybe defaults splitComma originsEnv
-      originSetting = if allowAll then Nothing else Just (map BS.pack origins, True)
+      parsed = maybe [] splitComma originsEnv
+      filtered = filter (not . null) parsed
+      origins = if null filtered then defaults else filtered
+      wildcard = any (== "*") origins
+      allowAll = wildcard || maybe False asBool allowAllEnv
+      originSetting =
+        if allowAll
+          then Nothing
+          else Just (map BS.pack origins, True)
       policy = simpleCorsResourcePolicy
         { corsOrigins            = originSetting
         , corsRequestHeaders     = "authorization":"content-type":"x-requested-with":simpleHeaders
