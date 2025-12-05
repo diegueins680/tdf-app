@@ -108,7 +108,9 @@ export default function MarketplacePage() {
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastError, setDatafastError] = useState<string | null>(null);
+  const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'contact' | 'card' | 'paypal'>('contact');
+  const [reviewOpen, setReviewOpen] = useState(false);
   const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
   const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
   const showTokenRates = Boolean(adaUsdRate || sedUsdRate);
@@ -192,6 +194,9 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
+    if (datafastFormRef.current) {
+      datafastFormRef.current.innerHTML = '';
+    }
     window.wpwlOptions = {
       locale: 'es',
       style: 'card',
@@ -204,7 +209,7 @@ export default function MarketplacePage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, [datafastCheckout, datafastDialogOpen]);
+  }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
 
   useEffect(() => {
     if (!cartQuery.data) return;
@@ -291,6 +296,7 @@ export default function MarketplacePage() {
       setDatafastCheckout(dto);
       setDatafastDialogOpen(true);
       setDatafastError(null);
+      setDatafastWidgetKey((k) => k + 1);
     },
     onError: () => setDatafastError('No pudimos iniciar el pago con tarjeta. Revisa tus datos.'),
   });
@@ -469,6 +475,14 @@ export default function MarketplacePage() {
     } else {
       handleCheckout();
     }
+  };
+
+  const openReview = () => {
+    setReviewOpen(true);
+  };
+
+  const closeReview = () => {
+    setReviewOpen(false);
   };
 
   const handleRestoreCart = () => {
@@ -1062,32 +1076,10 @@ export default function MarketplacePage() {
                       )}
                       <Button
                         variant="contained"
-                        onClick={handleContinueCheckout}
-                        disabled={
-                          !hasCartItems ||
-                          !isValidName ||
-                          !isValidEmail ||
-                          cartItemCount === 0 ||
-                          checkoutMutation.isPending ||
-                          datafastCheckoutMutation.isPending ||
-                          createPaypalOrderMutation.isPending ||
-                          capturePaypalMutation.isPending ||
-                          (paymentMethod === 'paypal' && (!paypalClientId || !paypalReady))
-                        }
+                        onClick={openReview}
+                        disabled={!hasCartItems || !isValidName || !isValidEmail || cartItemCount === 0}
                       >
-                        {paymentMethod === 'paypal'
-                          ? capturePaypalMutation.isPending
-                            ? 'Confirmando PayPal…'
-                            : createPaypalOrderMutation.isPending
-                              ? 'Abriendo PayPal…'
-                              : 'Pagar con PayPal'
-                          : paymentMethod === 'card'
-                            ? datafastCheckoutMutation.isPending
-                              ? 'Abriendo pago con tarjeta…'
-                              : 'Pagar con tarjeta'
-                            : checkoutMutation.isPending
-                              ? 'Enviando pedido…'
-                              : 'Confirmar y coordinar'}
+                        Revisar y pagar
                       </Button>
                     </Stack>
                     {checkoutMutation.isError && (
@@ -1174,6 +1166,62 @@ export default function MarketplacePage() {
             color="inherit"
           >
             Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={reviewOpen} onClose={closeReview} maxWidth="sm" fullWidth>
+        <DialogTitle>Revisa tu pedido</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle1" fontWeight={700}>
+              Total: {cartSubtotal}
+            </Typography>
+            <Stack spacing={0.5}>
+              {cartItems.map((item) => (
+                <Typography key={item.mciListingId} variant="body2">
+                  {item.mciQuantity} × {item.mciTitle} — {item.mciSubtotalDisplay}
+                </Typography>
+              ))}
+            </Stack>
+            <Typography variant="body2" color="text.secondary">
+              Método de pago: {paymentMethod === 'paypal' ? 'PayPal' : paymentMethod === 'card' ? 'Tarjeta (Datafast)' : 'Coordinar por correo/WhatsApp'}
+            </Typography>
+            {paymentMethod === 'paypal' && !paypalClientId && (
+              <Alert severity="warning">Falta configurar VITE_PAYPAL_CLIENT_ID para usar PayPal.</Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeReview} color="inherit">
+            Volver
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              closeReview();
+              handleContinueCheckout();
+            }}
+            disabled={
+              checkoutMutation.isPending ||
+              datafastCheckoutMutation.isPending ||
+              createPaypalOrderMutation.isPending ||
+              capturePaypalMutation.isPending ||
+              (paymentMethod === 'paypal' && (!paypalClientId || !paypalReady))
+            }
+          >
+            {paymentMethod === 'paypal'
+              ? capturePaypalMutation.isPending
+                ? 'Confirmando PayPal…'
+                : createPaypalOrderMutation.isPending
+                  ? 'Abriendo PayPal…'
+                  : 'Pagar con PayPal'
+              : paymentMethod === 'card'
+                ? datafastCheckoutMutation.isPending
+                  ? 'Abriendo pago con tarjeta…'
+                  : 'Pagar con tarjeta'
+                : checkoutMutation.isPending
+                  ? 'Enviando pedido…'
+                  : 'Confirmar pedido'}
           </Button>
         </DialogActions>
       </Dialog>
