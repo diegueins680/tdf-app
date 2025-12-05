@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Divider, Stack, TextField, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
-import * as QRCode from 'qrcode';
 
 const CARDANO_ADDRESS =
   'addr1qx2mdr6n8d0v2y5s99tmdluzvcq6lvpvez0mx55vvpfy6ee4fzjjxl454z8d2f5gd2yualhds75ycvsl3wuar908v0csqksrwy';
@@ -18,21 +17,13 @@ export default function DonationPage() {
   };
 
   useEffect(() => {
-    const buildQr = async () => {
-      try {
-        const url = (await QRCode.toDataURL(CARDANO_ADDRESS, {
-          errorCorrectionLevel: 'M',
-          width: 320,
-          margin: 1,
-          color: { dark: '#0f172a', light: '#f8fafc' },
-        })) as string;
-        setQrDataUrl(url);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'No pudimos generar el QR.';
-        setQrError(message);
-      }
-    };
-    void buildQr();
+    try {
+      const url = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(CARDANO_ADDRESS)}`;
+      setQrDataUrl(url);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'No pudimos generar el QR.';
+      setQrError(message);
+    }
   }, []);
 
   const handleCopy = async () => {

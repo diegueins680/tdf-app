@@ -32,7 +32,6 @@ import QrCodeIcon from '@mui/icons-material/QrCode';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import QRCode from 'qrcode';
 import type { AssetCheckoutDTO, AssetDTO, AssetUpdate, PageResponse, RoomDTO } from '../api/types';
 import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest, type AssetQrDTO } from '../api/inventory';
 import { Rooms } from '../api/rooms';
@@ -128,8 +127,8 @@ export default function LabelAssetsPage() {
     mutationFn: (assetId: string) => Inventory.generateQr(assetId),
     onSuccess: async (data: AssetQrDTO) => {
       const url = data.qrUrl;
-      const qr = (await QRCode.toDataURL(url, { width: 320 })) as string;
-      setQrDataUrl(qr);
+      const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}`;
+      setQrDataUrl(qrImg);
       setDialogOpen('qr');
     },
   });
@@ -235,8 +234,8 @@ export default function LabelAssetsPage() {
     setSelected(asset);
     if (asset.qrToken) {
       const url = `https://tdf-app.pages.dev/inventario/scan/${asset.qrToken}`;
-      const qr = (await QRCode.toDataURL(url, { width: 320 })) as string;
-      setQrDataUrl(qr);
+      const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}`;
+      setQrDataUrl(qrImg);
       setDialogOpen('qr');
     } else if (asset.assetId) {
       qrMutation.mutate(asset.assetId);
