@@ -20,6 +20,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RadioIcon from '@mui/icons-material/Radio';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { generateTidalCode } from '../utils/tidalAgent';
 
@@ -135,6 +136,7 @@ export default function RadioWidget() {
   const [expanded, setExpanded] = useState(false);
   const [activeId, setActiveId] = useState<string>(defaultStation.id);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
   const [promptDraft, setPromptDraft] = useState('');
   const [promptState, setPromptState] = useState<Record<string, Prompt[]>>(() =>
     Object.fromEntries(STATIONS.map((s) => [s.id, [...s.prompts]])),
@@ -145,7 +147,7 @@ export default function RadioWidget() {
   );
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
 
-  // Hydrate prompts from localStorage to keep user submissions across reloads.
+  // Hydrate prompts and radio settings from localStorage to keep user submissions/settings across reloads.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -156,9 +158,20 @@ export default function RadioWidget() {
     } catch {
       // ignore parse errors
     }
+    try {
+      const rawSettings = window.localStorage.getItem('radio-settings');
+      if (rawSettings) {
+        const parsed = JSON.parse(rawSettings) as { stationId?: string; playOnLoad?: boolean; muted?: boolean };
+        if (parsed.stationId) setActiveId(parsed.stationId);
+        if (parsed.muted !== undefined) setMuted(parsed.muted);
+        if (parsed.playOnLoad) setIsPlaying(true);
+      }
+    } catch {
+      // ignore parse errors
+    }
   }, []);
 
-  // Persist prompts to localStorage when they change.
+  // Persist prompts and settings to localStorage when they change.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -169,13 +182,28 @@ export default function RadioWidget() {
   }, [promptState]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const settings = {
+        stationId: activeStation.id,
+        playOnLoad: isPlaying,
+        muted,
+      };
+      window.localStorage.setItem('radio-settings', JSON.stringify(settings));
+    } catch {
+      // ignore
+    }
+  }, [activeStation.id, isPlaying, muted]);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.src = activeStation.streamUrl;
+    audio.muted = muted;
     if (isPlaying) {
       void audio.play().catch(() => setIsPlaying(false));
     }
-  }, [activeStation, isPlaying]);
+  }, [activeStation, isPlaying, muted]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -184,6 +212,7 @@ export default function RadioWidget() {
       audio.pause();
       setIsPlaying(false);
     } else {
+      if (muted) setMuted(false);
       void audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     }
   };
@@ -236,6 +265,11 @@ export default function RadioWidget() {
             <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
               <IconButton onClick={togglePlay} color="primary">
                 {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
+              <IconButton onClick={() => setMuted((m) => !m)} color="inherit">
+                {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
               </IconButton>
             </Tooltip>
             <IconButton onClick={() => setExpanded((p) => !p)} color="inherit">
