@@ -1,5 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module TDF.DB where
+module TDF.DB
+  ( Env(..)
+  , ConnectionPool
+  , makePool
+  , runMigrations
+  ) where
 
 import           Control.Monad.Logger (runStdoutLoggingT)
 import           Database.Persist.Postgresql (createPostgresqlPool)
