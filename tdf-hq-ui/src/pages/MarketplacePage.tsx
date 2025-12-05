@@ -1059,11 +1059,7 @@ export default function MarketplacePage() {
                         {item.miBrand && <Chip size="small" label={item.miBrand} variant="outlined" />}
                         {item.miModel && <Chip size="small" label={item.miModel} variant="outlined" />}
                         <Chip size="small" label={item.miCategory} color="default" variant="outlined" />
-                        <Chip
-                          size="small"
-                          color={item.miPurpose === 'rent' ? 'warning' : 'primary'}
-                          label={item.miPurpose === 'rent' ? 'Renta' : 'Venta'}
-                        />
+                        <Chip size="small" color="primary" label="Venta y Renta" />
                       </Stack>
                       <Box
                         sx={{
