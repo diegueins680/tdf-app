@@ -110,8 +110,8 @@ export default function DatafastReturnPage() {
             Volver al marketplace
           </Button>
           {orderId && (
-            <Button variant="outlined" onClick={() => navigate(`/operacion/ordenes-marketplace?orderId=${orderId}`)}>
-              Ver pedido
+            <Button variant="outlined" onClick={() => navigate(`/marketplace/orden/${orderId}`)}>
+              Seguir pedido
             </Button>
           )}
         </Stack>

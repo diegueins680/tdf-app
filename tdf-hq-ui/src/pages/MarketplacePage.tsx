@@ -107,6 +107,7 @@ export default function MarketplacePage() {
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastError, setDatafastError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'contact' | 'card' | 'paypal'>('contact');
   const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
   const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
   const cartQuery = useQuery<MarketplaceCartDTO>({
@@ -458,6 +459,16 @@ export default function MarketplacePage() {
     createPaypalOrderMutation.mutate();
   };
 
+  const handleContinueCheckout = () => {
+    if (paymentMethod === 'card') {
+      handleDatafastCheckout();
+    } else if (paymentMethod === 'paypal') {
+      handlePaypalCheckout();
+    } else {
+      handleCheckout();
+    }
+  };
+
   const handleRestoreCart = () => {
     if (!savedCartMeta?.cartId) return;
     setCartId(savedCartMeta.cartId);
@@ -534,6 +545,15 @@ export default function MarketplacePage() {
                 {statusMeta.desc}
               </Typography>
             )}
+            <Button
+              variant="text"
+              size="small"
+              component="a"
+              href={`/marketplace/orden/${lastOrder.moOrderId}`}
+              sx={{ alignSelf: 'flex-start', mt: 0.5, px: 0 }}
+            >
+              Ver seguimiento público
+            </Button>
             {lastOrder.moPaymentProvider && (
               <Typography variant="caption" color="text.secondary">
                 Pago: {lastOrder.moPaymentProvider?.toUpperCase()} {lastOrder.moPaypalOrderId ? ` · ${lastOrder.moPaypalOrderId}` : ''}
@@ -983,59 +1003,67 @@ export default function MarketplacePage() {
                       </Typography>
                     </Stack>
                     <Stack spacing={1}>
-                      <Button
-                        variant="contained"
-                        disabled={
-                          !hasCartItems ||
-                          checkoutMutation.isPending ||
-                          !isValidName ||
-                          !isValidEmail ||
-                          cartItemCount === 0
-                        }
-                        onClick={handleCheckout}
-                      >
-                        {checkoutMutation.isPending ? 'Enviando pedido…' : 'Confirmar pedido'}
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        disabled={
-                          !hasCartItems ||
-                          !isValidName ||
-                          !isValidEmail ||
-                          cartItemCount === 0 ||
-                          datafastCheckoutMutation.isPending
-                        }
-                        onClick={handleDatafastCheckout}
-                      >
-                        {datafastCheckoutMutation.isPending ? 'Abriendo pago…' : 'Pagar con tarjeta'}
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        disabled={
-                          !paypalClientId ||
-                          !hasCartItems ||
-                          !isValidName ||
-                          !isValidEmail ||
-                          cartItemCount === 0 ||
-                          !paypalReady ||
-                          createPaypalOrderMutation.isPending ||
-                          capturePaypalMutation.isPending
-                        }
-                        onClick={handlePaypalCheckout}
-                      >
-                        {capturePaypalMutation.isPending
-                          ? 'Confirmando pago…'
-                          : createPaypalOrderMutation.isPending
-                            ? 'Abriendo PayPal…'
-                            : 'Pagar con PayPal'}
-                      </Button>
+                      <Typography variant="caption" color="text.secondary">
+                        Elige cómo pagar
+                      </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        <Chip
+                          label="Coordinar por correo/WhatsApp"
+                          color={paymentMethod === 'contact' ? 'primary' : 'default'}
+                          variant={paymentMethod === 'contact' ? 'filled' : 'outlined'}
+                          onClick={() => setPaymentMethod('contact')}
+                          size="small"
+                        />
+                        <Chip
+                          label="Tarjeta (Datafast)"
+                          color={paymentMethod === 'card' ? 'primary' : 'default'}
+                          variant={paymentMethod === 'card' ? 'filled' : 'outlined'}
+                          onClick={() => setPaymentMethod('card')}
+                          size="small"
+                        />
+                        <Chip
+                          label="PayPal"
+                          color={paymentMethod === 'paypal' ? 'primary' : 'default'}
+                          variant={paymentMethod === 'paypal' ? 'filled' : 'outlined'}
+                          onClick={() => setPaymentMethod('paypal')}
+                          size="small"
+                          disabled={!paypalClientId}
+                        />
+                      </Stack>
                       {!paypalClientId && (
                         <Typography variant="caption" color="text.secondary">
                           Configura VITE_PAYPAL_CLIENT_ID para habilitar PayPal.
                         </Typography>
                       )}
+                      <Button
+                        variant="contained"
+                        onClick={handleContinueCheckout}
+                        disabled={
+                          !hasCartItems ||
+                          !isValidName ||
+                          !isValidEmail ||
+                          cartItemCount === 0 ||
+                          checkoutMutation.isPending ||
+                          datafastCheckoutMutation.isPending ||
+                          createPaypalOrderMutation.isPending ||
+                          capturePaypalMutation.isPending ||
+                          (paymentMethod === 'paypal' && (!paypalClientId || !paypalReady))
+                        }
+                      >
+                        {paymentMethod === 'paypal'
+                          ? capturePaypalMutation.isPending
+                            ? 'Confirmando PayPal…'
+                            : createPaypalOrderMutation.isPending
+                              ? 'Abriendo PayPal…'
+                              : 'Pagar con PayPal'
+                          : paymentMethod === 'card'
+                            ? datafastCheckoutMutation.isPending
+                              ? 'Abriendo pago con tarjeta…'
+                              : 'Pagar con tarjeta'
+                            : checkoutMutation.isPending
+                              ? 'Enviando pedido…'
+                              : 'Confirmar y coordinar'}
+                      </Button>
                     </Stack>
                     {checkoutMutation.isError && (
                       <Alert severity="error">No pudimos crear el pedido. Revisa tus datos.</Alert>
