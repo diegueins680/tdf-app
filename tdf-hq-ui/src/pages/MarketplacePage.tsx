@@ -488,7 +488,8 @@ export default function MarketplacePage() {
     const orderText = `Pedido ${lastOrder.moOrderId}\nTotal: ${lastOrder.moTotalDisplay}\nEstado: ${lastOrder.moStatus}\n${summaryLines}`;
     const statusMeta = getOrderStatusMeta(lastOrder.moStatus);
     const history = lastOrder.moStatusHistory ?? [];
-    const lastUpdatedAt = lastOrder.moUpdatedAt ?? (history.length > 0 ? history[history.length - 1][1] : null);
+    const lastHistoryEntry = history.length > 0 ? history[history.length - 1] : null;
+    const lastUpdatedAt = lastOrder.moUpdatedAt ?? (lastHistoryEntry ? lastHistoryEntry[1] : null);
     return (
       <Card variant="outlined">
         <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />

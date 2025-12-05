@@ -12,6 +12,7 @@ function useQueryParam(name: string): string | null {
 
 export default function DatafastReturnPage() {
   const orderId = useQueryParam('orderId');
+  const resourcePath = useQueryParam('resourcePath') ?? useQueryParam('id');
   const navigate = useNavigate();
   const location = useLocation();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -19,12 +20,12 @@ export default function DatafastReturnPage() {
 
   useEffect(() => {
     const run = async () => {
-      if (!orderId) {
+      if (!orderId || !resourcePath) {
         setStatus('error');
         return;
       }
       try {
-        const dto = await Marketplace.datafastStatus({ orderId });
+        const dto = await Marketplace.confirmDatafastPayment(orderId, resourcePath);
         setOrder(dto);
         setStatus('success');
       } catch {
@@ -32,7 +33,7 @@ export default function DatafastReturnPage() {
       }
     };
     void run();
-  }, [orderId, location.key]);
+  }, [orderId, resourcePath, location.key]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
