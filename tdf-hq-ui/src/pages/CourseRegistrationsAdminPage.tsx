@@ -212,7 +212,7 @@ export default function CourseRegistrationsAdminPage() {
               </Box>
             ))}
           </Stack>
-        )}
+        ) : null}
       </Paper>
     </Stack>
   );
