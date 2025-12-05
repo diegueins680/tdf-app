@@ -61,6 +61,13 @@ const CART_META_KEY = 'tdf-marketplace-cart-meta';
 const CART_EVENT = 'tdf-cart-updated';
 const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 
+const parseEnvNumber = (key: string): number | null => {
+  const raw = import.meta.env[key];
+  if (!raw) return null;
+  const val = Number(raw);
+  return Number.isFinite(val) ? val : null;
+};
+
 const normalizeText = (value: string) =>
   value
     .toLowerCase()
@@ -100,6 +107,8 @@ export default function MarketplacePage() {
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastError, setDatafastError] = useState<string | null>(null);
+  const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
+  const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
   const cartQuery = useQuery<MarketplaceCartDTO>({
     queryKey: ['marketplace-cart', cartId ?? ''],
     enabled: Boolean(cartId),
@@ -480,6 +489,12 @@ export default function MarketplacePage() {
     if (lower.includes('mantenimiento')) return { color: 'warning' as const, icon: <WarningAmberIcon /> };
     return { color: 'default' as const, icon: undefined };
   };
+  const formatTokenAmount = (usdCents: number, usdPerToken: number | null) => {
+    if (!usdPerToken || usdPerToken <= 0) return null;
+    const amount = (usdCents / 100) / usdPerToken;
+    if (!Number.isFinite(amount)) return null;
+    return amount.toFixed(4);
+  };
   const orderSummary = useMemo(() => {
     if (!lastOrder) return null;
     const summaryLines = lastOrder.moItems
@@ -720,11 +735,11 @@ export default function MarketplacePage() {
                           justifyContent: 'center',
                         }}
                       >
-                      {item.miPhotoUrl ? (
-                        <Box
-                          component="img"
-                          src={item.miPhotoUrl}
-                          alt={item.miTitle}
+                        {item.miPhotoUrl ? (
+                          <Box
+                            component="img"
+                            src={item.miPhotoUrl}
+                            alt={item.miTitle}
                             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             loading="lazy"
                           />
@@ -737,9 +752,21 @@ export default function MarketplacePage() {
                           </Stack>
                         )}
                       </Box>
-                      <Typography variant="h5" fontWeight={800}>
-                        {item.miPriceDisplay}
-                      </Typography>
+                      <Stack spacing={0.25}>
+                        <Typography variant="h5" fontWeight={800}>
+                          {item.miPriceDisplay}
+                        </Typography>
+                        {(adaUsdRate || sedUsdRate) && (
+                          <Typography variant="body2" color="text.secondary">
+                            {adaUsdRate
+                              ? `≈ ${formatTokenAmount(item.miPriceUsdCents, adaUsdRate) ?? '—'} ADA`
+                              : 'ADA n/d'}
+                            {sedUsdRate
+                              ? ` · ≈ ${formatTokenAmount(item.miPriceUsdCents, sedUsdRate) ?? '—'} SED`
+                              : ''}
+                          </Typography>
+                        )}
+                      </Stack>
                       {(() => {
                         const props = getStatusChipProps(item.miStatus);
                         return (
@@ -1130,36 +1157,48 @@ export default function MarketplacePage() {
       </Dialog>
       <Dialog open={compareOpen} onClose={() => setCompareOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Comparar artículos</DialogTitle>
-        <DialogContent dividers>
-          {compareItems.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
-              Agrega hasta 3 artículos al comparador.
-            </Typography>
-          )}
-          {compareItems.length > 0 && (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Título</TableCell>
-                  <TableCell>Categoría</TableCell>
-                  <TableCell>Marca</TableCell>
-                  <TableCell>Modelo</TableCell>
-                  <TableCell align="right">Precio</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {compareItems.map((item) => (
-                  <TableRow key={item.miListingId}>
-                    <TableCell>{item.miTitle}</TableCell>
-                    <TableCell>{item.miCategory}</TableCell>
-                    <TableCell>{item.miBrand ?? '-'}</TableCell>
-                    <TableCell>{item.miModel ?? '-'}</TableCell>
-                    <TableCell align="right">{item.miPriceDisplay}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+                <DialogContent dividers>
+                  {compareItems.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      Agrega hasta 3 artículos al comparador.
+                    </Typography>
+                  )}
+                  {compareItems.length > 0 && (
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Título</TableCell>
+                          <TableCell>Categoría</TableCell>
+                          <TableCell>Marca</TableCell>
+                          <TableCell>Modelo</TableCell>
+                          <TableCell align="right">USD</TableCell>
+                          {adaUsdRate && <TableCell align="right">ADA</TableCell>}
+                          {sedUsdRate && <TableCell align="right">SED</TableCell>}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {compareItems.map((item) => (
+                          <TableRow key={item.miListingId}>
+                            <TableCell>{item.miTitle}</TableCell>
+                            <TableCell>{item.miCategory}</TableCell>
+                            <TableCell>{item.miBrand ?? '-'}</TableCell>
+                            <TableCell>{item.miModel ?? '-'}</TableCell>
+                            <TableCell align="right">{item.miPriceDisplay}</TableCell>
+                            {adaUsdRate && (
+                              <TableCell align="right">
+                                ≈ {formatTokenAmount(item.miPriceUsdCents, adaUsdRate) ?? '—'} ADA
+                              </TableCell>
+                            )}
+                            {sedUsdRate && (
+                              <TableCell align="right">
+                                ≈ {formatTokenAmount(item.miPriceUsdCents, sedUsdRate) ?? '—'} SED
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
         </DialogContent>
         <DialogActions>
           {compareItems.length > 0 && (
