@@ -71,6 +71,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Inventario', path: '/operacion/inventario' },
       { label: 'Órdenes marketplace', path: '/operacion/ordenes-marketplace' },
+      { label: 'Reservas equipo', path: '/operacion/reservas-equipo' },
     ],
   },
   {

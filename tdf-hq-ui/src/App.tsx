@@ -39,6 +39,7 @@ import LabelReleasesPage from './pages/LabelReleasesPage';
 import ServiceTypesPage from './pages/ServiceTypesPage';
 import InventoryPage from './pages/InventoryPage';
 import InventoryScanPage from './pages/InventoryScanPage';
+import ReservasEquipoPage from './pages/ReservasEquipoPage';
 import AdsInboxPage from './pages/AdsInboxPage';
 import CmsAdminPage from './pages/CmsAdminPage';
 import FeedbackPage from './pages/FeedbackPage';
@@ -225,6 +226,7 @@ export default function App() {
         <Route path="/operacion" element={<Outlet />}>
           <Route path="inventario" element={<InventoryPage />} />
           <Route path="ordenes-marketplace" element={<MarketplaceOrdersPage />} />
+          <Route path="reservas-equipo" element={<ReservasEquipoPage />} />
           <Route index element={<Navigate to="inventario" replace />} />
         </Route>
 
