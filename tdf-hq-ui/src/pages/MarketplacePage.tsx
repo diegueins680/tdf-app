@@ -817,7 +817,7 @@ export default function MarketplacePage() {
                       size="small"
                       variant={condition === c ? 'filled' : 'outlined'}
                       color={condition === c ? 'primary' : 'default'}
-                      onClick={() => setCondition(c)}
+                      onClick={() => setCondition(c || 'all')}
                     />
                   ))}
                 </Stack>

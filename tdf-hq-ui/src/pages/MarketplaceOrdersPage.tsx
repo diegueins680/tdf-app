@@ -46,19 +46,26 @@ const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] 
   { value: 'paid', label: 'Pagado', color: 'success' },
   { value: 'pending', label: 'Pendiente', color: 'warning' },
   { value: 'paypal_pending', label: 'PayPal pendiente', color: 'info' },
+  { value: 'datafast_init', label: 'Tarjeta iniciada', color: 'info' },
+  { value: 'datafast_pending', label: 'Tarjeta en revisión', color: 'warning' },
+  { value: 'datafast_failed', label: 'Tarjeta falló', color: 'error' },
   { value: 'contact', label: 'Contactar', color: 'default' },
   { value: 'cancelled', label: 'Cancelado', color: 'default' },
+  { value: 'failed', label: 'Falló', color: 'error' },
   { value: 'refunded', label: 'Reembolsado', color: 'default' },
 ];
 
 const statusColor = (value: string): ChipProps['color'] => {
   const match = STATUS_PRESETS.find((p) => p.value === value);
-  return match?.color ?? 'default';
+  return match?.color ?? (value.toLowerCase().includes('fail') ? 'error' : 'default');
 };
 
 const statusLabel = (value: string): string => {
   const match = STATUS_PRESETS.find((p) => p.value === value);
-  return match?.label ?? value;
+  if (match) return match.label;
+  if (value.toLowerCase().includes('datafast')) return 'Tarjeta';
+  if (value.toLowerCase().includes('paypal')) return 'PayPal';
+  return value;
 };
 
 const formatDate = (iso?: string | null, withTime = true) => {
@@ -167,7 +174,7 @@ export default function MarketplaceOrdersPage() {
     setFromDate('');
     setToDate('');
   };
-  const applyPreset = (preset: 'last7' | 'paid' | 'paypal') => {
+  const applyPreset = (preset: 'last7' | 'paid' | 'paypal' | 'card') => {
     if (preset === 'last7') {
       const dt = DateTime.now().minus({ days: 7 }).toFormat("yyyy-LL-dd'T'00:00");
       setFromDate(dt);
@@ -178,6 +185,10 @@ export default function MarketplaceOrdersPage() {
     }
     if (preset === 'paypal') {
       setProviderFilter('paypal');
+    }
+    if (preset === 'card') {
+      setStatusFilter('datafast_pending');
+      setProviderFilter('datafast');
     }
   };
 
@@ -260,6 +271,19 @@ export default function MarketplaceOrdersPage() {
   const effectiveProvider = (paymentProviderInput || selectedOrder?.moPaymentProvider || '').trim();
   const warnMissingProvider = Boolean(selectedOrder && !effectiveProvider);
   const warnMissingPaidAt = Boolean(selectedOrder && effectiveStatus === 'paid' && !paidAtInput);
+  const statusHint = (() => {
+    if (!effectiveStatus) return null;
+    if (effectiveStatus === 'datafast_pending') {
+      return 'Pago con tarjeta en revisión. Espera confirmación o reintenta el cobro antes de marcar pagado.';
+    }
+    if (effectiveStatus === 'datafast_failed' || effectiveStatus === 'failed') {
+      return 'Pago con tarjeta fallido. Reintenta el cobro o cambia el estado a contactar.';
+    }
+    if (effectiveStatus === 'paypal_pending') {
+      return 'El cliente inició PayPal pero aún no confirma. Verifica en PayPal o comunícate con el cliente.';
+    }
+    return null;
+  })();
 
   return (
     <Box p={2}>
@@ -355,6 +379,9 @@ export default function MarketplaceOrdersPage() {
         </Button>
         <Button size="small" variant="outlined" onClick={() => applyPreset('paypal')}>
           PayPal
+        </Button>
+        <Button size="small" variant="outlined" onClick={() => applyPreset('card')}>
+          Tarjeta pendiente
         </Button>
       </Stack>
       <Box display="flex" justifyContent="flex-end" mb={2}>
@@ -635,6 +662,11 @@ export default function MarketplaceOrdersPage() {
                         {warnMissingPaidAt && (
                           <Alert severity="warning" variant="outlined">
                             Agrega la fecha y hora del cobro si marcas la orden como pagada.
+                          </Alert>
+                        )}
+                        {statusHint && (
+                          <Alert severity="info" variant="outlined">
+                            {statusHint}
                           </Alert>
                         )}
                         <Stack direction="row" spacing={1}>
