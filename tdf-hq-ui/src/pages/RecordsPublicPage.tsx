@@ -43,8 +43,6 @@ const SERVICE_OPTIONS = [
   'Mezcla / Post',
 ];
 
-const ENGINEER_ROSTER = ['Ing. Diego', 'Ing. Camilo', 'Ing. Laura', 'Ing. Sofía'];
-
 const overlap = (startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime) =>
   endA > startB && startA < endB;
 
@@ -87,6 +85,19 @@ function BookingRequestDialog({
     enabled: open && hasToken,
   });
 
+  const engineerOptions = useMemo(() => {
+    const engineers = new Set<string>();
+    (bookingsQuery.data ?? []).forEach((booking) => {
+      booking.resources.forEach((res) => {
+        if (res.brRole.toLowerCase().includes('engineer')) {
+          const name = res.brRoomName?.trim();
+          if (name) engineers.add(name);
+        }
+      });
+    });
+    return Array.from(engineers).sort((a, b) => a.localeCompare(b));
+  }, [bookingsQuery.data]);
+
   const parsedStart = useMemo(
     () => DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone: BOOKING_ZONE }),
     [startInput],
@@ -97,12 +108,14 @@ function BookingRequestDialog({
   const relevantConflicts = useMemo(() => {
     const bookings = bookingsQuery.data ?? [];
     if (!isTimeValid) return [];
-    return bookings.filter((booking) => {
-      const bStart = DateTime.fromISO(booking.startsAt);
-      const bEnd = DateTime.fromISO(booking.endsAt);
-      if (!bStart.isValid || !bEnd.isValid) return false;
-      return overlap(parsedStart.toUTC(), parsedEnd.toUTC(), bStart, bEnd);
-    });
+    return bookings
+      .filter((booking) => {
+        const bStart = DateTime.fromISO(booking.startsAt);
+        const bEnd = DateTime.fromISO(booking.endsAt);
+        if (!bStart.isValid || !bEnd.isValid) return false;
+        return overlap(parsedStart.toUTC(), parsedEnd.toUTC(), bStart, bEnd);
+      })
+      .sort((a, b) => DateTime.fromISO(a.startsAt).toMillis() - DateTime.fromISO(b.startsAt).toMillis());
   }, [bookingsQuery.data, parsedStart, parsedEnd, isTimeValid]);
 
   const selectedRoom = useMemo(
@@ -125,9 +138,17 @@ function BookingRequestDialog({
     if (!engineerName.trim() || !isTimeValid) return [];
     const engineerLower = engineerName.trim().toLowerCase();
     return relevantConflicts.filter((booking) =>
-      booking.resources.some((res) => res.brRole.toLowerCase().includes('engineer') && res.brRoomName.toLowerCase() === engineerLower),
+      booking.resources.some(
+        (res) =>
+          res.brRole.toLowerCase().includes('engineer') &&
+          res.brRoomName &&
+          res.brRoomName.toLowerCase() === engineerLower,
+      ),
     );
   }, [engineerName, relevantConflicts, isTimeValid]);
+
+  const nextRoomConflict = roomConflicts[0] ?? null;
+  const nextEngineerConflict = engineerConflicts[0] ?? null;
 
   const formatRange = (isoStart: string, isoEnd: string) =>
     `${DateTime.fromISO(isoStart).setZone(BOOKING_ZONE).toFormat("dd LLL yyyy, HH:mm")} - ${DateTime.fromISO(isoEnd)
@@ -326,13 +347,15 @@ function BookingRequestDialog({
                 onChange={(e) => setSelectedRoomId(e.target.value)}
                 fullWidth
                 SelectProps={{ native: true }}
-          helperText={
-            selectedRoom
-              ? `Seleccionaste ${selectedRoom.rName}`
-              : roomsQuery.data?.length
-                ? 'Elige una sala para validar disponibilidad.'
-                : undefined
-          }
+                helperText={
+                  selectedRoom
+                    ? nextRoomConflict
+                      ? `Cruce: ${formatRange(nextRoomConflict.startsAt, nextRoomConflict.endsAt)}`
+                      : `Seleccionaste ${selectedRoom.rName} (sin choques en la ventana elegida)`
+                    : roomsQuery.data?.length
+                      ? 'Elige una sala para validar disponibilidad.'
+                      : undefined
+                }
               >
                 <option value="">Cualquier sala disponible</option>
                 {(roomsQuery.data ?? []).map((room) => (
@@ -342,15 +365,26 @@ function BookingRequestDialog({
                 ))}
               </TextField>
               <Autocomplete
-                options={ENGINEER_ROSTER}
-                freeSolo
-                value={engineerName}
-                onInputChange={(_, value) => setEngineerName(value)}
+                options={engineerOptions}
+                freeSolo={engineerOptions.length === 0}
+                value={engineerName || null}
+                onChange={(_, value) => setEngineerName(value ?? '')}
+                onInputChange={(_, value, reason) => {
+                  if (reason === 'clear') setEngineerName('');
+                  if (reason === 'input' && engineerOptions.length === 0) setEngineerName(value);
+                }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Ingeniero (opcional)"
-                    placeholder="Selecciona o escribe para validar choques"
+                    placeholder={engineerOptions.length ? 'Selecciona para validar choques' : 'Escribe el nombre del ingeniero'}
+                    helperText={
+                      engineerName
+                        ? nextEngineerConflict
+                          ? `Cruce: ${formatRange(nextEngineerConflict.startsAt, nextEngineerConflict.endsAt)}`
+                          : 'Sin choques en este horario.'
+                        : 'Selecciona un ingeniero para asegurar disponibilidad.'
+                    }
                     fullWidth
                   />
                 )}
@@ -604,7 +638,7 @@ export default function RecordsPublicPage() {
   const recordingsQuery = useCmsContents('records-recording-', 'es');
   const [dialogOpen, setDialogOpen] = useState(false);
   const bookingToken =
-    import.meta.env['VITE_PUBLIC_BOOKING_TOKEN'] ?? import.meta.env['VITE_API_DEMO_TOKEN'] ?? '';
+    import.meta.env.VITE_PUBLIC_BOOKING_TOKEN ?? import.meta.env.VITE_API_DEMO_TOKEN ?? '';
   const hasBookingToken = Boolean(bookingToken);
   const { session, login, setApiToken } = useSession();
 
@@ -621,7 +655,7 @@ export default function RecordsPublicPage() {
         { remember: false },
       );
     } else if (!session.apiToken) {
-      setApiToken(bookingToken);
+      setApiToken(String(bookingToken));
     }
   }, [bookingToken, session, login, setApiToken]);
 
@@ -664,7 +698,7 @@ export default function RecordsPublicPage() {
           const payload = entry.ccdPayload;
           if (!payload || typeof payload !== 'object') return null;
           const p = payload as Partial<{
-            links: Array<{ platform?: string; url?: string; accent?: string }>;
+            links: { platform?: string; url?: string; accent?: string }[];
             title: string;
             artist: string;
             releasedOn: string;

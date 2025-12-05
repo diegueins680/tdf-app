@@ -228,14 +228,20 @@ export default function CalendarSyncPage() {
               size="small"
             />
             <Chip variant="outlined" label={`Zona local: ${zone}`} size="small" />
-            {lastSyncAt && (
-              <Chip
-                variant="outlined"
-                color="secondary"
-                size="small"
-                label={`Última sync: ${new Date(lastSyncAt).toLocaleString()}`}
-              />
-            )}
+            <Chip
+              variant="outlined"
+              color={lastSyncAt ? 'secondary' : 'default'}
+              size="small"
+              label={`Última sync: ${lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Sin sincronizar'}`}
+            />
+          </Stack>
+          <Stack direction="row" spacing={1} flexWrap="wrap">
+            <Chip label="Este mes" onClick={() => applyRangePreset('thisMonth')} variant="outlined" />
+            <Chip label="Próximos 30 días" onClick={() => applyRangePreset('next30')} variant="outlined" />
+            <Chip label="Últimos 30 días" onClick={() => applyRangePreset('last30')} variant="outlined" />
+            <Button size="small" onClick={clearRange}>
+              Limpiar rango
+            </Button>
           </Stack>
           {configQuery.isError && (
             <Alert severity="warning">No pudimos leer la configuración guardada. Intenta recargar o revisar permisos.</Alert>

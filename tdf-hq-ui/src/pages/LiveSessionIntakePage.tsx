@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -136,11 +136,86 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const [riderFile, setRiderFile] = useState<File | null>(null);
   const mustAcceptTerms = requireTerms ?? variant === 'public';
   const termsVersion = 'TDF Live Sessions v2';
+  const draftKey = 'live-session-draft';
 
   const inventoryQuery = useQuery({
     queryKey: ['input-inventory'],
     queryFn: () => listInputInventory(),
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(draftKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<{
+        bandName: string;
+        bandDescription: string;
+        primaryGenre: string;
+        contactEmail: string;
+        contactPhone: string;
+        sessionDate: string;
+        availableDates: string;
+        sessionInputList: string;
+        inputChannels: typeof inputChannels;
+        musicians: MusicianEntry[];
+        setlist: SongEntry[];
+      }>;
+      setBandName(parsed.bandName ?? '');
+      setBandDescription(parsed.bandDescription ?? '');
+      setPrimaryGenre(parsed.primaryGenre ?? '');
+      setContactEmail(parsed.contactEmail ?? '');
+      setContactPhone(parsed.contactPhone ?? '');
+      setSessionDate(parsed.sessionDate ?? new Date().toISOString().slice(0, 10));
+      setAvailableDates(parsed.availableDates ?? '');
+      setSessionInputList(parsed.sessionInputList ?? '');
+      if (Array.isArray(parsed.inputChannels) && parsed.inputChannels.length > 0) {
+        setInputChannels(parsed.inputChannels);
+      }
+      if (Array.isArray(parsed.musicians) && parsed.musicians.length > 0) {
+        setMusicians(parsed.musicians);
+      }
+      if (Array.isArray(parsed.setlist) && parsed.setlist.length > 0) {
+        setSetlist(parsed.setlist);
+      }
+    } catch {
+      // ignore bad drafts
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const payload = {
+      bandName,
+      bandDescription,
+      primaryGenre,
+      contactEmail,
+      contactPhone,
+      sessionDate,
+      availableDates,
+      sessionInputList,
+      inputChannels,
+      musicians,
+      setlist,
+    };
+    try {
+      window.localStorage.setItem(draftKey, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
+  }, [
+    bandName,
+    bandDescription,
+    primaryGenre,
+    contactEmail,
+    contactPhone,
+    sessionDate,
+    availableDates,
+    sessionInputList,
+    inputChannels,
+    musicians,
+    setlist,
+  ]);
 
   const partyOptions = useMemo(
     () =>

@@ -68,6 +68,7 @@ export default function LoginPage() {
   const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
 
   const { session, login } = useSession();
   const navigate = useNavigate();
@@ -627,13 +628,13 @@ export default function LoginPage() {
                 )}
               </Stack>
             )}
-            <TextField
-              label="Contraseña *"
-              type="password"
-              value={signupForm.password}
-              onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
-              fullWidth
-              helperText="Mínimo 8 caracteres."
+              <TextField
+                label="Contraseña *"
+                type="password"
+                value={signupForm.password}
+                onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
+                fullWidth
+              helperText={passwordHint}
             />
             {signupFeedback && (
               <Alert severity={signupFeedback.type === 'success' ? 'success' : 'error'}>

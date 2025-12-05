@@ -533,6 +533,7 @@ export default function MarketplacePage() {
     }
     setShowRestoreBanner(true);
   }, [hasCartItems, savedCartMeta]);
+  const canRestoreCart = savedCartMeta && !hasCartItems;
   const scrollToListings = () => {
     if (typeof window === 'undefined') return;
     const el = document.getElementById('marketplace-listings');
@@ -860,10 +861,31 @@ export default function MarketplacePage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: { xs: 2, md: 6 } }}>
       <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
-        <Stack spacing={0.5}>
+        <Stack spacing={1}>
           <Typography variant="h4" fontWeight={800}>
             Marketplace de Inventario
           </Typography>
+          <Typography variant="body2" color="text.secondary">
+            1) Elige equipos, 2) Ingresa contacto, 3) Selecciona cómo pagar. Guarda tu carrito y retoma cuando quieras.
+          </Typography>
+          {canRestoreCart ? (
+            <Alert
+              severity="info"
+              action={
+                <Stack direction="row" spacing={1}>
+                  <Button size="small" onClick={handleRestoreCart} variant="contained">
+                    Recuperar carrito
+                  </Button>
+                  <Button size="small" onClick={scrollToListings} variant="text" color="inherit">
+                    Ver catálogo
+                  </Button>
+                </Stack>
+              }
+            >
+              Tienes un carrito guardado con {savedCartMeta.count} productos · actualizado{' '}
+              {formatLastSavedTimestamp(savedCartMeta.updatedAt) ?? 'hace poco'}.
+            </Alert>
+          ) : null}
         </Stack>
 
         {listingsQuery.isLoading && (
@@ -1330,6 +1352,16 @@ export default function MarketplacePage() {
                 <CardHeader title="Checkout" />
                 <CardContent>
                   <Stack spacing={1.5}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Chip label="Paso 1: contacto" size="small" color="primary" />
+                      <Chip label="Paso 2: pago" size="small" color="secondary" variant="outlined" />
+                    </Stack>
+                    {!isValidName || !isValidEmail ? (
+                      <Alert severity="info" variant="outlined">
+                        Completa nombre y correo antes de elegir tarjeta o PayPal. Si prefieres coordinar por WhatsApp, elige
+                        “Correo/WhatsApp”.
+                      </Alert>
+                    ) : null}
                     <Stack direction="row" spacing={1} justifyContent="flex-end">
                       <Button
                         size="small"

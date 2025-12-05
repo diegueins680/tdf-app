@@ -116,24 +116,37 @@ export default function TrialLessonsPage() {
   const [subjectFilter, setSubjectFilter] = useState<number | 'all'>('all');
   const [teacherFilter, setTeacherFilter] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<StatusKey | 'all'>('all');
-
-  const dateWindow = useMemo(() => {
+  const [fromInput, setFromInput] = useState(() => {
     const now = new Date();
-    const from = new Date(now);
-    from.setDate(now.getDate() - 7);
-    const to = new Date(now);
-    to.setDate(now.getDate() + 30);
-    return { from: from.toISOString(), to: to.toISOString() };
-  }, []);
+    const start = new Date(now);
+    start.setDate(now.getDate() - 7);
+    start.setHours(0, 0, 0, 0);
+    return toLocalInput(start.toISOString());
+  });
+  const [toInput, setToInput] = useState(() => {
+    const end = new Date();
+    end.setDate(end.getDate() + 30);
+    end.setHours(23, 59, 0, 0);
+    return toLocalInput(end.toISOString());
+  });
+
+  const toIsoOrUndefined = (val: string) => {
+    if (!val) return undefined;
+    const d = new Date(val);
+    return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+  };
+
+  const filterFrom = useMemo(() => toIsoOrUndefined(fromInput), [fromInput]);
+  const filterTo = useMemo(() => toIsoOrUndefined(toInput), [toInput]);
 
   const classesQuery = useQuery({
-    queryKey: ['trial-class-sessions', subjectFilter, teacherFilter, statusFilter, dateWindow.from, dateWindow.to],
+    queryKey: ['trial-class-sessions', subjectFilter, teacherFilter, statusFilter, filterFrom, filterTo],
     queryFn: () =>
       Trials.listClassSessions({
         subjectId: subjectFilter === 'all' ? undefined : subjectFilter,
         teacherId: teacherFilter === 'all' ? undefined : teacherFilter,
-        from: dateWindow.from,
-        to: dateWindow.to,
+        from: filterFrom,
+        to: filterTo,
         status: statusFilter === 'all' ? undefined : statusFilter,
       }),
   });
@@ -179,6 +192,18 @@ export default function TrialLessonsPage() {
     endAt: '',
     notes: '',
   });
+
+  const applyRangePreset = (pastDays: number, futureDays: number) => {
+    const now = new Date();
+    const from = new Date(now);
+    from.setDate(now.getDate() - pastDays);
+    from.setHours(0, 0, 0, 0);
+    const to = new Date(now);
+    to.setDate(now.getDate() + futureDays);
+    to.setHours(23, 59, 0, 0);
+    setFromInput(toLocalInput(from.toISOString()));
+    setToInput(toLocalInput(to.toISOString()));
+  };
 
   const openCreateDialog = () => {
     setFormError(null);
@@ -380,6 +405,32 @@ export default function TrialLessonsPage() {
 
       <Paper sx={{ p: 2.5 }} variant="outlined">
         <Stack spacing={2}>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
+            <TextField
+              label="Desde"
+              type="datetime-local"
+              value={fromInput}
+              onChange={(e) => setFromInput(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <TextField
+              label="Hasta"
+              type="datetime-local"
+              value={toInput}
+              onChange={(e) => setToInput(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button variant="outlined" size="small" onClick={() => applyRangePreset(7, 30)}>
+                Últimos 7d / próximos 30d
+              </Button>
+              <Button variant="outlined" size="small" onClick={() => applyRangePreset(0, 90)}>
+                Próximas 12 semanas
+              </Button>
+            </Stack>
+          </Stack>
           {chipFilters}
           {loading && <LinearProgress />}
           {classesQuery.error && (
