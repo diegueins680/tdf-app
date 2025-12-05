@@ -375,6 +375,15 @@ data AssetCheckoutDTO = AssetCheckoutDTO
 instance ToJSON AssetCheckoutDTO
 instance FromJSON AssetCheckoutDTO
 
+data DriveUploadDTO = DriveUploadDTO
+  { duFileId         :: Text
+  , duWebViewLink    :: Maybe Text
+  , duWebContentLink :: Maybe Text
+  , duPublicUrl      :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON DriveUploadDTO
+instance FromJSON DriveUploadDTO
+
 data AssetCheckoutRequest = AssetCheckoutRequest
   { coTargetKind    :: Maybe Text
   , coTargetSession :: Maybe Text

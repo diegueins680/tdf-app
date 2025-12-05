@@ -24,6 +24,7 @@ executable tdf-hq-exe
     TDF.API.Calendar
     TDF.API.Marketplace
     TDF.API.Label
+    TDF.API.Drive
     TDF.API.Rooms
     TDF.API.Sessions
     TDF.API.Types

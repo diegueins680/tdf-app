@@ -45,6 +45,7 @@ import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPoli
 import           System.IO (hPutStrLn, stderr)
 import qualified Network.Wai as Wai (Request)
 import           Servant
+import           Servant.Multipart (FileData(..), Tmp)
 import           Servant.Server.Experimental.Auth (AuthHandler)
 import           Text.Printf (printf)
 import           Text.Read (readMaybe)
@@ -55,10 +56,11 @@ import           Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawS
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
-import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..))
+import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..))
 import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
+import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Config (AppConfig(..))
 import           TDF.DB
 import           TDF.Models
@@ -118,6 +120,7 @@ import           TDF.WhatsApp.Client (sendText)
 import           Network.HTTP.Client (Manager, RequestBody(..), newManager, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
+import           System.Environment (lookupEnv)
 import           Network.HTTP.Types.Status (statusCode)
 import           System.Environment (lookupEnv)
 import qualified TDF.Trials.Models as Trials
@@ -392,6 +395,17 @@ socialServer user =
   :<|> socialListFollowing user
   :<|> vcardExchange user
 
+driveServer :: AuthedUser -> ServerT DriveAPI AppM
+driveServer _ mAccessToken DriveUploadForm{..} = do
+  let tokenTxt = fmap T.strip mAccessToken <|> duAccessToken
+  accessToken <- maybe (throwError err400 { errBody = "X-Goog-Access-Token requerido" }) pure tokenTxt
+  mFolderEnv <- liftIO $ lookupEnv "DRIVE_UPLOAD_FOLDER_ID"
+  let folder = duFolderId <|> fmap (T.strip . T.pack) mFolderEnv
+      nameOverride = duName <|> (T.pack <$> fdFileName duFile)
+  manager <- liftIO $ newManager tlsManagerSettings
+  dto <- liftIO $ uploadToDrive manager accessToken duFile nameOverride folder
+  pure dto
+
 protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
        partyServer user
@@ -416,6 +430,7 @@ protectedServer user =
   :<|> adsAdminServer user
   :<|> calendarServer user
   :<|> cmsAdminServer user
+  :<|> driveServer user
   :<|> futureServer
 
 calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
@@ -4191,3 +4206,88 @@ toCmsDTO (Entity cid c) =
 
 entityKeyInt :: ToBackendKey SqlBackend record => Key record -> Int
 entityKeyInt = fromIntegral . fromSqlKey
+
+-- Google Drive upload (proxied)
+data DriveApiResp = DriveApiResp
+  { darId             :: Text
+  , darWebViewLink    :: Maybe Text
+  , darWebContentLink :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON DriveApiResp where
+  parseJSON = withObject "DriveApiResp" $ \o ->
+    DriveApiResp <$> o .: "id"
+                 <*> o .:? "webViewLink"
+                 <*> o .:? "webContentLink"
+
+uploadToDrive
+  :: Manager
+  -> Text            -- ^ Google access token (user or service)
+  -> FileData Tmp    -- ^ Uploaded file from client
+  -> Maybe Text      -- ^ Optional override name
+  -> Maybe Text      -- ^ Optional folder id
+  -> IO DriveUploadDTO
+uploadToDrive manager accessToken file mName mFolder = do
+  uuid <- nextRandom
+  let boundary = "tdf-boundary-" <> T.replace "-" "" (toText uuid)
+      dashBoundary = "--" <> boundary
+      fileName = fromMaybe (fdFileName file) mName
+      mimeType = if BS8.null (fdFileCType file) then "application/octet-stream" else fdFileCType file
+      meta = object $
+        [ "name" .= fileName
+        , "mimeType" .= TE.decodeUtf8 mimeType
+        ] <> maybe [] (\f -> ["parents" .= [f]]) mFolder
+
+  fileBytes <- BL.readFile (fdPayload file)
+  let metaPart = BL.intercalate "\r\n"
+        [ BL.fromStrict (TE.encodeUtf8 dashBoundary)
+        , "Content-Type: application/json; charset=UTF-8"
+        , ""
+        , encode meta
+        ]
+      filePart = BL.intercalate "\r\n"
+        [ BL.fromStrict (TE.encodeUtf8 dashBoundary)
+        , BL.fromStrict $ "Content-Type: " <> mimeType
+        , ""
+        , fileBytes
+        ]
+      closing = BL.fromStrict (TE.encodeUtf8 (dashBoundary <> "--"))
+      body = BL.intercalate "\r\n" [metaPart, filePart, closing, ""]
+
+  req0 <- parseRequest "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
+  let bearer = "Bearer " <> TE.encodeUtf8 accessToken
+      req = req0
+        { method = "POST"
+        , requestHeaders =
+            [ ("Authorization", bearer)
+            , ("Content-Type", BS8.pack ("multipart/related; boundary=" <> T.unpack boundary))
+            ]
+        , requestBody = RequestBodyLBS body
+        }
+  resp <- httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    fail ("Drive upload failed with status " <> show (statusCode (responseStatus resp)))
+  driveResp <- case eitherDecode (responseBody resp) of
+    Left err -> fail ("No pudimos interpretar la respuesta de Drive: " <> err)
+    Right ok -> pure (ok :: DriveApiResp)
+
+  -- Best-effort: make the file public.
+  let permBody = encode (object ["role" .= ("reader" :: Text), "type" .= ("anyone" :: Text)])
+  permReq0 <- parseRequest $ "https://www.googleapis.com/drive/v3/files/" <> T.unpack (darId driveResp) <> "/permissions"
+  let permReq = permReq0
+        { method = "POST"
+        , requestHeaders =
+            [ ("Authorization", bearer)
+            , ("Content-Type", "application/json")
+            ]
+        , requestBody = RequestBodyLBS permBody
+        }
+  _ <- (try (httpLbs permReq manager) :: IO (Either SomeException (Response BL.ByteString)))
+
+  let publicUrl = darWebViewLink driveResp <|> darWebContentLink driveResp
+  pure DriveUploadDTO
+    { duFileId = darId driveResp
+    , duWebViewLink = darWebViewLink driveResp
+    , duWebContentLink = darWebContentLink driveResp
+    , duPublicUrl = publicUrl
+    }

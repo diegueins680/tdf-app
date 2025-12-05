@@ -25,6 +25,7 @@ import           TDF.API.Instagram (InstagramAPI)
 import           TDF.API.Pipelines (PipelinesAPI)
 import           TDF.API.Rooms     (RoomsAPI)
 import           TDF.API.Sessions  (SessionsAPI)
+import           TDF.API.Drive     (DriveAPI)
 import           TDF.API.Types     (LooseJSON, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
 import           TDF.Models        (RoleEnum)
 import           TDF.DTO
@@ -182,6 +183,7 @@ type ProtectedAPI =
   :<|> AdsAdminAPI
   :<|> "calendar" :> CalendarAPI
   :<|> CmsAdminAPI
+  :<|> DriveAPI
   :<|> "stubs"    :> FutureAPI
 
 type API =
