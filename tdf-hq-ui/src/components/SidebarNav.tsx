@@ -56,12 +56,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Clases', path: '/escuela/clases' },
       { label: 'Trial lessons', path: '/escuela/trial-lessons' },
       { label: 'Trial queue', path: '/escuela/trial-queue' },
-      { label: 'Programas', path: '/escuela/programas' },
-      { label: 'Cursos', path: '/escuela/cursos' },
-      { label: 'Cohortes', path: '/escuela/cohortes' },
-      { label: 'Estudiantes', path: '/escuela/estudiantes' },
-      { label: 'Inscripciones', path: '/escuela/inscripciones' },
-      { label: 'Pagos', path: '/escuela/pagos' },
     ],
   },
   {
@@ -70,12 +64,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Artistas', path: '/label/artistas' },
       { label: 'Proyectos', path: '/label/proyectos' },
       { label: 'Releases', path: '/label/releases' },
-      { label: 'Tracks', path: '/label/tracks' },
-      { label: 'Assets', path: '/label/assets' },
-      { label: 'Metadata', path: '/label/metadata' },
-      { label: 'Contratos', path: '/label/contratos' },
-      { label: 'Regalías', path: '/label/regalias' },
-      { label: 'Marketing', path: '/label/marketing' },
     ],
   },
   {
@@ -83,11 +71,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Inventario', path: '/operacion/inventario' },
       { label: 'Órdenes marketplace', path: '/operacion/ordenes-marketplace' },
-      { label: 'Calendario domo', path: '/operacion/calendario-domo' },
-      { label: 'Reservas equipo', path: '/operacion/reservas-equipo' },
-      { label: 'Mantenimiento', path: '/operacion/mantenimiento' },
-      { label: 'Paquetes', path: '/operacion/paquetes' },
-      { label: 'Paquetes / Resumen', path: '/operacion/paquetes/resumen' },
     ],
   },
   {
@@ -98,11 +81,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Estado sistema', path: '/configuracion/estado' },
       { label: 'Usuarios admin', path: '/configuracion/usuarios-admin' },
       { label: 'Roles y permisos', path: '/configuracion/roles-permisos' },
-      { label: 'Impuestos y series', path: '/configuracion/impuestos-series' },
-      { label: 'Unidades de negocio', path: '/configuracion/unidades-negocio' },
-      { label: 'Sedes', path: '/configuracion/sedes' },
-      { label: 'Marcas', path: '/configuracion/marcas' },
-      { label: 'Integraciones', path: '/configuracion/integraciones' },
       { label: 'Calendario Google', path: '/configuracion/integraciones/calendario' },
       { label: 'CMS', path: '/configuracion/cms' },
       { label: 'Preferencias', path: '/configuracion/preferencias' },
@@ -111,12 +89,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: 'FINANZAS',
     items: [
-      { label: 'Cotizaciones', path: '/finanzas/cotizaciones' },
-      { label: 'Facturas', path: '/finanzas/facturas' },
-      { label: 'Cobros', path: '/finanzas/cobros' },
       { label: 'Pagos', path: '/finanzas/pagos' },
-      { label: 'Recibos', path: '/finanzas/recibos' },
-      { label: 'Regalías', path: '/finanzas/regalias' },
     ],
   },
   {

@@ -26,27 +26,20 @@ const sectionsByModule: Record<string, ManualItem[]> = {
     { title: 'Escuela / Clases', path: '/escuela/clases', description: 'Clases regulares: horarios, salas, profesor y asistencia. Permite filtrar, crear/editar y marcar “realizada”.' },
     { title: 'Escuela / Trial lessons', path: '/escuela/trial-lessons', description: 'Clases de prueba: programación y edición. Carga alumno, profesor, sala y notas.' },
     { title: 'Escuela / Trial queue', path: '/escuela/trial-queue', description: 'Bandeja de solicitudes de prueba. Asigna profesor, agenda y cambia estado.' },
-    { title: 'Operación / Calendario domo', path: '/operacion/calendario-domo', description: 'Agenda de domo/espacios especiales para logística interna.' },
   ],
   invoicing: [
-    { title: 'Finanzas / Cobros', path: '/finanzas/cobros', description: 'Seguimiento de cobros y estados. Consulta pagos pendientes y conciliación.' },
     { title: 'Finanzas / Pagos', path: '/finanzas/pagos', description: 'Registro de pagos y comprobantes. Soporta concepto, monto, referencia y adjuntos.' },
-    { title: 'Finanzas / Cotizaciones', path: '/finanzas/cotizaciones', description: 'Cotizaciones emitidas y su vigencia. Convierte cotizaciones a órdenes/facturas.' },
-    { title: 'Finanzas / Facturas', path: '/finanzas/facturas', description: 'Facturación y estados. Consulta facturas asociadas a clientes o órdenes.' },
-    { title: 'Finanzas / Recibos', path: '/finanzas/recibos', description: 'Recibos generados; descarga o reenvía al cliente.' },
-    { title: 'Finanzas / Regalías', path: '/finanzas/regalias', description: 'Cálculo y control de regalías por artista/proyecto.' },
   ],
   admin: [
     { title: 'Configuración / Usuarios admin', path: '/configuracion/usuarios-admin', description: 'Altas, bajas y reseteo de accesos administrativos.' },
     { title: 'Configuración / Roles y permisos', path: '/configuracion/roles-permisos', description: 'Asignación granular de permisos y módulos (CRM, scheduling, invoicing, etc.).' },
     { title: 'Configuración / Logs', path: '/configuracion/logs', description: 'Registros de sistema para auditar cambios y errores.' },
     { title: 'Configuración / Estado', path: '/configuracion/estado', description: 'Salud de integraciones y servicios (API, correo, pagos).' },
-    { title: 'Configuración / Integraciones', path: '/configuracion/integraciones', description: 'Claves y conexiones externas (API tokens, webhooks).' },
     { title: 'Configuración / CMS', path: '/configuracion/cms', description: 'Contenido público (records, fan hub, cursos). Crea, publica y versiona bloques.' },
   ],
   packages: [
-    { title: 'Label / Artistas', path: '/label/artistas', description: 'Catálogo de artistas (label). Datos biográficos, lanzamientos y enlaces.' },
-    { title: 'Operación / Paquetes', path: '/operacion/paquetes', description: 'Paquetes y combinaciones de servicios (incluye resumen y pricing).' },
+    { title: 'Operación / Inventario', path: '/operacion/inventario', description: 'Inventario con fotos, estado y precios (venta/renta).' },
+    { title: 'Operación / Órdenes marketplace', path: '/operacion/ordenes-marketplace', description: 'Seguimiento de pedidos del marketplace, pagos y estados.' },
   ],
 };
 

@@ -152,6 +152,34 @@ export default function MarketplaceOrdersPage() {
 
   const filtersDirty =
     statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate);
+  const filtersActiveCount =
+    (statusFilter !== 'all' ? 1 : 0) +
+    (providerFilter !== 'all' ? 1 : 0) +
+    (search.trim() ? 1 : 0) +
+    (fromDate ? 1 : 0) +
+    (toDate ? 1 : 0);
+
+  const exportCsv = async () => {
+    const header = ['Pedido', 'Cliente', 'Email', 'Total', 'Estado', 'Pago', 'Creado', 'Pagado'];
+    const rows = filtered.map((o) => [
+      o.moOrderId,
+      o.moBuyerName ?? '',
+      o.moBuyerEmail ?? '',
+      o.moTotalDisplay,
+      o.moStatus,
+      o.moPaymentProvider ?? '',
+      formatDate(o.moCreatedAt),
+      formatDate(o.moPaidAt),
+    ]);
+    const csv = [header, ...rows]
+      .map((cols) => cols.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    try {
+      await navigator.clipboard.writeText(csv);
+    } catch {
+      // ignore clipboard failures
+    }
+  };
 
   const updateMutation = useMutation<MarketplaceOrderDTO, Error, { id: string; payload: MarketplaceOrderUpdatePayload }>({
     mutationFn: ({ id, payload }) => Marketplace.updateOrder(id, payload),
@@ -189,24 +217,6 @@ export default function MarketplaceOrdersPage() {
     if (preset === 'card') {
       setStatusFilter('datafast_pending');
       setProviderFilter('datafast');
-    }
-  };
-
-  const copyRow = async (order: MarketplaceOrderDTO) => {
-    const row = [
-      order.moOrderId,
-      order.moBuyerName ?? '',
-      order.moBuyerEmail ?? '',
-      order.moTotalDisplay,
-      order.moStatus,
-      order.moPaymentProvider ?? '',
-      formatDate(order.moCreatedAt),
-    ].join('\t');
-    try {
-      await navigator.clipboard.writeText(row);
-      alert('Fila copiada');
-    } catch {
-      alert('No se pudo copiar la fila');
     }
   };
 
@@ -261,6 +271,24 @@ export default function MarketplaceOrdersPage() {
     }
   };
 
+  const copyRow = async (order: MarketplaceOrderDTO) => {
+    const row = [
+      order.moOrderId,
+      order.moBuyerName ?? '',
+      order.moBuyerEmail ?? '',
+      order.moTotalDisplay,
+      order.moStatus,
+      order.moPaymentProvider ?? '',
+      formatDate(order.moCreatedAt),
+      formatDate(order.moPaidAt),
+    ].join('\t');
+    try {
+      await navigator.clipboard.writeText(row);
+    } catch {
+      // ignore clipboard failures
+    }
+  };
+
   const confirmIfIrreversible = (nextStatus: string): boolean => {
     const risky = ['paid', 'cancelled', 'refunded', 'failed'];
     if (!risky.includes(nextStatus)) return true;
@@ -271,6 +299,8 @@ export default function MarketplaceOrdersPage() {
   const effectiveProvider = (paymentProviderInput || selectedOrder?.moPaymentProvider || '').trim();
   const warnMissingProvider = Boolean(selectedOrder && !effectiveProvider);
   const warnMissingPaidAt = Boolean(selectedOrder && effectiveStatus === 'paid' && !paidAtInput);
+  const blockSave =
+    effectiveStatus === 'paid' && (warnMissingProvider || warnMissingPaidAt);
   const statusHint = (() => {
     if (!effectiveStatus) return null;
     if (effectiveStatus === 'datafast_pending') {
@@ -370,7 +400,7 @@ export default function MarketplaceOrdersPage() {
           />
         </Grid>
       </Grid>
-      <Stack direction="row" spacing={1} mb={1}>
+      <Stack direction="row" spacing={1} mb={2} alignItems="center" flexWrap="wrap">
         <Button size="small" variant="outlined" onClick={() => applyPreset('last7')}>
           Últimos 7 días
         </Button>
@@ -383,14 +413,14 @@ export default function MarketplaceOrdersPage() {
         <Button size="small" variant="outlined" onClick={() => applyPreset('card')}>
           Tarjeta pendiente
         </Button>
+        <Box flex={1} />
+        {filtersActiveCount > 0 && (
+          <Chip label={`${filtersActiveCount} filtro${filtersActiveCount === 1 ? '' : 's'} activos`} size="small" />
+        )}
+        <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">
+          Limpiar filtros
+        </Button>
       </Stack>
-      <Box display="flex" justifyContent="flex-end" mb={2}>
-        <Stack direction="row" spacing={1}>
-          <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">
-            Limpiar filtros
-          </Button>
-        </Stack>
-      </Box>
 
       <Card variant="outlined">
         <CardHeader
@@ -410,6 +440,12 @@ export default function MarketplaceOrdersPage() {
                 color="warning"
                 variant="outlined"
               />
+              <Button size="small" variant="outlined" onClick={exportCsv}>
+                Exportar CSV
+              </Button>
+              {filtersDirty && (
+                <Chip label="Filtros activos" size="small" color="info" variant="filled" />
+              )}
             </Stack>
           }
         />
@@ -676,7 +712,7 @@ export default function MarketplaceOrdersPage() {
                           <Button
                             variant="contained"
                             onClick={handleSave}
-                            disabled={updateMutation.isPending}
+                            disabled={updateMutation.isPending || blockSave}
                           >
                             Guardar cambios
                           </Button>
