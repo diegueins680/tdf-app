@@ -498,6 +498,15 @@ export default function MarketplacePage() {
     (purpose !== 'all' ? 1 : 0) +
     (condition !== 'all' ? 1 : 0) +
     (sort !== 'relevance' ? 1 : 0);
+  const scrollToListings = () => {
+    if (typeof window === 'undefined') return;
+    const el = document.getElementById('marketplace-listings');
+    if (el?.scrollIntoView) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -813,7 +822,7 @@ export default function MarketplacePage() {
           <Alert severity="error">No pudimos cargar el marketplace. Intenta de nuevo.</Alert>
         )}
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} id="marketplace-listings">
           <Grid item xs={12} md={8}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center" sx={{ mb: 1 }}>
               <TextField
@@ -1337,9 +1346,16 @@ export default function MarketplacePage() {
                           : 'Confirmar pedido'}
                     </Button>
                     {checkoutDisabledReason && (
-                      <Typography variant="caption" color="text.secondary">
-                        {checkoutDisabledReason}
-                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Alert severity="info" variant="outlined">
+                          {checkoutDisabledReason}
+                        </Alert>
+                        {!hasCartItems && (
+                          <Button size="small" variant="text" onClick={scrollToListings} sx={{ alignSelf: 'flex-start' }}>
+                            Volver al catálogo
+                          </Button>
+                        )}
+                      </Stack>
                     )}
                   </Stack>
                   {checkoutMutation.isError && (

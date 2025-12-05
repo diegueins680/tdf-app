@@ -182,8 +182,9 @@ export default function App() {
           <Route path="/inicio" element={<FanHubPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/acerca" element={<AboutPage />} />
-        <Route path="/seguridad" element={<SecurityPage />} />
-        <Route path="/crm" element={<Outlet />}>
+          <Route path="/manual" element={<ManualPage />} />
+          <Route path="/seguridad" element={<SecurityPage />} />
+          <Route path="/crm" element={<Outlet />}>
           <Route path="contactos" element={<PartiesPage />} />
             <Route path="empresas" element={<CompaniesPage />} />
             <Route path="leads" element={<LeadsPage />} />
