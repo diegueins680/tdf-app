@@ -167,6 +167,37 @@ export default function MarketplaceOrdersPage() {
     setFromDate('');
     setToDate('');
   };
+  const applyPreset = (preset: 'last7' | 'paid' | 'paypal') => {
+    if (preset === 'last7') {
+      const dt = DateTime.now().minus({ days: 7 }).toFormat("yyyy-LL-dd'T'00:00");
+      setFromDate(dt);
+      setToDate('');
+    }
+    if (preset === 'paid') {
+      setStatusFilter('paid');
+    }
+    if (preset === 'paypal') {
+      setProviderFilter('paypal');
+    }
+  };
+
+  const copyRow = async (order: MarketplaceOrderDTO) => {
+    const row = [
+      order.moOrderId,
+      order.moBuyerName ?? '',
+      order.moBuyerEmail ?? '',
+      order.moTotalDisplay,
+      order.moStatus,
+      order.moPaymentProvider ?? '',
+      formatDate(order.moCreatedAt),
+    ].join('\t');
+    try {
+      await navigator.clipboard.writeText(row);
+      alert('Fila copiada');
+    } catch {
+      alert('No se pudo copiar la fila');
+    }
+  };
 
   const openOrder = (id: string) => {
     setSelectedId(id);
@@ -315,6 +346,17 @@ export default function MarketplaceOrdersPage() {
           />
         </Grid>
       </Grid>
+      <Stack direction="row" spacing={1} mb={1}>
+        <Button size="small" variant="outlined" onClick={() => applyPreset('last7')}>
+          Últimos 7 días
+        </Button>
+        <Button size="small" variant="outlined" onClick={() => applyPreset('paid')}>
+          Pagado
+        </Button>
+        <Button size="small" variant="outlined" onClick={() => applyPreset('paypal')}>
+          PayPal
+        </Button>
+      </Stack>
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <Stack direction="row" spacing={1}>
           <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">

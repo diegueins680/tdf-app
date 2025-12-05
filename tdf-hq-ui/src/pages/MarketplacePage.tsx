@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -19,6 +19,7 @@ import {
   MenuItem,
   Select,
   type SelectChangeEvent,
+  Tooltip,
   Snackbar,
   Stack,
   TextField,
@@ -88,6 +89,8 @@ export default function MarketplacePage() {
     return localStorage.getItem(CART_STORAGE_KEY);
   });
   const [category, setCategory] = useState<string>('all');
+  const [purpose, setPurpose] = useState<'all' | 'rent' | 'sale'>('all');
+  const [condition, setCondition] = useState<string>('all');
   const [sort, setSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'title-asc'>('relevance');
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
@@ -112,6 +115,7 @@ export default function MarketplacePage() {
   const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
   const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
   const showTokenRates = Boolean(adaUsdRate || sedUsdRate);
+  const normalizedSearchTerm = useMemo(() => normalizeText(search.trim()), [search]);
   const cartQuery = useQuery<MarketplaceCartDTO>({
     queryKey: ['marketplace-cart', cartId ?? ''],
     enabled: Boolean(cartId),
@@ -172,6 +176,10 @@ export default function MarketplacePage() {
       if (parsed?.search) setSearch(String(parsed.search));
       if (parsed?.category) setCategory(String(parsed.category));
       if (parsed?.sort) setSort(parsed.sort);
+      if (parsed?.purpose === 'rent' || parsed?.purpose === 'sale' || parsed?.purpose === 'all') {
+        setPurpose(parsed.purpose);
+      }
+      if (parsed?.condition) setCondition(String(parsed.condition));
     } catch {
       // ignore malformed filters
     }
@@ -363,11 +371,16 @@ export default function MarketplacePage() {
     () => Array.from(new Set(listings.map((item) => item.miCategory).filter(Boolean))),
     [listings],
   );
+  const conditions = useMemo(
+    () => Array.from(new Set(listings.map((item) => item.miCondition).filter(Boolean))),
+    [listings],
+  );
   const filteredListings = useMemo(() => {
-    const normalizedSearch = normalizeText(search.trim());
     return listings.filter((item) => {
       const matchesCategory = category === 'all' ? true : item.miCategory === category;
-      if (!normalizedSearch) return matchesCategory;
+      const matchesPurpose = purpose === 'all' ? true : item.miPurpose === purpose;
+      const matchesCondition = condition === 'all' ? true : item.miCondition === condition;
+      if (!normalizedSearchTerm) return matchesCategory && matchesPurpose && matchesCondition;
       const haystack = [
         item.miTitle,
         item.miBrand,
@@ -378,9 +391,24 @@ export default function MarketplacePage() {
       ]
         .filter(Boolean)
         .join(' ');
-      return matchesCategory && normalizeText(haystack).includes(normalizedSearch);
+      return matchesCategory && matchesPurpose && matchesCondition && normalizeText(haystack).includes(normalizedSearchTerm);
     });
-  }, [category, listings, search]);
+  }, [category, condition, listings, normalizedSearchTerm, purpose]);
+  const computeRelevanceScore = useCallback((item: MarketplaceItemDTO) => {
+    const status = (item.miStatus || '').toLowerCase();
+    const isInStock = status.includes('stock') || status.includes('disponible');
+    let score = 0;
+    if (isInStock) score += 3;
+    if (item.miPurpose === 'sale') score += 1;
+    if (normalizedSearchTerm) {
+      const title = normalizeText(item.miTitle || '');
+      const brand = normalizeText(item.miBrand || '');
+      if (title.startsWith(normalizedSearchTerm)) score += 3;
+      else if (title.includes(normalizedSearchTerm)) score += 2;
+      if (!title.startsWith(normalizedSearchTerm) && brand.startsWith(normalizedSearchTerm)) score += 1;
+    }
+    return score;
+  }, [normalizedSearchTerm]);
   const sortedListings = useMemo(() => {
     const list = [...filteredListings];
     switch (sort) {
@@ -390,18 +418,35 @@ export default function MarketplacePage() {
         return list.sort((a, b) => b.miPriceUsdCents - a.miPriceUsdCents);
       case 'title-asc':
         return list.sort((a, b) => a.miTitle.localeCompare(b.miTitle));
+      case 'relevance':
       default:
-        return list;
+        return list.sort(
+          (a, b) => computeRelevanceScore(b) - computeRelevanceScore(a) || a.miPriceUsdCents - b.miPriceUsdCents,
+        );
     }
-  }, [filteredListings, sort]);
+  }, [computeRelevanceScore, filteredListings, sort]);
   const cartItemCount = cartItems.reduce((acc, it) => acc + it.mciQuantity, 0);
-
+  const hasCartItems = cartItems.length > 0;
   const cartSubtotal = cart?.mcSubtotalDisplay ?? 'USD $0.00';
+  const checkoutDisabledReason = useMemo(() => {
+    if (!hasCartItems || cartItemCount === 0) return 'Agrega al menos un producto para continuar.';
+    if (!isValidName) return 'Ingresa tu nombre para coordinar el pedido.';
+    if (!isValidEmail) return 'Ingresa un correo válido.';
+    return '';
+  }, [cartItemCount, hasCartItems, isValidEmail, isValidName]);
   const resetFilters = () => {
     setSearch('');
     setCategory('all');
     setSort('relevance');
+    setPurpose('all');
+    setCondition('all');
   };
+  const filtersActiveCount =
+    (search.trim() ? 1 : 0) +
+    (category !== 'all' ? 1 : 0) +
+    (purpose !== 'all' ? 1 : 0) +
+    (condition !== 'all' ? 1 : 0) +
+    (sort !== 'relevance' ? 1 : 0);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -416,12 +461,12 @@ export default function MarketplacePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const payload = { search, category, sort };
+      const payload = { search, category, sort, purpose, condition };
       localStorage.setItem(FILTERS_KEY, JSON.stringify(payload));
     } catch {
       // ignore storage errors
     }
-  }, [search, category, sort]);
+  }, [search, category, sort, purpose, condition]);
 
   useEffect(() => {
     if (!paypalDialogOpen || !paypalOrder || !paypalReady || typeof window === 'undefined' || !window.paypal) return;
@@ -452,6 +497,10 @@ export default function MarketplacePage() {
   }, [capturePaypalMutation, paypalDialogOpen, paypalOrder, paypalReady]);
 
   const handleAdd = (listing: MarketplaceItemDTO) => {
+    if (!isListingAvailable(listing.miStatus)) {
+      setToast('Este artículo no está disponible en este momento.');
+      return;
+    }
     const currentQty =
       cart?.mcItems.find((item) => item.mciListingId === listing.miListingId)?.mciQuantity ?? 0;
     upsertItemMutation.mutate({ listingId: listing.miListingId, quantity: currentQty + 1 });
@@ -461,7 +510,6 @@ export default function MarketplacePage() {
     upsertItemMutation.mutate({ listingId: item.mciListingId, quantity });
   };
 
-  const hasCartItems = cartItems.length > 0;
   const clearCart = async () => {
     if (!hasCartItems) return;
     const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
@@ -527,6 +575,11 @@ export default function MarketplacePage() {
     if (lower.includes('reserva') || lower.includes('reservado')) return { color: 'warning' as const, icon: <InventoryIcon /> };
     if (lower.includes('mantenimiento')) return { color: 'warning' as const, icon: <WarningAmberIcon /> };
     return { color: 'default' as const, icon: undefined };
+  };
+  const isListingAvailable = (status?: string | null) => {
+    if (!status) return true;
+    const lower = status.toLowerCase();
+    return lower.includes('stock') || lower.includes('disponible');
   };
   const formatTokenAmount = (usdCents: number, usdPerToken: number | null) => {
     if (!usdPerToken || usdPerToken <= 0) return null;
@@ -719,6 +772,56 @@ export default function MarketplacePage() {
                   ))}
                 </Select>
               </FormControl>
+              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexWrap: 'wrap' }}>
+                <Typography variant="caption" color="text.secondary">
+                  Modalidad
+                </Typography>
+                <Chip
+                  label="Todo"
+                  size="small"
+                  variant={purpose === 'all' ? 'filled' : 'outlined'}
+                  color={purpose === 'all' ? 'primary' : 'default'}
+                  onClick={() => setPurpose('all')}
+                />
+                <Chip
+                  label="Venta"
+                  size="small"
+                  variant={purpose === 'sale' ? 'filled' : 'outlined'}
+                  color={purpose === 'sale' ? 'primary' : 'default'}
+                  onClick={() => setPurpose('sale')}
+                />
+                <Chip
+                  label="Renta"
+                  size="small"
+                  variant={purpose === 'rent' ? 'filled' : 'outlined'}
+                  color={purpose === 'rent' ? 'primary' : 'default'}
+                  onClick={() => setPurpose('rent')}
+                />
+              </Stack>
+              {conditions.length > 0 && (
+                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexWrap: 'wrap' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Condición
+                  </Typography>
+                  <Chip
+                    label="Todas"
+                    size="small"
+                    variant={condition === 'all' ? 'filled' : 'outlined'}
+                    color={condition === 'all' ? 'primary' : 'default'}
+                    onClick={() => setCondition('all')}
+                  />
+                  {conditions.map((c) => (
+                    <Chip
+                      key={c}
+                      label={c}
+                      size="small"
+                      variant={condition === c ? 'filled' : 'outlined'}
+                      color={condition === c ? 'primary' : 'default'}
+                      onClick={() => setCondition(c)}
+                    />
+                  ))}
+                </Stack>
+              )}
               <FormControl size="small" sx={{ minWidth: 180 }}>
                 <InputLabel id="marketplace-sort-label">Ordenar por</InputLabel>
                 <Select
@@ -729,13 +832,16 @@ export default function MarketplacePage() {
                     setSort(event.target.value as typeof sort)
                   }
                 >
-                  <MenuItem value="relevance">Relevancia</MenuItem>
+                  <MenuItem value="relevance">Relevancia (disponible primero)</MenuItem>
                   <MenuItem value="price-asc">Precio: bajo a alto</MenuItem>
                   <MenuItem value="price-desc">Precio: alto a bajo</MenuItem>
                   <MenuItem value="title-asc">Título A-Z</MenuItem>
                 </Select>
               </FormControl>
               <Chip label={`${filteredListings.length} resultados`} size="small" />
+              {filtersActiveCount > 0 && (
+                <Chip label={`Filtros activos: ${filtersActiveCount}`} size="small" color="primary" variant="outlined" />
+              )}
               <Button variant="text" size="small" onClick={resetFilters}>
                 Limpiar filtros
               </Button>
@@ -829,6 +935,20 @@ export default function MarketplacePage() {
                         const props = getStatusChipProps(item.miStatus);
                         return (
                           <Stack direction="row" spacing={1} flexWrap="wrap">
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<ContentCopyIcon fontSize="small" />}
+                              onClick={() => {
+                                const detail = `${item.miTitle} · ${item.miBrand ?? ''} ${item.miModel ?? ''} · ${
+                                  item.miPriceDisplay
+                                }`;
+                                navigator.clipboard.writeText(detail.trim()).catch(() => {});
+                                setToast('Detalle copiado');
+                              }}
+                            >
+                              Copiar detalle
+                            </Button>
                             {props && (
                               <Chip
                                 size="small"
@@ -845,15 +965,26 @@ export default function MarketplacePage() {
                         );
                       })()}
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 'auto' }}>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<ShoppingCartIcon />}
-                          onClick={() => handleAdd(item)}
-                          disabled={upsertItemMutation.isPending}
+                        <Tooltip
+                          title={
+                            isListingAvailable(item.miStatus)
+                              ? ''
+                              : `No disponible para agregar (${item.miStatus || 'estado desconocido'})`
+                          }
+                          disableHoverListener={isListingAvailable(item.miStatus)}
                         >
-                          {item.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
-                        </Button>
+                          <span>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              startIcon={<ShoppingCartIcon />}
+                              onClick={() => handleAdd(item)}
+                              disabled={upsertItemMutation.isPending || !isListingAvailable(item.miStatus)}
+                            >
+                              {item.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
+                            </Button>
+                          </span>
+                        </Tooltip>
                         <Typography variant="caption" color="text.secondary">
                           Incluye markup {item.miMarkupPct}% sobre precio referencia.
                         </Typography>
@@ -977,12 +1108,11 @@ export default function MarketplacePage() {
                           variant="outlined"
                           size="small"
                           onClick={() => {
-                            setPaymentMethod('card');
                             openReview();
                           }}
                           disabled={!isValidName || !isValidEmail || cartItemCount === 0}
                         >
-                          Pagar con tarjeta
+                          Continuar al checkout
                         </Button>
                       </Stack>
                     )}
@@ -1079,25 +1209,34 @@ export default function MarketplacePage() {
                           Configura VITE_PAYPAL_CLIENT_ID para habilitar PayPal.
                         </Typography>
                       )}
-                      {paymentMethod === 'card' && (
-                        <Stack direction="row" spacing={0.5} alignItems="center">
-                          <CreditCardIcon fontSize="small" color="primary" />
-                          <Typography variant="caption" color="text.secondary">
-                            Aceptamos Visa, Mastercard, Diners, Discover y Amex.
-                          </Typography>
-                        </Stack>
-                      )}
-                      <Button
-                        variant="contained"
-                        onClick={openReview}
-                        disabled={!hasCartItems || !isValidName || !isValidEmail || cartItemCount === 0}
-                      >
-                        Revisar y pagar
-                      </Button>
-                    </Stack>
-                    {checkoutMutation.isError && (
-                      <Alert severity="error">No pudimos crear el pedido. Revisa tus datos.</Alert>
+                    {paymentMethod === 'card' && (
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <CreditCardIcon fontSize="small" color="primary" />
+                        <Typography variant="caption" color="text.secondary">
+                          Aceptamos Visa, Mastercard, Diners, Discover y Amex.
+                        </Typography>
+                      </Stack>
                     )}
+                    <Button
+                      variant="contained"
+                      onClick={openReview}
+                      disabled={Boolean(checkoutDisabledReason)}
+                    >
+                      {paymentMethod === 'paypal'
+                        ? 'Continuar con PayPal'
+                        : paymentMethod === 'card'
+                          ? 'Continuar con tarjeta'
+                          : 'Confirmar pedido'}
+                    </Button>
+                    {checkoutDisabledReason && (
+                      <Typography variant="caption" color="text.secondary">
+                        {checkoutDisabledReason}
+                      </Typography>
+                    )}
+                  </Stack>
+                  {checkoutMutation.isError && (
+                    <Alert severity="error">No pudimos crear el pedido. Revisa tus datos.</Alert>
+                  )}
                     {datafastError && (
                       <Alert severity="warning" onClose={() => setDatafastError(null)}>
                         {datafastError}
@@ -1204,13 +1343,13 @@ export default function MarketplacePage() {
             <Typography variant="subtitle1" fontWeight={700}>
               Total: {cartSubtotal}
             </Typography>
-            <Stack spacing={0.5}>
-              {cartItems.map((item) => (
-                <Typography key={item.mciListingId} variant="body2">
-                  {item.mciQuantity} × {item.mciTitle} — {item.mciSubtotalDisplay}
-                </Typography>
-              ))}
-            </Stack>
+              <Stack spacing={0.5}>
+                {cartItems.map((item) => (
+                  <Typography key={item.mciListingId} variant="body2">
+                    {item.mciQuantity} × {item.mciTitle} — {item.mciSubtotalDisplay} ({item.mciUnitPriceDisplay} c/u)
+                  </Typography>
+                ))}
+              </Stack>
             <Typography variant="body2" color="text.secondary">
               Método de pago: {paymentMethod === 'paypal' ? 'PayPal' : paymentMethod === 'card' ? 'Tarjeta (Datafast)' : 'Coordinar por correo/WhatsApp'}
             </Typography>
