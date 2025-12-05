@@ -24,6 +24,7 @@ import {
   Stack,
   TextField,
   Typography,
+  Link,
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -151,6 +152,9 @@ export default function MarketplacePage() {
     return saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
   });
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<MarketplaceItemDTO | null>(null);
+  const [showRestoreBanner, setShowRestoreBanner] = useState(false);
   const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
   const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
   const showTokenRates = Boolean(adaUsdRate ?? sedUsdRate);
@@ -206,6 +210,29 @@ export default function MarketplacePage() {
     if (typeof window === 'undefined') return;
     localStorage.setItem('tdf-marketplace-payment', paymentMethod);
   }, [paymentMethod]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlSearch = params.get('q');
+      const urlCategory = params.get('cat');
+      const urlSort = params.get('sort');
+      const urlPurpose = params.get('purpose');
+      const urlCondition = params.get('cond');
+      if (urlSearch) setSearch(urlSearch);
+      if (urlCategory) setCategory(urlCategory);
+      if (urlSort === 'relevance' || urlSort === 'price-asc' || urlSort === 'price-desc' || urlSort === 'title-asc') {
+        setSort(urlSort);
+      }
+      if (urlPurpose === 'rent' || urlPurpose === 'sale' || urlPurpose === 'all') {
+        setPurpose(urlPurpose);
+      }
+      if (urlCondition) setCondition(urlCondition);
+    } catch {
+      // ignore url parse errors
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -498,6 +525,14 @@ export default function MarketplacePage() {
     (purpose !== 'all' ? 1 : 0) +
     (condition !== 'all' ? 1 : 0) +
     (sort !== 'relevance' ? 1 : 0);
+
+  useEffect(() => {
+    if (!savedCartMeta || hasCartItems) {
+      setShowRestoreBanner(false);
+      return;
+    }
+    setShowRestoreBanner(true);
+  }, [hasCartItems, savedCartMeta]);
   const scrollToListings = () => {
     if (typeof window === 'undefined') return;
     const el = document.getElementById('marketplace-listings');
@@ -524,6 +559,15 @@ export default function MarketplacePage() {
     try {
       const payload = { search, category, sort, purpose, condition };
       localStorage.setItem(FILTERS_KEY, JSON.stringify(payload));
+      const params = new URLSearchParams(window.location.search);
+      if (search) params.set('q', search); else params.delete('q');
+      if (category !== 'all') params.set('cat', category); else params.delete('cat');
+      if (sort !== 'relevance') params.set('sort', sort); else params.delete('sort');
+      if (purpose !== 'all') params.set('purpose', purpose); else params.delete('purpose');
+      if (condition !== 'all') params.set('cond', condition); else params.delete('cond');
+      const next = params.toString();
+      const nextUrl = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`;
+      window.history.replaceState({}, '', nextUrl);
     } catch {
       // ignore storage errors
     }
@@ -620,6 +664,16 @@ export default function MarketplacePage() {
 
   const closeReview = () => {
     setReviewOpen(false);
+  };
+
+  const openDetail = (listing: MarketplaceItemDTO) => {
+    setSelectedListing(listing);
+    setDetailOpen(true);
+  };
+
+  const closeDetail = () => {
+    setDetailOpen(false);
+    setSelectedListing(null);
   };
 
   const handleRestoreCart = () => {
@@ -985,8 +1039,17 @@ export default function MarketplacePage() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
+                          position: 'relative',
                         }}
                       >
+                        {!isListingAvailable(item.miStatus) && (
+                          <Chip
+                            size="small"
+                            color="warning"
+                            label={item.miStatus ?? 'No disponible'}
+                            sx={{ position: 'absolute', top: 8, left: 8, bgcolor: 'warning.light', fontWeight: 600 }}
+                          />
+                        )}
                         {item.miPhotoUrl ? (
                           <Box
                             component="img"
@@ -1042,6 +1105,9 @@ export default function MarketplacePage() {
                               }}
                             >
                               Copiar detalle
+                            </Button>
+                            <Button size="small" variant="text" onClick={() => openDetail(item)}>
+                              Ver detalles
                             </Button>
                             <Button
                               size="small"
@@ -1543,6 +1609,79 @@ export default function MarketplacePage() {
             }}
             color="inherit"
           >
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={detailOpen && Boolean(selectedListing)} onClose={closeDetail} maxWidth="sm" fullWidth>
+        <DialogTitle>Detalle del equipo</DialogTitle>
+        <DialogContent dividers>
+          {selectedListing && (
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="h6" fontWeight={700}>
+                  {selectedListing.miTitle}
+                </Typography>
+                <Chip size="small" label={selectedListing.miCategory} />
+              </Stack>
+              <Typography variant="body2" color="text.secondary">
+                {selectedListing.miBrand ?? 'Sin marca'} {selectedListing.miModel ?? ''}
+              </Typography>
+              {selectedListing.miPhotoUrl && (
+                <Box
+                  component="img"
+                  src={selectedListing.miPhotoUrl}
+                  alt={selectedListing.miTitle}
+                  sx={{ width: '100%', borderRadius: 2, objectFit: 'cover', maxHeight: 260 }}
+                />
+              )}
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Chip size="small" label={selectedListing.miPurpose === 'rent' ? 'Renta' : 'Venta'} />
+                {selectedListing.miCondition && <Chip size="small" label={`Condición: ${selectedListing.miCondition}`} />}
+                {selectedListing.miStatus && <Chip size="small" label={selectedListing.miStatus} />}
+              </Stack>
+              <Stack spacing={0.25}>
+                <Typography variant="h5" fontWeight={800}>
+                  {selectedListing.miPriceDisplay}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Incluye markup {selectedListing.miMarkupPct}% sobre precio referencia.
+                </Typography>
+              </Stack>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<ShoppingCartIcon />}
+                  onClick={() => {
+                    handleAdd(selectedListing);
+                    closeDetail();
+                  }}
+                  disabled={upsertItemMutation.isPending || !isListingAvailable(selectedListing.miStatus)}
+                >
+                  {selectedListing.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    const detail = `${selectedListing.miTitle} · ${selectedListing.miBrand ?? ''} ${selectedListing.miModel ?? ''} · ${
+                      selectedListing.miPriceDisplay
+                    }`;
+                    void navigator.clipboard.writeText(detail.trim()).then(
+                      () => setToast('Detalle copiado'),
+                      () => setToast('No se pudo copiar el detalle'),
+                    );
+                  }}
+                >
+                  Copiar detalle
+                </Button>
+              </Stack>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDetail} color="inherit">
             Cerrar
           </Button>
         </DialogActions>

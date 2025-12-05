@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  FormControlLabel,
   FormControl,
   Grid,
   IconButton,
@@ -30,6 +31,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Checkbox,
   Tooltip,
   Typography,
   type ChipProps,
@@ -93,6 +95,7 @@ export default function MarketplaceOrdersPage() {
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [search, setSearch] = useState('');
+  const [paidOnly, setPaidOnly] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusInput, setStatusInput] = useState<string>('');
   const [paymentProviderInput, setPaymentProviderInput] = useState<string>('');
@@ -141,6 +144,7 @@ export default function MarketplaceOrdersPage() {
         const provider = order.moPaymentProvider?.toLowerCase() ?? '';
         if (provider !== providerFilter.toLowerCase()) return false;
       }
+      if (paidOnly && !order.moPaidAt) return false;
       const created = DateTime.fromISO(order.moCreatedAt);
       if (fromDt && created < fromDt) return false;
       if (toDt && created > toDt) return false;
@@ -159,13 +163,14 @@ export default function MarketplaceOrdersPage() {
   }, [sortedOrders, search, providerFilter, statusFilter, fromDate, toDate]);
 
   const filtersDirty =
-    statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate);
+    statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
   const filtersActiveCount =
     (statusFilter !== 'all' ? 1 : 0) +
     (providerFilter !== 'all' ? 1 : 0) +
     (search.trim() ? 1 : 0) +
     (fromDate ? 1 : 0) +
-    (toDate ? 1 : 0);
+    (toDate ? 1 : 0) +
+    (paidOnly ? 1 : 0);
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -219,6 +224,7 @@ export default function MarketplaceOrdersPage() {
     setSearch('');
     setFromDate('');
     setToDate('');
+    setPaidOnly(false);
   };
   const applyPreset = (preset: 'last7' | 'paid' | 'paypal' | 'card') => {
     if (preset === 'last7') {
@@ -284,6 +290,23 @@ export default function MarketplaceOrdersPage() {
   const handleCopyOrderId = async (orderId: string) => {
     try {
       await navigator.clipboard.writeText(orderId);
+    } catch {
+      // ignore clipboard failures silently
+    }
+  };
+
+  const copyOrderSummary = async (order: MarketplaceOrderDTO) => {
+    const summaryLines = [
+      `Pedido: ${order.moOrderId}`,
+      `Estado: ${statusLabel(order.moStatus)}`,
+      `Total: ${order.moTotalDisplay} (${order.moCurrency.toUpperCase()})`,
+      `Pago: ${order.moPaymentProvider ?? '—'}`,
+      `Comprador: ${order.moBuyerName} (${order.moBuyerEmail || 'sin email'})`,
+      `Items: ${summarizeItems(order.moItems)}`,
+    ];
+    try {
+      await navigator.clipboard.writeText(summaryLines.join('\n'));
+      setToast('Resumen copiado');
     } catch {
       // ignore clipboard failures silently
     }
@@ -417,6 +440,12 @@ export default function MarketplaceOrdersPage() {
             inputProps={{ min: fromDate }}
           />
         </Grid>
+        <Grid item xs={12} md={12} lg={3}>
+          <FormControlLabel
+            control={<Checkbox checked={paidOnly} onChange={(e) => setPaidOnly(e.target.checked)} />}
+            label="Solo con pago registrado"
+          />
+        </Grid>
       </Grid>
       <Stack direction="row" spacing={1} mb={2} alignItems="center" flexWrap="wrap">
         <Button size="small" variant="outlined" onClick={() => applyPreset('last7')}>
@@ -441,6 +470,7 @@ export default function MarketplaceOrdersPage() {
         {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
         {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
         {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
+        {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
         {filtersActiveCount > 0 && (
           <Chip label={`${filtersActiveCount} filtro${filtersActiveCount === 1 ? '' : 's'} activos`} size="small" />
         )}
@@ -644,11 +674,16 @@ export default function MarketplaceOrdersPage() {
                       title={`Pedido ${selectedOrder.moOrderId.slice(0, 8)}`}
                       subheader={`Total ${selectedOrder.moTotalDisplay}`}
                       action={
-                        <Tooltip title="Copiar ID de pedido">
-                          <IconButton size="small" onClick={() => void handleCopyOrderId(selectedOrder.moOrderId)}>
-                            <ContentCopyIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        <Stack direction="row" spacing={1}>
+                          <Tooltip title="Copiar ID de pedido">
+                            <IconButton size="small" onClick={() => void handleCopyOrderId(selectedOrder.moOrderId)}>
+                              <ContentCopyIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Button size="small" onClick={() => void copyOrderSummary(selectedOrder)}>
+                            Copiar resumen
+                          </Button>
+                        </Stack>
                       }
                     />
                     <CardContent>
@@ -682,6 +717,11 @@ export default function MarketplaceOrdersPage() {
                         <Typography variant="body2">
                           <strong>Pago:</strong> {selectedOrder.moPaymentProvider || '—'}
                         </Typography>
+                        {selectedOrder.moPaypalOrderId && (
+                          <Typography variant="caption" color="text.secondary">
+                            PayPal order: {selectedOrder.moPaypalOrderId}
+                          </Typography>
+                        )}
                       </Stack>
                     </CardContent>
                   </Card>
@@ -758,6 +798,20 @@ export default function MarketplaceOrdersPage() {
                 </Stack>
 
                 <Divider />
+                {selectedOrder.moStatusHistory.length > 0 && (
+                  <Stack spacing={1}>
+                    <Typography variant="h6">Historial de estado</Typography>
+                    <Stack spacing={0.5}>
+                      {selectedOrder.moStatusHistory.map(([st, ts], idx) => (
+                        <Typography key={`${st}-${ts}-${idx}`} variant="body2" color="text.secondary">
+                          {formatDate(ts)} — {statusLabel(st)}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </Stack>
+                )}
+                <Divider />
+                
                 <Typography variant="h6">Items</Typography>
                 <Table size="small">
                   <TableHead>
