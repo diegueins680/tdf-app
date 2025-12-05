@@ -2,6 +2,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { useEffect, useMemo, useState } from 'react';
 import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider } from '@mui/material';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
@@ -102,6 +104,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const [cartCount, setCartCount] = useState(0);
   const [cartPreview, setCartPreview] = useState<{ title: string; subtotal: string }[]>([]);
   const [cartAnchor, setCartAnchor] = useState<HTMLElement | null>(null);
+  const [resourcesAnchor, setResourcesAnchor] = useState<null | HTMLElement>(null);
   const hasAdmin = useMemo(
     () => (session?.modules ?? []).some((m) => m.toLowerCase() === 'admin'),
     [session?.modules],
@@ -134,6 +137,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   };
   const handleCloseCart = () => setCartAnchor(null);
   const cartOpen = Boolean(cartAnchor);
+  const resourcesOpen = Boolean(resourcesAnchor);
 
   const renderBreadcrumb = () => {
     const parts = location.pathname.split('/').filter(Boolean);
@@ -204,20 +208,12 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           alignItems="center"
           sx={{ ml: 'auto' }}
         >
-          <Button color="inherit" component={RouterLink} to="/docs" sx={{ textTransform: 'none' }}>
-            Docs
-          </Button>
-          <Button color="inherit" component={RouterLink} to="/acerca" sx={{ textTransform: 'none' }}>
-            Acerca de
-          </Button>
-          <Button color="inherit" component={RouterLink} to="/donar" sx={{ textTransform: 'none' }}>
-            Donar
-          </Button>
-          <Button color="inherit" component={RouterLink} to="/herramientas/tidal-agent" sx={{ textTransform: 'none' }}>
-            Tidal
-          </Button>
-          <Button color="inherit" component={RouterLink} to="/seguridad" sx={{ textTransform: 'none' }}>
-            Seguridad
+          <Button
+            color="inherit"
+            onClick={(e) => setResourcesAnchor(e.currentTarget)}
+            sx={{ textTransform: 'none' }}
+          >
+            Recursos
           </Button>
           <Button
             color="inherit"
@@ -333,6 +329,29 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           </Stack>
         )}
       </Popover>
+      <Menu
+        anchorEl={resourcesAnchor}
+        open={resourcesOpen}
+        onClose={() => setResourcesAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MenuItem component={RouterLink} to="/docs" onClick={() => setResourcesAnchor(null)}>
+          Docs
+        </MenuItem>
+        <MenuItem component={RouterLink} to="/acerca" onClick={() => setResourcesAnchor(null)}>
+          Acerca de
+        </MenuItem>
+        <MenuItem component={RouterLink} to="/donar" onClick={() => setResourcesAnchor(null)}>
+          Donar
+        </MenuItem>
+        <MenuItem component={RouterLink} to="/herramientas/tidal-agent" onClick={() => setResourcesAnchor(null)}>
+          Tidal Agent
+        </MenuItem>
+        <MenuItem component={RouterLink} to="/seguridad" onClick={() => setResourcesAnchor(null)}>
+          Seguridad
+        </MenuItem>
+      </Menu>
       <ApiTokenDialog open={tokenDialogOpen} onClose={() => setTokenDialogOpen(false)} />
     </AppBar>
   );

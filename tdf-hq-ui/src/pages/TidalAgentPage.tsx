@@ -163,6 +163,15 @@ export default function TidalAgentPage() {
                           >
                             Copiar
                           </Button>
+                          <Button
+                            size="small"
+                            onClick={() => {
+                              setPrompt(item.prompt);
+                              setCode(item.code);
+                            }}
+                          >
+                            Usar prompt
+                          </Button>
                         </CardContent>
                       </Card>
                     ))}

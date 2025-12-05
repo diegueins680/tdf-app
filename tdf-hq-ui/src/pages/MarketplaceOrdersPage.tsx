@@ -17,6 +17,7 @@ import {
   Grid,
   IconButton,
   InputLabel,
+  Link,
   MenuItem,
   Paper,
   Select,
@@ -36,6 +37,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import LocalMallIcon from '@mui/icons-material/LocalMall';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { MarketplaceOrderDTO, MarketplaceOrderUpdatePayload } from '../api/types';
 import { Marketplace } from '../api/marketplace';
 import { DateTime } from 'luxon';
@@ -52,6 +54,11 @@ const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] 
 const statusColor = (value: string): ChipProps['color'] => {
   const match = STATUS_PRESETS.find((p) => p.value === value);
   return match?.color ?? 'default';
+};
+
+const statusLabel = (value: string): string => {
+  const match = STATUS_PRESETS.find((p) => p.value === value);
+  return match?.label ?? value;
 };
 
 const formatDate = (iso?: string | null, withTime = true) => {
@@ -75,6 +82,8 @@ export default function MarketplaceOrdersPage() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [providerFilter, setProviderFilter] = useState<string>('all');
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusInput, setStatusInput] = useState<string>('');
@@ -91,9 +100,13 @@ export default function MarketplaceOrdersPage() {
   });
 
   const orders = useMemo(() => ordersQuery.data ?? [], [ordersQuery.data]);
+  const sortedOrders = useMemo(
+    () => [...orders].sort((a, b) => (a.moCreatedAt > b.moCreatedAt ? -1 : 1)),
+    [orders],
+  );
   const selectedOrder = useMemo(
-    () => orders.find((o) => o.moOrderId === selectedId) ?? null,
-    [orders, selectedId],
+    () => sortedOrders.find((o) => o.moOrderId === selectedId) ?? null,
+    [sortedOrders, selectedId],
   );
 
   useEffect(() => {
@@ -105,8 +118,18 @@ export default function MarketplaceOrdersPage() {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return orders;
-    return orders.filter((order) => {
+    const fromDt = fromDate ? DateTime.fromISO(fromDate) : null;
+    const toDt = toDate ? DateTime.fromISO(toDate).endOf('day') : null;
+    return sortedOrders.filter((order) => {
+      if (statusFilter !== 'all' && order.moStatus !== statusFilter) return false;
+      if (providerFilter !== 'all') {
+        const provider = order.moPaymentProvider?.toLowerCase() ?? '';
+        if (provider !== providerFilter.toLowerCase()) return false;
+      }
+      const created = DateTime.fromISO(order.moCreatedAt);
+      if (fromDt && created < fromDt) return false;
+      if (toDt && created > toDt) return false;
+      if (!term) return true;
       const haystack = [
         order.moOrderId,
         order.moBuyerName,
@@ -116,13 +139,12 @@ export default function MarketplaceOrdersPage() {
       ]
         .join(' ')
         .toLowerCase();
-      const matchesProvider =
-        providerFilter === 'all'
-          ? true
-          : (order.moPaymentProvider ?? '').toLowerCase() === providerFilter.toLowerCase();
-      return haystack.includes(term) && matchesProvider;
+      return haystack.includes(term);
     });
-  }, [orders, search, providerFilter]);
+  }, [sortedOrders, search, providerFilter, statusFilter, fromDate, toDate]);
+
+  const filtersDirty =
+    statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate);
 
   const updateMutation = useMutation<MarketplaceOrderDTO, Error, { id: string; payload: MarketplaceOrderUpdatePayload }>({
     mutationFn: ({ id, payload }) => Marketplace.updateOrder(id, payload),
@@ -136,6 +158,14 @@ export default function MarketplaceOrdersPage() {
 
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
+  };
+
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setProviderFilter('all');
+    setSearch('');
+    setFromDate('');
+    setToDate('');
   };
 
   const openOrder = (id: string) => {
@@ -157,7 +187,10 @@ export default function MarketplaceOrdersPage() {
     if (!selectedOrder) return;
     const payload: MarketplaceOrderUpdatePayload = {};
     const nextStatus = statusInput.trim();
-    if (nextStatus && nextStatus !== selectedOrder.moStatus) payload.mouStatus = nextStatus;
+    if (nextStatus && nextStatus !== selectedOrder.moStatus) {
+      if (!confirmIfIrreversible(nextStatus)) return;
+      payload.mouStatus = nextStatus;
+    }
     const normalizedProvider = paymentProviderInput.trim();
     if (normalizedProvider !== (selectedOrder.moPaymentProvider ?? '')) {
       payload.mouPaymentProvider = normalizedProvider ? normalizedProvider : null;
@@ -178,23 +211,46 @@ export default function MarketplaceOrdersPage() {
     setPaidAtInput(nowStr);
   };
 
+  const handleCopyOrderId = async (orderId: string) => {
+    try {
+      await navigator.clipboard.writeText(orderId);
+    } catch {
+      // ignore clipboard failures silently
+    }
+  };
+
+  const confirmIfIrreversible = (nextStatus: string): boolean => {
+    const risky = ['paid', 'cancelled', 'refunded', 'failed'];
+    if (!risky.includes(nextStatus)) return true;
+    return window.confirm(`¿Confirmas cambiar el estado a "${nextStatus}"?`);
+  };
+
+  const effectiveStatus = (statusInput || selectedOrder?.moStatus || '').trim();
+  const effectiveProvider = (paymentProviderInput || selectedOrder?.moPaymentProvider || '').trim();
+  const warnMissingProvider = Boolean(selectedOrder && !effectiveProvider);
+  const warnMissingPaidAt = Boolean(selectedOrder && effectiveStatus === 'paid' && !paidAtInput);
+
   return (
     <Box p={2}>
-      <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-        <LocalMallIcon color="primary" />
-        <Typography variant="h4" fontWeight={700}>
-          Órdenes del marketplace
-        </Typography>
-        <Chip label={`${orders.length} órdenes`} color="info" size="small" />
-        <Box flex={1} />
-        <Tooltip title="Recargar">
-          <IconButton onClick={handleRefresh}>
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.
+      </Alert>
+          <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+            <LocalMallIcon color="primary" />
+            <Typography variant="h4" fontWeight={700}>
+              Órdenes del marketplace
+            </Typography>
+            <Chip label={`${orders.length} órdenes`} color="info" size="small" />
+            <Chip label={`${filtered.length} resultado${filtered.length === 1 ? '' : 's'}`} color="default" size="small" />
+            <Box flex={1} />
+            <Tooltip title="Recargar">
+              <IconButton onClick={handleRefresh}>
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
 
-      <Grid container spacing={2} mb={2}>
+      <Grid container spacing={2} mb={1}>
         <Grid item xs={12} md={5} lg={4}>
           <TextField
             fullWidth
@@ -203,7 +259,7 @@ export default function MarketplaceOrdersPage() {
             onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid item xs={12} md={3} lg={3}>
           <FormControl fullWidth>
             <InputLabel id="status-filter-label">Estado</InputLabel>
             <Select
@@ -221,7 +277,7 @@ export default function MarketplaceOrdersPage() {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} md={3} lg={3}>
+        <Grid item xs={12} md={4} lg={3}>
           <FormControl fullWidth>
             <InputLabel id="provider-filter-label">Método de pago</InputLabel>
             <Select
@@ -237,7 +293,35 @@ export default function MarketplaceOrdersPage() {
             </Select>
           </FormControl>
         </Grid>
+        <Grid item xs={6} md={6} lg={3}>
+          <TextField
+            label="Desde"
+            type="date"
+            fullWidth
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+        <Grid item xs={6} md={6} lg={3}>
+          <TextField
+            label="Hasta"
+            type="date"
+            fullWidth
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ min: fromDate }}
+          />
+        </Grid>
       </Grid>
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <Stack direction="row" spacing={1}>
+          <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">
+            Limpiar filtros
+          </Button>
+        </Stack>
+      </Box>
 
       <Card variant="outlined">
         <CardHeader
@@ -264,7 +348,22 @@ export default function MarketplaceOrdersPage() {
           {ordersQuery.isError && <Alert severity="error">{ordersQuery.error?.message ?? 'Error al cargar órdenes'}</Alert>}
           {ordersQuery.isLoading && <Typography color="text.secondary">Cargando órdenes...</Typography>}
           {!ordersQuery.isLoading && filtered.length === 0 && (
-            <Alert severity="info">No hay órdenes con estos filtros.</Alert>
+            <Alert
+              severity="info"
+              action={
+                <Button
+                  size="small"
+                  variant="outlined"
+                  href="/marketplace"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ir al marketplace
+                </Button>
+              }
+            >
+              No hay órdenes con estos filtros. Revisa el marketplace si necesitas crear un pedido.
+            </Alert>
           )}
           {filtered.length > 0 && (
             <TableContainer component={Paper}>
@@ -292,9 +391,24 @@ export default function MarketplaceOrdersPage() {
                     >
                       <TableCell>
                         <Stack spacing={0.5}>
-                          <Typography variant="body2" fontWeight={600}>
-                            {order.moOrderId.slice(0, 8)}
-                          </Typography>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <Tooltip title={order.moOrderId}>
+                              <Typography variant="body2" fontWeight={600}>
+                                {order.moOrderId.slice(0, 8)}
+                              </Typography>
+                            </Tooltip>
+                            <Tooltip title="Copiar ID">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void handleCopyOrderId(order.moOrderId);
+                                }}
+                              >
+                                <ContentCopyIcon fontSize="inherit" />
+                              </IconButton>
+                            </Tooltip>
+                          </Stack>
                           <Typography variant="caption" color="text.secondary">
                             {order.moCurrency.toUpperCase()}
                           </Typography>
@@ -304,22 +418,54 @@ export default function MarketplaceOrdersPage() {
                         <Typography variant="body2" fontWeight={600}>
                           {order.moBuyerName}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {order.moBuyerEmail}
-                        </Typography>
+                        {order.moBuyerEmail ? (
+                          <Link
+                            href={`mailto:${order.moBuyerEmail}`}
+                            underline="hover"
+                            variant="caption"
+                            color="text.secondary"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {order.moBuyerEmail}
+                          </Link>
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">
+                            —
+                          </Typography>
+                        )}
                       </TableCell>
-                      <TableCell>{order.moBuyerPhone || '—'}</TableCell>
                       <TableCell>
-                        <Chip size="small" label={order.moStatus} color={statusColor(order.moStatus)} />
+                        {order.moBuyerPhone ? (
+                          <Link
+                            href={`tel:${order.moBuyerPhone.replace(/\s+/g, '')}`}
+                            underline="hover"
+                            color="text.primary"
+                            variant="body2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {order.moBuyerPhone}
+                          </Link>
+                        ) : (
+                          '—'
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Chip size="small" label={statusLabel(order.moStatus)} color={statusColor(order.moStatus)} />
                       </TableCell>
                       <TableCell align="right">{order.moTotalDisplay}</TableCell>
                       <TableCell>
                         <Stack spacing={0.5}>
                           <Typography variant="body2">{order.moPaymentProvider ?? '—'}</Typography>
                           {order.moPaypalPayerEmail && (
-                            <Typography variant="caption" color="text.secondary">
+                            <Link
+                              href={`mailto:${order.moPaypalPayerEmail}`}
+                              underline="hover"
+                              variant="caption"
+                              color="text.secondary"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               {order.moPaypalPayerEmail}
-                            </Typography>
+                            </Link>
                           )}
                         </Stack>
                       </TableCell>
@@ -351,6 +497,13 @@ export default function MarketplaceOrdersPage() {
                     <CardHeader
                       title={`Pedido ${selectedOrder.moOrderId.slice(0, 8)}`}
                       subheader={`Total ${selectedOrder.moTotalDisplay}`}
+                      action={
+                        <Tooltip title="Copiar ID de pedido">
+                          <IconButton size="small" onClick={() => void handleCopyOrderId(selectedOrder.moOrderId)}>
+                            <ContentCopyIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      }
                     />
                     <CardContent>
                       <Stack spacing={1}>
@@ -363,6 +516,15 @@ export default function MarketplaceOrdersPage() {
                         <Typography variant="body2">
                           <strong>Teléfono:</strong> {selectedOrder.moBuyerPhone || '—'}
                         </Typography>
+                        <Typography variant="body2">
+                          <strong>Carrito:</strong> {selectedOrder.moCartId || '—'}
+                        </Typography>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="body2">
+                            <strong>Estado:</strong>
+                          </Typography>
+                          <Chip size="small" label={statusLabel(selectedOrder.moStatus)} color={statusColor(selectedOrder.moStatus)} />
+                        </Stack>
                         <Typography variant="body2">
                           <strong>Creado:</strong> {formatDate(selectedOrder.moCreatedAt)}
                         </Typography>
@@ -409,6 +571,16 @@ export default function MarketplaceOrdersPage() {
                           onChange={(e) => setPaidAtInput(e.target.value)}
                           InputLabelProps={{ shrink: true }}
                         />
+                        {warnMissingProvider && (
+                          <Alert severity={effectiveStatus === 'paid' ? 'warning' : 'info'} variant="outlined">
+                            No hay método de pago registrado. Ingresa paypal, datafast o manual para dejar trazabilidad.
+                          </Alert>
+                        )}
+                        {warnMissingPaidAt && (
+                          <Alert severity="warning" variant="outlined">
+                            Agrega la fecha y hora del cobro si marcas la orden como pagada.
+                          </Alert>
+                        )}
                         <Stack direction="row" spacing={1}>
                           <Button variant="outlined" onClick={markPaidNow} startIcon={<CheckCircleIcon />}>
                             Marcar pagado ahora

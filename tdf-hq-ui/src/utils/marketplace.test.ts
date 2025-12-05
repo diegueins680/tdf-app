@@ -21,6 +21,12 @@ describe('getOrderStatusMeta', () => {
     expect(getOrderStatusMeta('datafast_pending').color).toBe('warning');
     expect(getOrderStatusMeta('datafast_failed').label.toLowerCase()).toContain('rechazado');
   });
+
+  it('returns a readable fallback for unknown statuses', () => {
+    const meta = getOrderStatusMeta('custom_status');
+    expect(meta.label).toBe('custom_status');
+    expect(meta.color).toBe('default');
+  });
 });
 
 describe('formatLastSavedTimestamp', () => {

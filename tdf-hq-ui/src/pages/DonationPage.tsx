@@ -11,6 +11,7 @@ export default function DonationPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [copyMsg, setCopyMsg] = useState<string | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
+  const memoNote = 'Donación TDF';
 
   useEffect(() => {
     const buildQr = async () => {
@@ -91,8 +92,21 @@ export default function DonationPage() {
                   Abrir en wallet
                 </Button>
                 <Alert severity="info" variant="outlined">
-                  Usa red Cardano. No envíes otros activos o monedas. Las donaciones son no reembolsables.
+                  Usa red Cardano. No envíes otros activos o monedas. Las donaciones son no reembolsables. Revisa fees antes de enviar.
                 </Alert>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Memo sugerido:
+                  </Typography>
+                  <TextField value={memoNote} size="small" InputProps={{ readOnly: true }} sx={{ maxWidth: 220 }} />
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => navigator.clipboard.writeText(memoNote).catch(() => {})}
+                  >
+                    Copiar memo
+                  </Button>
+                </Stack>
               </Stack>
 
               <Stack

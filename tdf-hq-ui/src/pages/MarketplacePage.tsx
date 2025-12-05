@@ -11,16 +11,10 @@ import {
   FormControl,
   Grid,
   IconButton,
-  ButtonGroup,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   InputLabel,
   MenuItem,
   Select,
@@ -48,6 +42,7 @@ import type {
 } from '../api/types';
 import { Marketplace } from '../api/marketplace';
 import { formatLastSavedTimestamp, getOrderStatusMeta } from '../utils/marketplace';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
 
 declare global {
   interface Window {
@@ -61,6 +56,7 @@ const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
 const CART_META_KEY = 'tdf-marketplace-cart-meta';
 const CART_EVENT = 'tdf-cart-updated';
 const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
+const FILTERS_KEY = 'tdf-marketplace-filters';
 
 const parseEnvNumber = (key: string): number | null => {
   const raw = import.meta.env[key];
@@ -98,8 +94,6 @@ export default function MarketplacePage() {
   const [buyerPhone, setBuyerPhone] = useState('');
   const [contactPref, setContactPref] = useState<'email' | 'phone'>('email');
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
-  const [compareIds, setCompareIds] = useState<string[]>([]);
-  const [compareOpen, setCompareOpen] = useState(false);
   const [paypalReady, setPaypalReady] = useState(false);
   const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
   const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string } | null>(null);
@@ -159,6 +153,20 @@ export default function MarketplacePage() {
       localStorage.setItem(CART_STORAGE_KEY, cartId);
     }
   }, [cartId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(FILTERS_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed?.search) setSearch(String(parsed.search));
+      if (parsed?.category) setCategory(String(parsed.category));
+      if (parsed?.sort) setSort(parsed.sort);
+    } catch {
+      // ignore malformed filters
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -383,6 +391,7 @@ export default function MarketplacePage() {
   const resetFilters = () => {
     setSearch('');
     setCategory('all');
+    setSort('relevance');
   };
 
   useEffect(() => {
@@ -394,6 +403,16 @@ export default function MarketplacePage() {
       // ignore storage errors
     }
   }, [buyerName, buyerEmail, buyerPhone, contactPref]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const payload = { search, category, sort };
+      localStorage.setItem(FILTERS_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
+  }, [search, category, sort]);
 
   useEffect(() => {
     if (!paypalDialogOpen || !paypalOrder || !paypalReady || typeof window === 'undefined' || !window.paypal) return;
@@ -492,22 +511,6 @@ export default function MarketplacePage() {
     setToast('Carrito restaurado');
   };
 
-  const toggleCompare = (id: string) => {
-    setCompareIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 3) {
-        setToast('Máximo 3 artículos en el comparador');
-        return prev;
-      }
-      return [...prev, id];
-    });
-  };
-
-  const compareItems = useMemo(
-    () => listings.filter((item) => compareIds.includes(item.miListingId)),
-    [listings, compareIds],
-  );
-
   const getStatusChipProps = (status?: string | null) => {
     if (!status) return null;
     const lower = status.toLowerCase();
@@ -521,6 +524,28 @@ export default function MarketplacePage() {
     const amount = (usdCents / 100) / usdPerToken;
     if (!Number.isFinite(amount)) return null;
     return amount.toFixed(4);
+  };
+  const copyCompareTable = async () => {
+    const header = ['Título', 'Categoría', 'Marca', 'Modelo', 'USD'];
+    const tokenHeaders = [
+      adaUsdRate ? 'ADA' : null,
+      sedUsdRate ? 'SED' : null,
+    ].filter(Boolean) as string[];
+    const rows = compareItems.map((item) => {
+      const base = [item.miTitle, item.miCategory, item.miBrand ?? '-', item.miModel ?? '-', item.miPriceDisplay];
+      const tokenVals = [
+        adaUsdRate ? `≈ ${formatTokenAmount(item.miPriceUsdCents, adaUsdRate) ?? '—'} ADA` : null,
+        sedUsdRate ? `≈ ${formatTokenAmount(item.miPriceUsdCents, sedUsdRate) ?? '—'} SED` : null,
+      ].filter(Boolean) as string[];
+      return [...base, ...tokenVals].join('\t');
+    });
+    const payload = [header.join('\t'), ...rows].join('\n');
+    try {
+      await navigator.clipboard.writeText(payload);
+      setToast('Tabla copiada');
+    } catch {
+      setToast('No se pudo copiar la tabla');
+    }
   };
   const orderSummary = useMemo(() => {
     if (!lastOrder) return null;
@@ -727,18 +752,8 @@ export default function MarketplacePage() {
                 </Select>
               </FormControl>
               <Chip label={`${filteredListings.length} resultados`} size="small" />
-              {!showTokenRates && (
-                <Typography variant="caption" color="text.secondary">
-                  Configura VITE_ADA_USD_RATE / VITE_SED_USD_RATE para ver equivalentes en ADA/SED.
-                </Typography>
-              )}
-              <Button
-                variant="outlined"
-                size="small"
-                disabled={compareIds.length === 0}
-                onClick={() => setCompareOpen(true)}
-              >
-                Comparar ({compareIds.length})
+              <Button variant="text" size="small" onClick={resetFilters}>
+                Limpiar filtros
               </Button>
             </Stack>
             <Grid container spacing={2}>
@@ -855,13 +870,6 @@ export default function MarketplacePage() {
                         >
                           {item.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
                         </Button>
-                        <Chip
-                          label={compareIds.includes(item.miListingId) ? 'En comparador' : 'Comparar'}
-                          size="small"
-                          color={compareIds.includes(item.miListingId) ? 'primary' : 'default'}
-                          onClick={() => toggleCompare(item.miListingId)}
-                          variant={compareIds.includes(item.miListingId) ? 'filled' : 'outlined'}
-                        />
                         <Typography variant="caption" color="text.secondary">
                           Incluye markup {item.miMarkupPct}% sobre precio referencia.
                         </Typography>
@@ -1074,6 +1082,14 @@ export default function MarketplacePage() {
                           Configura VITE_PAYPAL_CLIENT_ID para habilitar PayPal.
                         </Typography>
                       )}
+                      {paymentMethod === 'card' && (
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <CreditCardIcon fontSize="small" color="primary" />
+                          <Typography variant="caption" color="text.secondary">
+                            Aceptamos Visa, Mastercard, Diners, Discover y Amex.
+                          </Typography>
+                        </Stack>
+                      )}
                       <Button
                         variant="contained"
                         onClick={openReview}
@@ -1155,7 +1171,7 @@ export default function MarketplacePage() {
             )}
             {datafastCheckout && (
               <Alert severity="info" variant="outlined">
-                Total: {datafastCheckout.dcAmount}
+                {cartItems.length} artículo(s) · Total: {cartSubtotal}
               </Alert>
             )}
             {!datafastCheckout && (
@@ -1267,62 +1283,6 @@ export default function MarketplacePage() {
             }}
             color="inherit"
           >
-            Cerrar
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={compareOpen} onClose={() => setCompareOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Comparar artículos</DialogTitle>
-                <DialogContent dividers>
-                  {compareItems.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      Agrega hasta 3 artículos al comparador.
-                    </Typography>
-                  )}
-                  {compareItems.length > 0 && (
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Título</TableCell>
-                          <TableCell>Categoría</TableCell>
-                          <TableCell>Marca</TableCell>
-                          <TableCell>Modelo</TableCell>
-                          <TableCell align="right">USD</TableCell>
-                          {adaUsdRate && <TableCell align="right">ADA (≈ {adaUsdRate} USD)</TableCell>}
-                          {sedUsdRate && <TableCell align="right">SED (≈ {sedUsdRate} USD)</TableCell>}
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {compareItems.map((item) => (
-                          <TableRow key={item.miListingId}>
-                            <TableCell>{item.miTitle}</TableCell>
-                            <TableCell>{item.miCategory}</TableCell>
-                            <TableCell>{item.miBrand ?? '-'}</TableCell>
-                            <TableCell>{item.miModel ?? '-'}</TableCell>
-                            <TableCell align="right">{item.miPriceDisplay}</TableCell>
-                            {adaUsdRate && (
-                              <TableCell align="right">
-                                ≈ {formatTokenAmount(item.miPriceUsdCents, adaUsdRate) ?? '—'} ADA
-                              </TableCell>
-                            )}
-                            {sedUsdRate && (
-                              <TableCell align="right">
-                                ≈ {formatTokenAmount(item.miPriceUsdCents, sedUsdRate) ?? '—'} SED
-                              </TableCell>
-                            )}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-        </DialogContent>
-        <DialogActions>
-          {compareItems.length > 0 && (
-            <Button onClick={() => setCompareIds([])} color="inherit">
-              Limpiar
-            </Button>
-          )}
-          <Button onClick={() => setCompareOpen(false)} variant="contained">
             Cerrar
           </Button>
         </DialogActions>

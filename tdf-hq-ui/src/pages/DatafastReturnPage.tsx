@@ -3,6 +3,7 @@ import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider,
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Marketplace } from '../api/marketplace';
 import type { MarketplaceOrderDTO } from '../api/types';
+import { getOrderStatusMeta } from '../utils/marketplace';
 
 function getQueryParam(name: string): string | null {
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -18,14 +19,12 @@ export default function DatafastReturnPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [order, setOrder] = useState<MarketplaceOrderDTO | null>(null);
   const [message, setMessage] = useState<string>('Confirmando tu pago...');
+  const [redirectSeconds, setRedirectSeconds] = useState<number>(5);
 
   const statusColor = (value?: string | null): 'default' | 'success' | 'warning' | 'info' => {
     if (!value) return 'default';
-    const lower = value.toLowerCase();
-    if (lower.includes('paid') || lower.includes('pag')) return 'success';
-    if (lower.includes('pending')) return 'warning';
-    if (lower.includes('contact')) return 'info';
-    return 'default';
+    const meta = getOrderStatusMeta(value);
+    return meta.color;
   };
 
   useEffect(() => {
@@ -53,6 +52,20 @@ export default function DatafastReturnPage() {
     void run();
   }, [orderId, resourcePath, location.key]);
 
+  useEffect(() => {
+    if (status !== 'success') return;
+    const timer = setInterval(() => {
+      setRedirectSeconds((s) => {
+        if (s <= 1) {
+          navigate('/marketplace', { replace: true });
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [status, navigate]);
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
       <Stack spacing={2} maxWidth={480} width="100%">
@@ -69,19 +82,25 @@ export default function DatafastReturnPage() {
         )}
         {status === 'success' && order && (
           <Stack spacing={2}>
-            <Alert severity="success">{message}</Alert>
+            <Alert severity="success">
+              {message} Te redirigiremos al marketplace en {redirectSeconds}s.
+            </Alert>
             <Card variant="outlined">
               <CardContent>
                 <Stack spacing={1}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Typography variant="subtitle1" fontWeight={700}>
-                      Seguimiento de tu orden
+                      Resumen de compra
                     </Typography>
-                    <Chip label={order.moStatus} color={statusColor(order.moStatus)} size="small" />
+                    <Chip label={getOrderStatusMeta(order.moStatus).label} color={statusColor(order.moStatus)} size="small" />
                   </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    Te avisaremos cuando cambie el estado. Guarda este ID: {order.moOrderId}.
-                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="body2" color="text.secondary">
+                      Método de pago: Tarjeta (Datafast)
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2">Total: {order.moTotalDisplay}</Typography>
+                  <Typography variant="body2">ID de pedido: {order.moOrderId}</Typography>
                   {order.moItems?.length > 0 && (
                     <Stack spacing={0.5}>
                       <Typography variant="caption" color="text.secondary">
