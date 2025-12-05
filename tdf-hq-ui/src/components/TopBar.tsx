@@ -1,7 +1,7 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { useEffect, useMemo, useState } from 'react';
-import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider } from '@mui/material';
+import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider, Tooltip } from '@mui/material';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
@@ -208,16 +208,18 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           alignItems="center"
           sx={{ ml: 'auto' }}
         >
-          <Button
-            color="inherit"
-            onClick={(e) => setResourcesAnchor(e.currentTarget)}
-            sx={{ textTransform: 'none' }}
-            aria-haspopup="true"
-            aria-expanded={resourcesOpen ? 'true' : undefined}
-            aria-label="Abrir recursos"
-          >
-            Recursos
-          </Button>
+          <Tooltip title="Alt+R abre recursos">
+            <Button
+              color="inherit"
+              onClick={(e) => setResourcesAnchor(e.currentTarget)}
+              sx={{ textTransform: 'none' }}
+              aria-haspopup="true"
+              aria-expanded={resourcesOpen ? 'true' : undefined}
+              aria-label="Abrir recursos"
+            >
+              Recursos
+            </Button>
+          </Tooltip>
           <Button
             color="inherit"
             component={RouterLink}
@@ -352,6 +354,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         onClose={() => setResourcesAnchor(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        MenuListProps={{ autoFocusItem: resourcesOpen }}
       >
         <MenuItem component={RouterLink} to="/docs" onClick={() => setResourcesAnchor(null)}>
           Docs

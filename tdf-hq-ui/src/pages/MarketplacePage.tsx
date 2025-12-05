@@ -907,6 +907,15 @@ export default function MarketplacePage() {
                 Limpiar filtros
               </Button>
             </Stack>
+            {filtersActiveCount > 0 && (
+              <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ mb: 1 }}>
+                {category !== 'all' && <Chip label={`Categoría: ${category}`} size="small" />}
+                {purpose !== 'all' && <Chip label={`Modalidad: ${purpose === 'sale' ? 'Venta' : 'Renta'}`} size="small" />}
+                {condition !== 'all' && <Chip label={`Condición: ${condition}`} size="small" />}
+                {sort !== 'relevance' && <Chip label={`Orden: ${sort}`} size="small" />}
+                {search.trim() && <Chip label="Búsqueda activa" size="small" />}
+              </Stack>
+            )}
             <Grid container spacing={2}>
               {!listingsQuery.isLoading && filteredListings.length === 0 && (
                 <Grid item xs={12}>
@@ -927,14 +936,18 @@ export default function MarketplacePage() {
                   <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, flexGrow: 1 }}>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="h6" fontWeight={700} noWrap>
-                          {item.miTitle}
-                        </Typography>
+                        <Tooltip title={item.miTitle}>
+                          <Typography variant="h6" fontWeight={700} noWrap>
+                            {item.miTitle}
+                          </Typography>
+                        </Tooltip>
                         <Chip label={item.miCategory} size="small" />
                       </Stack>
-                      <Typography variant="body2" color="text.secondary">
-                        {item.miBrand ?? 'Sin marca'} {item.miModel ?? ''}
-                      </Typography>
+                      <Tooltip title={`${item.miBrand ?? 'Sin marca'} ${item.miModel ?? ''}`}>
+                        <Typography variant="body2" color="text.secondary" noWrap>
+                          {item.miBrand ?? 'Sin marca'} {item.miModel ?? ''}
+                        </Typography>
+                      </Tooltip>
                       <Stack direction="row" spacing={1} flexWrap="wrap">
                         {item.miBrand && <Chip size="small" label={item.miBrand} variant="outlined" />}
                         {item.miModel && <Chip size="small" label={item.miModel} variant="outlined" />}
@@ -1011,6 +1024,17 @@ export default function MarketplacePage() {
                               }}
                             >
                               Copiar detalle
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => {
+                                const link = `${window.location.origin}/marketplace?listing=${item.miListingId}`;
+                                navigator.clipboard.writeText(link).catch(() => {});
+                                setToast('Enlace copiado');
+                              }}
+                            >
+                              Copiar enlace
                             </Button>
                             {props && (
                               <Chip

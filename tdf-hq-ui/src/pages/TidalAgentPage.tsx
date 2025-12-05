@@ -5,8 +5,13 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   Divider,
+  FormControl,
   FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   Switch,
   TextField,
@@ -29,6 +34,7 @@ export default function TidalAgentPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showRaw, setShowRaw] = useState(false);
   const [historyMode, setHistoryMode] = useState<'full' | 'code'>('full');
+  const [target, setTarget] = useState<'d1' | 'd2' | 'd3' | 'd4'>('d1');
 
   const handleSubmit = async () => {
     if (!config) return;
@@ -113,7 +119,33 @@ export default function TidalAgentPage() {
                     {copied ? 'Copiado' : 'Copiar'}
                   </Button>
                 )}
+                {code && (
+                  <Button
+                    variant="outlined"
+                    startIcon={<ContentCopyIcon />}
+                    onClick={() => {
+                      const wrapped = `${target} $ (${code})`;
+                      void navigator.clipboard.writeText(wrapped);
+                    }}
+                  >
+                    Copiar con {target} $
+                  </Button>
+                )}
               </Stack>
+              <FormControl size="small" sx={{ maxWidth: 160 }}>
+                <InputLabel id="tidal-target-label">Destino</InputLabel>
+                <Select
+                  labelId="tidal-target-label"
+                  label="Destino"
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value as typeof target)}
+                >
+                  <MenuItem value="d1">d1</MenuItem>
+                  <MenuItem value="d2">d2</MenuItem>
+                  <MenuItem value="d3">d3</MenuItem>
+                  <MenuItem value="d4">d4</MenuItem>
+                </Select>
+              </FormControl>
 
               {error && <Alert severity="error">{error}</Alert>}
 
@@ -135,9 +167,12 @@ export default function TidalAgentPage() {
 
               {history.length > 0 && (
                 <Stack spacing={1}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Historial rápido
-                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Historial rápido
+                    </Typography>
+                    <Chip label={history.length} size="small" color="info" />
+                  </Stack>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Button
                       size="small"
@@ -196,11 +231,12 @@ export default function TidalAgentPage() {
                             size="small"
                             variant="outlined"
                             onClick={() => {
-                              navigator.clipboard.writeText(item.code).catch(() => {});
+                              const wrapped = `${target} $ (${item.code})`;
+                              navigator.clipboard.writeText(wrapped).catch(() => {});
                               setShowRaw(false);
                             }}
                           >
-                            Copiar y cerrar raw
+                            Copiar con {target} $ y cerrar raw
                           </Button>
                         </CardContent>
                       </Card>

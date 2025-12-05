@@ -225,8 +225,8 @@ export default function App() {
         <Route path="/operacion" element={<Outlet />}>
           <Route path="inventario" element={<InventoryPage />} />
           <Route path="ordenes-marketplace" element={<MarketplaceOrdersPage />} />
-            <Route index element={<Navigate to="inventario" replace />} />
-          </Route>
+          <Route index element={<Navigate to="inventario" replace />} />
+        </Route>
 
           <Route path="/configuracion" element={<Outlet />}>
             <Route path="inscripciones-curso" element={<CourseRegistrationsAdminPage />} />
