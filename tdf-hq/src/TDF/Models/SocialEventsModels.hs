@@ -91,7 +91,3 @@ ArtistGenre
     Primary artistId genre
     deriving Show
 |]
-
-migrateSocialEvents :: [Migration]
-migrateSocialEvents = migrateAll
-

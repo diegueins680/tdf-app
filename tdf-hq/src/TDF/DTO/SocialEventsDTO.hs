@@ -9,9 +9,11 @@ import           Data.Time  (UTCTime)
 import           GHC.Generics (Generic)
 
 data ArtistDTO = ArtistDTO
-  { artistId     :: Maybe Text
-  , artistName   :: Text
-  , artistGenres :: [Text]
+  { artistId       :: Maybe Text
+  , artistName     :: Text
+  , artistGenres   :: [Text]
+  , artistBio      :: Maybe Text
+  , artistAvatarUrl :: Maybe Text
   } deriving (Show, Eq, Generic)
 instance ToJSON ArtistDTO
 instance FromJSON ArtistDTO

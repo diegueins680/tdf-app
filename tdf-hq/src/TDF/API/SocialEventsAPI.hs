@@ -24,7 +24,7 @@ type EventsRoutes =
   :<|> "events" :> ReqBody '[JSON] EventDTO :> Post '[JSON] EventDTO
   :<|> "events" :> IdParam :> Get '[JSON] EventDTO
   :<|> "events" :> IdParam :> ReqBody '[JSON] EventDTO :> Put '[JSON] EventDTO
-  :<|> "events" :> IdParam :> DeleteNoContent '[JSON] NoContent
+  :<|> "events" :> IdParam :> DeleteNoContent '[JSON]
 
 type VenuesRoutes =
        "venues" :> QueryParam "city" Text :> QueryParam "near" Text :> Get '[JSON] [VenueDTO]

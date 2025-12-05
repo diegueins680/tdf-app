@@ -20,7 +20,7 @@ import           Control.Monad (forM, forM_, when)
 
 import           Servant
 
-import           Database.Persist (Entity(..), SelectOpt(..), selectList, get, insert, insert_, update, delete)
+import           Database.Persist (Entity(..), SelectOpt(..), selectList, get, insert, insert_, update, delete, deleteWhere)
 import           Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
 
 import           TDF.API.SocialEventsAPI
@@ -53,11 +53,13 @@ socialEventsServer _user = eventsServer
         artists <- forM artistLinks $ \(Entity _ link) -> do
           mArtist <- liftIO $ runSqlPool (get (eventArtistArtistId link)) envPool
           pure $ case mArtist of
-            Nothing -> ArtistDTO { artistId = Nothing, artistName = "(unknown)", artistGenres = [] }
+            Nothing -> ArtistDTO { artistId = Nothing, artistName = "(unknown)", artistGenres = [], artistBio = Nothing, artistAvatarUrl = Nothing }
             Just a -> ArtistDTO 
               { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link))))
               , artistName = artistProfileName a
               , artistGenres = maybe [] id (artistProfileGenres a)
+              , artistBio = artistProfileBio a
+              , artistAvatarUrl = artistProfileAvatarUrl a
               }
         pure EventDTO
           { eventId = Just (T.pack (show (fromSqlKey eid)))
@@ -118,11 +120,13 @@ socialEventsServer _user = eventsServer
               artists <- forM artistLinks $ \(Entity _ link) -> do
                 mArtist <- liftIO $ runSqlPool (get (eventArtistArtistId link)) envPool
                 pure $ case mArtist of
-                  Nothing -> ArtistDTO { artistId = Nothing, artistName = "(unknown)", artistGenres = [] }
+                  Nothing -> ArtistDTO { artistId = Nothing, artistName = "(unknown)", artistGenres = [], artistBio = Nothing, artistAvatarUrl = Nothing }
                   Just a -> ArtistDTO 
                     { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link))))
                     , artistName = artistProfileName a
                     , artistGenres = maybe [] id (artistProfileGenres a)
+                    , artistBio = artistProfileBio a
+                    , artistAvatarUrl = artistProfileAvatarUrl a
                     }
               pure $ EventDTO
                 { eventId = Just (T.pack (show num))
@@ -267,17 +271,93 @@ socialEventsServer _user = eventsServer
             ]) envPool
           pure (dto { venueId = Just rawId })
 
-    -- Artists (not implemented)
+    -- Artists
     artistsServer :: ServerT ArtistsRoutes AppM
     artistsServer = listArtists :<|> createArtist :<|> getArtist :<|> updateArtist
+
     listArtists :: Maybe String -> Maybe String -> AppM [ArtistDTO]
-    listArtists _ _ = throwError err501 { errBody = "Not implemented: listArtists" }
+    listArtists mNameFilter mGenreFilter = do
+      Env{..} <- ask
+      rows <- liftIO $ runSqlPool (selectList [] [Desc ArtistProfileCreatedAt, LimitTo 500]) envPool
+      let filtered = case mNameFilter of
+            Nothing -> rows
+            Just name -> filter (\(Entity _ a) -> T.isInfixOf (T.pack name) (artistProfileName a)) rows
+      forM filtered $ \(Entity aid a) -> do
+        genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. aid] []) envPool
+        pure ArtistDTO
+          { artistId = Just (T.pack (show (fromSqlKey aid)))
+          , artistName = artistProfileName a
+          , artistGenres = map (artistGenreGenre . entityVal) genres
+          , artistBio = artistProfileBio a
+          , artistAvatarUrl = artistProfileAvatarUrl a
+          }
+
     createArtist :: ArtistDTO -> AppM ArtistDTO
-    createArtist _ = throwError err501 { errBody = "Not implemented: createArtist" }
+    createArtist dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      key <- liftIO $ runSqlPool (insert ArtistProfile
+        { artistProfilePartyId = Nothing
+        , artistProfileName = artistName dto
+        , artistProfileBio = artistBio dto
+        , artistProfileAvatarUrl = artistAvatarUrl dto
+        , artistProfileGenres = Just (artistGenres dto)
+        , artistProfileSocialLinks = Nothing
+        , artistProfileCreatedAt = now
+        , artistProfileUpdatedAt = now
+        }) envPool
+      let genreList = artistGenres dto
+      liftIO $ runSqlPool (forM_ genreList $ \g ->
+        insert_ ArtistGenre { artistGenreArtistId = key, artistGenreGenre = g }
+      ) envPool
+      pure ArtistDTO
+        { artistId = Just (T.pack (show (fromSqlKey key)))
+        , artistName = artistName dto
+        , artistGenres = genreList
+        , artistBio = artistBio dto
+        , artistAvatarUrl = artistAvatarUrl dto
+        }
+
     getArtist :: String -> AppM ArtistDTO
-    getArtist _ = throwError err501 { errBody = "Not implemented: getArtist" }
+    getArtist idStr = do
+      Env{..} <- ask
+      case readMaybe idStr :: Maybe Int64 of
+        Nothing -> throwError err400 { errBody = "Invalid artist id" }
+        Just num -> do
+          let key = toSqlKey num :: ArtistProfileId
+          mArtist <- liftIO $ runSqlPool (get key) envPool
+          case mArtist of
+            Nothing -> throwError err404 { errBody = "Artist not found" }
+            Just a -> do
+              genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. key] []) envPool
+              pure ArtistDTO
+                { artistId = Just (T.pack idStr)
+                , artistName = artistProfileName a
+                , artistGenres = map (artistGenreGenre . entityVal) genres
+                , artistBio = artistProfileBio a
+                , artistAvatarUrl = artistProfileAvatarUrl a
+                }
+
     updateArtist :: String -> ArtistDTO -> AppM ArtistDTO
-    updateArtist _ _ = throwError err501 { errBody = "Not implemented: updateArtist" }
+    updateArtist idStr dto = do
+      Env{..} <- ask
+      case readMaybe idStr :: Maybe Int64 of
+        Nothing -> throwError err400 { errBody = "Invalid artist id" }
+        Just num -> do
+          let key = toSqlKey num :: ArtistProfileId
+          now <- liftIO getCurrentTime
+          liftIO $ runSqlPool (update key [ArtistProfileName =. artistName dto
+                                          , ArtistProfileBio =. artistBio dto
+                                          , ArtistProfileAvatarUrl =. artistAvatarUrl dto
+                                          , ArtistProfileGenres =. Just (artistGenres dto)
+                                          , ArtistProfileUpdatedAt =. now
+                                          ]) envPool
+          -- Update genres
+          liftIO $ runSqlPool (deleteWhere [ArtistGenreArtistId ==. key]) envPool
+          liftIO $ runSqlPool (forM_ (artistGenres dto) $ \g ->
+            insert_ ArtistGenre { artistGenreArtistId = key, artistGenreGenre = g }
+          ) envPool
+          pure dto { artistId = Just (T.pack idStr) }
 
     -- RSVPs (not implemented)
     rsvpsServer :: ServerT RsvpRoutes AppM
