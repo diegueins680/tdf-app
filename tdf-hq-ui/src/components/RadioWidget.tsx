@@ -9,6 +9,7 @@ import {
   IconButton,
   LinearProgress,
   Stack,
+  TextField,
   Typography,
   Tooltip,
   Button,
@@ -19,8 +20,10 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RadioIcon from '@mui/icons-material/Radio';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { generateTidalCode } from '../utils/tidalAgent';
 
-type Prompt = { text: string; author?: string; createdAt?: string };
+type Prompt = { text: string; author?: string; createdAt?: string; code?: string };
 
 type Station = {
   id: string;
@@ -75,13 +78,44 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
     <Stack spacing={1}>
       {prompts.map((p, idx) => (
         <Card key={`${p.text}-${idx}`} variant="outlined">
-          <CardContent sx={{ py: 1.25 }}>
+          <CardContent sx={{ py: 1.25, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
             <Typography variant="body2" fontWeight={600}>
               {p.text}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {p.author ?? 'Agente Tidal'} {p.createdAt ? `· ${p.createdAt}` : ''}
             </Typography>
+            {p.code && (
+              <Box
+                sx={{
+                  bgcolor: 'rgba(148,163,184,0.08)',
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                  borderRadius: 1.5,
+                  p: 1,
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  whiteSpace: 'pre-line',
+                  position: 'relative',
+                }}
+              >
+                {p.code}
+                <Box sx={{ position: 'absolute', top: 4, right: 4 }}>
+                  <Tooltip title="Copiar instrucciones Tidal">
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        if (navigator?.clipboard?.writeText) {
+                          navigator.clipboard.writeText(p.code ?? '').catch(() => {});
+                        }
+                      }}
+                    >
+                      <ContentCopyIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+            )}
           </CardContent>
         </Card>
       ))}
@@ -94,10 +128,15 @@ export default function RadioWidget() {
   const [expanded, setExpanded] = useState(false);
   const [activeId, setActiveId] = useState<string>(STATIONS[0].id);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [promptDraft, setPromptDraft] = useState('');
+  const [promptState, setPromptState] = useState<Record<string, Prompt[]>>(() =>
+    Object.fromEntries(STATIONS.map((s) => [s.id, [...s.prompts]])),
+  );
   const activeStation = useMemo(
     () => STATIONS.find((s) => s.id === activeId) ?? STATIONS[0],
     [activeId],
   );
+  const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -117,6 +156,30 @@ export default function RadioWidget() {
     } else {
       void audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     }
+  };
+
+  const promptsWithCode = useMemo(() => {
+    if (!activeStation) return [];
+    return stationPrompts.map((p) => ({
+      ...p,
+      code: p.code ?? generateTidalCode(p.text, activeStation.mood).code,
+    }));
+  }, [activeStation, stationPrompts]);
+
+  const handleAddPrompt = () => {
+    const value = promptDraft.trim();
+    if (!value || !activeStation) return;
+    const newPrompt: Prompt = {
+      text: value,
+      author: 'Tú',
+      createdAt: new Date().toISOString().slice(0, 10),
+      code: generateTidalCode(value, activeStation.mood).code,
+    };
+    setPromptState((prev) => ({
+      ...prev,
+      [activeStation.id]: [newPrompt, ...(prev[activeStation.id] ?? [])],
+    }));
+    setPromptDraft('');
   };
 
   return (
@@ -182,7 +245,19 @@ export default function RadioWidget() {
                 sx={{ height: 6, borderRadius: 999, bgcolor: 'rgba(148,163,184,0.2)' }}
               />
               <Typography variant="subtitle2">Prompts en uso</Typography>
-              <PromptList prompts={activeStation.prompts} />
+              <PromptList prompts={promptsWithCode} />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Escribe tu prompt (ej. dembow con quenas y delay granular)"
+                  value={promptDraft}
+                  onChange={(e) => setPromptDraft(e.target.value)}
+                />
+                <Button variant="contained" onClick={handleAddPrompt} disabled={!promptDraft.trim()}>
+                  Generar Tidal
+                </Button>
+              </Stack>
               <Box>
                 <Typography variant="caption" color="text.secondary">
                   Tip: estos streams se generan con un agente que convierte prompts en código Tidal Cycles y los publica en tiempo real.
