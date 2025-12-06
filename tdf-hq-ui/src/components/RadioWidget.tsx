@@ -174,6 +174,15 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 }
 
 export default function RadioWidget() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
+  const [dragging, setDragging] = useState(false);
+  const dragState = useRef<{ offsetX: number; offsetY: number; active: boolean }>({
+    offsetX: 0,
+    offsetY: 0,
+    active: false,
+  });
+
   const [customStations, setCustomStations] = useState<Station[]>([]);
   const defaultStation = useMemo<Station>(
     () =>
@@ -202,6 +211,100 @@ export default function RadioWidget() {
     [activeId, availableStations, defaultStation],
   );
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
+
+  const clampPosition = useCallback(
+    (x: number, y: number) => {
+      if (typeof window === 'undefined') return { x, y };
+      const rect = containerRef.current?.getBoundingClientRect();
+      const margin = 12;
+      const width = rect?.width ?? 300;
+      const height = rect?.height ?? 260;
+      const maxX = Math.max(margin, window.innerWidth - width - margin);
+      const maxY = Math.max(margin, window.innerHeight - height - margin);
+      return {
+        x: Math.min(Math.max(margin, x), maxX),
+        y: Math.min(Math.max(margin, y), maxY),
+      };
+    },
+    [],
+  );
+
+  // Hydrate initial position
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const fromStorage = window.localStorage.getItem('radio-position');
+    if (fromStorage) {
+      try {
+        const parsed = JSON.parse(fromStorage) as { x: number; y: number };
+        setPosition(clampPosition(parsed.x, parsed.y));
+        return;
+      } catch {
+        // ignore parsing errors
+      }
+    }
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const initial = clampPosition(width - 320, height - 320);
+    setPosition(initial);
+  }, [clampPosition]);
+
+  // Keep the widget within bounds on resize
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onResize = () => {
+      setPosition((p) => clampPosition(p.x, p.y));
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [clampPosition]);
+
+  // Drag handlers
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      if (
+        tag === 'button' ||
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        tag === 'option' ||
+        target?.closest('[data-no-drag]') ||
+        target?.closest('svg')
+      ) {
+        return;
+      }
+      dragState.current = { offsetX: e.clientX - position.x, offsetY: e.clientY - position.y, active: true };
+      setDragging(true);
+      target?.setPointerCapture?.(e.pointerId);
+    },
+    [position.x, position.y],
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!dragState.current.active) return;
+    const move = (e: PointerEvent) => {
+      if (!dragState.current.active) return;
+      const next = clampPosition(e.clientX - dragState.current.offsetX, e.clientY - dragState.current.offsetY);
+      setPosition(next);
+      try {
+        window.localStorage.setItem('radio-position', JSON.stringify(next));
+      } catch {
+        // ignore storage errors
+      }
+    };
+    const up = () => {
+      dragState.current.active = false;
+      setDragging(false);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  }, [clampPosition]);
 
   // Hydrate prompts and radio settings from localStorage to keep user submissions/settings across reloads.
   useEffect(() => {
@@ -367,13 +470,19 @@ export default function RadioWidget() {
     <Box
       sx={{
         position: 'fixed',
-        bottom: { xs: 12, md: 20 },
-        right: { xs: 12, md: 24 },
+        left: position.x,
+        top: position.y,
         zIndex: 1400,
         width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
+        cursor: dragging ? 'grabbing' : 'auto',
       }}
+      ref={containerRef}
     >
-      <Card elevation={6} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+      <Card
+        elevation={6}
+        sx={{ borderRadius: 3, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'grab' }}
+        onPointerDown={onPointerDown}
+      >
         <CardContent
           sx={{ p: 2, cursor: 'pointer' }}
           onClick={(e) => {
