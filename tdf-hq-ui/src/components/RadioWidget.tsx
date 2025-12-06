@@ -24,6 +24,7 @@ import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { generateTidalCode } from '../utils/tidalAgent';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 
 interface Prompt {
   text: string;
@@ -46,39 +47,11 @@ const CURATED_STATIONS: Station[] = [
     id: 'cosmic-cycles',
     name: 'Cosmic Cycles',
     mood: 'Downtempo / Ambient',
-    streamUrl: 'https://icecast.radiofrance.fr/fip-webradio8.mp3', // placeholder stream
+    streamUrl: 'https://icecast.radiofrance.fr/fip-midfi.mp3', // reliable FIP stream
     prompts: [
       { text: 'Paisajes sonoros nocturnos con sintes lentos', author: 'Agente', createdAt: '2025-12-01' },
       { text: 'Texturas granulares inspiradas en lluvia en Quito', createdAt: '2025-12-02' },
     ],
-  },
-  {
-    id: 'andina-bass',
-    name: 'Andina Bass',
-    mood: 'Afro / Bassline',
-    streamUrl: 'https://streams.ilovemusic.de/iloveradio7.mp3', // placeholder stream
-    prompts: [
-      { text: 'Kick UKG con quenas procesadas en Tidal', author: 'User', createdAt: '2025-12-03' },
-      { text: 'Dembow con delays quebrados y filtros vivos', author: 'Agente' },
-    ],
-  },
-  {
-    id: 'club-late',
-    name: 'Club Late',
-    mood: 'Techno / Hypnotic',
-    streamUrl: 'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one', // placeholder stream
-    prompts: [
-      { text: 'Polirritmias 5/4 con hats abiertos', createdAt: '2025-12-03' },
-      { text: 'Bajos en sinusoide sidechain con pads brillantes' },
-    ],
-  },
-  {
-    id: 'bbc-6music',
-    name: 'BBC Radio 6 Music (UK)',
-    region: 'UK / Alt',
-    mood: 'Indie / Eclectic',
-    streamUrl: 'https://stream.live.vc.bbcmedia.co.uk/bbc_6music',
-    prompts: [],
   },
   {
     id: 'kexp',
@@ -86,14 +59,6 @@ const CURATED_STATIONS: Station[] = [
     region: 'US / Alt',
     mood: 'Indie / Live Sessions',
     streamUrl: 'https://kexp-mp3-128.streamguys1.com/kexp128.mp3',
-    prompts: [],
-  },
-  {
-    id: 'cafe-del-mar',
-    name: 'Café del Mar',
-    region: 'ES / Chill',
-    mood: 'Balearic / Chill',
-    streamUrl: 'https://s3.voscast.com:8151/stream',
     prompts: [],
   },
   {
@@ -182,6 +147,7 @@ export default function RadioWidget() {
     offsetY: 0,
     active: false,
   });
+  const dragMovedRef = useRef(false);
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
   const defaultStation = useMemo<Station>(
@@ -262,18 +228,23 @@ export default function RadioWidget() {
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       const target = e.target as HTMLElement | null;
+      const dragHandle = target?.closest('[data-drag-handle]');
       const tag = target?.tagName?.toLowerCase();
-      if (
+      const isInteractive =
         tag === 'button' ||
+        tag === 'a' ||
         tag === 'input' ||
         tag === 'textarea' ||
         tag === 'select' ||
         tag === 'option' ||
-        target?.closest('[data-no-drag]') ||
-        target?.closest('svg')
-      ) {
+        target?.closest('[data-no-drag]');
+
+      // Only start drag on the handle or non-interactive areas.
+      if (!dragHandle && isInteractive) {
         return;
       }
+      e.preventDefault();
+      dragMovedRef.current = false;
       dragState.current = { offsetX: e.clientX - position.x, offsetY: e.clientY - position.y, active: true };
       setDragging(true);
       target?.setPointerCapture?.(e.pointerId);
@@ -283,9 +254,10 @@ export default function RadioWidget() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!dragState.current.active) return;
+    if (!dragging || !dragState.current.active) return;
     const move = (e: PointerEvent) => {
       if (!dragState.current.active) return;
+      dragMovedRef.current = true;
       const next = clampPosition(e.clientX - dragState.current.offsetX, e.clientY - dragState.current.offsetY);
       setPosition(next);
       try {
@@ -304,7 +276,7 @@ export default function RadioWidget() {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
     };
-  }, [clampPosition]);
+  }, [clampPosition, dragging]);
 
   // Hydrate prompts and radio settings from localStorage to keep user submissions/settings across reloads.
   useEffect(() => {
@@ -472,11 +444,12 @@ export default function RadioWidget() {
         position: 'fixed',
         left: position.x,
         top: position.y,
-        zIndex: 1400,
-        width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
-        cursor: dragging ? 'grabbing' : 'auto',
-        touchAction: 'none',
-      }}
+      zIndex: 1400,
+      width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
+      cursor: dragging ? 'grabbing' : 'grab',
+      touchAction: 'none',
+      userSelect: 'none',
+    }}
       ref={containerRef}
       onPointerDown={onPointerDown}
     >
@@ -484,9 +457,33 @@ export default function RadioWidget() {
         elevation={6}
         sx={{ borderRadius: 3, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'grab' }}
       >
+        <Box
+          data-drag-handle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 1.5,
+            py: 0.75,
+            bgcolor: dragging ? 'action.selected' : 'action.hover',
+            borderBottom: '1px dashed',
+            borderColor: 'divider',
+            cursor: dragging ? 'grabbing' : 'grab',
+            userSelect: 'none',
+          }}
+        >
+          <DragIndicatorIcon fontSize="small" color="action" />
+          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+            Arrastra para mover
+          </Typography>
+        </Box>
         <CardContent
           sx={{ p: 2, cursor: 'pointer' }}
           onClick={(e) => {
+            if (dragging || dragMovedRef.current) {
+              dragMovedRef.current = false;
+              return;
+            }
             // Avoid toggling when clicking control buttons
             const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
             if (tag === 'button' || tag === 'svg' || tag === 'path') return;
@@ -495,7 +492,7 @@ export default function RadioWidget() {
         >
           <Stack direction="row" alignItems="center" spacing={1}>
             <RadioIcon color="secondary" />
-            <Box flex={1}>
+            <Box flex={1} minWidth={0}>
               <Typography variant="subtitle1" fontWeight={800} noWrap>
                 Radio Inteligente
               </Typography>
