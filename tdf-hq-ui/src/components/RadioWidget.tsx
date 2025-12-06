@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Card,
@@ -25,6 +26,12 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { generateTidalCode } from '../utils/tidalAgent';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { RadioAPI } from '../api/radio';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 
 interface Prompt {
   text: string;
@@ -33,13 +40,23 @@ interface Prompt {
   code?: string;
 }
 
+type LoadStreamDetail = {
+  streamUrl: string;
+  stationName?: string;
+  stationId?: string;
+};
+
 interface Station {
   id: string;
   name: string;
   streamUrl: string;
   region?: string;
+  stationId?: string;
+  country?: string;
+  genre?: string;
   mood: string;
   prompts: Prompt[];
+  source?: 'curated' | 'custom' | 'db' | 'shared';
 }
 
 const CURATED_STATIONS: Station[] = [
@@ -48,6 +65,9 @@ const CURATED_STATIONS: Station[] = [
     name: 'Cosmic Cycles',
     mood: 'Downtempo / Ambient',
     streamUrl: 'https://icecast.radiofrance.fr/fip-midfi.mp3', // reliable FIP stream
+    country: 'FR',
+    genre: 'Downtempo / Ambient',
+    source: 'curated',
     prompts: [
       { text: 'Paisajes sonoros nocturnos con sintes lentos', author: 'Agente', createdAt: '2025-12-01' },
       { text: 'Texturas granulares inspiradas en lluvia en Quito', createdAt: '2025-12-02' },
@@ -59,6 +79,9 @@ const CURATED_STATIONS: Station[] = [
     region: 'US / Alt',
     mood: 'Indie / Live Sessions',
     streamUrl: 'https://kexp-mp3-128.streamguys1.com/kexp128.mp3',
+    country: 'US',
+    genre: 'Indie / Live Sessions',
+    source: 'curated',
     prompts: [],
   },
   {
@@ -67,14 +90,9 @@ const CURATED_STATIONS: Station[] = [
     region: 'US / News',
     mood: 'News / Talk',
     streamUrl: 'https://fm939.wnyc.org/wnycfm-web',
-    prompts: [],
-  },
-  {
-    id: 'lofi-hiphop',
-    name: 'Lofi Hip Hop Radio',
-    region: 'Global',
-    mood: 'Lofi / Beats',
-    streamUrl: 'https://streams.radio.co/s8d88a3b0a/listen',
+    country: 'US',
+    genre: 'News / Talk',
+    source: 'curated',
     prompts: [],
   },
 ];
@@ -150,6 +168,20 @@ export default function RadioWidget() {
   const dragMovedRef = useRef(false);
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
+  const [newStationCountry, setNewStationCountry] = useState('');
+  const [newStationGenre, setNewStationGenre] = useState('');
+  const [searchCountry, setSearchCountry] = useState('');
+  const [searchGenre, setSearchGenre] = useState('');
+  const [favoriteKeys, setFavoriteKeys] = useState<string[]>([]);
+  const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editCountry, setEditCountry] = useState('');
+  const [editGenre, setEditGenre] = useState('');
   const defaultStation = useMemo<Station>(
     () =>
       CURATED_STATIONS[0] ?? {
@@ -166,17 +198,137 @@ export default function RadioWidget() {
   const [activeId, setActiveId] = useState<string>(defaultStation.id);
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [playbackWarning, setPlaybackWarning] = useState<string | null>(null);
   const [promptDraft, setPromptDraft] = useState('');
   const promptInputRef = useRef<HTMLInputElement | null>(null);
   const [promptState, setPromptState] = useState<Record<string, Prompt[]>>(() =>
     Object.fromEntries(CURATED_STATIONS.map((s) => [s.id, [...s.prompts]])),
   );
-  const availableStations = useMemo<Station[]>(() => [...CURATED_STATIONS, ...customStations], [customStations]);
+  const keyFor = useCallback((station: Station) => station.streamUrl.toLowerCase(), []);
+  const countryQuery = searchCountry.trim();
+  const genreQuery = searchGenre.trim();
+  const radioSearch = useQuery({
+    queryKey: ['radio-streams', countryQuery.toLowerCase(), genreQuery.toLowerCase()],
+    queryFn: () => RadioAPI.search({ country: countryQuery, genre: genreQuery }),
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    retry: false,
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'No se pudo cargar el catálogo de radios.';
+      setApiError(msg);
+    },
+    onSuccess: () => setApiError(null),
+  });
+  const refetchStreams = radioSearch.refetch;
+  const streamsFetching = radioSearch.isFetching;
+  const streamsError = radioSearch.error;
+
+  // Hydrate favorites/hidden preferences
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const favRaw = window.localStorage.getItem('radio-favorites');
+      if (favRaw) setFavoriteKeys(JSON.parse(favRaw));
+      const hidRaw = window.localStorage.getItem('radio-hidden');
+      if (hidRaw) setHiddenKeys(JSON.parse(hidRaw));
+      const favFilter = window.localStorage.getItem('radio-show-favorites');
+      if (favFilter) setShowFavoritesOnly(favFilter === '1');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-favorites', JSON.stringify(favoriteKeys));
+      window.localStorage.setItem('radio-hidden', JSON.stringify(hiddenKeys));
+      window.localStorage.setItem('radio-show-favorites', showFavoritesOnly ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [favoriteKeys, hiddenKeys, showFavoritesOnly]);
+  const favoriteSet = useMemo(() => new Set(favoriteKeys), [favoriteKeys]);
+  const hiddenSet = useMemo(() => new Set(hiddenKeys), [hiddenKeys]);
+
+  const dbStations = useMemo<Station[]>(() => {
+    if (!radioSearch.data) return [];
+    return radioSearch.data.map((dto) => ({
+      id: `db-${dto.rsId}`,
+      name: dto.rsName ?? 'Radio',
+      streamUrl: dto.rsStreamUrl,
+      country: dto.rsCountry ?? undefined,
+      region: dto.rsCountry ?? undefined,
+      genre: dto.rsGenre ?? undefined,
+      mood: dto.rsGenre ?? 'Live',
+      prompts: [],
+      source: 'db',
+    }));
+  }, [radioSearch.data]);
+  const allStations = useMemo<Station[]>(() => {
+    const merged = [...CURATED_STATIONS, ...dbStations, ...customStations];
+    const map = new Map<string, Station>();
+    merged.forEach((station) => {
+      const key = station.streamUrl.toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, station);
+      } else {
+        const current = map.get(key)!;
+        map.set(key, { ...current, ...station, prompts: current.prompts?.length ? current.prompts : station.prompts });
+      }
+    });
+    return Array.from(map.values());
+  }, [customStations, dbStations]);
+  const availableStations = allStations;
+  const visibleStations = useMemo(
+    () =>
+      allStations.filter((s) => {
+        const key = keyFor(s);
+        if (!showHidden && hiddenSet.has(key)) return false;
+        if (showFavoritesOnly && !favoriteSet.has(key)) return false;
+        return true;
+      }),
+    [allStations, favoriteSet, hiddenSet, showFavoritesOnly, keyFor],
+  );
+  const hiddenStations = useMemo(
+    () => allStations.filter((s) => hiddenSet.has(keyFor(s))),
+    [allStations, hiddenSet, keyFor],
+  );
   const activeStation = useMemo<Station>(
-    () => availableStations.find((s) => s.id === activeId) ?? defaultStation,
-    [activeId, availableStations, defaultStation],
+    () => allStations.find((s) => s.id === activeId) ?? defaultStation,
+    [activeId, allStations, defaultStation],
   );
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
+  useEffect(() => {
+    setEditName(activeStation.name);
+    setEditCountry(activeStation.country ?? '');
+    setEditGenre(activeStation.genre ?? activeStation.mood ?? '');
+  }, [activeStation]);
+  const toggleFavorite = useCallback(
+    (station: Station) => {
+      const key = keyFor(station);
+      setFavoriteKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+    },
+    [keyFor],
+  );
+  const hideStation = useCallback(
+    (station: Station) => {
+      const key = keyFor(station);
+      setHiddenKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
+      if (key === keyFor(activeStation)) {
+        setActiveId(defaultStation.id);
+      }
+    },
+    [activeStation, defaultStation.id, keyFor],
+  );
+  const unhideStation = useCallback(
+    (station: Station) => {
+      const key = keyFor(station);
+      setHiddenKeys((prev) => prev.filter((k) => k !== key));
+    },
+    [keyFor],
+  );
+  const isFavoriteActive = useMemo(() => favoriteSet.has(keyFor(activeStation)), [favoriteSet, activeStation, keyFor]);
 
   const clampPosition = useCallback(
     (x: number, y: number) => {
@@ -212,6 +364,18 @@ export default function RadioWidget() {
     const height = window.innerHeight;
     const initial = clampPosition(width - 320, height - 320);
     setPosition(initial);
+  }, [clampPosition]);
+  const resetPosition = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const initial = clampPosition(width - 320, height - 320);
+    setPosition(initial);
+    try {
+      window.localStorage.setItem('radio-position', JSON.stringify(initial));
+    } catch {
+      // ignore
+    }
   }, [clampPosition]);
 
   // Keep the widget within bounds on resize
@@ -285,7 +449,13 @@ export default function RadioWidget() {
       const rawStations = window.localStorage.getItem('radio-stations');
       if (rawStations) {
         const parsedStations: Station[] = JSON.parse(rawStations);
-        setCustomStations(parsedStations);
+        setCustomStations(
+          parsedStations.map((s) => ({
+            ...s,
+            source: s.source ?? 'custom',
+            mood: s.mood ?? s.genre ?? 'Custom',
+          })),
+        );
       }
       const raw = window.localStorage.getItem('radio-prompts');
       if (!raw) return;
@@ -335,12 +505,107 @@ export default function RadioWidget() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    if (!activeStation.streamUrl) {
+      setIsPlaying(false);
+      setPlaybackWarning('La emisora no tiene un stream disponible. Elige otra estación.');
+      audio.removeAttribute('src');
+      audio.load();
+      return;
+    }
     audio.src = activeStation.streamUrl;
     audio.muted = muted;
     if (isPlaying) {
       void audio.play().catch(() => setIsPlaying(false));
     }
-  }, [activeStation, isPlaying, muted]);
+  }, [activeStation.streamUrl, isPlaying, muted]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    let clearTimer: number | undefined;
+    const handleError = () => {
+      setIsPlaying(false);
+      const fallbackToDefault = activeStation.id !== defaultStation.id;
+      setPlaybackWarning(
+        fallbackToDefault
+          ? `No pudimos reproducir ${activeStation.name || 'esta emisora'}. Cambiamos a ${defaultStation.name}.`
+          : 'No pudimos reproducir esta emisora. Revisa el stream o prueba con otra.',
+      );
+      if (fallbackToDefault) {
+        setActiveId(defaultStation.id);
+        setTimeout(() => setIsPlaying(true), 160);
+      }
+    };
+    const handleCanPlay = () => {
+      if (clearTimer) {
+        window.clearTimeout(clearTimer);
+      }
+      if (!playbackWarning) return;
+      clearTimer = window.setTimeout(() => setPlaybackWarning(null), 2400);
+    };
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('canplay', handleCanPlay);
+    return () => {
+      if (clearTimer) {
+        window.clearTimeout(clearTimer);
+      }
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [activeStation.id, activeStation.name, defaultStation.id, defaultStation.name, playbackWarning]);
+
+  // Publish presence so other perfiles can see current stream.
+  useEffect(() => {
+    if (!isPlaying || !activeStation.streamUrl) {
+      void RadioAPI.clearPresence().catch(() => undefined);
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      void RadioAPI.setPresence({
+        rpuStreamUrl: activeStation.streamUrl,
+        rpuStationName: activeStation.name,
+        rpuStationId: activeStation.id,
+      }).catch(() => {
+        // ignore presence errors
+      });
+    }, 180);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isPlaying]);
+
+  useEffect(() => {
+    const handleLoadStream = (event: Event) => {
+      const detail = (event as CustomEvent<LoadStreamDetail>).detail;
+      if (!detail?.streamUrl) return;
+      setPlaybackWarning(null);
+      const existing = availableStations.find((s) => s.streamUrl === detail.streamUrl);
+      if (existing) {
+        setActiveId(existing.id);
+      } else {
+        const id = detail.stationId ?? `shared-${Math.random().toString(36).slice(2, 8)}`;
+        const station: Station = {
+          id,
+          stationId: detail.stationId,
+          name: detail.stationName?.trim() || 'Stream compartido',
+          streamUrl: detail.streamUrl,
+          mood: 'Compartido',
+          prompts: [],
+          source: 'shared',
+        };
+        setCustomStations((prev) => {
+          if (prev.some((s) => s.streamUrl === station.streamUrl)) return prev;
+          return [...prev, station];
+        });
+        setActiveId(id);
+      }
+      setExpanded(true);
+      setMuted(false);
+      setIsPlaying(true);
+    };
+    window.addEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
+    return () => window.removeEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
+  }, [availableStations]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -348,9 +613,19 @@ export default function RadioWidget() {
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
+      setPlaybackWarning(null);
     } else {
       if (muted) setMuted(false);
-      void audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      void audio
+        .play()
+        .then(() => {
+          setPlaybackWarning(null);
+          setIsPlaying(true);
+        })
+        .catch(() => {
+          setIsPlaying(false);
+          setPlaybackWarning('No se pudo reproducir este stream. Intenta con otra estación o revisa la URL.');
+        });
     }
   };
 
@@ -363,6 +638,37 @@ export default function RadioWidget() {
 
   const [newStationName, setNewStationName] = useState('');
   const [newStationUrl, setNewStationUrl] = useState('');
+  const normalizeField = useCallback((value?: string | null) => {
+    const trimmed = (value ?? '').trim();
+    return trimmed === '' ? undefined : trimmed;
+  }, []);
+  const clearFilters = useCallback(() => {
+    setSearchCountry('');
+    setSearchGenre('');
+    void refetchStreams();
+  }, [refetchStreams]);
+  const persistActiveStream = useCallback(
+    async (url: string, name?: string, country?: string, genre?: string) => {
+      try {
+        const payload = {
+          rsuStreamUrl: url,
+          rsuName: normalizeField(name),
+          rsuCountry: normalizeField(country),
+          rsuGenre: normalizeField(genre),
+        };
+        const saved = await RadioAPI.upsertActive(payload);
+        void refetchStreams();
+        setApiError(null);
+        return saved;
+      } catch (err) {
+        console.warn('No se pudo guardar metadata del stream', err);
+        const msg = err instanceof Error ? err.message : 'No se pudo guardar metadata del stream.';
+        setApiError(msg);
+        return null;
+      }
+    },
+    [normalizeField, refetchStreams],
+  );
   const addCustomStation = () => {
     const name = newStationName.trim();
     const url = newStationUrl.trim();
@@ -371,12 +677,27 @@ export default function RadioWidget() {
       return;
     }
     const id = `custom-${Math.random().toString(36).slice(2, 8)}`;
-    const station: Station = { id, name, streamUrl: url, mood: 'Custom', prompts: [] };
+    const country = normalizeField(newStationCountry);
+    const genre = normalizeField(newStationGenre);
+    const station: Station = {
+      id,
+      name,
+      streamUrl: url,
+      country,
+      region: country,
+      genre,
+      mood: genre ?? 'Custom',
+      prompts: [],
+      source: 'custom',
+    };
     setCustomStations((prev) => [...prev, station]);
     setPromptState((prev) => ({ ...prev, [id]: [] }));
     setActiveId(id);
+    setPlaybackWarning(null);
     setNewStationName('');
     setNewStationUrl('');
+    setNewStationCountry('');
+    setNewStationGenre('');
   };
 
   const removeCustomStation = (id: string) => {
@@ -398,12 +719,14 @@ export default function RadioWidget() {
       setTestResult('Ingresa una URL para probar.');
       return;
     }
+    setPlaybackWarning(null);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
     try {
       const res = await fetch(url, { method: 'HEAD', signal: controller.signal });
       if (res.ok) {
-        setTestResult('Stream disponible ✅');
+        const saved = await persistActiveStream(url, newStationName, newStationCountry, newStationGenre);
+        setTestResult(saved ? 'Stream disponible ✅ · guardado en catálogo' : 'Stream disponible ✅');
       } else {
         setTestResult('No pudimos validar el stream. Verifica la URL.');
       }
@@ -476,6 +799,12 @@ export default function RadioWidget() {
           <Typography variant="caption" color="text.secondary" fontWeight={600}>
             Arrastra para mover
           </Typography>
+          <Box sx={{ flex: 1 }} />
+          <Tooltip title="Volver a la esquina">
+            <IconButton size="small" onClick={resetPosition} data-no-drag>
+              <RestartAltIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
         <CardContent
           sx={{ p: 2, cursor: 'pointer' }}
@@ -505,6 +834,15 @@ export default function RadioWidget() {
                 {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
               </IconButton>
             </Tooltip>
+            <Tooltip title={isFavoriteActive ? 'Quitar de favoritos' : 'Marcar favorito'}>
+              <IconButton
+                onClick={() => toggleFavorite(activeStation)}
+                color={isFavoriteActive ? 'warning' : 'inherit'}
+                data-no-drag
+              >
+                {isFavoriteActive ? <StarIcon /> : <StarBorderIcon />}
+              </IconButton>
+            </Tooltip>
             <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
               <IconButton onClick={() => setMuted((m) => !m)} color="inherit" data-no-drag>
                 {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
@@ -531,6 +869,14 @@ export default function RadioWidget() {
               </Typography>
             </Stack>
           </Collapse>
+          {playbackWarning && (
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }} data-no-drag>
+              <WarningAmberIcon fontSize="small" color="warning" />
+              <Typography variant="caption" sx={{ color: 'warning.main' }}>
+                {playbackWarning}
+              </Typography>
+            </Stack>
+          )}
         </CardContent>
         <Collapse in={expanded}>
           <Divider />
@@ -539,17 +885,143 @@ export default function RadioWidget() {
               <Typography variant="body2" color="text.secondary">
                 Estaciones del mundo (usa el widget para escuchar):
               </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                {availableStations.map((station) => (
-                  <Chip
-                    key={station.id}
-                    label={station.region ? `${station.name} · ${station.region}` : station.name}
-                    color={station.id === activeId ? 'primary' : 'default'}
-                    onClick={() => setActiveId(station.id)}
-                    variant={station.id === activeId ? 'filled' : 'outlined'}
-                    onDelete={station.id.startsWith('custom-') ? () => removeCustomStation(station.id) : undefined}
+              <Stack spacing={1}>
+                <Typography variant="caption" color="text.secondary">
+                  Busca por país o género en el catálogo guardado:
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <TextField
+                    size="small"
+                    label="País"
+                    value={searchCountry}
+                    onChange={(e) => setSearchCountry(e.target.value)}
+                    placeholder="Ecuador, US, MX..."
+                    fullWidth
                   />
-                ))}
+                  <TextField
+                    size="small"
+                    label="Género"
+                    value={searchGenre}
+                    onChange={(e) => setSearchGenre(e.target.value)}
+                    placeholder="Ambient, Dembow, Jazz..."
+                    fullWidth
+                  />
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      void refetchStreams();
+                    }}
+                    disabled={streamsFetching}
+                    data-no-drag
+                    sx={{ minWidth: { sm: 140 } }}
+                  >
+                    {streamsFetching ? 'Buscando...' : 'Buscar streams'}
+                  </Button>
+                  {(countryQuery || genreQuery) && (
+                    <Button variant="text" onClick={clearFilters} data-no-drag sx={{ minWidth: { sm: 140 } }}>
+                      Limpiar filtros
+                    </Button>
+                  )}
+                  <Button
+                    variant={showFavoritesOnly ? 'contained' : 'outlined'}
+                    color="warning"
+                    onClick={() => setShowFavoritesOnly((v) => !v)}
+                    data-no-drag
+                    sx={{ minWidth: { sm: 160 } }}
+                    startIcon={showFavoritesOnly ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                  >
+                    Solo favoritos
+                  </Button>
+                </Stack>
+                {streamsFetching && (
+                  <LinearProgress variant="indeterminate" sx={{ height: 4, borderRadius: 999, maxWidth: 320 }} />
+                )}
+                {streamsError && (
+                  <Typography variant="caption" color="error">
+                    No se pudo cargar el catálogo de radios.
+                  </Typography>
+                )}
+                {apiError && (
+                  <Typography variant="caption" color="error">
+                    {apiError}
+                  </Typography>
+                )}
+              </Stack>
+              <Stack spacing={1}>
+                <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                  <Typography variant="caption" color="text.secondary">
+                    {streamsFetching
+                      ? 'Buscando estaciones...'
+                      : `Catálogo: ${dbStations.length} coincidencias${countryQuery || genreQuery ? ' (filtrado)' : ''}`}
+                  </Typography>
+                  {(countryQuery || genreQuery) && dbStations.length === 0 ? (
+                    <Typography variant="caption" color="text.secondary">
+                      Sin resultados con estos filtros.
+                    </Typography>
+                  ) : null}
+                  {hiddenStations.length > 0 && (
+                    <Tooltip title="Mostrar/ocultar estaciones que marcaste como ocultas">
+                      <Button
+                        size="small"
+                        variant={showHidden ? 'contained' : 'outlined'}
+                        startIcon={<VisibilityOffIcon fontSize="small" />}
+                        onClick={() => setShowHidden((v) => !v)}
+                        data-no-drag
+                      >
+                        {showHidden ? 'Ocultar ocultos' : `Ver ocultos (${hiddenStations.length})`}
+                      </Button>
+                    </Tooltip>
+                  )}
+                </Stack>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {visibleStations.map((station) => (
+                    <Chip
+                      key={station.id}
+                      label={
+                        station.country || station.region || station.genre
+                          ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
+                          : station.name
+                      }
+                      color={station.id === activeId ? 'primary' : 'default'}
+                      onClick={() => {
+                        setPlaybackWarning(null);
+                        setActiveId(station.id);
+                      }}
+                      variant={station.id === activeId ? 'filled' : 'outlined'}
+                      onDelete={
+                        station.id.startsWith('custom-')
+                          ? () => removeCustomStation(station.id)
+                          : () => hideStation(station)
+                      }
+                      deleteIcon={
+                        station.id.startsWith('custom-') ? undefined : <VisibilityOffIcon fontSize="small" />
+                      }
+                      icon={favoriteSet.has(keyFor(station)) ? <StarIcon fontSize="small" /> : undefined}
+                    />
+                  ))}
+                </Stack>
+                {showHidden && hiddenStations.length > 0 && (
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" color="text.secondary">
+                      Ocultas ({hiddenStations.length})
+                    </Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      {hiddenStations.map((station) => (
+                        <Chip
+                          key={`hidden-${station.id}`}
+                          label={
+                            station.country || station.region || station.genre
+                              ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
+                              : station.name
+                          }
+                          variant="outlined"
+                          onDelete={() => unhideStation(station)}
+                          deleteIcon={<RestartAltIcon fontSize="small" />}
+                        />
+                      ))}
+                  </Stack>
+                  </Stack>
+                )}
               </Stack>
               <Stack spacing={1}>
                 <Typography variant="caption" color="text.secondary">
@@ -569,6 +1041,22 @@ export default function RadioWidget() {
                     value={newStationUrl}
                     onChange={(e) => setNewStationUrl(e.target.value)}
                     placeholder="https://"
+                    fullWidth
+                  />
+                  <TextField
+                    size="small"
+                    label="País"
+                    value={newStationCountry}
+                    onChange={(e) => setNewStationCountry(e.target.value)}
+                    placeholder="Ecuador, México, UK..."
+                    fullWidth
+                  />
+                  <TextField
+                    size="small"
+                    label="Género"
+                    value={newStationGenre}
+                    onChange={(e) => setNewStationGenre(e.target.value)}
+                    placeholder="Afro, Ambient, Indie..."
                     fullWidth
                   />
                   <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1} sx={{ minWidth: { sm: 160 } }}>

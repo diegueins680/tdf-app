@@ -32,6 +32,7 @@ import TrialLessonsPage from './pages/TrialLessonsPage';
 import ClassesPage from './pages/ClassesPage';
 import ReportsPage from './pages/ReportsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
+import PublicProfilePage from './pages/PublicProfilePage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
 import LabelProjectsPage from './pages/LabelProjectsPage';
 import LabelReleasesPage from './pages/LabelReleasesPage';
@@ -179,6 +180,7 @@ export default function App() {
           <Route path="/admin/roles" element={<Navigate to="/configuracion/roles-permisos" replace />} />
 
           <Route path="/inicio" element={<FanHubPage />} />
+          <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/acerca" element={<AboutPage />} />
           <Route path="/seguridad" element={<SecurityPage />} />

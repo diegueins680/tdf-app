@@ -327,6 +327,27 @@ export interface FanFollowDTO {
   ffStartedAt: string;
 }
 
+export interface PartyFollowDTO {
+  pfFollowerId: number;
+  pfFollowingId: number;
+  pfViaNfc: boolean;
+  pfStartedAt: string;
+}
+
+export interface RadioPresenceDTO {
+  rpPartyId: number;
+  rpStreamUrl: string;
+  rpStationName?: string | null;
+  rpStationId?: string | null;
+  rpUpdatedAt: string;
+}
+
+export interface RadioPresenceUpsert {
+  rpuStreamUrl: string;
+  rpuStationName?: string | null;
+  rpuStationId?: string | null;
+}
+
 export interface ArtistProfileUpsert {
   apuArtistId: number;
   apuDisplayName?: string | null;

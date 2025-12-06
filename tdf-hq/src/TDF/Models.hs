@@ -292,6 +292,14 @@ PartyFollow
     createdAt        UTCTime
     UniquePartyFollow followerPartyId followingPartyId
     deriving Show Generic
+PartyRadioPresence
+    partyId          PartyId
+    streamUrl        Text
+    stationName      Text Maybe
+    stationId        Text Maybe
+    updatedAt        UTCTime
+    UniquePartyPresence partyId
+    deriving Show Generic
 ServiceCatalog
     name             Text
     kind             ServiceKind
@@ -538,5 +546,17 @@ CohortEnrollment
     userId   AcademyUserId
     createdAt UTCTime default=now()
     Primary cohortId userId
+    deriving Show Generic
+
+RadioStream
+    streamUrl      Text
+    name           Text Maybe
+    country        Text Maybe
+    genre          Text Maybe
+    isActive       Bool
+    lastCheckedAt  UTCTime Maybe
+    createdAt      UTCTime default=now()
+    updatedAt      UTCTime default=now()
+    UniqueRadioStreamUrl streamUrl
     deriving Show Generic
 |]
