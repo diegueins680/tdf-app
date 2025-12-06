@@ -223,6 +223,17 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     [follows],
   );
 
+  const streamingFallbacks = useMemo(() => {
+    const map = new Map<number, { spotify?: string | null; youtube?: string | null }>();
+    follows.forEach((follow) => {
+      map.set(follow.ffArtistId, {
+        spotify: follow.ffSpotifyUrl,
+        youtube: follow.ffYoutubeUrl,
+      });
+    });
+    return map;
+  }, [follows]);
+
   type ReleaseFeedItem = ArtistReleaseDTO & { artistName: string };
   const releaseFeedQuery = useQuery({
     queryKey: ['fan-release-feed', followedArtistIds],
@@ -430,7 +441,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               {isFan && releaseFeed.length > 0 && (
                 <Stack spacing={1.5}>
                   {releaseFeed.slice(0, 4).map((release) => {
-                    const releaseSources = buildReleaseStreamingSources(release);
+                    const spotifyUrl =
+                      release.arSpotifyUrl ?? streamingFallbacks.get(release.arArtistId)?.spotify ?? null;
+                    const youtubeUrl =
+                      release.arYoutubeUrl ?? streamingFallbacks.get(release.arArtistId)?.youtube ?? null;
+                    const releaseWithFallback = {
+                      ...release,
+                      arSpotifyUrl: spotifyUrl,
+                      arYoutubeUrl: youtubeUrl,
+                    };
+                    const releaseSources = buildReleaseStreamingSources(releaseWithFallback);
                     return (
                       <Box
                         key={`${release.arArtistId}-${release.arReleaseId}`}
@@ -476,10 +496,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             variant="contained"
                             size="small"
                             component="a"
-                            href={release.arSpotifyUrl ?? undefined}
+                            href={spotifyUrl ?? undefined}
                             target="_blank"
                             rel="noopener noreferrer"
-                            disabled={!release.arSpotifyUrl}
+                            disabled={!spotifyUrl}
                           >
                             Escuchar en Spotify
                           </Button>
@@ -487,10 +507,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             variant="outlined"
                             size="small"
                             component="a"
-                            href={release.arYoutubeUrl ?? undefined}
+                            href={youtubeUrl ?? undefined}
                             target="_blank"
                             rel="noopener noreferrer"
-                            disabled={!release.arYoutubeUrl}
+                            disabled={!youtubeUrl}
                           >
                             Ver en YouTube
                           </Button>
