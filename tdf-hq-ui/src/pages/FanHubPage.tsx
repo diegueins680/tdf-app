@@ -501,7 +501,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             rel="noopener noreferrer"
                             disabled={!spotifyUrl}
                           >
-                            Escuchar en Spotify
+                            Escuchar
                           </Button>
                           <Button
                             variant="outlined"
@@ -514,6 +514,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           >
                             Ver en YouTube
                           </Button>
+                          {canManageReleases && (
+                            <GoogleDriveUploadWidget
+                              label="Subir audio (Drive)"
+                              helperText="Carga el máster de este release."
+                              accept="audio/*"
+                              multiple={false}
+                              dense
+                            />
+                          )}
                         </Stack>
                       </Box>
                     );
