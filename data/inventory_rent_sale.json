@@ -1,0 +1,3440 @@
+[
+  {
+    "code": "TDFA001AC400",
+    "name": "AMPEG CLASSIC 400 CABINET",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 150.0,
+    "sale_recommended": 1500.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFAMPSHIBA1",
+    "name": "BOGNER SHIBA HEAD AND CABINET 4X12",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFELDELUXE",
+    "name": "FENDER BLUES DELUXE REISSUE",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFDEVILLE",
+    "name": "FENDER HOT ROD",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA008MRSHLC20",
+    "name": "MARSHALL CLASSIC 20",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 50.0,
+    "sale_recommended": 500.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFA001ADAMA5X",
+    "name": "MONITOR ADAM A5X",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA002ADAMA5X",
+    "name": "MONITOR ADAM A5X",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA0006PAPISO1-5",
+    "name": "MONITORES DE PISO FABRICACION NACIONAL CON POTENCIA PHONIC FULL RANGE",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA007P9R1",
+    "name": "MONITORES IN EAR SHURE RECEPTOR",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA007P9R2",
+    "name": "MONITORES IN EAR SHURE RECEPTOR",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA007P9R3",
+    "name": "MONITORES IN EAR SHURE RECEPTOR",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA007PSM1",
+    "name": "MONITORES IN EAR SHURE TRANSMISOR",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA007PSM2",
+    "name": "MONITORES IN EAR SHURE TRANSMISOR",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA005JBLMONITOR-1-3",
+    "name": "MONITORES JBL CON SUB WOOFER PARA REFERENCIA",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA002OAD200",
+    "name": "ORANGE AD 200B 750W CABINET",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 150.0,
+    "sale_recommended": 1500.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFA003ORRVB200",
+    "name": "ORANGE ROCKERVERB 200",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 150.0,
+    "sale_recommended": 1500.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFA009FBTCLS600-1A",
+    "name": "PA FBT CLS 600 1",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA010FBTCLS600-1B",
+    "name": "PA FBT CLS 600 2",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA012FBTCLS600-2B",
+    "name": "PA FBT CLS 600 SUB",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFA011FBTCLS600-2A",
+    "name": "PA FBT CLS 600 SUB",
+    "category": "AMPLIFICACION",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAATUS2020",
+    "name": "AMPLIFICADOR AUDIFONOS TASCAM US 2020",
+    "category": "AMPLIFICADOR DE AUDIFONOS",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFHM800",
+    "name": "HM800",
+    "category": "AMPLIFICADOR DE AUDIFONOS",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPHA4",
+    "name": "NADYAUDIOHPA4",
+    "category": "AMPLIFICADOR DE AUDIFONOS",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAARNHPA",
+    "name": "RUPERT NEEVE HEADPHONE AMPLIFIER",
+    "category": "AMPLIFICADOR DE AUDIFONOS",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFATR 1",
+    "name": "ATRIL REGULAR",
+    "category": "ATRIL",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFATR 2",
+    "name": "ATRIL REGULAR",
+    "category": "ATRIL",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFATR 3",
+    "name": "ATRIL REGULAR",
+    "category": "ATRIL",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFATR 4",
+    "name": "ATRIL REGULAR",
+    "category": "ATRIL",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUDFOCAL01",
+    "name": "FOCAL STELLIA BERYLIUM",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUD003SU",
+    "name": "HIFIMAN SUNDARA",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUDRESI01",
+    "name": "RESIDENT AUDIO R100",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUDROL01",
+    "name": "ROLAND RH-300",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUDROL02",
+    "name": "ROLAND RH-300",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUDSHD01",
+    "name": "SENNHEISER HD 200 PRO",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUDSHD02",
+    "name": "SENNHEISER HD 200 PRO",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUD001S",
+    "name": "SENNHEISER HD 206",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUD002S",
+    "name": "SENNHEISER HD 206",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUD003S",
+    "name": "SENNHEISER HD 206",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUDSENN26-01",
+    "name": "SENNHEISER HD 26 PRO",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUD600S",
+    "name": "SENNHEISER HD 600",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUDSONY01",
+    "name": "SONY DYNAMIC STEREO HEADPHONES MDR-7506",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAUDSONY02",
+    "name": "SONY DYNAMIC STEREO HEADPHONES MDR-7506",
+    "category": "AUDIFONOS",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIB003BLELE",
+    "name": "PERSIAN",
+    "category": "BAJOLELE",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIB007FJB",
+    "name": "FENDER JAZZ BASS  T901989",
+    "category": "BAJOS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIB008JB",
+    "name": "FENDER JAZZ BASS MX16808160",
+    "category": "BAJOS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIB006FP",
+    "name": "FENDER PRECISICION 900042",
+    "category": "BAJOS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIB005FP",
+    "name": "FENDER PRECISICION S910728",
+    "category": "BAJOS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIB001LAK",
+    "name": "LAKLAND SKYLINE  120118421",
+    "category": "BAJOS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIB004MM",
+    "name": "MUSIC MAN  B002254",
+    "category": "BAJOS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR A 1",
+    "name": "AZUL: 10-15 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR A 2",
+    "name": "AZUL: 10-15 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR A 3",
+    "name": "AZUL: 10-15 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR A 4",
+    "name": "AZUL: 10-15 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIUSB-MIDI",
+    "name": "BURL MOTHERSHIP",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 1",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 2",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 3",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 4",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 7",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 8",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 9",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 10",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 11",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 12",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 13",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 14",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 15",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 16",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 17",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 18",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 19",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 20",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 21",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 22",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 23",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF POWER 5",
+    "name": "ROSADO",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR 45",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF  XLR 46",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR 47",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 1",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 2",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 3",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 4",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 5",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 7",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 8",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 9",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF  1/4 R 10",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 11",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 12",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 13",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 14",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 15",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 16",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 17",
+    "name": "ROSADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 1",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 2",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 3",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 4",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 5",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 6",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR 7",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR 8",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 9",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 10",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 11",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 12",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 13",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 14",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 15",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 16",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 17",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 18",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 19",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 20",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 21",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 22",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 23",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 24",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 25",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 26",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 27",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 28",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 29",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 30",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 31",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 32",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 33",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 34",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 35",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 36",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 37",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 38",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 39",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 40",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 41",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 42",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 43",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR R 44",
+    "name": "ROSADO: 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 6",
+    "name": "ROSDADO 1-5 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 T 9",
+    "name": "TOMATE 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 10",
+    "name": "TOMATE 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 11",
+    "name": "TOMATE 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 R 12",
+    "name": "TOMATE 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 1",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 2",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 3",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 4",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 5",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 6",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 7",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 8",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 T 1",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 T 2",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 T 3",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 T 4",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 T 5",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 T 6",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 T 7",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF 1/4 T 8",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 9",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF XLR T 10",
+    "name": "TOMATE: 5-10 METROS",
+    "category": "CABLES",
+    "rent_recommended": 3.0,
+    "sale_recommended": 30.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDIATH",
+    "name": "DI AGUILAR TONE HAMMER",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI8JDIPDBJEPC1",
+    "name": "DI JDI PASSIVE DIRECT BOX JENSEN EQUIPPED PHASE COHERENT",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI11JDIPDBJEPC2",
+    "name": "DI JDI PASSIVE DIRECT BOX JENSEN EQUIPPED PHASE COHERENT",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI7JDISTJTE1",
+    "name": "DI JDI STEREO JENSEN TRANSFORMER EQUIPPED",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI12JDISTJTE2",
+    "name": "DI JDI STEREO JENSEN TRANSFORMER EQUIPPED",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI5DINET R 1",
+    "name": "DI NET RADIAL RECIEVER 1",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI6DINET R 2",
+    "name": "DI NET RADIAL RECIEVER 2",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI13DINETR3",
+    "name": "DI NET RADIAL RECIEVER 3",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI4DINET T 2",
+    "name": "DI NET RADIAL TRANSMITER 2",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI14DINETT3",
+    "name": "DI NET RADIAL TRANSMITER 3",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI9RSB2P1",
+    "name": "DI RADIAL SB-2 PASSIVE",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI10RSB2P2",
+    "name": "DI RADIAL SB-2 PASSIVE",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI1SAMSON ST",
+    "name": "DI SAMSON STEREO AZUL ACTIVA",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDI3DINET T 1",
+    "name": "DI NET RADIAL TRANSMITER 1",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF2DIRNEVE ST",
+    "name": "DI RUPERT NEVE STEREO",
+    "category": "CAJA DIRECTA",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF001NEEVE CH STRIP",
+    "name": "RUPERT NEEVE SHELFORD CHANNEL STRIP",
+    "category": "CHANNEL STRIP",
+    "rent_recommended": 150.0,
+    "sale_recommended": 1500.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF001DISTRESSOREL8X",
+    "name": "DISTRESSOR",
+    "category": "COMPRESORES",
+    "rent_recommended": 300.0,
+    "sale_recommended": 3000.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDF002DISTRESSOREL8X",
+    "name": "DISTRESSOR",
+    "category": "COMPRESORES",
+    "rent_recommended": 300.0,
+    "sale_recommended": 3000.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFC1402VLZ",
+    "name": "CONSOLA MACKIE 14 CANALES",
+    "category": "CONSOLAS",
+    "rent_recommended": 120.0,
+    "sale_recommended": 1200.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFC003BEH",
+    "name": "MIXER 16 CANALES BEHRINGER SUPPORT.",
+    "category": "CONSOLAS",
+    "rent_recommended": 120.0,
+    "sale_recommended": 1200.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFC001SAPHYRE36",
+    "name": "MIXER ANALOGO  SOUNDCRAFT VINTAGE INGLES 36 CANALES 6 STEREO",
+    "category": "CONSOLAS",
+    "rent_recommended": 120.0,
+    "sale_recommended": 1200.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFC002SOUNDCAFT",
+    "name": "MIXER DE 16 CANALES PORTATIL SOUNDCRAFT",
+    "category": "CONSOLAS",
+    "rent_recommended": 120.0,
+    "sale_recommended": 1200.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFEQ001CHCB",
+    "name": "CHANDLER CURVE BENDER EQ",
+    "category": "ECUALIZADORES",
+    "rent_recommended": 800.0,
+    "sale_recommended": 8000.0,
+    "source": "MANUAL RULE",
+    "note": "Assumed similar to Pultec tier"
+  },
+  {
+    "code": "TDFEQ001PLTCEQP1A",
+    "name": "ECUALIZADOR PULTEC EQP1A TUBE PROGRAM",
+    "category": "ECUALIZADORES",
+    "rent_recommended": 800.0,
+    "sale_recommended": 8000.0,
+    "source": "MANUAL RULE",
+    "note": "PRECIOS RENTA (EQP1A PULTEC)"
+  },
+  {
+    "code": "TDFEQ002PLTCEQP1A",
+    "name": "ECUALIZADOR PULTEC EQP1A TUBE PROGRAM",
+    "category": "ECUALIZADORES",
+    "rent_recommended": 800.0,
+    "sale_recommended": 8000.0,
+    "source": "MANUAL RULE",
+    "note": "PRECIOS RENTA (EQP1A PULTEC)"
+  },
+  {
+    "code": "TDFEQ001NEVE551",
+    "name": "RUPERT NEVE DESIGNS 551 (DOS)",
+    "category": "ECUALIZADORES",
+    "rent_recommended": 180.0,
+    "sale_recommended": 1800.0,
+    "source": "MANUAL RULE",
+    "note": "PRECIOS RENTA (NEVE 551 EQ)"
+  },
+  {
+    "code": "TDFADDC12V 1 S",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADAC19V 2 L CHICONI",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADAC12V 3 L MOOG",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TADAD 9V 4 M",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADAC12V 5 M AUDIO TECHNICA",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD12V 6 M SENNHEISER",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD12V 7 M",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADDC9V 8 M",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADDC9V 9 M",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADAC18.5/3V 10 L BEHRINGER",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADUNIV 11 M COBY PANASONIC",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD12V 12 S",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD12V 13 M CSEC",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD12V 14 S",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADAC54V 15 M NETGEAR",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADAC9V 16 M KORG",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADAC5.5V 17 M PANASONIC",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD15V 18 S",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD5.1V 19 LG",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADAC16V 20 L YAMAHA",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFADBLACKLION",
+    "name": "ADAPTADORES VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP 1 S",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP 2 M",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP 3 M",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP 4 S",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP  5 S",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP  6 L",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP  7 L",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP 9 S",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP 10 M",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFDCBRICK18V",
+    "name": "DC BRICK 18 V ADAPTADOR",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCRV 2S",
+    "name": "REG DE VOLTAJE",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCRV-BAT 1 S",
+    "name": "REG VOLT CON BAT",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCCP 8 S",
+    "name": "CORTA PICOS",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCCWCI1S",
+    "name": "WIRE CONTROLLER INPUT B-400",
+    "category": "FUENTES DE PODER Y ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD15V 21M",
+    "name": "ADAPTADOR 15V RADIAL",
+    "category": "FUENTES DE PODERY ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD15V 20M",
+    "name": "ADAPTADOR HONGKWAN TONE BONE",
+    "category": "FUENTES DE PODERY ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFFDCHANDLER",
+    "name": "FUENTE DE PODER CHANDLER",
+    "category": "FUENTES DE PODERY ADAPTADORES",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "80505027",
+    "name": "YAMAHA GUITALELE GL1",
+    "category": "GUITALELE",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIGE011FTC",
+    "name": "FENDER TELECASTER US13115442",
+    "category": "GUITARRAS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIGE010GTSCHER",
+    "name": "GRETSCH  CYG06050203",
+    "category": "GUITARRAS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIG1002SEQ",
+    "name": "SUQUOIA ACUSTICA GW250N-3",
+    "category": "GUITARRAS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "FEX730SC",
+    "name": "YAMAHA ELECTROACUSTICA",
+    "category": "GUITARRAS",
+    "rent_recommended": 60.0,
+    "sale_recommended": 600.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFKGTUNNER",
+    "name": "PROBADOR DE CABLES Y AFINADOR",
+    "category": "KORG WALL TUNNER",
+    "rent_recommended": 5.0,
+    "sale_recommended": 50.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMD421 A. B. C",
+    "name": "MD 421",
+    "category": "MICROFONOS",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM007AKGC-1/2",
+    "name": "MICROFONO AKG C518 TOM DE CLIP PAR",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM011AKGP220",
+    "name": "MICROFONO CONDENSADOR AKG PERCEPTION 220",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM017BBBSL",
+    "name": "BLUE BABY BOTTLE SL",
+    "category": "MICROFONOS",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM004NKM184-1/2",
+    "name": "MICROFONO CONDENSADOR NEUMANN  KM 184 MT No. Ser 178969",
+    "category": "MICROFONOS",
+    "rent_recommended": 150.0,
+    "sale_recommended": 1500.0,
+    "source": "MANUAL RULE",
+    "note": "Aligned with KSM 184 tier"
+  },
+  {
+    "code": "TDFU87",
+    "name": "U 87",
+    "category": "MICROFONOS",
+    "rent_recommended": 360.0,
+    "sale_recommended": 3600.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM002AK47",
+    "name": "TELEFUNKEN AK 47",
+    "category": "MICROFONOS",
+    "rent_recommended": 200.0,
+    "sale_recommended": 2000.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM003C414-1/2",
+    "name": "MICROFONO CONDESADOR AKG C414 XSLE PAR SERIE: 220503",
+    "category": "MICROFONOS",
+    "rent_recommended": 200.0,
+    "sale_recommended": 2000.0,
+    "source": "MANUAL RULE",
+    "note": "PRECIOS RENTA (AKG 414)"
+  },
+  {
+    "code": "TDFM015D112 B",
+    "name": "D112",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM005D112",
+    "name": "D112",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDF019EVRE20",
+    "name": "MICROFONO DINAMICO ELECTRO VOICE RE 20",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM010SE835",
+    "name": "MICROFONO DINAMICO SENHEISER  E835",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFE906",
+    "name": "MICROFONO DINAMICO SENNHEISER CON FILTRO E906",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFE606",
+    "name": "MICROFONO DINAMICO SENNHEISER E606 (dos micros)",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM006SB52",
+    "name": "BETA 52",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM008SM58A",
+    "name": "SM 58",
+    "category": "MICROFONOS",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM008SM58B",
+    "name": "SM 58",
+    "category": "MICROFONOS",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM014SM58 B",
+    "name": "SM 58",
+    "category": "MICROFONOS",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM013SM58C",
+    "name": "SM 58",
+    "category": "MICROFONOS",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDF024SSM57 D",
+    "name": "SM 57",
+    "category": "MICROFONOS",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDF023SSM57 C",
+    "name": "SM 57",
+    "category": "MICROFONOS",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM014SM58B",
+    "name": "SM 57",
+    "category": "MICROFONOS",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM009SM57A",
+    "name": "SM 57",
+    "category": "MICROFONOS",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDF022SSM7B",
+    "name": "SM7B",
+    "category": "MICROFONOS",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFM001DIMA",
+    "name": "MICROFONO NEUMAN KU 100 BINAURAL SERIE:",
+    "category": "MICROFONOS",
+    "rent_recommended": 850.0,
+    "sale_recommended": 8500.0,
+    "source": "MANUAL RULE",
+    "note": "PRECIOS RENTA (NEUMAN DIMITRI KU100)"
+  },
+  {
+    "code": "TDFM016R122MKII",
+    "name": "MICROFONO RIBBON ROYER R 122 MKII MICROFONO FIGURA 8",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM020R122MKII",
+    "name": "MICROFONO RIBBON ROYER R 122 MKII MICROFONO FIGURA 8",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM020LAV R1",
+    "name": "SISTEMA MICROFONOS LAVALIER VOCOPRO RECEPTOR (907;909;902;905)",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM012LAV 907",
+    "name": "SISTEMA MICROFONOS LAVALIER VOCOPRO TRASMISOR 907.2 HZ CON MIC DE DIADEMA Y CORBATERO",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM021LAV R2",
+    "name": "SISTEMA MICROFONOS LAVALIER VOCOPRO TRASMISOR 907.2 HZ CON MIC DE DIADEMA Y CORBATERO",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM013LAV 909.8",
+    "name": "SISTEMA MICROFONOS LAVALIER VOCOPRO TRASMISOR 909.8HZ CON MIC DE DIADEMA Y CORBATERO",
+    "category": "MICROFONOS",
+    "rent_recommended": 15.0,
+    "sale_recommended": 150.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFM018NTL102",
+    "name": "MICROFONO CONDENSADOR NEUMMAN TL 102",
+    "category": "MICROFONOS",
+    "rent_recommended": 70.0,
+    "sale_recommended": 700.0,
+    "source": "MANUAL RULE",
+    "note": "PRECIOS RENTA (NEUMAN TL 102)"
+  },
+  {
+    "code": "TDFORGANELECTRIC",
+    "name": "BONTEMPI ORGANO ELECTRICO",
+    "category": "ORGANO",
+    "rent_recommended": 80.0,
+    "sale_recommended": 800.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFTAPEREVERSE01",
+    "name": "ATTACK DECAY TAPE REVERSE SIMULATOR ELECTRO HARMONIX",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFBOSSOVERDRIVE01",
+    "name": "BOSS OVER DRIVE DISTORTION 0S-2 1457",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLCHLDCB",
+    "name": "CHANDLER LIMITED LITTLE DEVIL COLORED BOOST",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLSGNDR",
+    "name": "CMAT MODS SIGNA DRIVE GT PEDAL",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFROBOT01",
+    "name": "DEATH BY AUDIO ROBOT",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFBASSBIGMUFF01",
+    "name": "DELUXE BASS BIG MUFF ELECTRO HARMONIX",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFGCB95WH",
+    "name": "DUNLOP GCB95 WAH",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLEHX-EMSTQ",
+    "name": "EHX ELECTRIC MISTRESS STEREO",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFFUZZ01",
+    "name": "FUZZ FACTORY ZUVX 01",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDL2GKPLEX",
+    "name": "GALIEN KRUGER PLEX",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFHOOF12821",
+    "name": "HOOF FUZZ EARTH QUAKER DIVICES",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLKTNBST",
+    "name": "KEELEY KATANA BOOST",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMOOGMOOGERFOOGER01",
+    "name": "MOOG MOOGERFOOGER BASS MURF",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMOOGMOOGERFOOGERRING",
+    "name": "MOOG MOOGERFOOGER RING MODULATOR",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMOTHERSHIP01",
+    "name": "MOTHER SHIP 2 ANALOG SYNTHESIZER",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLMXR-DCBRK",
+    "name": "MXR 8 OUTPUT DC BRICK",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMXRBASSENVELOP001",
+    "name": "MXR BASS INNOVATION ENVELOP",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSUBMACHINE001",
+    "name": "MXR SUB MACHINE",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSIZERSYB-3",
+    "name": "PEDAL BASS SYNTHESIZER SYB-3",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLEGB-7",
+    "name": "PEDAL BOSS BASS EQUALIZER",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFFLANGER-03580",
+    "name": "PEDAL BOSS FLANGER BF-3",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFBOSSLMB-3",
+    "name": "PEDAL BOSS LIMITER ENHANCER LMB-3",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLBSCH-1",
+    "name": "PEDAL BOSS SUPER CHORUS CH-1",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFTREMOLOTR2 01",
+    "name": "PEDAL BOSS TREMOLO TR-2",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLWAAGES",
+    "name": "PEDAL DE DISTORSION WALRUS AUDIO AGES",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLPKM",
+    "name": "PEDAL DE FUZZ PIGTRONIX KEY MASTER",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFHOG2-01",
+    "name": "PEDAL HOG2 ELECTRO HARMONIX",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLMFDRIVE",
+    "name": "PEDAL MOOG MF DRIVE",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLMXRBOD",
+    "name": "PEDAL MXR BASS OCTAVE DELUXE",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMXRANALOGDELAY01",
+    "name": "PEDAL MXR CARBON COPY ANALOG DELAY",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLQTRON",
+    "name": "PEDAL Q TRON+ ENVELOPE CONTROLLED FILTER",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLQTRON+",
+    "name": "PEDAL Q TRON+ ENVELOPE FILTER + FX LOOP",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSTRYMONS21",
+    "name": "PEDAL STRYMON ZETZAH",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLVSAFUZZ",
+    "name": "PEDAL VISUAL SOUND ANGRY FUZZ",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPEDALTRAIN 1 S",
+    "name": "PEDALTRAIN MINI 1",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLEPLUMES",
+    "name": "PLUMES EARTHQUAKER DEVICES",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFQTRON03",
+    "name": "QTRON ELECTRO HAMONIX",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDL2SANSAMP",
+    "name": "SANSAMP TECH 21",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDLPLTN",
+    "name": "TC ELECTRONIC POLYTUNE",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFNANOBASS01",
+    "name": "THE MOLE BASS BOOSTER",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDL1TONEBONE",
+    "name": "TONE BONE RADIAL",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFV256VOCODER01",
+    "name": "V256 VOCODER ELECTRO HARMONIX",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFVOICEBOX01",
+    "name": "VOICE BOX HARMONY MACHINE AND VOCODER  ELECTRO HARMONIX",
+    "category": "PEDALES",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST011",
+    "name": "PEDESTAL DE BOMBO PRO STAND",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST008",
+    "name": "PEDESTAL HAMILTON REGULAR",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST009",
+    "name": "PEDESTAL HAMILTON REGULAR",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST004",
+    "name": "PEDESTAL HERCULES GRANDE",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST005",
+    "name": "PEDESTAL HERCULES GRANDE",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST006",
+    "name": "PEDESTAL HERCULES GRANDE",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST001",
+    "name": "PEDESTAL HERCULES REGULAR",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST002",
+    "name": "PEDESTAL HERCULES REGULAR",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST007",
+    "name": "PEDESTAL HERCULES REGULAR",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST003",
+    "name": "PEDESTAL HERCULES REGULAR SE PRESTA CON UN CLIP HERCULES VARIABLE PARA MICROFONOS",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST016",
+    "name": "PEDESTAL PARA STREAMING AURAY BAI2X",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST010",
+    "name": "PEDESTAL PEQUEÑO LK925W",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST013",
+    "name": "PEDESTAL REGULAR CON BRAZO",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST014",
+    "name": "PEDESTAL REGULAR SIN BRAZO",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST012",
+    "name": "PEDESTAL SONO ITALY CON BRAZO",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFPDST015",
+    "name": "PEDESTAL SONO ITALY CON BRAZO",
+    "category": "PEDESTALES",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP002DDRUMG",
+    "name": "BATERIA DDRUM CARMINE APICE 2 BOMBO",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP002DDKD1",
+    "name": "BATERIA DDRUM CARMINE APICE BOMBO 1",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP002DDKD2",
+    "name": "BATERIA DDRUM CARMINE APICE BOMBO 2",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP002DDFT1",
+    "name": "BATERIA DDRUM CARMINE APICE FLOOR TOM 1",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP002DDFT2",
+    "name": "BATERIA DDRUM CARMINE APICE FLOOR TOM 2",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP002DDSN",
+    "name": "BATERIA DDRUM CARMINE APICE SNARE",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP002DDT1",
+    "name": "BATERIA DDRUM CARMINE APICE TOM 1",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP002DDT2",
+    "name": "BATERIA DDRUM CARMINE APICE TOM 2",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP001YDKR",
+    "name": "BATERIA YAMAHA VINTAGE 69 ROJA JAPON",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP001YDKR BD1",
+    "name": "BATERIA YAMAHA VINTAGE BASS DRUM",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP001YDKRFT",
+    "name": "BATERIA YAMAHA VINTAGE FLOOR TOM",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP001YDKRT1",
+    "name": "BATERIA YAMAHA VINTAGE TOM 1",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP001YDKRT2",
+    "name": "BATERIA YAMAHA VINTAGE TOM 2",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP003GIBR",
+    "name": "GIBRALTAR CON 3 PEDESTALES CADA UNO CON ESPONJA",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIP004PBDW",
+    "name": "PEDAL BOMBO DW",
+    "category": "PERCUSION",
+    "rent_recommended": 25.0,
+    "sale_recommended": 250.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFR005HG2",
+    "name": "BLACK BOX ANALOG DESIGN HG-2 TUBE SATURATOR",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFR004BURL",
+    "name": "BURL MOTHERSHIP",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFR007CHR47EMI",
+    "name": "CHANDLER REDD47 EMI",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFR006CHZL",
+    "name": "ZENER LIMITER",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 530.0,
+    "sale_recommended": 5300.0,
+    "source": "PRECIO RENTA",
+    "note": ""
+  },
+  {
+    "code": "TDFR001SSLC-1/2",
+    "name": "COMPRESOR SSL DYN 660 PAR",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFR002EQNEAVE",
+    "name": "ECUALIZADOR NEAVE 3 BAND PAR",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFI002REDN",
+    "name": "INTERFAZ FOCUSRITE RED NET DANTE",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFI001PRE8",
+    "name": "INTERFAZ FOCUSRITE RED PRE 8",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFFOCUSRITEREDNETR1",
+    "name": "INTERFAZ FOCUSRITE REDNET R1",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFI003TAS20",
+    "name": "INTERFAZ TASCAM 20X20",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFR003UAPRE",
+    "name": "UNIVERSAL AUDIO PREAMPLIFICADOR",
+    "category": "RACK ESTUDIO",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "RNP4L",
+    "name": "VOGEL",
+    "category": "REQUINTO",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCTRLMIDI001",
+    "name": "ABLETON PUSH",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCTRLSEQ002",
+    "name": "ARTURIA BEATSTEP PRO",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCTRLSEQ003",
+    "name": "ARTURIA KEYSTEP",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFBEHRINGERTD-3",
+    "name": "BERHINGER TD-3",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFELECTRONEDIGITONE01",
+    "name": "ELECTRONE DIGITONE POLYPHONIC",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFELEKTRONEDIGITAKT",
+    "name": "ELEKTRON DIGITAKT 8 VOICE DIGITAL DRUM COMPUTER SAMPLER",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFKONRGMINILOGUE",
+    "name": "KORG MINILOGUE ANALOGUE SYNTHESIZER",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFKORGVB",
+    "name": "KORG VOLKA BEATS",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSYNTHM006",
+    "name": "M AUDIO OXYGEN 25",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMOOGM",
+    "name": "MOOG MAVIS MONOPHONIC ANALOG SYNTHESIZER VOICE",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMINITAUR10839",
+    "name": "MOOG MINITAUR ANALOG BASS SYNTHESIZER",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMOPHO00607",
+    "name": "MOPHO DAVE SMITH MONOPHONIC SYNTETISIZHER",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSYNTHP004",
+    "name": "OP-1 PORTABLE SYNTH",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFCTRLMIDI007",
+    "name": "STUDIOLOGIC MP-117",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFMOOGWERKSTTAT01",
+    "name": "WERKSTTAT-01 ANALOG SYNTETISIZHER",
+    "category": "SINTES",
+    "rent_recommended": 100.0,
+    "sale_recommended": 1000.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSTAND 4",
+    "name": "MULTI STAND INSTRUMENTOS",
+    "category": "STAND INSTRUMENTO",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSTAND 2",
+    "name": "STAND GUITARRA",
+    "category": "STAND INSTRUMENTO",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSTAND 3",
+    "name": "STAND GUITARRA",
+    "category": "STAND INSTRUMENTO",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSTAND5",
+    "name": "STAND HERCULES GUITARRA",
+    "category": "STAND INSTRUMENTO",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFSTAND 6",
+    "name": "STAND HERCULES GUITARRA",
+    "category": "STAND INSTRUMENTO",
+    "rent_recommended": 8.0,
+    "sale_recommended": 80.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF001SWTCH",
+    "name": "CISCO SWITCHER",
+    "category": "SWITCHER",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF002SWTCH",
+    "name": "CISCO SWITCHER",
+    "category": "SWITCHER",
+    "rent_recommended": 10.0,
+    "sale_recommended": 100.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIT014GR",
+    "name": "TROMPETA GROSSI GR STR500 DORADA",
+    "category": "TROMPETAS",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIT012PR",
+    "name": "TROMPETA PEARL RIVER PLATEADA",
+    "category": "TROMPETAS",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFIT013PT",
+    "name": "TROMPETA PTRUMPET NEGRA",
+    "category": "TROMPETAS",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "CATEGORY DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD12V 23",
+    "name": "ADAPTADOR 12V",
+    "category": "",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD12V 24",
+    "name": "ADAPTADOR 12V",
+    "category": "",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD24V 22",
+    "name": "ADAPTADOR 24 V",
+    "category": "",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDFAD5V 1",
+    "name": "ADAPTADOR 5V",
+    "category": "",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF003FRN X2P",
+    "name": "INTERFAZ FOCUSRITE REDNET X2P",
+    "category": "",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  },
+  {
+    "code": "TDF004FRN R1",
+    "name": "INTERFAZ REDNET R1",
+    "category": "",
+    "rent_recommended": 40.0,
+    "sale_recommended": 400.0,
+    "source": "FALLBACK DEFAULT",
+    "note": ""
+  }
+]

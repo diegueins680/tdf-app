@@ -33,6 +33,35 @@ const uiVersion = packageJson.version ?? '0.0.0';
 export default defineConfig({
   plugins: [react()],
   server: { port: 5173, host: true },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
+  build: {
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            if (id.includes('/src/pages/')) {
+              const parts = id.split('/src/pages/')[1]?.split('/');
+              const page = parts?.[0];
+              if (page) return `page-${page}`;
+            }
+            return;
+          }
+          if (id.includes('@mui')) return 'mui';
+          if (id.includes('react-router')) return 'router';
+          if (id.includes('@tanstack')) return 'tanstack';
+          if (id.includes('luxon')) return 'luxon';
+          if (id.includes('qrcode')) return 'qrcode';
+          return 'vendor';
+        },
+      },
+    },
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+  },
   define: {
     __APP_COMMIT__: JSON.stringify(uiCommit),
     __APP_VERSION__: JSON.stringify(uiVersion),

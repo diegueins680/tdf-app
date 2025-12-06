@@ -1,0 +1,12 @@
+{
+  "name": "tidal-agent",
+  "version": "0.1.0",
+  "description": "CLI that turns natural language prompts into TidalCycles snippets via an LLM",
+  "bin": {
+    "tidal-agent": "./index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node ./index.js"
+  }
+}

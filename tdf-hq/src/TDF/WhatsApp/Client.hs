@@ -6,7 +6,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import Network.HTTP.Client
-import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.HTTP.Types.Header (hAuthorization)
 import Control.Exception (try, SomeException)
 import qualified Data.ByteString.Lazy as LBS

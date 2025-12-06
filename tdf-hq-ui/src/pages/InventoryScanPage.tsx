@@ -1,0 +1,131 @@
+import { useEffect, useState } from 'react';
+import { Alert, Box, Button, Card, CardContent, Chip, Container, Stack, TextField, Typography } from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { AssetDTO } from '../api/types';
+import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest } from '../api/inventory';
+
+export default function InventoryScanPage() {
+  const { token } = useParams();
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [asset, setAsset] = useState<AssetDTO | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [checkoutForm, setCheckoutForm] = useState<AssetCheckoutRequest>({ coTargetKind: 'party' });
+  const [checkinForm, setCheckinForm] = useState<AssetCheckinRequest>({});
+
+  useEffect(() => {
+    const load = async () => {
+      if (!token) return;
+      try {
+        const data = await Inventory.byQrToken(token);
+        setAsset(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'No pudimos cargar el equipo.');
+      }
+    };
+    void load();
+  }, [token]);
+
+  const checkoutMutation = useMutation({
+    mutationFn: () =>
+      asset ? Inventory.checkout(asset.assetId, checkoutForm) : Promise.reject(new Error('No asset')),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['assets'] });
+      navigate('/operacion/inventario');
+    },
+    onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-out.'),
+  });
+
+  const checkinMutation = useMutation({
+    mutationFn: () =>
+      asset ? Inventory.checkin(asset.assetId, checkinForm) : Promise.reject(new Error('No asset')),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['assets'] });
+      navigate('/operacion/inventario');
+    },
+    onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-in.'),
+  });
+
+  if (!token) {
+    return <Container maxWidth="sm"><Alert severity="error">Token QR no encontrado.</Alert></Container>;
+  }
+
+  return (
+    <Box sx={{ minHeight: '100vh', background: '#0b1224', color: '#e2e8f0', py: 4 }}>
+      <Container maxWidth="sm">
+        <Stack spacing={2}>
+          <Typography variant="h5" fontWeight={800}>Escaneo de equipo</Typography>
+          {error && <Alert severity="error">{error}</Alert>}
+          {asset ? (
+            <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <CardContent>
+                <Stack spacing={1}>
+                  <Typography variant="h6">{asset.name}</Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Chip label={asset.category} size="small" />
+                    <Chip label={`Estado: ${asset.status}`} size="small" />
+                  </Stack>
+                  <Typography variant="body2">Condición: {asset.condition ?? '—'}</Typography>
+                  <Typography variant="body2">Ubicación: {asset.location ?? '—'}</Typography>
+                  {asset.status.toLowerCase() === 'booked' ? (
+                    <>
+                      <Typography variant="subtitle1" sx={{ mt: 2 }}>Registrar check-in</Typography>
+                      <TextField
+                        label="Condición al entrar"
+                        value={checkinForm.ciConditionIn ?? ''}
+                        onChange={(e) => setCheckinForm({ ...checkinForm, ciConditionIn: e.target.value })}
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        sx={{ mt: 1 }}
+                      />
+                      <TextField
+                        label="Notas"
+                        value={checkinForm.ciNotes ?? ''}
+                        onChange={(e) => setCheckinForm({ ...checkinForm, ciNotes: e.target.value })}
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        sx={{ mt: 1 }}
+                      />
+                      <Button variant="contained" sx={{ mt: 2 }} onClick={() => checkinMutation.mutate()} disabled={checkinMutation.isPending}>
+                        {checkinMutation.isPending ? 'Registrando…' : 'Check-in'}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Typography variant="subtitle1" sx={{ mt: 2 }}>Registrar check-out</Typography>
+                      <TextField
+                        label="Destino (party/ref)"
+                        value={checkoutForm.coTargetParty ?? ''}
+                        onChange={(e) => setCheckoutForm({ ...checkoutForm, coTargetParty: e.target.value })}
+                        fullWidth
+                        sx={{ mt: 1 }}
+                      />
+                      <TextField
+                        label="Notas"
+                        value={checkoutForm.coNotes ?? ''}
+                        onChange={(e) => setCheckoutForm({ ...checkoutForm, coNotes: e.target.value })}
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        sx={{ mt: 1 }}
+                      />
+                      <Button variant="contained" sx={{ mt: 2 }} onClick={() => checkoutMutation.mutate()} disabled={checkoutMutation.isPending}>
+                        {checkoutMutation.isPending ? 'Registrando…' : 'Check-out'}
+                      </Button>
+                    </>
+                  )}
+                </Stack>
+              </CardContent>
+            </Card>
+          ) : (
+            <Typography>Cargando equipo…</Typography>
+          )}
+        </Stack>
+      </Container>
+    </Box>
+  );
+}

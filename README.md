@@ -43,7 +43,7 @@ This is a monorepo containing three main applications:
 - Student lesson scheduling
 - Package balance tracking
 - Calendar integration
-- Offline support (planned)
+- **Offline support**: Schedule viewing, package balances, and booking mutations work offline with automatic sync
 
 **Note:** This is a Git submodule. Run `git submodule update --init --recursive` after cloning.
 
@@ -53,7 +53,7 @@ This is a monorepo containing three main applications:
 
 ### Prerequisites
 - **Backend:** Stack (Haskell), PostgreSQL 16
-- **Frontend/Mobile:** Node.js 18+, npm 9+
+- **Frontend/Mobile:** Node.js 20.19+ (LTS), npm 10+
 - **Optional:** Docker + Docker Compose
 
 ### Development Setup
@@ -83,8 +83,22 @@ npm run dev
 # 5. Mobile setup (new terminal)
 cd tdf-mobile
 # Set EXPO_PUBLIC_API_BASE=http://localhost:8080
+# Set EXPO_PUBLIC_UPLOAD_URL=http://localhost:8080/drive/upload (for inventory photos)
 npm run start
 ```
+
+### Inventory photos (Google Drive proxy)
+- Backend exposes `POST /drive/upload` (uses Google Drive token). Configure in `tdf-hq/.env`:
+  ```
+  DRIVE_ACCESS_TOKEN=<Google access token with drive.file scope>
+  DRIVE_UPLOAD_FOLDER_ID=<optional target folder>
+  ```
+- Mobile needs:
+  ```
+  EXPO_PUBLIC_UPLOAD_URL=http://<api-host>:8080/drive/upload
+  EXPO_PUBLIC_API_TOKEN="Bearer <your-api-token>"
+  ```
+  Inventory will upload camera/galería photos via that endpoint and store the returned URL on assets.
 
 ### Using Docker Compose
 
@@ -179,7 +193,7 @@ cd tdf-hq && stack build --copy-bins
 
 | Target | Root Directory | Install Command | Build Command | Output | Notes |
 | --- | --- | --- | --- | --- | --- |
-| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=18`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil` (optional `VITE_API_DEMO_TOKEN`). |
+| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=20.19.1`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil` (optional `VITE_API_DEMO_TOKEN`). |
 | **Vercel** | `tdf-hq-ui` | `npm install` | `npm run build` | `dist` | Framework preset: Vite. Same env vars as above. |
 | **Koyeb (API)** | `tdf-hq` Docker | `stack build` via Dockerfile | – | – | Configure `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`) in the service settings. |
 

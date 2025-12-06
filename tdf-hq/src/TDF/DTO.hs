@@ -54,11 +54,13 @@ data ArtistProfileDTO = ArtistProfileDTO
   , apGenres          :: Maybe Text
   , apHighlights      :: Maybe Text
   , apFollowerCount   :: Int
+  , apHasUserAccount  :: Bool
   } deriving (Show, Generic)
 instance ToJSON ArtistProfileDTO
 
 data ArtistProfileUpsert = ArtistProfileUpsert
   { apuArtistId        :: Int64
+  , apuDisplayName     :: Maybe Text
   , apuSlug            :: Maybe Text
   , apuBio             :: Maybe Text
   , apuCity            :: Maybe Text
@@ -125,6 +127,63 @@ data FanFollowDTO = FanFollowDTO
   , ffStartedAt     :: Day
   } deriving (Show, Generic)
 instance ToJSON FanFollowDTO
+
+-- Social follows between any parties (used for vCard/NFC exchanges)
+data PartyFollowDTO = PartyFollowDTO
+  { pfFollowerId   :: Int64
+  , pfFollowingId  :: Int64
+  , pfViaNfc       :: Bool
+  , pfStartedAt    :: Day
+  } deriving (Show, Generic)
+instance ToJSON PartyFollowDTO
+
+data RadioPresenceDTO = RadioPresenceDTO
+  { rpPartyId     :: Int64
+  , rpStreamUrl   :: Text
+  , rpStationName :: Maybe Text
+  , rpStationId   :: Maybe Text
+  , rpUpdatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON RadioPresenceDTO
+
+data RadioPresenceUpsert = RadioPresenceUpsert
+  { rpuStreamUrl   :: Text
+  , rpuStationName :: Maybe Text
+  , rpuStationId   :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON RadioPresenceUpsert
+
+data VCardExchangeRequest = VCardExchangeRequest
+  { vcerPartyId :: Int64
+  } deriving (Show, Generic)
+instance FromJSON VCardExchangeRequest
+
+-- Course registrations (admin)
+data CourseRegistrationDTO = CourseRegistrationDTO
+  { crId          :: Int64
+  , crCourseSlug  :: Text
+  , crFullName    :: Maybe Text
+  , crEmail       :: Maybe Text
+  , crPhoneE164   :: Maybe Text
+  , crSource      :: Text
+  , crStatus      :: Text
+  , crHowHeard    :: Maybe Text
+  , crUtmSource   :: Maybe Text
+  , crUtmMedium   :: Maybe Text
+  , crUtmCampaign :: Maybe Text
+  , crUtmContent  :: Maybe Text
+  , crCreatedAt   :: UTCTime
+  , crUpdatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON CourseRegistrationDTO
+
+-- Logs
+data LogEntryDTO = LogEntryDTO
+  { logTimestamp :: UTCTime
+  , logLevel     :: Text
+  , logMessage   :: Text
+  } deriving (Show, Generic)
+instance ToJSON LogEntryDTO
 
 data PartyCreate = PartyCreate
   { cLegalName        :: Maybe Text
@@ -321,6 +380,9 @@ data SignupRequest = SignupRequest
   , password        :: Text
   , googleIdToken   :: Maybe Text
   , marketingOptIn  :: Maybe Bool
+  , roles           :: Maybe [RoleEnum]
+  , fanArtistIds    :: Maybe [Int64]
+  , claimArtistId   :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON SignupRequest
 

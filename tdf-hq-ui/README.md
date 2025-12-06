@@ -31,7 +31,7 @@ VITE_TZ=America/Guayaquil
 
 1. Push this repo to GitHub.
 2. In Render → New → Static Site → pick this repo.
-3. Build command: `npm ci && npm run build`
+3. Build command: `npm run build:ui:ci` (falls back to `npm install` when `npm ci` is not possible)
 4. Publish directory: `dist`
 5. Environment variables:
    - `VITE_API_BASE=https://<your-api>.onrender.com`

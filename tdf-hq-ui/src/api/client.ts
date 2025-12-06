@@ -1,6 +1,7 @@
 import { getStoredSessionToken } from '../session/SessionContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
+export const API_BASE_URL = API_BASE;
 
 function buildAuthHeader(): string | undefined {
   const token = getStoredSessionToken();

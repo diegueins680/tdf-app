@@ -2,11 +2,11 @@
 module Main where
 
 import qualified Network.Wai.Handler.Warp as Warp
+import           Control.Concurrent      (threadDelay)
+import           Control.Exception       (SomeException, try)
 import           Control.Monad            (forM_, when)
-import           Data.ByteString.Char8    (pack)
-import           Data.Char                (isSpace, toLower)
+import qualified Data.ByteString.Char8    as BS
 import           Data.Int                (Int64)
-import           Data.List               (dropWhileEnd)
 import           Data.Maybe               (mapMaybe)
 import           Data.Text                (Text)
 import qualified Data.Text               as T
@@ -14,18 +14,16 @@ import           Database.Persist         ( (=.), upsert )
 import           Database.Persist.Sql     (SqlPersistT, Single(..), rawExecute, rawSql, runMigration,
                                            runSqlPool, toSqlKey)
 import           Database.Persist.Types   (PersistValue (PersistText))
-import           System.Environment       (lookupEnv)
+import           System.IO                (hSetEncoding, stdout, stderr)
+import           GHC.IO.Encoding          (utf8, setLocaleEncoding)
 import           Text.Read                (readMaybe)
 
-import           Network.Wai.Middleware.Cors
-                 ( cors
-                 , simpleCorsResourcePolicy
-                 , CorsResourcePolicy(..)
-                 , simpleHeaders
-                 )
+import           TDF.Cors                 (corsPolicy)
 
-import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, seedDatabase)
-import           TDF.DB         (Env(..), makePool)
+import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
+import           TDF.Cron       (startCoursePaymentReminderJob)
+import           TDF.DB         (Env(..), ConnectionPool, makePool)
+import qualified TDF.DB         as DB
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
 import           TDF.Trials.Models (migrateTrials)
@@ -33,84 +31,34 @@ import           TDF.Server     (mkApp)
 import           TDF.Seed       (seedAll)
 main :: IO ()
 main = do
+  setLocaleEncoding utf8
+  hSetEncoding stdout utf8
+  hSetEncoding stderr utf8
   cfg  <- loadConfig
-  pool <- makePool (pack (dbConnString cfg))
+  pool <- makePoolWithRetry 5 (BS.pack (dbConnString cfg))
   if resetDb cfg
     then do
       putStrLn "Resetting DB schema..."
       runSqlPool resetSchema pool
     else
       putStrLn "RESET_DB disabled, preserving existing schema."
-  putStrLn "Running DB migrations..."
-  runSqlPool runMigrations pool
+  if runMigrations cfg
+    then do
+      putStrLn "Running DB migrations..."
+      runSqlPool runAllMigrations pool
+    else
+      putStrLn "RUN_MIGRATIONS disabled (using pre-initialized schema)."
   when (seedDatabase cfg) $ do
     putStrLn "Seeding initial data..."
     runSqlPool seedAll pool
   putStrLn ("Starting server on port " <> show (appPort cfg))
 
-  let allowedOriginsBase =
-        [ "http://localhost:5173"
-        , "http://127.0.0.1:5173"
-        , "http://localhost:4173"
-        , "http://127.0.0.1:4173"
-        , "http://localhost:3000"
-        , "http://127.0.0.1:3000"
-        , "http://localhost:5174"
-        , "http://127.0.0.1:5174"
-        , "https://tdf-ui.onrender.com"
-        , "https://tdf-7t2qa.onrender.com"
-        , "https://tdfui.pages.dev"
-        ]
-  listEnvs <- mapM lookupEnv ["ALLOW_ORIGINS", "ALLOWED_ORIGINS", "CORS_ALLOW_ORIGINS"]
-  singleEnvs <- mapM lookupEnv ["ALLOW_ORIGIN", "ALLOWED_ORIGIN", "CORS_ALLOW_ORIGIN"]
-  allowAllFlag <- anyTrue ["ALLOW_ALL_ORIGINS", "ALLOWED_ORIGINS_ALL", "CORS_ALLOW_ALL"]
-  let fromListEnv =
-        concatMap (maybe [] (map pack . splitComma)) listEnvs
-      fromOneEnv =
-        concatMap (maybe [] (\origin -> [pack origin])) singleEnvs
-      allowedOrigins = allowedOriginsBase <> fromListEnv <> fromOneEnv
-      allowedHeaders =
-        "Authorization"
-        : "Content-Type"
-        : "X-Requested-With"
-        : simpleHeaders
-      corsPolicy =
-        simpleCorsResourcePolicy
-          { corsRequestHeaders = allowedHeaders
-          , corsMethods        = ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
-          , corsOrigins        = if allowAllFlag then Nothing else Just (allowedOrigins, True)
-          }
-      app = mkApp Env{ envPool = pool, envConfig = cfg }
+  let env = Env{ envPool = pool, envConfig = cfg }
+  appCors <- corsPolicy
+  let app = mkApp env
 
-  Warp.run (appPort cfg) (cors (const $ Just corsPolicy) app)
-
--- | Split a comma-separated list into trimmed entries.
-splitComma :: String -> [String]
-splitComma = go . dropWhile isSpace
-  where
-    go [] = []
-    go s =
-      let (h, t) = break (== ',') s
-          h'     = trim h
-      in if null t
-           then [h']
-           else h' : go (drop 1 t)
-    trim = dropWhileEnd isSpace . dropWhile isSpace
-
-anyTrue :: [String] -> IO Bool
-anyTrue names = do
-  vals <- mapM lookupEnv names
-  pure (any (maybe False parseBool) vals)
-
-parseBool :: String -> Bool
-parseBool val =
-  case map toLower (dropWhile isSpace val) of
-    ""      -> False
-    "true"  -> True
-    "1"     -> True
-    "yes"   -> True
-    "on"    -> True
-    _       -> False
+  startCoursePaymentReminderJob env
+  Warp.run (appPort cfg) (appCors app)
 
 resetSchema :: SqlPersistT IO ()
 resetSchema = do
@@ -120,8 +68,8 @@ resetSchema = do
   rawExecute "GRANT ALL ON SCHEMA public TO CURRENT_USER" []
   rawExecute "GRANT ALL ON SCHEMA public TO public" []
 
-runMigrations :: SqlPersistT IO ()
-runMigrations = do
+runAllMigrations :: SqlPersistT IO ()
+runAllMigrations = do
   rawExecute "CREATE EXTENSION IF NOT EXISTS pgcrypto" []
   renameLegacyPartyRoleConstraint
   legacyRoles <- captureLegacyPartyRoles
@@ -177,6 +125,22 @@ restoreLegacyPartyRoles [] = pure ()
 restoreLegacyPartyRoles roles =
   forM_ roles $ \(pid, role) ->
     upsert (PartyRole pid role True) [PartyRoleActive =. True]
+
+-- Retry DB pool creation to avoid failing fast on boot when the DB is not ready yet.
+makePoolWithRetry :: Int -> BS.ByteString -> IO ConnectionPool
+makePoolWithRetry retries connStr = do
+  result <- try (makePool connStr) :: IO (Either SomeException ConnectionPool)
+  case result of
+    Right pool -> pure pool
+    Left err ->
+      if retries <= 0
+        then do
+          putStrLn "Failed to connect to database after retries. Crashing."
+          error (show err)
+        else do
+          putStrLn $ "DB connection failed, retrying... attempts left: " <> show retries
+          threadDelay (5 * 1000 * 1000)
+          makePoolWithRetry (retries - 1) connStr
 
 columnExists :: Text -> SqlPersistT IO Bool
 columnExists column = do

@@ -273,8 +273,8 @@ See [TESTING_GUIDE.md](TESTING_GUIDE.md) for details.
 
 - Stack (Haskell)
 - PostgreSQL 16+
-- Node.js 18+
-- npm 9+
+- Node.js 20.19+
+- npm 10+
 
 ### Quick Setup (3 commands)
 

@@ -9,7 +9,7 @@ This guide will help you get the TDF Records User Role Management system up and 
 - PostgreSQL 13+ database server
 
 ### Frontend
-- Node.js 18+
+- Node.js 20.19+ (LTS)
 - npm (comes with Node.js)
 
 ## Setup Steps

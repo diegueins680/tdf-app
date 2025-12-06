@@ -124,6 +124,7 @@ export default function OrdersPage() {
         bookingSecondaryParts.push(`SO #${booking.serviceOrderId}`);
       }
       const serviceTitle = booking.serviceType ?? booking.title ?? '—';
+      const isRecording = serviceTitle.toLowerCase().includes('grab');
       const bookingPrimary =
         booking.serviceOrderTitle ??
         booking.customerName ??
@@ -136,6 +137,7 @@ export default function OrdersPage() {
         bookingId: booking.bookingId,
         schedule: formatScheduleRange(booking.startsAt, booking.endsAt),
         service: serviceTitle,
+        isRecording,
         bookingPrimary,
         bookingSecondary: bookingSecondaryJoined.length > 0 ? bookingSecondaryJoined : null,
         engineers: engineers.length ? engineers.join(', ') : '—',
@@ -286,9 +288,20 @@ export default function OrdersPage() {
                   <TableCell>{row.rooms}</TableCell>
                   <TableCell>{renderStatus(row.status)}</TableCell>
                   <TableCell align="right">
-                    <Button variant="text" size="small" onClick={() => handleEditClick(row.bookingId)}>
-                      Editar
-                    </Button>
+                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                      {row.isRecording && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => navigate('/estudio/live-sessions')}
+                        >
+                          Crear input list
+                        </Button>
+                      )}
+                      <Button variant="text" size="small" onClick={() => handleEditClick(row.bookingId)}>
+                        Editar
+                      </Button>
+                    </Stack>
                   </TableCell>
                 </TableRow>
               ))}
