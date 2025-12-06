@@ -1,7 +1,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module TDF.DTO.SocialEventsDTO where
+module TDF.DTO.SocialEventsDTO
+  ( ArtistDTO(..)
+  , VenueDTO(..)
+  , EventDTO(..)
+  , RsvpDTO(..)
+  , InvitationDTO(..)
+  ) where
 
 import           Data.Aeson (FromJSON, ToJSON)
 import           Data.Text  (Text)
@@ -55,3 +61,16 @@ data RsvpDTO = RsvpDTO
   } deriving (Show, Eq, Generic)
 instance ToJSON RsvpDTO
 instance FromJSON RsvpDTO
+
+data InvitationDTO = InvitationDTO
+  { invitationId         :: Maybe Text
+  , invitationEventId    :: Maybe Text
+  , invitationFromPartyId :: Maybe Text
+  , invitationToPartyId  :: Text
+  , invitationStatus     :: Maybe Text
+  , invitationMessage    :: Maybe Text
+  , invitationCreatedAt  :: Maybe UTCTime
+  , invitationUpdatedAt  :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+instance ToJSON InvitationDTO
+instance FromJSON InvitationDTO
