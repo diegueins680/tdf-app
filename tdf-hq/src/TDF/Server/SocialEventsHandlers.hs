@@ -8,12 +8,12 @@ module TDF.Server.SocialEventsHandlers
   ( socialEventsServer
   ) where
 
+import           Control.Applicative ((<|>))
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Text as T
 import           Text.Read (readMaybe)
 import           Data.Int (Int64)
-import           Data.Aeson (Value)
 import           Data.Time (getCurrentTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           Data.Maybe (isNothing)
@@ -27,7 +27,7 @@ import           Database.Persist
 import           Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
 
 import           TDF.API.SocialEventsAPI
-import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..), RsvpDTO(..))
+import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..), RsvpDTO(..), InvitationDTO(..))
 import           TDF.DB (Env(..))
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueName)
 import qualified TDF.Models.SocialEventsModels as SM
@@ -36,10 +36,10 @@ type AppM = ReaderT Env Handler
 
 socialEventsServer :: ServerT SocialEventsAPI AppM
 socialEventsServer = eventsServer
-                 :<|> venuesServer
-                 :<|> artistsServer
-                 :<|> rsvpsServer
-                 :<|> invitationsServer
+               :<|> venuesServer
+               :<|> artistsServer
+               :<|> rsvpsServer
+               :<|> invitationsServer
   where
     -- Events
     eventsServer :: ServerT EventsRoutes AppM
@@ -450,8 +450,111 @@ socialEventsServer = eventsServer
           
           pure dto { rsvpId = Just (T.pack (show (fromSqlKey key))) }
 
-    -- Invitations (not implemented)
+    -- Invitations
     invitationsServer :: ServerT InvitationsRoutes AppM
-    invitationsServer = createInvitation
-    createInvitation :: T.Text -> Value -> AppM Value
-    createInvitation _ _ = throwError err501 { errBody = "Not implemented: createInvitation" }
+    invitationsServer eventId =
+      listInvitations eventId
+        :<|> createInvitation eventId
+        :<|> updateInvitation eventId
+
+    listInvitations :: T.Text -> AppM [InvitationDTO]
+    listInvitations eventIdStr = do
+      Env{..} <- ask
+      case readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64 of
+        Nothing -> throwError err400 { errBody = "Invalid event id" }
+        Just num -> do
+          let eventKey = toSqlKey num :: SocialEventId
+          mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+          when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
+          rows <- liftIO $ runSqlPool (selectList [EventInvitationEventId ==. eventKey] [Desc EventInvitationCreatedAt]) envPool
+          pure $ map (\(Entity iid inv) ->
+            InvitationDTO
+              { invitationId = Just (T.pack (show (fromSqlKey iid)))
+              , invitationEventId = Just (T.strip eventIdStr)
+              , invitationFromPartyId = eventInvitationFromPartyId inv
+              , invitationToPartyId = maybe "" id (eventInvitationToPartyId inv)
+              , invitationStatus = eventInvitationStatus inv
+              , invitationMessage = eventInvitationMessage inv
+              , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
+              , invitationUpdatedAt = Just (eventInvitationUpdatedAt inv)
+              }
+            ) rows
+
+    createInvitation :: T.Text -> InvitationDTO -> AppM InvitationDTO
+    createInvitation eventIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      case readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64 of
+        Nothing -> throwError err400 { errBody = "Invalid event id" }
+        Just num -> do
+          let eventKey = toSqlKey num :: SocialEventId
+          mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+          when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
+          let toParty = T.strip (invitationToPartyId dto)
+          when (T.null toParty) $ throwError err400 { errBody = "invitationToPartyId is required" }
+          let statusVal = normalizeStatus (invitationStatus dto)
+          key <- liftIO $ runSqlPool (insert EventInvitation
+            { eventInvitationEventId = eventKey
+            , eventInvitationFromPartyId = fmap T.strip (invitationFromPartyId dto)
+            , eventInvitationToPartyId = Just toParty
+            , eventInvitationStatus = Just statusVal
+            , eventInvitationMessage = invitationMessage dto
+            , eventInvitationCreatedAt = now
+            , eventInvitationUpdatedAt = now
+            }) envPool
+          pure InvitationDTO
+            { invitationId = Just (T.pack (show (fromSqlKey key)))
+            , invitationEventId = Just (T.strip eventIdStr)
+            , invitationFromPartyId = invitationFromPartyId dto
+            , invitationToPartyId = toParty
+            , invitationStatus = Just statusVal
+            , invitationMessage = invitationMessage dto
+            , invitationCreatedAt = Just now
+            , invitationUpdatedAt = Just now
+            }
+
+    updateInvitation :: T.Text -> T.Text -> InvitationDTO -> AppM InvitationDTO
+    updateInvitation eventIdStr invitationIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, invitationKey) <- parseIds eventIdStr invitationIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
+      mExisting <- liftIO $ runSqlPool (get invitationKey) envPool
+      case mExisting of
+        Nothing -> throwError err404 { errBody = "Invitation not found" }
+        Just inv -> do
+          when (eventInvitationEventId inv /= eventKey) $ throwError err400 { errBody = "Invitation does not belong to this event" }
+          let statusVal = normalizeStatus (invitationStatus dto)
+          let messageVal = invitationMessage dto <|> eventInvitationMessage inv
+          let newToParty = T.strip (invitationToPartyId dto)
+          let toPartyVal = if T.null newToParty then eventInvitationToPartyId inv else Just newToParty
+          liftIO $ runSqlPool (update invitationKey
+            [ EventInvitationStatus =. Just statusVal
+            , EventInvitationMessage =. messageVal
+            , EventInvitationToPartyId =. toPartyVal
+            , EventInvitationUpdatedAt =. now
+            ]) envPool
+          pure InvitationDTO
+            { invitationId = Just (T.pack (show (fromSqlKey invitationKey)))
+            , invitationEventId = Just (T.strip eventIdStr)
+            , invitationFromPartyId = eventInvitationFromPartyId inv
+            , invitationToPartyId = maybe "" id toPartyVal
+            , invitationStatus = Just statusVal
+            , invitationMessage = messageVal
+            , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
+            , invitationUpdatedAt = Just now
+            }
+
+    normalizeStatus :: Maybe T.Text -> T.Text
+    normalizeStatus mStatus =
+      case fmap (T.toLower . T.strip) mStatus of
+        Nothing -> "pending"
+        Just s | T.null s -> "pending"
+        Just s -> s
+
+    parseIds :: T.Text -> T.Text -> AppM (SocialEventId, EventInvitationId)
+    parseIds eventIdStr invitationIdStr =
+      case (readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64, readMaybe (T.unpack (T.strip invitationIdStr)) :: Maybe Int64) of
+        (Just e, Just i) -> pure (toSqlKey e, toSqlKey i)
+        _ -> throwError err400 { errBody = "Invalid event or invitation id" }
