@@ -8,16 +8,16 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
-module TDF.Models.SocialEventsModels
-  ( migrateSocialEvents
-  ) where
+module TDF.Models.SocialEventsModels where
 
 import           Data.Text          (Text)
 import           Data.Time          (UTCTime)
+import           GHC.Generics       (Generic)
 import           Database.Persist.TH
 
 share [mkPersist sqlSettings, mkMigrate "migrateSocialEvents"] [persistLowerCase|
@@ -30,7 +30,7 @@ ArtistProfile
     socialLinks Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
-    deriving Show
+    deriving Show Generic
 
 Venue
     name Text
@@ -43,7 +43,7 @@ Venue
     contact Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
-    deriving Show
+    deriving Show Generic
 
 SocialEvent
     organizerPartyId Text Maybe
@@ -57,14 +57,14 @@ SocialEvent
     metadata Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
-    deriving Show
+    deriving Show Generic
 
 EventArtist
     eventId SocialEventId
     artistId ArtistProfileId
     role Text Maybe
     Primary eventId artistId
-    deriving Show
+    deriving Show Generic
 
 EventRsvp
     eventId SocialEventId
@@ -73,7 +73,7 @@ EventRsvp
     metadata Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
-    deriving Show
+    deriving Show Generic
 
 EventInvitation
     eventId SocialEventId
@@ -83,11 +83,11 @@ EventInvitation
     message Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
-    deriving Show
+    deriving Show Generic
 
 ArtistGenre
     artistId ArtistProfileId
     genre Text
     Primary artistId genre
-    deriving Show
+    deriving Show Generic
 |]
