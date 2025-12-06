@@ -29,7 +29,8 @@ corsPolicy = do
       filtered = filter (not . null) normalized
       origins = nub (if null filtered then defaults else filtered)
       wildcard = any (== "*") origins
-      allowAll = wildcard || maybe False asBool allowAllEnv
+      -- Default to allow all to keep the public web client working even if env vars are missing.
+      allowAll = wildcard || maybe True asBool allowAllEnv
       originSetting =
         if allowAll
           then Nothing
