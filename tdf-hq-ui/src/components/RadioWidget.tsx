@@ -26,12 +26,15 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { generateTidalCode } from '../utils/tidalAgent';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { RadioAPI } from '../api/radio';
+import { RadioAPI, type RadioStreamDTO } from '../api/radio';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import SkipNextIcon from '@mui/icons-material/SkipNext';
+import BoltIcon from '@mui/icons-material/Bolt';
 
 interface Prompt {
   text: string;
@@ -182,6 +185,9 @@ export default function RadioWidget() {
   const [editName, setEditName] = useState('');
   const [editCountry, setEditCountry] = useState('');
   const [editGenre, setEditGenre] = useState('');
+  const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
+  const [autoSkipOnError, setAutoSkipOnError] = useState(false);
+  const [compactBarVisible, setCompactBarVisible] = useState(true);
   const defaultStation = useMemo<Station>(
     () =>
       CURATED_STATIONS[0] ?? {
@@ -207,21 +213,30 @@ export default function RadioWidget() {
   const keyFor = useCallback((station: Station) => station.streamUrl.toLowerCase(), []);
   const countryQuery = searchCountry.trim();
   const genreQuery = searchGenre.trim();
-  const radioSearch = useQuery({
+  const radioSearch = useQuery<RadioStreamDTO[], Error>({
     queryKey: ['radio-streams', countryQuery.toLowerCase(), genreQuery.toLowerCase()],
     queryFn: () => RadioAPI.search({ country: countryQuery, genre: genreQuery }),
     staleTime: 60_000,
     gcTime: 5 * 60_000,
     retry: false,
-    onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : 'No se pudo cargar el catálogo de radios.';
-      setApiError(msg);
-    },
-    onSuccess: () => setApiError(null),
   });
   const refetchStreams = radioSearch.refetch;
   const streamsFetching = radioSearch.isFetching;
   const streamsError = radioSearch.error;
+  useEffect(() => {
+    if (streamsError) {
+      const msg = streamsError instanceof Error ? streamsError.message : 'No se pudo cargar el catálogo de radios.';
+      setApiError(msg);
+    } else {
+      setApiError(null);
+    }
+  }, [streamsError]);
+
+  useEffect(() => {
+    if (radioSearch.data) {
+      setLastUpdatedTs(Date.now());
+    }
+  }, [radioSearch.data]);
 
   // Hydrate favorites/hidden preferences
   useEffect(() => {
@@ -288,8 +303,18 @@ export default function RadioWidget() {
         if (showFavoritesOnly && !favoriteSet.has(key)) return false;
         return true;
       }),
-    [allStations, favoriteSet, hiddenSet, showFavoritesOnly, keyFor],
+    [allStations, favoriteSet, hiddenSet, showHidden, showFavoritesOnly, keyFor],
   );
+  const sortedVisibleStations = useMemo(() => {
+    const arr = [...visibleStations];
+    arr.sort((a, b) => {
+      const aFav = favoriteSet.has(keyFor(a));
+      const bFav = favoriteSet.has(keyFor(b));
+      if (aFav !== bFav) return aFav ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+    return arr;
+  }, [favoriteSet, keyFor, visibleStations]);
   const hiddenStations = useMemo(
     () => allStations.filter((s) => hiddenSet.has(keyFor(s))),
     [allStations, hiddenSet, keyFor],
@@ -298,6 +323,22 @@ export default function RadioWidget() {
     () => allStations.find((s) => s.id === activeId) ?? defaultStation,
     [activeId, allStations, defaultStation],
   );
+  const countryOptions = useMemo(() => {
+    const opts = new Set<string>();
+    allStations.forEach((s) => {
+      if (s.country) opts.add(s.country);
+      if (s.region) opts.add(s.region);
+    });
+    return Array.from(opts).slice(0, 16);
+  }, [allStations]);
+  const genreOptions = useMemo(() => {
+    const opts = new Set<string>();
+    allStations.forEach((s) => {
+      if (s.genre) opts.add(s.genre);
+      else if (s.mood) opts.add(s.mood);
+    });
+    return Array.from(opts).slice(0, 16);
+  }, [allStations]);
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
   useEffect(() => {
     setEditName(activeStation.name);
@@ -328,6 +369,17 @@ export default function RadioWidget() {
     },
     [keyFor],
   );
+  const jumpToNextStation = useCallback(() => {
+    if (sortedVisibleStations.length === 0) return;
+    const idx = sortedVisibleStations.findIndex((s) => s.id === activeStation.id);
+    const safeIdx = idx === -1 ? 0 : idx;
+    const next = sortedVisibleStations[(safeIdx + 1) % sortedVisibleStations.length];
+    if (!next) return;
+    setActiveId(next.id);
+    setPlaybackWarning(null);
+    setMuted(false);
+    setIsPlaying(true);
+  }, [activeStation.id, sortedVisibleStations]);
   const isFavoriteActive = useMemo(() => favoriteSet.has(keyFor(activeStation)), [favoriteSet, activeStation, keyFor]);
 
   const clampPosition = useCallback(
@@ -625,6 +677,9 @@ export default function RadioWidget() {
         .catch(() => {
           setIsPlaying(false);
           setPlaybackWarning('No se pudo reproducir este stream. Intenta con otra estación o revisa la URL.');
+          if (autoSkipOnError) {
+            setTimeout(() => jumpToNextStation(), 200);
+          }
         });
     }
   };
@@ -642,6 +697,7 @@ export default function RadioWidget() {
     const trimmed = (value ?? '').trim();
     return trimmed === '' ? undefined : trimmed;
   }, []);
+  const normalizeMaybe = normalizeField;
   const clearFilters = useCallback(() => {
     setSearchCountry('');
     setSearchGenre('');
@@ -772,9 +828,43 @@ export default function RadioWidget() {
       cursor: dragging ? 'grabbing' : 'grab',
       touchAction: 'none',
       userSelect: 'none',
-    }}
+      }}
       ref={containerRef}
       onPointerDown={onPointerDown}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        const step = e.shiftKey ? 20 : 10;
+        const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+        if (['input', 'textarea'].includes(tag ?? '')) return;
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          e.preventDefault();
+          setPosition((p) => {
+            const next = clampPosition(
+              e.key === 'ArrowLeft' ? p.x - step : e.key === 'ArrowRight' ? p.x + step : p.x,
+              e.key === 'ArrowUp' ? p.y - step : e.key === 'ArrowDown' ? p.y + step : p.y,
+            );
+            try {
+              window.localStorage.setItem('radio-position', JSON.stringify(next));
+            } catch {
+              // ignore
+            }
+            return next;
+          });
+          return;
+        }
+        if (e.key.toLowerCase() === 'f') {
+          e.preventDefault();
+          setShowFavoritesOnly((v) => !v);
+        }
+        if (e.key.toLowerCase() === 'r') {
+          e.preventDefault();
+          resetPosition();
+        }
+        if (e.key.toLowerCase() === 'n') {
+          e.preventDefault();
+          jumpToNextStation();
+        }
+      }}
     >
       <Card
         elevation={6}
@@ -800,6 +890,16 @@ export default function RadioWidget() {
             Arrastra para mover
           </Typography>
           <Box sx={{ flex: 1 }} />
+          <Tooltip title={compactBarVisible ? 'Ocultar mini barra' : 'Mostrar mini barra'}>
+            <IconButton
+              size="small"
+              onClick={() => setCompactBarVisible((v) => !v)}
+              data-no-drag
+              color={compactBarVisible ? 'primary' : 'inherit'}
+            >
+              <FiberManualRecordIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Volver a la esquina">
             <IconButton size="small" onClick={resetPosition} data-no-drag>
               <RestartAltIcon fontSize="small" />
@@ -848,6 +948,11 @@ export default function RadioWidget() {
                 {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
               </IconButton>
             </Tooltip>
+            <Tooltip title={autoSkipOnError ? 'Desactivar auto-skip al fallar' : 'Saltar al siguiente si falla'}>
+              <IconButton onClick={() => setAutoSkipOnError((v) => !v)} color={autoSkipOnError ? 'success' : 'inherit'} data-no-drag>
+                <BoltIcon />
+              </IconButton>
+            </Tooltip>
             <IconButton
               onClick={() => {
                 setExpanded((p) => !p);
@@ -868,6 +973,9 @@ export default function RadioWidget() {
                 Generada en vivo con prompts de usuarios
               </Typography>
             </Stack>
+            <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
+              Reproduciendo: {activeStation.name}
+            </Typography>
           </Collapse>
           {playbackWarning && (
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }} data-no-drag>
@@ -875,6 +983,11 @@ export default function RadioWidget() {
               <Typography variant="caption" sx={{ color: 'warning.main' }}>
                 {playbackWarning}
               </Typography>
+              {sortedVisibleStations.length > 1 && (
+                <Button size="small" variant="text" onClick={jumpToNextStation} data-no-drag>
+                  Probar siguiente
+                </Button>
+              )}
             </Stack>
           )}
         </CardContent>
@@ -897,6 +1010,7 @@ export default function RadioWidget() {
                     onChange={(e) => setSearchCountry(e.target.value)}
                     placeholder="Ecuador, US, MX..."
                     fullWidth
+                    inputProps={{ list: 'radio-country-options' }}
                   />
                   <TextField
                     size="small"
@@ -905,6 +1019,7 @@ export default function RadioWidget() {
                     onChange={(e) => setSearchGenre(e.target.value)}
                     placeholder="Ambient, Dembow, Jazz..."
                     fullWidth
+                    inputProps={{ list: 'radio-genre-options' }}
                   />
                   <Button
                     variant="outlined"
@@ -932,7 +1047,78 @@ export default function RadioWidget() {
                   >
                     Solo favoritos
                   </Button>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    startIcon={<CloudDownloadIcon fontSize="small" />}
+                    onClick={async () => {
+                      setImporting(true);
+                      setImportMessage(null);
+                      setApiError(null);
+                      try {
+                        const res = await RadioAPI.importSources({ rirLimit: 800 });
+                        setImportMessage(
+                          `Importadas ${res.rirInserted} nuevas, ${res.rirUpdated} actualizadas de ${res.rirProcessed} streams.`,
+                        );
+                        void refetchStreams();
+                        setLastUpdatedTs(Date.now());
+                      } catch (err) {
+                        const msg = err instanceof Error ? err.message : 'No se pudo importar el catálogo.';
+                        setImportMessage(msg);
+                      } finally {
+                        setImporting(false);
+                      }
+                    }}
+                    disabled={importing}
+                    data-no-drag
+                    sx={{ minWidth: { sm: 200 } }}
+                  >
+                    {importing ? 'Importando...' : 'Importar catálogo'}
+                  </Button>
+                  {lastUpdatedTs && (
+                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: { sm: 200 } }}>
+                      Última actualización: {new Date(lastUpdatedTs).toLocaleTimeString()}
+                    </Typography>
+                  )}
                 </Stack>
+                {(countryOptions.length > 0 || genreOptions.length > 0) && (
+                  <Stack spacing={0.5}>
+                    {countryOptions.length > 0 && (
+                      <>
+                        <datalist id="radio-country-options">
+                          {countryOptions.map((c) => (
+                            <option key={`country-opt-${c}`} value={c} />
+                          ))}
+                        </datalist>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                        <Typography variant="caption" color="text.secondary">
+                          País sugerido:
+                        </Typography>
+                        {countryOptions.map((c) => (
+                          <Chip key={`country-${c}`} size="small" label={c} onClick={() => setSearchCountry(c)} />
+                        ))}
+                      </Stack>
+                      </>
+                    )}
+                    {genreOptions.length > 0 && (
+                      <>
+                        <datalist id="radio-genre-options">
+                          {genreOptions.map((g) => (
+                            <option key={`genre-opt-${g}`} value={g} />
+                          ))}
+                        </datalist>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                        <Typography variant="caption" color="text.secondary">
+                          Género sugerido:
+                        </Typography>
+                        {genreOptions.map((g) => (
+                          <Chip key={`genre-${g}`} size="small" label={g} onClick={() => setSearchGenre(g)} />
+                        ))}
+                      </Stack>
+                      </>
+                    )}
+                  </Stack>
+                )}
                 {streamsFetching && (
                   <LinearProgress variant="indeterminate" sx={{ height: 4, borderRadius: 999, maxWidth: 320 }} />
                 )}
@@ -944,6 +1130,11 @@ export default function RadioWidget() {
                 {apiError && (
                   <Typography variant="caption" color="error">
                     {apiError}
+                  </Typography>
+                )}
+                {importMessage && (
+                  <Typography variant="caption" color={importMessage.includes('Importadas') ? 'success.main' : 'error'}>
+                    {importMessage}
                   </Typography>
                 )}
               </Stack>
@@ -974,7 +1165,7 @@ export default function RadioWidget() {
                   )}
                 </Stack>
                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {visibleStations.map((station) => (
+                  {sortedVisibleStations.map((station) => (
                     <Chip
                       key={station.id}
                       label={
@@ -996,7 +1187,13 @@ export default function RadioWidget() {
                       deleteIcon={
                         station.id.startsWith('custom-') ? undefined : <VisibilityOffIcon fontSize="small" />
                       }
-                      icon={favoriteSet.has(keyFor(station)) ? <StarIcon fontSize="small" /> : undefined}
+                      icon={
+                        station.id === activeId ? (
+                          <FiberManualRecordIcon fontSize="small" color="success" />
+                        ) : favoriteSet.has(keyFor(station)) ? (
+                          <StarIcon fontSize="small" />
+                        ) : undefined
+                      }
                     />
                   ))}
                 </Stack>
@@ -1005,11 +1202,11 @@ export default function RadioWidget() {
                     <Typography variant="caption" color="text.secondary">
                       Ocultas ({hiddenStations.length})
                     </Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      {hiddenStations.map((station) => (
-                        <Chip
-                          key={`hidden-${station.id}`}
-                          label={
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    {hiddenStations.map((station) => (
+                      <Chip
+                        key={`hidden-${station.id}`}
+                        label={
                             station.country || station.region || station.genre
                               ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
                               : station.name
@@ -1019,7 +1216,7 @@ export default function RadioWidget() {
                           deleteIcon={<RestartAltIcon fontSize="small" />}
                         />
                       ))}
-                  </Stack>
+                    </Stack>
                   </Stack>
                 )}
               </Stack>
@@ -1027,6 +1224,43 @@ export default function RadioWidget() {
                 <Typography variant="caption" color="text.secondary">
                   Pega una URL de radio (ej. onlineradiobox.com) y guárdala para escucharla aquí.
                 </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  También puedes editar la metadata de la estación activa y guardarla en el catálogo.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <TextField
+                    size="small"
+                    label="Nombre"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    fullWidth
+                  />
+                  <TextField
+                    size="small"
+                    label="País"
+                    value={editCountry}
+                    onChange={(e) => setEditCountry(e.target.value)}
+                    fullWidth
+                    inputProps={{ list: 'radio-country-options' }}
+                  />
+                  <TextField
+                    size="small"
+                    label="Género"
+                    value={editGenre}
+                    onChange={(e) => setEditGenre(e.target.value)}
+                    fullWidth
+                    inputProps={{ list: 'radio-genre-options' }}
+                  />
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      void persistActiveStream(activeStation.streamUrl, editName, editCountry, editGenre);
+                    }}
+                    data-no-drag
+                  >
+                    Guardar metadata
+                  </Button>
+                </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <TextField
                     size="small"
@@ -1122,6 +1356,50 @@ export default function RadioWidget() {
       {/* Audio is programmatically controlled; captions are not available for live streams. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} preload="none" aria-hidden="true" />
+      {compactBarVisible && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: 12,
+            left: 12,
+            zIndex: 1350,
+            bgcolor: 'background.paper',
+            boxShadow: 6,
+            borderRadius: 2,
+            px: 1,
+            py: 0.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.75,
+            border: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
+            <IconButton size="small" onClick={togglePlay}>
+              {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Saltar al siguiente">
+            <IconButton size="small" onClick={jumpToNextStation}>
+              <SkipNextIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" fontWeight={700} noWrap>
+              {activeStation.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {activeStation.genre ?? activeStation.mood}
+            </Typography>
+          </Box>
+          <Tooltip title="Cerrar mini barra">
+            <IconButton size="small" onClick={() => setCompactBarVisible(false)}>
+              <VisibilityOffIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
     </Box>
   );
 }

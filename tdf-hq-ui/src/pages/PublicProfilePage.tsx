@@ -52,8 +52,14 @@ export default function PublicProfilePage() {
     [friendsQuery.data, parsedId],
   );
 
-  const friendMutation = useMutation({
-    mutationFn: () => (isFriend ? SocialAPI.removeFriend(parsedId) : SocialAPI.addFriend(parsedId)),
+  const friendMutation = useMutation<void, Error, void>({
+    mutationFn: async () => {
+      if (isFriend) {
+        await SocialAPI.removeFriend(parsedId);
+      } else {
+        await SocialAPI.addFriend(parsedId);
+      }
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['friends'] });
     },
@@ -122,7 +128,7 @@ export default function PublicProfilePage() {
                   variant={isFriend ? 'outlined' : 'contained'}
                   startIcon={isFriend ? <PersonOffIcon /> : <PersonAddAltIcon />}
                   onClick={() => friendMutation.mutate()}
-                  disabled={friendMutation.isLoading}
+                  disabled={friendMutation.status === 'pending'}
                 >
                   {isFriend ? 'Eliminar amigo' : 'Agregar amigo'}
                 </Button>
