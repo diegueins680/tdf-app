@@ -213,6 +213,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   });
 
   const follows = useMemo(() => followsQuery.data ?? [], [followsQuery.data]);
+  const hasFollows = follows.length > 0;
+  const canManageReleases = useMemo(() => {
+    const roles = session?.roles?.map((r) => r.toLowerCase()) ?? [];
+    return roles.some((role) => role.includes('admin') || role.includes('manager') || role.includes('label'));
+  }, [session?.roles]);
   const followedArtistIds = useMemo(
     () => follows.map((follow) => follow.ffArtistId).sort((a, b) => a - b),
     [follows],
@@ -404,7 +409,23 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </Box>
               )}
               {isFan && !releaseFeedQuery.isLoading && releaseFeed.length === 0 && (
-                <Alert severity="info">Sigue al menos un artista para ver drops recientes aquí.</Alert>
+                <Alert severity="info" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ flexGrow: 1 }}>
+                    {hasFollows
+                      ? 'No hay lanzamientos recientes de los artistas que sigues. Vuelve pronto o revisa los perfiles.'
+                      : 'Sigue al menos un artista para ver drops recientes aquí.'}
+                  </Box>
+                  {hasFollows && canManageReleases && (
+                    <Button
+                      component={RouterLink}
+                      to="/label/releases"
+                      size="small"
+                      variant="outlined"
+                    >
+                      Crear release
+                    </Button>
+                  )}
+                </Alert>
               )}
               {isFan && releaseFeed.length > 0 && (
                 <Stack spacing={1.5}>
