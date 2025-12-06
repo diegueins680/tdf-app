@@ -14,6 +14,9 @@ import {
   TextField,
   Alert,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -33,6 +36,14 @@ export default function BookingsPage() {
   const qc = useQueryClient();
   const zone = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
+  const statusOptions = [
+    'Tentative',
+    'Confirmed',
+    'InProgress',
+    'Completed',
+    'Cancelled',
+    'NoShow',
+  ];
   const toIsoDate = (value: string): string => {
     const parsed = DateTime.fromISO(value);
     if (!parsed.isValid) {
@@ -48,17 +59,21 @@ export default function BookingsPage() {
         title: booking.title,
         start: toIsoDate(booking.startsAt),
         end: toIsoDate(booking.endsAt),
+        extendedProps: booking,
       })),
     [bookings],
   );
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mode, setMode] = useState<'create' | 'edit'>('create');
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [title, setTitle] = useState('Bloque de estudio');
   const [notes, setNotes] = useState('');
   const [startInput, setStartInput] = useState('');
   const [endInput, setEndInput] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [serviceType, setServiceType] = useState<string>('');
+  const [status, setStatus] = useState<string>('Confirmed');
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
 
   const formatForInput = (date: Date) =>
@@ -73,10 +88,22 @@ export default function BookingsPage() {
   const handleDateClick = (info: { date: Date }) => {
     const start = info.date;
     const end = DateTime.fromJSDate(start).plus({ minutes: 60 }).toJSDate();
+    setMode('create');
+    setEditingId(null);
+    setTitle('Bloque de estudio');
+    setNotes('');
+    setServiceType('');
+    setStatus('Confirmed');
     openDialogForRange(start, end);
   };
 
   const handleSelect = (info: { start: Date; end: Date }) => {
+    setMode('create');
+    setEditingId(null);
+    setTitle('Bloque de estudio');
+    setNotes('');
+    setServiceType('');
+    setStatus('Confirmed');
     openDialogForRange(info.start, info.end ?? DateTime.fromJSDate(info.start).plus({ minutes: 60 }).toJSDate());
   };
 
@@ -101,10 +128,28 @@ export default function BookingsPage() {
       setTitle('Bloque de estudio');
       setNotes('');
       setServiceType('');
+      setStatus('Confirmed');
+      setEditingId(null);
+      setMode('create');
       void qc.invalidateQueries({ queryKey: ['bookings'] });
     },
     onError: (err) => {
       setFormError(err instanceof Error ? err.message : 'No se pudo crear la sesión.');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: { id: number; body: Record<string, unknown> }) =>
+      Bookings.update(payload.id, payload.body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['bookings'] });
+      setDialogOpen(false);
+      setEditingId(null);
+      setMode('create');
+      setFormError(null);
+    },
+    onError: (err) => {
+      setFormError(err instanceof Error ? err.message : 'No se pudo actualizar la sesión.');
     },
   });
 
@@ -120,7 +165,51 @@ export default function BookingsPage() {
       setFormError('La hora de fin debe ser mayor que la de inicio.');
       return;
     }
-    createMutation.mutate();
+    if (mode === 'edit' && editingId) {
+      updateMutation.mutate({
+        id: editingId,
+        body: {
+          ubTitle: title.trim(),
+          ubServiceType: serviceType.trim() || null,
+          ubNotes: notes.trim() || null,
+          ubStatus: status,
+          ubStartsAt: startIso,
+          ubEndsAt: endIso,
+        },
+      });
+    } else {
+      createMutation.mutate();
+    }
+  };
+
+  const handleEventClick = (info: { event: { id: string; extendedProps?: unknown } }) => {
+    const bookingId = Number.parseInt(info.event.id, 10);
+    const booking = bookings.find((b) => b.bookingId === bookingId);
+    if (!booking) return;
+    setMode('edit');
+    setEditingId(booking.bookingId);
+    setTitle(booking.title ?? 'Sesión');
+    setNotes(booking.notes ?? '');
+    setServiceType(booking.serviceType ?? '');
+    setStatus(booking.status ?? 'Confirmed');
+    setStartInput(formatForInput(new Date(booking.startsAt)));
+    setEndInput(formatForInput(new Date(booking.endsAt)));
+    setDialogOpen(true);
+  };
+
+  const handleEventDropOrResize = (arg: { event: { id: string; start: Date | null; end: Date | null } }) => {
+    const bookingId = Number.parseInt(arg.event.id, 10);
+    if (!arg.event.start || !arg.event.end) return;
+    const startIso = toUtcIso(formatForInput(arg.event.start));
+    const endIso = toUtcIso(formatForInput(arg.event.end));
+    if (!startIso || !endIso) return;
+    void updateMutation.mutate({
+      id: bookingId,
+      body: {
+        ubStartsAt: startIso,
+        ubEndsAt: endIso,
+      },
+    });
   };
 
   return (
@@ -135,10 +224,14 @@ export default function BookingsPage() {
           height="auto"
           allDaySlot={false}
           slotDuration="00:30:00"
+          editable
           selectable
           selectMirror
           select={handleSelect}
           dateClick={handleDateClick}
+          eventClick={handleEventClick}
+          eventDrop={handleEventDropOrResize}
+          eventResize={handleEventDropOrResize}
           events={events}
           nowIndicator
           timeZone={zone}
@@ -185,6 +278,21 @@ export default function BookingsPage() {
               multiline
               minRows={2}
             />
+            <FormControl>
+              <InputLabel id="booking-status-label">Estado</InputLabel>
+              <Select
+                labelId="booking-status-label"
+                label="Estado"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {statusOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               select
               label="Servicio"
@@ -207,10 +315,14 @@ export default function BookingsPage() {
           <Button
             variant="contained"
             onClick={handleCreate}
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || updateMutation.isPending}
             sx={{ textTransform: 'none' }}
           >
-            {createMutation.isPending ? 'Creando…' : 'Crear sesión'}
+            {createMutation.isPending || updateMutation.isPending
+              ? 'Guardando…'
+              : mode === 'edit'
+                ? 'Actualizar'
+                : 'Crear sesión'}
           </Button>
         </DialogActions>
       </Dialog>
