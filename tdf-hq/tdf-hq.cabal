@@ -27,6 +27,7 @@ executable tdf-hq-exe
     TDF.API.Drive
     TDF.API.Rooms
     TDF.API.Sessions
+    TDF.API.Radio
     TDF.API.SocialEventsAPI
     TDF.API.Types
     TDF.API.WhatsApp
@@ -57,6 +58,7 @@ executable tdf-hq-exe
     TDF.Server.SocialEventsHandlers
     TDF.ServerLiveSessions
     TDF.ServerFeedback
+    TDF.ServerRadio
     TDF.ServerFuture
     TDF.Routes.Courses
     TDF.Trials.API
@@ -142,6 +144,7 @@ test-suite tdf-hq-test
     TDF.API.Label
     TDF.API.Marketplace
     TDF.API.LiveSessions
+    TDF.API.Radio
     TDF.Calendar.Models
     TDF.API.Pipelines
     TDF.API.Rooms
@@ -177,6 +180,7 @@ test-suite tdf-hq-test
     TDF.ServerFuture
     TDF.ServerLiveSessions
     TDF.ServerFeedback
+    TDF.ServerRadio
     TDF.ServerSpec
     TDF.Services
     TDF.Trials.API

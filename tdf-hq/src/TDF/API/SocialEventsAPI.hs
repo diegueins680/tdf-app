@@ -16,7 +16,7 @@ import Servant
 import Data.Aeson (Value)
 import Data.Text (Text)
 
-import TDF.DTO.SocialEventsDTO (EventDTO, VenueDTO, ArtistDTO, RsvpDTO)
+import TDF.DTO.SocialEventsDTO (EventDTO, VenueDTO, ArtistDTO, RsvpDTO, InvitationDTO)
 
 type IdParam = Capture "id" Text
 
@@ -44,7 +44,11 @@ type RsvpRoutes =
   :<|> "events" :> Capture "eventId" Text :> "rsvps" :> ReqBody '[JSON] RsvpDTO :> Post '[JSON] RsvpDTO
 
 type InvitationsRoutes =
-       "events" :> Capture "eventId" Text :> "invitations" :> ReqBody '[JSON] Value :> Post '[JSON] Value
+       "events" :> Capture "eventId" Text :> "invitations" :>
+         ( Get '[JSON] [InvitationDTO]
+      :<|> ReqBody '[JSON] InvitationDTO :> Post '[JSON] InvitationDTO
+      :<|> Capture "invitationId" Text :> ReqBody '[JSON] InvitationDTO :> Put '[JSON] InvitationDTO
+         )
 
 type SocialEventsAPI = EventsRoutes
                :<|> VenuesRoutes
