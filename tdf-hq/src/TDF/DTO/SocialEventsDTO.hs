@@ -15,10 +15,10 @@ import           Data.Time  (UTCTime)
 import           GHC.Generics (Generic)
 
 data ArtistDTO = ArtistDTO
-  { artistId        :: Maybe Text
-  , artistName      :: Text
-  , artistGenres    :: [Text]
-  , artistBio       :: Maybe Text
+  { artistId       :: Maybe Text
+  , artistName     :: Text
+  , artistGenres   :: [Text]
+  , artistBio      :: Maybe Text
   , artistAvatarUrl :: Maybe Text
   } deriving (Show, Eq, Generic)
 instance ToJSON ArtistDTO
@@ -56,21 +56,21 @@ data RsvpDTO = RsvpDTO
   { rsvpId        :: Maybe Text
   , rsvpEventId   :: Text
   , rsvpPartyId   :: Text
-  , rsvpStatus    :: Text
+  , rsvpStatus    :: Text  -- "Accepted", "Declined", "Maybe"
   , rsvpCreatedAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON RsvpDTO
 instance FromJSON RsvpDTO
 
 data InvitationDTO = InvitationDTO
-  { invitationId          :: Maybe Text
-  , invitationEventId     :: Maybe Text
+  { invitationId         :: Maybe Text
+  , invitationEventId    :: Maybe Text
   , invitationFromPartyId :: Maybe Text
-  , invitationToPartyId   :: Text
-  , invitationStatus      :: Maybe Text
-  , invitationMessage     :: Maybe Text
-  , invitationCreatedAt   :: Maybe UTCTime
-  , invitationUpdatedAt   :: Maybe UTCTime
+  , invitationToPartyId  :: Text
+  , invitationStatus     :: Maybe Text
+  , invitationMessage    :: Maybe Text
+  , invitationCreatedAt  :: Maybe UTCTime
+  , invitationUpdatedAt  :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON InvitationDTO
 instance FromJSON InvitationDTO

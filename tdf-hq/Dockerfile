@@ -48,14 +48,22 @@ COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
 # Make sure Stack installs the correct compiler for the resolver
 # Also, be explicit and avoid any global "system-ghc" config
 RUN set -e; \
+    retry() { \
+      for i in 1 2 3 4 5 6 7 8; do \
+        "$@" && return 0; \
+        echo "Retrying ($i/8): $*" >&2; \
+        sleep $((i*5)); \
+      done; \
+      return 1; \
+    }; \
     # Update index with a clean pantry if hash verification fails (Hackage mirror flakiness)
-    if ! stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc update; then \
+    if ! retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc update; then \
       echo "Stack update failed, clearing pantry cache and retrying..." >&2; \
       rm -rf /root/.stack/pantry/hackage; \
-      stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc update; \
+      retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc update; \
     fi; \
-    stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc setup && \
-    stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc build --only-dependencies
+    retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc setup; \
+    retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc build --only-dependencies
 
 # Copy sources (git metadata is provided via build args when available)
 COPY tdf-hq/app app

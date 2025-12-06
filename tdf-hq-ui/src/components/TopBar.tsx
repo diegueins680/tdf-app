@@ -76,6 +76,7 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   regalias: 'Regalías',
   docs: 'Documentación',
   acerca: 'Acerca de',
+  manual: 'Manual',
   seguridad: 'Seguridad',
   feedback: 'Sugerencias',
   herramientas: 'Herramientas',
@@ -502,6 +503,9 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         MenuListProps={{ autoFocusItem: resourcesOpen }}
       >
+        <MenuItem component={RouterLink} to="/manual" onClick={() => setResourcesAnchor(null)}>
+          Manual
+        </MenuItem>
         <MenuItem component={RouterLink} to="/docs" onClick={() => setResourcesAnchor(null)}>
           Docs
         </MenuItem>
