@@ -15,6 +15,7 @@ import           Text.Read (readMaybe)
 import           Data.Int (Int64)
 import           Data.Aeson (Value)
 import           Data.Time (getCurrentTime)
+import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           Data.Maybe (isNothing)
 import           Control.Monad (forM, forM_, when)
 
@@ -49,9 +50,23 @@ socialEventsServer = eventsServer
                :<|> deleteEvent
 
     listEvents :: Maybe T.Text -> Maybe T.Text -> AppM [EventDTO]
-    listEvents _mCity _mStartAfter = do
+    listEvents mCity mStartAfter = do
       Env{..} <- ask
-      rows <- liftIO $ runSqlPool (selectList [] [Desc SocialEventStartTime, LimitTo 200]) envPool
+      let startFilter = case mStartAfter of
+            Nothing -> []
+            Just raw -> case iso8601ParseM (T.unpack raw) of
+              Just t  -> [SocialEventStartTime >=. t]
+              Nothing -> []
+      venueFilter <- case fmap T.strip mCity of
+        Nothing -> pure []
+        Just "" -> pure []
+        Just cityTxt -> do
+          venueRows <- liftIO $ runSqlPool (selectList [VenueCity ==. Just cityTxt] []) envPool
+          let ids = map entityKey venueRows
+          if null ids
+            then pure [SocialEventId ==. toSqlKey 0] -- force empty result set
+            else pure [SocialEventVenueId <-. map Just ids]
+      rows <- liftIO $ runSqlPool (selectList (startFilter ++ venueFilter) [Desc SocialEventStartTime, LimitTo 200]) envPool
       forM rows $ \(Entity eid e) -> do
         artistLinks <- liftIO $ runSqlPool (selectList [EventArtistEventId ==. eid] []) envPool
         artists <- forM artistLinks $ \(Entity _ link) -> do
