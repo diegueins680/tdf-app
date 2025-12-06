@@ -6,6 +6,8 @@
 
 module TDF.Server.SocialEventsHandlers
   ( socialEventsServer
+  , normalizeInvitationStatus
+  , parseInvitationIdsEither
   ) where
 
 import           Control.Applicative ((<|>))
@@ -452,10 +454,10 @@ socialEventsServer = eventsServer
 
     -- Invitations
     invitationsServer :: ServerT InvitationsRoutes AppM
-    invitationsServer eventId =
-      listInvitations eventId
-        :<|> createInvitation eventId
-        :<|> updateInvitation eventId
+    invitationsServer =
+      listInvitations
+        :<|> createInvitation
+        :<|> updateInvitation
 
     listInvitations :: T.Text -> AppM [InvitationDTO]
     listInvitations eventIdStr = do
@@ -492,7 +494,7 @@ socialEventsServer = eventsServer
           when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
           let toParty = T.strip (invitationToPartyId dto)
           when (T.null toParty) $ throwError err400 { errBody = "invitationToPartyId is required" }
-          let statusVal = normalizeStatus (invitationStatus dto)
+          let statusVal = normalizeInvitationStatus (invitationStatus dto)
           key <- liftIO $ runSqlPool (insert EventInvitation
             { eventInvitationEventId = eventKey
             , eventInvitationFromPartyId = fmap T.strip (invitationFromPartyId dto)
@@ -525,7 +527,7 @@ socialEventsServer = eventsServer
         Nothing -> throwError err404 { errBody = "Invitation not found" }
         Just inv -> do
           when (eventInvitationEventId inv /= eventKey) $ throwError err400 { errBody = "Invitation does not belong to this event" }
-          let statusVal = normalizeStatus (invitationStatus dto)
+          let statusVal = normalizeInvitationStatus (invitationStatus dto)
           let messageVal = invitationMessage dto <|> eventInvitationMessage inv
           let newToParty = T.strip (invitationToPartyId dto)
           let toPartyVal = if T.null newToParty then eventInvitationToPartyId inv else Just newToParty
@@ -546,15 +548,23 @@ socialEventsServer = eventsServer
             , invitationUpdatedAt = Just now
             }
 
-    normalizeStatus :: Maybe T.Text -> T.Text
-    normalizeStatus mStatus =
-      case fmap (T.toLower . T.strip) mStatus of
-        Nothing -> "pending"
-        Just s | T.null s -> "pending"
-        Just s -> s
-
     parseIds :: T.Text -> T.Text -> AppM (SocialEventId, EventInvitationId)
     parseIds eventIdStr invitationIdStr =
-      case (readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64, readMaybe (T.unpack (T.strip invitationIdStr)) :: Maybe Int64) of
-        (Just e, Just i) -> pure (toSqlKey e, toSqlKey i)
-        _ -> throwError err400 { errBody = "Invalid event or invitation id" }
+      case parseInvitationIdsEither eventIdStr invitationIdStr of
+        Right ids -> pure ids
+        Left e -> throwError e
+
+-- | Normalize invitation status to a lowercase, non-empty value.
+normalizeInvitationStatus :: Maybe T.Text -> T.Text
+normalizeInvitationStatus mStatus =
+  case fmap (T.toLower . T.strip) mStatus of
+    Nothing -> "pending"
+    Just s | T.null s -> "pending"
+    Just s -> s
+
+-- | Parse event and invitation ids, returning a typed pair or an HTTP 400 error.
+parseInvitationIdsEither :: T.Text -> T.Text -> Either ServerError (SocialEventId, EventInvitationId)
+parseInvitationIdsEither eventIdStr invitationIdStr =
+  case (readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64, readMaybe (T.unpack (T.strip invitationIdStr)) :: Maybe Int64) of
+    (Just e, Just i) -> Right (toSqlKey e, toSqlKey i)
+    _ -> Left err400 { errBody = "Invalid event or invitation id" }

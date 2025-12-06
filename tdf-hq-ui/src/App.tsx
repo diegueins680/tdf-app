@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Button, Container } from '@mui/material';
 import { Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import TopBar from './components/TopBar';
@@ -51,14 +51,33 @@ import PaymentsPage from './pages/PaymentsPage';
 import CalendarSyncPage from './pages/CalendarSyncPage';
 import SecurityPage from './pages/SecurityPage';
 import MarketplacePage from './pages/MarketplacePage';
+import ManualPage from './pages/ManualPage';
 import GoogleDriveCallbackPage from './pages/GoogleDriveCallbackPage';
 import MarketplaceOrdersPage from './pages/MarketplaceOrdersPage';
 import DatafastReturnPage from './pages/DatafastReturnPage';
 import MarketplaceOrderTrackingPage from './pages/MarketplaceOrderTrackingPage';
+import NotFoundPage from './pages/NotFoundPage';
+import TidalAgentPage from './pages/TidalAgentPage';
+import LabelAssetsPage from './pages/LabelAssetsPage';
+import LabelTracksPage from './pages/LabelTracksPage';
 
 function Shell() {
   const { session } = useSession();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = window.localStorage.getItem('sidebar-collapsed');
+    if (saved !== null) return saved === '1';
+    return window.innerWidth < 1024;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('sidebar-collapsed', sidebarCollapsed ? '1' : '0');
+    } catch {
+      // ignore storage issues
+    }
+  }, [sidebarCollapsed]);
 
   if (!session) {
     return <Navigate to="/login" replace />;
@@ -143,6 +162,7 @@ function Shell() {
           </Box>
         </Box>
       </Box>
+      <RadioWidget />
     </Box>
   );
 }
@@ -182,10 +202,12 @@ export default function App() {
           <Route path="/inicio" element={<FanHubPage />} />
           <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
           <Route path="/docs" element={<DocsPage />} />
+          <Route path="/manual" element={<ManualPage />} />
           <Route path="/acerca" element={<AboutPage />} />
           <Route path="/seguridad" element={<SecurityPage />} />
+          <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
           <Route path="/crm" element={<Outlet />}>
-          <Route path="contactos" element={<PartiesPage />} />
+            <Route path="contactos" element={<PartiesPage />} />
             <Route path="empresas" element={<CompaniesPage />} />
             <Route path="leads" element={<LeadsPage />} />
             <Route index element={<Navigate to="contactos" replace />} />
@@ -198,10 +220,7 @@ export default function App() {
             <Route path="servicios" element={<ServiceTypesPage />} />
             <Route path="pipelines" element={<KanbanPage />} />
             <Route path="live-sessions" element={<LiveSessionIntakePage />} />
-            <Route
-              path="reportes"
-              element={<ReportsPage />}
-            />
+            <Route path="reportes" element={<ReportsPage />} />
             <Route index element={<Navigate to="calendario" replace />} />
           </Route>
 
@@ -209,6 +228,8 @@ export default function App() {
             <Route path="artistas" element={<LabelArtistsPage />} />
             <Route path="proyectos" element={<LabelProjectsPage />} />
             <Route path="releases" element={<LabelReleasesPage />} />
+            <Route path="assets" element={<LabelAssetsPage />} />
+            <Route path="tracks" element={<LabelTracksPage />} />
             <Route index element={<Navigate to="artistas" replace />} />
           </Route>
 
@@ -225,12 +246,12 @@ export default function App() {
             <Route index element={<Navigate to="pagos" replace />} />
           </Route>
 
-        <Route path="/operacion" element={<Outlet />}>
-          <Route path="inventario" element={<InventoryPage />} />
-          <Route path="ordenes-marketplace" element={<MarketplaceOrdersPage />} />
-          <Route path="reservas-equipo" element={<ReservasEquipoPage />} />
-          <Route index element={<Navigate to="inventario" replace />} />
-        </Route>
+          <Route path="/operacion" element={<Outlet />}>
+            <Route path="inventario" element={<InventoryPage />} />
+            <Route path="ordenes-marketplace" element={<MarketplaceOrdersPage />} />
+            <Route path="reservas-equipo" element={<ReservasEquipoPage />} />
+            <Route index element={<Navigate to="inventario" replace />} />
+          </Route>
 
           <Route path="/configuracion" element={<Outlet />}>
             <Route path="inscripciones-curso" element={<CourseRegistrationsAdminPage />} />
@@ -244,11 +265,10 @@ export default function App() {
             <Route index element={<Navigate to="roles-permisos" replace />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/inicio" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<PublicBranding><NotFoundPage /></PublicBranding>} />
       </Routes>
-      <RadioWidget />
     </>
   );
 }

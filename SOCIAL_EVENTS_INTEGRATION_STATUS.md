@@ -198,8 +198,8 @@ Events.create(formData);
 2. **RSVPs**: Stubbed (501 responses)
    - Need to implement: RSVP to event, update RSVP status, get event RSVPs
    
-3. **Invitations**: Stubbed (501 responses)
-   - Need to implement: Send invitation, get invitations, respond to invitation
+3. **Invitations**: Partial
+   - Create + list + update (respond) implemented; still need recipient-based listing and accept/decline shortcuts
    
 4. **Image Storage**: Not yet implemented
    - Venue image URLs and artist profile images would need cloud storage (S3/Cloudinary)
