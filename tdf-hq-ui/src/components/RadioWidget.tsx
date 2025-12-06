@@ -475,13 +475,14 @@ export default function RadioWidget() {
         zIndex: 1400,
         width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
         cursor: dragging ? 'grabbing' : 'auto',
+        touchAction: 'none',
       }}
       ref={containerRef}
+      onPointerDown={onPointerDown}
     >
       <Card
         elevation={6}
         sx={{ borderRadius: 3, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'grab' }}
-        onPointerDown={onPointerDown}
       >
         <CardContent
           sx={{ p: 2, cursor: 'pointer' }}
@@ -503,12 +504,12 @@ export default function RadioWidget() {
               </Typography>
             </Box>
             <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
-              <IconButton onClick={togglePlay} color="primary">
+              <IconButton onClick={togglePlay} color="primary" data-no-drag>
                 {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
               </IconButton>
             </Tooltip>
             <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
-              <IconButton onClick={() => setMuted((m) => !m)} color="inherit">
+              <IconButton onClick={() => setMuted((m) => !m)} color="inherit" data-no-drag>
                 {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
               </IconButton>
             </Tooltip>
@@ -520,6 +521,7 @@ export default function RadioWidget() {
                 }
               }}
               color="inherit"
+              data-no-drag
             >
               {expanded ? <ExpandMoreIcon /> : <ExpandLessIcon />}
             </IconButton>
@@ -578,6 +580,7 @@ export default function RadioWidget() {
                       onClick={() => {
                         void testStream();
                       }}
+                      data-no-drag
                     >
                       Probar stream
                     </Button>
@@ -585,6 +588,7 @@ export default function RadioWidget() {
                       variant="contained"
                       onClick={addCustomStation}
                       disabled={!newStationName.trim() || !newStationUrl.trim()}
+                      data-no-drag
                     >
                       Guardar
                     </Button>
@@ -617,7 +621,7 @@ export default function RadioWidget() {
                   onChange={(e) => setPromptDraft(e.target.value)}
                   inputRef={promptInputRef}
                 />
-                <Button variant="contained" onClick={handleAddPrompt} disabled={!promptDraft.trim()}>
+                <Button variant="contained" onClick={handleAddPrompt} disabled={!promptDraft.trim()} data-no-drag>
                   Generar Tidal
                 </Button>
               </Stack>
