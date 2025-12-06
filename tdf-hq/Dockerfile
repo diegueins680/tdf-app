@@ -49,10 +49,10 @@ COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
 # Also, be explicit and avoid any global "system-ghc" config
 RUN set -e; \
     retry() { \
-      for i in 1 2 3; do \
+      for i in 1 2 3 4 5 6 7 8; do \
         "$@" && return 0; \
-        echo "Retrying ($i/3): $*" >&2; \
-        sleep 10; \
+        echo "Retrying ($i/8): $*" >&2; \
+        sleep $((i*5)); \
       done; \
       return 1; \
     }; \
