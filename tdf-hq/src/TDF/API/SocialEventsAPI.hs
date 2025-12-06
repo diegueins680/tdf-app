@@ -13,7 +13,6 @@ module TDF.API.SocialEventsAPI
   ) where
 
 import Servant
-import Data.Aeson (Value)
 import Data.Text (Text)
 
 import TDF.DTO.SocialEventsDTO (EventDTO, VenueDTO, ArtistDTO, RsvpDTO, InvitationDTO)

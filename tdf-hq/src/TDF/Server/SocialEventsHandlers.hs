@@ -454,10 +454,10 @@ socialEventsServer = eventsServer
 
     -- Invitations
     invitationsServer :: ServerT InvitationsRoutes AppM
-    invitationsServer =
-      listInvitations
-        :<|> createInvitation
-        :<|> updateInvitation
+    invitationsServer eventIdStr =
+      listInvitations eventIdStr
+        :<|> createInvitation eventIdStr
+        :<|> updateInvitation eventIdStr
 
     listInvitations :: T.Text -> AppM [InvitationDTO]
     listInvitations eventIdStr = do
