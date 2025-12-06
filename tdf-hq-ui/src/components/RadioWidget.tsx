@@ -188,6 +188,13 @@ export default function RadioWidget() {
   const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
   const [autoSkipOnError, setAutoSkipOnError] = useState(false);
   const [compactBarVisible, setCompactBarVisible] = useState(true);
+  const [showCatalogSection, setShowCatalogSection] = useState(true);
+  const [showAddSection, setShowAddSection] = useState(false);
+  const controlFadeSx = {
+    opacity: 0.65,
+    transition: 'opacity 0.2s ease',
+    '&:hover': { opacity: 1 },
+  } as const;
   const defaultStation = useMemo<Station>(
     () =>
       CURATED_STATIONS[0] ?? {
@@ -939,17 +946,23 @@ export default function RadioWidget() {
                 onClick={() => toggleFavorite(activeStation)}
                 color={isFavoriteActive ? 'warning' : 'inherit'}
                 data-no-drag
+                sx={controlFadeSx}
               >
                 {isFavoriteActive ? <StarIcon /> : <StarBorderIcon />}
               </IconButton>
             </Tooltip>
             <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
-              <IconButton onClick={() => setMuted((m) => !m)} color="inherit" data-no-drag>
+              <IconButton onClick={() => setMuted((m) => !m)} color="inherit" data-no-drag sx={controlFadeSx}>
                 {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
               </IconButton>
             </Tooltip>
             <Tooltip title={autoSkipOnError ? 'Desactivar auto-skip al fallar' : 'Saltar al siguiente si falla'}>
-              <IconButton onClick={() => setAutoSkipOnError((v) => !v)} color={autoSkipOnError ? 'success' : 'inherit'} data-no-drag>
+              <IconButton
+                onClick={() => setAutoSkipOnError((v) => !v)}
+                color={autoSkipOnError ? 'success' : 'inherit'}
+                data-no-drag
+                sx={controlFadeSx}
+              >
                 <BoltIcon />
               </IconButton>
             </Tooltip>
@@ -962,6 +975,7 @@ export default function RadioWidget() {
               }}
               color="inherit"
               data-no-drag
+              sx={controlFadeSx}
             >
               {expanded ? <ExpandMoreIcon /> : <ExpandLessIcon />}
             </IconButton>
@@ -995,360 +1009,393 @@ export default function RadioWidget() {
           <Divider />
           <CardContent sx={{ p: 2 }}>
             <Stack spacing={1.5}>
-              <Typography variant="body2" color="text.secondary">
-                Estaciones del mundo (usa el widget para escuchar):
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Busca por país o género en el catálogo guardado:
+              <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+                <Typography variant="body2" color="text.secondary">
+                  Estaciones del mundo (usa el widget para escuchar):
                 </Typography>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <TextField
+                <Box flex={1} />
+                <Tooltip title={showCatalogSection ? 'Ocultar catálogo' : 'Mostrar catálogo'}>
+                  <Button
                     size="small"
-                    label="País"
-                    value={searchCountry}
-                    onChange={(e) => setSearchCountry(e.target.value)}
-                    placeholder="Ecuador, US, MX..."
-                    fullWidth
-                    inputProps={{ list: 'radio-country-options' }}
-                  />
-                  <TextField
+                    variant="text"
+                    startIcon={showCatalogSection ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    onClick={() => setShowCatalogSection((v) => !v)}
+                    data-no-drag
+                  >
+                    Catálogo
+                  </Button>
+                </Tooltip>
+                <Tooltip title={showAddSection ? 'Ocultar agregar/editar' : 'Mostrar agregar/editar'}>
+                  <Button
                     size="small"
-                    label="Género"
-                    value={searchGenre}
-                    onChange={(e) => setSearchGenre(e.target.value)}
-                    placeholder="Ambient, Dembow, Jazz..."
-                    fullWidth
-                    inputProps={{ list: 'radio-genre-options' }}
-                  />
-                  <Button
-                    variant="outlined"
-                    onClick={() => {
-                      void refetchStreams();
-                    }}
-                    disabled={streamsFetching}
+                    variant="text"
+                    startIcon={showAddSection ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    onClick={() => setShowAddSection((v) => !v)}
                     data-no-drag
-                    sx={{ minWidth: { sm: 140 } }}
                   >
-                    {streamsFetching ? 'Buscando...' : 'Buscar streams'}
+                    Editar/añadir
                   </Button>
-                  {(countryQuery || genreQuery) && (
-                    <Button variant="text" onClick={clearFilters} data-no-drag sx={{ minWidth: { sm: 140 } }}>
-                      Limpiar filtros
-                    </Button>
-                  )}
-                  <Button
-                    variant={showFavoritesOnly ? 'contained' : 'outlined'}
-                    color="warning"
-                    onClick={() => setShowFavoritesOnly((v) => !v)}
-                    data-no-drag
-                    sx={{ minWidth: { sm: 160 } }}
-                    startIcon={showFavoritesOnly ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
-                  >
-                    Solo favoritos
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    startIcon={<CloudDownloadIcon fontSize="small" />}
-                    onClick={async () => {
-                      setImporting(true);
-                      setImportMessage(null);
-                      setApiError(null);
-                      try {
-                        const res = await RadioAPI.importSources({ rirLimit: 800 });
-                        setImportMessage(
-                          `Importadas ${res.rirInserted} nuevas, ${res.rirUpdated} actualizadas de ${res.rirProcessed} streams.`,
-                        );
-                        void refetchStreams();
-                        setLastUpdatedTs(Date.now());
-                      } catch (err) {
-                        const msg = err instanceof Error ? err.message : 'No se pudo importar el catálogo.';
-                        setImportMessage(msg);
-                      } finally {
-                        setImporting(false);
-                      }
-                    }}
-                    disabled={importing}
-                    data-no-drag
-                    sx={{ minWidth: { sm: 200 } }}
-                  >
-                    {importing ? 'Importando...' : 'Importar catálogo'}
-                  </Button>
-                  {lastUpdatedTs && (
-                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: { sm: 200 } }}>
-                      Última actualización: {new Date(lastUpdatedTs).toLocaleTimeString()}
+                </Tooltip>
+              </Stack>
+
+              <Collapse in={showCatalogSection} timeout="auto">
+                <Stack spacing={1.5}>
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Busca por país o género en el catálogo guardado:
                     </Typography>
-                  )}
-                </Stack>
-                {(countryOptions.length > 0 || genreOptions.length > 0) && (
-                  <Stack spacing={0.5}>
-                    {countryOptions.length > 0 && (
-                      <>
-                        <datalist id="radio-country-options">
-                          {countryOptions.map((c) => (
-                            <option key={`country-opt-${c}`} value={c} />
-                          ))}
-                        </datalist>
-                      <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-                        <Typography variant="caption" color="text.secondary">
-                          País sugerido:
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                      <TextField
+                        size="small"
+                        label="País"
+                        value={searchCountry}
+                        onChange={(e) => setSearchCountry(e.target.value)}
+                        placeholder="Ecuador, US, MX..."
+                        fullWidth
+                        inputProps={{ list: 'radio-country-options' }}
+                      />
+                      <TextField
+                        size="small"
+                        label="Género"
+                        value={searchGenre}
+                        onChange={(e) => setSearchGenre(e.target.value)}
+                        placeholder="Ambient, Dembow, Jazz..."
+                        fullWidth
+                        inputProps={{ list: 'radio-genre-options' }}
+                      />
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          void refetchStreams();
+                        }}
+                        disabled={streamsFetching}
+                        data-no-drag
+                        sx={{ minWidth: { sm: 140 } }}
+                      >
+                        {streamsFetching ? 'Buscando...' : 'Buscar streams'}
+                      </Button>
+                      {(countryQuery || genreQuery) && (
+                        <Button variant="text" onClick={clearFilters} data-no-drag sx={{ minWidth: { sm: 140 } }}>
+                          Limpiar filtros
+                        </Button>
+                      )}
+                      <Button
+                        variant={showFavoritesOnly ? 'contained' : 'outlined'}
+                        color="warning"
+                        onClick={() => setShowFavoritesOnly((v) => !v)}
+                        data-no-drag
+                        sx={{ minWidth: { sm: 160 } }}
+                        startIcon={showFavoritesOnly ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                      >
+                        Solo favoritos
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        startIcon={<CloudDownloadIcon fontSize="small" />}
+                        onClick={async () => {
+                          setImporting(true);
+                          setImportMessage(null);
+                          setApiError(null);
+                          try {
+                            const res = await RadioAPI.importSources({ rirLimit: 800 });
+                            setImportMessage(
+                              `Importadas ${res.rirInserted} nuevas, ${res.rirUpdated} actualizadas de ${res.rirProcessed} streams.`,
+                            );
+                            void refetchStreams();
+                            setLastUpdatedTs(Date.now());
+                          } catch (err) {
+                            const msg = err instanceof Error ? err.message : 'No se pudo importar el catálogo.';
+                            setImportMessage(msg);
+                          } finally {
+                            setImporting(false);
+                          }
+                        }}
+                        disabled={importing}
+                        data-no-drag
+                        sx={{ minWidth: { sm: 200 } }}
+                      >
+                        {importing ? 'Importando...' : 'Importar catálogo'}
+                      </Button>
+                      {lastUpdatedTs && (
+                        <Typography variant="caption" color="text.secondary" sx={{ minWidth: { sm: 200 } }}>
+                          Última actualización: {new Date(lastUpdatedTs).toLocaleTimeString()}
                         </Typography>
-                        {countryOptions.map((c) => (
-                          <Chip key={`country-${c}`} size="small" label={c} onClick={() => setSearchCountry(c)} />
-                        ))}
+                      )}
+                    </Stack>
+                    {(countryOptions.length > 0 || genreOptions.length > 0) && (
+                      <Stack spacing={0.5}>
+                        {countryOptions.length > 0 && (
+                          <>
+                            <datalist id="radio-country-options">
+                              {countryOptions.map((c) => (
+                                <option key={`country-opt-${c}`} value={c} />
+                              ))}
+                            </datalist>
+                            <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                              <Typography variant="caption" color="text.secondary">
+                                País sugerido:
+                              </Typography>
+                              {countryOptions.map((c) => (
+                                <Chip key={`country-${c}`} size="small" label={c} onClick={() => setSearchCountry(c)} />
+                              ))}
+                            </Stack>
+                          </>
+                        )}
+                        {genreOptions.length > 0 && (
+                          <>
+                            <datalist id="radio-genre-options">
+                              {genreOptions.map((g) => (
+                                <option key={`genre-opt-${g}`} value={g} />
+                              ))}
+                            </datalist>
+                            <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                              <Typography variant="caption" color="text.secondary">
+                                Género sugerido:
+                              </Typography>
+                              {genreOptions.map((g) => (
+                                <Chip key={`genre-${g}`} size="small" label={g} onClick={() => setSearchGenre(g)} />
+                              ))}
+                            </Stack>
+                          </>
+                        )}
                       </Stack>
-                      </>
                     )}
-                    {genreOptions.length > 0 && (
-                      <>
-                        <datalist id="radio-genre-options">
-                          {genreOptions.map((g) => (
-                            <option key={`genre-opt-${g}`} value={g} />
-                          ))}
-                        </datalist>
-                      <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-                        <Typography variant="caption" color="text.secondary">
-                          Género sugerido:
-                        </Typography>
-                        {genreOptions.map((g) => (
-                          <Chip key={`genre-${g}`} size="small" label={g} onClick={() => setSearchGenre(g)} />
-                        ))}
-                      </Stack>
-                      </>
+                    {streamsFetching && (
+                      <LinearProgress variant="indeterminate" sx={{ height: 4, borderRadius: 999, maxWidth: 320 }} />
+                    )}
+                    {streamsError && (
+                      <Typography variant="caption" color="error">
+                        No se pudo cargar el catálogo de radios.
+                      </Typography>
+                    )}
+                    {apiError && (
+                      <Typography variant="caption" color="error">
+                        {apiError}
+                      </Typography>
+                    )}
+                    {importMessage && (
+                      <Typography variant="caption" color={importMessage.includes('Importadas') ? 'success.main' : 'error'}>
+                        {importMessage}
+                      </Typography>
                     )}
                   </Stack>
-                )}
-                {streamsFetching && (
-                  <LinearProgress variant="indeterminate" sx={{ height: 4, borderRadius: 999, maxWidth: 320 }} />
-                )}
-                {streamsError && (
-                  <Typography variant="caption" color="error">
-                    No se pudo cargar el catálogo de radios.
-                  </Typography>
-                )}
-                {apiError && (
-                  <Typography variant="caption" color="error">
-                    {apiError}
-                  </Typography>
-                )}
-                {importMessage && (
-                  <Typography variant="caption" color={importMessage.includes('Importadas') ? 'success.main' : 'error'}>
-                    {importMessage}
-                  </Typography>
-                )}
-              </Stack>
-              <Stack spacing={1}>
-                <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-                  <Typography variant="caption" color="text.secondary">
-                    {streamsFetching
-                      ? 'Buscando estaciones...'
-                      : `Catálogo: ${dbStations.length} coincidencias${countryQuery || genreQuery ? ' (filtrado)' : ''}`}
-                  </Typography>
-                  {(countryQuery || genreQuery) && dbStations.length === 0 ? (
-                    <Typography variant="caption" color="text.secondary">
-                      Sin resultados con estos filtros.
-                    </Typography>
-                  ) : null}
-                  {hiddenStations.length > 0 && (
-                    <Tooltip title="Mostrar/ocultar estaciones que marcaste como ocultas">
-                      <Button
-                        size="small"
-                        variant={showHidden ? 'contained' : 'outlined'}
-                        startIcon={<VisibilityOffIcon fontSize="small" />}
-                        onClick={() => setShowHidden((v) => !v)}
-                        data-no-drag
-                      >
-                        {showHidden ? 'Ocultar ocultos' : `Ver ocultos (${hiddenStations.length})`}
-                      </Button>
-                    </Tooltip>
-                  )}
-                </Stack>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {sortedVisibleStations.map((station) => (
-                    <Chip
-                      key={station.id}
-                      label={
-                        station.country || station.region || station.genre
-                          ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
-                          : station.name
-                      }
-                      color={station.id === activeId ? 'primary' : 'default'}
-                      onClick={() => {
-                        setPlaybackWarning(null);
-                        setActiveId(station.id);
-                      }}
-                      variant={station.id === activeId ? 'filled' : 'outlined'}
-                      onDelete={
-                        station.id.startsWith('custom-')
-                          ? () => removeCustomStation(station.id)
-                          : () => hideStation(station)
-                      }
-                      deleteIcon={
-                        station.id.startsWith('custom-') ? undefined : <VisibilityOffIcon fontSize="small" />
-                      }
-                      icon={
-                        station.id === activeId ? (
-                          <FiberManualRecordIcon fontSize="small" color="success" />
-                        ) : favoriteSet.has(keyFor(station)) ? (
-                          <StarIcon fontSize="small" />
-                        ) : undefined
-                      }
-                    />
-                  ))}
-                </Stack>
-                {showHidden && hiddenStations.length > 0 && (
-                  <Stack spacing={0.5}>
-                    <Typography variant="caption" color="text.secondary">
-                      Ocultas ({hiddenStations.length})
-                    </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    {hiddenStations.map((station) => (
-                      <Chip
-                        key={`hidden-${station.id}`}
-                        label={
+                  <Stack spacing={1}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                      <Typography variant="caption" color="text.secondary">
+                        {streamsFetching
+                          ? 'Buscando estaciones...'
+                          : `Catálogo: ${sortedVisibleStations.length} coincidencias${countryQuery || genreQuery ? ' (filtrado)' : ''}`}
+                      </Typography>
+                      {(countryQuery || genreQuery) && sortedVisibleStations.length === 0 ? (
+                        <Typography variant="caption" color="text.secondary">
+                          Sin resultados con estos filtros.
+                        </Typography>
+                      ) : null}
+                      {hiddenStations.length > 0 && (
+                        <Tooltip title="Mostrar/ocultar estaciones que marcaste como ocultas">
+                          <Button
+                            size="small"
+                            variant={showHidden ? 'contained' : 'outlined'}
+                            startIcon={<VisibilityOffIcon fontSize="small" />}
+                            onClick={() => setShowHidden((v) => !v)}
+                            data-no-drag
+                          >
+                            {showHidden ? 'Ocultar ocultos' : `Ver ocultos (${hiddenStations.length})`}
+                          </Button>
+                        </Tooltip>
+                      )}
+                    </Stack>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      {sortedVisibleStations.map((station) => (
+                        <Chip
+                          key={station.id}
+                          label={
                             station.country || station.region || station.genre
                               ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
                               : station.name
                           }
-                          variant="outlined"
-                          onDelete={() => unhideStation(station)}
-                          deleteIcon={<RestartAltIcon fontSize="small" />}
+                          color={station.id === activeId ? 'primary' : 'default'}
+                          onClick={() => {
+                            setPlaybackWarning(null);
+                            setActiveId(station.id);
+                          }}
+                          variant={station.id === activeId ? 'filled' : 'outlined'}
+                          onDelete={
+                            station.id.startsWith('custom-')
+                              ? () => removeCustomStation(station.id)
+                              : () => hideStation(station)
+                          }
+                          deleteIcon={
+                            station.id.startsWith('custom-') ? undefined : <VisibilityOffIcon fontSize="small" />
+                          }
+                          icon={
+                            station.id === activeId ? (
+                              <FiberManualRecordIcon fontSize="small" color="success" />
+                            ) : favoriteSet.has(keyFor(station)) ? (
+                              <StarIcon fontSize="small" />
+                            ) : undefined
+                          }
                         />
                       ))}
                     </Stack>
+                    {showHidden && hiddenStations.length > 0 && (
+                      <Stack spacing={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          Ocultas ({hiddenStations.length})
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          {hiddenStations.map((station) => (
+                            <Chip
+                              key={`hidden-${station.id}`}
+                              label={
+                                station.country || station.region || station.genre
+                                  ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
+                                  : station.name
+                              }
+                              variant="outlined"
+                              onDelete={() => unhideStation(station)}
+                              deleteIcon={<RestartAltIcon fontSize="small" />}
+                            />
+                          ))}
+                        </Stack>
+                      </Stack>
+                    )}
                   </Stack>
-                )}
-              </Stack>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Pega una URL de radio (ej. onlineradiobox.com) y guárdala para escucharla aquí.
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  También puedes editar la metadata de la estación activa y guardarla en el catálogo.
-                </Typography>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <TextField
-                    size="small"
-                    label="Nombre"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    fullWidth
-                  />
-                  <TextField
-                    size="small"
-                    label="País"
-                    value={editCountry}
-                    onChange={(e) => setEditCountry(e.target.value)}
-                    fullWidth
-                    inputProps={{ list: 'radio-country-options' }}
-                  />
-                  <TextField
-                    size="small"
-                    label="Género"
-                    value={editGenre}
-                    onChange={(e) => setEditGenre(e.target.value)}
-                    fullWidth
-                    inputProps={{ list: 'radio-genre-options' }}
-                  />
-                  <Button
-                    variant="outlined"
-                    onClick={() => {
-                      void persistActiveStream(activeStation.streamUrl, editName, editCountry, editGenre);
-                    }}
-                    data-no-drag
-                  >
-                    Guardar metadata
-                  </Button>
                 </Stack>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <TextField
-                    size="small"
-                    label="Nombre de la radio"
-                    value={newStationName}
-                    onChange={(e) => setNewStationName(e.target.value)}
-                    fullWidth
-                  />
-                  <TextField
-                    size="small"
-                    label="URL del stream"
-                    value={newStationUrl}
-                    onChange={(e) => setNewStationUrl(e.target.value)}
-                    placeholder="https://"
-                    fullWidth
-                  />
-                  <TextField
-                    size="small"
-                    label="País"
-                    value={newStationCountry}
-                    onChange={(e) => setNewStationCountry(e.target.value)}
-                    placeholder="Ecuador, México, UK..."
-                    fullWidth
-                  />
-                  <TextField
-                    size="small"
-                    label="Género"
-                    value={newStationGenre}
-                    onChange={(e) => setNewStationGenre(e.target.value)}
-                    placeholder="Afro, Ambient, Indie..."
-                    fullWidth
-                  />
-                  <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1} sx={{ minWidth: { sm: 160 } }}>
+              </Collapse>
+
+              <Collapse in={showAddSection} timeout="auto">
+                <Stack spacing={1}>
+                  <Typography variant="caption" color="text.secondary">
+                    Pega una URL de radio (ej. onlineradiobox.com) y guárdala para escucharla aquí.
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    También puedes editar la metadata de la estación activa y guardarla en el catálogo.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <TextField
+                      size="small"
+                      label="Nombre"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      fullWidth
+                    />
+                    <TextField
+                      size="small"
+                      label="País"
+                      value={editCountry}
+                      onChange={(e) => setEditCountry(e.target.value)}
+                      fullWidth
+                      inputProps={{ list: 'radio-country-options' }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Género"
+                      value={editGenre}
+                      onChange={(e) => setEditGenre(e.target.value)}
+                      fullWidth
+                      inputProps={{ list: 'radio-genre-options' }}
+                    />
                     <Button
                       variant="outlined"
                       onClick={() => {
-                        void testStream();
+                        void persistActiveStream(activeStation.streamUrl, editName, editCountry, editGenre);
                       }}
                       data-no-drag
                     >
-                      Probar stream
-                    </Button>
-                    <Button
-                      variant="contained"
-                      onClick={addCustomStation}
-                      disabled={!newStationName.trim() || !newStationUrl.trim()}
-                      data-no-drag
-                    >
-                      Guardar
+                      Guardar metadata
                     </Button>
                   </Stack>
-                </Stack>
-                {testResult && (
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <WarningAmberIcon fontSize="small" color={testResult.includes('✅') ? 'success' : 'warning'} />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <TextField
+                      size="small"
+                      label="Nombre de la radio"
+                      value={newStationName}
+                      onChange={(e) => setNewStationName(e.target.value)}
+                      fullWidth
+                    />
+                    <TextField
+                      size="small"
+                      label="URL del stream"
+                      value={newStationUrl}
+                      onChange={(e) => setNewStationUrl(e.target.value)}
+                      placeholder="https://"
+                      fullWidth
+                    />
+                    <TextField
+                      size="small"
+                      label="País"
+                      value={newStationCountry}
+                      onChange={(e) => setNewStationCountry(e.target.value)}
+                      placeholder="Ecuador, México, UK..."
+                      fullWidth
+                    />
+                    <TextField
+                      size="small"
+                      label="Género"
+                      value={newStationGenre}
+                      onChange={(e) => setNewStationGenre(e.target.value)}
+                      placeholder="Afro, Ambient, Indie..."
+                      fullWidth
+                    />
+                    <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1} sx={{ minWidth: { sm: 160 } }}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          void testStream();
+                        }}
+                        data-no-drag
+                      >
+                        Probar stream
+                      </Button>
+                      <Button
+                        variant="contained"
+                        onClick={addCustomStation}
+                        disabled={!newStationName.trim() || !newStationUrl.trim()}
+                        data-no-drag
+                      >
+                        Guardar
+                      </Button>
+                    </Stack>
+                  </Stack>
+                  {testResult && (
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <WarningAmberIcon fontSize="small" color={testResult.includes('✅') ? 'success' : 'warning'} />
+                      <Typography variant="caption" color="text.secondary">
+                        {testResult}
+                      </Typography>
+                    </Stack>
+                  )}
+                  <LinearProgress
+                    variant="indeterminate"
+                    sx={{ height: 6, borderRadius: 999, bgcolor: 'rgba(148,163,184,0.2)' }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Streams de muestra; agrega tus prompts para escuchar nuevas variaciones.
+                  </Typography>
+                  <Typography variant="subtitle2">Prompts en uso</Typography>
+                  <PromptList prompts={promptsWithCode} />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Escribe tu prompt (ej. dembow con quenas y delay granular)"
+                      value={promptDraft}
+                      onChange={(e) => setPromptDraft(e.target.value)}
+                      inputRef={promptInputRef}
+                    />
+                    <Button variant="contained" onClick={handleAddPrompt} disabled={!promptDraft.trim()} data-no-drag>
+                      Generar Tidal
+                    </Button>
+                  </Stack>
+                  <Box>
                     <Typography variant="caption" color="text.secondary">
-                      {testResult}
+                      Tip: estos streams se generan con un agente que convierte prompts en código Tidal Cycles y los publica en tiempo real.
                     </Typography>
-                  </Stack>
-                )}
-              </Stack>
-              <LinearProgress
-                variant="indeterminate"
-                sx={{ height: 6, borderRadius: 999, bgcolor: 'rgba(148,163,184,0.2)' }}
-              />
-              <Typography variant="caption" color="text.secondary">
-                Streams de muestra; agrega tus prompts para escuchar nuevas variaciones.
-              </Typography>
-              <Typography variant="subtitle2">Prompts en uso</Typography>
-              <PromptList prompts={promptsWithCode} />
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Escribe tu prompt (ej. dembow con quenas y delay granular)"
-                  value={promptDraft}
-                  onChange={(e) => setPromptDraft(e.target.value)}
-                  inputRef={promptInputRef}
-                />
-                <Button variant="contained" onClick={handleAddPrompt} disabled={!promptDraft.trim()} data-no-drag>
-                  Generar Tidal
-                </Button>
-              </Stack>
-              <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Tip: estos streams se generan con un agente que convierte prompts en código Tidal Cycles y los publica en tiempo real.
-                </Typography>
-              </Box>
+                  </Box>
+                </Stack>
+              </Collapse>
             </Stack>
           </CardContent>
         </Collapse>

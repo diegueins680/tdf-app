@@ -19,7 +19,8 @@
   - ✅ `updateVenue` - updates venue details
   - ⏸️ `listArtists`, `createArtist`, `getArtist`, `updateArtist` - stubs (501)
   - ⏸️ `listRsvps`, `createRsvp` - stubs (501)
-  - ⏸️ `createInvitation` - stub (501)
+  - ✅ `createInvitation` - records invitation with event/party IDs (basic)
+  - ✅ `listInvitations` / `updateInvitation` - list by event and update status/message
 
 ### Authentication & Security
 - Handlers accept `AuthedUser` parameter → wired to `ProtectedAPI` via `AuthProtect "bearer-token"`
