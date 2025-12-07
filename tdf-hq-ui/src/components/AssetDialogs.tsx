@@ -51,7 +51,6 @@ export function CheckoutDialog({
   const targetKind = form.coTargetKind ?? 'party';
   const selectedRoom = roomOptions?.find((room) => room.roomId === form.coTargetRoom) ?? null;
   const activeCheckout = currentCheckout && !currentCheckout.returnedAt ? currentCheckout : null;
-  const hasActive = Boolean(activeCheckout);
   const formatDue = (value?: string | null) => {
     if (!value) return null;
     const d = new Date(value);
@@ -65,7 +64,7 @@ export function CheckoutDialog({
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Estado: {asset.status} · Ubicación: {asset.location ?? '—'}
         </Typography>
-        {hasActive && (
+        {activeCheckout && (
           <Alert severity="warning" sx={{ mb: 1 }}>
             Actualmente en uso por {activeCheckout.targetPartyRef ?? activeCheckout.targetRoomId ?? activeCheckout.targetKind}.{' '}
             {activeCheckout.dueAt ? `Vence: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
@@ -165,8 +164,8 @@ export function CheckoutDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={loading || hasActive}>
-          {hasActive ? 'Pendiente de check-in' : loading ? 'Guardando…' : 'Confirmar'}
+        <Button variant="contained" onClick={onSubmit} disabled={loading || Boolean(activeCheckout)}>
+          {activeCheckout ? 'Pendiente de check-in' : loading ? 'Guardando…' : 'Confirmar'}
         </Button>
       </DialogActions>
     </Dialog>

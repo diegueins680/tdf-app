@@ -126,7 +126,7 @@ const fireCartMetaEvent = () => {
 export default function MarketplacePage() {
   const qc = useQueryClient();
   const paypalClientId =
-    (import.meta.env['VITE_PAYPAL_CLIENT_ID'] as string | undefined)?.trim() || PAYPAL_CLIENT_ID_FALLBACK;
+    (import.meta.env['VITE_PAYPAL_CLIENT_ID'] as string | undefined)?.trim() ?? PAYPAL_CLIENT_ID_FALLBACK;
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [copyToast, setCopyToast] = useState<string | null>(null);
