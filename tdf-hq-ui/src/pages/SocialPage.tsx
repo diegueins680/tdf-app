@@ -33,9 +33,7 @@ function usePartiesMap() {
   });
   const byId = useMemo(() => {
     const map = new Map<number, PartyDTO>();
-    (partiesQuery.data ?? []).forEach((p) => {
-      map.set(p.partyId, p);
-    });
+    (partiesQuery.data ?? []).forEach((p) => map.set(p.partyId, p));
     return map;
   }, [partiesQuery.data]);
   return { partiesQuery, byId };
@@ -103,7 +101,7 @@ export default function SocialPage() {
     <Box>
       <Stack spacing={2} sx={{ mb: 2 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h4" fontWeight={800}>Red social</Typography>
+          <Typography variant="h4" fontWeight={800}>Conexiones</Typography>
           <Chip label={session?.partyId ? `Tu ID: ${session.partyId}` : 'Sin sesión'} size="small" />
         </Stack>
         <Typography color="text.secondary">

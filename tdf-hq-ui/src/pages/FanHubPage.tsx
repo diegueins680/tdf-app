@@ -532,6 +532,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       cachedAudio ?? release.arSpotifyUrl ?? streamingFallbacks.get(release.arArtistId)?.spotify ?? null;
                     const youtubeUrl =
                       release.arYoutubeUrl ?? streamingFallbacks.get(release.arArtistId)?.youtube ?? null;
+                    const hasSpotify = Boolean(spotifyUrl);
+                    const hasYoutube = Boolean(youtubeUrl);
+                    const hasLinks = hasSpotify || hasYoutube;
                     const releaseWithFallback = {
                       ...release,
                       arSpotifyUrl: spotifyUrl,
@@ -578,29 +581,48 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             />
                           </Box>
                         )}
-                        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<PlayArrowIcon />}
-                            endIcon={canManageReleases ? <CloudUploadIcon fontSize="small" /> : undefined}
-                            onClick={() => handlePlayRelease(release)}
-                            disabled={!spotifyUrl && !canManageReleases}
-                          >
-                            {uploadingReleaseId === release.arReleaseId ? 'Subiendo…' : 'Escuchar'}
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            component="a"
-                            href={youtubeUrl ?? undefined}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            disabled={!youtubeUrl}
-                          >
-                            Ver en YouTube
-                          </Button>
-                        </Stack>
+                        {!hasLinks && !canManageReleases && (
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                            Sin links de streaming todavía.
+                          </Typography>
+                        )}
+                        {(hasLinks || canManageReleases) && (
+                          <Stack direction="row" spacing={1} sx={{ mt: 1 }} alignItems="center">
+                            {(hasSpotify || canManageReleases) && (
+                              <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<PlayArrowIcon />}
+                                endIcon={canManageReleases ? <CloudUploadIcon fontSize="small" /> : undefined}
+                                onClick={() => handlePlayRelease(release)}
+                                disabled={!hasSpotify && !canManageReleases}
+                              >
+                                {uploadingReleaseId === release.arReleaseId ? 'Subiendo…' : 'Escuchar'}
+                              </Button>
+                            )}
+                            {hasYoutube && (
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                component="a"
+                                href={youtubeUrl ?? undefined}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Ver en YouTube
+                              </Button>
+                            )}
+                            {canManageReleases && (
+                              <GoogleDriveUploadWidget
+                                label="Subir audio (Drive)"
+                                helperText="Carga el máster de este release."
+                                accept="audio/*"
+                                multiple={false}
+                                dense
+                              />
+                            )}
+                          </Stack>
+                        )}
                       </Box>
                     );
                   })}
