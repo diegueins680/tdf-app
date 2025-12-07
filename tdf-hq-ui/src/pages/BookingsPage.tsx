@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings } from '../api/bookings';
 import type { BookingDTO } from '../api/types';
@@ -150,6 +150,14 @@ export default function BookingsPage() {
     [rooms, assignedRoomIds],
   );
 
+  useEffect(() => {
+    if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
+    const defaults = defaultRoomsForService(serviceType);
+    if (defaults.length) {
+      setAssignedRoomIds(defaults.map((room) => room.roomId));
+    }
+  }, [serviceType, rooms, assignedRoomIds.length]);
+
   const formatForInput = (date: Date) =>
     DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm");
 
@@ -220,6 +228,8 @@ export default function BookingsPage() {
       setStatus('Confirmed');
       setEditingId(null);
       setMode('create');
+      setAssignedRoomIds([]);
+      setEngineerName('');
       void qc.invalidateQueries({ queryKey: ['bookings'] });
     },
     onError: (err) => {
@@ -419,14 +429,14 @@ export default function BookingsPage() {
               onChange={(e) => {
                 const value = e.target.value;
                 setServiceType(value);
-                if (mode === 'create') {
+                if (mode === 'create' || assignedRoomIds.length === 0) {
                   const defaults = defaultRoomsForService(value);
                   if (defaults.length) {
                     setAssignedRoomIds(defaults.map((room) => room.roomId));
                   }
-                  if (requiresEngineer(value) && !engineerName) {
-                    setEngineerName('');
-                  }
+                }
+                if (requiresEngineer(value) && !engineerName) {
+                  setEngineerName('');
                 }
               }}
               helperText="Elige el tipo de servicio asociado a la sesión."
