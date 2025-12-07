@@ -60,6 +60,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import TidalAgentPage from './pages/TidalAgentPage';
 import LabelAssetsPage from './pages/LabelAssetsPage';
 import LabelTracksPage from './pages/LabelTracksPage';
+import SocialPage from './pages/SocialPage';
 
 function Shell() {
   const { session } = useSession();
@@ -201,6 +202,7 @@ export default function App() {
 
           <Route path="/inicio" element={<FanHubPage />} />
           <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
+          <Route path="/social" element={<SocialPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/acerca" element={<AboutPage />} />

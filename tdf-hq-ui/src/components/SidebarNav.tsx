@@ -34,6 +34,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: 'CRM',
     items: [
+      { label: 'Conexiones', path: '/social' },
       { label: 'Contactos', path: '/crm/contactos' },
       { label: 'Empresas', path: '/crm/empresas' },
       { label: 'Leads', path: '/crm/leads' },
@@ -160,6 +161,7 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
 
 export const pathRequiresModule = (path: string): string | null => {
   if (path.startsWith('/crm')) return 'crm';
+  if (path.startsWith('/social')) return 'crm';
   if (path.startsWith('/estudio')) return 'scheduling';
   if (path.startsWith('/finanzas')) return 'invoicing';
   if (path.startsWith('/configuracion')) return 'admin';
