@@ -46,11 +46,11 @@ interface Prompt {
   code?: string;
 }
 
-type LoadStreamDetail = {
+interface LoadStreamDetail {
   streamUrl: string;
   stationName?: string;
   stationId?: string;
-};
+}
 
 interface Station {
   id: string;
@@ -279,9 +279,19 @@ export default function RadioWidget() {
     if (typeof window === 'undefined') return;
     try {
       const favRaw = window.localStorage.getItem('radio-favorites');
-      if (favRaw) setFavoriteKeys(JSON.parse(favRaw));
+      if (favRaw) {
+        const parsed = JSON.parse(favRaw);
+        if (Array.isArray(parsed)) {
+          setFavoriteKeys(parsed.filter((item): item is string => typeof item === 'string'));
+        }
+      }
       const hidRaw = window.localStorage.getItem('radio-hidden');
-      if (hidRaw) setHiddenKeys(JSON.parse(hidRaw));
+      if (hidRaw) {
+        const parsed = JSON.parse(hidRaw);
+        if (Array.isArray(parsed)) {
+          setHiddenKeys(parsed.filter((item): item is string => typeof item === 'string'));
+        }
+      }
       const favFilter = window.localStorage.getItem('radio-show-favorites');
       if (favFilter) setShowFavoritesOnly(favFilter === '1');
     } catch {
@@ -675,7 +685,7 @@ export default function RadioWidget() {
         const station: Station = {
           id,
           stationId: detail.stationId,
-          name: detail.stationName?.trim() || 'Stream compartido',
+          name: detail.stationName?.trim() ?? 'Stream compartido',
           streamUrl: detail.streamUrl,
           mood: 'Compartido',
           prompts: [],
@@ -755,11 +765,28 @@ export default function RadioWidget() {
     const trimmed = (value ?? '').trim();
     return trimmed === '' ? undefined : trimmed;
   }, []);
-  const normalizeMaybe = normalizeField;
   const clearFilters = useCallback(() => {
     setSearchCountry('');
     setSearchGenre('');
     void refetchStreams();
+  }, [refetchStreams]);
+  const handleImportClick = useCallback(() => {
+    void (async () => {
+      setImporting(true);
+      setImportMessage(null);
+      setApiError(null);
+      try {
+        const res = await RadioAPI.importSources({ rirLimit: 800 });
+        setImportMessage(`Importadas ${res.rirInserted} nuevas, ${res.rirUpdated} actualizadas de ${res.rirProcessed} streams.`);
+        void refetchStreams();
+        setLastUpdatedTs(Date.now());
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'No se pudo importar el catálogo.';
+        setImportMessage(msg);
+      } finally {
+        setImporting(false);
+      }
+    })();
   }, [refetchStreams]);
   const persistActiveStream = useCallback(
     async (url: string, name?: string, country?: string, genre?: string) => {
@@ -1046,7 +1073,9 @@ export default function RadioWidget() {
                 variant="outlined"
                 size="small"
                 startIcon={<ShareIcon fontSize="small" />}
-                onClick={handleShare}
+                onClick={() => {
+                  void handleShare();
+                }}
                 data-no-drag
               >
                 Compartir stream
@@ -1167,24 +1196,7 @@ export default function RadioWidget() {
                         variant="outlined"
                         color="secondary"
                         startIcon={<CloudDownloadIcon fontSize="small" />}
-                        onClick={async () => {
-                          setImporting(true);
-                          setImportMessage(null);
-                          setApiError(null);
-                          try {
-                            const res = await RadioAPI.importSources({ rirLimit: 800 });
-                            setImportMessage(
-                              `Importadas ${res.rirInserted} nuevas, ${res.rirUpdated} actualizadas de ${res.rirProcessed} streams.`,
-                            );
-                            void refetchStreams();
-                            setLastUpdatedTs(Date.now());
-                          } catch (err) {
-                            const msg = err instanceof Error ? err.message : 'No se pudo importar el catálogo.';
-                            setImportMessage(msg);
-                          } finally {
-                            setImporting(false);
-                          }
-                        }}
+                        onClick={handleImportClick}
                         disabled={importing}
                         data-no-drag
                         sx={{ minWidth: { sm: 200 } }}

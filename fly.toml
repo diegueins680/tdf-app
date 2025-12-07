@@ -7,9 +7,9 @@ image = "diegueins680/tdf-hq:latest"
 [env]
   APP_PORT = "8080"
   ALLOW_ORIGINS = "https://tdf-app.pages.dev"
-  ALLOW_ALL_ORIGINS = "false"
-  VITE_PAYPAL_CLIENT_ID = "REPLACE_WITH_PAYPAL_CLIENT_ID"
-  VITE_LIVE_SESSIONS_PUBLIC_TOKEN = "REPLACE_WITH_INTAKE_TOKEN"
+  ALLOW_ALL_ORIGINS = "true"
+  VITE_PAYPAL_CLIENT_ID = "AfPPuaIkpj5aWoweUi1hL7s94NUo9fZdsN8e6P7v0zftuWAuWJvdNm6aHK_fboeSnZetnTLnnoBesxQ2"
+  VITE_LIVE_SESSIONS_PUBLIC_TOKEN = "f96db9e5-8b43-4923-85d6-c1cc9bb2cb7f"
 
 [[services]]
   protocol = "tcp"
