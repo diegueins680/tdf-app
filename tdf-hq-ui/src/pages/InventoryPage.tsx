@@ -53,6 +53,7 @@ export default function InventoryPage() {
   const [selected, setSelected] = useState<AssetDTO | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
+  const [currentCheckout, setCurrentCheckout] = useState<AssetCheckoutDTO | null>(null);
   const [dialogOpen, setDialogOpen] = useState<'checkout' | 'checkin' | 'qr' | null>(null);
   const [form, setForm] = useState<AssetCheckoutRequest>({
     coTargetKind: 'party',
@@ -70,7 +71,11 @@ export default function InventoryPage() {
 
   const assetHistoryMutation = useMutation({
     mutationFn: (assetId: string) => Inventory.history(assetId),
-    onSuccess: (data) => setHistory(data),
+    onSuccess: (data) => {
+      setHistory(data);
+      const active = data.find((entry) => !entry.returnedAt);
+      setCurrentCheckout(active ?? null);
+    },
   });
 
   const qrMutation = useMutation({
@@ -106,6 +111,9 @@ export default function InventoryPage() {
   });
 
   const openCheckout = (asset: AssetDTO) => {
+    setCurrentCheckout(null);
+    setHistory([]);
+    assetHistoryMutation.mutate(asset.assetId);
     setForm({
       coTargetKind: 'party',
       coTargetParty: '',
@@ -222,6 +230,7 @@ export default function InventoryPage() {
         partyOptions={partyOptions}
         loadingRooms={roomsQuery.isLoading}
         loadingParties={partiesQuery.isLoading}
+        currentCheckout={currentCheckout}
       />
 
       <CheckinDialog

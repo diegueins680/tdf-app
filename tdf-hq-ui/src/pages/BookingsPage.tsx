@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings } from '../api/bookings';
 import type { BookingDTO, PartyDTO } from '../api/types';
@@ -52,8 +52,8 @@ export default function BookingsPage() {
   const qc = useQueryClient();
   const zone = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
-  const rooms = roomsQuery.data ?? [];
-  const parties = partiesQuery.data ?? [];
+  const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
+  const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const statusOptions = [
     'Tentative',
     'Confirmed',
@@ -71,19 +71,26 @@ export default function BookingsPage() {
   };
 
   const extractEngineerFromNotes = (raw?: string | null) => {
-    if (!raw) return { engineer: '', notesBody: '' };
+    if (!raw) return { engineer: '', engineerId: null as number | null, notesBody: '' };
     const lines = raw.split('\n');
     let engineer = '';
+    let engineerId: number | null = null;
     const remaining: string[] = [];
     lines.forEach((line) => {
-      const match = line.match(/^\s*engineer:\s*(.*)$/i);
+      const match = /^\s*engineer:\s*(.*)$/i.exec(line);
       if (match) {
-        engineer = match[1]?.trim() ?? '';
+        const value = match[1]?.trim() ?? '';
+        engineer = value;
+        const idMatch = /^\s*\[(\d+)\]\s*(.*)$/.exec(value);
+        if (idMatch) {
+          engineerId = Number(idMatch[1]);
+          engineer = idMatch[2]?.trim() ?? '';
+        }
       } else {
         remaining.push(line);
       }
     });
-    return { engineer, notesBody: remaining.join('\n').trim() };
+    return { engineer, engineerId, notesBody: remaining.join('\n').trim() };
   };
 
   const events = useMemo(
@@ -101,7 +108,7 @@ export default function BookingsPage() {
           ? `Cupos: ${Math.max(0, courseRemaining ?? 0)}/${courseCapacity}`
           : null;
         const priceText = coursePrice ? `USD ${Math.round(coursePrice)}` : null;
-        const locationText = courseLocation ? courseLocation : null;
+        const locationText = courseLocation ?? null;
         return {
           id: String(booking.bookingId),
           title: booking.title,
@@ -170,7 +177,7 @@ export default function BookingsPage() {
 
   const pickFirst = (list: RoomDTO[]) => (list.length > 0 ? [list[0]!] : []);
 
-  const defaultRoomsForService = (svc: string): RoomDTO[] => {
+  const defaultRoomsForService = useCallback((svc: string): RoomDTO[] => {
     const lowered = svc.toLowerCase();
     if (lowered.includes('dj')) {
       const defaults = pickFirst(categorizeRooms.djBooth);
@@ -192,7 +199,7 @@ export default function BookingsPage() {
       return [...categorizeRooms.controlRoom.slice(0, 1), ...categorizeRooms.liveRoom.slice(0, 1)];
     }
     return categorizeRooms.other.slice(0, 1);
-  };
+  }, [categorizeRooms]);
 
   const assignedRooms = useMemo(
     () => rooms.filter((room) => assignedRoomIds.includes(room.roomId)),
@@ -215,7 +222,7 @@ export default function BookingsPage() {
     if (defaults.length) {
       setAssignedRoomIds(defaults.map((room) => room.roomId));
     }
-  }, [serviceType, rooms, assignedRoomIds.length]);
+  }, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
 
   const formatForInput = (date: Date) =>
     DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm");
@@ -265,9 +272,15 @@ export default function BookingsPage() {
 
   const buildCombinedNotes = () => {
     const trimmed = notes.trim();
-    const engineerLabel = engineerPartyId
-      ? engineerOptions.find((opt) => opt.partyId === engineerPartyId)?.displayName ?? engineerName.trim()
-      : engineerName.trim();
+    const engineerLabel = (() => {
+      if (engineerPartyId) {
+        const display =
+          engineerOptions.find((opt) => opt.partyId === engineerPartyId)?.displayName ??
+          engineerName.trim();
+        return display ? `[${engineerPartyId}] ${display}` : `[${engineerPartyId}]`;
+      }
+      return engineerName.trim();
+    })();
     const engineerLine = engineerLabel ? `Engineer: ${engineerLabel}` : '';
     if (trimmed && engineerLine) return `${trimmed}\n${engineerLine}`;
     if (engineerLine) return engineerLine;
@@ -372,10 +385,15 @@ export default function BookingsPage() {
     setMode('edit');
     setEditingId(booking.bookingId);
     setTitle(booking.title ?? 'Sesión');
-    const { engineer, notesBody } = extractEngineerFromNotes(booking.notes);
+    const { engineer, engineerId, notesBody } = extractEngineerFromNotes(booking.notes);
     setNotes(notesBody);
     setEngineerName(engineer);
-    setEngineerPartyId(null);
+    const matchedEngineerId =
+      engineerId ??
+      (engineer
+        ? parties.find((p) => p.displayName.toLowerCase() === engineer.toLowerCase())?.partyId ?? null
+        : null);
+    setEngineerPartyId(matchedEngineerId);
     setCustomerPartyId(booking.partyId ?? null);
     const customerLabel =
       booking.partyId && parties.find((p) => p.partyId === booking.partyId)?.displayName
@@ -641,7 +659,7 @@ export default function BookingsPage() {
               onChange={(_, value) => setAssignedRoomIds(value.map((room) => room.roomId))}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip label={option.rName} {...getTagProps({ index })} />
+                  <Chip key={option.roomId} label={option.rName} {...getTagProps({ index })} />
                 ))
               }
               renderInput={(params) => (

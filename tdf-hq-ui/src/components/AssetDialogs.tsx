@@ -1,16 +1,17 @@
 import {
+  Alert,
+  Autocomplete,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Autocomplete,
   MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import type { AssetDTO, PartyDTO, RoomDTO } from '../api/types';
+import type { AssetCheckoutDTO, AssetDTO, PartyDTO, RoomDTO } from '../api/types';
 import type { AssetCheckinRequest, AssetCheckoutRequest } from '../api/inventory';
 
 export const CHECKOUT_TARGET_OPTIONS = [
@@ -31,6 +32,7 @@ export function CheckoutDialog({
   partyOptions,
   loadingRooms,
   loadingParties,
+  currentCheckout,
 }: {
   open: boolean;
   onClose: () => void;
@@ -43,10 +45,19 @@ export function CheckoutDialog({
   partyOptions?: PartyDTO[];
   loadingRooms?: boolean;
   loadingParties?: boolean;
+  currentCheckout?: AssetCheckoutDTO | null;
 }) {
   if (!asset) return null;
   const targetKind = form.coTargetKind ?? 'party';
   const selectedRoom = roomOptions?.find((room) => room.roomId === form.coTargetRoom) ?? null;
+  const activeCheckout = currentCheckout && !currentCheckout.returnedAt ? currentCheckout : null;
+  const hasActive = Boolean(activeCheckout);
+  const formatDue = (value?: string | null) => {
+    if (!value) return null;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleString();
+  };
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Check-out · {asset.name}</DialogTitle>
@@ -54,6 +65,13 @@ export function CheckoutDialog({
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Estado: {asset.status} · Ubicación: {asset.location ?? '—'}
         </Typography>
+        {hasActive && (
+          <Alert severity="warning" sx={{ mb: 1 }}>
+            Actualmente en uso por {activeCheckout.targetPartyRef ?? activeCheckout.targetRoomId ?? activeCheckout.targetKind}.{' '}
+            {activeCheckout.dueAt ? `Vence: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
+            {' '}Registra el check-in antes de asignarlo de nuevo.
+          </Alert>
+        )}
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             select
@@ -147,8 +165,8 @@ export function CheckoutDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={loading}>
-          {loading ? 'Guardando…' : 'Confirmar'}
+        <Button variant="contained" onClick={onSubmit} disabled={loading || hasActive}>
+          {hasActive ? 'Pendiente de check-in' : loading ? 'Guardando…' : 'Confirmar'}
         </Button>
       </DialogActions>
     </Dialog>

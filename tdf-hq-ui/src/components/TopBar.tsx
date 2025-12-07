@@ -467,7 +467,6 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               value={quickQuery}
               onChange={(e) => setQuickQuery(e.target.value)}
               inputRef={quickInputRef}
-              autoFocus
               onKeyDown={(event) => {
                 if (event.key === 'ArrowDown') {
                   event.preventDefault();

@@ -229,7 +229,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [uploadingReleaseId, setUploadingReleaseId] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [feedLimit, setFeedLimit] = useState(4);
-  type TargetArtist = { id: number; name: string; spotifyUrl?: string | null; youtubeUrl?: string | null };
+  interface TargetArtist {
+    id: number;
+    name: string;
+    spotifyUrl?: string | null;
+    youtubeUrl?: string | null;
+  }
   const targetArtists = useMemo<TargetArtist[]>(() => {
     if (isFan && hasFollows) {
       return follows.map((follow) => ({
@@ -270,7 +275,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return map;
   }, [targetArtists]);
 
-  type ReleaseFeedItem = ArtistReleaseDTO & { artistName: string };
+  interface ReleaseFeedItem extends ArtistReleaseDTO {
+    artistName: string;
+  }
   const releaseFeedQuery = useQuery({
     queryKey: ['fan-release-feed', releaseArtistIds, canSeeReleaseFeed],
     enabled: canSeeReleaseFeed && targetArtists.length > 0,
@@ -492,7 +499,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         type="file"
         accept="audio/*"
         hidden
-        onChange={handleAudioFileChange}
+        onChange={(event) => {
+          void handleAudioFileChange(event);
+        }}
       />
       <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
         <Stack spacing={1}>
