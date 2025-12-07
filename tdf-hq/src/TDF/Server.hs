@@ -35,7 +35,7 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime)
+import           Data.Time (Day, UTCTime (..), fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime, secondsToDiffTime)
 import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           GHC.Generics (Generic)
@@ -2243,10 +2243,39 @@ bookingServer user =
 listBookings :: AuthedUser -> AppM [BookingDTO]
 listBookings user = do
   requireModule user ModuleScheduling
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    bookings <- selectList [] [Desc BookingId]
-    buildBookingDTOs bookings
+  Env pool cfg <- ask
+  liftIO $ do
+    dbBookings <- flip runSqlPool pool $ do
+      bookings <- selectList [] [Desc BookingId]
+      buildBookingDTOs bookings
+    let courseSessions = courseCalendarBookings cfg
+    pure (dbBookings ++ courseSessions)
+
+courseCalendarBookings :: AppConfig -> [BookingDTO]
+courseCalendarBookings cfg =
+  case courseMetadataFor cfg Nothing productionCourseSlug of
+    Nothing   -> []
+    Just meta ->
+      zipWith (mkBooking meta) ([1..] :: [Int]) (Courses.sessions meta)
+  where
+    mkBooking CourseMetadata{..} idx CourseSession{..} =
+      let startUtc = UTCTime date (secondsToDiffTime (15 * 60 * 60)) -- 10:00 Quito (UTC-5)
+          endUtc   = addUTCTime (4 * 60 * 60) startUtc               -- 4-hour block
+      in BookingDTO
+           { bookingId          = negate (fromIntegral (1000 + idx))
+           , title              = "Curso: " <> label
+           , startsAt           = startUtc
+           , endsAt             = endUtc
+           , status             = "Confirmed"
+           , notes              = Just ("Curso " <> slug)
+           , partyId            = Nothing
+           , serviceType        = Just "Curso Producción Musical"
+           , serviceOrderId     = Nothing
+           , serviceOrderTitle  = Nothing
+           , customerName       = Nothing
+           , partyDisplayName   = Nothing
+           , resources          = []
+           }
 
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
 createBooking user req = do
