@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Alert, Box, Card, CardContent, Chip, Link, Stack, Typography } from '@mui/material';
 import LaunchIcon from '@mui/icons-material/Launch';
 import { useSession } from '../session/SessionContext';
+import { deriveModulesFromRoles } from '../components/SidebarNav';
 
 interface ManualItem {
   title: string;
@@ -41,11 +42,30 @@ const sectionsByModule: Record<string, ManualItem[]> = {
     { title: 'Operación / Inventario', path: '/operacion/inventario', description: 'Inventario con fotos, estado y precios (venta/renta).' },
     { title: 'Operación / Órdenes marketplace', path: '/operacion/ordenes-marketplace', description: 'Seguimiento de pedidos del marketplace, pagos y estados.' },
   ],
+  label: [
+    { title: 'Label / Artistas', path: '/label/artistas', description: 'Roster de artistas con perfiles, notas y enlaces públicos.' },
+    { title: 'Label / Proyectos', path: '/label/proyectos', description: 'Proyectos activos por artista, con estados y entregables.' },
+    { title: 'Label / Releases', path: '/label/releases', description: 'Lanzamientos con fechas, estado y metadatos por plataforma.' },
+    { title: 'Label / Assets', path: '/label/assets', description: 'Activos del label (equipos, recursos vinculados) con estados.' },
+    { title: 'Label / Tracks', path: '/label/tracks', description: 'Seguimiento de tareas/pistas por release: pendientes vs. completadas.' },
+  ],
 };
 
 export default function ManualPage() {
   const { session } = useSession();
-  const modules = useMemo(() => (session?.modules ?? []).map((m) => m.toLowerCase()), [session?.modules]);
+  const modules = useMemo(() => {
+    const provided = session?.modules ?? [];
+    const fromRoles = deriveModulesFromRoles(session?.roles);
+    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+    if (baseSet.has('packages')) {
+      baseSet.add('ops');
+      baseSet.add('label');
+    }
+    if (baseSet.has('ops')) {
+      baseSet.add('packages');
+    }
+    return Array.from(baseSet);
+  }, [session?.modules, session?.roles]);
 
   const items = useMemo(() => {
     const merged: ManualItem[] = [];

@@ -43,7 +43,9 @@ type ArtistAdminAPI =
        :<|> ReqBody '[JSON] ArtistProfileUpsert :> Post '[JSON] ArtistProfileDTO
          )
   :<|> "releases" :>
-         ( ReqBody '[JSON] ArtistReleaseUpsert :> Post '[JSON] ArtistReleaseDTO )
+         ( ReqBody '[JSON] ArtistReleaseUpsert :> Post '[JSON] ArtistReleaseDTO
+       :<|> Capture "releaseId" Int64 :> ReqBody '[JSON] ArtistReleaseUpsert :> Put '[JSON] ArtistReleaseDTO
+         )
 
 type LogsAPI =
        QueryParam "limit" Int :> Get '[JSON] [LogEntryDTO]

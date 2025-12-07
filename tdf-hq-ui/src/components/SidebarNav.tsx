@@ -19,6 +19,8 @@ export interface NavGroup {
   items: NavItem[];
 }
 
+type NavGroupView = NavGroup & { restricted?: boolean };
+
 export const NAV_GROUPS: NavGroup[] = [
   {
     title: 'PÚBLICO',
@@ -64,6 +66,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Artistas', path: '/label/artistas' },
       { label: 'Proyectos', path: '/label/proyectos' },
       { label: 'Releases', path: '/label/releases' },
+      { label: 'Assets', path: '/label/assets' },
+      { label: 'Tracks', path: '/label/tracks' },
     ],
   },
   {
@@ -96,9 +100,11 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: 'RECURSOS',
     items: [
+      { label: 'Manual', path: '/manual' },
       { label: 'Acerca de', path: '/acerca' },
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Sugerencias', path: '/feedback' },
+      { label: 'Tidal Agent', path: '/herramientas/tidal-agent' },
       { label: 'Creador musical', path: '/herramientas/creador-musical' },
     ],
   },
@@ -120,11 +126,14 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
         moduleSet.add('scheduling');
         moduleSet.add('invoicing');
         moduleSet.add('packages');
+        moduleSet.add('ops');
+        moduleSet.add('label');
       } else if (role.includes('manager')) {
         moduleSet.add('crm');
         moduleSet.add('scheduling');
         moduleSet.add('invoicing');
         moduleSet.add('packages');
+        moduleSet.add('ops');
       } else if (role.includes('reception')) {
         moduleSet.add('crm');
         moduleSet.add('scheduling');
@@ -137,7 +146,14 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
       } else if (role.includes('maintenance')) {
         moduleSet.add('packages');
         moduleSet.add('scheduling');
-    }
+        moduleSet.add('ops');
+      } else if (role.includes('label')) {
+        moduleSet.add('label');
+      } else if (role.includes('inventory') || role.includes('operacion') || role.includes('operation') || role.includes('ops')) {
+        moduleSet.add('ops');
+      } else if (role.includes('finance') || role.includes('billing')) {
+        moduleSet.add('invoicing');
+      }
   });
   return Array.from(moduleSet);
 };
@@ -147,8 +163,8 @@ export const pathRequiresModule = (path: string): string | null => {
   if (path.startsWith('/estudio')) return 'scheduling';
   if (path.startsWith('/finanzas')) return 'invoicing';
   if (path.startsWith('/configuracion')) return 'admin';
-  if (path.startsWith('/operacion')) return 'packages';
-  if (path.startsWith('/label')) return 'packages';
+  if (path.startsWith('/operacion')) return 'ops';
+  if (path.startsWith('/label')) return 'label';
   if (path.startsWith('/escuela')) return 'scheduling';
   if (path.startsWith('/eventos')) return 'scheduling';
   return null;
@@ -165,21 +181,35 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const modules = useMemo(() => {
     const provided = session?.modules ?? [];
     const fromRoles = deriveModulesFromRoles(session?.roles);
-    return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+    // Backward-compatible aliases so legacy "packages" access still unlocks Ops/Label.
+    if (baseSet.has('packages')) {
+      baseSet.add('ops');
+      baseSet.add('label');
+    }
+    if (baseSet.has('ops')) {
+      baseSet.add('packages');
+    }
+    return baseSet;
   }, [session?.modules, session?.roles]);
 
-  const allowedNavGroups = useMemo(() => {
+  const allowedNavGroups = useMemo<NavGroupView[]>(() => {
     return NAV_GROUPS.map((group) => {
       const filteredItems = group.items.filter((item) => {
         const required = pathRequiresModule(item.path);
         if (!required) return true;
         return modules.has(required);
       });
-      return { ...group, items: filteredItems };
-    }).filter((group) => group.items.length > 0);
+      const hadHidden = group.items.some((item) => {
+        const required = pathRequiresModule(item.path);
+        return required !== null && !modules.has(required);
+      });
+      const restricted = filteredItems.length === 0 && hadHidden;
+      return { ...group, items: filteredItems, restricted };
+    }).filter((group) => group.items.length > 0 || group.restricted);
   }, [modules]);
 
-  const filteredNavGroups = useMemo(() => {
+  const filteredNavGroups = useMemo<NavGroupView[]>(() => {
     const query = filter.trim().toLowerCase();
     if (!query) return allowedNavGroups;
     return allowedNavGroups
@@ -190,8 +220,9 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
             item.label.toLowerCase().includes(query) ||
             item.path.toLowerCase().includes(query),
         ),
+        restricted: group.restricted,
       }))
-      .filter((group) => group.items.length > 0);
+      .filter((group) => group.items.length > 0 || group.restricted);
   }, [allowedNavGroups, filter]);
 
   const flatFilteredItems = useMemo(
@@ -199,14 +230,14 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     [filteredNavGroups],
   );
 
-  const ensureExpandedDefaults = (groups: NavGroup[]) => {
+  const ensureExpandedDefaults = (groups: NavGroupView[]) => {
     const next = new Set<string>();
     groups.forEach((group) => {
       const hasSingle = group.items.length <= 1;
       const matchesRoute = group.items.some(
         (item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`),
       );
-      if (hasSingle || matchesRoute) next.add(group.title);
+      if (hasSingle || matchesRoute || group.restricted) next.add(group.title);
     });
     return next;
   };
@@ -243,7 +274,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       if (activeTag === 'input' || activeTag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable) {
         return;
       }
-      if (event.key === '/' || (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey))) {
+      if (event.key === '/') {
         event.preventDefault();
         searchRef.current?.focus();
       }
@@ -318,7 +349,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
             }
           }}
           size="small"
-          placeholder="Buscar sección"
+          placeholder="Buscar sección (/)"
           fullWidth
           InputProps={{
             startAdornment: (
@@ -349,7 +380,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         )}
         {filteredNavGroups.map((group, groupIdx) => {
           const isSearching = filter.trim().length > 0;
-          const isExpanded = isSearching || expandedGroups.has(group.title);
+          const isExpanded = isSearching || expandedGroups.has(group.title) || group.restricted;
           return (
             <Box key={group.title} sx={{ px: 1 }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
@@ -414,6 +445,14 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                       </ListItemButton>
                     );
                   })}
+                  {group.items.length === 0 && group.restricted && (
+                    <Typography
+                      variant="body2"
+                      sx={{ px: 3, py: 1.5, color: 'rgba(248,250,252,0.65)' }}
+                    >
+                      No tienes acceso a esta sección. Pide acceso a tu admin.
+                    </Typography>
+                  )}
                 </List>
               </Collapse>
             </Box>
