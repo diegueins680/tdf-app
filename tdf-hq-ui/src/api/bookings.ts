@@ -8,6 +8,7 @@ export interface BookingUpdatePayload {
   ubNotes?: string;
   ubStartsAt?: string;
   ubEndsAt?: string;
+  ubResourceIds?: string[] | null;
 }
 
 export const Bookings = {
