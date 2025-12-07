@@ -72,13 +72,30 @@ export default function BookingsPage() {
 
   const events = useMemo(
     () =>
-      bookings.map((booking) => ({
-        id: String(booking.bookingId),
-        title: booking.title,
-        start: toIsoDate(booking.startsAt),
-        end: toIsoDate(booking.endsAt),
-        extendedProps: booking,
-      })),
+      bookings.map((booking) => {
+        const isCourse =
+          Boolean(booking.courseSlug) ||
+          (booking.bookingId ?? 0) < 0 ||
+          (booking.serviceType ?? '').toLowerCase().includes('curso');
+        const courseCapacity = booking.courseCapacity ?? undefined;
+        const courseRemaining = booking.courseRemaining ?? undefined;
+        const coursePrice = booking.coursePrice ?? undefined;
+        const courseLocation = booking.courseLocation ?? undefined;
+        const courseSubtitle = courseCapacity
+          ? `Cupos: ${Math.max(0, courseRemaining ?? 0)}/${courseCapacity}`
+          : null;
+        const priceText = coursePrice ? `USD ${Math.round(coursePrice)}` : null;
+        const locationText = courseLocation ? courseLocation : null;
+        return {
+          id: String(booking.bookingId),
+          title: booking.title,
+          start: toIsoDate(booking.startsAt),
+          end: toIsoDate(booking.endsAt),
+          extendedProps: { ...booking, isCourse, courseSubtitle, priceText, locationText },
+          backgroundColor: isCourse ? 'rgba(59,130,246,0.22)' : undefined,
+          borderColor: isCourse ? 'rgba(59,130,246,0.4)' : undefined,
+        };
+      }),
     [bookings],
   );
 
@@ -332,7 +349,11 @@ export default function BookingsPage() {
     }
   };
 
-  const handleEventClick = (info: { event: { id: string; extendedProps?: unknown } }) => {
+  const handleEventClick = (info: { event: { id: string; extendedProps?: { isCourse?: boolean } } }) => {
+    if (info.event.extendedProps?.isCourse) {
+      window.alert('Este bloque pertenece al curso de Producción Musical y es de solo lectura.');
+      return;
+    }
     const bookingId = Number.parseInt(info.event.id, 10);
     const booking = bookings.find((b) => b.bookingId === bookingId);
     if (!booking) return;
@@ -360,7 +381,11 @@ export default function BookingsPage() {
     setDialogOpen(true);
   };
 
-  const handleEventDropOrResize = (arg: { event: { id: string; start: Date | null; end: Date | null } }) => {
+  const handleEventDropOrResize = (arg: { event: { id: string; start: Date | null; end: Date | null; extendedProps?: { isCourse?: boolean } }; revert?: () => void }) => {
+    if (arg.event.extendedProps?.isCourse) {
+      arg.revert?.();
+      return;
+    }
     const bookingId = Number.parseInt(arg.event.id, 10);
     if (!arg.event.start || !arg.event.end) return;
     const startIso = toUtcIso(formatForInput(arg.event.start));
@@ -395,6 +420,39 @@ export default function BookingsPage() {
           eventClick={handleEventClick}
           eventDrop={handleEventDropOrResize}
           eventResize={handleEventDropOrResize}
+          eventClassNames={(arg) => (arg.event.extendedProps?.isCourse ? ['course-event'] : [])}
+          eventContent={(arg) => {
+            const isCourse = arg.event.extendedProps?.isCourse;
+            const courseSubtitle = arg.event.extendedProps?.courseSubtitle as string | undefined;
+            const priceText = arg.event.extendedProps?.priceText as string | undefined;
+            const locationText = arg.event.extendedProps?.locationText as string | undefined;
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {isCourse && (
+                    <span
+                      style={{
+                        background: 'rgba(59,130,246,0.18)',
+                        color: '#0f172a',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                      }}
+                    >
+                      Curso
+                    </span>
+                  )}
+                  <span>{arg.event.title}</span>
+                </div>
+                {isCourse && (
+                  <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.8 }}>
+                    {[courseSubtitle, priceText, locationText].filter(Boolean).join(' · ')}
+                  </span>
+                )}
+              </div>
+            );
+          }}
           events={events}
           nowIndicator
           timeZone={zone}

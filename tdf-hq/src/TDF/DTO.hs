@@ -260,6 +260,11 @@ data BookingDTO = BookingDTO
   , customerName      :: Maybe Text
   , partyDisplayName  :: Maybe Text
   , resources   :: [BookingResourceDTO]
+  , courseSlug        :: Maybe Text
+  , coursePrice       :: Maybe Double
+  , courseCapacity    :: Maybe Int
+  , courseRemaining   :: Maybe Int
+  , courseLocation    :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON BookingDTO
 
