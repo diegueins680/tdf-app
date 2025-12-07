@@ -61,6 +61,7 @@ import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
+import           TDF.Contracts.API (ContractsAPI)
 import           TDF.Config (AppConfig(..))
 import           TDF.DB
 import           TDF.Models
@@ -78,6 +79,7 @@ import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.ServerFeedback (feedbackServer)
+import qualified TDF.Contracts.Server as Contracts
 import           TDF.Trials.API (TrialsAPI)
 import           TDF.Trials.Server (trialsServer)
 import qualified TDF.Meta as Meta
@@ -205,6 +207,7 @@ server =
   :<|> cmsPublicServer
   :<|> marketplacePublicServer
   :<|> labelPublicServer
+  :<|> contractsServer
   :<|> socialEventsServer
   :<|> radioPresencePublicServer
   :<|> protectedServer
@@ -3261,6 +3264,11 @@ marketplaceAdminServer user =
 
 labelPublicServer :: ServerT LabelAPI AppM
 labelPublicServer = listLabelTracks :<|> createLabelTrack :<|> updateLabelTrack :<|> deleteLabelTrack
+
+contractsServer :: ServerT ContractsAPI AppM
+contractsServer = hoistServer contractsProxy lift Contracts.server
+  where
+    contractsProxy = Proxy :: Proxy ContractsAPI
 
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do

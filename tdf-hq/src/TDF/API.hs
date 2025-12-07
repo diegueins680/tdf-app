@@ -41,6 +41,7 @@ import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
+import           TDF.Contracts.API (ContractsAPI)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -213,6 +214,7 @@ type API =
   :<|> CmsPublicAPI
   :<|> "marketplace" :> MarketplaceAPI
   :<|> "label" :> LabelAPI
+  :<|> "contracts" :> ContractsAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> RadioPublicAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI

@@ -1,9 +1,8 @@
 {-# LANGUAGE DeriveGeneric #-}
 module TDF.Contracts.Types where
 import GHC.Generics (Generic)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Text (Text)
-import Data.Time (Day)
 
 data Contract = Contract {
   kind :: Text,
