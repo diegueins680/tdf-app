@@ -121,7 +121,7 @@ adminServer user =
 
     artistsRouter =
       (listArtistProfilesAdmin :<|> upsertArtistProfileAdmin)
-      :<|> createArtistReleaseAdmin
+      :<|> (createArtistReleaseAdmin :<|> updateArtistReleaseAdmin)
 
     logsRouter =
       getLogs :<|> clearLogsHandler
@@ -220,6 +220,28 @@ adminServer user =
             entity <- getJustEntity releaseId
             pure (Just (artistReleaseEntityToDTOAdmin entity))
       maybe (throwError err404) pure dto
+
+    updateArtistReleaseAdmin releaseId ArtistReleaseUpsert{..} = do
+      ensureModule ModuleAdmin user
+      now <- liftIO getCurrentTime
+      let releaseKey = toSqlKey releaseId
+          artistKey  = toSqlKey aruArtistId
+      mRelease <- withPool $ get releaseKey
+      case mRelease of
+        Nothing -> throwError err404
+        Just release -> do
+          when (artistReleaseArtistPartyId release /= artistKey) $
+            throwError err400 { errBody = "El release no pertenece a este artista" }
+          withPool $ update releaseKey
+            [ ArtistReleaseTitle        =. aruTitle
+            , ArtistReleaseReleaseDate  =. aruReleaseDate
+            , ArtistReleaseDescription  =. aruDescription
+            , ArtistReleaseCoverImageUrl =. aruCoverImageUrl
+            , ArtistReleaseSpotifyUrl   =. aruSpotifyUrl
+            , ArtistReleaseYoutubeUrl   =. aruYoutubeUrl
+            ]
+          entity <- withPool $ getJustEntity releaseKey
+          pure (artistReleaseEntityToDTOAdmin entity)
 
     updateRegistrationStatus slug regId CourseRegistrationStatusUpdate{..} = do
       ensureModule ModuleAdmin user

@@ -11,8 +11,8 @@ import {
   Chip,
   CircularProgress,
   Grid,
-  IconButton,
   Link,
+  IconButton,
   Stack,
   TextField,
   Typography,
@@ -21,17 +21,20 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import YouTubeIcon from '@mui/icons-material/YouTube';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
+import { Admin } from '../api/admin';
 import { useSession } from '../session/SessionContext';
 import { Link as RouterLink } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
+import { ensureAccessToken, uploadToDrive, makeFilePublic, buildPublicContentUrl } from '../services/googleDrive';
 
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
@@ -218,6 +221,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     const roles = session?.roles?.map((r) => r.toLowerCase()) ?? [];
     return roles.some((role) => role.includes('admin') || role.includes('manager') || role.includes('label'));
   }, [session?.roles]);
+  const [releaseAudioMap, setReleaseAudioMap] = useState<Record<number, string>>({});
+  const audioFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingUploadRelease, setPendingUploadRelease] = useState<ReleaseFeedItem | null>(null);
+  const [uploadingReleaseId, setUploadingReleaseId] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const followedArtistIds = useMemo(
     () => follows.map((follow) => follow.ffArtistId).sort((a, b) => a - b),
     [follows],
@@ -278,6 +286,74 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     } else {
       followMutation.mutate(artistId);
     }
+  };
+
+  const handleUploadTrigger = (release: ReleaseFeedItem) => {
+    setUploadError(null);
+    setPendingUploadRelease(release);
+    setUploadingReleaseId(release.arReleaseId);
+    audioFileInputRef.current?.click();
+  };
+
+  const handleAudioFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !pendingUploadRelease) {
+      setUploadingReleaseId(null);
+      return;
+    }
+    try {
+      setUploadError(null);
+      await ensureAccessToken();
+      const driveFile = await uploadToDrive(file);
+      await makeFilePublic(driveFile.id);
+      const publicUrl = buildPublicContentUrl(driveFile.id);
+      setReleaseAudioMap((prev) => ({ ...prev, [pendingUploadRelease.arReleaseId]: publicUrl }));
+      const payload = {
+        aruArtistId: pendingUploadRelease.arArtistId,
+        aruTitle: pendingUploadRelease.arTitle,
+        aruReleaseDate: pendingUploadRelease.arReleaseDate ?? null,
+        aruDescription: pendingUploadRelease.arDescription ?? null,
+        aruCoverImageUrl: pendingUploadRelease.arCoverImageUrl ?? null,
+        aruSpotifyUrl: publicUrl,
+        aruYoutubeUrl: pendingUploadRelease.arYoutubeUrl ?? null,
+      };
+      await Admin.updateArtistRelease(pendingUploadRelease.arReleaseId, payload);
+      void releaseFeedQuery.refetch();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No pudimos subir el audio a Drive.';
+      setUploadError(msg);
+    } finally {
+      setUploadingReleaseId(null);
+      setPendingUploadRelease(null);
+      if (audioFileInputRef.current) {
+        audioFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handlePlayRelease = (release: ReleaseFeedItem) => {
+    const audioUrl =
+      releaseAudioMap[release.arReleaseId] ??
+      release.arSpotifyUrl ??
+      release.arYoutubeUrl ??
+      streamingFallbacks.get(release.arArtistId)?.spotify ??
+      streamingFallbacks.get(release.arArtistId)?.youtube ??
+      null;
+    if (!audioUrl) {
+      if (canManageReleases) {
+        handleUploadTrigger(release);
+      }
+      return;
+    }
+    window.dispatchEvent(
+      new CustomEvent('tdf-radio-load-stream', {
+        detail: {
+          streamUrl: audioUrl,
+          stationName: release.arTitle,
+          stationId: `release-${release.arReleaseId}`,
+        },
+      }),
+    );
   };
 
   const normalizeField = (value?: string | null) => {
@@ -381,6 +457,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 6, px: { xs: 2, md: 6 } }}>
+      <input
+        ref={audioFileInputRef}
+        type="file"
+        accept="audio/*"
+        hidden
+        onChange={handleAudioFileChange}
+      />
       <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
         <Stack spacing={1}>
           <Typography variant="h3" fontWeight={700}>
@@ -438,11 +521,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   )}
                 </Alert>
               )}
+              {uploadError && (
+                <Alert severity="warning">{uploadError}</Alert>
+              )}
               {isFan && releaseFeed.length > 0 && (
                 <Stack spacing={1.5}>
                   {releaseFeed.slice(0, 4).map((release) => {
+                    const cachedAudio = releaseAudioMap[release.arReleaseId];
                     const spotifyUrl =
-                      release.arSpotifyUrl ?? streamingFallbacks.get(release.arArtistId)?.spotify ?? null;
+                      cachedAudio ?? release.arSpotifyUrl ?? streamingFallbacks.get(release.arArtistId)?.spotify ?? null;
                     const youtubeUrl =
                       release.arYoutubeUrl ?? streamingFallbacks.get(release.arArtistId)?.youtube ?? null;
                     const releaseWithFallback = {
@@ -495,13 +582,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           <Button
                             variant="contained"
                             size="small"
-                            component="a"
-                            href={spotifyUrl ?? undefined}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            disabled={!spotifyUrl}
+                            startIcon={<PlayArrowIcon />}
+                            endIcon={canManageReleases ? <CloudUploadIcon fontSize="small" /> : undefined}
+                            onClick={() => handlePlayRelease(release)}
+                            disabled={!spotifyUrl && !canManageReleases}
                           >
-                            Escuchar
+                            {uploadingReleaseId === release.arReleaseId ? 'Subiendo…' : 'Escuchar'}
                           </Button>
                           <Button
                             variant="outlined"
@@ -514,15 +600,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           >
                             Ver en YouTube
                           </Button>
-                          {canManageReleases && (
-                            <GoogleDriveUploadWidget
-                              label="Subir audio (Drive)"
-                              helperText="Carga el máster de este release."
-                              accept="audio/*"
-                              multiple={false}
-                              dense
-                            />
-                          )}
                         </Stack>
                       </Box>
                     );
