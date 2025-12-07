@@ -1,7 +1,7 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import { useEffect, useMemo, useState, useCallback } from 'react';
-import { AppBar, Box, Button, Chip, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider, Tooltip, Dialog, DialogTitle, DialogContent, TextField, InputAdornment, List, ListItemButton, ListItemText } from '@mui/material';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { AppBar, Box, Button, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider, Tooltip, Dialog, DialogTitle, DialogContent, TextField, InputAdornment, List, ListItemButton, ListItemText } from '@mui/material';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
@@ -115,10 +115,8 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const [cartPreview, setCartPreview] = useState<{ title: string; subtotal: string }[]>([]);
   const [cartAnchor, setCartAnchor] = useState<HTMLElement | null>(null);
   const [resourcesAnchor, setResourcesAnchor] = useState<null | HTMLElement>(null);
-  const hasAdmin = useMemo(
-    () => (session?.modules ?? []).some((m) => m.toLowerCase() === 'admin'),
-    [session?.modules],
-  );
+  const quickInputRef = useRef<HTMLInputElement | null>(null);
+  const resourcesButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const meta = readCartMeta();
@@ -145,8 +143,18 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const modules = useMemo(() => {
     const provided = session?.modules ?? [];
     const fromRoles = deriveModulesFromRoles(session?.roles);
-    return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+    if (baseSet.has('packages')) {
+      baseSet.add('ops');
+      baseSet.add('label');
+    }
+    if (baseSet.has('ops')) {
+      baseSet.add('packages');
+    }
+    return baseSet;
   }, [session?.modules, session?.roles]);
+
+  const hasAdmin = modules.has('admin');
 
   const quickNavItems = useMemo(() => {
     return NAV_GROUPS.flatMap((group) =>
@@ -186,6 +194,10 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         openQuickNav();
+      } else if (event.altKey && event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        if (!resourcesButtonRef.current) return;
+        setResourcesAnchor((prev) => (prev ? null : resourcesButtonRef.current));
       }
     };
     window.addEventListener('keydown', handler);
@@ -195,6 +207,14 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   useEffect(() => {
     setQuickHighlight(0);
   }, [quickQuery]);
+
+  useEffect(() => {
+    if (quickNavOpen) {
+      setTimeout(() => {
+        quickInputRef.current?.focus();
+      }, 0);
+    }
+  }, [quickNavOpen]);
 
   const handleSelectQuick = (idx: number) => {
     const target = filteredQuickItems[idx];
@@ -298,6 +318,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               aria-haspopup="true"
               aria-expanded={resourcesOpen ? 'true' : undefined}
               aria-label="Abrir recursos"
+              ref={resourcesButtonRef}
             >
               Recursos
             </Button>
@@ -320,7 +341,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             </Badge>
           </Button>
 
-          {hasAdmin ? (
+          {hasAdmin && (
             <Button
               color="inherit"
               variant="outlined"
@@ -336,8 +357,6 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             >
               ADMIN
             </Button>
-          ) : (
-            <Chip label="ADMIN" size="small" sx={{ bgcolor: 'rgba(59,130,246,0.15)', color: '#93c5fd' }} />
           )}
           <Button
             variant="outlined"
@@ -351,14 +370,16 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
 
           {session ? (
             <>
-              <Button
-                variant="outlined"
-                color="info"
-                onClick={() => navigate('/configuracion/roles-permisos')}
-                sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.4)', color: '#f8fafc' }}
-              >
-                Panel
-              </Button>
+              {hasAdmin && (
+                <Button
+                  variant="outlined"
+                  color="info"
+                  onClick={() => navigate('/configuracion/roles-permisos')}
+                  sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.4)', color: '#f8fafc' }}
+                >
+                  Panel
+                </Button>
+              )}
               <Button
                 variant="contained"
                 color="secondary"
@@ -437,17 +458,19 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         maxWidth="sm"
       >
         <DialogTitle>Ir a otra sección</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            placeholder="Escribe para buscar (ej: inventario, leads, marketplace)"
-            value={quickQuery}
-            onChange={(e) => setQuickQuery(e.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                setQuickHighlight((prev) => (prev + 1) % Math.max(filteredQuickItems.length, 1));
-              } else if (event.key === 'ArrowUp') {
+          <DialogContent>
+            <TextField
+              fullWidth
+              placeholder="Escribe para buscar (ej: inventario, leads, marketplace)"
+              value={quickQuery}
+              onChange={(e) => setQuickQuery(e.target.value)}
+              inputRef={quickInputRef}
+              autoFocus
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowDown') {
+                  event.preventDefault();
+                  setQuickHighlight((prev) => (prev + 1) % Math.max(filteredQuickItems.length, 1));
+                } else if (event.key === 'ArrowUp') {
                 event.preventDefault();
                 setQuickHighlight((prev) => {
                   if (filteredQuickItems.length === 0) return 0;

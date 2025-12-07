@@ -126,11 +126,14 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
         moduleSet.add('scheduling');
         moduleSet.add('invoicing');
         moduleSet.add('packages');
+        moduleSet.add('ops');
+        moduleSet.add('label');
       } else if (role.includes('manager')) {
         moduleSet.add('crm');
         moduleSet.add('scheduling');
         moduleSet.add('invoicing');
         moduleSet.add('packages');
+        moduleSet.add('ops');
       } else if (role.includes('reception')) {
         moduleSet.add('crm');
         moduleSet.add('scheduling');
@@ -143,7 +146,10 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
       } else if (role.includes('maintenance')) {
         moduleSet.add('packages');
         moduleSet.add('scheduling');
-    }
+        moduleSet.add('ops');
+      } else if (role.includes('label')) {
+        moduleSet.add('label');
+      }
   });
   return Array.from(moduleSet);
 };
@@ -153,8 +159,8 @@ export const pathRequiresModule = (path: string): string | null => {
   if (path.startsWith('/estudio')) return 'scheduling';
   if (path.startsWith('/finanzas')) return 'invoicing';
   if (path.startsWith('/configuracion')) return 'admin';
-  if (path.startsWith('/operacion')) return 'packages';
-  if (path.startsWith('/label')) return 'packages';
+  if (path.startsWith('/operacion')) return 'ops';
+  if (path.startsWith('/label')) return 'label';
   if (path.startsWith('/escuela')) return 'scheduling';
   if (path.startsWith('/eventos')) return 'scheduling';
   return null;
@@ -171,7 +177,16 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const modules = useMemo(() => {
     const provided = session?.modules ?? [];
     const fromRoles = deriveModulesFromRoles(session?.roles);
-    return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+    // Backward-compatible aliases so legacy "packages" access still unlocks Ops/Label.
+    if (baseSet.has('packages')) {
+      baseSet.add('ops');
+      baseSet.add('label');
+    }
+    if (baseSet.has('ops')) {
+      baseSet.add('packages');
+    }
+    return baseSet;
   }, [session?.modules, session?.roles]);
 
   const allowedNavGroups = useMemo<NavGroupView[]>(() => {
@@ -255,7 +270,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       if (activeTag === 'input' || activeTag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable) {
         return;
       }
-      if (event.key === '/' || (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey))) {
+      if (event.key === '/') {
         event.preventDefault();
         searchRef.current?.focus();
       }
@@ -330,7 +345,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
             }
           }}
           size="small"
-          placeholder="Buscar sección (/, ⌘K)"
+          placeholder="Buscar sección (/)"
           fullWidth
           InputProps={{
             startAdornment: (
