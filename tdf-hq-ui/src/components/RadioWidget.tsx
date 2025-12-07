@@ -881,14 +881,14 @@ export default function RadioWidget() {
         position: 'fixed',
         left: position.x,
         top: position.y,
-      zIndex: 1400,
-      width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
-      cursor: dragging ? 'grabbing' : 'grab',
-      touchAction: 'none',
-      userSelect: 'none',
+        zIndex: 1400,
+        width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
+        cursor: dragging ? 'grabbing' : 'grab',
+        touchAction: 'none',
+        userSelect: 'none',
       }}
       ref={containerRef}
-      onPointerDown={expanded ? onPointerDown : undefined}
+      onPointerDown={onPointerDown}
       tabIndex={0}
       onKeyDown={(e) => {
         const step = e.shiftKey ? 20 : 10;
@@ -924,7 +924,6 @@ export default function RadioWidget() {
         }
       }}
     >
-      {expanded && (
       <Card
         elevation={6}
         sx={{ borderRadius: 3, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'grab' }}
@@ -1475,7 +1474,6 @@ export default function RadioWidget() {
           </CardContent>
         </Collapse>
       </Card>
-      )}
       {/* Audio is programmatically controlled; captions are not available for live streams. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} preload="none" aria-hidden="true" />
