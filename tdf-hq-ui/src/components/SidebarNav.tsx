@@ -121,39 +121,39 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
   const moduleSet = new Set<string>();
   lowerRoles.forEach((role) => {
     if (role.includes('admin')) {
-        moduleSet.add('admin');
-        moduleSet.add('crm');
-        moduleSet.add('scheduling');
-        moduleSet.add('invoicing');
-        moduleSet.add('packages');
-        moduleSet.add('ops');
-        moduleSet.add('label');
-      } else if (role.includes('manager')) {
-        moduleSet.add('crm');
-        moduleSet.add('scheduling');
-        moduleSet.add('invoicing');
-        moduleSet.add('packages');
-        moduleSet.add('ops');
-      } else if (role.includes('reception')) {
-        moduleSet.add('crm');
-        moduleSet.add('scheduling');
-      } else if (role.includes('accounting')) {
-        moduleSet.add('invoicing');
-      } else if (role.includes('engineer') || role.includes('scheduling')) {
-        moduleSet.add('scheduling');
-      } else if (role.includes('packages') || role.includes('package')) {
-        moduleSet.add('packages');
-      } else if (role.includes('maintenance')) {
-        moduleSet.add('packages');
-        moduleSet.add('scheduling');
-        moduleSet.add('ops');
-      } else if (role.includes('label')) {
-        moduleSet.add('label');
-      } else if (role.includes('inventory') || role.includes('operacion') || role.includes('operation') || role.includes('ops')) {
-        moduleSet.add('ops');
-      } else if (role.includes('finance') || role.includes('billing')) {
-        moduleSet.add('invoicing');
-      }
+      moduleSet.add('admin');
+      moduleSet.add('crm');
+      moduleSet.add('scheduling');
+      moduleSet.add('invoicing');
+      moduleSet.add('packages');
+      moduleSet.add('ops');
+      moduleSet.add('label');
+    } else if (role.includes('manager')) {
+      moduleSet.add('crm');
+      moduleSet.add('scheduling');
+      moduleSet.add('invoicing');
+      moduleSet.add('packages');
+      moduleSet.add('ops');
+    } else if (role.includes('reception')) {
+      moduleSet.add('crm');
+      moduleSet.add('scheduling');
+    } else if (role.includes('accounting')) {
+      moduleSet.add('invoicing');
+    } else if (role.includes('engineer') || role.includes('scheduling')) {
+      moduleSet.add('scheduling');
+    } else if (role.includes('packages') || role.includes('package')) {
+      moduleSet.add('packages');
+    } else if (role.includes('maintenance')) {
+      moduleSet.add('packages');
+      moduleSet.add('scheduling');
+      moduleSet.add('ops');
+    } else if (role.includes('label')) {
+      moduleSet.add('label');
+    } else if (role.includes('inventory') || role.includes('operacion') || role.includes('operation') || role.includes('ops')) {
+      moduleSet.add('ops');
+    } else if (role.includes('finance') || role.includes('billing')) {
+      moduleSet.add('invoicing');
+    }
   });
   return Array.from(moduleSet);
 };
