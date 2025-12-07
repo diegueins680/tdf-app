@@ -306,6 +306,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               onClick={openQuickNav}
               startIcon={<SearchIcon fontSize="small" />}
               sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.4)' }}
+              aria-keyshortcuts="Control+K Meta+K"
             >
               Ir a...
             </Button>
@@ -319,6 +320,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               aria-expanded={resourcesOpen ? 'true' : undefined}
               aria-label="Abrir recursos"
               ref={resourcesButtonRef}
+              aria-keyshortcuts="Alt+R"
             >
               Recursos
             </Button>

@@ -149,6 +149,10 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
         moduleSet.add('ops');
       } else if (role.includes('label')) {
         moduleSet.add('label');
+      } else if (role.includes('inventory') || role.includes('operacion') || role.includes('operation') || role.includes('ops')) {
+        moduleSet.add('ops');
+      } else if (role.includes('finance') || role.includes('billing')) {
+        moduleSet.add('invoicing');
       }
   });
   return Array.from(moduleSet);
