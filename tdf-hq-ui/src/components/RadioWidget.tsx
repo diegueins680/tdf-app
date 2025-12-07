@@ -35,6 +35,9 @@ import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import BoltIcon from '@mui/icons-material/Bolt';
+import ShareIcon from '@mui/icons-material/Share';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import { useNavigate } from 'react-router-dom';
 
 interface Prompt {
   text: string;
@@ -160,6 +163,7 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 }
 
 export default function RadioWidget() {
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
   const [dragging, setDragging] = useState(false);
@@ -187,9 +191,13 @@ export default function RadioWidget() {
   const [editGenre, setEditGenre] = useState('');
   const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
   const [autoSkipOnError, setAutoSkipOnError] = useState(false);
-  const [compactBarVisible, setCompactBarVisible] = useState(true);
+  const [compactBarVisible, setCompactBarVisible] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem('radio-mini-visible') !== '0';
+  });
   const [showCatalogSection, setShowCatalogSection] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
   const controlFadeSx = {
     opacity: 0.65,
     transition: 'opacity 0.2s ease',
@@ -207,7 +215,10 @@ export default function RadioWidget() {
     [],
   );
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('radio-expanded') === '1';
+  });
   const [activeId, setActiveId] = useState<string>(defaultStation.id);
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -220,6 +231,24 @@ export default function RadioWidget() {
   const keyFor = useCallback((station: Station) => station.streamUrl.toLowerCase(), []);
   const countryQuery = searchCountry.trim();
   const genreQuery = searchGenre.trim();
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-mini-visible', compactBarVisible ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [compactBarVisible]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-expanded', expanded ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [expanded]);
+
   const radioSearch = useQuery<RadioStreamDTO[], Error>({
     queryKey: ['radio-streams', countryQuery.toLowerCase(), genreQuery.toLowerCase()],
     queryFn: () => RadioAPI.search({ country: countryQuery, genre: genreQuery }),
@@ -698,6 +727,28 @@ export default function RadioWidget() {
     }));
   }, [activeStation, stationPrompts]);
 
+  const handleShare = useCallback(async () => {
+    if (!activeStation.streamUrl) return;
+    const message = `Escuchando ${activeStation.name} (${activeStation.mood || 'Radio'})\n${activeStation.streamUrl}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: activeStation.name,
+          text: message,
+          url: activeStation.streamUrl,
+        });
+        setShareNotice('Enviado para compartir');
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(message);
+        setShareNotice('Copiado al portapapeles');
+      }
+      setTimeout(() => setShareNotice(null), 2200);
+    } catch {
+      setShareNotice('No se pudo compartir. Intenta de nuevo.');
+      setTimeout(() => setShareNotice(null), 2200);
+    }
+  }, [activeStation]);
+
   const [newStationName, setNewStationName] = useState('');
   const [newStationUrl, setNewStationUrl] = useState('');
   const normalizeField = useCallback((value?: string | null) => {
@@ -837,7 +888,7 @@ export default function RadioWidget() {
       userSelect: 'none',
       }}
       ref={containerRef}
-      onPointerDown={onPointerDown}
+      onPointerDown={expanded ? onPointerDown : undefined}
       tabIndex={0}
       onKeyDown={(e) => {
         const step = e.shiftKey ? 20 : 10;
@@ -873,6 +924,7 @@ export default function RadioWidget() {
         }
       }}
     >
+      {expanded && (
       <Card
         elevation={6}
         sx={{ borderRadius: 3, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'grab' }}
@@ -990,6 +1042,29 @@ export default function RadioWidget() {
             <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
               Reproduciendo: {activeStation.name}
             </Typography>
+            <Stack direction="row" spacing={1} mt={1} alignItems="center">
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ShareIcon fontSize="small" />}
+                onClick={handleShare}
+                data-no-drag
+              >
+                Compartir stream
+              </Button>
+              <Button
+                variant="text"
+                size="small"
+                startIcon={<PeopleAltIcon fontSize="small" />}
+                onClick={() => navigate('/social')}
+                data-no-drag
+              >
+                Conexiones
+              </Button>
+              {shareNotice && (
+                <Chip label={shareNotice} size="small" color="info" variant="outlined" />
+              )}
+            </Stack>
           </Collapse>
           {playbackWarning && (
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }} data-no-drag>
@@ -1400,6 +1475,7 @@ export default function RadioWidget() {
           </CardContent>
         </Collapse>
       </Card>
+      )}
       {/* Audio is programmatically controlled; captions are not available for live streams. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} preload="none" aria-hidden="true" />
@@ -1430,6 +1506,11 @@ export default function RadioWidget() {
           <Tooltip title="Saltar al siguiente">
             <IconButton size="small" onClick={jumpToNextStation}>
               <SkipNextIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Abrir reproductor">
+            <IconButton size="small" onClick={() => setExpanded(true)}>
+              <ExpandLessIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Box sx={{ minWidth: 0 }}>
