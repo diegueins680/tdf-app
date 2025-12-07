@@ -66,7 +66,12 @@ server = createH :<|> pdfH :<|> sendH
             , scCreatedAt = now
             }
       liftIO (persistContract stored)
-      pure (A.object ["status" .= ("created" :: Text), "id" .= cid, "kind" .= kindText])
+      pure (A.object
+        [ "status" .= ("created" :: Text)
+        , "id" .= cid
+        , "kind" .= kindText
+        , "payload" .= payload
+        ])
 
     pdfH :: Text -> Handler BL.ByteString
     pdfH cid = do
@@ -85,7 +90,7 @@ server = createH :<|> pdfH :<|> sendH
       mStored <- liftIO (loadContract cid)
       case mStored of
         Nothing -> throwError err404 { errBody = "Contract not found" }
-        Just _  -> pure (A.object ["status" .= ("queued" :: Text), "id" .= cid])
+        Just _  -> pure (A.object ["status" .= ("sent" :: Text), "id" .= cid])
 
 persistContract :: StoredContract -> IO ()
 persistContract stored = do
