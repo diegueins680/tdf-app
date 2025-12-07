@@ -173,6 +173,30 @@ export default function RadioWidget() {
     active: false,
   });
   const dragMovedRef = useRef(false);
+  const miniContainerRef = useRef<HTMLDivElement | null>(null);
+  const [miniPosition, setMiniPosition] = useState<{ x: number; y: number }>(() => {
+    if (typeof window === 'undefined') return { x: 12, y: 12 };
+    const fromStorage = window.localStorage.getItem('radio-mini-position');
+    if (fromStorage) {
+      try {
+        const parsed = JSON.parse(fromStorage) as { x?: number; y?: number };
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          return { x: parsed.x, y: parsed.y };
+        }
+      } catch {
+        // ignore parsing errors
+      }
+    }
+    const initialY = Math.max(12, window.innerHeight - 96);
+    return { x: 12, y: initialY };
+  });
+  const [miniDragging, setMiniDragging] = useState(false);
+  const miniDragState = useRef<{ offsetX: number; offsetY: number; active: boolean }>({
+    offsetX: 0,
+    offsetY: 0,
+    active: false,
+  });
+  const miniDragMovedRef = useRef(false);
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
   const [newStationCountry, setNewStationCountry] = useState('');
@@ -191,9 +215,9 @@ export default function RadioWidget() {
   const [editGenre, setEditGenre] = useState('');
   const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
   const [autoSkipOnError, setAutoSkipOnError] = useState(false);
-  const [compactBarVisible, setCompactBarVisible] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return window.localStorage.getItem('radio-mini-visible') !== '0';
+  const [miniBarVisible, setMiniBarVisible] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('radio-mini-visible') === '1';
   });
   const [showCatalogSection, setShowCatalogSection] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
@@ -234,11 +258,11 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-mini-visible', compactBarVisible ? '1' : '0');
+      window.localStorage.setItem('radio-mini-visible', miniBarVisible ? '1' : '0');
     } catch {
       // ignore
     }
-  }, [compactBarVisible]);
+  }, [miniBarVisible]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -444,6 +468,22 @@ export default function RadioWidget() {
     },
     [],
   );
+  const clampMiniPosition = useCallback(
+    (x: number, y: number) => {
+      if (typeof window === 'undefined') return { x, y };
+      const rect = miniContainerRef.current?.getBoundingClientRect();
+      const margin = 12;
+      const width = rect?.width ?? 240;
+      const height = rect?.height ?? 72;
+      const maxX = Math.max(margin, window.innerWidth - width - margin);
+      const maxY = Math.max(margin, window.innerHeight - height - margin);
+      return {
+        x: Math.min(Math.max(margin, x), maxX),
+        y: Math.min(Math.max(margin, y), maxY),
+      };
+    },
+    [],
+  );
 
   // Hydrate initial position
   useEffect(() => {
@@ -481,26 +521,34 @@ export default function RadioWidget() {
     if (typeof window === 'undefined') return;
     const onResize = () => {
       setPosition((p) => clampPosition(p.x, p.y));
+      setMiniPosition((p) => clampMiniPosition(p.x, p.y));
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [clampPosition]);
+  }, [clampMiniPosition, clampPosition]);
+
+  useEffect(() => {
+    setMiniPosition((p) => clampMiniPosition(p.x, p.y));
+  }, [clampMiniPosition]);
 
   // Drag handlers
+  const isInteractiveTarget = useCallback((target?: HTMLElement | null) => {
+    const tag = target?.tagName?.toLowerCase();
+    return (
+      tag === 'button' ||
+      tag === 'a' ||
+      tag === 'input' ||
+      tag === 'textarea' ||
+      tag === 'select' ||
+      tag === 'option' ||
+      target?.closest('[data-no-drag]')
+    );
+  }, []);
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       const target = e.target as HTMLElement | null;
       const dragHandle = target?.closest('[data-drag-handle]');
-      const tag = target?.tagName?.toLowerCase();
-      const isInteractive =
-        tag === 'button' ||
-        tag === 'a' ||
-        tag === 'input' ||
-        tag === 'textarea' ||
-        tag === 'select' ||
-        tag === 'option' ||
-        target?.closest('[data-no-drag]');
-
+      const isInteractive = isInteractiveTarget(target);
       // Only start drag on the handle or non-interactive areas.
       if (!dragHandle && isInteractive) {
         return;
@@ -511,7 +559,19 @@ export default function RadioWidget() {
       setDragging(true);
       target?.setPointerCapture?.(e.pointerId);
     },
-    [position.x, position.y],
+    [isInteractiveTarget, position.x, position.y],
+  );
+  const onMiniPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (isInteractiveTarget(target)) return;
+      e.preventDefault();
+      miniDragMovedRef.current = false;
+      miniDragState.current = { offsetX: e.clientX - miniPosition.x, offsetY: e.clientY - miniPosition.y, active: true };
+      setMiniDragging(true);
+      target?.setPointerCapture?.(e.pointerId);
+    },
+    [isInteractiveTarget, miniPosition.x, miniPosition.y],
   );
 
   useEffect(() => {
@@ -539,6 +599,31 @@ export default function RadioWidget() {
       window.removeEventListener('pointerup', up);
     };
   }, [clampPosition, dragging]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!miniDragging || !miniDragState.current.active) return;
+    const move = (e: PointerEvent) => {
+      if (!miniDragState.current.active) return;
+      miniDragMovedRef.current = true;
+      const next = clampMiniPosition(e.clientX - miniDragState.current.offsetX, e.clientY - miniDragState.current.offsetY);
+      setMiniPosition(next);
+      try {
+        window.localStorage.setItem('radio-mini-position', JSON.stringify(next));
+      } catch {
+        // ignore storage errors
+      }
+    };
+    const up = () => {
+      miniDragState.current.active = false;
+      setMiniDragging(false);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  }, [clampMiniPosition, miniDragging]);
 
   // Hydrate prompts and radio settings from localStorage to keep user submissions/settings across reloads.
   useEffect(() => {
