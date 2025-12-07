@@ -641,7 +641,9 @@ export default function TeachersPage() {
                       Clases y estado
                     </Typography>
                     {teacherClasses.length === 0 && (
-                      <Typography color="text.secondary">No hay clases para este profesor con el filtro actual.</Typography>
+                      <Typography color="text.secondary">
+                        No hay clases para este profesor con el filtro actual. Ajusta las fechas o agenda una clase nueva.
+                      </Typography>
                     )}
                     {teacherClasses.map((row) => {
                       const meta = statusMeta[row.status];
