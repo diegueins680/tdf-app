@@ -215,10 +215,8 @@ export default function RadioWidget() {
   const [editGenre, setEditGenre] = useState('');
   const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
   const [autoSkipOnError, setAutoSkipOnError] = useState(false);
-  const [miniBarVisible, setMiniBarVisible] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem('radio-mini-visible') === '1';
-  });
+  // Start visible by default; only hide when the user explicitly minimizes during the session.
+  const [miniBarVisible, setMiniBarVisible] = useState(false);
   const [showCatalogSection, setShowCatalogSection] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
@@ -255,15 +253,6 @@ export default function RadioWidget() {
   const keyFor = useCallback((station: Station) => station.streamUrl.toLowerCase(), []);
   const countryQuery = searchCountry.trim();
   const genreQuery = searchGenre.trim();
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      window.localStorage.setItem('radio-mini-visible', miniBarVisible ? '1' : '0');
-    } catch {
-      // ignore
-    }
-  }, [miniBarVisible]);
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -988,54 +977,56 @@ export default function RadioWidget() {
   }, []);
 
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        left: position.x,
-        top: position.y,
-        zIndex: 1400,
-        width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
-        cursor: dragging ? 'grabbing' : 'grab',
-        touchAction: 'none',
-        userSelect: 'none',
-      }}
-      ref={containerRef}
-      onPointerDown={onPointerDown}
-      tabIndex={0}
-      onKeyDown={(e) => {
-        const step = e.shiftKey ? 20 : 10;
-        const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
-        if (['input', 'textarea'].includes(tag ?? '')) return;
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-          e.preventDefault();
-          setPosition((p) => {
-            const next = clampPosition(
-              e.key === 'ArrowLeft' ? p.x - step : e.key === 'ArrowRight' ? p.x + step : p.x,
-              e.key === 'ArrowUp' ? p.y - step : e.key === 'ArrowDown' ? p.y + step : p.y,
-            );
-            try {
-              window.localStorage.setItem('radio-position', JSON.stringify(next));
-            } catch {
-              // ignore
+    <>
+      {!miniBarVisible && (
+        <Box
+          sx={{
+            position: 'fixed',
+            left: position.x,
+            top: position.y,
+            zIndex: 1400,
+            width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
+            cursor: dragging ? 'grabbing' : 'grab',
+            touchAction: 'none',
+            userSelect: 'none',
+          }}
+          ref={containerRef}
+          onPointerDown={onPointerDown}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            const step = e.shiftKey ? 20 : 10;
+            const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+            if (['input', 'textarea'].includes(tag ?? '')) return;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+              e.preventDefault();
+              setPosition((p) => {
+                const next = clampPosition(
+                  e.key === 'ArrowLeft' ? p.x - step : e.key === 'ArrowRight' ? p.x + step : p.x,
+                  e.key === 'ArrowUp' ? p.y - step : e.key === 'ArrowDown' ? p.y + step : p.y,
+                );
+                try {
+                  window.localStorage.setItem('radio-position', JSON.stringify(next));
+                } catch {
+                  // ignore
+                }
+                return next;
+              });
+              return;
             }
-            return next;
-          });
-          return;
-        }
-        if (e.key.toLowerCase() === 'f') {
-          e.preventDefault();
-          setShowFavoritesOnly((v) => !v);
-        }
-        if (e.key.toLowerCase() === 'r') {
-          e.preventDefault();
-          resetPosition();
-        }
-        if (e.key.toLowerCase() === 'n') {
-          e.preventDefault();
-          jumpToNextStation();
-        }
-      }}
-    >
+            if (e.key.toLowerCase() === 'f') {
+              e.preventDefault();
+              setShowFavoritesOnly((v) => !v);
+            }
+            if (e.key.toLowerCase() === 'r') {
+              e.preventDefault();
+              resetPosition();
+            }
+            if (e.key.toLowerCase() === 'n') {
+              e.preventDefault();
+              jumpToNextStation();
+            }
+          }}
+        >
       <Card
         elevation={6}
         sx={{ borderRadius: 3, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'grab' }}
@@ -1060,14 +1051,9 @@ export default function RadioWidget() {
             Arrastra para mover
           </Typography>
           <Box sx={{ flex: 1 }} />
-          <Tooltip title={compactBarVisible ? 'Ocultar mini barra' : 'Mostrar mini barra'}>
-            <IconButton
-              size="small"
-              onClick={() => setCompactBarVisible((v) => !v)}
-              data-no-drag
-              color={compactBarVisible ? 'primary' : 'inherit'}
-            >
-              <FiberManualRecordIcon fontSize="small" />
+          <Tooltip title="Ocultar radio y mostrar mini barra">
+            <IconButton size="small" onClick={() => setMiniBarVisible(true)} data-no-drag>
+              <VisibilityOffIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Volver a la esquina">
@@ -1571,16 +1557,18 @@ export default function RadioWidget() {
           </CardContent>
         </Collapse>
       </Card>
+    </Box>
+      )}
       {/* Audio is programmatically controlled; captions are not available for live streams. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} preload="none" aria-hidden="true" />
-      {compactBarVisible && (
+      {miniBarVisible && (
         <Box
           sx={{
             position: 'fixed',
-            bottom: 12,
-            left: 12,
-            zIndex: 1350,
+            left: miniPosition.x,
+            top: miniPosition.y,
+            zIndex: 1400,
             bgcolor: 'background.paper',
             boxShadow: 6,
             borderRadius: 2,
@@ -1591,24 +1579,48 @@ export default function RadioWidget() {
             gap: 0.75,
             border: '1px solid',
             borderColor: 'divider',
+            cursor: miniDragging ? 'grabbing' : 'grab',
+            touchAction: 'none',
+            userSelect: 'none',
+            minWidth: 220,
+          }}
+          ref={miniContainerRef}
+          onPointerDown={onMiniPointerDown}
+          onClick={(e) => {
+            if (miniDragging || miniDragMovedRef.current) {
+              miniDragMovedRef.current = false;
+              return;
+            }
+            const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+            if (tag === 'button' || tag === 'svg' || tag === 'path') return;
+            setMiniBarVisible(false);
+            setExpanded(true);
           }}
         >
+          <DragIndicatorIcon fontSize="small" color="action" />
           <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
-            <IconButton size="small" onClick={togglePlay}>
+            <IconButton size="small" onClick={togglePlay} data-no-drag>
               {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
           <Tooltip title="Saltar al siguiente">
-            <IconButton size="small" onClick={jumpToNextStation}>
+            <IconButton size="small" onClick={jumpToNextStation} data-no-drag>
               <SkipNextIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Abrir reproductor">
-            <IconButton size="small" onClick={() => setExpanded(true)}>
+          <Tooltip title="Mostrar radio">
+            <IconButton
+              size="small"
+              onClick={() => {
+                setMiniBarVisible(false);
+                setExpanded(true);
+              }}
+              data-no-drag
+            >
               <ExpandLessIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ minWidth: 0, maxWidth: 220 }}>
             <Typography variant="caption" fontWeight={700} noWrap>
               {activeStation.name}
             </Typography>
@@ -1616,13 +1628,8 @@ export default function RadioWidget() {
               {activeStation.genre ?? activeStation.mood}
             </Typography>
           </Box>
-          <Tooltip title="Cerrar mini barra">
-            <IconButton size="small" onClick={() => setCompactBarVisible(false)}>
-              <VisibilityOffIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
         </Box>
       )}
-    </Box>
+    </>
   );
 }
