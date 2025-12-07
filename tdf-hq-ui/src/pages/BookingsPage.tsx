@@ -659,7 +659,7 @@ export default function BookingsPage() {
               onChange={(_, value) => setAssignedRoomIds(value.map((room) => room.roomId))}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip label={option.rName} {...getTagProps({ index })} key={option.roomId} />
+                  <Chip label={option.rName} {...getTagProps({ index })} />
                 ))
               }
               renderInput={(params) => (

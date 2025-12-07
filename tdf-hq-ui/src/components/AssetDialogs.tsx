@@ -66,8 +66,8 @@ export function CheckoutDialog({
         </Typography>
         {activeCheckout && (
           <Alert severity="warning" sx={{ mb: 1 }}>
-            Actualmente en uso por {activeCheckout.targetPartyRef ?? activeCheckout.targetRoomId ?? activeCheckout.targetKind}.{' '}
-            {activeCheckout.dueAt ? `Vence: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
+            Actualmente en uso por {activeCheckout?.targetPartyRef ?? activeCheckout?.targetRoomId ?? activeCheckout?.targetKind}.{' '}
+            {activeCheckout?.dueAt ? `Vence: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
             {' '}Registra el check-in antes de asignarlo de nuevo.
           </Alert>
         )}
