@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings } from '../api/bookings';
-import type { BookingDTO } from '../api/types';
+import type { BookingDTO, PartyDTO } from '../api/types';
 import {
   Typography,
   Paper,
@@ -29,6 +29,7 @@ import { DateTime } from 'luxon';
 import { loadServiceTypes } from '../utils/serviceTypesStore';
 import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
+import { Parties } from '../api/parties';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -43,10 +44,16 @@ export default function BookingsPage() {
     queryFn: Rooms.list,
     staleTime: 5 * 60 * 1000,
   });
+  const partiesQuery = useQuery<PartyDTO[]>({
+    queryKey: ['parties', 'all'],
+    queryFn: () => Parties.list(),
+    staleTime: 5 * 60 * 1000,
+  });
   const qc = useQueryClient();
   const zone = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
   const rooms = roomsQuery.data ?? [];
+  const parties = partiesQuery.data ?? [];
   const statusOptions = [
     'Tentative',
     'Confirmed',
@@ -85,6 +92,7 @@ export default function BookingsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [serviceType, setServiceType] = useState<string>('');
   const [engineerName, setEngineerName] = useState('');
+  const [engineerPartyId, setEngineerPartyId] = useState<number | null>(null);
   const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Confirmed');
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
@@ -150,6 +158,14 @@ export default function BookingsPage() {
     [rooms, assignedRoomIds],
   );
 
+  const engineerOptions = useMemo(
+    () =>
+      parties.filter((party) =>
+        (party.roles ?? []).some((role) => role.toLowerCase().includes('engineer')),
+      ),
+    [parties],
+  );
+
   useEffect(() => {
     if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
     const defaults = defaultRoomsForService(serviceType);
@@ -202,7 +218,10 @@ export default function BookingsPage() {
 
   const buildCombinedNotes = () => {
     const trimmed = notes.trim();
-    const engineerLine = engineerName.trim() ? `Engineer: ${engineerName.trim()}` : '';
+    const engineerLabel = engineerPartyId
+      ? engineerOptions.find((opt) => opt.partyId === engineerPartyId)?.displayName ?? engineerName.trim()
+      : engineerName.trim();
+    const engineerLine = engineerLabel ? `Engineer: ${engineerLabel}` : '';
     if (trimmed && engineerLine) return `${trimmed}\n${engineerLine}`;
     if (engineerLine) return engineerLine;
     return trimmed || null;
@@ -230,6 +249,7 @@ export default function BookingsPage() {
       setMode('create');
       setAssignedRoomIds([]);
       setEngineerName('');
+      setEngineerPartyId(null);
       void qc.invalidateQueries({ queryKey: ['bookings'] });
     },
     onError: (err) => {
@@ -268,7 +288,7 @@ export default function BookingsPage() {
       setFormError('Asigna al menos una sala para la sesión.');
       return;
     }
-    if (requiresEngineer(serviceType) && !engineerName.trim()) {
+    if (requiresEngineer(serviceType) && !(engineerName.trim() || engineerPartyId)) {
       setFormError('Las sesiones de recording, mixing o mastering requieren un ingeniero.');
       return;
     }
@@ -310,6 +330,7 @@ export default function BookingsPage() {
         ? booking.notes.split('\n').find((line) => line.toLowerCase().includes('engineer:'))?.split(':').slice(1).join(':').trim() ?? ''
         : '';
     setEngineerName(parsedEngineer);
+    setEngineerPartyId(null);
     setServiceType(booking.serviceType ?? '');
     setStatus(booking.status ?? 'Confirmed');
     setStartInput(formatForInput(new Date(booking.startsAt)));
@@ -400,12 +421,39 @@ export default function BookingsPage() {
               multiline
               minRows={2}
             />
-            <TextField
-              label="Ingeniero (requerido para recording/mixing/mastering)"
-              value={engineerName}
-              onChange={(e) => setEngineerName(e.target.value)}
-              fullWidth
-              required={requiresEngineer(serviceType)}
+            <Autocomplete
+              options={engineerOptions}
+              getOptionLabel={(option) => option.displayName}
+              loading={partiesQuery.isFetching}
+              value={engineerOptions.find((opt) => opt.partyId === engineerPartyId) ?? null}
+              onChange={(_, value) => {
+                setEngineerPartyId(value?.partyId ?? null);
+                setEngineerName(value?.displayName ?? '');
+              }}
+              inputValue={engineerName}
+              onInputChange={(_, value, reason) => {
+                if (reason === 'input') {
+                  setEngineerName(value);
+                  setEngineerPartyId(null);
+                }
+                if (reason === 'clear') {
+                  setEngineerName('');
+                  setEngineerPartyId(null);
+                }
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Ingeniero (requerido para recording/mixing/mastering)"
+                  required={requiresEngineer(serviceType)}
+                  helperText={
+                    engineerOptions.length === 0
+                      ? 'No hay ingenieros en el catálogo de contactos.'
+                      : 'Selecciona un ingeniero del catálogo.'
+                  }
+                />
+              )}
+              noOptionsText="Sin ingenieros en el catálogo"
             />
             <FormControl>
               <InputLabel id="booking-status-label">Estado</InputLabel>

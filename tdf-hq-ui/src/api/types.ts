@@ -3,6 +3,7 @@ export interface PartyDTO {
   legalName?: string | null;
   displayName: string;
   isOrg: boolean;
+  roles?: string[];
   taxId?: string | null;
   primaryEmail?: string | null;
   primaryPhone?: string | null;
