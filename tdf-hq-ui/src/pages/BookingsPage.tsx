@@ -93,6 +93,8 @@ export default function BookingsPage() {
   const [serviceType, setServiceType] = useState<string>('');
   const [engineerName, setEngineerName] = useState('');
   const [engineerPartyId, setEngineerPartyId] = useState<number | null>(null);
+  const [customerPartyId, setCustomerPartyId] = useState<number | null>(null);
+  const [customerName, setCustomerName] = useState('');
   const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Confirmed');
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
@@ -165,6 +167,7 @@ export default function BookingsPage() {
       ),
     [parties],
   );
+  const customerOptions = parties;
 
   useEffect(() => {
     if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
@@ -192,6 +195,8 @@ export default function BookingsPage() {
     setNotes('');
     setServiceType('');
     setEngineerName('');
+    setCustomerName('');
+    setCustomerPartyId(null);
     const defaults = defaultRoomsForService('');
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
@@ -205,6 +210,8 @@ export default function BookingsPage() {
     setNotes('');
     setServiceType('');
     setEngineerName('');
+    setCustomerName('');
+    setCustomerPartyId(null);
     const defaults = defaultRoomsForService('');
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
@@ -236,6 +243,7 @@ export default function BookingsPage() {
         cbStatus: status,
         cbNotes: buildCombinedNotes(),
         cbServiceType: serviceType.trim() || null,
+        cbPartyId: customerPartyId,
         cbResourceIds: assignedRoomIds,
       }),
     onSuccess: () => {
@@ -250,6 +258,8 @@ export default function BookingsPage() {
       setAssignedRoomIds([]);
       setEngineerName('');
       setEngineerPartyId(null);
+      setCustomerName('');
+      setCustomerPartyId(null);
       void qc.invalidateQueries({ queryKey: ['bookings'] });
     },
     onError: (err) => {
@@ -284,6 +294,10 @@ export default function BookingsPage() {
       setFormError('La hora de fin debe ser mayor que la de inicio.');
       return;
     }
+    if (!customerPartyId) {
+      setFormError('Selecciona un cliente para la sesión.');
+      return;
+    }
     if (assignedRoomIds.length === 0) {
       setFormError('Asigna al menos una sala para la sesión.');
       return;
@@ -310,6 +324,7 @@ export default function BookingsPage() {
           ubStartsAt: startIso,
           ubEndsAt: endIso,
           ubResourceIds: assignedRoomIds,
+          ubPartyId: customerPartyId,
         },
       });
     } else {
@@ -331,6 +346,12 @@ export default function BookingsPage() {
         : '';
     setEngineerName(parsedEngineer);
     setEngineerPartyId(null);
+    setCustomerPartyId(booking.partyId ?? null);
+    const customerLabel =
+      booking.partyId && parties.find((p) => p.partyId === booking.partyId)?.displayName
+        ? parties.find((p) => p.partyId === booking.partyId)?.displayName ?? ''
+        : booking.customerName ?? booking.partyDisplayName ?? '';
+    setCustomerName(customerLabel);
     setServiceType(booking.serviceType ?? '');
     setStatus(booking.status ?? 'Confirmed');
     setStartInput(formatForInput(new Date(booking.startsAt)));
@@ -396,6 +417,36 @@ export default function BookingsPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               fullWidth
+            />
+            <Autocomplete
+              options={customerOptions}
+              getOptionLabel={(option) => option.displayName}
+              loading={partiesQuery.isFetching}
+              value={customerOptions.find((opt) => opt.partyId === customerPartyId) ?? null}
+              onChange={(_, value) => {
+                setCustomerPartyId(value?.partyId ?? null);
+                setCustomerName(value?.displayName ?? '');
+              }}
+              inputValue={customerName}
+              onInputChange={(_, value, reason) => {
+                if (reason === 'clear') {
+                  setCustomerPartyId(null);
+                  setCustomerName('');
+                }
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Cliente"
+                  required
+                  helperText={
+                    customerOptions.length === 0
+                      ? 'No hay clientes en el catálogo.'
+                      : 'Selecciona un cliente para la sesión.'
+                  }
+                />
+              )}
+              noOptionsText="Sin clientes en el catálogo"
             />
             <TextField
               label="Inicio"
