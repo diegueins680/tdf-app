@@ -70,6 +70,22 @@ export default function BookingsPage() {
     return parsed.toISO() ?? value;
   };
 
+  const extractEngineerFromNotes = (raw?: string | null) => {
+    if (!raw) return { engineer: '', notesBody: '' };
+    const lines = raw.split('\n');
+    let engineer = '';
+    const remaining: string[] = [];
+    lines.forEach((line) => {
+      const match = line.match(/^\s*engineer:\s*(.*)$/i);
+      if (match) {
+        engineer = match[1]?.trim() ?? '';
+      } else {
+        remaining.push(line);
+      }
+    });
+    return { engineer, notesBody: remaining.join('\n').trim() };
+  };
+
   const events = useMemo(
     () =>
       bookings.map((booking) => {
@@ -94,6 +110,9 @@ export default function BookingsPage() {
           extendedProps: { ...booking, isCourse, courseSubtitle, priceText, locationText },
           backgroundColor: isCourse ? 'rgba(59,130,246,0.22)' : undefined,
           borderColor: isCourse ? 'rgba(59,130,246,0.4)' : undefined,
+          editable: !isCourse,
+          startEditable: !isCourse,
+          durationEditable: !isCourse,
         };
       }),
     [bookings],
@@ -114,11 +133,14 @@ export default function BookingsPage() {
   const [customerName, setCustomerName] = useState('');
   const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Confirmed');
+  const [calendarError, setCalendarError] = useState<string | null>(null);
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
 
   const requiresEngineer = (svc: string) => {
     const lowered = svc.toLowerCase();
-    return lowered.includes('recording') || lowered.includes('mix') || lowered.includes('master');
+    return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
+      lowered.includes(keyword),
+    );
   };
 
   const categorizeRooms = useMemo(() => {
@@ -185,6 +207,7 @@ export default function BookingsPage() {
     [parties],
   );
   const customerOptions = parties;
+  const missingEngineer = requiresEngineer(serviceType) && !(engineerName.trim() || engineerPartyId);
 
   useEffect(() => {
     if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
@@ -319,17 +342,7 @@ export default function BookingsPage() {
       setFormError('Asigna al menos una sala para la sesión.');
       return;
     }
-    if (requiresEngineer(serviceType) && !(engineerName.trim() || engineerPartyId)) {
-      setFormError('Las sesiones de recording, mixing o mastering requieren un ingeniero.');
-      return;
-    }
-    const combinedNotes = (() => {
-      const trimmed = notes.trim();
-      const engineerLine = engineerName.trim() ? `Engineer: ${engineerName.trim()}` : '';
-      if (trimmed && engineerLine) return `${trimmed}\n${engineerLine}`;
-      if (engineerLine) return engineerLine;
-      return trimmed || null;
-    })();
+    const combinedNotes = buildCombinedNotes();
     if (mode === 'edit' && editingId) {
       updateMutation.mutate({
         id: editingId,
@@ -351,7 +364,6 @@ export default function BookingsPage() {
 
   const handleEventClick = (info: { event: { id: string; extendedProps?: { isCourse?: boolean } } }) => {
     if (info.event.extendedProps?.isCourse) {
-      window.alert('Este bloque pertenece al curso de Producción Musical y es de solo lectura.');
       return;
     }
     const bookingId = Number.parseInt(info.event.id, 10);
@@ -360,12 +372,9 @@ export default function BookingsPage() {
     setMode('edit');
     setEditingId(booking.bookingId);
     setTitle(booking.title ?? 'Sesión');
-    setNotes(booking.notes ?? '');
-    const parsedEngineer =
-      booking.notes && booking.notes.includes('Engineer:')
-        ? booking.notes.split('\n').find((line) => line.toLowerCase().includes('engineer:'))?.split(':').slice(1).join(':').trim() ?? ''
-        : '';
-    setEngineerName(parsedEngineer);
+    const { engineer, notesBody } = extractEngineerFromNotes(booking.notes);
+    setNotes(notesBody);
+    setEngineerName(engineer);
     setEngineerPartyId(null);
     setCustomerPartyId(booking.partyId ?? null);
     const customerLabel =
@@ -391,18 +400,30 @@ export default function BookingsPage() {
     const startIso = toUtcIso(formatForInput(arg.event.start));
     const endIso = toUtcIso(formatForInput(arg.event.end));
     if (!startIso || !endIso) return;
-    void updateMutation.mutate({
-      id: bookingId,
-      body: {
-        ubStartsAt: startIso,
-        ubEndsAt: endIso,
+    updateMutation.mutate(
+      {
+        id: bookingId,
+        body: {
+          ubStartsAt: startIso,
+          ubEndsAt: endIso,
+        },
       },
-    });
+      {
+        onError: (err) => {
+          setCalendarError(err instanceof Error ? err.message : 'No pudimos mover la sesión.');
+          arg.revert?.();
+        },
+        onSuccess: () => {
+          setCalendarError(null);
+        },
+      },
+    );
   };
 
   return (
     <>
       <Typography variant="h5" gutterBottom>Agenda</Typography>
+      {calendarError && <Alert severity="warning" sx={{ mb: 1 }}>{calendarError}</Alert>}
       {bookingsQuery.isLoading && <div>Cargando...</div>}
       {bookingsQuery.error && <div>Error: {bookingsQuery.error.message}</div>}
       <Paper sx={{ p: 1 }}>
@@ -470,6 +491,11 @@ export default function BookingsPage() {
           <Stack spacing={2} component="form" onSubmit={handleCreate}>
             {formError && <Alert severity="error">{formError}</Alert>}
             {roomsQuery.isLoading && <Alert severity="info">Cargando salas disponibles…</Alert>}
+            {missingEngineer && (
+              <Alert severity="warning">
+                Este servicio normalmente usa un ingeniero. Asigna uno o continúa bajo tu criterio.
+              </Alert>
+            )}
             <TextField
               label="Título"
               value={title}
@@ -553,12 +579,13 @@ export default function BookingsPage() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Ingeniero (requerido para recording/mixing/mastering)"
-                  required={requiresEngineer(serviceType)}
+                  label="Ingeniero (sugerido para recording/mixing/mastering)"
                   helperText={
                     engineerOptions.length === 0
                       ? 'No hay ingenieros en el catálogo de contactos.'
-                      : 'Selecciona un ingeniero del catálogo.'
+                      : requiresEngineer(serviceType)
+                        ? 'Recomendado para recording/mixing/mastering.'
+                        : 'Opcional.'
                   }
                 />
               )}
