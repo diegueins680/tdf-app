@@ -35,7 +35,7 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import           Data.Time (Day, UTCTime, fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime)
+import           Data.Time (Day, UTCTime (..), fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime, secondsToDiffTime)
 import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           GHC.Generics (Generic)
@@ -75,6 +75,7 @@ import           TDF.Server.SocialEventsHandlers (socialEventsServer)
 import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsServer, sessionsServer)
 import qualified Data.Map.Strict            as Map
 import           TDF.ServerFuture (futureServer)
+import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.ServerFeedback (feedbackServer)
 import           TDF.Trials.API (TrialsAPI)
@@ -205,6 +206,7 @@ server =
   :<|> marketplacePublicServer
   :<|> labelPublicServer
   :<|> socialEventsServer
+  :<|> radioPresencePublicServer
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -352,6 +354,23 @@ coursesPublicServer =
     courseMetadataH slug = loadCourseMetadata slug
     registrationH slug payload = createOrUpdateRegistration slug payload
 
+radioPresencePublicServer :: Int64 -> AppM (Maybe RadioPresenceDTO)
+radioPresencePublicServer partyId = do
+  when (partyId <= 0) $ throwBadRequest "Invalid party id"
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    mRow <- selectFirst [PartyRadioPresencePartyId ==. toSqlKey partyId] []
+    pure (fmap presenceToDTO mRow)
+  where
+    presenceToDTO (Entity _ PartyRadioPresence{..}) =
+      RadioPresenceDTO
+        { rpPartyId     = fromIntegral (fromSqlKey partyRadioPresencePartyId)
+        , rpStreamUrl   = partyRadioPresenceStreamUrl
+        , rpStationName = partyRadioPresenceStationName
+        , rpStationId   = partyRadioPresenceStationId
+        , rpUpdatedAt   = partyRadioPresenceUpdatedAt
+        }
+
 whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM
 whatsappWebhookServer =
        verifyHook
@@ -396,6 +415,9 @@ socialServer user =
        socialListFollowers user
   :<|> socialListFollowing user
   :<|> vcardExchange user
+  :<|> socialListFriends user
+  :<|> socialAddFriend user
+  :<|> socialRemoveFriend user
 
 driveServer :: AuthedUser -> ServerT DriveAPI AppM
 driveServer _ mAccessToken DriveUploadForm{..} = do
@@ -435,6 +457,7 @@ protectedServer user =
   :<|> calendarServer user
   :<|> cmsAdminServer user
   :<|> driveServer user
+  :<|> radioServer user
   :<|> futureServer
 
 calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
@@ -1689,6 +1712,69 @@ socialListFollowing user = do
     rows <- selectList [PartyFollowFollowerPartyId ==. auPartyId user] [Desc PartyFollowCreatedAt]
     pure (map partyFollowEntityToDTO rows)
 
+socialListFriends :: AuthedUser -> AppM [PartyFollowDTO]
+socialListFriends user = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    following <- selectList [PartyFollowFollowerPartyId ==. auPartyId user] []
+    let otherIds = map (partyFollowFollowingPartyId . entityVal) following
+    reverseRows <- if null otherIds
+      then pure []
+      else selectList
+             [ PartyFollowFollowerPartyId <-. otherIds
+             , PartyFollowFollowingPartyId ==. auPartyId user
+             ] []
+    let mutualIds = Set.fromList (map (partyFollowFollowerPartyId . entityVal) reverseRows)
+        mutual = filter (\(Entity _ pf) -> partyFollowFollowingPartyId pf `Set.member` mutualIds) following
+    pure (map partyFollowEntityToDTO mutual)
+
+socialAddFriend :: AuthedUser -> Int64 -> AppM [PartyFollowDTO]
+socialAddFriend user targetId = do
+  when (targetId <= 0) $ throwBadRequest "Invalid party id"
+  let followerKey = auPartyId user
+      targetKey   = toSqlKey targetId :: PartyId
+  when (followerKey == targetKey) $
+    throwBadRequest "No puedes agregarte como amigo"
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    mTarget <- get targetKey
+    case mTarget of
+      Nothing -> pure []
+      Just _ -> do
+        now <- liftIO getCurrentTime
+        _ <- upsert PartyFollow
+          { partyFollowFollowerPartyId  = followerKey
+          , partyFollowFollowingPartyId = targetKey
+          , partyFollowViaNfc           = False
+          , partyFollowCreatedAt        = now
+          }
+          [ PartyFollowViaNfc =. False ]
+        _ <- upsert PartyFollow
+          { partyFollowFollowerPartyId  = targetKey
+          , partyFollowFollowingPartyId = followerKey
+          , partyFollowViaNfc           = False
+          , partyFollowCreatedAt        = now
+          }
+          [ PartyFollowViaNfc =. False ]
+        rows <- selectList
+          [ PartyFollowFollowerPartyId ==. followerKey
+          , PartyFollowFollowingPartyId ==. targetKey
+          ] []
+        pure (map partyFollowEntityToDTO rows)
+
+socialRemoveFriend :: AuthedUser -> Int64 -> AppM NoContent
+socialRemoveFriend user targetId = do
+  when (targetId <= 0) $ throwBadRequest "Invalid party id"
+  let followerKey = auPartyId user
+      targetKey   = toSqlKey targetId :: PartyId
+  when (followerKey == targetKey) $
+    throwBadRequest "No puedes eliminarte como amigo"
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    deleteBy (UniquePartyFollow followerKey targetKey)
+    deleteBy (UniquePartyFollow targetKey followerKey)
+  pure NoContent
+
 vcardExchange :: AuthedUser -> VCardExchangeRequest -> AppM [PartyFollowDTO]
 vcardExchange user VCardExchangeRequest{..} = do
   when (vcerPartyId <= 0) $ throwBadRequest "Invalid party id"
@@ -2157,10 +2243,39 @@ bookingServer user =
 listBookings :: AuthedUser -> AppM [BookingDTO]
 listBookings user = do
   requireModule user ModuleScheduling
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    bookings <- selectList [] [Desc BookingId]
-    buildBookingDTOs bookings
+  Env pool cfg <- ask
+  liftIO $ do
+    dbBookings <- flip runSqlPool pool $ do
+      bookings <- selectList [] [Desc BookingId]
+      buildBookingDTOs bookings
+    let courseSessions = courseCalendarBookings cfg
+    pure (dbBookings ++ courseSessions)
+
+courseCalendarBookings :: AppConfig -> [BookingDTO]
+courseCalendarBookings cfg =
+  case courseMetadataFor cfg Nothing productionCourseSlug of
+    Nothing   -> []
+    Just meta ->
+      zipWith (mkBooking meta) ([1..] :: [Int]) (Courses.sessions meta)
+  where
+    mkBooking CourseMetadata{..} idx CourseSession{..} =
+      let startUtc = UTCTime date (secondsToDiffTime (15 * 60 * 60)) -- 10:00 Quito (UTC-5)
+          endUtc   = addUTCTime (4 * 60 * 60) startUtc               -- 4-hour block
+      in BookingDTO
+           { bookingId          = negate (fromIntegral (1000 + idx))
+           , title              = "Curso: " <> label
+           , startsAt           = startUtc
+           , endsAt             = endUtc
+           , status             = "Confirmed"
+           , notes              = Just ("Curso " <> slug)
+           , partyId            = Nothing
+           , serviceType        = Just "Curso Producción Musical"
+           , serviceOrderId     = Nothing
+           , serviceOrderTitle  = Nothing
+           , customerName       = Nothing
+           , partyDisplayName   = Nothing
+           , resources          = []
+           }
 
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
 createBooking user req = do

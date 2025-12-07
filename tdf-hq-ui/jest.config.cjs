@@ -7,4 +7,8 @@ module.exports = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   setupFilesAfterEnv: [],
+  reporters: [
+    'default',
+    ['@testomatio/reporter/lib/adapter/jest', { apiKey: process.env.TESTOMATIO }],
+  ],
 };

@@ -33,6 +33,9 @@ const uiVersion = packageJson.version ?? '0.0.0';
 export default defineConfig({
   plugins: [react()],
   server: { port: 5173, host: true },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
   build: {
     chunkSizeWarningLimit: 900,
     rollupOptions: {
@@ -55,6 +58,9 @@ export default defineConfig({
         },
       },
     },
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
   },
   define: {
     __APP_COMMIT__: JSON.stringify(uiCommit),

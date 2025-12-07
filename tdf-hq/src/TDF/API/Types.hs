@@ -686,3 +686,58 @@ data BandCreate = BandCreate
 
 instance ToJSON BandCreate
 instance FromJSON BandCreate
+
+data RadioStreamDTO = RadioStreamDTO
+  { rsId            :: Int64
+  , rsName          :: Maybe Text
+  , rsStreamUrl     :: Text
+  , rsCountry       :: Maybe Text
+  , rsGenre         :: Maybe Text
+  , rsActive        :: Bool
+  , rsLastCheckedAt :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON RadioStreamDTO
+instance FromJSON RadioStreamDTO
+
+data RadioStreamUpsert = RadioStreamUpsert
+  { rsuStreamUrl :: Text
+  , rsuName      :: Maybe Text
+  , rsuCountry   :: Maybe Text
+  , rsuGenre     :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON RadioStreamUpsert
+instance FromJSON RadioStreamUpsert
+
+data RadioImportRequest = RadioImportRequest
+  { rirSources :: Maybe [Text]
+  , rirLimit   :: Maybe Int
+  } deriving (Show, Generic)
+instance ToJSON RadioImportRequest
+instance FromJSON RadioImportRequest
+
+data RadioImportResult = RadioImportResult
+  { rirProcessed :: Int
+  , rirInserted  :: Int
+  , rirUpdated   :: Int
+  , rirSources   :: [Text]
+  } deriving (Show, Generic)
+instance ToJSON RadioImportResult
+instance FromJSON RadioImportResult
+
+data RadioPresenceDTO = RadioPresenceDTO
+  { rpPartyId     :: Int64
+  , rpStreamUrl   :: Text
+  , rpStationName :: Maybe Text
+  , rpStationId   :: Maybe Text
+  , rpUpdatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON RadioPresenceDTO
+instance FromJSON RadioPresenceDTO
+
+data RadioPresenceUpsert = RadioPresenceUpsert
+  { rpuStreamUrl   :: Text
+  , rpuStationName :: Maybe Text
+  , rpuStationId   :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON RadioPresenceUpsert
+instance FromJSON RadioPresenceUpsert

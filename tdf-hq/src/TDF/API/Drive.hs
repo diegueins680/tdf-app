@@ -9,7 +9,7 @@ module TDF.API.Drive where
 import           Data.Text          (Text)
 import           GHC.Generics       (Generic)
 import           Servant
-import           Servant.Multipart  (MultipartForm, Tmp, FromMultipart(..), lookupFile, lookupInput, FileData, Input(..))
+import           Servant.Multipart  (MultipartForm, Tmp, FromMultipart(..), lookupFile, lookupInput, FileData)
 import qualified Data.Text         as T
 
 import           TDF.API.Types      (DriveUploadDTO)

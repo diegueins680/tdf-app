@@ -1,4 +1,4 @@
-import { get, post, del } from './client';
+import { get, post, put, del } from './client';
 import type {
   ArtistProfileDTO,
   ArtistProfileUpsert,
@@ -44,6 +44,8 @@ export const Admin = {
     post<ArtistProfileDTO>('/admin/artists/profiles', payload),
   createArtistRelease: (payload: ArtistReleaseUpsert) =>
     post<ArtistReleaseDTO>('/admin/artists/releases', payload),
+  updateArtistRelease: (releaseId: number, payload: ArtistReleaseUpsert) =>
+    put<ArtistReleaseDTO>(`/admin/artists/releases/${releaseId}`, payload),
   getLogs: (limit?: number): Promise<LogEntry[]> => {
     const params = limit ? `?limit=${limit}` : '';
     return get(`/admin/logs${params}`);

@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings } from '../api/bookings';
-import type { BookingDTO } from '../api/types';
+import type { BookingDTO, PartyDTO } from '../api/types';
 import {
   Typography,
   Paper,
@@ -14,6 +14,12 @@ import {
   TextField,
   Alert,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  Autocomplete,
+  Chip,
+  Box,
 } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -21,6 +27,9 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DateTime } from 'luxon';
 import { loadServiceTypes } from '../utils/serviceTypesStore';
+import { Rooms } from '../api/rooms';
+import type { RoomDTO } from '../api/types';
+import { Parties } from '../api/parties';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -30,9 +39,29 @@ export default function BookingsPage() {
     queryKey: ['bookings'],
     queryFn: Bookings.list,
   });
+  const roomsQuery = useQuery<RoomDTO[]>({
+    queryKey: ['rooms'],
+    queryFn: Rooms.list,
+    staleTime: 5 * 60 * 1000,
+  });
+  const partiesQuery = useQuery<PartyDTO[]>({
+    queryKey: ['parties', 'all'],
+    queryFn: () => Parties.list(),
+    staleTime: 5 * 60 * 1000,
+  });
   const qc = useQueryClient();
   const zone = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
+  const rooms = roomsQuery.data ?? [];
+  const parties = partiesQuery.data ?? [];
+  const statusOptions = [
+    'Tentative',
+    'Confirmed',
+    'InProgress',
+    'Completed',
+    'Cancelled',
+    'NoShow',
+  ];
   const toIsoDate = (value: string): string => {
     const parsed = DateTime.fromISO(value);
     if (!parsed.isValid) {
@@ -48,18 +77,102 @@ export default function BookingsPage() {
         title: booking.title,
         start: toIsoDate(booking.startsAt),
         end: toIsoDate(booking.endsAt),
+        extendedProps: booking,
       })),
     [bookings],
   );
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mode, setMode] = useState<'create' | 'edit'>('create');
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [title, setTitle] = useState('Bloque de estudio');
   const [notes, setNotes] = useState('');
   const [startInput, setStartInput] = useState('');
   const [endInput, setEndInput] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [serviceType, setServiceType] = useState<string>('');
+  const [engineerName, setEngineerName] = useState('');
+  const [engineerPartyId, setEngineerPartyId] = useState<number | null>(null);
+  const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
+  const [status, setStatus] = useState<string>('Confirmed');
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
+
+  const requiresEngineer = (svc: string) => {
+    const lowered = svc.toLowerCase();
+    return lowered.includes('recording') || lowered.includes('mix') || lowered.includes('master');
+  };
+
+  const categorizeRooms = useMemo(() => {
+    const map = {
+      djBooth: [] as RoomDTO[],
+      liveRoom: [] as RoomDTO[],
+      controlRoom: [] as RoomDTO[],
+      vocalBooth: [] as RoomDTO[],
+      other: [] as RoomDTO[],
+    };
+    rooms.forEach((room) => {
+      const name = room.rName.toLowerCase();
+      if (name.includes('dj')) {
+        map.djBooth.push(room);
+      } else if (name.includes('live')) {
+        map.liveRoom.push(room);
+      } else if (name.includes('control')) {
+        map.controlRoom.push(room);
+      } else if (name.includes('vocal')) {
+        map.vocalBooth.push(room);
+      } else {
+        map.other.push(room);
+      }
+    });
+    return map;
+  }, [rooms]);
+
+  const pickFirst = (list: RoomDTO[]) => (list.length > 0 ? [list[0]!] : []);
+
+  const defaultRoomsForService = (svc: string): RoomDTO[] => {
+    const lowered = svc.toLowerCase();
+    if (lowered.includes('dj')) {
+      const defaults = pickFirst(categorizeRooms.djBooth);
+      return defaults.length ? defaults : pickFirst(categorizeRooms.other);
+    }
+    if (lowered.includes('band') && lowered.includes('record')) {
+      return [...categorizeRooms.liveRoom.slice(0, 1), ...categorizeRooms.controlRoom.slice(0, 1)];
+    }
+    if (lowered.includes('vocal') && lowered.includes('record')) {
+      return [...categorizeRooms.vocalBooth.slice(0, 1), ...categorizeRooms.controlRoom.slice(0, 1)];
+    }
+    if (lowered.includes('rehearsal') || lowered.includes('ensayo') || (lowered.includes('band') && lowered.includes('rehe'))) {
+      return categorizeRooms.liveRoom.slice(0, 1);
+    }
+    if (lowered.includes('mix') || lowered.includes('master')) {
+      return categorizeRooms.controlRoom.slice(0, 1);
+    }
+    if (lowered.includes('record')) {
+      return [...categorizeRooms.controlRoom.slice(0, 1), ...categorizeRooms.liveRoom.slice(0, 1)];
+    }
+    return categorizeRooms.other.slice(0, 1);
+  };
+
+  const assignedRooms = useMemo(
+    () => rooms.filter((room) => assignedRoomIds.includes(room.roomId)),
+    [rooms, assignedRoomIds],
+  );
+
+  const engineerOptions = useMemo(
+    () =>
+      parties.filter((party) =>
+        (party.roles ?? []).some((role) => role.toLowerCase().includes('engineer')),
+      ),
+    [parties],
+  );
+
+  useEffect(() => {
+    if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
+    const defaults = defaultRoomsForService(serviceType);
+    if (defaults.length) {
+      setAssignedRoomIds(defaults.map((room) => room.roomId));
+    }
+  }, [serviceType, rooms, assignedRoomIds.length]);
 
   const formatForInput = (date: Date) =>
     DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm");
@@ -73,10 +186,28 @@ export default function BookingsPage() {
   const handleDateClick = (info: { date: Date }) => {
     const start = info.date;
     const end = DateTime.fromJSDate(start).plus({ minutes: 60 }).toJSDate();
+    setMode('create');
+    setEditingId(null);
+    setTitle('Bloque de estudio');
+    setNotes('');
+    setServiceType('');
+    setEngineerName('');
+    const defaults = defaultRoomsForService('');
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
+    setStatus('Confirmed');
     openDialogForRange(start, end);
   };
 
   const handleSelect = (info: { start: Date; end: Date }) => {
+    setMode('create');
+    setEditingId(null);
+    setTitle('Bloque de estudio');
+    setNotes('');
+    setServiceType('');
+    setEngineerName('');
+    const defaults = defaultRoomsForService('');
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
+    setStatus('Confirmed');
     openDialogForRange(info.start, info.end ?? DateTime.fromJSDate(info.start).plus({ minutes: 60 }).toJSDate());
   };
 
@@ -85,15 +216,27 @@ export default function BookingsPage() {
     return dt.isValid ? dt.toUTC().toISO() : null;
   };
 
+  const buildCombinedNotes = () => {
+    const trimmed = notes.trim();
+    const engineerLabel = engineerPartyId
+      ? engineerOptions.find((opt) => opt.partyId === engineerPartyId)?.displayName ?? engineerName.trim()
+      : engineerName.trim();
+    const engineerLine = engineerLabel ? `Engineer: ${engineerLabel}` : '';
+    if (trimmed && engineerLine) return `${trimmed}\n${engineerLine}`;
+    if (engineerLine) return engineerLine;
+    return trimmed || null;
+  };
+
   const createMutation = useMutation({
     mutationFn: () =>
       Bookings.create({
         cbTitle: title.trim() || 'Bloque de estudio',
         cbStartsAt: toUtcIso(startInput) ?? '',
         cbEndsAt: toUtcIso(endInput) ?? '',
-        cbStatus: 'Confirmed',
-        cbNotes: notes.trim() || null,
+        cbStatus: status,
+        cbNotes: buildCombinedNotes(),
         cbServiceType: serviceType.trim() || null,
+        cbResourceIds: assignedRoomIds,
       }),
     onSuccess: () => {
       setDialogOpen(false);
@@ -101,10 +244,31 @@ export default function BookingsPage() {
       setTitle('Bloque de estudio');
       setNotes('');
       setServiceType('');
+      setStatus('Confirmed');
+      setEditingId(null);
+      setMode('create');
+      setAssignedRoomIds([]);
+      setEngineerName('');
+      setEngineerPartyId(null);
       void qc.invalidateQueries({ queryKey: ['bookings'] });
     },
     onError: (err) => {
       setFormError(err instanceof Error ? err.message : 'No se pudo crear la sesión.');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: { id: number; body: Record<string, unknown> }) =>
+      Bookings.update(payload.id, payload.body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['bookings'] });
+      setDialogOpen(false);
+      setEditingId(null);
+      setMode('create');
+      setFormError(null);
+    },
+    onError: (err) => {
+      setFormError(err instanceof Error ? err.message : 'No se pudo actualizar la sesión.');
     },
   });
 
@@ -120,7 +284,74 @@ export default function BookingsPage() {
       setFormError('La hora de fin debe ser mayor que la de inicio.');
       return;
     }
-    createMutation.mutate();
+    if (assignedRoomIds.length === 0) {
+      setFormError('Asigna al menos una sala para la sesión.');
+      return;
+    }
+    if (requiresEngineer(serviceType) && !(engineerName.trim() || engineerPartyId)) {
+      setFormError('Las sesiones de recording, mixing o mastering requieren un ingeniero.');
+      return;
+    }
+    const combinedNotes = (() => {
+      const trimmed = notes.trim();
+      const engineerLine = engineerName.trim() ? `Engineer: ${engineerName.trim()}` : '';
+      if (trimmed && engineerLine) return `${trimmed}\n${engineerLine}`;
+      if (engineerLine) return engineerLine;
+      return trimmed || null;
+    })();
+    if (mode === 'edit' && editingId) {
+      updateMutation.mutate({
+        id: editingId,
+        body: {
+          ubTitle: title.trim(),
+          ubServiceType: serviceType.trim() || null,
+          ubNotes: combinedNotes,
+          ubStatus: status,
+          ubStartsAt: startIso,
+          ubEndsAt: endIso,
+          ubResourceIds: assignedRoomIds,
+        },
+      });
+    } else {
+      createMutation.mutate();
+    }
+  };
+
+  const handleEventClick = (info: { event: { id: string; extendedProps?: unknown } }) => {
+    const bookingId = Number.parseInt(info.event.id, 10);
+    const booking = bookings.find((b) => b.bookingId === bookingId);
+    if (!booking) return;
+    setMode('edit');
+    setEditingId(booking.bookingId);
+    setTitle(booking.title ?? 'Sesión');
+    setNotes(booking.notes ?? '');
+    const parsedEngineer =
+      booking.notes && booking.notes.includes('Engineer:')
+        ? booking.notes.split('\n').find((line) => line.toLowerCase().includes('engineer:'))?.split(':').slice(1).join(':').trim() ?? ''
+        : '';
+    setEngineerName(parsedEngineer);
+    setEngineerPartyId(null);
+    setServiceType(booking.serviceType ?? '');
+    setStatus(booking.status ?? 'Confirmed');
+    setStartInput(formatForInput(new Date(booking.startsAt)));
+    setEndInput(formatForInput(new Date(booking.endsAt)));
+    setAssignedRoomIds((booking.resources ?? []).map((r) => r.brRoomId));
+    setDialogOpen(true);
+  };
+
+  const handleEventDropOrResize = (arg: { event: { id: string; start: Date | null; end: Date | null } }) => {
+    const bookingId = Number.parseInt(arg.event.id, 10);
+    if (!arg.event.start || !arg.event.end) return;
+    const startIso = toUtcIso(formatForInput(arg.event.start));
+    const endIso = toUtcIso(formatForInput(arg.event.end));
+    if (!startIso || !endIso) return;
+    void updateMutation.mutate({
+      id: bookingId,
+      body: {
+        ubStartsAt: startIso,
+        ubEndsAt: endIso,
+      },
+    });
   };
 
   return (
@@ -135,10 +366,14 @@ export default function BookingsPage() {
           height="auto"
           allDaySlot={false}
           slotDuration="00:30:00"
+          editable
           selectable
           selectMirror
           select={handleSelect}
           dateClick={handleDateClick}
+          eventClick={handleEventClick}
+          eventDrop={handleEventDropOrResize}
+          eventResize={handleEventDropOrResize}
           events={events}
           nowIndicator
           timeZone={zone}
@@ -155,6 +390,7 @@ export default function BookingsPage() {
         <DialogContent dividers>
           <Stack spacing={2} component="form" onSubmit={handleCreate}>
             {formError && <Alert severity="error">{formError}</Alert>}
+            {roomsQuery.isLoading && <Alert severity="info">Cargando salas disponibles…</Alert>}
             <TextField
               label="Título"
               value={title}
@@ -185,11 +421,72 @@ export default function BookingsPage() {
               multiline
               minRows={2}
             />
+            <Autocomplete
+              options={engineerOptions}
+              getOptionLabel={(option) => option.displayName}
+              loading={partiesQuery.isFetching}
+              value={engineerOptions.find((opt) => opt.partyId === engineerPartyId) ?? null}
+              onChange={(_, value) => {
+                setEngineerPartyId(value?.partyId ?? null);
+                setEngineerName(value?.displayName ?? '');
+              }}
+              inputValue={engineerName}
+              onInputChange={(_, value, reason) => {
+                if (reason === 'input') {
+                  setEngineerName(value);
+                  setEngineerPartyId(null);
+                }
+                if (reason === 'clear') {
+                  setEngineerName('');
+                  setEngineerPartyId(null);
+                }
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Ingeniero (requerido para recording/mixing/mastering)"
+                  required={requiresEngineer(serviceType)}
+                  helperText={
+                    engineerOptions.length === 0
+                      ? 'No hay ingenieros en el catálogo de contactos.'
+                      : 'Selecciona un ingeniero del catálogo.'
+                  }
+                />
+              )}
+              noOptionsText="Sin ingenieros en el catálogo"
+            />
+            <FormControl>
+              <InputLabel id="booking-status-label">Estado</InputLabel>
+              <Select
+                labelId="booking-status-label"
+                label="Estado"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {statusOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               select
               label="Servicio"
               value={serviceType}
-              onChange={(e) => setServiceType(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setServiceType(value);
+                if (mode === 'create' || assignedRoomIds.length === 0) {
+                  const defaults = defaultRoomsForService(value);
+                  if (defaults.length) {
+                    setAssignedRoomIds(defaults.map((room) => room.roomId));
+                  }
+                }
+                if (requiresEngineer(value) && !engineerName) {
+                  setEngineerName('');
+                }
+              }}
               helperText="Elige el tipo de servicio asociado a la sesión."
             >
               <MenuItem value="">(Sin asignar)</MenuItem>
@@ -200,6 +497,32 @@ export default function BookingsPage() {
                 </MenuItem>
               ))}
             </TextField>
+            <Autocomplete
+              multiple
+              options={rooms}
+              getOptionLabel={(option) => option.rName}
+              value={assignedRooms}
+              onChange={(_, value) => setAssignedRoomIds(value.map((room) => room.roomId))}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip label={option.rName} {...getTagProps({ index })} />
+                ))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Salas asignadas"
+                  placeholder="Agregar/ajustar salas"
+                  helperText="Se precargan según el tipo de servicio."
+                />
+              )}
+              noOptionsText="No hay salas registradas"
+            />
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Reglas: DJ Practice → DJ Booth · Band recording → Live + Control · Vocal recording → Vocal Booth + Control · Band rehearsal → Live · Mixing/Mastering → Control. Recording/Mixing/Mastering requieren ingeniero.
+              </Typography>
+            </Box>
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -207,10 +530,14 @@ export default function BookingsPage() {
           <Button
             variant="contained"
             onClick={handleCreate}
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || updateMutation.isPending}
             sx={{ textTransform: 'none' }}
           >
-            {createMutation.isPending ? 'Creando…' : 'Crear sesión'}
+            {createMutation.isPending || updateMutation.isPending
+              ? 'Guardando…'
+              : mode === 'edit'
+                ? 'Actualizar'
+                : 'Crear sesión'}
           </Button>
         </DialogActions>
       </Dialog>

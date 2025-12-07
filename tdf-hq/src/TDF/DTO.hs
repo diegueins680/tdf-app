@@ -137,6 +137,22 @@ data PartyFollowDTO = PartyFollowDTO
   } deriving (Show, Generic)
 instance ToJSON PartyFollowDTO
 
+data RadioPresenceDTO = RadioPresenceDTO
+  { rpPartyId     :: Int64
+  , rpStreamUrl   :: Text
+  , rpStationName :: Maybe Text
+  , rpStationId   :: Maybe Text
+  , rpUpdatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON RadioPresenceDTO
+
+data RadioPresenceUpsert = RadioPresenceUpsert
+  { rpuStreamUrl   :: Text
+  , rpuStationName :: Maybe Text
+  , rpuStationId   :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON RadioPresenceUpsert
+
 data VCardExchangeRequest = VCardExchangeRequest
   { vcerPartyId :: Int64
   } deriving (Show, Generic)
