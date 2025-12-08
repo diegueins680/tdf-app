@@ -239,8 +239,14 @@ export default function RadioWidget() {
   const [editGenre, setEditGenre] = useState('');
   const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
   const [autoSkipOnError, setAutoSkipOnError] = useState(false);
-  // Start visible by default; only hide when the user explicitly minimizes during the session.
-  const [miniBarVisible, setMiniBarVisible] = useState(false);
+  // Start minimized by default; respect previous user choice if stored.
+  const [miniBarVisible, setMiniBarVisible] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = window.localStorage.getItem('radio-mini-visible');
+    if (saved === '0') return false;
+    if (saved === '1') return true;
+    return true; // default minimized to reduce initial noise
+  });
   const [pinned, setPinned] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem('radio-pinned') === '1';
@@ -1016,6 +1022,15 @@ export default function RadioWidget() {
       promptInputRef.current?.focus();
     }, 120);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-mini-visible', miniBarVisible ? '1' : '0');
+    } catch {
+      // ignore persistence issues
+    }
+  }, [miniBarVisible]);
 
   return (
     <>

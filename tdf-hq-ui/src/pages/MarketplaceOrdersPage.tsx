@@ -44,6 +44,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { MarketplaceOrderDTO, MarketplaceOrderUpdatePayload } from '../api/types';
 import { Marketplace } from '../api/marketplace';
 import { DateTime } from 'luxon';
+import { useSession } from '../session/SessionContext';
 
 const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] }[] = [
   { value: 'paid', label: 'Pagado', color: 'success' },
@@ -89,6 +90,8 @@ const summarizeItems = (items: MarketplaceOrderDTO['moItems']) =>
   items.map((it) => `${it.moiQuantity} × ${it.moiTitle}`).join(' · ');
 
 export default function MarketplaceOrdersPage() {
+  const { session } = useSession();
+  const isAuthed = Boolean(session);
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [providerFilter, setProviderFilter] = useState<string>('all');
@@ -109,6 +112,8 @@ export default function MarketplaceOrdersPage() {
         status: statusFilter === 'all' ? undefined : statusFilter,
         limit: 200,
       }),
+    enabled: isAuthed,
+    retry: false,
   });
 
   const orders = useMemo(() => ordersQuery.data ?? [], [ordersQuery.data]);
