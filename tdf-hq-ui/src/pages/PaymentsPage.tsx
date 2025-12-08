@@ -347,7 +347,7 @@ function PaymentForm({
                 onComplete={(files: DriveFileInfo[]) => {
                   const file = files[0];
                   if (!file) return;
-                  setAttachmentUrl(file.webViewLink || file.webContentLink || '');
+                  setAttachmentUrl(file.webViewLink ?? file.webContentLink ?? '');
                   setAttachmentName(file.name);
                   setError(null);
                 }}
