@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Grid,
   Link,
+  Snackbar,
   IconButton,
   Stack,
   TextField,
@@ -141,6 +142,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [heroImageFileName, setHeroImageFileName] = useState<string>('');
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
   const [expandedFeatured, setExpandedFeatured] = useState<Set<number>>(() => new Set());
+  const [fanRoleToast, setFanRoleToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (profileQuery.data) {
@@ -208,6 +210,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       login({ ...session, roles: nextRoles });
       await qc.invalidateQueries({ queryKey: ['fan-profile', viewerId] });
       await qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
+    },
+    onSuccess: () => {
+      setFanRoleToast('Rol Fan activado. Refrescamos tu feed.');
     },
   });
 
@@ -1311,6 +1316,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         </Grid>
       </Stack>
     </Box>
+    <Snackbar
+      open={Boolean(fanRoleToast)}
+      autoHideDuration={3000}
+      onClose={() => setFanRoleToast(null)}
+      message={fanRoleToast ?? ''}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    />
   );
 }
 function ProfileSectionCard({

@@ -11,8 +11,10 @@ import {
   DialogTitle,
   Grid,
   LinearProgress,
+  CircularProgress,
   MenuItem,
   Paper,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -182,6 +184,8 @@ export default function TrialLessonsPage() {
 
   const [formError, setFormError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
+  const [statusPendingId, setStatusPendingId] = useState<number | null>(null);
+  const [statusToast, setStatusToast] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [studentDialogOpen, setStudentDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ClassSessionDTO | null>(null);
@@ -348,15 +352,20 @@ export default function TrialLessonsPage() {
 
   const statusMutation = useMutation({
     mutationFn: async (params: { cls: ClassSessionDTO; nextStatus: StatusKey }) => {
+      setStatusPendingId(params.cls.classSessionId);
       await syncStatus(params.cls, params.nextStatus);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       setListError(null);
+      setStatusToast(`Estado actualizado: ${statusMeta[variables.nextStatus].label}`);
       void qc.invalidateQueries({ queryKey: ['trial-class-sessions'] });
     },
     onError: (error) => {
       const msg = error instanceof Error ? error.message : 'No pudimos actualizar el estado.';
       setListError(msg);
+    },
+    onSettled: () => {
+      setStatusPendingId(null);
     },
   });
 
@@ -513,6 +522,7 @@ export default function TrialLessonsPage() {
               const subject = subjects.find((s) => s.subjectId === cls.subjectId);
               const room = rooms.find((r) => r.roomId === cls.roomId);
               const student = students.find((p) => p.studentId === cls.studentId);
+              const rowPending = statusPendingId === cls.classSessionId;
               return (
                 <Paper
                   key={cls.classSessionId}
@@ -559,9 +569,13 @@ export default function TrialLessonsPage() {
                       <Button
                         variant="text"
                         size="small"
-                        startIcon={<CheckCircleIcon fontSize="small" />}
+                        startIcon={
+                          rowPending
+                            ? <CircularProgress size={14} />
+                            : <CheckCircleIcon fontSize="small" />
+                        }
                         onClick={() => handleQuickStatus(cls, 'realizada')}
-                        disabled={statusMutation.isPending || normalizedStatus(cls.status) === 'realizada'}
+                        disabled={rowPending || normalizedStatus(cls.status) === 'realizada'}
                       >
                         Realizada
                       </Button>
@@ -569,9 +583,13 @@ export default function TrialLessonsPage() {
                         variant="text"
                         size="small"
                         color="inherit"
-                        startIcon={<CancelIcon fontSize="small" />}
+                        startIcon={
+                          rowPending
+                            ? <CircularProgress size={14} />
+                            : <CancelIcon fontSize="small" />
+                        }
                         onClick={() => handleQuickStatus(cls, 'cancelada')}
-                        disabled={statusMutation.isPending || normalizedStatus(cls.status) === 'cancelada'}
+                        disabled={rowPending || normalizedStatus(cls.status) === 'cancelada'}
                       >
                         Cancelar
                       </Button>
@@ -583,6 +601,14 @@ export default function TrialLessonsPage() {
           </Stack>
         </Stack>
       </Paper>
+
+      <Snackbar
+        open={Boolean(statusToast)}
+        autoHideDuration={3000}
+        onClose={() => setStatusToast(null)}
+        message={statusToast ?? ''}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
 
       <Dialog open={dialogOpen} onClose={closeDialog} fullWidth maxWidth="sm">
         <DialogTitle>{editing ? 'Editar clase de prueba' : 'Nueva clase de prueba'}</DialogTitle>

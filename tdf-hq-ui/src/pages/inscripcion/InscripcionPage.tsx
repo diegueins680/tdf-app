@@ -1,5 +1,5 @@
 import { useParams, useSearchParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -18,11 +18,25 @@ export default function InscripcionPage() {
   const leadId = sp.get('lead') ?? '';
   const token = sp.get('t') ?? '';
 
+  const storageKey = leadId ? `inscripcion-lead-${leadId}` : 'inscripcion-lead';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = window.localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored) as { name?: string; email?: string };
+        setName(parsed.name ?? '');
+        setEmail(parsed.email ?? '');
+      }
+    } catch {
+      // ignore storage read errors
+    }
+  }, [storageKey]);
 
   const submit = async () => {
     setBusy(true);
@@ -40,6 +54,9 @@ export default function InscripcionPage() {
       const body = (await res.json().catch(() => ({}))) as { ok?: boolean };
       if (body.ok) {
         setDone(true);
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(storageKey, JSON.stringify({ name, email }));
+        }
       } else {
         setError('No pudimos completar tu inscripción. Revisa el enlace e inténtalo de nuevo.');
       }
@@ -110,8 +127,8 @@ export default function InscripcionPage() {
           ¡Listo! 🎉
         </Typography>
         <Typography variant="body1" color="rgba(226,232,240,0.85)">
-          Hemos recibido tus datos para <strong>{title}</strong>. Te contactaremos por WhatsApp y correo con los
-          siguientes pasos.
+          Hemos recibido tus datos para <strong>{title}</strong>. Revisa tu correo y WhatsApp; te enviaremos los
+          siguientes pasos y confirmación de cupo.
         </Typography>
       </Stack>,
     );
@@ -165,8 +182,7 @@ export default function InscripcionPage() {
           }}
         />
         <Alert severity="info" sx={{ bgcolor: 'rgba(14,165,233,0.08)', color: '#e0f2fe' }}>
-          Asegúrate de usar el mismo correo con el que conversamos para validar tu cupo. Si ves un error de enlace, pide
-          que te reenvíen el link: {enrollmentUrl}
+          Asegúrate de usar el mismo correo con el que conversamos para validar tu cupo. Guardamos tu nombre y correo en este dispositivo para que no tengas que volver a escribirlos. Si ves un error de enlace, pide que te reenvíen el link: {enrollmentUrl}
         </Alert>
         {error && (
           <Alert severity="error" sx={{ bgcolor: 'rgba(239,68,68,0.08)', color: '#fecdd3' }}>

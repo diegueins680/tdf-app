@@ -598,6 +598,16 @@ export default function BookingsPage() {
                 )}
               </Stack>
             )}
+            <Button
+              variant="text"
+              size="small"
+              component="a"
+              href="/estudio/live-sessions"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Abrir gestión de cursos
+            </Button>
           </Stack>
         </DialogContent>
         <DialogActions>
