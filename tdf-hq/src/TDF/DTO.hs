@@ -1,5 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.DTO where

@@ -6,35 +6,53 @@ author: "TDF Records"
 maintainer: "dev@tdfrecords.com"
 
 dependencies:
-  - base >= 4.7 && < 5
   - aeson
-  - servant
-  - servant-server
+  - base >= 4.7 && < 5
+  - base64-bytestring
+  - bcrypt
+  - bytestring
+  - conduit
+  - containers
+  - directory
+  - entropy
+  - file-embed
+  - filepath
+  - gitrev
+  - http-client
+  - http-client-tls
+  - http-media
+  - http-types
+  - http2
+  - mime-mail
+  - monad-logger
+  - mtl
+  - path-pieces
   - persistent
   - persistent-postgresql
+  - persistent-sqlite
   - persistent-template
+  - postgresql-simple
+  - process
+  - random
+  - resource-pool
+  - resourcet
+  - safe-exceptions
+  - scientific
+  - servant
+  - servant-server
+  - servant-multipart
+  - smtp-mail
+  - template-haskell
   - text
   - time
   - transformers
-  - mtl
-  - monad-logger
-  - bytestring
-  - gitrev
-  - template-haskell
-  - entropy
-  - mime-mail
-  - smtp-mail
+  - unordered-containers
+  - uuid
+  - uuid-types
+  - vector
   - wai
   - wai-cors
-  - http-client
-  - http-client-tls
-  - postgresql-simple
-  - random
-  - vector
-  - directory
-  - filepath
-  - servant-multipart
-  - uuid
+  - warp
 
 extra-source-files:
   - sql/2025-11-16_leads_whatsapp.sql
