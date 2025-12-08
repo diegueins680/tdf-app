@@ -304,6 +304,7 @@ export default function TrialLessonsPage() {
       startAt: new Date(startAt).toISOString(),
       endAt: new Date(endAt).toISOString(),
       roomId: Number(roomId),
+      status: form.status,
     };
 
     try {
@@ -328,21 +329,20 @@ export default function TrialLessonsPage() {
   };
 
   const syncStatus = async (cls: ClassSessionDTO, nextStatus: StatusKey, notesOverride?: string) => {
-    // Mirror status to booking if existe; otherwise fall back to attendance flag.
     const bookingId = cls.bookingId;
-    if (!bookingId && nextStatus !== 'realizada') {
-      throw new Error('Esta clase no tiene una reserva asociada; agrega una antes de cambiar el estado.');
-    }
+    const trimmedNotes = (notesOverride ?? cls.notes ?? '').trim() || undefined;
+    const patch: ClassSessionUpdate = { status: nextStatus, notes: trimmedNotes };
+
+    // Always try to persist class status directly so standalone trials are supported.
+    await Trials.updateClassSession(cls.classSessionId, patch);
+
     if (nextStatus === 'realizada') {
-      if (bookingId) {
-        await Bookings.update(bookingId, { ubStatus: bookingStatusMap[nextStatus] });
-      }
       await Trials.attendClassSession(cls.classSessionId, {
         attended: true,
-        notes: (notesOverride ?? cls.notes ?? '').trim() || undefined,
+        notes: trimmedNotes,
       });
-      return;
     }
+
     if (!bookingId) return;
     const ubStatus = bookingStatusMap[nextStatus];
     if (ubStatus) {

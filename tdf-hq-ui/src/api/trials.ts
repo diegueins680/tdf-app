@@ -79,6 +79,7 @@ export interface ClassSessionCreate {
   endAt: string;
   roomId: number;
   bookingId?: number | null;
+  status?: string;
 }
 
 export interface ClassSessionUpdate {
@@ -90,6 +91,7 @@ export interface ClassSessionUpdate {
   roomId?: number;
   bookingId?: number | null;
   notes?: string | null;
+  status?: string;
 }
 
 export interface ClassSessionAttend {

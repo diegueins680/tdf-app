@@ -2,8 +2,8 @@
 ARG SOURCE_COMMIT=dev
 ARG BUILD_TIME=unknown
 
-# Use the GHC version required by the resolver to avoid Stack downloading a full toolchain.
-FROM haskell:9.6-bullseye AS builder
+# Use the exact GHC version required by the resolver to avoid Stack re-downloading it.
+FROM haskell:9.6.6-bullseye AS builder
 ARG SOURCE_COMMIT
 ARG BUILD_TIME
 WORKDIR /app
@@ -21,6 +21,11 @@ ENV GIT_SHA=${SOURCE_COMMIT}
 ENV BUILD_TIME=${BUILD_TIME}
 ENV STACK_ROOT=/root/.stack
 ENV STACK_SETUP_PATH=/tmp/stack-setup-2.yaml
+ENV STACK_SYSTEM_GHC=true
+# Keep Stack lean: prefer system GHC from the base image, disable installing GHCS, and skip hackage index downloads.
+RUN mkdir -p /root/.stack && \
+    printf "system-ghc: true\ninstall-ghc: false\nskip-ghc-check: true\npackage-indices: []\n" > /root/.stack/config.yaml
+
 # Prefer raw.githubusercontent.com to avoid GitHub API 403 rate limits; fall back to the API if needed.
 ENV STACK_SETUP_URL_PRIMARY=https://raw.githubusercontent.com/commercialhaskell/stackage-content/master/stack/stack-setup-2.yaml
 ENV STACK_SETUP_URL_FALLBACK=https://api.github.com/repos/commercialhaskell/stackage-content/contents/stack/stack-setup-2.yaml?ref=master
@@ -56,14 +61,9 @@ RUN set -e; \
       done; \
       return 1; \
     }; \
-    # Update index with a clean pantry if hash verification fails (Hackage mirror flakiness)
-    if ! retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc update; then \
-      echo "Stack update failed, clearing pantry cache and retrying..." >&2; \
-      rm -rf /root/.stack/pantry/hackage; \
-      retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc update; \
-    fi; \
-    retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc setup; \
-    retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc build --only-dependencies
+    # Avoid full index downloads; rely on pinned snapshot + pantry and system GHC from base image
+    retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --system-ghc --no-install-ghc --skip-ghc-check setup; \
+    retry stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --system-ghc --no-install-ghc --skip-ghc-check build --only-dependencies
 
 # Copy sources (git metadata is provided via build args when available)
 COPY tdf-hq/app app
@@ -90,7 +90,7 @@ RUN set -eu; \
     echo "$BUILD_TS" > /app/BUILD_TIME
 
 # Build and export the binary
-RUN stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --install-ghc build --copy-bins --local-bin-path /out
+RUN stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --system-ghc --no-install-ghc --skip-ghc-check build --copy-bins --local-bin-path /out
 
 # -------- Stage 2: slim runtime ----------
 FROM debian:bookworm-slim
