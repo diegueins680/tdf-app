@@ -14,6 +14,8 @@ import {
   Typography,
   Tooltip,
   Button,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -1182,35 +1184,37 @@ export default function RadioWidget() {
         <Collapse in={expanded}>
           <Divider />
           <CardContent sx={{ p: 2 }}>
-            <Stack spacing={1.5}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
-                <Typography variant="body2" color="text.secondary">
-                  Estaciones del mundo (usa el widget para escuchar):
-                </Typography>
-                <Box flex={1} />
-                <Tooltip title={showCatalogSection ? 'Ocultar catálogo' : 'Mostrar catálogo'}>
-                  <Button
-                    size="small"
-                    variant="text"
-                    startIcon={showCatalogSection ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    onClick={() => setShowCatalogSection((v) => !v)}
-                    data-no-drag
-                  >
-                    Catálogo
-                  </Button>
-                </Tooltip>
-                <Tooltip title={showAddSection ? 'Ocultar agregar/editar' : 'Mostrar agregar/editar'}>
-                  <Button
-                    size="small"
-                    variant="text"
-                    startIcon={showAddSection ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    onClick={() => setShowAddSection((v) => !v)}
-                    data-no-drag
-                  >
-                    Editar/añadir
-                  </Button>
-                </Tooltip>
-              </Stack>
+              <Stack spacing={1.5}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+                  <Typography variant="body2" color="text.secondary">
+                    Estaciones del mundo (usa el widget para escuchar):
+                  </Typography>
+                  <Box flex={1} />
+                  <Stack direction="row" spacing={1}>
+                    <Tooltip title={showCatalogSection ? 'Ocultar catálogo' : 'Mostrar catálogo'}>
+                      <Button
+                        size="small"
+                        variant="text"
+                        startIcon={showCatalogSection ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        onClick={() => setShowCatalogSection((v) => !v)}
+                        data-no-drag
+                      >
+                        Catálogo
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title={showAddSection ? 'Ocultar agregar/editar' : 'Mostrar agregar/editar'}>
+                      <Button
+                        size="small"
+                        variant="text"
+                        startIcon={showAddSection ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        onClick={() => setShowAddSection((v) => !v)}
+                        data-no-drag
+                      >
+                        Editar/añadir
+                      </Button>
+                    </Tooltip>
+                  </Stack>
+                </Stack>
 
               <Collapse in={showCatalogSection} timeout="auto">
                 <Stack spacing={1.5}>
@@ -1218,7 +1222,7 @@ export default function RadioWidget() {
                     <Typography variant="caption" color="text.secondary">
                       Busca por país o género en el catálogo guardado:
                     </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
                       <TextField
                         size="small"
                         label="País"
@@ -1237,32 +1241,37 @@ export default function RadioWidget() {
                         fullWidth
                         inputProps={{ list: 'radio-genre-options' }}
                       />
-                      <Button
-                        variant="outlined"
-                        onClick={() => {
-                          void refetchStreams();
-                        }}
-                        disabled={streamsFetching}
-                        data-no-drag
-                        sx={{ minWidth: { sm: 140 } }}
-                      >
-                        {streamsFetching ? 'Buscando...' : 'Buscar streams'}
-                      </Button>
-                      {(countryQuery || genreQuery) && (
-                        <Button variant="text" onClick={clearFilters} data-no-drag sx={{ minWidth: { sm: 140 } }}>
-                          Limpiar filtros
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: { sm: 220 } }}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => {
+                            void refetchStreams();
+                          }}
+                          disabled={streamsFetching}
+                          data-no-drag
+                        >
+                          {streamsFetching ? 'Buscando...' : 'Buscar'}
                         </Button>
-                      )}
-                      <Button
-                        variant={showFavoritesOnly ? 'contained' : 'outlined'}
-                        color="warning"
-                        onClick={() => setShowFavoritesOnly((v) => !v)}
-                        data-no-drag
-                        sx={{ minWidth: { sm: 160 } }}
-                        startIcon={showFavoritesOnly ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
-                      >
-                        Solo favoritos
-                      </Button>
+                        {(countryQuery || genreQuery) && (
+                          <Button variant="text" size="small" onClick={clearFilters} data-no-drag>
+                            Limpiar
+                          </Button>
+                        )}
+                      </Stack>
+                    </Stack>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={showFavoritesOnly}
+                            onChange={() => setShowFavoritesOnly((v) => !v)}
+                            color="warning"
+                            size="small"
+                          />
+                        }
+                        label="Solo favoritos"
+                      />
                       <Button
                         variant="contained"
                         color="secondary"
@@ -1275,7 +1284,7 @@ export default function RadioWidget() {
                         {importing ? 'Importando...' : 'Importar'}
                       </Button>
                       {lastUpdatedTs && (
-                        <Typography variant="caption" color="text.secondary" sx={{ minWidth: { sm: 200 } }}>
+                        <Typography variant="caption" color="text.secondary">
                           Última actualización: {new Date(lastUpdatedTs).toLocaleTimeString()}
                         </Typography>
                       )}
