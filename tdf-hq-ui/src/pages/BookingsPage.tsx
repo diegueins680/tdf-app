@@ -177,6 +177,9 @@ export default function BookingsPage() {
   const [prefillNotice, setPrefillNotice] = useState(false);
   const [autoAssignMessage, setAutoAssignMessage] = useState('');
   const [template, setTemplate] = useState<string>('');
+  const [serviceLocked, setServiceLocked] = useState(false);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [duplicateStartInput, setDuplicateStartInput] = useState('');
   const toEventDate = (value: Date | string | null | undefined) => {
     if (!value) return null;
     if (value instanceof Date) return value;
@@ -191,14 +194,26 @@ export default function BookingsPage() {
     const start = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
     const end = DateTime.fromFormat(endInput, "yyyy-LL-dd'T'HH:mm", { zone });
     if (!start.isValid || !end.isValid) return [];
-    return events.filter((ev) => {
-      const evStart = toEventDate(ev.start);
-      const evEnd = toEventDate(ev.end);
-      if (!evStart || !evEnd) return false;
-      return start.toJSDate() < evEnd && end.toJSDate() > evStart;
+    const assigned = new Set(assignedRoomIds);
+    const isOverlap = (aStart: string, aEnd: string) => {
+      const s = DateTime.fromISO(aStart);
+      const e = DateTime.fromISO(aEnd);
+      if (!s.isValid || !e.isValid) return false;
+      return start < e && end > s;
+    };
+    const isActive = (status: string) => {
+      const low = status.toLowerCase();
+      return !(low.includes('cancel') || low.includes('no show'));
+    };
+    return bookings.filter((b) => {
+      if (!isActive(b.status ?? '')) return false;
+      if (editingId && b.bookingId === editingId) return false;
+      if (!isOverlap(b.startsAt, b.endsAt)) return false;
+      const roomIds = (b.resources ?? []).map((r) => r.brRoomId);
+      if (roomIds.length === 0) return false;
+      return roomIds.some((rid) => assigned.has(rid));
     });
-  }, [endInput, events, startInput, zone]);
-  const [serviceLocked, setServiceLocked] = useState(false);
+  }, [assignedRoomIds, bookings, editingId, endInput, startInput, zone]);
 
   const requiresEngineer = (svc: string) => {
     const lowered = svc.toLowerCase();
@@ -388,6 +403,38 @@ export default function BookingsPage() {
     setAutoAssignMessage('');
   };
 
+  const datetimeFormat = "yyyy-LL-dd'T'HH:mm";
+
+  const openDuplicateModal = () => {
+    const base = DateTime.fromFormat(startInput, datetimeFormat, { zone });
+    const fallback = DateTime.now().setZone(zone).plus({ days: 1 });
+    const suggested = base.isValid ? base.plus({ days: 7 }) : fallback;
+    setDuplicateStartInput(suggested.toFormat(datetimeFormat));
+    setDuplicateDialogOpen(true);
+  };
+
+  const confirmDuplicate = () => {
+    const newStart = DateTime.fromFormat(duplicateStartInput, datetimeFormat, { zone });
+    if (!newStart.isValid) {
+      setFormError('Elige una fecha/hora válida para duplicar.');
+      return;
+    }
+    const baseStart = DateTime.fromFormat(startInput, datetimeFormat, { zone });
+    const baseEnd = DateTime.fromFormat(endInput, datetimeFormat, { zone });
+    const durationMinutes =
+      baseStart.isValid && baseEnd.isValid
+        ? Math.max(15, Math.round(baseEnd.diff(baseStart, 'minutes').as('minutes')))
+        : 60;
+    const newEnd = newStart.plus({ minutes: durationMinutes });
+    setStartInput(newStart.toFormat(datetimeFormat));
+    setEndInput(newEnd.toFormat(datetimeFormat));
+    setMode('create');
+    setEditingId(null);
+    setFormError(null);
+    setPrefillNotice(false);
+    setDuplicateDialogOpen(false);
+  };
+
   const buildCombinedNotes = () => {
     const trimmed = notes.trim();
     // Keep notes purely for free text; engineer is now a first-class field.
@@ -461,6 +508,12 @@ export default function BookingsPage() {
     }
     if (DateTime.fromISO(endIso) <= DateTime.fromISO(startIso)) {
       setFormError('La hora de fin debe ser mayor que la de inicio.');
+      return;
+    }
+    if (conflicts.length > 0) {
+      const titles = conflicts.map((c) => c.title ?? 'otra reserva');
+      const list = titles.slice(0, 3).join(', ');
+      setFormError(`Conflicto de horario con: ${list}. Ajusta la hora o las salas.`);
       return;
     }
     if (!customerPartyId) {
@@ -550,6 +603,9 @@ export default function BookingsPage() {
     setStartInput(formatForInput(new Date(booking.startsAt)));
     setEndInput(formatForInput(new Date(booking.endsAt)));
     setAssignedRoomIds((booking.resources ?? []).map((r) => r.brRoomId));
+    const baseStart = DateTime.fromISO(booking.startsAt).setZone(zone);
+    const suggestedDuplicate = baseStart.isValid ? baseStart.plus({ days: 7 }) : DateTime.now().setZone(zone);
+    setDuplicateStartInput(suggestedDuplicate.toFormat("yyyy-LL-dd'T'HH:mm"));
     setDialogOpen(true);
   };
 
@@ -1061,6 +1117,11 @@ export default function BookingsPage() {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
+          {mode === 'edit' && (
+            <Button onClick={openDuplicateModal} color="inherit">
+              Duplicar
+            </Button>
+          )}
           <Button
             variant="contained"
             onClick={handleCreate}
@@ -1072,6 +1133,30 @@ export default function BookingsPage() {
               : mode === 'edit'
                 ? 'Actualizar'
                 : 'Crear sesión'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={duplicateDialogOpen} onClose={() => setDuplicateDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Duplicar sesión</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1.5}>
+            <TextField
+              label="Nuevo inicio"
+              type="datetime-local"
+              value={duplicateStartInput}
+              onChange={(e) => setDuplicateStartInput(e.target.value)}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+            <Typography variant="body2" color="text.secondary">
+              Mantendremos salas, cliente e ingeniero. Ajusta la hora final conservando la duración original.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDuplicateDialogOpen(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={confirmDuplicate}>
+            Aplicar
           </Button>
         </DialogActions>
       </Dialog>
