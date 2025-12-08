@@ -377,6 +377,8 @@ export default function BookingsPage() {
 
   const handleEventClick = (info: { event: { id: string; extendedProps?: { isCourse?: boolean } } }) => {
     if (info.event.extendedProps?.isCourse) {
+      setDialogOpen(false);
+      window.alert('Este bloque pertenece al curso de Producción Musical y es de solo lectura.');
       return;
     }
     const bookingId = Number.parseInt(info.event.id, 10);
@@ -408,8 +410,8 @@ export default function BookingsPage() {
     setDialogOpen(true);
   };
 
-  const handleEventDropOrResize = (arg: { event: { id: string; start: Date | null; end: Date | null; extendedProps?: Record<string, unknown> }; revert?: () => void }) => {
-    if (arg.event.extendedProps?.['isCourse']) {
+  const handleEventDropOrResize = (arg: { event: { id: string; start: Date | null; end: Date | null; extendedProps?: { isCourse?: boolean } }; revert?: () => void }) => {
+    if (arg.event.extendedProps?.isCourse) {
       arg.revert?.();
       return;
     }
@@ -459,12 +461,12 @@ export default function BookingsPage() {
           eventClick={handleEventClick}
           eventDrop={handleEventDropOrResize}
           eventResize={handleEventDropOrResize}
-          eventClassNames={(arg) => (arg.event.extendedProps?.['isCourse'] ? ['course-event'] : [])}
+          eventClassNames={(arg) => (arg.event.extendedProps?.isCourse ? ['course-event'] : [])}
           eventContent={(arg) => {
-            const isCourse = Boolean(arg.event.extendedProps?.['isCourse']);
-            const courseSubtitle = arg.event.extendedProps?.['courseSubtitle'] as string | undefined;
-            const priceText = arg.event.extendedProps?.['priceText'] as string | undefined;
-            const locationText = arg.event.extendedProps?.['locationText'] as string | undefined;
+            const isCourse = Boolean(arg.event.extendedProps?.isCourse);
+            const courseSubtitle = arg.event.extendedProps?.courseSubtitle as string | undefined;
+            const priceText = arg.event.extendedProps?.priceText as string | undefined;
+            const locationText = arg.event.extendedProps?.locationText as string | undefined;
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

@@ -35,6 +35,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ShareIcon from '@mui/icons-material/Share';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   MarketplaceCartDTO,
@@ -46,6 +47,11 @@ import type {
 import { Marketplace } from '../api/marketplace';
 import { formatLastSavedTimestamp, getOrderStatusMeta } from '../utils/marketplace';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
+import { Inventory } from '../api/inventory';
+import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import { deriveModulesFromRoles } from '../components/SidebarNav';
+import { useSession } from '../session/SessionContext';
+import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 
 interface PaypalButtonOptions {
   createOrder?: () => string;
@@ -113,10 +119,6 @@ const normalizePhone = (value: string) => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
-// Fallback to keep PayPal usable if the env var is missing in the build.
-const PAYPAL_CLIENT_ID_FALLBACK =
-  'AfPPualkpj5aWoweUi1hL7s94NUo9fZdsN8e6P7v0zftuWAuWJvdNm6aHK_fboeSnZetnTLnnoBesxQ2';
-
 const fireCartMetaEvent = () => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(CART_EVENT));
@@ -125,11 +127,27 @@ const fireCartMetaEvent = () => {
 
 export default function MarketplacePage() {
   const qc = useQueryClient();
-  const paypalClientId =
-    (import.meta.env['VITE_PAYPAL_CLIENT_ID'] as string | undefined)?.trim() ?? PAYPAL_CLIENT_ID_FALLBACK;
+  const { session } = useSession();
+  const modules = useMemo(() => {
+    const provided = session?.modules ?? [];
+    const fromRoles = deriveModulesFromRoles(session?.roles);
+    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+    if (baseSet.has('packages')) {
+      baseSet.add('ops');
+    }
+    if (baseSet.has('ops')) {
+      baseSet.add('packages');
+    }
+    return baseSet;
+  }, [session?.modules, session?.roles]);
+  const canManagePhotos = modules.has('ops') || modules.has('admin');
+  const paypalClientId = import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '';
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [copyToast, setCopyToast] = useState<string | null>(null);
+  const [photoDialogListing, setPhotoDialogListing] = useState<MarketplaceItemDTO | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [pendingPhotoUrl, setPendingPhotoUrl] = useState<string | null>(null);
   const [cartId, setCartId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem(CART_STORAGE_KEY);
@@ -449,6 +467,31 @@ export default function MarketplacePage() {
     onError: () => setPaypalError('No pudimos confirmar el pago. Intenta de nuevo.'),
   });
 
+  const updatePhotoMutation = useMutation({
+    mutationFn: ({ assetId, photoUrl }: { assetId: string; photoUrl: string | null }) =>
+      Inventory.update(assetId, { uPhotoUrl: photoUrl }),
+    onSuccess: (_asset, { assetId, photoUrl }) => {
+      const normalized = photoUrl ?? null;
+      qc.setQueryData<MarketplaceItemDTO[]>(['marketplace-listings'], (prev) =>
+        prev?.map((item) => (item.miAssetId === assetId ? { ...item, miPhotoUrl: normalized } : item)),
+      );
+      setSelectedListing((prev) =>
+        prev && prev.miAssetId === assetId ? { ...prev, miPhotoUrl: normalized } : prev,
+      );
+      setPhotoDialogListing((prev) =>
+        prev && prev.miAssetId === assetId ? { ...prev, miPhotoUrl: normalized } : prev,
+      );
+      setPendingPhotoUrl(null);
+      setPhotoError(null);
+      setToast(photoUrl ? 'Foto guardada para este equipo' : 'Foto eliminada');
+      void qc.invalidateQueries({ queryKey: ['marketplace-listings'] });
+    },
+    onError: (err) => {
+      setPhotoError(err instanceof Error ? err.message : 'No se pudo actualizar la foto.');
+      setPendingPhotoUrl(null);
+    },
+  });
+
   const listings = useMemo(() => listingsQuery.data ?? [], [listingsQuery.data]);
   const categories = useMemo(
     () => Array.from(new Set(listings.map((item) => item.miCategory).filter(Boolean))),
@@ -682,6 +725,38 @@ export default function MarketplacePage() {
   const closeDetail = () => {
     setDetailOpen(false);
     setSelectedListing(null);
+  };
+
+  const openPhotoDialog = (listing: MarketplaceItemDTO) => {
+    if (!canManagePhotos) return;
+    setPhotoDialogListing(listing);
+    setPhotoError(null);
+    setPendingPhotoUrl(null);
+  };
+
+  const closePhotoDialog = () => {
+    setPhotoDialogListing(null);
+    setPhotoError(null);
+    setPendingPhotoUrl(null);
+  };
+
+  const handlePhotoUploadComplete = (files: DriveFileInfo[]) => {
+    const listing = photoDialogListing;
+    if (!listing) return;
+    const file = files[0];
+    const link = file?.webViewLink ?? file?.webContentLink ?? (file?.id ? buildPublicContentUrl(file.id) : null);
+    if (!link) {
+      setPhotoError('No pudimos obtener el enlace público de Drive.');
+      return;
+    }
+    setPendingPhotoUrl(link);
+    updatePhotoMutation.mutate({ assetId: listing.miAssetId, photoUrl: link });
+  };
+
+  const handlePhotoRemoval = () => {
+    if (!photoDialogListing) return;
+    setPendingPhotoUrl(null);
+    updatePhotoMutation.mutate({ assetId: photoDialogListing.miAssetId, photoUrl: null });
   };
 
   const handleRestoreCart = () => {
@@ -1100,11 +1175,22 @@ export default function MarketplacePage() {
                             loading="lazy"
                           />
                         ) : (
-                          <Stack spacing={0.5} alignItems="center" py={3}>
+                          <Stack spacing={0.75} alignItems="center" py={2.5} px={1.5} textAlign="center">
                             <InventoryIcon sx={{ color: 'text.secondary' }} />
                             <Typography variant="caption" color="text.secondary">
                               Sin foto
                             </Typography>
+                            {canManagePhotos && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<AddPhotoAlternateIcon />}
+                                onClick={() => openPhotoDialog(item)}
+                                disabled={updatePhotoMutation.isPending}
+                              >
+                                Agregar foto
+                              </Button>
+                            )}
                           </Stack>
                         )}
                       </Box>
@@ -1529,6 +1615,74 @@ export default function MarketplacePage() {
           {copyToast}
         </Alert>
       </Snackbar>
+      <Dialog open={Boolean(photoDialogListing)} onClose={closePhotoDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Gestionar foto</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Stack spacing={0.25}>
+              <Typography variant="h6" fontWeight={700}>
+                {photoDialogListing?.miTitle ?? 'Equipo'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Sube una imagen y guardaremos el enlace público de Google Drive en el inventario y marketplace.
+              </Typography>
+            </Stack>
+            {photoDialogListing?.miPhotoUrl && (
+              <Box
+                component="img"
+                src={photoDialogListing.miPhotoUrl}
+                alt={photoDialogListing.miTitle}
+                sx={{ width: '100%', borderRadius: 1.5, maxHeight: 220, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }}
+              />
+            )}
+            <GoogleDriveUploadWidget
+              label="Subir imagen (Drive)"
+              helperText="JPG o PNG. El enlace quedará visible solo si el archivo es público."
+              onComplete={handlePhotoUploadComplete}
+              accept="image/*"
+              multiple={false}
+              dense
+            />
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Button
+                variant="text"
+                color="inherit"
+                onClick={handlePhotoRemoval}
+                disabled={
+                  updatePhotoMutation.isPending ||
+                  (!photoDialogListing?.miPhotoUrl && !pendingPhotoUrl)
+                }
+                startIcon={<DeleteIcon fontSize="small" />}
+              >
+                Quitar foto
+              </Button>
+              {updatePhotoMutation.isPending && (
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <CircularProgress size={16} />
+                  <Typography variant="caption" color="text.secondary">
+                    Guardando foto...
+                  </Typography>
+                </Stack>
+              )}
+              {pendingPhotoUrl && (
+                <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
+                  Enlace: {pendingPhotoUrl}
+                </Typography>
+              )}
+            </Stack>
+            {photoError && (
+              <Alert severity="error" onClose={() => setPhotoError(null)}>
+                {photoError}
+              </Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closePhotoDialog} color="inherit">
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog
         open={datafastDialogOpen}
         onClose={() => {

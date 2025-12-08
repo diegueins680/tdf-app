@@ -126,11 +126,6 @@ renderContractLatex StoredContract{..} =
         , "\\end{verbatim}"
         , "\\end{document}"
         ]
-    , TE.decodeUtf8 (BL.toStrict (A.encode scPayload))
-    , "\\end{verbatim}"
-    , "\\end{document}"
-    ]
->>>>>>> 43c8ae81b68a39473d5dd850d6dde03c433faee9
 
 extractKind :: A.Value -> Text
 extractKind val =
