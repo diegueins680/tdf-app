@@ -489,7 +489,10 @@ export default function BookingsPage() {
           eventClick={handleEventClick}
           eventDrop={handleEventDropOrResize}
           eventResize={handleEventDropOrResize}
-          eventClassNames={(arg) => (arg.event.extendedProps?.isCourse ? ['course-event'] : [])}
+          eventClassNames={(arg) => {
+            const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
+            return ext['isCourse'] ? ['course-event'] : [];
+          }}
           eventContent={(arg) => {
             const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
             const isCourse = Boolean(ext['isCourse']);
