@@ -114,11 +114,11 @@ function PaymentForm({
 
   useEffect(() => {
     if (selectedParty && lastPaymentForParty) {
-      setConcept(lastPaymentForParty.payConcept ?? concept);
+      setConcept((prev) => lastPaymentForParty.payConcept ?? prev);
       setMethod(lastPaymentForParty.payMethod);
       setCurrency(lastPaymentForParty.payCurrency);
       setReference(lastPaymentForParty.payReference ?? 'N/A');
-      setPeriod(lastPaymentForParty.payPeriod ?? period);
+      setPeriod((prev) => lastPaymentForParty.payPeriod ?? prev);
     }
   }, [selectedParty, lastPaymentForParty]);
 
@@ -161,9 +161,9 @@ function PaymentForm({
       pcOrderId: orderId.trim() ? Number(orderId) : null,
       pcInvoiceId: invoiceId.trim() ? Number(invoiceId) : null,
       pcAmountCents: Math.round(normalizedAmount * 100),
-      pcCurrency: currency.trim() || 'USD',
+      pcCurrency: currency.trim() ?? 'USD',
       pcMethod: method,
-      pcReference: reference.trim() || null,
+      pcReference: reference.trim() ?? null,
       pcPaidAt: paidAt,
       pcConcept: concept.trim() || 'Honorarios',
       pcPeriod: period.trim() || null,
