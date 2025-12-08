@@ -437,7 +437,7 @@ driveServer _ mAccessToken DriveUploadForm{..} = do
 
 countriesServer :: AppM [CountryDTO]
 countriesServer = do
-  countries <- runDb $ selectList [] [Asc CountryName]
+  countries <- runDB $ selectList [] [Asc CountryName]
   pure (map toCountryDTO countries)
 
 protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
