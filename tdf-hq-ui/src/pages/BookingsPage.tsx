@@ -180,15 +180,6 @@ export default function BookingsPage() {
   const [serviceLocked, setServiceLocked] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateStartInput, setDuplicateStartInput] = useState('');
-  const toEventDate = (value: Date | string | null | undefined) => {
-    if (!value) return null;
-    if (value instanceof Date) return value;
-    if (typeof value === 'string') {
-      const parsed = DateTime.fromISO(value);
-      if (parsed.isValid) return parsed.toJSDate();
-    }
-    return null;
-  };
   const conflicts = useMemo(() => {
     if (!startInput || !endInput) return [];
     const start = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
@@ -1090,7 +1081,7 @@ export default function BookingsPage() {
               onChange={(_, value) => setAssignedRoomIds(value.map((room) => room.roomId))}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip {...getTagProps({ index })} label={option.rName} />
+                  <Chip key={option.roomId} {...getTagProps({ index })} label={option.rName} />
                 ))
               }
               renderInput={(params) => (
@@ -1103,6 +1094,12 @@ export default function BookingsPage() {
               )}
               noOptionsText="No hay salas registradas"
             />
+            {conflicts.length > 0 && (
+              <Alert severity="warning" variant="outlined">
+                Conflicto con {conflicts.length} reserva(s):{' '}
+                {conflicts.slice(0, 3).map((c) => c.title ?? 'reserva').join(', ')}. Ajusta horario o salas.
+              </Alert>
+            )}
             {autoAssignMessage && (
               <Typography variant="caption" color="primary">
                 {autoAssignMessage}
