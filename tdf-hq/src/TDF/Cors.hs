@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Cors (corsPolicy) where
-import Network.Wai (Middleware)
+import Network.Wai (Middleware, Request, requestHeaders)
 import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
@@ -26,19 +26,30 @@ corsPolicy = do
       filtered = filter (not . null) normalized
       origins = nub (if null filtered then defaults else filtered)
       wildcard = any (== "*") origins
+      allowPagesDevWildcard = True
       originSetting =
         if wildcard
           then Nothing
           else Just (map BS.pack origins, True)
-      policy = simpleCorsResourcePolicy
+      basePolicy = simpleCorsResourcePolicy
         { corsOrigins            = originSetting
         , corsRequestHeaders     = "authorization":"content-type":"x-requested-with":simpleHeaders
         , corsMethods            = ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
         , corsRequireOrigin      = False
         , corsIgnoreFailures     = False
         }
+      allowAllPolicy = basePolicy { corsOrigins = Nothing }
+      pagesHost origin =
+        let lowered = BS.map toLower origin
+        in ".pages.dev" `BS.isSuffixOf` lowered || ".vercel.app" `BS.isSuffixOf` lowered
+      choosePolicy :: Request -> Maybe CorsResourcePolicy
+      choosePolicy req =
+        case lookup "origin" (requestHeaders req) of
+          Just o | allowPagesDevWildcard && pagesHost o -> Just allowAllPolicy
+          _ -> Just basePolicy
   putStrLn $ "[cors] origins=" <> (if wildcard then "*" else intercalate "," origins)
-  pure (cors (const (Just policy)))
+  putStrLn $ "[cors] pages.dev wildcard=" <> show allowPagesDevWildcard
+  pure (cors choosePolicy)
 
 -- | Split a comma-separated list into trimmed entries.
 splitComma :: String -> [String]
