@@ -108,13 +108,14 @@ const parseEnvNumber = (key: string): number | null => {
   return Number.isFinite(val) ? val : null;
 };
 
+type GlobalWithEnv = Window & { __ENV__?: Record<string, string | undefined> };
+
 const readRuntimeEnv = (key: string): string => {
   if (typeof window === 'undefined') return '';
-  const win = window as Window;
-  const fromGlobal = win[key as keyof Window];
-  if (typeof fromGlobal === 'string' && fromGlobal.trim()) return fromGlobal.trim();
+  const win = window as GlobalWithEnv;
   const fromEnv = win.__ENV__?.[key];
-  return typeof fromEnv === 'string' ? fromEnv.trim() : '';
+  if (typeof fromEnv === 'string' && fromEnv.trim()) return fromEnv.trim();
+  return '';
 };
 
 const normalizeText = (value: string) =>
@@ -152,10 +153,10 @@ export default function MarketplacePage() {
     return baseSet;
   }, [session?.modules, session?.roles]);
   const canManagePhotos = modules.has('ops') || modules.has('admin');
-  const paypalClientId = useMemo(() => {
-    const baked = (import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
-    const runtimeVal = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
-    return baked !== '' ? baked : (runtimeVal ?? '');
+  const paypalClientId = useMemo<string>(() => {
+    const baked = String(import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
+    const runtimeVal: string = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
+    return baked !== '' ? baked : runtimeVal;
   }, []);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);
