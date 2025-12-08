@@ -4,7 +4,7 @@ import Network.Wai (Middleware)
 import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
-import Data.Char (isSpace, toLower)
+import Data.Char (isSpace)
 import Control.Applicative ((<|>))
 import Data.List (dropWhileEnd, intercalate, nub)
 
@@ -15,9 +15,6 @@ corsPolicy = do
             <|> lookupEnv "ALLOW_ORIGIN"
             <|> lookupEnv "CORS_ALLOW_ORIGINS"
             <|> lookupEnv "CORS_ALLOW_ORIGIN"
-  allowAllEnv <- lookupEnv "ALLOW_ALL_ORIGINS"
-             <|> lookupEnv "ALLOW_ORIGINS_ALL"
-             <|> lookupEnv "CORS_ALLOW_ALL"
   let defaults =
         [ "http://localhost:5173"
         , "http://127.0.0.1:5173"
@@ -63,12 +60,3 @@ normalizeOrigin = dropTrailingSlash . trim
 
 trim :: String -> String
 trim = dropWhileEnd isSpace . dropWhile isSpace
-
-asBool :: String -> Bool
-asBool v =
-  case map toLower (dropWhile isSpace v) of
-    "true"  -> True
-    "1"     -> True
-    "yes"   -> True
-    "on"    -> True
-    _       -> False
