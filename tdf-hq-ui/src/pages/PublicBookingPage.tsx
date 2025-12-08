@@ -154,6 +154,11 @@ export default function PublicBookingPage() {
               <Typography variant="body2" color="text.secondary">
                 Horarios mostrados en <strong>{localTimezoneLabel()}</strong>.
               </Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                <Chip label="1. Agenda sin crear cuenta" size="small" variant="outlined" />
+                <Chip label="2. Confirmamos por email" size="small" variant="outlined" />
+                <Chip label="3. Coordinamos por WhatsApp si lo dejas" size="small" variant="outlined" />
+              </Stack>
             </Stack>
 
             <Grid container spacing={2}>
