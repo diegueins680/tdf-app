@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings } from '../api/bookings';
 import type { BookingDTO, PartyDTO } from '../api/types';
@@ -52,8 +52,8 @@ export default function BookingsPage() {
   const qc = useQueryClient();
   const zone = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
-  const rooms = roomsQuery.data ?? [];
-  const parties = partiesQuery.data ?? [];
+  const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
+  const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const statusOptions = [
     'Tentative',
     'Confirmed',
@@ -69,16 +69,66 @@ export default function BookingsPage() {
     }
     return parsed.toISO() ?? value;
   };
+  const formatEventRange = (start?: Date | null, end?: Date | null) => {
+    if (!start) return '';
+    const startStr = DateTime.fromJSDate(start).setZone(zone).toFormat('ccc d LLL, HH:mm');
+    if (!end) return startStr;
+    const endStr = DateTime.fromJSDate(end).setZone(zone).toFormat('HH:mm');
+    return `${startStr} - ${endStr}`;
+  };
+
+  const extractEngineerFromNotes = (raw?: string | null) => {
+    if (!raw) return { engineer: '', engineerId: null as number | null, notesBody: '' };
+    const lines = raw.split('\n');
+    let engineer = '';
+    let engineerId: number | null = null;
+    const remaining: string[] = [];
+    lines.forEach((line) => {
+      const match = /^\s*engineer:\s*(.*)$/i.exec(line);
+      if (match) {
+        const value = match[1]?.trim() ?? '';
+        engineer = value;
+        const idMatch = /^\s*\[(\d+)\]\s*(.*)$/.exec(value);
+        if (idMatch) {
+          engineerId = Number(idMatch[1]);
+          engineer = idMatch[2]?.trim() ?? '';
+        }
+      } else {
+        remaining.push(line);
+      }
+    });
+    return { engineer, engineerId, notesBody: remaining.join('\n').trim() };
+  };
 
   const events = useMemo(
     () =>
-      bookings.map((booking) => ({
-        id: String(booking.bookingId),
-        title: booking.title,
-        start: toIsoDate(booking.startsAt),
-        end: toIsoDate(booking.endsAt),
-        extendedProps: booking,
-      })),
+      bookings.map((booking) => {
+        const isCourse =
+          Boolean(booking.courseSlug) ||
+          (booking.bookingId ?? 0) < 0 ||
+          (booking.serviceType ?? '').toLowerCase().includes('curso');
+        const courseCapacity = booking.courseCapacity ?? undefined;
+        const courseRemaining = booking.courseRemaining ?? undefined;
+        const coursePrice = booking.coursePrice ?? undefined;
+        const courseLocation = booking.courseLocation ?? undefined;
+        const courseSubtitle = courseCapacity
+          ? `Cupos: ${Math.max(0, courseRemaining ?? 0)}/${courseCapacity}`
+          : null;
+        const priceText = coursePrice ? `USD ${Math.round(coursePrice)}` : null;
+        const locationText = courseLocation ?? null;
+        return {
+          id: String(booking.bookingId),
+          title: booking.title,
+          start: toIsoDate(booking.startsAt),
+          end: toIsoDate(booking.endsAt),
+          extendedProps: { ...booking, isCourse, courseSubtitle, priceText, locationText },
+          backgroundColor: isCourse ? 'rgba(59,130,246,0.22)' : undefined,
+          borderColor: isCourse ? 'rgba(59,130,246,0.4)' : undefined,
+          editable: !isCourse,
+          startEditable: !isCourse,
+          durationEditable: !isCourse,
+        };
+      }),
     [bookings],
   );
 
@@ -97,11 +147,24 @@ export default function BookingsPage() {
   const [customerName, setCustomerName] = useState('');
   const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Confirmed');
+  const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [courseNotice, setCourseNotice] = useState<string | null>(null);
+  const [courseReadOnlyInfo, setCourseReadOnlyInfo] = useState<{
+    title: string;
+    range: string;
+    subtitle?: string;
+    price?: string;
+    location?: string;
+    slug?: string;
+    shareUrl?: string;
+  } | null>(null);
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
 
   const requiresEngineer = (svc: string) => {
     const lowered = svc.toLowerCase();
-    return lowered.includes('recording') || lowered.includes('mix') || lowered.includes('master');
+    return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
+      lowered.includes(keyword),
+    );
   };
 
   const categorizeRooms = useMemo(() => {
@@ -131,7 +194,7 @@ export default function BookingsPage() {
 
   const pickFirst = (list: RoomDTO[]) => (list.length > 0 ? [list[0]!] : []);
 
-  const defaultRoomsForService = (svc: string): RoomDTO[] => {
+  const defaultRoomsForService = useCallback((svc: string): RoomDTO[] => {
     const lowered = svc.toLowerCase();
     if (lowered.includes('dj')) {
       const defaults = pickFirst(categorizeRooms.djBooth);
@@ -153,7 +216,7 @@ export default function BookingsPage() {
       return [...categorizeRooms.controlRoom.slice(0, 1), ...categorizeRooms.liveRoom.slice(0, 1)];
     }
     return categorizeRooms.other.slice(0, 1);
-  };
+  }, [categorizeRooms]);
 
   const assignedRooms = useMemo(
     () => rooms.filter((room) => assignedRoomIds.includes(room.roomId)),
@@ -168,6 +231,7 @@ export default function BookingsPage() {
     [parties],
   );
   const customerOptions = parties;
+  const missingEngineer = requiresEngineer(serviceType) && !(engineerName.trim() || engineerPartyId);
 
   useEffect(() => {
     if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
@@ -175,7 +239,7 @@ export default function BookingsPage() {
     if (defaults.length) {
       setAssignedRoomIds(defaults.map((room) => room.roomId));
     }
-  }, [serviceType, rooms, assignedRoomIds.length]);
+  }, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
 
   const formatForInput = (date: Date) =>
     DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm");
@@ -225,9 +289,15 @@ export default function BookingsPage() {
 
   const buildCombinedNotes = () => {
     const trimmed = notes.trim();
-    const engineerLabel = engineerPartyId
-      ? engineerOptions.find((opt) => opt.partyId === engineerPartyId)?.displayName ?? engineerName.trim()
-      : engineerName.trim();
+    const engineerLabel = (() => {
+      if (engineerPartyId) {
+        const display =
+          engineerOptions.find((opt) => opt.partyId === engineerPartyId)?.displayName ??
+          engineerName.trim();
+        return display ? `[${engineerPartyId}] ${display}` : `[${engineerPartyId}]`;
+      }
+      return engineerName.trim();
+    })();
     const engineerLine = engineerLabel ? `Engineer: ${engineerLabel}` : '';
     if (trimmed && engineerLine) return `${trimmed}\n${engineerLine}`;
     if (engineerLine) return engineerLine;
@@ -302,17 +372,7 @@ export default function BookingsPage() {
       setFormError('Asigna al menos una sala para la sesión.');
       return;
     }
-    if (requiresEngineer(serviceType) && !(engineerName.trim() || engineerPartyId)) {
-      setFormError('Las sesiones de recording, mixing o mastering requieren un ingeniero.');
-      return;
-    }
-    const combinedNotes = (() => {
-      const trimmed = notes.trim();
-      const engineerLine = engineerName.trim() ? `Engineer: ${engineerName.trim()}` : '';
-      if (trimmed && engineerLine) return `${trimmed}\n${engineerLine}`;
-      if (engineerLine) return engineerLine;
-      return trimmed || null;
-    })();
+    const combinedNotes = buildCombinedNotes();
     if (mode === 'edit' && editingId) {
       updateMutation.mutate({
         id: editingId,
@@ -332,20 +392,40 @@ export default function BookingsPage() {
     }
   };
 
-  const handleEventClick = (info: { event: { id: string; extendedProps?: unknown } }) => {
+  const handleEventClick = (info: { event: { id: string; title?: string; extendedProps?: Record<string, unknown> } }) => {
+    const ext = info.event.extendedProps ?? {};
+    if (ext['isCourse']) {
+      setDialogOpen(false);
+      const slug = (ext['courseSlug'] as string | undefined) || undefined;
+      const shareUrl =
+        slug && typeof window !== 'undefined' ? `${window.location.origin}/inscripcion/${slug}` : undefined;
+      setCourseReadOnlyInfo({
+        title: info.event.title ?? 'Bloque de curso',
+        range: formatEventRange((info.event as any).start, (info.event as any).end),
+        subtitle: (ext['courseSubtitle'] as string | undefined) || undefined,
+        price: (ext['priceText'] as string | undefined) || undefined,
+        location: (ext['locationText'] as string | undefined) || undefined,
+        slug,
+        shareUrl,
+      });
+      setCourseNotice('Los bloques del curso son de solo lectura. Revisa los detalles del horario aquí.');
+      return;
+    }
     const bookingId = Number.parseInt(info.event.id, 10);
     const booking = bookings.find((b) => b.bookingId === bookingId);
     if (!booking) return;
     setMode('edit');
     setEditingId(booking.bookingId);
     setTitle(booking.title ?? 'Sesión');
-    setNotes(booking.notes ?? '');
-    const parsedEngineer =
-      booking.notes && booking.notes.includes('Engineer:')
-        ? booking.notes.split('\n').find((line) => line.toLowerCase().includes('engineer:'))?.split(':').slice(1).join(':').trim() ?? ''
-        : '';
-    setEngineerName(parsedEngineer);
-    setEngineerPartyId(null);
+    const { engineer, engineerId, notesBody } = extractEngineerFromNotes(booking.notes);
+    setNotes(notesBody);
+    setEngineerName(engineer);
+    const matchedEngineerId =
+      engineerId ??
+      (engineer
+        ? parties.find((p) => p.displayName.toLowerCase() === engineer.toLowerCase())?.partyId ?? null
+        : null);
+    setEngineerPartyId(matchedEngineerId);
     setCustomerPartyId(booking.partyId ?? null);
     const customerLabel =
       booking.partyId && parties.find((p) => p.partyId === booking.partyId)?.displayName
@@ -360,24 +440,45 @@ export default function BookingsPage() {
     setDialogOpen(true);
   };
 
-  const handleEventDropOrResize = (arg: { event: { id: string; start: Date | null; end: Date | null } }) => {
+  const handleEventDropOrResize = (arg: { event: { id: string; start: Date | null; end: Date | null; extendedProps?: { isCourse?: boolean } }; revert?: () => void }) => {
+    if (arg.event.extendedProps?.isCourse) {
+      arg.revert?.();
+      return;
+    }
     const bookingId = Number.parseInt(arg.event.id, 10);
     if (!arg.event.start || !arg.event.end) return;
     const startIso = toUtcIso(formatForInput(arg.event.start));
     const endIso = toUtcIso(formatForInput(arg.event.end));
     if (!startIso || !endIso) return;
-    void updateMutation.mutate({
-      id: bookingId,
-      body: {
-        ubStartsAt: startIso,
-        ubEndsAt: endIso,
+    updateMutation.mutate(
+      {
+        id: bookingId,
+        body: {
+          ubStartsAt: startIso,
+          ubEndsAt: endIso,
+        },
       },
-    });
+      {
+        onError: (err) => {
+          setCalendarError(err instanceof Error ? err.message : 'No pudimos mover la sesión.');
+          arg.revert?.();
+        },
+        onSuccess: () => {
+          setCalendarError(null);
+        },
+      },
+    );
   };
 
   return (
     <>
       <Typography variant="h5" gutterBottom>Agenda</Typography>
+      {courseNotice && (
+        <Alert severity="info" sx={{ mb: 1 }} onClose={() => setCourseNotice(null)}>
+          {courseNotice}
+        </Alert>
+      )}
+      {calendarError && <Alert severity="warning" sx={{ mb: 1 }}>{calendarError}</Alert>}
       {bookingsQuery.isLoading && <div>Cargando...</div>}
       {bookingsQuery.error && <div>Error: {bookingsQuery.error.message}</div>}
       <Paper sx={{ p: 1 }}>
@@ -395,6 +496,43 @@ export default function BookingsPage() {
           eventClick={handleEventClick}
           eventDrop={handleEventDropOrResize}
           eventResize={handleEventDropOrResize}
+          eventClassNames={(arg) => {
+            const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
+            return ext['isCourse'] ? ['course-event'] : [];
+          }}
+          eventContent={(arg) => {
+            const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
+            const isCourse = Boolean(ext['isCourse']);
+            const courseSubtitle = (ext['courseSubtitle'] as string | undefined) || undefined;
+            const priceText = (ext['priceText'] as string | undefined) || undefined;
+            const locationText = (ext['locationText'] as string | undefined) || undefined;
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {isCourse && (
+                    <span
+                      style={{
+                        background: 'rgba(59,130,246,0.18)',
+                        color: '#0f172a',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                      }}
+                    >
+                      Curso
+                    </span>
+                  )}
+                  <span>{arg.event.title}</span>
+                </div>
+                {isCourse && (
+                  <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.8 }}>
+                    {[courseSubtitle, priceText, locationText].filter(Boolean).join(' · ')}
+                  </span>
+                )}
+              </div>
+            );
+          }}
           events={events}
           nowIndicator
           timeZone={zone}
@@ -406,12 +544,90 @@ export default function BookingsPage() {
         />
       </Paper>
 
+      <Dialog open={Boolean(courseReadOnlyInfo)} onClose={() => { setCourseReadOnlyInfo(null); setCourseNotice(null); }} maxWidth="xs" fullWidth>
+        <DialogTitle>Bloque de curso</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1}>
+            <Typography variant="subtitle1" fontWeight={700}>
+              {courseReadOnlyInfo?.title ?? 'Curso'}
+            </Typography>
+            {courseReadOnlyInfo?.range && (
+              <Typography variant="body2" color="text.secondary">
+                {courseReadOnlyInfo.range}
+              </Typography>
+            )}
+            {[courseReadOnlyInfo?.subtitle, courseReadOnlyInfo?.location, courseReadOnlyInfo?.price]
+              .filter(Boolean)
+              .map((line, idx) => (
+                <Typography key={idx} variant="body2">
+                  {line}
+                </Typography>
+              ))}
+            <Alert severity="info" variant="outlined">
+              Este bloque es de solo lectura. Para editarlo, ajusta el calendario del curso.
+            </Alert>
+            {(courseReadOnlyInfo?.slug || courseReadOnlyInfo?.shareUrl) && (
+              <Stack direction="row" spacing={1}>
+                {courseReadOnlyInfo?.slug && (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    component="a"
+                    href={`/inscripcion/${courseReadOnlyInfo.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Abrir landing
+                  </Button>
+                )}
+                {courseReadOnlyInfo?.shareUrl && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(courseReadOnlyInfo.shareUrl ?? '');
+                        setCourseNotice('Link copiado. Compártelo con estudiantes desde aquí.');
+                      } catch {
+                        setCourseNotice('No pudimos copiar el link. Intenta de nuevo.');
+                      }
+                    }}
+                  >
+                    Copiar link
+                  </Button>
+                )}
+              </Stack>
+            )}
+            <Button
+              variant="text"
+              size="small"
+              component="a"
+              href="/estudio/live-sessions"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Abrir gestión de cursos
+            </Button>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setCourseReadOnlyInfo(null); setCourseNotice(null); }} color="inherit">
+            Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Nueva sesión en el calendario</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} component="form" onSubmit={handleCreate}>
             {formError && <Alert severity="error">{formError}</Alert>}
             {roomsQuery.isLoading && <Alert severity="info">Cargando salas disponibles…</Alert>}
+            {missingEngineer && (
+              <Alert severity="warning">
+                Este servicio normalmente usa un ingeniero. Asigna uno o continúa bajo tu criterio.
+              </Alert>
+            )}
             <TextField
               label="Título"
               value={title}
@@ -495,12 +711,13 @@ export default function BookingsPage() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Ingeniero (requerido para recording/mixing/mastering)"
-                  required={requiresEngineer(serviceType)}
+                  label="Ingeniero (sugerido para recording/mixing/mastering)"
                   helperText={
                     engineerOptions.length === 0
                       ? 'No hay ingenieros en el catálogo de contactos.'
-                      : 'Selecciona un ingeniero del catálogo.'
+                      : requiresEngineer(serviceType)
+                        ? 'Recomendado para recording/mixing/mastering.'
+                        : 'Opcional.'
                   }
                 />
               )}

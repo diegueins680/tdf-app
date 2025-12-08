@@ -50,6 +50,9 @@ data CourseMetadata = CourseMetadata
   , price          :: Double
   , currency       :: Text
   , capacity       :: Int
+  , remaining      :: Int
+  , sessionStartHour :: Int
+  , sessionDurationHours :: Int
   , locationLabel  :: Text
   , locationMapUrl :: Text
   , daws           :: [Text]

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -33,9 +34,7 @@ function usePartiesMap() {
   });
   const byId = useMemo(() => {
     const map = new Map<number, PartyDTO>();
-    (partiesQuery.data ?? []).forEach((p) => {
-      map.set(p.partyId, p);
-    });
+    (partiesQuery.data ?? []).forEach((p) => map.set(p.partyId, p));
     return map;
   }, [partiesQuery.data]);
   return { partiesQuery, byId };
@@ -44,7 +43,7 @@ function usePartiesMap() {
 function formatParty(byId: Map<number, PartyDTO>, partyId: number) {
   const party = byId.get(partyId);
   if (!party) return `Party #${partyId}`;
-  return party.displayName || party.legalName || `Party #${partyId}`;
+  return party.displayName ?? party.legalName ?? `Party #${partyId}`;
 }
 
 export default function SocialPage() {
@@ -103,20 +102,35 @@ export default function SocialPage() {
     <Box>
       <Stack spacing={2} sx={{ mb: 2 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h4" fontWeight={800}>Red social</Typography>
+          <Typography variant="h4" fontWeight={800}>Conexiones</Typography>
           <Chip label={session?.partyId ? `Tu ID: ${session.partyId}` : 'Sin sesión'} size="small" />
         </Stack>
         <Typography color="text.secondary">
           Administra seguidores, seguidos y amigos mutuos. Usa el ID de perfil para agregar amigos.
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-          <TextField
-            label="Agregar amigo por ID"
-            placeholder="Ej: 123"
+          <Autocomplete
+            sx={{ minWidth: 260 }}
             size="small"
-            value={addId}
-            onChange={(e) => setAddId(e.target.value)}
-            sx={{ maxWidth: 220 }}
+            options={partiesQuery.data ?? []}
+            loading={partiesQuery.isLoading}
+            getOptionLabel={(option) => option.displayName ?? option.legalName ?? `Party #${option.partyId}`}
+            value={(() => {
+              const numeric = Number(addId);
+              if (!Number.isFinite(numeric)) return null;
+              return (partiesQuery.data ?? []).find((p) => p.partyId === numeric) ?? null;
+            })()}
+            onChange={(_, value) => setAddId(value ? String(value.partyId) : '')}
+            inputValue={addId}
+            onInputChange={(_, value) => setAddId(value)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Agregar amigo por contacto o ID"
+                placeholder="Busca un contacto o ingresa su ID"
+              />
+            )}
+            noOptionsText={partiesQuery.isFetching ? 'Cargando contactos…' : 'Sin coincidencias'}
           />
           <Button
             variant="contained"
@@ -141,7 +155,7 @@ export default function SocialPage() {
         <CardContent>
           <Tabs
             value={activeTab}
-            onChange={(_e, val) => setActiveTab(val)}
+            onChange={(_e, val: TabKey) => setActiveTab(val)}
             sx={{ mb: 2 }}
           >
             <Tab label={`Amigos (${friendsQuery.data?.length ?? 0})`} value="friends" />

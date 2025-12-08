@@ -277,7 +277,7 @@ export default function PaymentsPage() {
     queryFn: () => Parties.list(),
   });
 
-  const parties = partiesQuery.data ?? [];
+  const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
 
   const partyLookup = useMemo(() => {
     const map = new Map<number, PartyDTO>();

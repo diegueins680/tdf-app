@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Grid,
   Link,
+  Snackbar,
   IconButton,
   Stack,
   TextField,
@@ -29,6 +30,7 @@ import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
+import { Parties } from '../api/parties';
 import { useSession } from '../session/SessionContext';
 import { Link as RouterLink } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
@@ -59,7 +61,7 @@ function StatPill({ label, value }: { label: string; value: number }) {
 }
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
-  const { session } = useSession();
+  const { session, login } = useSession();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -95,6 +97,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     queryKey: ['fan-artists'],
     queryFn: Fans.listArtists,
   });
+  const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
 
   const profileQuery = useQuery({
     queryKey: ['fan-profile', viewerId],
@@ -139,6 +142,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [heroImageFileName, setHeroImageFileName] = useState<string>('');
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
   const [expandedFeatured, setExpandedFeatured] = useState<Set<number>>(() => new Set());
+  const [fanRoleToast, setFanRoleToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (profileQuery.data) {
@@ -198,6 +202,19 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       void qc.invalidateQueries({ queryKey: ['artist-profile', viewerId] });
     },
   });
+  const enableFanRoleMutation = useMutation({
+    mutationFn: async () => {
+      if (!session?.partyId) throw new Error('No encontramos tu cuenta para activar el rol Fan.');
+      await Parties.addRole(session.partyId, 'Fan');
+      const nextRoles = Array.from(new Set([...(session.roles ?? []), 'Fan']));
+      login({ ...session, roles: nextRoles });
+      await qc.invalidateQueries({ queryKey: ['fan-profile', viewerId] });
+      await qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
+    },
+    onSuccess: () => {
+      setFanRoleToast('Rol Fan activado. Refrescamos tu feed.');
+    },
+  });
 
   const followMutation = useMutation({
     mutationFn: (artistId: number) => Fans.follow(artistId),
@@ -221,38 +238,72 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     const roles = session?.roles?.map((r) => r.toLowerCase()) ?? [];
     return roles.some((role) => role.includes('admin') || role.includes('manager') || role.includes('label'));
   }, [session?.roles]);
+  const canSeeReleaseFeed = isFan || canManageReleases;
   const [releaseAudioMap, setReleaseAudioMap] = useState<Record<number, string>>({});
   const audioFileInputRef = useRef<HTMLInputElement | null>(null);
   const [pendingUploadRelease, setPendingUploadRelease] = useState<ReleaseFeedItem | null>(null);
   const [uploadingReleaseId, setUploadingReleaseId] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const followedArtistIds = useMemo(
-    () => follows.map((follow) => follow.ffArtistId).sort((a, b) => a - b),
-    [follows],
+  const [feedLimit, setFeedLimit] = useState(4);
+  interface TargetArtist {
+    id: number;
+    name: string;
+    spotifyUrl?: string | null;
+    youtubeUrl?: string | null;
+  }
+  const targetArtists = useMemo<TargetArtist[]>(() => {
+    if (isFan && hasFollows) {
+      return follows.map((follow) => ({
+        id: follow.ffArtistId,
+        name: follow.ffArtistName,
+        spotifyUrl: follow.ffSpotifyUrl ?? null,
+        youtubeUrl: follow.ffYoutubeUrl ?? null,
+      }));
+    }
+    if (canManageReleases) {
+      return artists.map((artist) => ({
+        id: artist.apArtistId,
+        name: artist.apDisplayName,
+        spotifyUrl:
+          artist.apSpotifyUrl ??
+          (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null),
+        youtubeUrl:
+          artist.apYoutubeUrl ??
+          (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null),
+      }));
+    }
+    return [];
+  }, [isFan, hasFollows, follows, canManageReleases, artists]);
+  const releaseArtistIds = useMemo(
+    () => targetArtists.map((artist) => artist.id).sort((a, b) => a - b),
+    [targetArtists],
   );
+  const hasReleaseTargets = targetArtists.length > 0;
 
   const streamingFallbacks = useMemo(() => {
     const map = new Map<number, { spotify?: string | null; youtube?: string | null }>();
-    follows.forEach((follow) => {
-      map.set(follow.ffArtistId, {
-        spotify: follow.ffSpotifyUrl,
-        youtube: follow.ffYoutubeUrl,
+    targetArtists.forEach((artist) => {
+      map.set(artist.id, {
+        spotify: artist.spotifyUrl ?? null,
+        youtube: artist.youtubeUrl ?? null,
       });
     });
     return map;
-  }, [follows]);
+  }, [targetArtists]);
 
-  type ReleaseFeedItem = ArtistReleaseDTO & { artistName: string };
+  interface ReleaseFeedItem extends ArtistReleaseDTO {
+    artistName: string;
+  }
   const releaseFeedQuery = useQuery({
-    queryKey: ['fan-release-feed', followedArtistIds],
-    enabled: isFan && follows.length > 0,
+    queryKey: ['fan-release-feed', releaseArtistIds, canSeeReleaseFeed],
+    enabled: canSeeReleaseFeed && targetArtists.length > 0,
     queryFn: async () => {
       const perArtist = await Promise.all(
-        follows.map(async (follow) => {
-          const releases = await Fans.getReleases(follow.ffArtistId);
+        targetArtists.map(async (artist) => {
+          const releases = await Fans.getReleases(artist.id);
           return releases.map((release) => ({
             ...release,
-            artistName: follow.ffArtistName,
+            artistName: artist.name,
           }));
         }),
       );
@@ -278,6 +329,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     });
     return map;
   }, [releaseFeed]);
+  useEffect(() => {
+    setFeedLimit((prev) => Math.min(prev, Math.max(releaseFeed.length, 4)));
+  }, [releaseFeed.length]);
+  const visibleFeed = releaseFeed.slice(0, feedLimit);
 
   const handleFollowToggle = (artistId: number, currentlyFollowing: boolean) => {
     if (!viewerId) return;
@@ -340,11 +395,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       streamingFallbacks.get(release.arArtistId)?.youtube ??
       null;
     if (!audioUrl) {
-      if (canManageReleases) {
-        handleUploadTrigger(release);
-      }
+      setUploadError('Este release todavía no tiene un stream adjunto. Sube el máster o pega un link.');
       return;
     }
+    setUploadError(null);
     window.dispatchEvent(
       new CustomEvent('tdf-radio-load-stream', {
         detail: {
@@ -431,7 +485,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     updateArtistProfileMutation.mutate(payload);
   };
 
-  const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
   const suggestedArtists = useMemo(() => {
     if (!artists.length) return [];
     const followed = new Set(follows.map((f) => f.ffArtistId));
@@ -462,7 +515,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         type="file"
         accept="audio/*"
         hidden
-        onChange={handleAudioFileChange}
+        onChange={(event) => {
+          void handleAudioFileChange(event);
+        }}
       />
       <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
         <Stack spacing={1}>
@@ -488,28 +543,34 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             <Card sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="h6">Novedades de tus artistas</Typography>
-                {isFan && <Chip label={`${releaseFeed.length} lanzamientos`} size="small" />}
+                {canSeeReleaseFeed && <Chip label={`${releaseFeed.length} lanzamientos`} size="small" />}
               </Stack>
               <Typography variant="body2" color="text.secondary">
                 Reproduce lanzamientos sin salir del hub: si hay enlaces de Spotify o YouTube los cargamos en el reproductor
                 embebido.
               </Typography>
-              {!isFan && (
+              {!canSeeReleaseFeed && (
                 <Alert severity="info">Inicia sesión con rol Fan/Customer para ver lanzamientos personalizados.</Alert>
               )}
-              {isFan && releaseFeedQuery.isLoading && (
+              {canSeeReleaseFeed && releaseFeedQuery.isLoading && (
                 <Box display="flex" justifyContent="center" py={3}>
                   <CircularProgress size={20} />
                 </Box>
               )}
-              {isFan && !releaseFeedQuery.isLoading && releaseFeed.length === 0 && (
+              {canSeeReleaseFeed && !releaseFeedQuery.isLoading && releaseFeed.length === 0 && (
                 <Alert severity="info" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Box sx={{ flexGrow: 1 }}>
-                    {hasFollows
-                      ? 'No hay lanzamientos recientes de los artistas que sigues. Vuelve pronto o revisa los perfiles.'
-                      : 'Sigue al menos un artista para ver drops recientes aquí.'}
+                    {hasReleaseTargets
+                      ? isFan
+                        ? hasFollows
+                          ? 'No hay lanzamientos recientes de los artistas que sigues. Vuelve pronto o revisa los perfiles.'
+                          : 'Sigue al menos un artista para ver drops recientes aquí.'
+                        : 'No hay lanzamientos aún. Adjunta streams o crea un release para verlo aquí.'
+                      : isFan
+                        ? 'Sigue al menos un artista para ver drops recientes aquí.'
+                        : 'No hay artistas disponibles para mostrar lanzamientos.'}
                   </Box>
-                  {hasFollows && canManageReleases && (
+                  {canManageReleases && (
                     <Button
                       component={RouterLink}
                       to="/label/releases"
@@ -524,20 +585,24 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               {uploadError && (
                 <Alert severity="warning">{uploadError}</Alert>
               )}
-              {isFan && releaseFeed.length > 0 && (
+              {canSeeReleaseFeed && releaseFeed.length > 0 && (
                 <Stack spacing={1.5}>
-                  {releaseFeed.slice(0, 4).map((release) => {
+                  {visibleFeed.map((release) => {
                     const cachedAudio = releaseAudioMap[release.arReleaseId];
                     const spotifyUrl =
                       cachedAudio ?? release.arSpotifyUrl ?? streamingFallbacks.get(release.arArtistId)?.spotify ?? null;
                     const youtubeUrl =
                       release.arYoutubeUrl ?? streamingFallbacks.get(release.arArtistId)?.youtube ?? null;
+                    const hasSpotify = Boolean(spotifyUrl);
+                    const hasYoutube = Boolean(youtubeUrl);
+                    const hasLinks = hasSpotify || hasYoutube;
                     const releaseWithFallback = {
                       ...release,
                       arSpotifyUrl: spotifyUrl,
                       arYoutubeUrl: youtubeUrl,
                     };
                     const releaseSources = buildReleaseStreamingSources(releaseWithFallback);
+                    const hasStream = releaseSources.length > 0;
                     return (
                       <Box
                         key={`${release.arArtistId}-${release.arReleaseId}`}
@@ -578,32 +643,80 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             />
                           </Box>
                         )}
-                        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<PlayArrowIcon />}
-                            endIcon={canManageReleases ? <CloudUploadIcon fontSize="small" /> : undefined}
-                            onClick={() => handlePlayRelease(release)}
-                            disabled={!spotifyUrl && !canManageReleases}
-                          >
-                            {uploadingReleaseId === release.arReleaseId ? 'Subiendo…' : 'Escuchar'}
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            component="a"
-                            href={youtubeUrl ?? undefined}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            disabled={!youtubeUrl}
-                          >
-                            Ver en YouTube
-                          </Button>
-                        </Stack>
+                        {!hasLinks && !canManageReleases && (
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                            Sin links de streaming todavía.
+                          </Typography>
+                        )}
+                        {(hasLinks || canManageReleases) && (
+                          <Stack direction="row" spacing={1} sx={{ mt: 1 }} alignItems="center">
+                            {hasLinks && (
+                              <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<PlayArrowIcon />}
+                                onClick={() => handlePlayRelease(release)}
+                                disabled={!hasStream || uploadingReleaseId === release.arReleaseId}
+                              >
+                                {uploadingReleaseId === release.arReleaseId ? 'Subiendo…' : 'Escuchar'}
+                              </Button>
+                            )}
+                            {!hasLinks && canManageReleases && (
+                              <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<CloudUploadIcon />}
+                                onClick={() => handleUploadTrigger(release)}
+                              >
+                                Adjuntar stream
+                              </Button>
+                            )}
+                            {hasYoutube && (
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                component="a"
+                                href={youtubeUrl ?? undefined}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Ver en YouTube
+                              </Button>
+                            )}
+                            {canManageReleases && (
+                              <GoogleDriveUploadWidget
+                                label="Subir audio (Drive)"
+                                helperText="Carga el máster de este release."
+                                accept="audio/*"
+                                multiple={false}
+                                dense
+                              />
+                            )}
+                          </Stack>
+                        )}
                       </Box>
                     );
                   })}
+                  {releaseFeed.length > feedLimit && (
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      Ver más lanzamientos
+                    </Button>
+                  )}
+                  {releaseFeed.length > 4 && feedLimit >= releaseFeed.length && (
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={() => setFeedLimit(4)}
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      Ver menos
+                    </Button>
+                  )}
                 </Stack>
               )}
             </Card>
@@ -688,9 +801,28 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Grid>
         </Grid>
 
-        {!isFan && session && (
-          <Alert severity="info">
-            Este usuario no tiene rol de Fan/Customer, por lo que no cargamos el perfil fan. Agrega el rol Fan para evitar errores 403 en esta sección.
+        {!isFan && !canManageReleases && session && (
+          <Alert
+            severity="info"
+            action={
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => enableFanRoleMutation.mutate()}
+                disabled={enableFanRoleMutation.isPending}
+              >
+                {enableFanRoleMutation.isPending ? 'Activando…' : 'Convertirme en fan'}
+              </Button>
+            }
+          >
+            Activa tu rol Fan para ver el feed y editar tu perfil. Lo aplicamos sólo a tu cuenta.
+            {enableFanRoleMutation.isError && (
+              <Typography variant="body2" color="error">
+                {enableFanRoleMutation.error instanceof Error
+                  ? enableFanRoleMutation.error.message
+                  : 'No pudimos activar el rol.'}
+              </Typography>
+            )}
           </Alert>
         )}
 
@@ -1184,6 +1316,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         </Grid>
       </Stack>
     </Box>
+    <Snackbar
+      open={Boolean(fanRoleToast)}
+      autoHideDuration={3000}
+      onClose={() => setFanRoleToast(null)}
+      message={fanRoleToast ?? ''}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    />
   );
 }
 function ProfileSectionCard({

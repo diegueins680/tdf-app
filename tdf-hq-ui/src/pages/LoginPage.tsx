@@ -46,6 +46,23 @@ import { buildSignupPayload, deriveEffectiveRoles, normalizeSignupRoles } from '
 
 type LoginTab = 'password' | 'token';
 
+const pickLandingPath = (roles: string[], modules?: string[]) => {
+  const lowerRoles = roles.map((r) => r.toLowerCase());
+  const lowerModules = (modules ?? []).map((m) => m.toLowerCase());
+  const hasRole = (...needles: string[]) => needles.some((needle) => lowerRoles.some((role) => role.includes(needle)));
+  const hasModule = (needle: string) => lowerModules.includes(needle);
+
+  if (hasRole('admin') || hasModule('admin')) return '/configuracion/roles-permisos';
+  if (hasRole('artist', 'artista')) return '/mi-artista';
+  if (hasRole('fan', 'customer') && !hasModule('crm') && !hasModule('scheduling')) return '/fans';
+  if (hasModule('scheduling')) return '/estudio/calendario';
+  if (hasModule('crm')) return '/crm/contactos';
+  if (hasModule('label')) return '/label/artistas';
+  if (hasModule('ops')) return '/operacion/inventario';
+  if (hasModule('invoicing')) return '/finanzas/pagos';
+  return '/inicio';
+};
+
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -176,9 +193,7 @@ export default function LoginPage() {
             ? ['admin']
             : ['staff'];
       const normalized = Array.from(new Set(baseRoles.map((r) => r.toLowerCase())));
-      if (!normalized.includes('fan')) {
-        normalized.push('fan');
-      }
+      const landingPath = pickLandingPath(normalized, modules);
 
       login(
         {
@@ -191,7 +206,7 @@ export default function LoginPage() {
         },
         { remember: rememberDevice },
       );
-      navigate('/crm/contactos', { replace: true });
+      navigate(landingPath, { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
       setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
@@ -284,6 +299,7 @@ export default function LoginPage() {
     try {
       const response = await signupMutation.mutateAsync(payload);
       const effectiveRoles = deriveEffectiveRoles(response.roles, selectedRoles);
+      const landingPath = pickLandingPath(effectiveRoles, response.modules);
       const shouldFollowArtists = selectedRoles.includes('Fan') && favoriteArtistIds.length > 0;
       const selectedFanArtistIds = favoriteArtistIds;
       login(
@@ -306,7 +322,7 @@ export default function LoginPage() {
           ),
         );
       }
-      navigate('/crm/contactos', { replace: true });
+      navigate(landingPath, { replace: true });
     } catch (err) {
       setSignupFeedback({
         type: 'error',
@@ -316,7 +332,8 @@ export default function LoginPage() {
   };
 
   if (session) {
-    return <Navigate to="/crm/contactos" replace />;
+    const landing = pickLandingPath(session.roles ?? [], session.modules);
+    return <Navigate to={landing} replace />;
   }
 
   return (

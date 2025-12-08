@@ -41,6 +41,8 @@ import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
+import           TDF.Contracts.API (ContractsAPI)
+import           TDF.DTO (CountryDTO)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -151,6 +153,8 @@ type FanPublicAPI =
 type RadioPublicAPI =
        "radio" :> "presence" :> Capture "partyId" Int64 :> Get '[JSON] (Maybe RadioPresenceDTO)
 
+type CountryAPI = "countries" :> Get '[JSON] [CountryDTO]
+
 type FanSecureAPI =
        "me" :> "profile" :>
          ( Get '[JSON] FanProfileDTO
@@ -193,6 +197,7 @@ type ProtectedAPI =
   :<|> CmsAdminAPI
   :<|> DriveAPI
   :<|> RadioAPI
+  :<|> CountryAPI
   :<|> "stubs"    :> FutureAPI
 
 type API =
@@ -213,6 +218,7 @@ type API =
   :<|> CmsPublicAPI
   :<|> "marketplace" :> MarketplaceAPI
   :<|> "label" :> LabelAPI
+  :<|> "contracts" :> ContractsAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> RadioPublicAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography, TextField, InputAdornment } from '@mui/material';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { Box, Button, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography, TextField, InputAdornment } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
@@ -19,7 +19,7 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-type NavGroupView = NavGroup & { restricted?: boolean };
+type NavGroupView = NavGroup & { restricted?: boolean; requiredModule?: string | null };
 
 export const NAV_GROUPS: NavGroup[] = [
   {
@@ -180,6 +180,22 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const [highlightIndex, setHighlightIndex] = useState<number>(-1);
   const searchRef = useRef<HTMLInputElement | null>(null);
 
+  const buildAccessMailto = useCallback(
+    (group: NavGroupView) => {
+      const module = group.requiredModule ?? 'acceso';
+      const subject = encodeURIComponent(`Acceso ${group.title} (${module})`);
+      const bodyLines = [
+        'Hola equipo, necesito acceso a esta sección.',
+        `Sección: ${group.title}`,
+        `Módulo: ${module}`,
+        session ? `Usuario: ${session.displayName} (${session.username})` : null,
+      ].filter(Boolean);
+      const body = encodeURIComponent(bodyLines.join('\n'));
+      return `mailto:soporte@tdf.com?subject=${subject}&body=${body}`;
+    },
+    [session],
+  );
+
   const modules = useMemo(() => {
     const provided = session?.modules ?? [];
     const fromRoles = deriveModulesFromRoles(session?.roles);
@@ -197,6 +213,9 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
 
   const allowedNavGroups = useMemo<NavGroupView[]>(() => {
     return NAV_GROUPS.map((group) => {
+      const requiredModule = group.items
+        .map((item) => pathRequiresModule(item.path))
+        .find((m) => m !== null && !modules.has(m));
       const filteredItems = group.items.filter((item) => {
         const required = pathRequiresModule(item.path);
         if (!required) return true;
@@ -207,7 +226,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         return required !== null && !modules.has(required);
       });
       const restricted = filteredItems.length === 0 && hadHidden;
-      return { ...group, items: filteredItems, restricted };
+      return { ...group, items: filteredItems, restricted, requiredModule };
     }).filter((group) => group.items.length > 0 || group.restricted);
   }, [modules]);
 
@@ -448,13 +467,20 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                     );
                   })}
                   {group.items.length === 0 && group.restricted && (
-                    <Typography
-                      variant="body2"
-                      sx={{ px: 3, py: 1.5, color: 'rgba(248,250,252,0.65)' }}
-                    >
-                      No tienes acceso a esta sección. Pide acceso a tu admin.
+                  <Stack spacing={1} sx={{ px: 3, py: 1.5 }}>
+                    <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.65)' }}>
+                      No tienes acceso a esta sección.
                     </Typography>
-                  )}
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      sx={{ color: '#cbd5e1', borderColor: 'rgba(248,250,252,0.3)', alignSelf: 'flex-start' }}
+                      href={buildAccessMailto(group)}
+                    >
+                      Solicitar acceso
+                    </Button>
+                  </Stack>
+                )}
                 </List>
               </Collapse>
             </Box>

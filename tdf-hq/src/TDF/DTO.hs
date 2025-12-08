@@ -118,6 +118,19 @@ data FanProfileUpdate = FanProfileUpdate
   } deriving (Show, Generic)
 instance FromJSON FanProfileUpdate
 
+data CountryDTO = CountryDTO
+  { countryCode :: Text
+  , countryName :: Text
+  } deriving (Show, Generic)
+instance ToJSON CountryDTO
+instance FromJSON CountryDTO
+
+toCountryDTO :: Entity Country -> CountryDTO
+toCountryDTO (Entity _ Country{..}) = CountryDTO
+  { countryCode = countryCode
+  , countryName = countryName
+  }
+
 data FanFollowDTO = FanFollowDTO
   { ffArtistId      :: Int64
   , ffArtistName    :: Text
@@ -260,6 +273,11 @@ data BookingDTO = BookingDTO
   , customerName      :: Maybe Text
   , partyDisplayName  :: Maybe Text
   , resources   :: [BookingResourceDTO]
+  , courseSlug        :: Maybe Text
+  , coursePrice       :: Maybe Double
+  , courseCapacity    :: Maybe Int
+  , courseRemaining   :: Maybe Int
+  , courseLocation    :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON BookingDTO
 

@@ -122,7 +122,14 @@ export default function CourseProductionLandingPage() {
   };
 
   const meta: CourseMetadata | undefined = metaQuery.data;
+  const remaining = meta?.remaining ?? undefined;
+  const capacity = meta?.capacity;
+  const isFull = remaining !== undefined && remaining <= 0;
   const whatsappHref = meta?.whatsappCtaUrl ?? 'https://wa.me/?text=INSCRIBIRME%20Curso%20Produccion%20Musical';
+  const seatsLabel =
+    capacity !== undefined
+      ? `Cupos: ${remaining !== undefined ? Math.max(0, remaining) : capacity}/${capacity}`
+      : undefined;
   const patchedSessions = useMemo(() => {
     const targetDates = ['2025-12-13', '2025-12-20', '2025-12-27', '2026-01-03'];
     if (!meta?.sessions?.length) return undefined;
@@ -161,6 +168,8 @@ export default function CourseProductionLandingPage() {
             whatsappHref={whatsappHref}
             loading={metaQuery.isLoading}
             heroOverride={cmsPayload?.hero}
+            seatsLabel={seatsLabel}
+            isFull={isFull}
           />
           <Grid container spacing={3}>
             <Grid item xs={12} md={7}>
@@ -170,6 +179,8 @@ export default function CourseProductionLandingPage() {
               <FormCard
                 formRef={formRef}
                 onSubmit={handleSubmit}
+                remaining={remaining}
+                capacity={capacity}
                 fullName={fullName}
                 email={email}
                 phone={phone}
@@ -181,6 +192,8 @@ export default function CourseProductionLandingPage() {
                 submitting={submitting}
                 submitted={submitted}
                 submitError={submitError}
+                isFull={isFull}
+                whatsappHref={whatsappHref}
               />
               <InstructorCard />
               {meta?.locationLabel && meta?.locationMapUrl && (
@@ -259,12 +272,16 @@ function Hero({
   onPrimaryClick,
   whatsappHref,
   heroOverride,
+  seatsLabel,
+  isFull,
 }: {
   meta?: CourseMetadata;
   loading: boolean;
   onPrimaryClick: () => void;
   whatsappHref: string;
   heroOverride?: HeroOverrides;
+  seatsLabel?: string;
+  isFull: boolean;
 }) {
   const title = loading ? 'Cargando curso…' : heroOverride?.title ?? meta?.title ?? 'Curso de Producción Musical';
   const subtitle = loading ? 'Preparando detalles...' : heroOverride?.subtitle ?? meta?.subtitle ?? 'Presencial · 4 sábados · 16 horas';
@@ -296,15 +313,26 @@ function Hero({
           <Typography variant="h4" fontWeight={800} sx={{ color: '#cbd5f5' }}>
             {loading ? '—' : `$${meta?.price?.toFixed(0) ?? '150'} ${meta?.currency ?? 'USD'}`}
           </Typography>
-          <Typography variant="body1" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-            {loading ? '—' : `Cupo: ${meta?.capacity ?? 10} personas · ${meta?.format ?? 'Presencial'}`}
-          </Typography>
+          <Stack spacing={0.5}>
+            <Typography variant="body1" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+              {loading ? '—' : `${meta?.format ?? 'Presencial'} · ${meta?.duration ?? '16 horas'}`}
+            </Typography>
+            {seatsLabel && (
+              <Typography
+                variant="body2"
+                sx={{ color: isFull ? '#fcd34d' : '#93c5fd', fontWeight: 700, letterSpacing: 0.2 }}
+              >
+                {isFull ? 'Cupos agotados' : seatsLabel}
+              </Typography>
+            )}
+          </Stack>
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <Button
             variant="contained"
             size="large"
             onClick={onPrimaryClick}
+            disabled={isFull}
             sx={{
               bgcolor: '#7c3aed',
               color: '#f8fafc',
@@ -312,7 +340,7 @@ function Hero({
               boxShadow: '0 14px 30px rgba(124,58,237,0.35)',
             }}
           >
-            {primaryCta}
+            {isFull ? 'Cupos agotados' : primaryCta}
           </Button>
           <Button
             variant="outlined"
@@ -449,6 +477,10 @@ function FormCard({
   submitting,
   submitted,
   submitError,
+  remaining,
+  capacity,
+  isFull,
+  whatsappHref,
 }: {
   formRef: RefObject<HTMLDivElement>;
   onSubmit: (evt: React.FormEvent<HTMLFormElement>) => void;
@@ -463,7 +495,18 @@ function FormCard({
   submitting: boolean;
   submitted: boolean;
   submitError: string | null;
+  remaining?: number;
+  capacity?: number;
+  isFull: boolean;
+  whatsappHref: string;
 }) {
+  const disableInputs = submitted || isFull;
+  const seatsText =
+    capacity !== undefined
+      ? remaining !== undefined
+        ? `Quedan ${Math.max(0, remaining)} de ${capacity} cupos.`
+        : `Cupo para ${capacity} personas.`
+      : null;
   return (
     <Card
       ref={formRef}
@@ -479,8 +522,28 @@ function FormCard({
             Reserva tu cupo
           </Typography>
           <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-            Déjanos tus datos y te enviaremos los pasos para completar el pago. Cupos limitados a 10 personas.
+            Déjanos tus datos y te enviaremos los pasos para completar el pago. Cupos limitados.
           </Typography>
+          {seatsText && (
+            <Alert
+              severity={isFull ? 'warning' : 'info'}
+              action={
+                <Button
+                  size="small"
+                  startIcon={<WhatsAppIcon />}
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="outlined"
+                  color={isFull ? 'warning' : 'info'}
+                >
+                  {isFull ? 'Avísame' : 'Escríbenos'}
+                </Button>
+              }
+            >
+              {isFull ? 'Cupos agotados. Escríbenos y te avisamos si se libera un cupo.' : seatsText}
+            </Alert>
+          )}
           <Box component="form" onSubmit={onSubmit}>
             <Stack spacing={1.5}>
               <TextField
@@ -488,7 +551,7 @@ function FormCard({
                 required
                 value={fullName}
                 onChange={(e) => onFullNameChange(e.target.value)}
-                disabled={submitted}
+                disabled={disableInputs}
                 fullWidth
                 InputProps={{
                   sx: {
@@ -511,7 +574,7 @@ function FormCard({
                 required
                 value={email}
                 onChange={(e) => onEmailChange(e.target.value)}
-                disabled={submitted}
+                disabled={disableInputs}
                 fullWidth
                 InputProps={{
                   sx: {
@@ -532,7 +595,7 @@ function FormCard({
                 label="WhatsApp (opcional)"
                 value={phone}
                 onChange={(e) => onPhoneChange(e.target.value)}
-                disabled={submitted}
+                disabled={disableInputs}
                 fullWidth
                 InputProps={{
                   sx: {
@@ -553,7 +616,7 @@ function FormCard({
                 label="¿Cómo te enteraste del curso? (opcional)"
                 value={howHeard}
                 onChange={(e) => onHowHeardChange(e.target.value)}
-                disabled={submitted}
+                disabled={disableInputs}
                 fullWidth
                 multiline
                 minRows={2}
@@ -575,11 +638,11 @@ function FormCard({
               <Button
                 type="submit"
                 variant="contained"
-                disabled={submitted || submitting}
+                disabled={disableInputs || submitting}
                 startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <CelebrationIcon />}
                 sx={{ mt: 1 }}
               >
-                {submitted ? 'Inscripción recibida' : 'Enviar inscripción'}
+                {isFull ? 'Cupos agotados' : submitted ? 'Inscripción recibida' : 'Enviar inscripción'}
               </Button>
             </Stack>
           </Box>

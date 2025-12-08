@@ -11,8 +11,10 @@ import {
   DialogTitle,
   Grid,
   LinearProgress,
+  CircularProgress,
   MenuItem,
   Paper,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -24,6 +26,7 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { Bookings } from '../api/bookings';
 import type {
   ClassSessionDTO,
   ClassSessionUpdate,
@@ -71,6 +74,14 @@ const statusMeta: Record<StatusKey, { label: string; color: string; bg: string; 
     border: 'rgba(139,92,246,0.35)',
     icon: <EventAvailableIcon fontSize="small" />,
   },
+};
+const statusOptions: StatusKey[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
+const bookingStatusMap: Record<StatusKey, string> = {
+  programada: 'Confirmed',
+  'por-confirmar': 'Tentative',
+  cancelada: 'Cancelled',
+  realizada: 'Completed',
+  reprogramada: 'Confirmed',
 };
 
 const toLocalInput = (iso?: string | null) => {
@@ -172,6 +183,9 @@ export default function TrialLessonsPage() {
   const students = studentsQuery.data ?? [];
 
   const [formError, setFormError] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
+  const [statusPendingId, setStatusPendingId] = useState<number | null>(null);
+  const [statusToast, setStatusToast] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [studentDialogOpen, setStudentDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ClassSessionDTO | null>(null);
@@ -183,6 +197,7 @@ export default function TrialLessonsPage() {
     startAt: string;
     endAt: string;
     notes: string;
+    status: StatusKey;
   }>({
     studentId: null,
     teacherId: null,
@@ -191,6 +206,7 @@ export default function TrialLessonsPage() {
     startAt: '',
     endAt: '',
     notes: '',
+    status: 'programada',
   });
 
   const applyRangePreset = (pastDays: number, futureDays: number) => {
@@ -218,6 +234,7 @@ export default function TrialLessonsPage() {
       startAt: startLocal,
       endAt: toLocalInput(addMinutes(now.toISOString(), 45)),
       notes: '',
+      status: 'programada',
     });
     setDialogOpen(true);
   };
@@ -233,6 +250,7 @@ export default function TrialLessonsPage() {
       startAt: toLocalInput(cls.startAt),
       endAt: toLocalInput(cls.endAt),
       notes: cls.notes ?? '',
+      status: normalizedStatus(cls.status),
     });
     setDialogOpen(true);
   };
@@ -273,6 +291,7 @@ export default function TrialLessonsPage() {
 
   const handleSubmit = async () => {
     setFormError(null);
+    setListError(null);
     const { studentId, teacherId, subjectId, roomId, startAt, endAt, notes } = form;
     if (!studentId || !teacherId || !subjectId || !roomId || !startAt || !endAt) {
       setFormError('Completa estudiante, profesor, materia, sala y horario.');
@@ -294,6 +313,10 @@ export default function TrialLessonsPage() {
           notes: notes.trim() || undefined,
         };
         await updateMutation.mutateAsync({ id: editing.classSessionId, patch });
+        if (normalizedStatus(editing.status) !== form.status) {
+          await syncStatus(editing, form.status, form.notes);
+          void qc.invalidateQueries({ queryKey: ['trial-class-sessions'] });
+        }
       } else {
         await createMutation.mutateAsync(basePayload);
       }
@@ -304,11 +327,57 @@ export default function TrialLessonsPage() {
     }
   };
 
+  const syncStatus = async (cls: ClassSessionDTO, nextStatus: StatusKey, notesOverride?: string) => {
+    // Mirror status to booking if existe; otherwise fall back to attendance flag.
+    const bookingId = cls.bookingId;
+    if (!bookingId && nextStatus !== 'realizada') {
+      throw new Error('Esta clase no tiene una reserva asociada; agrega una antes de cambiar el estado.');
+    }
+    if (nextStatus === 'realizada') {
+      if (bookingId) {
+        await Bookings.update(bookingId, { ubStatus: bookingStatusMap[nextStatus] });
+      }
+      await Trials.attendClassSession(cls.classSessionId, {
+        attended: true,
+        notes: (notesOverride ?? cls.notes ?? '').trim() || undefined,
+      });
+      return;
+    }
+    if (!bookingId) return;
+    const ubStatus = bookingStatusMap[nextStatus];
+    if (ubStatus) {
+      await Bookings.update(bookingId, { ubStatus });
+    }
+  };
+
+  const statusMutation = useMutation({
+    mutationFn: async (params: { cls: ClassSessionDTO; nextStatus: StatusKey }) => {
+      setStatusPendingId(params.cls.classSessionId);
+      await syncStatus(params.cls, params.nextStatus);
+    },
+    onSuccess: (_, variables) => {
+      setListError(null);
+      setStatusToast(`Estado actualizado: ${statusMeta[variables.nextStatus].label}`);
+      void qc.invalidateQueries({ queryKey: ['trial-class-sessions'] });
+    },
+    onError: (error) => {
+      const msg = error instanceof Error ? error.message : 'No pudimos actualizar el estado.';
+      setListError(msg);
+    },
+    onSettled: () => {
+      setStatusPendingId(null);
+    },
+  });
+
   const data = classesQuery.data ?? [];
   const loading = classesQuery.isLoading || subjectsQuery.isLoading || teachersQuery.isLoading || roomsQuery.isLoading || studentsQuery.isLoading;
 
   const normalizedStatus = (status: string): StatusKey =>
     (['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'].includes(status) ? status : 'programada') as StatusKey;
+
+  const handleQuickStatus = (cls: ClassSessionDTO, nextStatus: StatusKey) => {
+    statusMutation.mutate({ cls, nextStatus });
+  };
 
   const chipFilters = (
     <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -438,6 +507,11 @@ export default function TrialLessonsPage() {
               {classesQuery.error instanceof Error ? classesQuery.error.message : 'Error al cargar clases.'}
             </Alert>
           )}
+          {listError && (
+            <Alert severity="warning">
+              {listError}
+            </Alert>
+          )}
           {data.length === 0 && !loading && (
             <Typography color="text.secondary">No hay clases de prueba para este filtro.</Typography>
           )}
@@ -448,6 +522,7 @@ export default function TrialLessonsPage() {
               const subject = subjects.find((s) => s.subjectId === cls.subjectId);
               const room = rooms.find((r) => r.roomId === cls.roomId);
               const student = students.find((p) => p.studentId === cls.studentId);
+              const rowPending = statusPendingId === cls.classSessionId;
               return (
                 <Paper
                   key={cls.classSessionId}
@@ -487,9 +562,38 @@ export default function TrialLessonsPage() {
                         </Typography>
                       )}
                     </Box>
-                    <Button variant="outlined" size="small" onClick={() => openEditDialog(cls)}>
-                      Editar
-                    </Button>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Button variant="outlined" size="small" onClick={() => openEditDialog(cls)}>
+                        Editar
+                      </Button>
+                      <Button
+                        variant="text"
+                        size="small"
+                        startIcon={
+                          rowPending
+                            ? <CircularProgress size={14} />
+                            : <CheckCircleIcon fontSize="small" />
+                        }
+                        onClick={() => handleQuickStatus(cls, 'realizada')}
+                        disabled={rowPending || normalizedStatus(cls.status) === 'realizada'}
+                      >
+                        Realizada
+                      </Button>
+                      <Button
+                        variant="text"
+                        size="small"
+                        color="inherit"
+                        startIcon={
+                          rowPending
+                            ? <CircularProgress size={14} />
+                            : <CancelIcon fontSize="small" />
+                        }
+                        onClick={() => handleQuickStatus(cls, 'cancelada')}
+                        disabled={rowPending || normalizedStatus(cls.status) === 'cancelada'}
+                      >
+                        Cancelar
+                      </Button>
+                    </Stack>
                   </Stack>
                 </Paper>
               );
@@ -497,6 +601,14 @@ export default function TrialLessonsPage() {
           </Stack>
         </Stack>
       </Paper>
+
+      <Snackbar
+        open={Boolean(statusToast)}
+        autoHideDuration={3000}
+        onClose={() => setStatusToast(null)}
+        message={statusToast ?? ''}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
 
       <Dialog open={dialogOpen} onClose={closeDialog} fullWidth maxWidth="sm">
         <DialogTitle>{editing ? 'Editar clase de prueba' : 'Nueva clase de prueba'}</DialogTitle>
@@ -551,6 +663,20 @@ export default function TrialLessonsPage() {
               {rooms.map((r) => (
                 <MenuItem key={r.roomId} value={r.roomId}>
                   {r.rName}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              label="Estado"
+              value={form.status}
+              onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value as StatusKey }))}
+              helperText="Se sincroniza con la reserva asociada cuando exista."
+              fullWidth
+            >
+              {statusOptions.map((st) => (
+                <MenuItem key={st} value={st}>
+                  {statusMeta[st].label}
                 </MenuItem>
               ))}
             </TextField>

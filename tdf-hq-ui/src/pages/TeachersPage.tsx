@@ -26,6 +26,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import type { TrialSlot, TrialSubject, TeacherDTO, ClassSessionDTO } from '../api/trials';
 import { Trials } from '../api/trials';
+import { Parties } from '../api/parties';
 
 type ClassStatus = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
 
@@ -233,6 +234,24 @@ const buildTeachersFromDTO = (teachers: TeacherDTO[]): TeacherProfile[] => {
   }));
 };
 
+const buildTeachersFromParties = (parties: { partyId: number; displayName: string; roles?: string[] }[]): TeacherProfile[] => {
+  if (!parties.length) return [];
+  const palette = ['#2563eb', '#0ea5e9', '#22c55e', '#f59e0b', '#8b5cf6', '#14b8a6'];
+  const isTeacher = (roles?: string[]) =>
+    (roles ?? []).some((r) => r.toLowerCase() === 'teacher');
+
+  return parties
+    .filter((p) => isTeacher(p.roles))
+    .map((p, idx) => ({
+      id: p.partyId,
+      name: p.displayName,
+      subjects: [],
+      headline: 'Profesor',
+      focus: 'Rol Teacher asignado',
+      color: palette[idx % palette.length],
+    }));
+};
+
 const buildClassesFromSlots = (slots: TrialSlot[], subjectMap: Map<number, string>): ClassRow[] => {
   if (!slots.length) return [];
   const statuses: ClassStatus[] = ['por-confirmar', 'programada', 'programada', 'realizada', 'cancelada'];
@@ -287,6 +306,11 @@ export default function TeachersPage() {
     queryKey: ['trial-teachers'],
     queryFn: Trials.listTeachers,
   });
+  const teacherPartiesQuery = useQuery({
+    queryKey: ['party-teachers'],
+    queryFn: Parties.list,
+    enabled: !teachersQuery.isLoading && ((teachersQuery.data ?? []).length === 0),
+  });
   const slotsQuery = useQuery({
     queryKey: ['trial-slots-teachers'],
     queryFn: () => Trials.listSlots(),
@@ -299,8 +323,17 @@ export default function TeachersPage() {
   const subjectMap = useMemo(() => new Map(subjects.map((s) => [s.subjectId, s.name])), [subjects]);
 
   const teachersFromDTO = useMemo(() => buildTeachersFromDTO(teachersQuery.data ?? []), [teachersQuery.data]);
+  const teachersFromParties = useMemo(
+    () => buildTeachersFromParties(teacherPartiesQuery.data ?? []),
+    [teacherPartiesQuery.data],
+  );
   const teachersFromSlots = useMemo(() => buildTeachersFromSlots(slotsQuery.data ?? []), [slotsQuery.data]);
-  const teachers = teachersFromDTO.length ? teachersFromDTO : teachersFromSlots;
+
+  const teachers: TeacherProfile[] = useMemo(() => {
+    if (teachersFromDTO.length) return teachersFromDTO;
+    if (teachersFromParties.length) return teachersFromParties;
+    return teachersFromSlots;
+  }, [teachersFromDTO, teachersFromParties, teachersFromSlots]);
   const usingDemoTeachers = teachers.length === 0;
 
   const classesFromSlots = useMemo(() => buildClassesFromSlots(slotsQuery.data ?? [], subjectMap), [slotsQuery.data, subjectMap]);
@@ -378,7 +411,12 @@ export default function TeachersPage() {
   );
   const history = teacherClasses.filter((c) => c.status === 'realizada' || c.status === 'cancelada');
 
-  const loading = subjectsQuery.isLoading || slotsQuery.isLoading || teachersQuery.isLoading || teacherClassesQuery.isFetching;
+  const loading =
+    subjectsQuery.isLoading ||
+    slotsQuery.isLoading ||
+    teachersQuery.isLoading ||
+    teacherPartiesQuery.isFetching ||
+    teacherClassesQuery.isFetching;
   const canEditSubjects = Boolean(selectedTeacherId) && !usingDemoTeachers;
 
   const updateSubjectsMutation = useMutation({
@@ -519,11 +557,17 @@ export default function TeachersPage() {
                             <Typography variant="body2" color="text.secondary">
                               {teacher.headline ?? 'Profesor'}
                             </Typography>
-                            <Stack direction="row" spacing={0.5} mt={0.5} flexWrap="wrap">
-                              {teacher.subjects.map((sid) => (
-                                <Chip key={sid} label={subjectMap.get(sid) ?? `Materia ${sid}`} size="small" variant="outlined" />
-                              ))}
-                            </Stack>
+                            {teacher.subjects.length > 0 ? (
+                              <Stack direction="row" spacing={0.5} mt={0.5} flexWrap="wrap">
+                                {teacher.subjects.map((sid) => (
+                                  <Chip key={sid} label={subjectMap.get(sid) ?? `Materia ${sid}`} size="small" variant="outlined" />
+                                ))}
+                              </Stack>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                Sin materias asignadas
+                              </Typography>
+                            )}
                           </Box>
                         </Stack>
                       </CardActionArea>
@@ -551,16 +595,22 @@ export default function TeachersPage() {
                         </Typography>
                       )}
                       {selectedTeacher.focus && (
+                      <Typography variant="body2" color="text.secondary">
+                        {selectedTeacher.focus}
+                      </Typography>
+                    )}
+                    <Stack direction="row" spacing={0.5} mt={1} flexWrap="wrap">
+                      {selectedTeacher.subjects.length > 0 ? (
+                        selectedTeacher.subjects.map((sid) => (
+                          <Chip key={sid} label={subjectMap.get(sid) ?? `Materia ${sid}`} size="small" />
+                        ))
+                      ) : (
                         <Typography variant="body2" color="text.secondary">
-                          {selectedTeacher.focus}
+                          Sin materias asignadas
                         </Typography>
                       )}
-                      <Stack direction="row" spacing={0.5} mt={1} flexWrap="wrap">
-                        {selectedTeacher.subjects.map((sid) => (
-                          <Chip key={sid} label={subjectMap.get(sid) ?? `Materia ${sid}`} size="small" />
-                        ))}
-                      </Stack>
-                    </Box>
+                    </Stack>
+                  </Box>
                     <Stack spacing={1} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
                       <Chip
                         label={`${upcoming.length} próximas`}
@@ -641,7 +691,9 @@ export default function TeachersPage() {
                       Clases y estado
                     </Typography>
                     {teacherClasses.length === 0 && (
-                      <Typography color="text.secondary">No hay clases para este profesor con el filtro actual.</Typography>
+                      <Typography color="text.secondary">
+                        No hay clases para este profesor con el filtro actual. Ajusta las fechas o agenda una clase nueva.
+                      </Typography>
                     )}
                     {teacherClasses.map((row) => {
                       const meta = statusMeta[row.status];
