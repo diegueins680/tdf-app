@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -32,8 +33,10 @@ export default function CalendarSyncPage() {
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [appliedRemoteConfig, setAppliedRemoteConfig] = useState(false);
+  const [autoExchanging, setAutoExchanging] = useState(false);
 
   const trimmedCalendarId = calendarId.trim();
+  const location = useLocation();
 
   const formatForInput = useCallback(
     (dt: DateTime) => dt.setZone(zone).toFormat("yyyy-LL-dd'T'HH:mm"),
@@ -254,6 +257,24 @@ export default function CalendarSyncPage() {
     setAccountEmail('');
     setCalendarHistory([]);
   };
+
+  // Auto-handle OAuth redirect ?code=... so users don't paste manually
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const codeParam = params.get('code');
+    const calendarParam = params.get('calendarId');
+    if (!codeParam || autoExchanging) return;
+    setAutoExchanging(true);
+    setCode(codeParam);
+    if (calendarParam) setCalendarId(calendarParam);
+    setShowValidation(true);
+    exchangeMutation.mutate(
+      { code: codeParam, calendarId: calendarParam ?? trimmedCalendarId || 'primary' },
+      {
+        onSettled: () => setAutoExchanging(false),
+      },
+    );
+  }, [autoExchanging, exchangeMutation, location.search, trimmedCalendarId]);
 
   useEffect(() => {
     if (!configQuery.isSuccess || appliedRemoteConfig) return;

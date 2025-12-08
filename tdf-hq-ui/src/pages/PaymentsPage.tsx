@@ -77,6 +77,7 @@ function PaymentForm({
   const [concept, setConcept] = useState<string>('Honorarios');
   const [period, setPeriod] = useState<string>(toPeriod(new Date().toISOString()));
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
+  const [attachmentName, setAttachmentName] = useState<string>('');
   const [invoiceId, setInvoiceId] = useState<string>('');
   const [orderId, setOrderId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +123,7 @@ function PaymentForm({
       setAmount('');
       setReference('N/A');
       setAttachmentUrl('');
+      setAttachmentName('');
       onCreated();
     },
     onError: (err) => setError(err.message),
@@ -319,13 +321,46 @@ function PaymentForm({
             />
           </Grid>
           <Grid item xs={12}>
-            <TextField
-              label="URL de respaldo (opcional)"
-              fullWidth
-              value={attachmentUrl}
-              onChange={(e) => setAttachmentUrl(e.target.value)}
-              placeholder="Link a comprobante o carpeta"
-            />
+            <Stack spacing={1}>
+              <Button
+                variant="outlined"
+                component="label"
+                size="small"
+              >
+                {attachmentName ? `Adjunto: ${attachmentName}` : 'Subir comprobante (PDF/imagen)'}
+                <input
+                  type="file"
+                  hidden
+                  accept="application/pdf,image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 4 * 1024 * 1024) {
+                      setError('El archivo supera 4MB. Sube un comprobante más ligero.');
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const result = reader.result;
+                      if (typeof result === 'string') {
+                        setAttachmentUrl(result);
+                        setAttachmentName(file.name);
+                        setError(null);
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </Button>
+              <TextField
+                label="URL de respaldo (opcional)"
+                fullWidth
+                value={attachmentUrl}
+                onChange={(e) => setAttachmentUrl(e.target.value)}
+                placeholder="Link a comprobante o carpeta"
+                helperText="Puedes subir un archivo o pegar un enlace."
+              />
+            </Stack>
           </Grid>
         </Grid>
         {error && (
