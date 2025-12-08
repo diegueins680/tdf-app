@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings } from '../api/bookings';
-import type { BookingDTO, PartyDTO } from '../api/types';
+import type { BookingDTO, PartyCreate, PartyDTO } from '../api/types';
 import {
   Typography,
   Paper,
@@ -50,7 +50,7 @@ export default function BookingsPage() {
     staleTime: 5 * 60 * 1000,
   });
   const qc = useQueryClient();
-  const zone = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
+  const zone = (import.meta.env['VITE_TZ'] as string | undefined) ?? 'America/Guayaquil';
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
   const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
@@ -103,6 +103,7 @@ export default function BookingsPage() {
   const events = useMemo(
     () =>
       bookings.map((booking) => {
+        const engineerMeta = extractEngineerFromNotes(booking.notes);
         const isCourse =
           Boolean(booking.courseSlug) ||
           (booking.bookingId ?? 0) < 0 ||
@@ -121,7 +122,15 @@ export default function BookingsPage() {
           title: booking.title,
           start: toIsoDate(booking.startsAt),
           end: toIsoDate(booking.endsAt),
-          extendedProps: { ...booking, isCourse, courseSubtitle, priceText, locationText },
+          extendedProps: {
+            ...booking,
+            isCourse,
+            courseSubtitle,
+            priceText,
+            locationText,
+            engineerName: engineerMeta.engineer,
+            engineerId: engineerMeta.engineerId,
+          },
           backgroundColor: isCourse ? 'rgba(59,130,246,0.22)' : undefined,
           borderColor: isCourse ? 'rgba(59,130,246,0.4)' : undefined,
           editable: !isCourse,
@@ -158,6 +167,9 @@ export default function BookingsPage() {
     slug?: string;
     shareUrl?: string;
   } | null>(null);
+  const [createContactOpen, setCreateContactOpen] = useState(false);
+  const [createContactForm, setCreateContactForm] = useState({ name: '', email: '', phone: '' });
+  const [createContactError, setCreateContactError] = useState<string | null>(null);
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
 
   const requiresEngineer = (svc: string) => {
@@ -232,6 +244,18 @@ export default function BookingsPage() {
   );
   const customerOptions = parties;
   const missingEngineer = requiresEngineer(serviceType) && !(engineerName.trim() || engineerPartyId);
+  const createPartyMutation = useMutation({
+    mutationFn: (payload: PartyCreate) => Parties.create(payload),
+    onSuccess: (party) => {
+      setCustomerPartyId(party.partyId);
+      setCustomerName(party.displayName);
+      setCreateContactOpen(false);
+      setCreateContactForm({ name: '', email: '', phone: '' });
+      setCreateContactError(null);
+      void qc.invalidateQueries({ queryKey: ['parties'] });
+    },
+    onError: (err) => setCreateContactError(err instanceof Error ? err.message : 'No se pudo crear el contacto.'),
+  });
 
   useEffect(() => {
     if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
@@ -301,18 +325,21 @@ export default function BookingsPage() {
     const engineerLine = engineerLabel ? `Engineer: ${engineerLabel}` : '';
     if (trimmed && engineerLine) return `${trimmed}\n${engineerLine}`;
     if (engineerLine) return engineerLine;
-    return trimmed || null;
+    return trimmed === '' ? null : trimmed;
   };
 
   const createMutation = useMutation({
     mutationFn: () =>
       Bookings.create({
-        cbTitle: title.trim() || 'Bloque de estudio',
+        cbTitle: title.trim() === '' ? 'Bloque de estudio' : title.trim(),
         cbStartsAt: toUtcIso(startInput) ?? '',
         cbEndsAt: toUtcIso(endInput) ?? '',
         cbStatus: status,
         cbNotes: buildCombinedNotes(),
-        cbServiceType: serviceType.trim() || null,
+        cbServiceType: (() => {
+          const trimmed = serviceType.trim();
+          return trimmed === '' ? null : trimmed;
+        })(),
         cbPartyId: customerPartyId,
         cbResourceIds: assignedRoomIds,
       }),
@@ -374,11 +401,12 @@ export default function BookingsPage() {
     }
     const combinedNotes = buildCombinedNotes();
     if (mode === 'edit' && editingId) {
+      const trimmedService = serviceType.trim();
       updateMutation.mutate({
         id: editingId,
         body: {
           ubTitle: title.trim(),
-          ubServiceType: serviceType.trim() || null,
+          ubServiceType: trimmedService === '' ? null : trimmedService,
           ubNotes: combinedNotes,
           ubStatus: status,
           ubStartsAt: startIso,
@@ -392,19 +420,27 @@ export default function BookingsPage() {
     }
   };
 
-  const handleEventClick = (info: { event: { id: string; title?: string; extendedProps?: Record<string, unknown> } }) => {
+  const handleEventClick = (info: {
+    event: {
+      id: string;
+      title?: string;
+      extendedProps?: Record<string, unknown>;
+      start?: Date | null;
+      end?: Date | null;
+    };
+  }) => {
     const ext = info.event.extendedProps ?? {};
     if (ext['isCourse']) {
       setDialogOpen(false);
-      const slug = (ext['courseSlug'] as string | undefined) || undefined;
+      const slug = (ext['courseSlug'] as string | undefined) ?? undefined;
       const shareUrl =
         slug && typeof window !== 'undefined' ? `${window.location.origin}/inscripcion/${slug}` : undefined;
       setCourseReadOnlyInfo({
         title: info.event.title ?? 'Bloque de curso',
-        range: formatEventRange((info.event as any).start, (info.event as any).end),
-        subtitle: (ext['courseSubtitle'] as string | undefined) || undefined,
-        price: (ext['priceText'] as string | undefined) || undefined,
-        location: (ext['locationText'] as string | undefined) || undefined,
+        range: formatEventRange(info.event.start ?? null, info.event.end ?? null),
+        subtitle: (ext['courseSubtitle'] as string | undefined) ?? undefined,
+        price: (ext['priceText'] as string | undefined) ?? undefined,
+        location: (ext['locationText'] as string | undefined) ?? undefined,
         slug,
         shareUrl,
       });
@@ -503,9 +539,10 @@ export default function BookingsPage() {
           eventContent={(arg) => {
             const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
             const isCourse = Boolean(ext['isCourse']);
-            const courseSubtitle = (ext['courseSubtitle'] as string | undefined) || undefined;
-            const priceText = (ext['priceText'] as string | undefined) || undefined;
-            const locationText = (ext['locationText'] as string | undefined) || undefined;
+            const courseSubtitle = (ext['courseSubtitle'] as string | undefined) ?? undefined;
+            const priceText = (ext['priceText'] as string | undefined) ?? undefined;
+            const locationText = (ext['locationText'] as string | undefined) ?? undefined;
+            const engineerLabel = (ext['engineerName'] as string | undefined) ?? undefined;
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -528,6 +565,11 @@ export default function BookingsPage() {
                 {isCourse && (
                   <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.8 }}>
                     {[courseSubtitle, priceText, locationText].filter(Boolean).join(' · ')}
+                  </span>
+                )}
+                {engineerLabel && (
+                  <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.85 }}>
+                    Ingeniero: {engineerLabel}
                   </span>
                 )}
               </div>
@@ -558,15 +600,15 @@ export default function BookingsPage() {
             )}
             {[courseReadOnlyInfo?.subtitle, courseReadOnlyInfo?.location, courseReadOnlyInfo?.price]
               .filter(Boolean)
-              .map((line, idx) => (
-                <Typography key={idx} variant="body2">
+              .map((line) => (
+                <Typography key={line} variant="body2">
                   {line}
                 </Typography>
               ))}
             <Alert severity="info" variant="outlined">
               Este bloque es de solo lectura. Para editarlo, ajusta el calendario del curso.
             </Alert>
-            {(courseReadOnlyInfo?.slug || courseReadOnlyInfo?.shareUrl) && (
+            {Boolean(courseReadOnlyInfo?.slug ?? courseReadOnlyInfo?.shareUrl) && (
               <Stack direction="row" spacing={1}>
                 {courseReadOnlyInfo?.slug && (
                   <Button
@@ -584,13 +626,15 @@ export default function BookingsPage() {
                   <Button
                     variant="outlined"
                     size="small"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(courseReadOnlyInfo.shareUrl ?? '');
-                        setCourseNotice('Link copiado. Compártelo con estudiantes desde aquí.');
-                      } catch {
-                        setCourseNotice('No pudimos copiar el link. Intenta de nuevo.');
-                      }
+                    onClick={() => {
+                      void (async () => {
+                        try {
+                          await navigator.clipboard.writeText(courseReadOnlyInfo.shareUrl ?? '');
+                          setCourseNotice('Link copiado. Compártelo con estudiantes desde aquí.');
+                        } catch {
+                          setCourseNotice('No pudimos copiar el link. Intenta de nuevo.');
+                        }
+                      })();
                     }}
                   >
                     Copiar link
@@ -613,6 +657,63 @@ export default function BookingsPage() {
         <DialogActions>
           <Button onClick={() => { setCourseReadOnlyInfo(null); setCourseNotice(null); }} color="inherit">
             Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={createContactOpen} onClose={() => { if (!createPartyMutation.isPending) setCreateContactOpen(false); }} maxWidth="xs" fullWidth>
+        <DialogTitle>Nuevo contacto</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <TextField
+              label="Nombre completo"
+              value={createContactForm.name}
+              onChange={(e) => setCreateContactForm((prev) => ({ ...prev, name: e.target.value }))}
+              required
+            />
+            <TextField
+              label="Correo"
+              type="email"
+              value={createContactForm.email}
+              onChange={(e) => setCreateContactForm((prev) => ({ ...prev, email: e.target.value }))}
+            />
+            <TextField
+              label="Teléfono"
+              value={createContactForm.phone}
+              onChange={(e) => setCreateContactForm((prev) => ({ ...prev, phone: e.target.value }))}
+            />
+            {createContactError && <Alert severity="error">{createContactError}</Alert>}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setCreateContactOpen(false);
+              setCreateContactError(null);
+            }}
+            disabled={createPartyMutation.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              const name = createContactForm.name.trim();
+              if (!name) {
+                setCreateContactError('Agrega un nombre para el contacto.');
+                return;
+              }
+              const payload: PartyCreate = {
+                cDisplayName: name,
+                cIsOrg: false,
+                cPrimaryEmail: createContactForm.email.trim() || null,
+                cPrimaryPhone: createContactForm.phone.trim() || null,
+              };
+              createPartyMutation.mutate(payload);
+            }}
+            disabled={createPartyMutation.isPending}
+          >
+            Crear y asignar
           </Button>
         </DialogActions>
       </Dialog>
@@ -664,6 +765,17 @@ export default function BookingsPage() {
               )}
               noOptionsText="Sin clientes en el catálogo"
             />
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => {
+                setCreateContactError(null);
+                setCreateContactOpen(true);
+              }}
+              sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
+            >
+              Crear contacto rápido
+            </Button>
             <TextField
               label="Inicio"
               type="datetime-local"
@@ -773,7 +885,7 @@ export default function BookingsPage() {
               onChange={(_, value) => setAssignedRoomIds(value.map((room) => room.roomId))}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip label={option.rName} {...getTagProps({ index })} />
+                  <Chip key={option.roomId} label={option.rName} {...getTagProps({ index })} />
                 ))
               }
               renderInput={(params) => (

@@ -476,10 +476,10 @@ export default function MarketplacePage() {
         prev?.map((item) => (item.miAssetId === assetId ? { ...item, miPhotoUrl: normalized } : item)),
       );
       setSelectedListing((prev) =>
-        prev && prev.miAssetId === assetId ? { ...prev, miPhotoUrl: normalized } : prev,
+        prev?.miAssetId === assetId ? { ...prev, miPhotoUrl: normalized } : prev,
       );
       setPhotoDialogListing((prev) =>
-        prev && prev.miAssetId === assetId ? { ...prev, miPhotoUrl: normalized } : prev,
+        prev?.miAssetId === assetId ? { ...prev, miPhotoUrl: normalized } : prev,
       );
       setPendingPhotoUrl(null);
       setPhotoError(null);

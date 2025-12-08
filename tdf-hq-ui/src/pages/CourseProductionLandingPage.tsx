@@ -123,13 +123,9 @@ export default function CourseProductionLandingPage() {
 
   const meta: CourseMetadata | undefined = metaQuery.data;
   const remaining = meta?.remaining ?? undefined;
-  const capacity = meta?.capacity;
   const isFull = remaining !== undefined && remaining <= 0;
   const whatsappHref = meta?.whatsappCtaUrl ?? 'https://wa.me/?text=INSCRIBIRME%20Curso%20Produccion%20Musical';
-  const seatsLabel =
-    capacity !== undefined
-      ? `Cupos: ${remaining !== undefined ? Math.max(0, remaining) : capacity}/${capacity}`
-      : undefined;
+  const seatsLabel = isFull ? 'Cupos agotados' : 'Cupos limitados';
   const patchedSessions = useMemo(() => {
     const targetDates = ['2025-12-13', '2025-12-20', '2025-12-27', '2026-01-03'];
     if (!meta?.sessions?.length) return undefined;
@@ -179,8 +175,6 @@ export default function CourseProductionLandingPage() {
               <FormCard
                 formRef={formRef}
                 onSubmit={handleSubmit}
-                remaining={remaining}
-                capacity={capacity}
                 fullName={fullName}
                 email={email}
                 phone={phone}
@@ -477,8 +471,6 @@ function FormCard({
   submitting,
   submitted,
   submitError,
-  remaining,
-  capacity,
   isFull,
   whatsappHref,
 }: {
@@ -495,18 +487,11 @@ function FormCard({
   submitting: boolean;
   submitted: boolean;
   submitError: string | null;
-  remaining?: number;
-  capacity?: number;
   isFull: boolean;
   whatsappHref: string;
 }) {
   const disableInputs = submitted || isFull;
-  const seatsText =
-    capacity !== undefined
-      ? remaining !== undefined
-        ? `Quedan ${Math.max(0, remaining)} de ${capacity} cupos.`
-        : `Cupo para ${capacity} personas.`
-      : null;
+  const seatsText = isFull ? 'Cupos agotados. Escríbenos y te avisamos si se libera un cupo.' : 'Cupos limitados.';
   return (
     <Card
       ref={formRef}

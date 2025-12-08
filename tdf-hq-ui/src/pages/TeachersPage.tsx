@@ -386,7 +386,6 @@ export default function TeachersPage() {
     [teacherClassesQuery.data],
   );
   const classes = classesFromApi.length ? classesFromApi : classesFromSlots;
-  const usingDemoClasses = classes.length === 0;
 
   const selectedTeacher = filteredTeachers.find((t) => t.id === selectedTeacherId) ?? null;
   useEffect(() => {

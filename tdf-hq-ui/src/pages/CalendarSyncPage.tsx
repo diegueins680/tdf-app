@@ -75,7 +75,11 @@ export default function CalendarSyncPage() {
     const storedConnected = window.localStorage.getItem('calendar-sync.connected');
     const storedLastSync = window.localStorage.getItem('calendar-sync.lastSyncAt');
 
-    if (storedId) setCalendarId(storedId);
+    if (storedId) {
+      setCalendarId(storedId);
+    } else {
+      setCalendarId('primary');
+    }
     if (storedConnected) setConnectedCalendar(storedConnected);
     if (storedLastSync) setLastSyncAt(storedLastSync);
 
@@ -185,6 +189,14 @@ export default function CalendarSyncPage() {
   const calendarIdError = showValidation && !trimmedCalendarId ? 'Ingresa el Calendar ID o usa "primary".' : '';
   const codeError = showValidation && !code.trim() ? 'Pega el code que te devuelve Google tras consentir.' : '';
 
+  const handleQuickConnect = () => {
+    if (!calendarId.trim()) {
+      setCalendarId('primary');
+    }
+    setShowValidation(true);
+    authUrlMutation.mutate();
+  };
+
   const handleSaveTokens = () => {
     setShowValidation(true);
     if (!trimmedCalendarId || !code.trim()) return;
@@ -219,8 +231,12 @@ export default function CalendarSyncPage() {
           </Typography>
           <Typography color="text.secondary">
             Conecta tu calendario y sincroniza eventos a la base de datos para usarlos en reportes, agenda interna y
-            posteriores automatizaciones. Usa los pasos: 1) abre la URL de consentimiento, 2) pega el code, 3) sincroniza.
+            posteriores automatizaciones. Usa los pasos: 1) conectar con Google, 2) pegar el code, 3) guardar tokens, 4) sincronizar.
           </Typography>
+          <Alert severity="info" variant="outlined">
+            Tip rápido: el botón &quot;Conectar con Google&quot; abre el consentimiento y asume Calendar ID &quot;primary&quot;. Luego pega el
+            code que devuelve Google, guarda tokens y ejecuta sincronizar.
+          </Alert>
           <Stack direction="row" spacing={1} flexWrap="wrap">
             <Chip
               color={connectedCalendar ? 'success' : 'default'}
@@ -291,12 +307,20 @@ export default function CalendarSyncPage() {
           </Grid>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <Button
+              variant="contained"
+              startIcon={<LinkIcon />}
+              onClick={handleQuickConnect}
+              disabled={authUrlMutation.isPending}
+            >
+              Conectar con Google
+            </Button>
+            <Button
               variant="outlined"
               startIcon={<LinkIcon />}
               onClick={() => authUrlMutation.mutate()}
               disabled={authUrlMutation.isPending}
             >
-              Obtener URL de consentimiento
+              Reabrir URL de consentimiento
             </Button>
             <TextField
               label="Code (pegado desde Google)"
@@ -304,7 +328,7 @@ export default function CalendarSyncPage() {
               onChange={(e) => setCode(e.target.value)}
               sx={{ minWidth: 320 }}
               error={Boolean(codeError)}
-              helperText={codeError || 'Se genera al aceptar en la ventana de Google.'}
+              helperText={codeError || 'Pega el code mostrado por Google tras aceptar el consentimiento.'}
             />
             <Button
               variant="contained"
