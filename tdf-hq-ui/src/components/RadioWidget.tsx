@@ -404,7 +404,17 @@ export default function RadioWidget() {
       if (s.country) opts.add(s.country);
       if (s.region) opts.add(s.region);
     });
-    return Array.from(opts).slice(0, 16);
+    const cleaned = Array.from(opts).filter((val) => {
+      const trimmed = val.trim();
+      if (!trimmed) return false;
+      if (trimmed.length > 24) return false;
+      const lower = trimmed.toLowerCase();
+      if (lower.includes('pull request')) return false;
+      if (trimmed.startsWith('http')) return false;
+      if (/[0-9#]/.test(trimmed)) return false;
+      return /^[\p{L}\s\/\-\.'&,]+$/u.test(trimmed);
+    });
+    return cleaned.slice(0, 16);
   }, [allStations]);
   const genreOptions = useMemo(() => {
     const opts = new Set<string>();
