@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS lead (
   created_at        TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_lead_token ON lead(token);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_lead_token ON lead(token) WHERE token IS NOT NULL;
 
 -- Audit log table for tracking all WhatsApp messages sent/received.
 -- This table is created for future implementation of message auditing.

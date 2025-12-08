@@ -47,9 +47,16 @@ APP_PORT=8080
 RESET_DB=false
 SEED_DB=true
 SEED_TRIGGER_TOKEN=tdf-bootstrap-seed
+DRIVE_ACCESS_TOKEN=         # Google access token with drive.file scope (for /drive/upload)
+DRIVE_UPLOAD_FOLDER_ID=     # Optional Google Drive folder for uploads
 ```
 
 `RESET_DB=true` will drop and recreate the `public` schema on boot; `SEED_DB=false` skips automatic seed data. Setting `SEED_TRIGGER_TOKEN` to a non-empty value enables the unauthenticated `/seed` endpoint; leaving it blank disables it entirely.
+
+### Drive upload proxy
+
+- New endpoint: `POST /drive/upload` (multipart `file`) uses a Google Drive access token to store files and returns a public URL (if permissions allow). Authenticated via the same bearer auth as the rest of the API.
+- Configure `DRIVE_ACCESS_TOKEN` with a service account or user token that has `drive.file` scope. Optionally set `DRIVE_UPLOAD_FOLDER_ID` to constrain uploads to a specific folder.
 
 ## Running the application
 

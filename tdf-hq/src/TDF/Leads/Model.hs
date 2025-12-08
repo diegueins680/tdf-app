@@ -7,7 +7,7 @@ import Database.PostgreSQL.Simple
 import System.Random (randomRIO)
 
 genToken :: IO Text
-genToken = T.pack <$> mapM (const rand) [1..20]
+genToken = T.pack <$> mapM (const rand) ([1..20] :: [Int])
   where
     alphabet = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9']
     rand = (alphabet !!) <$> randomRIO (0, length alphabet - 1)
@@ -18,13 +18,15 @@ ensureLead conn phone ceId = do
             "SELECT id, token FROM lead WHERE phone_e164 = ? AND course_edition_id = ? LIMIT 1"
             (phone, ceId)
   case rows of
-    [(lid :: Int, tok :: Text)] -> pure (lid, tok)
+    ((lid, tok):_) -> pure (lid, tok)
     _ -> do
       tok <- genToken
-      [Only lid] <- query conn
+      result <- query conn
             "INSERT INTO lead (phone_e164, course_edition_id, token) VALUES (?,?,?) RETURNING id"
             (phone, ceId, tok)
-      pure (lid, tok)
+      case result of
+        [Only lid] -> pure (lid, tok)
+        _ -> error "Failed to insert lead"
 
 lookupCourseIdBySlug :: Connection -> Text -> IO (Maybe Int)
 lookupCourseIdBySlug conn slug = do

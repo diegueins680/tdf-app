@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -10,7 +11,7 @@ module TDF.ServerExtra where
 import           Control.Monad              (filterM, unless, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import           Control.Monad.Reader       (MonadReader, asks)
+import           Control.Monad.Reader       (MonadReader, ask, asks)
 import           Data.Foldable              (for_)
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing)
@@ -19,7 +20,12 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Time                  (getCurrentTime)
+import qualified Data.ByteString.Lazy.Char8 as BL8
+import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
+import           Data.UUID.V4               (nextRandom)
+import           Data.Aeson                 (object, (.=))
+import qualified Data.Aeson                as A
+import           System.IO                  (hPutStrLn, stderr)
 import           Database.Persist        hiding (Active)
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
@@ -31,15 +37,29 @@ import           TDF.API.Pipelines          (PipelinesAPI)
 import           TDF.API.Rooms              (RoomsAPI)
 import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Types
-import           TDF.Auth                   (AuthedUser, ModuleAccess(..), hasModuleAccess)
+import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
+import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
+import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
-import           TDF.Models                 (Party(..))
+import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
 import           TDF.ModelsExtra
 import qualified TDF.ModelsExtra as ME
 import           TDF.Pipelines              (canonicalStage, defaultStage, pipelineStages, pipelineTypeSlug, parsePipelineType)
 import qualified TDF.Handlers.InputList     as InputList
 
+-- Helpers for simple date parsing (YYYY-MM-DD)
+parseDayText :: MonadError ServerError m => Text -> m Day
+parseDayText t =
+  case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
+    Just d  -> pure d
+    Nothing -> throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
+
+parseUTCTimeText :: MonadError ServerError m => Text -> m UTCTime
+parseUTCTimeText t =
+  case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
+    Just d  -> pure (UTCTime d 0)
+    Nothing -> throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
 inventoryServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -53,6 +73,11 @@ inventoryServer user =
   :<|> getAssetH
   :<|> patchAssetH
   :<|> deleteAssetH
+  :<|> checkoutAssetH
+  :<|> checkinAssetH
+  :<|> checkoutHistoryH
+  :<|> refreshQrH
+  :<|> resolveByQrH
   where
     listAssets _mq mp mps = do
       ensureModule ModuleAdmin user
@@ -80,7 +105,7 @@ inventoryServer user =
           , assetLocationId            = Nothing
           , assetOwner                 = "TDF"
           , assetQrCode                = Nothing
-          , assetPhotoUrl              = Nothing
+          , assetPhotoUrl              = cPhotoUrl req
           , assetNotes                 = Nothing
           , assetWarrantyExpires       = Nothing
           , assetMaintenancePolicy     = None
@@ -106,6 +131,7 @@ inventoryServer user =
             , (AssetStatus =.) <$> statusValue
             , fmap (\rid -> AssetLocationId =. Just rid) locationKey
             , fmap (\noteTxt -> AssetNotes =. Just noteTxt) (uNotes req)
+            , fmap (\url -> AssetPhotoUrl =. Just url) (uPhotoUrl req)
             ]
       result <- withPool $ do
         mEntity <- getEntity assetKey
@@ -132,7 +158,126 @@ inventoryServer user =
       , name     = assetName asset
       , category = assetCategory asset
       , status   = T.pack (show (assetStatus asset))
+      , condition = Just (T.pack (show (assetCondition asset)))
+      , brand    = assetBrand asset
+      , model    = assetModel asset
       , location = fmap toPathPiece (assetLocationId asset)
+      , qrToken  = assetQrCode asset
+      , photoUrl = assetPhotoUrl asset
+      }
+
+    checkoutAssetH rawId req = do
+      ensureModule ModuleAdmin user
+      assetKey <- parseKey @Asset rawId
+      asset <- withPool $ get assetKey
+      _ <- maybe (throwError err404) pure asset
+      now <- liftIO getCurrentTime
+      let targetKind = maybe TargetParty parseTarget (coTargetKind req)
+          targetRoomKey = coTargetRoom req >>= parseKeyMaybe @Room
+          targetSessionKey = coTargetSession req >>= parseKeyMaybe @ME.Session
+          checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
+      active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
+      when (isJust active) $
+        throwError err409 { errBody = "Asset already checked out" }
+      (mRoom, mSession) <- validateTargets targetKind targetRoomKey targetSessionKey
+      recEnt <- withPool $ do
+        checkoutId <- insert AssetCheckout
+          { assetCheckoutAssetId          = assetKey
+          , assetCheckoutTargetKind       = targetKind
+          , assetCheckoutTargetSessionId  = mSession
+          , assetCheckoutTargetPartyRef   = coTargetParty req
+          , assetCheckoutTargetRoomId     = mRoom
+          , assetCheckoutCheckedOutByRef  = checkedOutBy
+          , assetCheckoutCheckedOutAt     = now
+          , assetCheckoutDueAt            = coDueAt req
+          , assetCheckoutConditionOut     = coConditionOut req
+          , assetCheckoutPhotoDriveFileId = Nothing
+          , assetCheckoutReturnedAt       = Nothing
+          , assetCheckoutConditionIn      = Nothing
+          , assetCheckoutNotes            = coNotes req
+          }
+        update assetKey [AssetStatus =. Booked]
+        getJustEntity checkoutId
+      pure (toCheckoutDTO recEnt)
+
+    checkinAssetH rawId req = do
+      ensureModule ModuleAdmin user
+      assetKey <- parseKey @Asset rawId
+      now <- liftIO getCurrentTime
+      mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
+      case mOpen of
+        Nothing -> throwError err404 { errBody = "No active checkout" }
+        Just (Entity checkoutId _) -> do
+          recEnt <- withPool $ do
+            update checkoutId
+              [ AssetCheckoutReturnedAt   =. Just now
+              , AssetCheckoutConditionIn  =. ciConditionIn req
+              , AssetCheckoutNotes        =. ciNotes req
+              ]
+            update assetKey [AssetStatus =. Active]
+            getJustEntity checkoutId
+          pure (toCheckoutDTO recEnt)
+
+    checkoutHistoryH rawId = do
+      ensureModule ModuleAdmin user
+      assetKey <- parseKey @Asset rawId
+      recs <- withPool $ selectList [AssetCheckoutAssetId ==. assetKey] [Desc AssetCheckoutCheckedOutAt, LimitTo 50]
+      pure (map toCheckoutDTO recs)
+
+    refreshQrH rawId = do
+      ensureModule ModuleAdmin user
+      assetKey <- parseKey @Asset rawId
+      token <- liftIO (fmap (T.pack . show) nextRandom)
+      let qrUrl tokenVal = "https://tdf-app.pages.dev/inventario/scan/" <> tokenVal
+      withPool $ update assetKey [AssetQrCode =. Just token]
+      pure AssetQrDTO { qrToken = token, qrUrl = qrUrl token }
+
+    resolveByQrH token = do
+      ensureModule ModuleAdmin user
+      mAsset <- withPool $ selectFirst [AssetQrCode ==. Just token] []
+      maybe (throwError err404) (pure . toAssetDTO) mAsset
+
+    parseTarget raw =
+      case T.toLower (T.strip raw) of
+        "session" -> TargetSession
+        "party"   -> TargetParty
+        "room"    -> TargetRoom
+        _         -> TargetParty
+
+    parseKeyMaybe
+      :: forall record.
+         PathPiece (Key record)
+      => Text
+      -> Maybe (Key record)
+    parseKeyMaybe t = fromPathPiece t
+
+    validateTargets targetKind mRoom mSession = do
+      case targetKind of
+        TargetRoom ->
+          case mRoom of
+            Nothing -> throwError err400 { errBody = "targetRoom required for room checkout" }
+            Just _  -> pure (mRoom, Nothing)
+        TargetSession ->
+          case mSession of
+            Nothing -> throwError err400 { errBody = "targetSession required for session checkout" }
+            Just _  -> pure (Nothing, mSession)
+        TargetParty ->
+          pure (Nothing, Nothing)
+
+    toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
+      { checkoutId      = toPathPiece key
+      , assetId         = toPathPiece (assetCheckoutAssetId rec)
+      , targetKind      = T.pack (show (assetCheckoutTargetKind rec))
+      , targetSessionId = fmap toPathPiece (assetCheckoutTargetSessionId rec)
+      , targetPartyRef  = assetCheckoutTargetPartyRef rec
+      , targetRoomId    = fmap toPathPiece (assetCheckoutTargetRoomId rec)
+      , checkedOutBy    = assetCheckoutCheckedOutByRef rec
+      , checkedOutAt    = assetCheckoutCheckedOutAt rec
+      , dueAt           = assetCheckoutDueAt rec
+      , conditionOut    = assetCheckoutConditionOut rec
+      , conditionIn     = assetCheckoutConditionIn rec
+      , returnedAt      = assetCheckoutReturnedAt rec
+      , notes           = assetCheckoutNotes rec
       }
 
 bandsServer
@@ -750,6 +895,133 @@ ensureModule
 ensureModule moduleTag user =
   unless (hasModuleAccess moduleTag user) $
     throwError err403 { errBody = "Missing required module access" }
+
+-- Basic payments server (manual payouts / honorarios)
+paymentsServer
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => AuthedUser
+  -> ServerT PaymentsAPI m
+paymentsServer user =
+       listPaymentsH
+  :<|> createPaymentH
+  :<|> getPaymentH
+  where
+    listPaymentsH mPartyId = do
+      ensureModule ModuleAdmin user
+      let filt = maybe [] (\pid -> [M.PaymentPartyId ==. toSqlKey pid]) mPartyId
+      recs <- withPool $ selectList filt [Desc M.PaymentReceivedAt, LimitTo 200]
+      pure (map toPaymentDTO recs)
+
+    createPaymentH PaymentCreate{..} = do
+      ensureModule ModuleAdmin user
+      paidAt <- parseUTCTimeText pcPaidAt
+      now <- liftIO getCurrentTime
+      let partyKey   = toSqlKey pcPartyId
+          mOrderKey  = toSqlKey <$> pcOrderId
+          mInvoiceKey= toSqlKey <$> pcInvoiceId
+      ent <- withPool $ do
+        payId <- insert Payment
+          { paymentInvoiceId   = mInvoiceKey
+          , paymentOrderId     = mOrderKey
+          , paymentPartyId     = partyKey
+          , paymentMethod      = parseMethod pcMethod
+          , paymentAmountCents = pcAmountCents
+          , paymentReceivedAt  = paidAt
+          , paymentReference   = pcReference
+          , paymentConcept     = Just pcConcept
+          , paymentPeriod      = pcPeriod
+          , paymentAttachment  = pcAttachmentUrl
+          , paymentCreatedBy   = Just (auPartyId user)
+          , paymentCreatedAt   = Just now
+          }
+        getJustEntity payId
+      pure (toPaymentDTO ent)
+
+    getPaymentH pid = do
+      ensureModule ModuleAdmin user
+      mEnt <- withPool $ getEntity (toSqlKey pid :: Key Payment)
+      maybe (throwError err404) (pure . toPaymentDTO) mEnt
+
+    toPaymentDTO (Entity key p) = PaymentDTO
+      { payId          = fromSqlKey key
+      , payPartyId     = fromSqlKey (paymentPartyId p)
+      , payOrderId     = fmap fromSqlKey (paymentOrderId p)
+      , payInvoiceId   = fmap fromSqlKey (paymentInvoiceId p)
+      , payAmountCents = paymentAmountCents p
+      , payCurrency    = "USD"
+      , payMethod      = T.pack (show (paymentMethod p))
+      , payReference   = paymentReference p
+      , payPaidAt      = T.pack (show (paymentReceivedAt p))
+      , payConcept     = fromMaybe "" (paymentConcept p)
+      , payPeriod      = paymentPeriod p
+      , payAttachment  = paymentAttachment p
+      }
+
+parseMethod :: Text -> PaymentMethod
+parseMethod t =
+  case T.toLower (T.strip t) of
+    "bank" -> BankTransferM
+    "banktransfer" -> BankTransferM
+    "transferencia" -> BankTransferM
+    "produbanco" -> BankTransferM
+    "cash" -> CashM
+    "efectivo" -> CashM
+    "crypto" -> CryptoM
+    _ -> BankTransferM
+
+-- Minimal Instagram server (stub): logs webhook payload, stores messages, returns canned responses.
+instagramServer
+  :: ( MonadIO m
+     , MonadReader Env m
+     )
+  => ServerT IG.InstagramAPI m
+instagramServer =
+       handleWebhook
+  :<|> handleReply
+  :<|> listMessages
+  where
+    handleWebhook payload = liftIO $ do
+      hPutStrLn stderr "[instagram] received webhook payload"
+      BL8.hPutStrLn stderr (A.encode payload)
+      pure NoContent
+
+    handleReply req = do
+      now <- liftIO getCurrentTime
+      -- store outgoing message (stub)
+      Env{..} <- ask
+      liftIO $ flip runSqlPool envPool $ do
+        _ <- upsert (M.InstagramMessage (IG.irSenderId req <> "-out-" <> T.pack (show now))
+                         (IG.irSenderId req)
+                         Nothing
+                         (Just (IG.irMessage req))
+                         "outgoing"
+                         now)
+             [ M.InstagramMessageText =. Just (IG.irMessage req)
+             , M.InstagramMessageDirection =. "outgoing"
+             ]
+        pure ()
+      let msg = T.concat
+            [ "Respuesta automática: Hola! Gracias por escribir. "
+            , "Recibimos: \"", T.take 200 (T.strip (IG.irMessage req)), "\". "
+            , "Pronto te contactaremos. (stub local)"
+            ]
+      pure (object ["status" .= ("ok" :: Text), "message" .= msg, "echoRecipient" .= IG.irSenderId req])
+
+    listMessages = do
+      Env{..} <- ask
+      rows <- liftIO $ flip runSqlPool envPool $ selectList [] [Desc M.InstagramMessageCreatedAt, LimitTo 100]
+      let toObj (Entity _ m) = object
+            [ "externalId" .= M.instagramMessageExternalId m
+            , "senderId"   .= M.instagramMessageSenderId m
+            , "senderName" .= M.instagramMessageSenderName m
+            , "text"       .= M.instagramMessageText m
+            , "direction"  .= M.instagramMessageDirection m
+            , "createdAt"  .= M.instagramMessageCreatedAt m
+            ]
+      pure (A.toJSON (map toObj rows))
 
 -- Shared helpers ----------------------------------------------------------
 

@@ -60,9 +60,7 @@ export default function KanbanPage() {
         if (!stageKey) {
           return;
         }
-        if (!initialColumns[stageKey]) {
-          initialColumns[stageKey] = [];
-        }
+        initialColumns[stageKey] ??= [];
         const columnEntries = initialColumns[stageKey];
         if (!columnEntries) {
           return;

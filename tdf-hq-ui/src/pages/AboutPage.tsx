@@ -4,6 +4,7 @@ import {
   Alert,
   Button,
   Chip,
+  Divider,
   Grid,
   Link,
   Paper,
@@ -15,6 +16,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import ShieldIcon from '@mui/icons-material/Shield';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { Meta } from '../api/meta';
+import { API_BASE_URL } from '../api/client';
 
 const RESOURCE_LINKS = [
   { label: 'Documentación (Redoc)', href: '/docs' },
@@ -31,6 +33,24 @@ const MODULES = [
   'Escuela / Academy',
 ];
 
+interface CommitInfo {
+  display: string;
+  link: string | null;
+}
+
+const formatCommit = (value?: string | null): CommitInfo | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return null;
+  if (trimmed.toLowerCase() === 'dev') {
+    return { display: trimmed, link: null };
+  }
+  return {
+    display: trimmed.slice(0, 7),
+    link: `https://github.com/diegueins680/tdf-app/commit/${trimmed}`,
+  };
+};
+
 export default function AboutPage() {
   const {
     data: version,
@@ -46,15 +66,12 @@ export default function AboutPage() {
 
   const loading = versionLoading || healthLoading;
   const hasMetaError = Boolean(versionError ?? healthError);
-  const uiCommit = useMemo(() => {
-    if (!__APP_COMMIT__ || __APP_COMMIT__.trim().length === 0) {
-      return null;
-    }
-    const value = __APP_COMMIT__.trim();
-    return {
-      display: value.slice(0, 7),
-      link: value === 'dev' ? null : `https://github.com/diegueins680/tdf-app/commit/${value}`,
-    };
+  const uiVersion = (__APP_VERSION__ || '').trim() || null;
+  const uiCommit = useMemo(() => formatCommit(__APP_COMMIT__), []);
+  const apiCommit = useMemo(() => formatCommit(version?.commit), [version?.commit]);
+  const apiBaseUrl = useMemo(() => {
+    const trimmed = API_BASE_URL.trim();
+    return trimmed.length > 0 ? trimmed : null;
   }, []);
 
   const buildDate = useMemo(() => {
@@ -111,31 +128,75 @@ export default function AboutPage() {
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, height: '100%' }}>
-            <Stack gap={1}>
-              <Typography variant="overline">Versión</Typography>
-              <Typography variant="h5" fontWeight={600}>
-                {version?.name ?? 'Aplicación'}
-              </Typography>
-              <Typography variant="body1">
-                Release <strong>{version?.version ?? '—'}</strong>
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Compilado: {buildDate}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                UI commit:{' '}
-                {uiCommit ? (
-                  uiCommit.link ? (
-                    <Link href={uiCommit.link} target="_blank" rel="noreferrer">
-                      {uiCommit.display}
+            <Stack gap={2}>
+              <Typography variant="overline">Versiones</Typography>
+
+              <Stack gap={0.5}>
+                <Typography variant="body2" color="text.secondary">
+                  Backend (API)
+                </Typography>
+                <Typography variant="h6" fontWeight={600}>
+                  {version?.name ?? 'tdf-hq'}
+                </Typography>
+                <Typography variant="body1">
+                  Release <strong>{version?.version ?? '—'}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Compilado: {buildDate}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Endpoint:{' '}
+                  {apiBaseUrl ? (
+                    <Link href={apiBaseUrl} target="_blank" rel="noreferrer">
+                      {apiBaseUrl}
                     </Link>
                   ) : (
-                    uiCommit.display
-                  )
-                ) : (
-                  '—'
-                )}
-              </Typography>
+                    '—'
+                  )}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Commit:{' '}
+                  {apiCommit ? (
+                    apiCommit.link ? (
+                      <Link href={apiCommit.link} target="_blank" rel="noreferrer">
+                        {apiCommit.display}
+                      </Link>
+                    ) : (
+                      apiCommit.display
+                    )
+                  ) : (
+                    '—'
+                  )}
+                </Typography>
+              </Stack>
+
+              <Divider flexItem />
+
+              <Stack gap={0.5}>
+                <Typography variant="body2" color="text.secondary">
+                  Web UI
+                </Typography>
+                <Typography variant="h6" fontWeight={600}>
+                  tdf-hq-ui
+                </Typography>
+                <Typography variant="body1">
+                  Release <strong>{uiVersion ?? '—'}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Commit:{' '}
+                  {uiCommit ? (
+                    uiCommit.link ? (
+                      <Link href={uiCommit.link} target="_blank" rel="noreferrer">
+                        {uiCommit.display}
+                      </Link>
+                    ) : (
+                      uiCommit.display
+                    )
+                  ) : (
+                    '—'
+                  )}
+                </Typography>
+              </Stack>
             </Stack>
           </Paper>
         </Grid>

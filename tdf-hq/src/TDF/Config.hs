@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Config where
 
+import           Control.Applicative ((<|>))
 import           Data.Char          (toLower)
 import           Data.Maybe         (fromMaybe)
 import           Data.Text          (Text)
@@ -26,6 +27,7 @@ data AppConfig = AppConfig
   , appPort         :: Int
   , resetDb         :: Bool
   , seedDatabase    :: Bool
+  , runMigrations   :: Bool
   , seedTriggerToken :: Maybe Text
   , appBaseUrl      :: Maybe Text
   , emailConfig     :: Maybe EmailConfig
@@ -49,12 +51,13 @@ loadConfig = do
   ap         <- get "APP_PORT" "8080"
   rdb        <- get "RESET_DB" "false"
   sdb        <- get "SEED_DB" "true"
+  mig        <- get "RUN_MIGRATIONS" "true"
   seedEnv    <- lookupEnv "SEED_TRIGGER_TOKEN"
   baseUrlEnv <- lookupEnv "HQ_APP_URL"
   smtpHostEnv <- lookupEnv "SMTP_HOST"
   smtpPortEnv <- lookupEnv "SMTP_PORT"
-  smtpUserEnv <- lookupEnv "SMTP_USERNAME"
-  smtpPassEnv <- lookupEnv "SMTP_PASSWORD"
+  smtpUserEnv <- lookupEnv "SMTP_USERNAME" <|> lookupEnv "SMTP_USER"
+  smtpPassEnv <- lookupEnv "SMTP_PASSWORD" <|> lookupEnv "SMTP_PASS"
   smtpFromEnv <- lookupEnv "SMTP_FROM"
   smtpFromNameEnv <- lookupEnv "SMTP_FROM_NAME"
   smtpTlsEnv  <- lookupEnv "SMTP_TLS"
@@ -67,6 +70,7 @@ loadConfig = do
     , appPort = read ap
     , resetDb = asBool rdb
     , seedDatabase = asBool sdb
+    , runMigrations = asBool mig
     , seedTriggerToken = mkSeedToken seedEnv
     , appBaseUrl = fmap (T.strip . T.pack) baseUrlEnv
     , emailConfig = mkEmailConfig smtpHostEnv smtpUserEnv smtpPassEnv smtpFromEnv smtpFromNameEnv smtpPortEnv smtpTlsEnv

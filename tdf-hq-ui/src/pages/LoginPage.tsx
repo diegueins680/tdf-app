@@ -1,19 +1,27 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Checkbox,
   Chip,
+  CircularProgress,
   Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Fab,
+  FormControl,
   FormControlLabel,
+  FormHelperText,
+  InputLabel,
   Link,
+  MenuItem,
+  OutlinedInput,
   Paper,
+  Select,
   Stack,
   Tab,
   Tabs,
@@ -21,6 +29,7 @@ import {
   Typography,
   type ChipProps,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -29,9 +38,30 @@ import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
 import { useThemeMode } from '../theme/AppThemeProvider';
 import { loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
+import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
+import { Fans } from '../api/fans';
+import type { ArtistProfileDTO } from '../api/types';
 import BrandLogo from '../components/BrandLogo';
+import { buildSignupPayload, deriveEffectiveRoles, normalizeSignupRoles } from '../utils/roles';
 
 type LoginTab = 'password' | 'token';
+
+const pickLandingPath = (roles: string[], modules?: string[]) => {
+  const lowerRoles = roles.map((r) => r.toLowerCase());
+  const lowerModules = (modules ?? []).map((m) => m.toLowerCase());
+  const hasRole = (...needles: string[]) => needles.some((needle) => lowerRoles.some((role) => role.includes(needle)));
+  const hasModule = (needle: string) => lowerModules.includes(needle);
+
+  if (hasRole('admin') || hasModule('admin')) return '/configuracion/roles-permisos';
+  if (hasRole('artist', 'artista')) return '/mi-artista';
+  if (hasRole('fan', 'customer') && !hasModule('crm') && !hasModule('scheduling')) return '/fans';
+  if (hasModule('scheduling')) return '/estudio/calendario';
+  if (hasModule('crm')) return '/crm/contactos';
+  if (hasModule('label')) return '/label/artistas';
+  if (hasModule('ops')) return '/operacion/inventario';
+  if (hasModule('invoicing')) return '/finanzas/pagos';
+  return '/inicio';
+};
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -51,7 +81,11 @@ export default function LoginPage() {
     phone: '',
     password: '',
   });
+  const [signupRoles, setSignupRoles] = useState<SignupRole[]>([]);
+  const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
+  const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
 
   const { session, login } = useSession();
   const navigate = useNavigate();
@@ -91,6 +125,22 @@ export default function LoginPage() {
     }
     return { label: 'API: offline', color: 'error' };
   }, [health, healthError, healthLoading]);
+
+  const fanArtistsQuery = useQuery({
+    queryKey: ['signup', 'artists'],
+    queryFn: Fans.listArtists,
+    enabled: signupDialogOpen,
+    staleTime: 5 * 60 * 1000,
+  });
+  const fanArtists = useMemo(() => fanArtistsQuery.data ?? [], [fanArtistsQuery.data]);
+  const claimableArtists = useMemo(
+    () => fanArtists.filter((artist) => artist.apHasUserAccount === false),
+    [fanArtists],
+  );
+  const selectedClaim = useMemo(
+    () => claimableArtists.find((artist) => artist.apArtistId === claimArtistId) ?? null,
+    [claimArtistId, claimableArtists],
+  );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -136,18 +186,27 @@ export default function LoginPage() {
         roles = ['token'];
       }
 
+      const baseRoles =
+        roles.length > 0
+          ? roles
+          : normalizedIdentifier.toLowerCase().includes('admin')
+            ? ['admin']
+            : ['staff'];
+      const normalized = Array.from(new Set(baseRoles.map((r) => r.toLowerCase())));
+      const landingPath = pickLandingPath(normalized, modules);
+
       login(
         {
           username: normalizedIdentifier,
           displayName,
-          roles: roles.length ? roles : normalizedIdentifier.toLowerCase().includes('admin') ? ['admin'] : ['staff'],
+          roles: normalized,
           apiToken,
           modules,
           partyId,
         },
         { remember: rememberDevice },
       );
-      navigate('/crm/contactos', { replace: true });
+      navigate(landingPath, { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
       setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
@@ -196,23 +255,38 @@ export default function LoginPage() {
       phone: '',
       password: '',
     });
+    setSignupRoles([]);
+    setFavoriteArtistIds([]);
+    setClaimArtistId(null);
     signupMutation.reset();
   };
 
   const closeSignupDialog = () => {
     setSignupDialogOpen(false);
     setSignupFeedback(null);
+    setSignupRoles([]);
+    setFavoriteArtistIds([]);
+    setClaimArtistId(null);
     signupMutation.reset();
   };
 
+  const handleSignupRoleChange = (event: SelectChangeEvent<SignupRole[]>) => {
+    const nextRoles = normalizeSignupRoles(event.target.value);
+    setSignupRoles(nextRoles);
+    if (!nextRoles.includes('Fan')) {
+      setFavoriteArtistIds([]);
+    }
+  };
+
   const handleSignupSubmit = async () => {
-    const payload = {
-      firstName: signupForm.firstName.trim(),
-      lastName: signupForm.lastName.trim(),
-      email: signupForm.email.trim(),
-      phone: signupForm.phone.trim() || undefined,
-      password: signupForm.password,
-    };
+    const claimIsValid = claimArtistId ? claimableArtists.some((artist) => artist.apArtistId === claimArtistId) : true;
+    if (!claimIsValid) {
+      setSignupFeedback({ type: 'error', message: 'El perfil seleccionado ya no está disponible para reclamar.' });
+      return;
+    }
+
+    const payload = buildSignupPayload(signupForm, signupRoles, favoriteArtistIds, claimArtistId ?? undefined);
+    const selectedRoles = payload.roles ?? [];
     if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
       setSignupFeedback({ type: 'error', message: 'Completa nombre, correo y una contraseña segura (8+ caracteres).' });
       return;
@@ -224,18 +298,31 @@ export default function LoginPage() {
     setSignupFeedback(null);
     try {
       const response = await signupMutation.mutateAsync(payload);
+      const effectiveRoles = deriveEffectiveRoles(response.roles, selectedRoles);
+      const landingPath = pickLandingPath(effectiveRoles, response.modules);
+      const shouldFollowArtists = selectedRoles.includes('Fan') && favoriteArtistIds.length > 0;
+      const selectedFanArtistIds = favoriteArtistIds;
       login(
         {
           username: payload.email,
           displayName: `${payload.firstName} ${payload.lastName}`.trim() || payload.email,
-          roles: response.roles?.map((role) => role.toLowerCase()) ?? ['fan'],
+          roles: effectiveRoles,
           apiToken: response.token,
           modules: response.modules,
           partyId: response.partyId,
         },
         { remember: true },
       );
-      navigate('/crm/contactos', { replace: true });
+      if (shouldFollowArtists) {
+        void Promise.all(
+          selectedFanArtistIds.map((artistId) =>
+            Fans.follow(artistId).catch((followErr) => {
+              console.warn('No se pudo seguir al artista después del registro', followErr);
+            }),
+          ),
+        );
+      }
+      navigate(landingPath, { replace: true });
     } catch (err) {
       setSignupFeedback({
         type: 'error',
@@ -245,7 +332,8 @@ export default function LoginPage() {
   };
 
   if (session) {
-    return <Navigate to="/crm/contactos" replace />;
+    const landing = pickLandingPath(session.roles ?? [], session.modules);
+    return <Navigate to={landing} replace />;
   }
 
   return (
@@ -345,6 +433,9 @@ export default function LoginPage() {
               }
               label="Recordarme en este dispositivo"
             />
+            <Typography variant="caption" color="text.secondary">
+              Si lo activas, mantendremos tu sesión iniciada en este navegador.
+            </Typography>
 
             {formError && <Alert severity="warning">{formError}</Alert>}
 
@@ -379,7 +470,7 @@ export default function LoginPage() {
               </Typography>
               <Typography variant="body2">
                 ¿Buscas una clase de prueba?{' '}
-                <Link href="#" underline="hover">
+                <Link component={RouterLink} to="/trials" underline="hover">
                   Solicitar trial
                 </Link>
               </Typography>
@@ -454,13 +545,113 @@ export default function LoginPage() {
               onChange={(event) => setSignupForm((prev) => ({ ...prev, phone: event.target.value }))}
               fullWidth
             />
-            <TextField
-              label="Contraseña *"
-              type="password"
-              value={signupForm.password}
-              onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
-              fullWidth
-              helperText="Mínimo 8 caracteres."
+            <FormControl fullWidth>
+              <InputLabel id="signup-roles-label">Roles (opcional)</InputLabel>
+              <Select<SignupRole[]>
+                labelId="signup-roles-label"
+                multiple
+                value={signupRoles}
+                onChange={handleSignupRoleChange}
+                input={<OutlinedInput label="Roles (opcional)" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((role) => (
+                      <Chip key={role} label={role} size="small" />
+                    ))}
+                  </Box>
+                )}
+              >
+                {SELF_SIGNUP_ROLES.map((role) => (
+                  <MenuItem key={role} value={role}>
+                    <Checkbox checked={signupRoles.includes(role)} />
+                    <Typography variant="body2">{role}</Typography>
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>
+                Elige los roles que necesitas (Fan, Artista, Promotor, Manager, A&R, Producer, etc.). Roles administrativos o financieros (como Admin o Accounting) no se pueden autoseleccionar.
+                </FormHelperText>
+              </FormControl>
+            {(claimableArtists.length > 0 || claimArtistId) && (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">¿Tu perfil de artista ya existe en TDF?</Typography>
+                <Autocomplete
+                  options={claimableArtists}
+                  getOptionLabel={(option) => option.apDisplayName}
+                  value={selectedClaim}
+                  loading={fanArtistsQuery.isFetching}
+                  onChange={(_, option) => {
+                    setClaimArtistId(option?.apArtistId ?? null);
+                    if (option && !signupRoles.some((role) => role.toLowerCase().startsWith('artist'))) {
+                      setSignupRoles((prev) => [...prev, 'Artista']);
+                    }
+                  }}
+                  noOptionsText={fanArtistsQuery.isFetching ? 'Buscando artistas…' : 'No hay perfiles disponibles para reclamar'}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Reclamar perfil de artista (opcional)"
+                      helperText="Solo se muestran perfiles sin usuario. Al reclamarlo obtendrás acceso como Artista."
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {fanArtistsQuery.isFetching ? <CircularProgress color="inherit" size={16} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+                {claimArtistId && !selectedClaim && (
+                  <Alert severity="warning">El perfil elegido ya no está disponible para reclamar.</Alert>
+                )}
+              </Stack>
+            )}
+            {signupRoles.includes('Fan') && (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">¿De qué artistas o bandas eres fan?</Typography>
+                <Autocomplete<ArtistProfileDTO, true, false, false>
+                  multiple
+                  options={fanArtists}
+                  getOptionLabel={(option) => option.apDisplayName}
+                  value={fanArtists.filter((artist) => favoriteArtistIds.includes(artist.apArtistId))}
+                  loading={fanArtistsQuery.isFetching}
+                  onChange={(_, selected) => {
+                    setFavoriteArtistIds(selected.map((item) => item.apArtistId));
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Artistas o bandas"
+                      placeholder={fanArtistsQuery.isFetching ? 'Cargando artistas...' : 'Buscar y seleccionar'}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {fanArtistsQuery.isFetching ? <CircularProgress color="inherit" size={16} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+                {fanArtistsQuery.isError && (
+                  <Alert severity="warning">
+                    No pudimos cargar la lista de artistas en este momento. Puedes seguirlos después desde el Fan Hub.
+                  </Alert>
+                )}
+              </Stack>
+            )}
+              <TextField
+                label="Contraseña *"
+                type="password"
+                value={signupForm.password}
+                onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
+                fullWidth
+              helperText={passwordHint}
             />
             {signupFeedback && (
               <Alert severity={signupFeedback.type === 'success' ? 'success' : 'error'}>
