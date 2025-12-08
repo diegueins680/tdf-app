@@ -154,8 +154,8 @@ export default function MarketplacePage() {
   const canManagePhotos = modules.has('ops') || modules.has('admin');
   const paypalClientId = useMemo(() => {
     const baked = (import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
-    const runtimeVal = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID') ?? '';
-    return baked !== '' ? baked : runtimeVal;
+    const runtimeVal = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
+    return baked !== '' ? baked : (runtimeVal ?? '');
   }, []);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);
@@ -1633,13 +1633,6 @@ export default function MarketplacePage() {
                           />
                         )}
                       </Stack>
-                      {(!showPaypalOption || !showDatafastOption) && (modules.has('ops') || modules.has('admin')) && (
-                        <Alert severity="warning" variant="outlined" sx={{ mt: 0.5 }}>
-                          {!showPaypalOption
-                            ? 'PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID.'
-                            : 'Datafast no disponible en este momento.'}
-                        </Alert>
-                      )}
                     {paymentMethod === 'card' && (
                       <Stack direction="row" spacing={0.5} alignItems="center">
                         <CreditCardIcon fontSize="small" color="primary" />
@@ -1912,9 +1905,6 @@ export default function MarketplacePage() {
             <Typography variant="body2" color="text.secondary">
               Método de pago: {paymentMethod === 'paypal' ? 'PayPal' : paymentMethod === 'card' ? 'Tarjeta (Datafast)' : 'Coordinar por correo/WhatsApp'}
             </Typography>
-            {paymentMethod === 'paypal' && !paypalClientId && (
-              <Alert severity="warning">Falta configurar VITE_PAYPAL_CLIENT_ID para usar PayPal.</Alert>
-            )}
           </Stack>
         </DialogContent>
         <DialogActions>
