@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -126,21 +126,50 @@ export default function TrialLessonsPage() {
     queryFn: Trials.listStudents,
   });
 
-  const [subjectFilter, setSubjectFilter] = useState<number | 'all'>('all');
-  const [teacherFilter, setTeacherFilter] = useState<number | 'all'>('all');
-  const [statusFilter, setStatusFilter] = useState<StatusKey | 'all'>('all');
+  const [subjectFilter, setSubjectFilter] = useState<number | 'all'>(() => {
+    if (typeof window === 'undefined') return 'all';
+    const raw = window.localStorage.getItem('trial.filter.subject');
+    return raw ? (Number.parseInt(raw, 10) || 'all') : 'all';
+  });
+  const [teacherFilter, setTeacherFilter] = useState<number | 'all'>(() => {
+    if (typeof window === 'undefined') return 'all';
+    const raw = window.localStorage.getItem('trial.filter.teacher');
+    return raw ? (Number.parseInt(raw, 10) || 'all') : 'all';
+  });
+  const [statusFilter, setStatusFilter] = useState<StatusKey | 'all'>(() => {
+    if (typeof window === 'undefined') return 'all';
+    const raw = window.localStorage.getItem('trial.filter.status');
+    return (raw as StatusKey) ?? 'all';
+  });
   const [fromInput, setFromInput] = useState(() => {
-    const now = new Date();
-    const start = new Date(now);
-    start.setDate(now.getDate() - 7);
-    start.setHours(0, 0, 0, 0);
-    return toLocalInput(start.toISOString());
+    if (typeof window === 'undefined') {
+      const now = new Date();
+      const start = new Date(now);
+      start.setDate(now.getDate() - 7);
+      start.setHours(0, 0, 0, 0);
+      return toLocalInput(start.toISOString());
+    }
+    return window.localStorage.getItem('trial.filter.from') ?? (() => {
+      const now = new Date();
+      const start = new Date(now);
+      start.setDate(now.getDate() - 7);
+      start.setHours(0, 0, 0, 0);
+      return toLocalInput(start.toISOString());
+    })();
   });
   const [toInput, setToInput] = useState(() => {
-    const end = new Date();
-    end.setDate(end.getDate() + 30);
-    end.setHours(23, 59, 0, 0);
-    return toLocalInput(end.toISOString());
+    if (typeof window === 'undefined') {
+      const end = new Date();
+      end.setDate(end.getDate() + 30);
+      end.setHours(23, 59, 0, 0);
+      return toLocalInput(end.toISOString());
+    }
+    return window.localStorage.getItem('trial.filter.to') ?? (() => {
+      const end = new Date();
+      end.setDate(end.getDate() + 30);
+      end.setHours(23, 59, 0, 0);
+      return toLocalInput(end.toISOString());
+    })();
   });
 
   const toIsoOrUndefined = (val: string) => {
@@ -184,6 +213,14 @@ export default function TrialLessonsPage() {
   const rooms = roomsQuery.data ?? [];
   const students = studentsQuery.data ?? [];
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('trial.filter.subject', subjectFilter === 'all' ? '' : String(subjectFilter));
+    window.localStorage.setItem('trial.filter.teacher', teacherFilter === 'all' ? '' : String(teacherFilter));
+    window.localStorage.setItem('trial.filter.status', statusFilter === 'all' ? '' : statusFilter);
+    window.localStorage.setItem('trial.filter.from', fromInput);
+    window.localStorage.setItem('trial.filter.to', toInput);
+  }, [fromInput, statusFilter, subjectFilter, teacherFilter, toInput]);
   const [formError, setFormError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
   const [statusPendingId, setStatusPendingId] = useState<number | null>(null);
@@ -385,6 +422,29 @@ export default function TrialLessonsPage() {
     statusMutation.mutate({ cls, nextStatus });
   };
 
+  const downloadCsv = (rows: ClassSessionDTO[]) => {
+    const headers = ['ID', 'Materia', 'Profesor', 'Alumno', 'Inicio', 'Fin', 'Estado', 'Sala', 'Notas'];
+    const csvRows = rows.map((cls) => [
+      cls.classSessionId,
+      cls.subjectName ?? cls.subjectId,
+      cls.teacherName ?? cls.teacherId,
+      cls.studentName ?? cls.studentId,
+      cls.startAt,
+      cls.endAt,
+      cls.status,
+      cls.roomName ?? cls.roomId ?? '',
+      (cls.notes ?? '').replace(/\n/g, ' '),
+    ]);
+    const lines = [headers, ...csvRows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','));
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'trial-lessons.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const chipFilters = (
     <Stack direction="row" spacing={1} flexWrap="wrap">
       <Chip
@@ -481,6 +541,9 @@ export default function TrialLessonsPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
+          <Button variant="outlined" onClick={() => downloadCsv(data)}>
+            Exportar CSV
+          </Button>
           <Button variant="outlined" onClick={openStudentDialog}>
             Nuevo alumno
           </Button>

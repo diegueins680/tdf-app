@@ -11,6 +11,7 @@
     "dev:ui": "npm run dev --workspace=tdf-hq-ui",
     "dev:mobile": "npm run start --workspace=tdf-mobile",
     "build:ui": "npm run build --workspace=tdf-hq-ui",
+    "ci:ui": "npm run build:ui && npm run test --workspace=tdf-hq-ui -- --runTestsByPath src/__tests__/pages-import.test.ts",
     "build:ui:ci": "./scripts/build-ui-with-install.sh",
     "test:ui": "npm run test --workspace=tdf-hq-ui",
     "lint:ui": "npm run lint --workspace=tdf-hq-ui",

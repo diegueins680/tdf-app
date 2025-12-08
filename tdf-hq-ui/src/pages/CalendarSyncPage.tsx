@@ -180,6 +180,24 @@ export default function CalendarSyncPage() {
       (!fromInput || Boolean(fromIso)) &&
       (!toInput || Boolean(toIso)),
   });
+  const syncMutation = useMutation({
+    mutationFn: () =>
+      CalendarApi.sync({
+        calendarId: trimmedCalendarId || 'primary',
+        from: fromIso ?? undefined,
+        to: toIso ?? undefined,
+      }),
+    onSuccess: (res) => {
+      const ts = new Date().toISOString();
+      setLastSyncAt(ts);
+      void eventsQuery.refetch();
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('calendar-sync.lastSyncAt', ts);
+      }
+      setCopyToast(`Sync completada: ${res.created} creados, ${res.updated} actualizados.`);
+    },
+    onError: () => setCopyToast('No pudimos sincronizar ahora. Intenta más tarde.'),
+  });
 
   const configQuery = useQuery({
     queryKey: ['calendar-config'],
@@ -214,20 +232,6 @@ export default function CalendarSyncPage() {
     const toLabel = toInput ? new Date(toInput).toLocaleString() : 'Sin fecha fin';
     return `${formatted} · Rango: ${fromLabel} → ${toLabel}`;
   }, [fromInput, lastSyncAt, toInput]);
-
-  const syncMutation = useMutation({
-    mutationFn: () =>
-      CalendarApi.sync({
-        calendarId: trimmedCalendarId,
-        from: fromIso ?? undefined,
-        to: toIso ?? undefined,
-      }),
-    onSuccess: () => {
-      setShowValidation(false);
-      setLastSyncAt(new Date().toISOString());
-      void eventsQuery.refetch();
-    },
-  });
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
   const calendarIdError = showValidation && !trimmedCalendarId ? 'Ingresa el Calendar ID o usa "primary".' : '';
@@ -315,9 +319,19 @@ export default function CalendarSyncPage() {
           <Typography variant="h5" fontWeight={800}>
             Integración Google Calendar
           </Typography>
-          <Alert severity="info" variant="outlined">
-            {`Última sync: ${lastSyncSummary}`}
-          </Alert>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+            <Alert severity="info" variant="outlined" sx={{ flexGrow: 1 }}>
+              {`Última sync: ${lastSyncSummary}`}
+            </Alert>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending || !trimmedCalendarId || Boolean(rangeError)}
+            >
+              {syncMutation.isPending ? 'Sincronizando…' : 'Sync ahora'}
+            </Button>
+          </Stack>
           <Typography color="text.secondary">
             Conecta tu calendario y sincroniza eventos a la base de datos para usarlos en reportes, agenda interna y
             posteriores automatizaciones. Usa los pasos: 1) conectar con Google, 2) pegar el code, 3) guardar tokens, 4) sincronizar.

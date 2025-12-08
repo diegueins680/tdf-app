@@ -61,6 +61,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import TidalAgentPage from './pages/TidalAgentPage';
 import LabelAssetsPage from './pages/LabelAssetsPage';
 import LabelTracksPage from './pages/LabelTracksPage';
+import AdminDiagnosticsPage from './pages/AdminDiagnosticsPage';
 
 function Shell() {
   const { session } = useSession();
@@ -206,6 +207,7 @@ export default function App() {
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/acerca" element={<AboutPage />} />
           <Route path="/seguridad" element={<SecurityPage />} />
+          <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
           <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
           <Route path="/crm" element={<Outlet />}>
             <Route path="contactos" element={<PartiesPage />} />
