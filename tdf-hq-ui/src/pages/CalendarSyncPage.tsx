@@ -209,6 +209,19 @@ export default function CalendarSyncPage() {
     syncMutation.mutate();
   };
 
+  const handleDisconnect = () => {
+    setConnectedCalendar(null);
+    setLastSyncAt(null);
+    setCode('');
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('calendar-sync.calendarId');
+      window.localStorage.removeItem('calendar-sync.range');
+      window.localStorage.removeItem('calendar-sync.connected');
+      window.localStorage.removeItem('calendar-sync.lastSyncAt');
+    }
+    setCalendarId('primary');
+  };
+
   useEffect(() => {
     if (!configQuery.isSuccess || appliedRemoteConfig) return;
     const cfg = configQuery.data;
@@ -250,6 +263,9 @@ export default function CalendarSyncPage() {
               size="small"
               label={`Última sync: ${lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Sin sincronizar'}`}
             />
+            <Button size="small" onClick={handleDisconnect} variant="outlined" color="inherit">
+              Desconectar y limpiar
+            </Button>
           </Stack>
           <Stack direction="row" spacing={1} flexWrap="wrap">
             <Chip label="Este mes" onClick={() => applyRangePreset('thisMonth')} variant="outlined" />

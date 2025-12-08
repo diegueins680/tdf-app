@@ -29,10 +29,8 @@ corsPolicy = do
       filtered = filter (not . null) normalized
       origins = nub (if null filtered then defaults else filtered)
       wildcard = any (== "*") origins
-      -- Default to allow all to keep the public web client working even if env vars are missing.
-      allowAll = wildcard || maybe True asBool allowAllEnv
       originSetting =
-        if allowAll
+        if wildcard
           then Nothing
           else Just (map BS.pack origins, True)
       policy = simpleCorsResourcePolicy
@@ -42,8 +40,7 @@ corsPolicy = do
         , corsRequireOrigin      = False
         , corsIgnoreFailures     = False
         }
-  putStrLn $ "[cors] allowAll=" <> show allowAll
-          <> " origins=" <> if allowAll then "*" else intercalate "," origins
+  putStrLn $ "[cors] origins=" <> (if wildcard then "*" else intercalate "," origins)
   pure (cors (const (Just policy)))
 
 -- | Split a comma-separated list into trimmed entries.

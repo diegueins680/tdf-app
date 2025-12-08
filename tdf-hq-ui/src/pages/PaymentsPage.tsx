@@ -77,6 +77,8 @@ function PaymentForm({
   const [concept, setConcept] = useState<string>('Honorarios');
   const [period, setPeriod] = useState<string>(toPeriod(new Date().toISOString()));
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
+  const [invoiceId, setInvoiceId] = useState<string>('');
+  const [orderId, setOrderId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const lastPaymentForParty = useMemo(() => {
     if (!selectedParty) return null;
@@ -94,6 +96,16 @@ function PaymentForm({
   useEffect(() => {
     setPeriod(toPeriod(paidAt));
   }, [paidAt]);
+
+  useEffect(() => {
+    if (selectedParty && lastPaymentForParty) {
+      setConcept(lastPaymentForParty.payConcept ?? concept);
+      setMethod(lastPaymentForParty.payMethod);
+      setCurrency(lastPaymentForParty.payCurrency);
+      setReference(lastPaymentForParty.payReference ?? 'N/A');
+      setPeriod(lastPaymentForParty.payPeriod ?? period);
+    }
+  }, [selectedParty, lastPaymentForParty]);
 
   const mutation = useMutation<PaymentDTO, Error, PaymentCreate>({
     mutationFn: (body) => Payments.create(body),
@@ -125,8 +137,8 @@ function PaymentForm({
     setError(null);
     const payload: PaymentCreate = {
       pcPartyId: parsedPartyId,
-      pcOrderId: null,
-      pcInvoiceId: null,
+      pcOrderId: orderId.trim() ? Number(orderId) : null,
+      pcInvoiceId: invoiceId.trim() ? Number(invoiceId) : null,
       pcAmountCents: Math.round(normalizedAmount * 100),
       pcCurrency: currency.trim() || 'USD',
       pcMethod: method,
@@ -160,12 +172,6 @@ function PaymentForm({
                 value={selectedParty}
                 onChange={(_, value) => {
                   setSelectedParty(value);
-                  if (value && lastPaymentForParty) {
-                    setConcept(lastPaymentForParty.payConcept ?? concept);
-                    setMethod(lastPaymentForParty.payMethod);
-                    setCurrency(lastPaymentForParty.payCurrency);
-                    setReference(lastPaymentForParty.payReference ?? 'N/A');
-                  }
                 }}
                 inputValue={partyInput}
                 onInputChange={(_, value) => setPartyInput(value)}
@@ -268,6 +274,24 @@ function PaymentForm({
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               placeholder="Transferencia, recibo, etc."
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Factura (ID opcional)"
+              fullWidth
+              value={invoiceId}
+              onChange={(e) => setInvoiceId(e.target.value)}
+              placeholder="Vincula con factura si aplica"
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Orden (ID opcional)"
+              fullWidth
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
+              placeholder="Vincula con orden si aplica"
             />
           </Grid>
           <Grid item xs={12}>

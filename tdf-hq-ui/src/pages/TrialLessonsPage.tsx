@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -108,6 +108,7 @@ const formatDateTime = (iso: string) => {
 
 export default function TrialLessonsPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const subjectsQuery = useQuery({
     queryKey: ['trial-subjects'],
     queryFn: Trials.listSubjects,
@@ -442,6 +443,25 @@ export default function TrialLessonsPage() {
     </Stack>
   );
 
+  const pushToCalendarWithPrefill = (cls: ClassSessionDTO, subjectName?: string, studentName?: string) => {
+    try {
+      const prefill = {
+        title: `Trial - ${subjectName ?? 'Clase'}`,
+        startAt: cls.startAt,
+        endAt: cls.endAt,
+        customerName: studentName ?? cls.studentName ?? '',
+        notes: cls.notes ?? '',
+        hint: 'Prefill creado desde Trial lessons',
+      };
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('booking-prefill', JSON.stringify(prefill));
+      }
+    } catch {
+      // ignore prefill errors; just navigate
+    }
+    navigate('/estudio/calendario');
+  };
+
   return (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="flex-start" spacing={2}>
@@ -565,11 +585,10 @@ export default function TrialLessonsPage() {
                           label={hasBooking ? `Reserva #${cls.bookingId}` : 'Sin reserva vinculada'}
                         />
                         <Button
-                          component={RouterLink}
-                          to="/estudio/calendario"
                           size="small"
                           variant="text"
                           sx={{ textTransform: 'none', minWidth: 0 }}
+                          onClick={() => pushToCalendarWithPrefill(cls, subject?.name, student?.displayName)}
                         >
                           {hasBooking ? 'Abrir calendario' : 'Crear en calendario'}
                         </Button>

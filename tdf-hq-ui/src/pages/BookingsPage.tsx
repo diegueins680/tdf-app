@@ -173,6 +173,7 @@ export default function BookingsPage() {
   const [createContactForm, setCreateContactForm] = useState({ name: '', email: '', phone: '' });
   const [createContactError, setCreateContactError] = useState<string | null>(null);
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
+  const [prefillHandled, setPrefillHandled] = useState(false);
 
   const requiresEngineer = (svc: string) => {
     const lowered = svc.toLowerCase();
@@ -266,6 +267,30 @@ export default function BookingsPage() {
       setAssignedRoomIds(defaults.map((room) => room.roomId));
     }
   }, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
+
+  useEffect(() => {
+    if (prefillHandled || dialogOpen) return;
+    try {
+      const raw = typeof window !== 'undefined' ? window.sessionStorage.getItem('booking-prefill') : null;
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<{ title?: string; startAt?: string; endAt?: string; customerName?: string; notes?: string; hint?: string }>;
+      if (parsed.startAt) setStartInput(formatForInput(new Date(parsed.startAt)));
+      if (parsed.endAt) setEndInput(formatForInput(new Date(parsed.endAt)));
+      if (parsed.title) setTitle(parsed.title);
+      if (parsed.customerName) setCustomerName(parsed.customerName);
+      if (parsed.notes) setNotes(parsed.notes);
+      setStatus('Tentative');
+      setServiceType('Trial lesson');
+      setDialogOpen(true);
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem('booking-prefill');
+      }
+    } catch {
+      // ignore malformed prefill
+    } finally {
+      setPrefillHandled(true);
+    }
+  }, [dialogOpen, formatForInput, prefillHandled]);
 
   const formatForInput = (date: Date) =>
     DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm");
