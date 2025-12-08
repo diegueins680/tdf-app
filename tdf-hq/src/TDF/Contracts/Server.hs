@@ -117,7 +117,7 @@ renderContractLatex StoredContract{..} =
     , "\\begin{document}"
     , "\\section*{Contract " <> latexEscape scId <> "}"
     , "\\textbf{Kind:} " <> latexEscape scKind <> "\\\\"
-    , "\\textbf{Created:} " <> latexEscape (T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" scCreatedAt)) <> "\\\\"
+    , "\\textbf{Created:} " <> latexEscape (T.pack (formatTime defaultTimeLocale \"%Y-%m-%d %H:%M:%S\" scCreatedAt)) <> "\\\\"
     , "\\subsection*{Payload}"
     , "\\begin{verbatim}"
     , TE.decodeUtf8 (BL.toStrict (A.encode scPayload))

@@ -61,7 +61,6 @@ import NotFoundPage from './pages/NotFoundPage';
 import TidalAgentPage from './pages/TidalAgentPage';
 import LabelAssetsPage from './pages/LabelAssetsPage';
 import LabelTracksPage from './pages/LabelTracksPage';
-import SocialPage from './pages/SocialPage';
 
 function Shell() {
   const { session } = useSession();
