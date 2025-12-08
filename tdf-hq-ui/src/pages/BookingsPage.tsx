@@ -865,15 +865,17 @@ export default function BookingsPage() {
               label="Plantilla rápida"
               value={template}
               onChange={(e) => {
-                const val = e.target.value as string;
+                const val = String(e.target.value);
                 setTemplate(val);
-                const presetMap = {
+                const presetMap: Record<'rehearsal' | 'recording' | 'mix' | 'curso', { title: string; svc: string; note: string }> = {
                   rehearsal: { title: 'Rehearsal', svc: 'Band rehearsal', note: 'Ensayo banda' },
                   recording: { title: 'Recording', svc: 'Recording', note: 'Grabación' },
                   mix: { title: 'Mix/Master', svc: 'Mixing', note: 'Mix/master' },
                   curso: { title: 'Curso', svc: 'Curso', note: 'Bloque de curso' },
-                } satisfies Record<string, { title: string; svc: string; note: string }>;
-                const preset = presetMap[val];
+                };
+                const preset = Object.prototype.hasOwnProperty.call(presetMap, val)
+                  ? presetMap[val as keyof typeof presetMap]
+                  : undefined;
                 if (preset) {
                   setTitle(preset.title);
                   setServiceType(preset.svc);
@@ -1006,7 +1008,7 @@ export default function BookingsPage() {
               onChange={(_, value) => setAssignedRoomIds(value.map((room) => room.roomId))}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip key={option.roomId} label={option.rName} {...getTagProps({ index })} />
+                  <Chip label={option.rName} {...getTagProps({ index })} />
                 ))
               }
               renderInput={(params) => (

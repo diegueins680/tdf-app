@@ -18,6 +18,7 @@ import {
   TableRow,
   TextField,
   Typography,
+  Snackbar,
 } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -29,7 +30,6 @@ import { Payments } from '../api/payments';
 import { Parties } from '../api/parties';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { DriveFileInfo } from '../services/googleDrive';
-import { useSnackbar } from 'notistack';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'COP'];
@@ -70,7 +70,7 @@ function PaymentForm({
   defaultParty?: PartyDTO | null;
   payments: PaymentDTO[];
 }) {
-  const { enqueueSnackbar } = useSnackbar();
+  const [toast, setToast] = useState<string | null>(null);
   const qc = useQueryClient();
   const [selectedParty, setSelectedParty] = useState<PartyDTO | null>(defaultParty ?? null);
   const [partyInput, setPartyInput] = useState<string>('');
@@ -131,7 +131,7 @@ function PaymentForm({
       setAttachmentUrl('');
       setAttachmentName('');
       onCreated();
-      enqueueSnackbar('Pago registrado', { variant: 'success' });
+      setToast('Pago registrado');
     },
     onError: (err) => setError(err.message),
   });
@@ -161,12 +161,12 @@ function PaymentForm({
       pcOrderId: orderId.trim() ? Number(orderId) : null,
       pcInvoiceId: invoiceId.trim() ? Number(invoiceId) : null,
       pcAmountCents: Math.round(normalizedAmount * 100),
-      pcCurrency: currency.trim() ?? 'USD',
+      pcCurrency: currency.trim() || 'USD',
       pcMethod: method,
-      pcReference: reference.trim() ?? null,
+      pcReference: reference.trim() || null,
       pcPaidAt: paidAt,
-      pcConcept: concept.trim() || 'Honorarios',
-      pcPeriod: period.trim() || null,
+      pcConcept: concept.trim() ?? 'Honorarios',
+      pcPeriod: period.trim() ?? null,
       pcAttachmentUrl: attachmentUrl.trim() || null,
     };
     mutation.mutate(payload);
@@ -391,6 +391,13 @@ function PaymentForm({
             </Button>
           </Alert>
         )}
+        <Snackbar
+          open={Boolean(toast)}
+          autoHideDuration={2200}
+          onClose={() => setToast(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          message={toast ?? ''}
+        />
       </CardContent>
     </Card>
   );
