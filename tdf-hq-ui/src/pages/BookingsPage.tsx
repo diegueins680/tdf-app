@@ -463,10 +463,11 @@ export default function BookingsPage() {
           eventResize={handleEventDropOrResize}
           eventClassNames={(arg) => (arg.event.extendedProps?.isCourse ? ['course-event'] : [])}
           eventContent={(arg) => {
-            const isCourse = Boolean(arg.event.extendedProps?.isCourse);
-            const courseSubtitle = arg.event.extendedProps?.courseSubtitle as string | undefined;
-            const priceText = arg.event.extendedProps?.priceText as string | undefined;
-            const locationText = arg.event.extendedProps?.locationText as string | undefined;
+            const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
+            const isCourse = Boolean(ext['isCourse']);
+            const courseSubtitle = (ext['courseSubtitle'] as string | undefined) || undefined;
+            const priceText = (ext['priceText'] as string | undefined) || undefined;
+            const locationText = (ext['locationText'] as string | undefined) || undefined;
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
