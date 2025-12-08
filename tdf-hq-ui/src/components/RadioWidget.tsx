@@ -107,6 +107,25 @@ const CURATED_STATIONS: Station[] = [
   },
 ];
 
+const RADIO_COUNTRIES = [
+  'AR',
+  'BR',
+  'CA',
+  'CL',
+  'CO',
+  'CR',
+  'DE',
+  'EC',
+  'ES',
+  'FR',
+  'MX',
+  'PE',
+  'PT',
+  'UK',
+  'US',
+  'VE',
+];
+
 function PromptList({ prompts }: { prompts: Prompt[] }) {
   if (prompts.length === 0) {
     return (
@@ -398,24 +417,7 @@ export default function RadioWidget() {
     () => allStations.find((s) => s.id === activeId) ?? defaultStation,
     [activeId, allStations, defaultStation],
   );
-  const countryOptions = useMemo(() => {
-    const opts = new Set<string>();
-    allStations.forEach((s) => {
-      if (s.country) opts.add(s.country);
-      if (s.region) opts.add(s.region);
-    });
-    const cleaned = Array.from(opts).filter((val) => {
-      const trimmed = val.trim();
-      if (!trimmed) return false;
-      if (trimmed.length > 24) return false;
-      const lower = trimmed.toLowerCase();
-      if (lower.includes('pull request')) return false;
-      if (trimmed.startsWith('http')) return false;
-      if (/[0-9#]/.test(trimmed)) return false;
-      return /^[\p{L}\s\/\-\.'&,]+$/u.test(trimmed);
-    });
-    return cleaned.slice(0, 16);
-  }, [allStations]);
+  const countryOptions = useMemo(() => RADIO_COUNTRIES, []);
   const genreOptions = useMemo(() => {
     const opts = new Set<string>();
     allStations.forEach((s) => {
