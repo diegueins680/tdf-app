@@ -27,6 +27,7 @@ import           TDF.API.Rooms     (RoomsAPI)
 import           TDF.API.Sessions  (SessionsAPI)
 import           TDF.API.Drive     (DriveAPI)
 import           TDF.API.Types     (LooseJSON, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
+import           TDF.API.Radio     (RadioAPI)
 import           TDF.Models        (RoleEnum)
 import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
@@ -40,6 +41,8 @@ import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
+import           TDF.Contracts.API (ContractsAPI)
+import           TDF.DTO (CountryDTO)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -92,6 +95,9 @@ type SocialAPI =
        "followers" :> Get '[JSON] [PartyFollowDTO]
   :<|> "following" :> Get '[JSON] [PartyFollowDTO]
   :<|> "vcard-exchange" :> ReqBody '[JSON] VCardExchangeRequest :> Post '[JSON] [PartyFollowDTO]
+  :<|> "friends" :> Get '[JSON] [PartyFollowDTO]
+  :<|> "friends" :> Capture "partyId" Int64 :> Post '[JSON] [PartyFollowDTO]
+  :<|> "friends" :> Capture "partyId" Int64 :> Delete '[JSON] NoContent
 
 type BookingAPI =
        Get '[JSON] [BookingDTO]
@@ -144,6 +150,11 @@ type FanPublicAPI =
   :<|> "artists" :> Capture "artistId" Int64 :> Get '[JSON] ArtistProfileDTO
   :<|> "artists" :> Capture "artistId" Int64 :> "releases" :> Get '[JSON] [ArtistReleaseDTO]
 
+type RadioPublicAPI =
+       "radio" :> "presence" :> Capture "partyId" Int64 :> Get '[JSON] (Maybe RadioPresenceDTO)
+
+type CountryAPI = "countries" :> Get '[JSON] [CountryDTO]
+
 type FanSecureAPI =
        "me" :> "profile" :>
          ( Get '[JSON] FanProfileDTO
@@ -185,6 +196,8 @@ type ProtectedAPI =
   :<|> "calendar" :> CalendarAPI
   :<|> CmsAdminAPI
   :<|> DriveAPI
+  :<|> RadioAPI
+  :<|> CountryAPI
   :<|> "stubs"    :> FutureAPI
 
 type API =
@@ -205,7 +218,9 @@ type API =
   :<|> CmsPublicAPI
   :<|> "marketplace" :> MarketplaceAPI
   :<|> "label" :> LabelAPI
+  :<|> "contracts" :> ContractsAPI
   :<|> "social-events" :> SocialEventsAPI
+  :<|> RadioPublicAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
 data HealthStatus = HealthStatus { status :: String, db :: String }

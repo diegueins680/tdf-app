@@ -22,7 +22,7 @@ import { Parties } from '../api/parties';
 import type { PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
 import type { Role } from '../api/generated/client';
-import { submitLiveSessionIntake, listInputInventory, type InputInventoryItem } from '../api/liveSessions';
+import { submitLiveSessionIntake } from '../api/liveSessions';
 import { getStoredSessionToken } from '../session/SessionContext';
 
 interface MusicianEntry {
@@ -64,13 +64,6 @@ const emptySong = (): SongEntry => ({
   songKey: '',
   lyrics: '',
 });
-
-interface InventoryOption {
-  id: string;
-  label: string;
-  category: string;
-  channelCount: number;
-}
 
 const GENRE_OPTIONS = [
   'Rock',
@@ -120,16 +113,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const [contactPhone, setContactPhone] = useState('');
   const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [availableDates, setAvailableDates] = useState('');
-  const [sessionInputList, setSessionInputList] = useState('');
-  const [inputChannels, setInputChannels] = useState<{
-    id: string;
-    channel: string;
-    source: string;
-    micId?: string | null;
-    preampId?: string | null;
-    interfaceId?: string | null;
-    notes?: string;
-  }[]>([{ id: crypto.randomUUID(), channel: 'Ch 1', source: '', micId: null, preampId: null, interfaceId: null, notes: '' }]);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [musicians, setMusicians] = useState<MusicianEntry[]>([emptyMusician()]);
   const [setlist, setSetlist] = useState<SongEntry[]>([emptySong()]);
@@ -137,11 +120,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const mustAcceptTerms = requireTerms ?? variant === 'public';
   const termsVersion = 'TDF Live Sessions v2';
   const draftKey = 'live-session-draft';
-
-  const inventoryQuery = useQuery({
-    queryKey: ['input-inventory'],
-    queryFn: () => listInputInventory(),
-  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -156,8 +134,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
         contactPhone: string;
         sessionDate: string;
         availableDates: string;
-        sessionInputList: string;
-        inputChannels: typeof inputChannels;
         musicians: MusicianEntry[];
         setlist: SongEntry[];
       }>;
@@ -168,10 +144,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       setContactPhone(parsed.contactPhone ?? '');
       setSessionDate(parsed.sessionDate ?? new Date().toISOString().slice(0, 10));
       setAvailableDates(parsed.availableDates ?? '');
-      setSessionInputList(parsed.sessionInputList ?? '');
-      if (Array.isArray(parsed.inputChannels) && parsed.inputChannels.length > 0) {
-        setInputChannels(parsed.inputChannels);
-      }
       if (Array.isArray(parsed.musicians) && parsed.musicians.length > 0) {
         setMusicians(parsed.musicians);
       }
@@ -193,8 +165,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       contactPhone,
       sessionDate,
       availableDates,
-      sessionInputList,
-      inputChannels,
       musicians,
       setlist,
     };
@@ -211,8 +181,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     contactPhone,
     sessionDate,
     availableDates,
-    sessionInputList,
-    inputChannels,
     musicians,
     setlist,
   ]);
@@ -293,19 +261,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
         bandName,
         bandDescription: asNullableString(bandDescription),
         primaryGenre: asNullableString(primaryGenre),
-        inputList: asNullableString(
-          JSON.stringify({
-            channels: inputChannels.map((ch, idx) => ({
-              channel: ch.channel || `Ch ${idx + 1}`,
-              source: ch.source,
-              micId: ch.micId ?? null,
-              preampId: ch.preampId ?? null,
-              interfaceId: ch.interfaceId ?? null,
-              notes: ch.notes ?? '',
-            })),
-            notes: sessionInputList,
-          }),
-        ),
         contactEmail: asNullableString(contactEmail),
         contactPhone: asNullableString(contactPhone),
         sessionDate: asNullableString(sessionDate),
@@ -378,118 +333,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const handleAddSong = () => setSetlist((prev) => [...prev, emptySong()]);
   const handleRemoveSong = (id: string) => setSetlist((prev) => prev.filter((song) => song.id !== id));
 
-  const handleAddChannel = () => {
-    const next = inputChannels.length + 1;
-    setInputChannels((prev) => [...prev, { id: crypto.randomUUID(), channel: `Ch ${next}`, source: '', micId: null, preampId: null, interfaceId: null, notes: '' }]);
-  };
-
-  const parseChannelCount = (item: InputInventoryItem): number => {
-    const haystack = `${item.name} ${item.model}`.toLowerCase();
-    const match = /(\d+)\s*(ch|canal|ch\.)?/i.exec(haystack);
-    if (match?.[1]) {
-      const parsed = Number.parseInt(match[1], 10);
-      if (Number.isFinite(parsed) && parsed > 0) return parsed;
-    }
-    if (haystack.includes('8pre') || haystack.includes('mp8') || haystack.includes('bad8')) return 8;
-    if (haystack.includes('b4')) return 4;
-    if (haystack.includes('2-') || haystack.includes('dual') || haystack.includes('stereo')) return 2;
-    return 1;
-  };
-
-  const handleRemoveChannel = (id: string) => {
-    setInputChannels((prev) => (prev.length <= 1 ? prev : prev.filter((ch) => ch.id !== id)));
-  };
-
-  const handleChannelChange = (
-    id: string,
-    patch: Partial<{
-      channel: string;
-      source: string;
-      micId?: string | null;
-      preampId?: string | null;
-      interfaceId?: string | null;
-      notes?: string;
-    }>,
-  ) => {
-    setInputChannels((prev) =>
-      prev.map((ch) => {
-        if (ch.id !== id) return ch;
-        const next = { ...ch, ...patch };
-
-        // Si el preamp elegido también es interfaz/conversor, autocompleta la interfaz (si está vacía).
-        if (patch.preampId !== undefined) {
-          const selectedPre = inventoryOptions.find((i) => i.id === patch.preampId);
-          const isAlsoInterface =
-            selectedPre && (selectedPre.category.includes('interface') || selectedPre.category.includes('conversor'));
-          if (isAlsoInterface) {
-            next.interfaceId = selectedPre.id;
-          }
-        }
-
-        // Si la interfaz elegida también es preamp, autocompleta el preamp (si está vacío).
-        if (patch.interfaceId !== undefined) {
-          const selectedInt = inventoryOptions.find((i) => i.id === patch.interfaceId);
-          const isAlsoPreamp = selectedInt?.category.includes('pre');
-          if (isAlsoPreamp && selectedInt) {
-            next.preampId = selectedInt.id;
-          }
-        }
-
-        return next;
-      }),
-    );
-  };
-
-  const usageCounts = useMemo(() => {
-    const counts = {
-      mic: new Map<string, number>(),
-      pre: new Map<string, number>(),
-      int: new Map<string, number>(),
-    };
-    inputChannels.forEach((ch) => {
-      if (ch.micId) counts.mic.set(ch.micId, (counts.mic.get(ch.micId) ?? 0) + 1);
-      if (ch.preampId) counts.pre.set(ch.preampId, (counts.pre.get(ch.preampId) ?? 0) + 1);
-      if (ch.interfaceId) counts.int.set(ch.interfaceId, (counts.int.get(ch.interfaceId) ?? 0) + 1);
-    });
-    return counts;
-  }, [inputChannels]);
-
-  const inventoryOptions = useMemo<InventoryOption[]>(
-    () =>
-      (inventoryQuery.data ?? []).map((item: InputInventoryItem) => ({
-        id: item.id,
-        label: [item.name, item.brand, item.model].filter(Boolean).join(' · '),
-        category: item.category?.toLowerCase() ?? '',
-        channelCount: parseChannelCount(item),
-      })),
-    [inventoryQuery.data],
-  );
-
-  const availableMics = (currentId?: string | null) =>
-    inventoryOptions.filter((i) => {
-      if (!i.category.includes('mic')) return false;
-      const used = usageCounts.mic.get(i.id) ?? 0;
-      const cap = i.channelCount;
-      if (i.id === (currentId ?? '')) return true;
-      return used < cap;
-    });
-  const availablePreamps = (currentId?: string | null) =>
-    inventoryOptions.filter((i) => {
-      if (!i.category.includes('pre')) return false;
-      const used = usageCounts.pre.get(i.id) ?? 0;
-      const cap = i.channelCount;
-      if (i.id === (currentId ?? '')) return true;
-      return used < cap;
-    });
-  const availableInterfaces = (currentId?: string | null) =>
-    inventoryOptions.filter((i) => {
-      if (!(i.category.includes('interface') || i.category.includes('conversor'))) return false;
-      const used = usageCounts.int.get(i.id) ?? 0;
-      const cap = i.channelCount;
-      if (i.id === (currentId ?? '')) return true;
-      return used < cap;
-    });
-
   const riderLabel = riderFile ? `${riderFile.name} (${Math.round(riderFile.size / 1024)} KB)` : 'Subir rider técnico (PDF, DOCX)';
 
   return (
@@ -499,7 +342,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
           {variant === 'public' ? 'Aplicar a TDF Live Sessions' : 'Live Session — Datos de banda'}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Ingresa la información del proyecto, los músicos y adjunta el rider técnico para generar el input list.
+          Ingresa la información del proyecto, los músicos y adjunta el rider técnico.
         </Typography>
       </Box>
 
@@ -716,90 +559,8 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
             </Button>
           </Stack>
           <Typography variant="body2" color="text.secondary">
-            Define el setlist con BPM, tonalidad y letra. Usa el input list general para toda la sesión y así anticipar microfonía y ruteo.
+            Define el setlist con BPM, tonalidad y letra. Los detalles de microfonía y ruteo pueden ir en el rider adjunto.
           </Typography>
-          <TextField
-            label="Input list / microfonía de la sesión"
-            value={sessionInputList}
-            onChange={(e) => setSessionInputList(e.target.value)}
-            placeholder="Kick IN - Beta91, Kick OUT - D112, Snare - SM57, Guitarra DI + SM57, Voz - SM7..."
-            fullWidth
-            multiline
-            minRows={2}
-          />
-          <Stack spacing={1}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="subtitle1" fontWeight={700}>
-                Canales (control de inventario)
-              </Typography>
-              <Button size="small" startIcon={<AddIcon />} onClick={handleAddChannel} variant="outlined">
-                Agregar canal
-              </Button>
-            </Stack>
-            {inventoryQuery.isError && <Alert severity="warning">No se pudo cargar inventario de microfonía/preamp.</Alert>}
-            {inputChannels.map((ch, idx) => (
-              <Paper key={ch.id} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-                  <TextField
-                    label="Canal"
-                    value={ch.channel}
-                    onChange={(e) => handleChannelChange(ch.id, { channel: e.target.value })}
-                    sx={{ width: { xs: '100%', sm: 140 } }}
-                  />
-                  <TextField
-                    label="Fuente (voz, gtr DI, kick out)"
-                    value={ch.source}
-                    onChange={(e) => handleChannelChange(ch.id, { source: e.target.value })}
-                    fullWidth
-                  />
-                  {inputChannels.length > 1 && (
-                    <IconButton onClick={() => handleRemoveChannel(ch.id)} size="small">
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                </Stack>
-                <Grid container spacing={1} sx={{ mt: 1 }}>
-                  <Grid item xs={12} md={4}>
-                    <Autocomplete
-                      options={availableMics(ch.micId)}
-                      value={inventoryOptions.find((i) => i.id === ch.micId) ?? null}
-                      onChange={(_, option) => handleChannelChange(ch.id, { micId: option?.id ?? null })}
-                      renderInput={(params) => <TextField {...params} label="Micrófono" placeholder="SM7, Beta91, 57..." />}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <Autocomplete
-                      options={availablePreamps(ch.preampId)}
-                      value={inventoryOptions.find((i) => i.id === ch.preampId) ?? null}
-                      onChange={(_, option) => handleChannelChange(ch.id, { preampId: option?.id ?? null })}
-                      renderInput={(params) => <TextField {...params} label="Preamp" placeholder="Neve, API..." />}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <Autocomplete
-                      options={availableInterfaces(ch.interfaceId)}
-                      value={inventoryOptions.find((i) => i.id === ch.interfaceId) ?? null}
-                      onChange={(_, option) => handleChannelChange(ch.id, { interfaceId: option?.id ?? null })}
-                      renderInput={(params) => <TextField {...params} label="Interface / Conversor" placeholder="Apollo, Clarett..." />}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      label="Notas del canal (placement, comp, ruteo)"
-                      value={ch.notes ?? ''}
-                      onChange={(e) => handleChannelChange(ch.id, { notes: e.target.value })}
-                      fullWidth
-                      multiline
-                      minRows={1}
-                    />
-                  </Grid>
-                </Grid>
-                <Typography variant="caption" color="text.secondary">
-                  Canción #{idx + 1} usará este canal. Ajusta el nombre para mapear con el setlist.
-                </Typography>
-              </Paper>
-            ))}
-          </Stack>
 
           <Stack spacing={2}>
             {setlist.map((song, idx) => (
@@ -858,8 +619,6 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                       multiline
                       minRows={2}
                     />
-                  </Grid>
-                  <Grid item xs={12}>
                   </Grid>
                 </Grid>
               </Paper>

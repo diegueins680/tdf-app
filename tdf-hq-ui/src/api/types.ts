@@ -3,6 +3,7 @@ export interface PartyDTO {
   legalName?: string | null;
   displayName: string;
   isOrg: boolean;
+  roles?: string[];
   taxId?: string | null;
   primaryEmail?: string | null;
   primaryPhone?: string | null;
@@ -212,6 +213,11 @@ export interface BookingDTO {
   customerName?: string | null;
   partyDisplayName?: string | null;
   resources: BookingResourceDTO[];
+  courseSlug?: string | null;
+  coursePrice?: number | null;
+  courseCapacity?: number | null;
+  courseRemaining?: number | null;
+  courseLocation?: string | null;
 }
 
 export interface VersionInfo {
@@ -325,6 +331,27 @@ export interface FanFollowDTO {
   ffSpotifyUrl?: string | null;
   ffYoutubeUrl?: string | null;
   ffStartedAt: string;
+}
+
+export interface PartyFollowDTO {
+  pfFollowerId: number;
+  pfFollowingId: number;
+  pfViaNfc: boolean;
+  pfStartedAt: string;
+}
+
+export interface RadioPresenceDTO {
+  rpPartyId: number;
+  rpStreamUrl: string;
+  rpStationName?: string | null;
+  rpStationId?: string | null;
+  rpUpdatedAt: string;
+}
+
+export interface RadioPresenceUpsert {
+  rpuStreamUrl: string;
+  rpuStationName?: string | null;
+  rpuStationId?: string | null;
 }
 
 export interface ArtistProfileUpsert {

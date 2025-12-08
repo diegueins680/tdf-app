@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -20,13 +21,27 @@ import {
 } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import SearchIcon from '@mui/icons-material/Search';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PaymentCreate, PaymentDTO, PartyDTO } from '../api/types';
 import { Payments } from '../api/payments';
 import { Parties } from '../api/parties';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Crypto'] as const;
+
+const partyFilterOptions = createFilterOptions<PartyDTO>({
+  stringify: (option) =>
+    [
+      option.displayName,
+      option.primaryEmail,
+      option.primaryPhone,
+      option.instagram,
+      option.partyId,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase(),
+});
 
 const toPeriod = (isoDate: string) => {
   const date = new Date(isoDate);
@@ -40,13 +55,16 @@ const formatAmount = (cents: number, currency: string) =>
 
 function PaymentForm({
   onCreated,
-  defaultPartyId,
+  parties,
+  defaultParty,
 }: {
   onCreated: () => void;
-  defaultPartyId?: number;
+  parties: PartyDTO[];
+  defaultParty?: PartyDTO | null;
 }) {
   const qc = useQueryClient();
-  const [partyId, setPartyId] = useState<string>(defaultPartyId ? String(defaultPartyId) : '');
+  const [selectedParty, setSelectedParty] = useState<PartyDTO | null>(defaultParty ?? null);
+  const [partyInput, setPartyInput] = useState<string>('');
   const [paidAt, setPaidAt] = useState<string>(new Date().toISOString().slice(0, 10));
   const [amount, setAmount] = useState<string>('');
   const [currency, setCurrency] = useState<string>('USD');
@@ -58,10 +76,8 @@ function PaymentForm({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (defaultPartyId) {
-      setPartyId(String(defaultPartyId));
-    }
-  }, [defaultPartyId]);
+    setSelectedParty(defaultParty ?? null);
+  }, [defaultParty]);
 
   useEffect(() => {
     setPeriod(toPeriod(paidAt));
@@ -80,9 +96,9 @@ function PaymentForm({
   });
 
   const handleSubmit = () => {
-    const parsedPartyId = Number.parseInt(partyId, 10);
-    if (!parsedPartyId || Number.isNaN(parsedPartyId)) {
-      setError('Ingresa un ID de contacto valido');
+    const parsedPartyId = selectedParty?.partyId;
+    if (!parsedPartyId) {
+      setError('Elige un contacto de la lista.');
       return;
     }
     const normalizedAmount = Number.parseFloat(amount.replace(',', '.'));
@@ -127,14 +143,24 @@ function PaymentForm({
         </Stack>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
-            <TextField
-              label="ID del contacto (partyId)"
-              fullWidth
-              value={partyId}
-              onChange={(e) => setPartyId(e.target.value)}
-              placeholder="Ej. 43"
-              required
-              type="number"
+            <Autocomplete
+              options={parties}
+              value={selectedParty}
+              onChange={(_, value) => setSelectedParty(value)}
+              inputValue={partyInput}
+              onInputChange={(_, value) => setPartyInput(value)}
+              filterOptions={partyFilterOptions}
+              getOptionLabel={(option) => `${option.displayName} · ID ${option.partyId}${option.primaryEmail ? ` · ${option.primaryEmail}` : ''}`}
+              isOptionEqualToValue={(option, value) => option.partyId === value.partyId}
+              noOptionsText="Sin coincidencias. Revisa Contactos."
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Contacto"
+                  required
+                  helperText="Busca por nombre, email o ID."
+                />
+              )}
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -238,15 +264,12 @@ function PaymentForm({
 }
 
 export default function PaymentsPage() {
-  const [partyFilter, setPartyFilter] = useState<string>('43');
-  const partyId = useMemo(() => {
-    const parsed = Number.parseInt(partyFilter, 10);
-    return Number.isNaN(parsed) ? undefined : parsed;
-  }, [partyFilter]);
+  const [partyFilter, setPartyFilter] = useState<PartyDTO | null>(null);
+  const [partyFilterInput, setPartyFilterInput] = useState<string>('');
 
   const paymentsQuery = useQuery<PaymentDTO[]>({
-    queryKey: ['payments', partyId ?? 'all'],
-    queryFn: () => Payments.list(partyId),
+    queryKey: ['payments', partyFilter?.partyId ?? 'all'],
+    queryFn: () => Payments.list(partyFilter?.partyId),
   });
 
   const partiesQuery = useQuery<PartyDTO[]>({
@@ -254,11 +277,13 @@ export default function PaymentsPage() {
     queryFn: () => Parties.list(),
   });
 
-  const selectedPartyName = useMemo(() => {
-    if (!partyId || !partiesQuery.data) return '';
-    const match = partiesQuery.data.find((p) => p.partyId === partyId);
-    return match?.displayName ?? '';
-  }, [partyId, partiesQuery.data]);
+  const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
+
+  const partyLookup = useMemo(() => {
+    const map = new Map<number, PartyDTO>();
+    parties.forEach((party) => map.set(party.partyId, party));
+    return map;
+  }, [parties]);
 
   const payments = paymentsQuery.data ?? [];
 
@@ -273,14 +298,37 @@ export default function PaymentsPage() {
             Carga pagos de honorarios directamente al CRM. Filtra por contacto para ver su historial.
           </Typography>
         </Box>
-        <Stack direction="row" gap={1}>
-          <TextField
-            label="partyId"
-            value={partyFilter}
-            onChange={(e) => setPartyFilter(e.target.value)}
-            InputProps={{ startAdornment: <SearchIcon fontSize="small" /> }}
+        <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
+          <Autocomplete
+            sx={{ minWidth: 280 }}
             size="small"
+            options={parties}
+            loading={partiesQuery.isFetching}
+            value={partyFilter}
+            onChange={(_, value) => setPartyFilter(value)}
+            inputValue={partyFilterInput}
+            onInputChange={(_, value) => setPartyFilterInput(value)}
+            filterOptions={partyFilterOptions}
+            getOptionLabel={(option) => `${option.displayName} · ID ${option.partyId}${option.primaryEmail ? ` · ${option.primaryEmail}` : ''}`}
+            isOptionEqualToValue={(option, value) => option.partyId === value.partyId}
+            noOptionsText="Sin coincidencias"
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Filtrar por contacto"
+                placeholder="Nombre, correo o ID"
+              />
+            )}
           />
+          <Button
+            variant="text"
+            onClick={() => {
+              setPartyFilter(null);
+              setPartyFilterInput('');
+            }}
+          >
+            Quitar filtro
+          </Button>
           <Button
             startIcon={<RefreshIcon />}
             onClick={() => {
@@ -300,7 +348,8 @@ export default function PaymentsPage() {
             onCreated={() => {
               void paymentsQuery.refetch();
             }}
-            defaultPartyId={partyId}
+            parties={parties}
+            defaultParty={partyFilter}
           />
         </Grid>
         <Grid item xs={12} lg={7}>
@@ -309,7 +358,9 @@ export default function PaymentsPage() {
               <Box>
                 <Typography variant="h6">Pagos registrados</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {partyId ? `Filtrando por partyId ${partyId} ${selectedPartyName ? `(${selectedPartyName})` : ''}` : 'Ultimos 200 pagos'}
+                  {partyFilter
+                    ? `Filtrando por ${partyFilter.displayName} · ID ${partyFilter.partyId}`
+                    : 'Ultimos 200 pagos'}
                 </Typography>
               </Box>
               {paymentsQuery.isFetching && <Typography variant="body2">Cargando...</Typography>}
@@ -330,17 +381,28 @@ export default function PaymentsPage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {payments.map((pay) => (
-                    <TableRow key={pay.payId} hover>
-                      <TableCell>{pay.payId}</TableCell>
-                      <TableCell>{pay.payPartyId}</TableCell>
-                      <TableCell>{pay.payPaidAt.split(' ')[0]}</TableCell>
-                      <TableCell>{pay.payPeriod ?? '-'}</TableCell>
-                      <TableCell>{formatAmount(pay.payAmountCents, pay.payCurrency)}</TableCell>
-                      <TableCell>{pay.payMethod}</TableCell>
-                      <TableCell>{pay.payReference ?? '-'}</TableCell>
-                    </TableRow>
-                  ))}
+                  {payments.map((pay) => {
+                    const contact = partyLookup.get(pay.payPartyId);
+                    return (
+                      <TableRow key={pay.payId} hover>
+                        <TableCell>{pay.payId}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            {contact?.displayName ?? 'Contacto desconocido'}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            ID {pay.payPartyId}
+                            {contact?.primaryEmail ? ` · ${contact.primaryEmail}` : ''}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{pay.payPaidAt.split(' ')[0]}</TableCell>
+                        <TableCell>{pay.payPeriod ?? '-'}</TableCell>
+                        <TableCell>{formatAmount(pay.payAmountCents, pay.payCurrency)}</TableCell>
+                        <TableCell>{pay.payMethod}</TableCell>
+                        <TableCell>{pay.payReference ?? '-'}</TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}

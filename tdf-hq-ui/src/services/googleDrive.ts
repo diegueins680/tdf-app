@@ -167,6 +167,21 @@ export const ensureAccessToken = async (): Promise<StoredToken> => {
   throw new Error('Necesitas iniciar sesión con Google Drive');
 };
 
+export const makeFilePublic = async (fileId: string): Promise<void> => {
+  const token = await ensureAccessToken();
+  await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token.accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ role: 'reader', type: 'anyone' }),
+  }).catch(() => undefined);
+};
+
+export const buildPublicContentUrl = (fileId: string) =>
+  `https://drive.google.com/uc?export=download&id=${fileId}`;
+
 export const uploadToDrive = async (
   file: File,
   onProgress?: (pct: number) => void,

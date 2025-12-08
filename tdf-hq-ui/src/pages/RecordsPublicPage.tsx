@@ -18,6 +18,8 @@ import {
   Stack,
   TextField,
   Typography,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -31,6 +33,8 @@ import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { Admin } from '../api/admin';
 import { useSession } from '../session/SessionContext';
+import { deriveModulesFromRoles } from '../components/SidebarNav';
+import EditIcon from '@mui/icons-material/Edit';
 
 const BOOKING_ZONE = 'America/Bogota';
 const SERVICE_OPTIONS = [
@@ -419,27 +423,40 @@ function BookingRequestDialog({
   );
 }
 
-const SectionTitle = ({ title, kicker }: { title: string; kicker?: string }) => (
-  <Stack spacing={1} direction="row" alignItems="center" sx={{ mb: 2 }}>
-    {kicker && (
-      <Chip
-        label={kicker}
-        size="small"
-        sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: 'primary.contrastText', fontWeight: 600 }}
-      />
-    )}
-    <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
-      {title}
-    </Typography>
+const SectionTitle = ({
+  title,
+  kicker,
+  actions,
+}: {
+  title: string;
+  kicker?: string;
+  actions?: React.ReactNode;
+}) => (
+  <Stack spacing={1} direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+    <Stack direction="row" spacing={1} alignItems="center">
+      {kicker && (
+        <Chip
+          label={kicker}
+          size="small"
+          sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: 'primary.contrastText', fontWeight: 600 }}
+        />
+      )}
+      <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
+        {title}
+      </Typography>
+    </Stack>
+    {actions && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>{actions}</Box>}
   </Stack>
 );
 
 const GradientCard = ({
   title,
   children,
+  actions,
 }: {
   title: string;
   children: React.ReactNode;
+  actions?: React.ReactNode;
 }) => (
   <Box
     sx={{
@@ -450,9 +467,12 @@ const GradientCard = ({
       boxShadow: '0 30px 60px rgba(0,0,0,0.35)',
     }}
   >
-    <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-      {title}
-    </Typography>
+    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+        {title}
+      </Typography>
+      {actions}
+    </Stack>
     {children}
   </Box>
 );
@@ -637,12 +657,16 @@ export default function RecordsPublicPage() {
   const releasesQuery = useCmsContents('records-release-', 'es');
   const recordingsQuery = useCmsContents('records-recording-', 'es');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const bookingToken =
-    import.meta.env['VITE_PUBLIC_BOOKING_TOKEN'] ??
-    import.meta.env['VITE_API_DEMO_TOKEN'] ??
-    '';
+  const envVars = import.meta.env as Record<string, string | undefined>;
+  const bookingToken = envVars['VITE_PUBLIC_BOOKING_TOKEN'] ?? envVars['VITE_API_DEMO_TOKEN'] ?? '';
   const hasBookingToken = Boolean(bookingToken);
   const { session, login, setApiToken } = useSession();
+  const modules = useMemo(() => {
+    const provided = session?.modules ?? [];
+    const fromRoles = deriveModulesFromRoles(session?.roles);
+    return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+  }, [session?.modules, session?.roles]);
+  const canMaintainCms = modules.has('admin') || modules.has('cms');
 
   useEffect(() => {
     if (!bookingToken) return;
@@ -807,6 +831,33 @@ export default function RecordsPublicPage() {
                 fontWeight: 700,
               }}
             />
+            {canMaintainCms && (
+              <Stack direction="row" spacing={1}>
+                <Tooltip title="Abrir CMS (records-*)">
+                  <Button
+                    component={RouterLink}
+                    to="/configuracion/cms"
+                    variant="outlined"
+                    size="small"
+                    startIcon={<EditIcon />}
+                    sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
+                  >
+                    Gestionar CMS
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Ir a CRUD de releases">
+                  <Button
+                    component={RouterLink}
+                    to="/label/releases"
+                    variant="outlined"
+                    size="small"
+                    sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
+                  >
+                    Releases (CRUD)
+                  </Button>
+                </Tooltip>
+              </Stack>
+            )}
             <Typography variant="h2" sx={{ fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.05 }}>
               {heroTitle}
             </Typography>
@@ -862,7 +913,23 @@ export default function RecordsPublicPage() {
             spacing={3}
             sx={{ mt: 6, flexWrap: 'wrap' }}
           >
-            <GradientCard title="Fotos del estudio">
+            <GradientCard
+              title="Fotos del estudio"
+              actions={
+                canMaintainCms ? (
+                  <Tooltip title="Editar fotos (CMS records-recording-*)">
+                    <IconButton
+                      component={RouterLink}
+                      to="/configuracion/cms?slug=records-recording-"
+                      size="small"
+                      sx={{ color: 'rgba(229,231,235,0.9)' }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                ) : null
+              }
+            >
               <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
                 Actualiza imágenes y textos desde Configuración → CMS (slugs records-recording-*).
               </Typography>
@@ -877,7 +944,23 @@ export default function RecordsPublicPage() {
                 ))}
               </Stack>
             </GradientCard>
-            <GradientCard title="TDF Sessions">
+            <GradientCard
+              title="TDF Sessions"
+              actions={
+                canMaintainCms ? (
+                  <Tooltip title="Editar sesiones (CMS records-session-*)">
+                    <IconButton
+                      component={RouterLink}
+                      to="/configuracion/cms?slug=records-session-"
+                      size="small"
+                      sx={{ color: 'rgba(229,231,235,0.9)' }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                ) : null
+              }
+            >
               <Stack spacing={1}>
                 {sessions.slice(0, 2).map((video) => (
                   <Stack key={video.youtubeId} direction="row" spacing={1} alignItems="center">
@@ -889,7 +972,35 @@ export default function RecordsPublicPage() {
                 ))}
               </Stack>
             </GradientCard>
-            <GradientCard title="Releases">
+            <GradientCard
+              title="Releases"
+              actions={
+                canMaintainCms ? (
+                  <Stack direction="row" spacing={0.5}>
+                    <Tooltip title="Editar releases (CMS records-release-*)">
+                      <IconButton
+                        component={RouterLink}
+                        to="/configuracion/cms?slug=records-release-"
+                        size="small"
+                        sx={{ color: 'rgba(229,231,235,0.9)' }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Ir a CRUD de releases">
+                      <IconButton
+                        component={RouterLink}
+                        to="/label/releases"
+                        size="small"
+                        sx={{ color: 'rgba(229,231,235,0.9)' }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                ) : null
+              }
+            >
               <Stack spacing={1}>
                 {releases.map((release) => (
                   <Typography key={release.title} variant="body2" sx={{ fontWeight: 700 }}>
@@ -904,7 +1015,23 @@ export default function RecordsPublicPage() {
 
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Box sx={{ mb: 6 }}>
-          <SectionTitle title="Grabaciones recientes" kicker="Estudio" />
+          <SectionTitle
+            title="Grabaciones recientes"
+            kicker="Estudio"
+            actions={
+              canMaintainCms && (
+                <Button
+                  component={RouterLink}
+                  to="/configuracion/cms?slug=records-recording-"
+                  size="small"
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                >
+                  Gestionar CMS
+                </Button>
+              )
+            }
+          />
           <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
             Mantén este grid con las sesiones más frescas: foto hero, fecha y un párrafo corto sobre cómo se grabó. Edita desde Configuración → CMS.
           </Typography>
@@ -912,7 +1039,33 @@ export default function RecordsPublicPage() {
         </Box>
 
         <Box id="releases" sx={{ mb: 6 }}>
-          <SectionTitle title="Lanzamientos TDF Records" kicker="Label" />
+          <SectionTitle
+            title="Lanzamientos TDF Records"
+            kicker="Label"
+            actions={
+              canMaintainCms && (
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    component={RouterLink}
+                    to="/configuracion/cms?slug=records-release-"
+                    size="small"
+                    variant="outlined"
+                    startIcon={<EditIcon />}
+                  >
+                    CMS
+                  </Button>
+                  <Button
+                    component={RouterLink}
+                    to="/label/releases"
+                    size="small"
+                    variant="outlined"
+                  >
+                    CRUD releases
+                  </Button>
+                </Stack>
+              )
+            }
+          />
           <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
             Cada release incluye los links oficiales. Edita los enlaces a plataformas en el CMS.
           </Typography>
@@ -920,14 +1073,45 @@ export default function RecordsPublicPage() {
         </Box>
 
         <Box sx={{ mb: 6 }}>
-          <SectionTitle title="TDF Sessions" kicker="YouTube" />
+          <SectionTitle
+            title="TDF Sessions"
+            kicker="YouTube"
+            actions={
+              canMaintainCms && (
+                <Button
+                  component={RouterLink}
+                  to="/configuracion/cms?slug=records-session-"
+                  size="small"
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                >
+                  Gestionar CMS
+                </Button>
+              )
+            }
+          />
           <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
             Inserta el ID de YouTube en la lista de sesiones para embeberlo aquí. Ideal para compartir en la página pública sin esfuerzo.
           </Typography>
           <SessionsGrid items={sessions} />
         </Box>
 
-        <GradientCard title="Cómo actualizar este CMS">
+        <GradientCard
+          title="Cómo actualizar este CMS"
+          actions={
+            canMaintainCms && (
+              <Button
+                component={RouterLink}
+                to="/configuracion/cms"
+                size="small"
+                variant="outlined"
+                startIcon={<EditIcon />}
+              >
+                Abrir CMS
+              </Button>
+            )
+          }
+        >
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
             Usa el panel en Configuración → CMS con slugs records-release-*, records-session-* y records-recording-* para crear borradores, publicar y versionar contenido en es/en.
           </Typography>

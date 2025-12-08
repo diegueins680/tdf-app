@@ -1,21 +1,21 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
-
-
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module TDF.API.SocialEventsAPI
   ( SocialEventsAPI
+  , EventsRoutes
+  , VenuesRoutes
+  , ArtistsRoutes
+  , RsvpRoutes
+  , InvitationsRoutes
+  , IdParam
   ) where
 
 import Servant
-import Data.Aeson (Value)
 import Data.Text (Text)
 
-import TDF.DTO.SocialEventsDTO (EventDTO, VenueDTO, ArtistDTO)
+import TDF.DTO.SocialEventsDTO (EventDTO, VenueDTO, ArtistDTO, RsvpDTO, InvitationDTO)
 
 type IdParam = Capture "id" Text
 
@@ -24,7 +24,7 @@ type EventsRoutes =
   :<|> "events" :> ReqBody '[JSON] EventDTO :> Post '[JSON] EventDTO
   :<|> "events" :> IdParam :> Get '[JSON] EventDTO
   :<|> "events" :> IdParam :> ReqBody '[JSON] EventDTO :> Put '[JSON] EventDTO
-  :<|> "events" :> IdParam :> DeleteNoContent '[JSON] NoContent
+  :<|> "events" :> IdParam :> DeleteNoContent
 
 type VenuesRoutes =
        "venues" :> QueryParam "city" Text :> QueryParam "near" Text :> Get '[JSON] [VenueDTO]
@@ -39,11 +39,15 @@ type ArtistsRoutes =
   :<|> "artists" :> IdParam :> ReqBody '[JSON] ArtistDTO :> Put '[JSON] ArtistDTO
 
 type RsvpRoutes =
-       "events" :> Capture "eventId" Text :> "rsvps" :> Get '[JSON] Value
-  :<|> "events" :> Capture "eventId" Text :> "rsvps" :> ReqBody '[JSON] Value :> Post '[JSON] Value
+       "events" :> Capture "eventId" Text :> "rsvps" :> Get '[JSON] [RsvpDTO]
+  :<|> "events" :> Capture "eventId" Text :> "rsvps" :> ReqBody '[JSON] RsvpDTO :> Post '[JSON] RsvpDTO
 
 type InvitationsRoutes =
-       "events" :> Capture "eventId" Text :> "invitations" :> ReqBody '[JSON] Value :> Post '[JSON] Value
+       "events" :> Capture "eventId" Text :> "invitations" :>
+         ( Get '[JSON] [InvitationDTO]
+      :<|> ReqBody '[JSON] InvitationDTO :> Post '[JSON] InvitationDTO
+      :<|> Capture "invitationId" Text :> ReqBody '[JSON] InvitationDTO :> Put '[JSON] InvitationDTO
+         )
 
 type SocialEventsAPI = EventsRoutes
                :<|> VenuesRoutes

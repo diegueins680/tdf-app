@@ -495,6 +495,7 @@ roleSlug Vendor        = "vendor"
 roleSlug ReadOnly      = "readonly"
 roleSlug Customer      = "customer"
 roleSlug Fan           = "fan"
+roleSlug Maintenance   = "maintenance"
 
 ensureStaff :: UTCTime -> Text -> Maybe Text -> RoleEnum -> Text -> Text -> Text -> SqlPersistT IO (Key Party)
 ensureStaff now name mlegal role token uname pwd = do
