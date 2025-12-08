@@ -75,6 +75,8 @@ interface Window {
     Buttons: PaypalButtons;
   };
   wpwlOptions?: Record<string, unknown>;
+  __ENV__?: Record<string, string | undefined>;
+  VITE_PAYPAL_CLIENT_ID?: string;
 }
 }
 const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
@@ -104,6 +106,15 @@ const parseEnvNumber = (key: string): number | null => {
   if (!raw) return null;
   const val = Number(raw);
   return Number.isFinite(val) ? val : null;
+};
+
+const readRuntimeEnv = (key: string): string => {
+  if (typeof window === 'undefined') return '';
+  const win = window as Window;
+  const fromGlobal = win[key as keyof Window];
+  if (typeof fromGlobal === 'string' && fromGlobal.trim()) return fromGlobal.trim();
+  const fromEnv = win.__ENV__?.[key];
+  return typeof fromEnv === 'string' ? fromEnv.trim() : '';
 };
 
 const normalizeText = (value: string) =>
@@ -141,7 +152,10 @@ export default function MarketplacePage() {
     return baseSet;
   }, [session?.modules, session?.roles]);
   const canManagePhotos = modules.has('ops') || modules.has('admin');
-  const paypalClientId = import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '';
+  const paypalClientId = useMemo(() => {
+    const baked = (import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
+    return baked || readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
+  }, []);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [copyToast, setCopyToast] = useState<string | null>(null);
