@@ -687,11 +687,6 @@ export default function MarketplacePage() {
         setPaypalDialogOpen(false);
       },
     });
-    const isEligibleFn = (buttons as { isEligible?: () => boolean }).isEligible;
-    if (typeof isEligibleFn === 'function' && !isEligibleFn()) {
-      setPaypalError('PayPal no está disponible para este dispositivo o navegador.');
-      return;
-    }
     buttons
       .render(container)
       .catch(() => {
