@@ -509,7 +509,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 6, px: { xs: 2, md: 6 } }}>
+    <>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 6, px: { xs: 2, md: 6 } }}>
       <input
         ref={audioFileInputRef}
         type="file"
@@ -1315,14 +1316,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           })}
         </Grid>
       </Stack>
-    </Box>
-    <Snackbar
-      open={Boolean(fanRoleToast)}
-      autoHideDuration={3000}
-      onClose={() => setFanRoleToast(null)}
-      message={fanRoleToast ?? ''}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-    />
+      </Box>
+      <Snackbar
+        open={Boolean(fanRoleToast)}
+        autoHideDuration={3000}
+        onClose={() => setFanRoleToast(null)}
+        message={fanRoleToast ?? ''}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+    </>
   );
 }
 function ProfileSectionCard({
