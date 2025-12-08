@@ -7,7 +7,7 @@ module TDF.Contracts.Server
 
 import           Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
-import           Data.Aeson ((.=))
+import           Data.Aeson ((.=), (.:))
 import           Data.Aeson.Types (parseMaybe, withObject, (.:?))
 import qualified Data.ByteString.Lazy as BL
 import           Data.Text (Text)
