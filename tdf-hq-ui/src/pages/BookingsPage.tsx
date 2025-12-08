@@ -103,7 +103,9 @@ export default function BookingsPage() {
   const events = useMemo(
     () =>
       bookings.map((booking) => {
-        const engineerMeta = extractEngineerFromNotes(booking.notes);
+        const engineerMeta = booking.engineerName || booking.engineerPartyId
+          ? { engineer: booking.engineerName ?? '', engineerId: booking.engineerPartyId ?? null, notesBody: booking.notes ?? '' }
+          : extractEngineerFromNotes(booking.notes);
         const isCourse =
           Boolean(booking.courseSlug) ||
           (booking.bookingId ?? 0) < 0 ||
@@ -313,18 +315,7 @@ export default function BookingsPage() {
 
   const buildCombinedNotes = () => {
     const trimmed = notes.trim();
-    const engineerLabel = (() => {
-      if (engineerPartyId) {
-        const display =
-          engineerOptions.find((opt) => opt.partyId === engineerPartyId)?.displayName ??
-          engineerName.trim();
-        return display ? `[${engineerPartyId}] ${display}` : `[${engineerPartyId}]`;
-      }
-      return engineerName.trim();
-    })();
-    const engineerLine = engineerLabel ? `Engineer: ${engineerLabel}` : '';
-    if (trimmed && engineerLine) return `${trimmed}\n${engineerLine}`;
-    if (engineerLine) return engineerLine;
+    // Keep notes purely for free text; engineer is now a first-class field.
     return trimmed === '' ? null : trimmed;
   };
 
@@ -342,6 +333,8 @@ export default function BookingsPage() {
         })(),
         cbPartyId: customerPartyId,
         cbResourceIds: assignedRoomIds,
+        cbEngineerPartyId: engineerPartyId,
+        cbEngineerName: engineerName.trim() || null,
       }),
     onSuccess: () => {
       setDialogOpen(false);
@@ -413,6 +406,8 @@ export default function BookingsPage() {
           ubEndsAt: endIso,
           ubResourceIds: assignedRoomIds,
           ubPartyId: customerPartyId,
+          ubEngineerPartyId: engineerPartyId,
+          ubEngineerName: engineerName.trim() || null,
         },
       });
     } else {
@@ -453,13 +448,15 @@ export default function BookingsPage() {
     setMode('edit');
     setEditingId(booking.bookingId);
     setTitle(booking.title ?? 'Sesión');
-    const { engineer, engineerId, notesBody } = extractEngineerFromNotes(booking.notes);
-    setNotes(notesBody);
-    setEngineerName(engineer);
+    const parsedNotes = extractEngineerFromNotes(booking.notes);
+    const engineerFromBooking = booking.engineerName ?? parsedNotes.engineer;
+    const engineerIdFromBooking = booking.engineerPartyId ?? parsedNotes.engineerId;
+    setNotes(parsedNotes.notesBody);
+    setEngineerName(engineerFromBooking);
     const matchedEngineerId =
-      engineerId ??
-      (engineer
-        ? parties.find((p) => p.displayName.toLowerCase() === engineer.toLowerCase())?.partyId ?? null
+      engineerIdFromBooking ??
+      (engineerFromBooking
+        ? parties.find((p) => p.displayName.toLowerCase() === engineerFromBooking.toLowerCase())?.partyId ?? null
         : null);
     setEngineerPartyId(matchedEngineerId);
     setCustomerPartyId(booking.partyId ?? null);

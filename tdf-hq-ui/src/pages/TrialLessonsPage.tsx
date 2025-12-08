@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -523,6 +524,7 @@ export default function TrialLessonsPage() {
               const room = rooms.find((r) => r.roomId === cls.roomId);
               const student = students.find((p) => p.studentId === cls.studentId);
               const rowPending = statusPendingId === cls.classSessionId;
+              const hasBooking = Boolean(cls.bookingId);
               return (
                 <Paper
                   key={cls.classSessionId}
@@ -556,6 +558,22 @@ export default function TrialLessonsPage() {
                       <Typography variant="body2" color="text.secondary">
                         Alumno: {student?.displayName ?? cls.studentName ?? cls.studentId}
                       </Typography>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                        <Chip
+                          size="small"
+                          color={hasBooking ? 'success' : 'default'}
+                          label={hasBooking ? `Reserva #${cls.bookingId}` : 'Sin reserva vinculada'}
+                        />
+                        <Button
+                          component={RouterLink}
+                          to="/estudio/calendario"
+                          size="small"
+                          variant="text"
+                          sx={{ textTransform: 'none', minWidth: 0 }}
+                        >
+                          {hasBooking ? 'Abrir calendario' : 'Crear en calendario'}
+                        </Button>
+                      </Stack>
                       {cls.notes && (
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                           {cls.notes}

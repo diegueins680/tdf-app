@@ -207,6 +207,8 @@ export interface BookingDTO {
   status: string;
   notes?: string | null;
   partyId?: number | null;
+  engineerPartyId?: number | null;
+  engineerName?: string | null;
   serviceType?: string | null;
   serviceOrderId?: number | null;
   serviceOrderTitle?: string | null;

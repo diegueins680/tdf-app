@@ -27,7 +27,9 @@ import type { PaymentCreate, PaymentDTO, PartyDTO } from '../api/types';
 import { Payments } from '../api/payments';
 import { Parties } from '../api/parties';
 
-const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Crypto'] as const;
+const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
+const CURRENCY_OPTIONS = ['USD', 'EUR', 'COP'];
+const CONCEPT_PRESETS = ['Honorarios', 'Adelanto', 'Licencia', 'Reembolso', 'Otros'];
 
 const partyFilterOptions = createFilterOptions<PartyDTO>({
   stringify: (option) =>
@@ -57,10 +59,12 @@ function PaymentForm({
   onCreated,
   parties,
   defaultParty,
+  payments,
 }: {
   onCreated: () => void;
   parties: PartyDTO[];
   defaultParty?: PartyDTO | null;
+  payments: PaymentDTO[];
 }) {
   const qc = useQueryClient();
   const [selectedParty, setSelectedParty] = useState<PartyDTO | null>(defaultParty ?? null);
@@ -74,6 +78,14 @@ function PaymentForm({
   const [period, setPeriod] = useState<string>(toPeriod(new Date().toISOString()));
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const lastPaymentForParty = useMemo(() => {
+    if (!selectedParty) return null;
+    return (
+      payments
+        .filter((p) => p.payPartyId === selectedParty.partyId)
+        .sort((a, b) => (a.payId < b.payId ? 1 : -1))[0] ?? null
+    );
+  }, [payments, selectedParty]);
 
   useEffect(() => {
     setSelectedParty(defaultParty ?? null);
@@ -141,17 +153,25 @@ function PaymentForm({
             Registrar pago
           </Button>
         </Stack>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <Autocomplete
-              options={parties}
-              value={selectedParty}
-              onChange={(_, value) => setSelectedParty(value)}
-              inputValue={partyInput}
-              onInputChange={(_, value) => setPartyInput(value)}
-              filterOptions={partyFilterOptions}
-              getOptionLabel={(option) => `${option.displayName} · ID ${option.partyId}${option.primaryEmail ? ` · ${option.primaryEmail}` : ''}`}
-              isOptionEqualToValue={(option, value) => option.partyId === value.partyId}
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <Autocomplete
+                options={parties}
+                value={selectedParty}
+                onChange={(_, value) => {
+                  setSelectedParty(value);
+                  if (value && lastPaymentForParty) {
+                    setConcept(lastPaymentForParty.payConcept ?? concept);
+                    setMethod(lastPaymentForParty.payMethod);
+                    setCurrency(lastPaymentForParty.payCurrency);
+                    setReference(lastPaymentForParty.payReference ?? 'N/A');
+                  }
+                }}
+                inputValue={partyInput}
+                onInputChange={(_, value) => setPartyInput(value)}
+                filterOptions={partyFilterOptions}
+                getOptionLabel={(option) => `${option.displayName} · ID ${option.partyId}${option.primaryEmail ? ` · ${option.primaryEmail}` : ''}`}
+                isOptionEqualToValue={(option, value) => option.partyId === value.partyId}
               noOptionsText="Sin coincidencias. Revisa Contactos."
               renderInput={(params) => (
                 <TextField
@@ -174,24 +194,24 @@ function PaymentForm({
               required
             />
           </Grid>
-          <Grid item xs={12} md={4}>
-            <TextField
-              label="Periodo"
-              fullWidth
-              value={period}
-              onChange={(e) => setPeriod(e.target.value.toUpperCase())}
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Periodo"
+                fullWidth
+                value={period}
+                onChange={(e) => setPeriod(e.target.value.toUpperCase())}
               placeholder="EJ. DEC-2025"
             />
           </Grid>
           <Grid item xs={12} md={4}>
             <TextField
-              label="Monto (USD)"
+              label={`Monto (${currency})`}
               fullWidth
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Ej. 399.00"
               required
-              InputProps={{ startAdornment: <Box sx={{ mr: 1 }}>$</Box> }}
+              InputProps={{ startAdornment: <Box sx={{ mr: 1, fontWeight: 700 }}>{currency}</Box> }}
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -202,7 +222,11 @@ function PaymentForm({
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
             >
-              <MenuItem value="USD">USD</MenuItem>
+              {CURRENCY_OPTIONS.map((code) => (
+                <MenuItem key={code} value={code}>
+                  {code}
+                </MenuItem>
+              ))}
             </TextField>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -221,12 +245,20 @@ function PaymentForm({
             </TextField>
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              label="Concepto"
-              fullWidth
+            <Autocomplete
+              freeSolo
+              options={CONCEPT_PRESETS}
               value={concept}
-              onChange={(e) => setConcept(e.target.value)}
-              placeholder="Honorarios, adelanto, etc."
+              onChange={(_, value) => setConcept(value ?? '')}
+              inputValue={concept}
+              onInputChange={(_, value) => setConcept(value)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Concepto"
+                  helperText="Elige o escribe el concepto del pago."
+                />
+              )}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -256,6 +288,24 @@ function PaymentForm({
         {mutation.isSuccess && !error && (
           <Alert severity="success" sx={{ mt: 2 }}>
             Pago registrado correctamente.
+          </Alert>
+        )}
+        {lastPaymentForParty && (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Último pago de este contacto: {formatAmount(lastPaymentForParty.payAmountCents, lastPaymentForParty.payCurrency)} · {lastPaymentForParty.payMethod}.{' '}
+            <Button
+              size="small"
+              onClick={() => {
+                setAmount(String(lastPaymentForParty.payAmountCents / 100));
+                setCurrency(lastPaymentForParty.payCurrency);
+                setMethod(lastPaymentForParty.payMethod);
+                setConcept(lastPaymentForParty.payConcept ?? concept);
+                setReference(lastPaymentForParty.payReference ?? 'N/A');
+                setPeriod(lastPaymentForParty.payPeriod ?? period);
+              }}
+            >
+              Copiar datos
+            </Button>
           </Alert>
         )}
       </CardContent>
@@ -350,6 +400,7 @@ export default function PaymentsPage() {
             }}
             parties={parties}
             defaultParty={partyFilter}
+            payments={payments}
           />
         </Grid>
         <Grid item xs={12} lg={7}>

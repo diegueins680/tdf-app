@@ -10,6 +10,8 @@ export interface BookingUpdatePayload {
   ubEndsAt?: string;
   ubResourceIds?: string[] | null;
   ubPartyId?: number | null;
+  ubEngineerPartyId?: number | null;
+  ubEngineerName?: string | null;
 }
 
 export const Bookings = {
@@ -23,6 +25,8 @@ export const Bookings = {
     cbServiceType?: string | null;
     cbPartyId?: number | null;
     cbResourceIds?: string[] | null;
+    cbEngineerPartyId?: number | null;
+    cbEngineerName?: string | null;
   }) => post<BookingDTO>('/bookings', body),
   update: (bookingId: number, body: BookingUpdatePayload) =>
     put<BookingDTO>(`/bookings/${bookingId}`, body),
