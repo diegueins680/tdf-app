@@ -188,11 +188,11 @@ export default function CalendarSyncPage() {
   });
 
   const exchangeMutation = useMutation({
-    mutationFn: () => CalendarApi.exchangeCode({ code: code.trim(), calendarId: trimmedCalendarId }),
-    onSuccess: () => {
+    mutationFn: (payload: { code: string; calendarId: string }) => CalendarApi.exchangeCode(payload),
+    onSuccess: (_, variables) => {
       setCode('');
       setShowValidation(false);
-      setConnectedCalendar(trimmedCalendarId);
+      setConnectedCalendar(variables.calendarId);
       setLastSyncAt(null);
       void eventsQuery.refetch();
     },
@@ -227,8 +227,9 @@ export default function CalendarSyncPage() {
   const handleSaveTokens = () => {
     setShowValidation(true);
     if (!trimmedCalendarId || !code.trim()) return;
-    exchangeMutation.mutate();
-    const nextHistory = Array.from(new Set([trimmedCalendarId, ...calendarHistory])).slice(0, 5);
+    const payload = { code: code.trim(), calendarId: trimmedCalendarId || 'primary' };
+    exchangeMutation.mutate(payload);
+    const nextHistory = Array.from(new Set([payload.calendarId, ...calendarHistory])).slice(0, 5);
     setCalendarHistory(nextHistory);
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('calendar-sync.history', JSON.stringify(nextHistory));
@@ -268,8 +269,9 @@ export default function CalendarSyncPage() {
     setCode(codeParam);
     if (calendarParam) setCalendarId(calendarParam);
     setShowValidation(true);
+    const targetCalendar = calendarParam ?? (trimmedCalendarId || 'primary');
     exchangeMutation.mutate(
-      { code: codeParam, calendarId: calendarParam ?? trimmedCalendarId || 'primary' },
+      { code: codeParam, calendarId: targetCalendar },
       {
         onSettled: () => setAutoExchanging(false),
       },
