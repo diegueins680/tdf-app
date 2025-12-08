@@ -3,150 +3,1640 @@
  * Do not make direct changes to the file.
  */
 
-
 export interface paths {
-  "/api/users": {
-    /**
-     * Get all users
-     * @description Returns a list of all users with their assigned roles
-     */
-    get: operations["getUsers"];
-  };
-  "/api/users/{userId}/roles": {
-    /**
-     * Get user roles
-     * @description Returns all roles assigned to a specific user
-     */
-    get: operations["getUserRoles"];
-    /**
-     * Update user roles
-     * @description Replace all roles for a user with the provided list
-     */
-    put: operations["updateUserRoles"];
-  };
+    "/version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get API Version
+         * @description Returns version and build information for the running API server.
+         */
+        get: operations["getVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health Check
+         * @description Checks the health of the API server and its database connection.
+         */
+        get: operations["getHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Login with username or email
+         * @description Authenticates a user and returns a bearer token plus role metadata.
+         */
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an account
+         * @description Registers a new party + credential pair and returns a ready-to-use token.
+         */
+        post: operations["signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get course metadata
+         * @description Returns public metadata for a course landing page.
+         */
+        get: operations["getCourseMetadata"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create course registration
+         * @description Stores a registration for the specified course. Landing submissions use source=landing and include UTM tags.
+         */
+        post: operations["createCourseRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/whatsapp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify WhatsApp webhook
+         * @description Echoes the hub.challenge parameter when the verify token matches.
+         */
+        get: operations["verifyWhatsAppWebhook"];
+        put?: never;
+        /**
+         * Receive WhatsApp webhook
+         * @description Consumes WhatsApp Cloud API message payloads and triggers keyword-based enrollment.
+         */
+        post: operations["handleWhatsAppWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/courses/{slug}/registrations/{registrationId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update course registration status
+         * @description Marks a course registration as paid or cancelled.
+         */
+        patch: operations["updateCourseRegistrationStatus"];
+        trace?: never;
+    };
+    "/fans/artists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List public artist profiles
+         * @description Returns fan-facing artist profiles with bio, location, and follower counts.
+         */
+        get: operations["listFanArtists"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/artists/{artistId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get artist profile
+         * @description Returns the public profile for the specified artist id.
+         */
+        get: operations["getFanArtist"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/artists/{artistId}/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * List artist releases
+         * @description Returns the releases registered for the artist.
+         */
+        get: operations["listFanArtistReleases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get fan profile
+         * @description Returns the profile for the authenticated fan/customer.
+         */
+        get: operations["getFanProfile"];
+        /**
+         * Update fan profile
+         * @description Creates or updates the fan profile for the authenticated party.
+         */
+        put: operations["updateFanProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/follows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List follows
+         * @description Returns the artists followed by the authenticated fan.
+         */
+        get: operations["listFanFollows"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/follows/{artistId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Follow artist
+         * @description Adds the selected artist to the authenticated fan feed.
+         */
+        post: operations["followArtist"];
+        /**
+         * Unfollow artist
+         * @description Removes the follow relationship for the authenticated fan.
+         */
+        delete: operations["unfollowArtist"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/artist-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get my artist profile
+         * @description Returns the artist profile for the authenticated artist/admin.
+         */
+        get: operations["getMyArtistProfile"];
+        /**
+         * Upsert my artist profile
+         * @description Updates artist bio, links, genres, and media shown to fans.
+         */
+        put: operations["updateMyArtistProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List parties
+         * @description Returns every party/contact stored in the CRM module. Requires CRM access.
+         */
+        get: operations["listParties"];
+        put?: never;
+        /**
+         * Create party
+         * @description Creates a person or organization in the CRM.
+         */
+        post: operations["createParty"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parties/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get party
+         * @description Returns the detailed record for a party, including whether it already has user access.
+         */
+        get: operations["getParty"];
+        /**
+         * Update party
+         * @description Updates mutable fields such as contact info, notes, or flags.
+         */
+        put: operations["updateParty"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parties/{partyId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add party role
+         * @description Activates a single role for the provided party id. Useful to grant extra capabilities (Artist, Student, etc.).
+         */
+        post: operations["addPartyRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List user accounts
+         * @description Returns the parties that have credentials plus their active roles.
+         */
+        get: operations["listUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{userId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace roles for a user
+         * @description Assigns the provided set of roles to the credential identified by `userId`.
+         */
+        put: operations["updateUserRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List user credentials
+         * @description Returns the full admin view of user accounts, including modules and status.
+         */
+        get: operations["adminListUsers"];
+        put?: never;
+        /**
+         * Create user for an existing party
+         * @description Generates credentials for a party. If no password is provided the system creates a strong temporary password,
+         *     stores the hash, and emails the welcome message with username + password.
+         */
+        post: operations["adminCreateUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get user account
+         * @description Returns the credential, linked party, active flag, and derived modules.
+         */
+        get: operations["adminGetUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update user account
+         * @description Update username, active flag, roles, or force a password reset for a specific user.
+         */
+        patch: operations["adminUpdateUser"];
+        trace?: never;
+    };
 }
-
 export type webhooks = Record<string, never>;
-
 export interface components {
-  schemas: {
-    User: {
-      /** @description Unique user identifier */
-      id: number;
-      /** @description User's full name */
-      name: string;
-      /**
-       * Format: email
-       * @description User's email address
-       */
-      email?: string | null;
-      /** @description User's phone number */
-      phone?: string | null;
-      /** @description List of roles assigned to the user */
-      roles: components["schemas"]["PartyRole"][];
-      /** @description Current status of the user */
-      status: components["schemas"]["PartyStatus"];
-      /**
-       * Format: date-time
-       * @description Timestamp when the user was created
-       */
-      createdAt: string;
+    schemas: {
+        Version: {
+            /** @description Application name. */
+            name?: string;
+            /** @description Application version. */
+            version?: string;
+            /** @description Git commit SHA. */
+            commit?: string | null;
+            /** @description Timestamp of the build. */
+            buildTime?: string | null;
+        };
+        Health: {
+            /**
+             * @description Service status.
+             * @enum {string}
+             */
+            status?: "ok" | "degraded";
+            /** @description Application version. */
+            version?: string;
+        };
+        LoginRequest: {
+            /**
+             * @description Username or primary email.
+             * @example admin@tdf.com
+             */
+            username: string;
+            /**
+             * Format: password
+             * @example changeme123
+             */
+            password: string;
+        };
+        SignupRequest: {
+            /** @example Diego */
+            firstName: string;
+            /** @example Saá */
+            lastName: string;
+            /**
+             * Format: email
+             * @example ops@tdfrecords.com
+             */
+            email: string;
+            /** @example +593 99 555 1122 */
+            phone?: string | null;
+            /**
+             * Format: password
+             * @example changeme123
+             */
+            password: string;
+            /** @description Optional roles (non-admin) to assign during signup. */
+            roles?: components["schemas"]["Role"][];
+            /** @description Artist or band ids the fan wants to follow immediately after signup. */
+            fanArtistIds?: number[];
+            /** @description Optional existing artist profile to claim when it is not already assigned to a user. */
+            claimArtistId?: number | null;
+        };
+        LoginResponse: {
+            /** @description Bearer token for authenticated requests. */
+            token?: string;
+            /** Format: int64 */
+            partyId?: number;
+            roles?: components["schemas"]["Role"][];
+            modules?: string[];
+        };
+        /**
+         * @description Assigned platform role.
+         * @enum {string}
+         */
+        Role: "Admin" | "Manager" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Artist" | "Artista" | "Webmaster" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
+        UserRoleSummary: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: email */
+            email?: string | null;
+            phone?: string | null;
+            roles?: components["schemas"]["Role"][];
+            /** @enum {string} */
+            status?: "Active" | "Inactive";
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        UserRoleUpdate: {
+            /** @description Complete list of roles that should remain active. */
+            roles: components["schemas"]["Role"][];
+        };
+        Party: {
+            /** Format: int64 */
+            partyId?: number;
+            legalName?: string | null;
+            displayName?: string;
+            isOrg?: boolean;
+            taxId?: string | null;
+            /** Format: email */
+            primaryEmail?: string | null;
+            primaryPhone?: string | null;
+            whatsapp?: string | null;
+            instagram?: string | null;
+            emergencyContact?: string | null;
+            notes?: string | null;
+            /** @description True if a credential exists for this party. */
+            hasUserAccount?: boolean;
+            /** @description Present when the party is linked to a band/project. */
+            band?: Record<string, never> | null;
+        };
+        CreatePartyRequest: {
+            /** @description Display name shown in listings. */
+            cDisplayName: string;
+            /** @description True for organizations/bands, false for individual contacts. */
+            cIsOrg: boolean;
+            cLegalName?: string | null;
+            /** Format: email */
+            cPrimaryEmail?: string | null;
+            cPrimaryPhone?: string | null;
+            cWhatsapp?: string | null;
+            cInstagram?: string | null;
+            cTaxId?: string | null;
+            cEmergencyContact?: string | null;
+            cNotes?: string | null;
+            cRoles?: components["schemas"]["Role"][] | null;
+        };
+        UpdatePartyRequest: {
+            uDisplayName?: string;
+            uIsOrg?: boolean;
+            uLegalName?: string | null;
+            /** Format: email */
+            uPrimaryEmail?: string | null;
+            uPrimaryPhone?: string | null;
+            uWhatsapp?: string | null;
+            uInstagram?: string | null;
+            uTaxId?: string | null;
+            uEmergencyContact?: string | null;
+            uNotes?: string | null;
+        };
+        RoleAssignmentRequest: {
+            role: components["schemas"]["Role"];
+        };
+        UserAccount: {
+            /** Format: int64 */
+            userId?: number;
+            /** Format: int64 */
+            partyId?: number;
+            partyName?: string;
+            username?: string;
+            active?: boolean;
+            roles?: components["schemas"]["Role"][];
+            modules?: string[];
+        };
+        CreateUserAccountRequest: {
+            /**
+             * Format: int64
+             * @description Party id that will receive login access.
+             */
+            uacPartyId: number;
+            /** @description Optional custom username; defaults to the primary email. */
+            uacUsername?: string | null;
+            /**
+             * Format: password
+             * @description Optional password override. Leave empty to auto-generate and email one.
+             */
+            uacPassword?: string | null;
+            uacActive?: boolean | null;
+            uacRoles?: components["schemas"]["Role"][] | null;
+        };
+        UpdateUserAccountRequest: {
+            uauUsername?: string | null;
+            /** Format: password */
+            uauPassword?: string | null;
+            uauActive?: boolean | null;
+            uauRoles?: components["schemas"]["Role"][] | null;
+        };
+        ArtistProfile: {
+            /** Format: int64 */
+            apArtistId?: number;
+            apDisplayName?: string;
+            apSlug?: string | null;
+            apBio?: string | null;
+            apCity?: string | null;
+            /** Format: uri */
+            apHeroImageUrl?: string | null;
+            apSpotifyArtistId?: string | null;
+            /** Format: uri */
+            apSpotifyUrl?: string | null;
+            apYoutubeChannelId?: string | null;
+            /** Format: uri */
+            apYoutubeUrl?: string | null;
+            /** Format: uri */
+            apWebsiteUrl?: string | null;
+            /** Format: uri */
+            apFeaturedVideoUrl?: string | null;
+            apGenres?: string | null;
+            apHighlights?: string | null;
+            /**
+             * Format: int64
+             * @description Total followers captured in the Fan Hub.
+             */
+            apFollowerCount?: number;
+            /** @description Whether this artist is already assigned to a user account. */
+            apHasUserAccount?: boolean;
+        };
+        ArtistProfileUpsert: {
+            /** Format: int64 */
+            apuArtistId: number;
+            apuSlug?: string | null;
+            apuBio?: string | null;
+            apuCity?: string | null;
+            /** Format: uri */
+            apuHeroImageUrl?: string | null;
+            apuSpotifyArtistId?: string | null;
+            /** Format: uri */
+            apuSpotifyUrl?: string | null;
+            apuYoutubeChannelId?: string | null;
+            /** Format: uri */
+            apuYoutubeUrl?: string | null;
+            /** Format: uri */
+            apuWebsiteUrl?: string | null;
+            /** Format: uri */
+            apuFeaturedVideoUrl?: string | null;
+            apuGenres?: string | null;
+            apuHighlights?: string | null;
+        };
+        ArtistRelease: {
+            /** Format: int64 */
+            arArtistId?: number;
+            /** Format: int64 */
+            arReleaseId?: number;
+            arTitle?: string;
+            /** Format: date */
+            arReleaseDate?: string | null;
+            arDescription?: string | null;
+            /** Format: uri */
+            arCoverImageUrl?: string | null;
+            /** Format: uri */
+            arSpotifyUrl?: string | null;
+            /** Format: uri */
+            arYoutubeUrl?: string | null;
+        };
+        FanProfile: {
+            /** Format: int64 */
+            fpArtistId?: number;
+            fpDisplayName?: string | null;
+            /** Format: uri */
+            fpAvatarUrl?: string | null;
+            fpFavoriteGenres?: string | null;
+            fpBio?: string | null;
+            fpCity?: string | null;
+        };
+        FanProfileUpdate: {
+            fpuDisplayName?: string | null;
+            /** Format: uri */
+            fpuAvatarUrl?: string | null;
+            fpuFavoriteGenres?: string | null;
+            fpuBio?: string | null;
+            fpuCity?: string | null;
+        };
+        FanFollow: {
+            /** Format: int64 */
+            ffArtistId?: number;
+            ffArtistName?: string;
+            /** Format: uri */
+            ffHeroImageUrl?: string | null;
+            /** Format: uri */
+            ffSpotifyUrl?: string | null;
+            /** Format: uri */
+            ffYoutubeUrl?: string | null;
+            /** Format: date */
+            ffStartedAt?: string;
+        };
+        CourseSession: {
+            label?: string;
+            /** Format: date */
+            date?: string;
+        };
+        SyllabusItem: {
+            title?: string;
+            topics?: string[];
+        };
+        CourseMetadata: {
+            slug?: string;
+            title?: string;
+            subtitle?: string;
+            format?: string;
+            duration?: string;
+            /** Format: float */
+            price?: number;
+            currency?: string;
+            capacity?: number;
+            locationLabel?: string;
+            /** Format: uri */
+            locationMapUrl?: string;
+            daws?: string[];
+            includes?: string[];
+            sessions?: components["schemas"]["CourseSession"][];
+            syllabus?: components["schemas"]["SyllabusItem"][];
+            /** Format: uri */
+            whatsappCtaUrl?: string;
+            /** Format: uri */
+            landingUrl?: string;
+        };
+        UTMTags: {
+            source?: string | null;
+            medium?: string | null;
+            campaign?: string | null;
+            content?: string | null;
+        };
+        CourseRegistrationRequest: {
+            fullName?: string | null;
+            /** Format: email */
+            email?: string | null;
+            /** @example +593999001122 */
+            phoneE164?: string | null;
+            /** @description landing | whatsapp | other keyword */
+            source: string;
+            howHeard?: string | null;
+            utm?: components["schemas"]["UTMTags"];
+        };
+        CourseRegistrationResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** @enum {string} */
+            status?: "pending_payment" | "paid" | "cancelled";
+        };
+        CourseRegistrationStatusUpdate: {
+            /** @enum {string} */
+            status: "pending_payment" | "paid" | "cancelled";
+        };
+        /** @description Meta WhatsApp Cloud API webhook payload (pass-through, not strictly validated). */
+        WhatsAppWebhook: {
+            [key: string]: unknown;
+        };
     };
-    /**
-     * @description User account status
-     * @enum {string}
-     */
-    PartyStatus: "Active" | "Inactive";
-    /**
-     * @description Available user roles in the system
-     * @enum {string}
-     */
-    PartyRole: "Admin" | "Manager" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Artist" | "Student" | "ReadOnly";
-    UserRoleUpdate: {
-      /** @description New list of roles to assign to the user */
-      roles: components["schemas"]["PartyRole"][];
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
-
 export type $defs = Record<string, never>;
-
-export type external = Record<string, never>;
-
 export interface operations {
-
-  /**
-   * Get all users
-   * @description Returns a list of all users with their assigned roles
-   */
-  getUsers: {
-    responses: {
-      /** @description Successful response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["User"][];
+    getVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
-    };
-  };
-  /**
-   * Get user roles
-   * @description Returns all roles assigned to a specific user
-   */
-  getUserRoles: {
-    parameters: {
-      path: {
-        /** @description The user ID */
-        userId: number;
-      };
-    };
-    responses: {
-      /** @description Successful response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["PartyRole"][];
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Version"];
+                };
+            };
         };
-      };
-      /** @description User not found */
-      404: {
-        content: never;
-      };
     };
-  };
-  /**
-   * Update user roles
-   * @description Replace all roles for a user with the provided list
-   */
-  updateUserRoles: {
-    parameters: {
-      path: {
-        /** @description The user ID */
-        userId: number;
-      };
+    getHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UserRoleUpdate"];
-      };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Authenticated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    responses: {
-      /** @description Roles updated successfully */
-      200: {
-        content: never;
-      };
-      /** @description Invalid request */
-      400: {
-        content: never;
-      };
-      /** @description User not found */
-      404: {
-        content: never;
-      };
+    signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupRequest"];
+            };
+        };
+        responses: {
+            /** @description Account created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Email already registered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-  };
+    getCourseMetadata: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Course metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseMetadata"];
+                };
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createCourseRegistration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseRegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description Registration stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseRegistrationResponse"];
+                };
+            };
+            /** @description Invalid payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Course not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    verifyWhatsAppWebhook: {
+        parameters: {
+            query?: {
+                "hub.mode"?: string;
+                "hub.verify_token"?: string;
+                "hub.challenge"?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Challenge echoed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Verify token mismatch */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    handleWhatsAppWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppWebhook"];
+            };
+        };
+        responses: {
+            /** @description Processed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateCourseRegistrationStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseRegistrationStatusUpdate"];
+            };
+        };
+        responses: {
+            /** @description Status updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseRegistrationResponse"];
+                };
+            };
+            /** @description Registration not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listFanArtists: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artist profiles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistProfile"][];
+                };
+            };
+        };
+    };
+    getFanArtist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artist profile found */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistProfile"];
+                };
+            };
+            /** @description Artist not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listFanArtistReleases: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artist releases */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistRelease"][];
+                };
+            };
+            /** @description Artist not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getFanProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Fan profile loaded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FanProfile"];
+                };
+            };
+        };
+    };
+    updateFanProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FanProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Fan profile saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FanProfile"];
+                };
+            };
+        };
+    };
+    listFanFollows: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Follow list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FanFollow"][];
+                };
+            };
+        };
+    };
+    followArtist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artist followed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FanFollow"];
+                };
+            };
+            /** @description Artist not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    unfollowArtist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Follow removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMyArtistProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artist profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistProfile"];
+                };
+            };
+        };
+    };
+    updateMyArtistProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistProfileUpsert"];
+            };
+        };
+        responses: {
+            /** @description Artist profile saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistProfile"];
+                };
+            };
+        };
+    };
+    listParties: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Parties fetched */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Party"][];
+                };
+            };
+        };
+    };
+    createParty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePartyRequest"];
+            };
+        };
+        responses: {
+            /** @description Party created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Party"];
+                };
+            };
+        };
+    };
+    getParty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Party found */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Party"];
+                };
+            };
+            /** @description Party not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateParty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePartyRequest"];
+            };
+        };
+        responses: {
+            /** @description Party updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Party"];
+                };
+            };
+            /** @description Party not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    addPartyRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleAssignmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Role assigned */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Party not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Users fetched successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRoleSummary"][];
+                };
+            };
+        };
+    };
+    updateUserRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserRoleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Roles replaced */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description User not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListUsers: {
+        parameters: {
+            query?: {
+                includeInactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accounts fetched */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAccount"][];
+                };
+            };
+        };
+    };
+    adminCreateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description User created and welcome email dispatched */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAccount"];
+                };
+            };
+            /** @description Missing party email or invalid payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Party not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminGetUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account found */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAccount"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminUpdateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description Account updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAccount"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
 }

@@ -14,7 +14,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "types": [
-      "vite/client"
+      "vite/client",
+      "jest"
     ],
     "strict": true,
     "noImplicitReturns": true,

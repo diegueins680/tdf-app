@@ -1,0 +1,157 @@
+import { useEffect, useState } from 'react';
+import { Alert, Box, Button, Card, CardContent, Divider, Stack, TextField, Typography } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import QrCode2Icon from '@mui/icons-material/QrCode2';
+
+const CARDANO_ADDRESS =
+  'addr1qx2mdr6n8d0v2y5s99tmdluzvcq6lvpvez0mx55vvpfy6ee4fzjjxl454z8d2f5gd2yualhds75ycvsl3wuar908v0csqksrwy';
+
+export default function DonationPage() {
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [copyMsg, setCopyMsg] = useState<string | null>(null);
+  const [qrError, setQrError] = useState<string | null>(null);
+  const memoNote = 'Donación TDF';
+  const notifyCopy = (message: string) => {
+    setCopyMsg(message);
+    window.setTimeout(() => setCopyMsg(null), 2000);
+  };
+
+  useEffect(() => {
+    try {
+      const url = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(CARDANO_ADDRESS)}`;
+      setQrDataUrl(url);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'No pudimos generar el QR.';
+      setQrError(message);
+    }
+  }, []);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(CARDANO_ADDRESS);
+      notifyCopy('Dirección copiada');
+    } catch {
+      notifyCopy('No se pudo copiar, copia manualmente.');
+    }
+  };
+
+  return (
+    <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+      <Card sx={{ maxWidth: 720, width: '100%', borderRadius: 3, boxShadow: '0 16px 64px rgba(15,17,24,0.25)' }}>
+        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+          <Stack spacing={2.5}>
+            <Stack spacing={0.5}>
+              <Typography variant="overline" color="text.secondary">
+                Donaciones cripto
+              </Typography>
+              <Typography variant="h4" fontWeight={800}>
+                Apoya con Cardano (ADA)
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Usamos una dirección de Cardano para contribuciones anónimas. Envía ADA a la dirección única indicada abajo. Si necesitas un comprobante, compártenos el hash de la transacción.
+              </Typography>
+            </Stack>
+
+            <Divider />
+
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="stretch">
+              <Stack spacing={1} flex={1}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Dirección
+                </Typography>
+                <TextField value={CARDANO_ADDRESS} multiline minRows={2} fullWidth InputProps={{ readOnly: true }} />
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Button
+                    variant="contained"
+                    startIcon={<ContentCopyIcon />}
+                    onClick={() => {
+                      void handleCopy();
+                    }}
+                  >
+                    Copiar dirección
+                  </Button>
+                  {copyMsg && (
+                    <Typography variant="body2" color="text.secondary">
+                      {copyMsg}
+                    </Typography>
+                  )}
+                </Stack>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  href={`web+cardano:${CARDANO_ADDRESS}`}
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Abrir en wallet
+                </Button>
+                <Alert severity="info" variant="outlined">
+                  Usa red Cardano. No envíes otros activos o monedas. Las donaciones son no reembolsables. Revisa fees antes de enviar.
+                </Alert>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Memo sugerido:
+                  </Typography>
+                  <TextField value={memoNote} size="small" InputProps={{ readOnly: true }} sx={{ maxWidth: 220 }} />
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(memoNote).then(
+                        () => notifyCopy('Memo copiado'),
+                        () => notifyCopy('No se pudo copiar el memo'),
+                      );
+                    }}
+                  >
+                    Copiar memo
+                  </Button>
+                </Stack>
+              </Stack>
+
+              <Stack
+                spacing={1}
+                alignItems="center"
+                justifyContent="center"
+                sx={{
+                  flexBasis: 320,
+                  flexShrink: 0,
+                  bgcolor: 'rgba(148,163,184,0.12)',
+                  borderRadius: 2,
+                  p: 2,
+                  border: '1px solid rgba(148,163,184,0.35)',
+                }}
+              >
+                <Typography variant="subtitle2" color="text.secondary">
+                  Escanea el QR
+                </Typography>
+                {qrError && <Alert severity="warning">{qrError}</Alert>}
+                {qrDataUrl ? (
+                  <Box
+                    component="img"
+                    src={qrDataUrl}
+                    alt="QR de donación Cardano"
+                    sx={{ width: '100%', maxWidth: 280, borderRadius: 2, border: '1px solid rgba(15,17,24,0.12)' }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: 180,
+                      height: 180,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: 'rgba(255,255,255,0.5)',
+                      borderRadius: 2,
+                      border: '1px dashed rgba(148,163,184,0.7)',
+                    }}
+                  >
+                    <QrCode2Icon fontSize="large" color="disabled" />
+                  </Box>
+                )}
+              </Stack>
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+}

@@ -3,6 +3,7 @@ export interface PartyDTO {
   legalName?: string | null;
   displayName: string;
   isOrg: boolean;
+  roles?: string[];
   taxId?: string | null;
   primaryEmail?: string | null;
   primaryPhone?: string | null;
@@ -45,6 +46,159 @@ export interface BookingResourceDTO {
   brRole: string;
 }
 
+export interface AssetDTO {
+  assetId: string;
+  name: string;
+  category: string;
+  status: string;
+  condition?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  location?: string | null;
+  qrToken?: string | null;
+  photoUrl?: string | null;
+}
+
+export interface PageResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+export interface AssetCreate {
+  cName: string;
+  cCategory: string;
+  cPhotoUrl?: string | null;
+}
+
+export interface AssetUpdate {
+  uName?: string;
+  uCategory?: string;
+  uStatus?: string;
+  uLocationId?: string | null;
+  uNotes?: string | null;
+  uPhotoUrl?: string | null;
+}
+
+export interface MarketplaceItemDTO {
+  miListingId: string;
+  miAssetId: string;
+  miPurpose: string;
+  miTitle: string;
+  miCategory: string;
+  miBrand?: string | null;
+  miModel?: string | null;
+  miPhotoUrl?: string | null;
+  miStatus?: string | null;
+  miCondition?: string | null;
+  miPriceUsdCents: number;
+  miPriceDisplay: string;
+  miMarkupPct: number;
+  miCurrency: string;
+}
+
+export interface MarketplaceCartItemDTO {
+  mciListingId: string;
+  mciTitle: string;
+  mciCategory: string;
+  mciBrand?: string | null;
+  mciModel?: string | null;
+  mciQuantity: number;
+  mciUnitPriceUsdCents: number;
+  mciSubtotalCents: number;
+  mciUnitPriceDisplay: string;
+  mciSubtotalDisplay: string;
+}
+
+export interface MarketplaceCartDTO {
+  mcCartId: string;
+  mcItems: MarketplaceCartItemDTO[];
+  mcCurrency: string;
+  mcSubtotalCents: number;
+  mcSubtotalDisplay: string;
+}
+
+export interface MarketplaceOrderItemDTO {
+  moiListingId: string;
+  moiTitle: string;
+  moiQuantity: number;
+  moiUnitPriceUsdCents: number;
+  moiSubtotalCents: number;
+  moiUnitPriceDisplay: string;
+  moiSubtotalDisplay: string;
+}
+
+export interface MarketplaceOrderDTO {
+  moOrderId: string;
+  moCartId?: string | null;
+  moCurrency: string;
+  moTotalUsdCents: number;
+  moTotalDisplay: string;
+  moStatus: string;
+  moStatusHistory: [string, string][];
+  moBuyerName: string;
+  moBuyerEmail: string;
+  moBuyerPhone?: string | null;
+  moPaymentProvider?: string | null;
+  moPaypalOrderId?: string | null;
+  moPaypalPayerEmail?: string | null;
+  moPaidAt?: string | null;
+  moCreatedAt: string;
+  moUpdatedAt: string;
+  moItems: MarketplaceOrderItemDTO[];
+}
+
+export interface MarketplaceOrderUpdatePayload {
+  mouStatus?: string;
+  mouPaymentProvider?: string | null;
+  mouPaidAt?: string | null;
+}
+
+export interface DatafastCheckoutDTO {
+  dcOrderId: string;
+  dcCheckoutId: string;
+  dcWidgetUrl: string;
+  dcAmount: string;
+  dcCurrency: string;
+}
+
+export interface PaypalCreateDTO {
+  pcOrderId: string;
+  pcPaypalOrderId: string;
+  pcApprovalUrl?: string | null;
+}
+
+export interface PaypalCaptureRequest {
+  pcCaptureOrderId: string;
+  pcCapturePaypalId: string;
+}
+
+export interface LabelTrackDTO {
+  ltId: string;
+  ltTitle: string;
+  ltNote?: string | null;
+  ltStatus: string;
+  ltCreatedAt: string;
+  ltUpdatedAt: string;
+}
+
+export interface AssetCheckoutDTO {
+  checkoutId: string;
+  assetId: string;
+  targetKind: string;
+  targetSessionId?: string | null;
+  targetPartyRef?: string | null;
+  targetRoomId?: string | null;
+  checkedOutBy: string;
+  checkedOutAt: string;
+  dueAt?: string | null;
+  conditionOut?: string | null;
+  conditionIn?: string | null;
+  returnedAt?: string | null;
+  notes?: string | null;
+}
+
 export interface BookingDTO {
   bookingId: number;
   title: string;
@@ -59,6 +213,11 @@ export interface BookingDTO {
   customerName?: string | null;
   partyDisplayName?: string | null;
   resources: BookingResourceDTO[];
+  courseSlug?: string | null;
+  coursePrice?: number | null;
+  courseCapacity?: number | null;
+  courseRemaining?: number | null;
+  courseLocation?: string | null;
 }
 
 export interface VersionInfo {
@@ -124,6 +283,7 @@ export interface ArtistProfileDTO {
   apGenres?: string | null;
   apHighlights?: string | null;
   apFollowerCount: number;
+  apHasUserAccount?: boolean;
 }
 
 export interface ArtistReleaseDTO {
@@ -135,6 +295,16 @@ export interface ArtistReleaseDTO {
   arCoverImageUrl?: string | null;
   arSpotifyUrl?: string | null;
   arYoutubeUrl?: string | null;
+}
+
+export interface ArtistReleaseUpsert {
+  aruArtistId: number;
+  aruTitle: string;
+  aruReleaseDate?: string | null;
+  aruDescription?: string | null;
+  aruCoverImageUrl?: string | null;
+  aruSpotifyUrl?: string | null;
+  aruYoutubeUrl?: string | null;
 }
 
 export interface FanProfileDTO {
@@ -163,8 +333,30 @@ export interface FanFollowDTO {
   ffStartedAt: string;
 }
 
+export interface PartyFollowDTO {
+  pfFollowerId: number;
+  pfFollowingId: number;
+  pfViaNfc: boolean;
+  pfStartedAt: string;
+}
+
+export interface RadioPresenceDTO {
+  rpPartyId: number;
+  rpStreamUrl: string;
+  rpStationName?: string | null;
+  rpStationId?: string | null;
+  rpUpdatedAt: string;
+}
+
+export interface RadioPresenceUpsert {
+  rpuStreamUrl: string;
+  rpuStationName?: string | null;
+  rpuStationId?: string | null;
+}
+
 export interface ArtistProfileUpsert {
   apuArtistId: number;
+  apuDisplayName?: string | null;
   apuSlug?: string | null;
   apuBio?: string | null;
   apuCity?: string | null;
@@ -177,4 +369,33 @@ export interface ArtistProfileUpsert {
   apuFeaturedVideoUrl?: string | null;
   apuGenres?: string | null;
   apuHighlights?: string | null;
+}
+
+export interface PaymentDTO {
+  payId: number;
+  payPartyId: number;
+  payOrderId?: number | null;
+  payInvoiceId?: number | null;
+  payAmountCents: number;
+  payCurrency: string;
+  payMethod: string;
+  payReference?: string | null;
+  payPaidAt: string;
+  payConcept: string;
+  payPeriod?: string | null;
+  payAttachment?: string | null;
+}
+
+export interface PaymentCreate {
+  pcPartyId: number;
+  pcOrderId?: number | null;
+  pcInvoiceId?: number | null;
+  pcAmountCents: number;
+  pcCurrency: string;
+  pcMethod: string;
+  pcReference?: string | null;
+  pcPaidAt: string;
+  pcConcept: string;
+  pcPeriod?: string | null;
+  pcAttachmentUrl?: string | null;
 }

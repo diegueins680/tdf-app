@@ -32,6 +32,14 @@ CREATE TABLE IF NOT EXISTS referral_code(
   owner_user_id UUID REFERENCES academy_user(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS referral_claim(
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT REFERENCES referral_code(code) ON DELETE CASCADE,
+  claimant_user_id UUID REFERENCES academy_user(id) ON DELETE SET NULL,
+  email TEXT NOT NULL,
+  claimed_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE (code, email)
+);
 CREATE TABLE IF NOT EXISTS cohort(
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug TEXT UNIQUE NOT NULL,
