@@ -14,6 +14,7 @@ import {
   Stack,
   TextField,
   Typography,
+  Snackbar,
 } from '@mui/material';
 import SyncIcon from '@mui/icons-material/Sync';
 import LinkIcon from '@mui/icons-material/Link';
@@ -34,9 +35,17 @@ export default function CalendarSyncPage() {
   const [showValidation, setShowValidation] = useState(false);
   const [appliedRemoteConfig, setAppliedRemoteConfig] = useState(false);
   const [autoExchanging, setAutoExchanging] = useState(false);
+  const [copyToast, setCopyToast] = useState<string | null>(null);
 
   const trimmedCalendarId = calendarId.trim();
   const location = useLocation();
+  const icsUrl = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    const base = (import.meta.env['VITE_CALENDAR_ICS_BASE'] ?? `${window.location.origin}/calendar/v1/ics`).trim();
+    const cal = trimmedCalendarId || 'primary';
+    const separator = base.includes('?') ? '&' : '?';
+    return `${base}${separator}calendarId=${encodeURIComponent(cal)}`;
+  }, [trimmedCalendarId]);
 
   const formatForInput = useCallback(
     (dt: DateTime) => dt.setZone(zone).toFormat("yyyy-LL-dd'T'HH:mm"),
@@ -123,7 +132,7 @@ export default function CalendarSyncPage() {
       setCalendarHistory(nextHistory);
       window.localStorage.setItem('calendar-sync.history', JSON.stringify(nextHistory));
     }
-  }, [calendarId]);
+  }, [calendarHistory, calendarId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -197,6 +206,14 @@ export default function CalendarSyncPage() {
       void eventsQuery.refetch();
     },
   });
+
+  const lastSyncSummary = useMemo(() => {
+    if (!lastSyncAt) return 'Sin sincronizar';
+    const formatted = new Date(lastSyncAt).toLocaleString();
+    const fromLabel = fromInput ? new Date(fromInput).toLocaleString() : 'Sin fecha inicio';
+    const toLabel = toInput ? new Date(toInput).toLocaleString() : 'Sin fecha fin';
+    return `${formatted} · Rango: ${fromLabel} → ${toLabel}`;
+  }, [fromInput, lastSyncAt, toInput]);
 
   const syncMutation = useMutation({
     mutationFn: () =>
@@ -298,6 +315,9 @@ export default function CalendarSyncPage() {
           <Typography variant="h5" fontWeight={800}>
             Integración Google Calendar
           </Typography>
+          <Alert severity="info" variant="outlined">
+            {`Última sync: ${lastSyncSummary}`}
+          </Alert>
           <Typography color="text.secondary">
             Conecta tu calendario y sincroniza eventos a la base de datos para usarlos en reportes, agenda interna y
             posteriores automatizaciones. Usa los pasos: 1) conectar con Google, 2) pegar el code, 3) guardar tokens, 4) sincronizar.
@@ -364,6 +384,32 @@ export default function CalendarSyncPage() {
                       />
                     )}
                   />
+                  <Stack spacing={0.5}>
+                    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                      <Typography variant="caption" color="text.secondary">
+                        URL ICS:
+                      </Typography>
+                      <Typography variant="caption" sx={{ wordBreak: 'break-all', flex: 1 }}>
+                        {icsUrl || '—'}
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => {
+                          if (!icsUrl) return;
+                          navigator.clipboard.writeText(icsUrl).then(
+                            () => setCopyToast('ICS copiado al portapapeles.'),
+                            () => setCopyToast('No se pudo copiar el ICS, intenta manualmente.'),
+                          );
+                        }}
+                      >
+                        Copiar
+                      </Button>
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary">
+                      Usa este enlace para suscribirte al calendario en Outlook/Apple/Google.
+                    </Typography>
+                  </Stack>
                   <TextField
                     label="Cuenta Google (opcional)"
                     fullWidth
@@ -569,6 +615,13 @@ export default function CalendarSyncPage() {
           </Stack>
         </Stack>
       </Paper>
+      <Snackbar
+        open={Boolean(copyToast)}
+        autoHideDuration={2200}
+        onClose={() => setCopyToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        message={copyToast ?? ''}
+      />
     </Stack>
   );
 }

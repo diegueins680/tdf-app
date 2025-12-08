@@ -154,7 +154,8 @@ export default function MarketplacePage() {
   const canManagePhotos = modules.has('ops') || modules.has('admin');
   const paypalClientId = useMemo(() => {
     const baked = (import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
-    return baked || readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
+    const runtimeVal = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID') ?? '';
+    return baked !== '' ? baked : runtimeVal;
   }, []);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);
@@ -240,7 +241,8 @@ export default function MarketplacePage() {
 
   const listingsQuery = useQuery({
     queryKey: ['marketplace-listings'],
-    queryFn: Marketplace.list,
+    queryFn: () => Marketplace.list(),
+    staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -1017,7 +1019,7 @@ export default function MarketplacePage() {
           <Alert
             severity="warning"
             action={
-              <Button size="small" onClick={() => listingsQuery.refetch()}>
+              <Button size="small" onClick={() => void listingsQuery.refetch()}>
                 Reintentar
               </Button>
             }
@@ -1165,6 +1167,45 @@ export default function MarketplacePage() {
                   >
                     No encontramos resultados con estos filtros.
                   </Alert>
+                  <Card variant="outlined" sx={{ mt: 1 }}>
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          ¿Te avisamos cuando vuelva a estar disponible?
+                        </Typography>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                          <TextField
+                            label="Nombre"
+                            value={buyerName}
+                            onChange={(e) => setBuyerName(e.target.value)}
+                            size="small"
+                          />
+                          <TextField
+                            label="Correo"
+                            value={buyerEmail}
+                            onChange={(e) => setBuyerEmail(e.target.value)}
+                            size="small"
+                          />
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => {
+                              localStorage.setItem(
+                                BUYER_INFO_KEY,
+                                JSON.stringify({ name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref }),
+                              );
+                              setToast('Guardamos tu contacto; te avisaremos.');
+                            }}
+                          >
+                            Guardar contacto
+                          </Button>
+                        </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                          Usaremos tu contacto solo para notificar disponibilidad.
+                        </Typography>
+                      </Stack>
+                    </CardContent>
+                  </Card>
                 </Grid>
               )}
               {sortedListings.map((item) => (
@@ -1858,6 +1899,9 @@ export default function MarketplacePage() {
             <Typography variant="subtitle1" fontWeight={700}>
               Total: {cartSubtotal}
             </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Contacto: {buyerName || '—'} · {buyerEmail || '—'}
+            </Typography>
             <Stack spacing={0.5}>
               {cartItems.map((item) => (
                 <Typography key={item.mciListingId} variant="body2">
@@ -1888,7 +1932,11 @@ export default function MarketplacePage() {
               datafastCheckoutMutation.isPending ||
               createPaypalOrderMutation.isPending ||
               capturePaypalMutation.isPending ||
-              (paymentMethod === 'paypal' && (!paypalClientId || !paypalReady))
+              (paymentMethod === 'paypal' && (!paypalClientId || !paypalReady)) ||
+              !isValidName ||
+              !isValidEmail ||
+              !hasCartItems ||
+              cartItemCount === 0
             }
           >
             {paymentMethod === 'paypal'

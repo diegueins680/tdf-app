@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import DescriptionIcon from '@mui/icons-material/Description';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PaymentCreate, PaymentDTO, PartyDTO } from '../api/types';
@@ -28,6 +29,7 @@ import { Payments } from '../api/payments';
 import { Parties } from '../api/parties';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { DriveFileInfo } from '../services/googleDrive';
+import { useSnackbar } from 'notistack';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'COP'];
@@ -68,6 +70,7 @@ function PaymentForm({
   defaultParty?: PartyDTO | null;
   payments: PaymentDTO[];
 }) {
+  const { enqueueSnackbar } = useSnackbar();
   const qc = useQueryClient();
   const [selectedParty, setSelectedParty] = useState<PartyDTO | null>(defaultParty ?? null);
   const [partyInput, setPartyInput] = useState<string>('');
@@ -83,6 +86,7 @@ function PaymentForm({
   const [invoiceId, setInvoiceId] = useState<string>('');
   const [orderId, setOrderId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [fieldHints, setFieldHints] = useState<{ amount?: string; party?: string; date?: string }>({});
   const invoiceOptions = useMemo(
     () => Array.from(new Set(payments.map((p) => p.payInvoiceId).filter(Boolean))).map((v) => String(v)),
     [payments],
@@ -127,6 +131,7 @@ function PaymentForm({
       setAttachmentUrl('');
       setAttachmentName('');
       onCreated();
+      enqueueSnackbar('Pago registrado', { variant: 'success' });
     },
     onError: (err) => setError(err.message),
   });
@@ -135,18 +140,22 @@ function PaymentForm({
     const parsedPartyId = selectedParty?.partyId;
     if (!parsedPartyId) {
       setError('Elige un contacto de la lista.');
+      setFieldHints((prev) => ({ ...prev, party: 'Selecciona un contacto de la lista desplegable.' }));
       return;
     }
     const normalizedAmount = Number.parseFloat(amount.replace(',', '.'));
     if (Number.isNaN(normalizedAmount) || normalizedAmount <= 0) {
       setError('Ingresa un monto valido');
+      setFieldHints((prev) => ({ ...prev, amount: 'Usa solo números. Ej: 120.50' }));
       return;
     }
     if (!paidAt) {
       setError('Selecciona una fecha de pago');
+      setFieldHints((prev) => ({ ...prev, date: 'Selecciona la fecha del pago.' }));
       return;
     }
     setError(null);
+    setFieldHints({});
     const payload: PaymentCreate = {
       pcPartyId: parsedPartyId,
       pcOrderId: orderId.trim() ? Number(orderId) : null,
@@ -196,7 +205,8 @@ function PaymentForm({
                   {...params}
                   label="Contacto"
                   required
-                  helperText="Busca por nombre, email o ID."
+                  helperText={fieldHints.party ?? 'Busca por nombre, email o ID.'}
+                  error={Boolean(fieldHints.party)}
                 />
               )}
             />
@@ -210,6 +220,8 @@ function PaymentForm({
               onChange={(e) => setPaidAt(e.target.value)}
               InputLabelProps={{ shrink: true }}
               required
+              helperText={fieldHints.date}
+              error={Boolean(fieldHints.date)}
             />
           </Grid>
             <Grid item xs={12} md={4}>
@@ -230,6 +242,8 @@ function PaymentForm({
               placeholder="Ej. 399.00"
               required
               InputProps={{ startAdornment: <Box sx={{ mr: 1, fontWeight: 700 }}>{currency}</Box> }}
+              helperText={fieldHints.amount}
+              error={Boolean(fieldHints.amount)}
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -385,6 +399,9 @@ function PaymentForm({
 export default function PaymentsPage() {
   const [partyFilter, setPartyFilter] = useState<PartyDTO | null>(null);
   const [partyFilterInput, setPartyFilterInput] = useState<string>('');
+  const [fromFilter, setFromFilter] = useState<string>('');
+  const [toFilter, setToFilter] = useState<string>('');
+  const [methodFilter, setMethodFilter] = useState<string>('all');
 
   const paymentsQuery = useQuery<PaymentDTO[]>({
     queryKey: ['payments', partyFilter?.partyId ?? 'all'],
@@ -439,11 +456,44 @@ export default function PaymentsPage() {
               />
             )}
           />
+          <TextField
+            label="Desde"
+            type="date"
+            size="small"
+            value={fromFilter}
+            onChange={(e) => setFromFilter(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Hasta"
+            type="date"
+            size="small"
+            value={toFilter}
+            onChange={(e) => setToFilter(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Metodo"
+            size="small"
+            select
+            value={methodFilter}
+            onChange={(e) => setMethodFilter(e.target.value)}
+          >
+            <MenuItem value="all">(Todos)</MenuItem>
+            {PAYMENT_METHODS.map((m) => (
+              <MenuItem key={m} value={m}>
+                {m}
+              </MenuItem>
+            ))}
+          </TextField>
           <Button
             variant="text"
             onClick={() => {
               setPartyFilter(null);
               setPartyFilterInput('');
+              setFromFilter('');
+              setToFilter('');
+              setMethodFilter('all');
             }}
           >
             Quitar filtro
@@ -498,10 +548,18 @@ export default function PaymentsPage() {
                     <TableCell>Monto</TableCell>
                     <TableCell>Metodo</TableCell>
                     <TableCell>Referencia</TableCell>
+                    <TableCell>Comprobante</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {payments.map((pay) => {
+                  {payments
+                    .filter((pay) => {
+                      if (fromFilter && pay.payPaidAt < fromFilter) return false;
+                      if (toFilter && pay.payPaidAt > toFilter) return false;
+                      if (methodFilter !== 'all' && pay.payMethod !== methodFilter) return false;
+                      return true;
+                    })
+                    .map((pay) => {
                     const contact = partyLookup.get(pay.payPartyId);
                     return (
                       <TableRow key={pay.payId} hover>
@@ -520,6 +578,24 @@ export default function PaymentsPage() {
                         <TableCell>{formatAmount(pay.payAmountCents, pay.payCurrency)}</TableCell>
                         <TableCell>{pay.payMethod}</TableCell>
                         <TableCell>{pay.payReference ?? '-'}</TableCell>
+                        <TableCell>
+                          {pay.payAttachment ? (
+                            <Button
+                              size="small"
+                              startIcon={<DescriptionIcon fontSize="small" />}
+                              component="a"
+                              href={pay.payAttachment}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Ver
+                            </Button>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              —
+                            </Typography>
+                          )}
+                        </TableCell>
                       </TableRow>
                     );
                   })}

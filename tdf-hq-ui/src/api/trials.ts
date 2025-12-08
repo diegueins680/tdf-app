@@ -69,6 +69,7 @@ export interface ClassSessionDTO {
   roomName?: string | null;
   bookingId?: number | null;
   notes?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface ClassSessionCreate {

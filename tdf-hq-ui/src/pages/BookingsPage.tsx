@@ -174,12 +174,24 @@ export default function BookingsPage() {
   const [createContactError, setCreateContactError] = useState<string | null>(null);
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
   const [prefillHandled, setPrefillHandled] = useState(false);
+  const [prefillNotice, setPrefillNotice] = useState(false);
+  const [autoAssignMessage, setAutoAssignMessage] = useState('');
+  const [template, setTemplate] = useState<string>('');
+  const [serviceLocked, setServiceLocked] = useState(false);
 
   const requiresEngineer = (svc: string) => {
     const lowered = svc.toLowerCase();
     return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
       lowered.includes(keyword),
     );
+  };
+  const defaultMinutesForService = (svc: string) => {
+    const lowered = svc.toLowerCase();
+    if (lowered.includes('trial') || lowered.includes('lesson') || lowered.includes('clase')) return 60;
+    if (lowered.includes('rehearsal') || lowered.includes('ensayo')) return 90;
+    if (lowered.includes('mix') || lowered.includes('master')) return 120;
+    if (lowered.includes('record') || lowered.includes('grab')) return 120;
+    return 60;
   };
 
   const categorizeRooms = useMemo(() => {
@@ -268,8 +280,10 @@ export default function BookingsPage() {
     }
   }, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
 
-  const formatForInput = (date: Date) =>
-    DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm");
+  const formatForInput = useCallback(
+    (date: Date) => DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm"),
+    [zone],
+  );
 
   useEffect(() => {
     if (prefillHandled || dialogOpen) return;
@@ -285,6 +299,8 @@ export default function BookingsPage() {
       setStatus('Tentative');
       setServiceType('Trial lesson');
       setDialogOpen(true);
+      setAutoAssignMessage('Datos precargados desde la última acción.');
+      setPrefillNotice(true);
       if (typeof window !== 'undefined') {
         window.sessionStorage.removeItem('booking-prefill');
       }
@@ -338,6 +354,19 @@ export default function BookingsPage() {
     return dt.isValid ? dt.toUTC().toISO() : null;
   };
 
+  const resetPrefill = () => {
+    setStartInput('');
+    setEndInput('');
+    setTitle('Bloque de estudio');
+    setNotes('');
+    setServiceType('');
+    setAssignedRoomIds([]);
+    setEngineerName('');
+    setEngineerPartyId(null);
+    setPrefillNotice(false);
+    setAutoAssignMessage('');
+  };
+
   const buildCombinedNotes = () => {
     const trimmed = notes.trim();
     // Keep notes purely for free text; engineer is now a first-class field.
@@ -375,6 +404,8 @@ export default function BookingsPage() {
       setEngineerPartyId(null);
       setCustomerName('');
       setCustomerPartyId(null);
+      setPrefillNotice(false);
+      setAutoAssignMessage('');
       void qc.invalidateQueries({ queryKey: ['bookings'] });
     },
     onError: (err) => {
@@ -391,6 +422,8 @@ export default function BookingsPage() {
       setEditingId(null);
       setMode('create');
       setFormError(null);
+      setPrefillNotice(false);
+      setAutoAssignMessage('');
     },
     onError: (err) => {
       setFormError(err instanceof Error ? err.message : 'No se pudo actualizar la sesión.');
@@ -491,6 +524,7 @@ export default function BookingsPage() {
         : booking.customerName ?? booking.partyDisplayName ?? '';
     setCustomerName(customerLabel);
     setServiceType(booking.serviceType ?? '');
+    setServiceLocked(Boolean(booking.courseSlug));
     setStatus(booking.status ?? 'Confirmed');
     setStartInput(formatForInput(new Date(booking.startsAt)));
     setEndInput(formatForInput(new Date(booking.endsAt)));
@@ -751,6 +785,18 @@ export default function BookingsPage() {
                 Este servicio normalmente usa un ingeniero. Asigna uno o continúa bajo tu criterio.
               </Alert>
             )}
+            {prefillNotice && (
+              <Alert
+                severity="info"
+                action={
+                  <Button color="inherit" size="small" onClick={resetPrefill}>
+                    Deshacer
+                  </Button>
+                }
+              >
+                Datos precargados desde la última acción.
+              </Alert>
+            )}
             <TextField
               label="Título"
               value={title}
@@ -815,6 +861,40 @@ export default function BookingsPage() {
               InputLabelProps={{ shrink: true }}
             />
             <TextField
+              select
+              label="Plantilla rápida"
+              value={template}
+              onChange={(e) => {
+                const val = e.target.value as string;
+                setTemplate(val);
+                const presetMap = {
+                  rehearsal: { title: 'Rehearsal', svc: 'Band rehearsal', note: 'Ensayo banda' },
+                  recording: { title: 'Recording', svc: 'Recording', note: 'Grabación' },
+                  mix: { title: 'Mix/Master', svc: 'Mixing', note: 'Mix/master' },
+                  curso: { title: 'Curso', svc: 'Curso', note: 'Bloque de curso' },
+                } satisfies Record<string, { title: string; svc: string; note: string }>;
+                const preset = presetMap[val];
+                if (preset) {
+                  setTitle(preset.title);
+                  setServiceType(preset.svc);
+                  setNotes((prev) => (prev ? prev : preset.note));
+                  const defaults = defaultRoomsForService(preset.svc);
+                  if (defaults.length) {
+                    setAssignedRoomIds(defaults.map((r) => r.roomId));
+                    setAutoAssignMessage(`Asignamos ${defaults.map((r) => r.rName).join(' + ')}`);
+                  }
+                }
+              }}
+              helperText="Prefill servicio, salas y notas"
+              fullWidth
+            >
+              <MenuItem value="">Sin plantilla</MenuItem>
+              <MenuItem value="rehearsal">Ensayo (band rehearsal)</MenuItem>
+              <MenuItem value="recording">Recording (cabina + control)</MenuItem>
+              <MenuItem value="mix">Mix/Master (control room)</MenuItem>
+              <MenuItem value="curso">Curso/bloque</MenuItem>
+            </TextField>
+            <TextField
               label="Notas (opcional)"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -876,18 +956,32 @@ export default function BookingsPage() {
               select
               label="Servicio"
               value={serviceType}
+              disabled={serviceLocked}
               onChange={(e) => {
                 const value = e.target.value;
                 setServiceType(value);
+                const messageParts: string[] = [];
                 if (mode === 'create' || assignedRoomIds.length === 0) {
                   const defaults = defaultRoomsForService(value);
                   if (defaults.length) {
                     setAssignedRoomIds(defaults.map((room) => room.roomId));
+                    messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
                   }
                 }
-                if (requiresEngineer(value) && !engineerName) {
-                  setEngineerName('');
+                if (requiresEngineer(value) && !engineerName && engineerOptions.length > 0) {
+                  const eng = engineerOptions[0]!;
+                  setEngineerName(eng.displayName);
+                  setEngineerPartyId(eng.partyId);
+                  messageParts.push(`Ingeniero sugerido: ${eng.displayName}`);
                 }
+                const minutes = defaultMinutesForService(value);
+                const startDt = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
+                if (startDt.isValid && minutes > 0) {
+                  const endDt = startDt.plus({ minutes });
+                  setEndInput(endDt.toFormat("yyyy-LL-dd'T'HH:mm"));
+                  messageParts.push(`Duración ajustada a ${minutes} min`);
+                }
+                setAutoAssignMessage(messageParts.join(' · '));
               }}
               helperText="Elige el tipo de servicio asociado a la sesión."
             >
@@ -899,6 +993,11 @@ export default function BookingsPage() {
                 </MenuItem>
               ))}
             </TextField>
+            {serviceLocked && (
+              <Alert severity="info" variant="outlined">
+                Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.
+              </Alert>
+            )}
             <Autocomplete
               multiple
               options={rooms}
@@ -907,7 +1006,7 @@ export default function BookingsPage() {
               onChange={(_, value) => setAssignedRoomIds(value.map((room) => room.roomId))}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip label={option.rName} {...getTagProps({ index })} />
+                  <Chip key={option.roomId} label={option.rName} {...getTagProps({ index })} />
                 ))
               }
               renderInput={(params) => (
@@ -920,6 +1019,11 @@ export default function BookingsPage() {
               )}
               noOptionsText="No hay salas registradas"
             />
+            {autoAssignMessage && (
+              <Typography variant="caption" color="primary">
+                {autoAssignMessage}
+              </Typography>
+            )}
             <Box>
               <Typography variant="caption" color="text.secondary">
                 Reglas: DJ Practice → DJ Booth · Band recording → Live + Control · Vocal recording → Vocal Booth + Control · Band rehearsal → Live · Mixing/Mastering → Control. Recording/Mixing/Mastering requieren ingeniero.

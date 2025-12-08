@@ -318,6 +318,7 @@ export default function TrialLessonsPage() {
         await updateMutation.mutateAsync({ id: editing.classSessionId, patch });
         if (normalizedStatus(editing.status) !== form.status) {
           await syncStatus(editing, form.status, form.notes);
+          setStatusToast(`Estado actualizado: ${statusMeta[form.status].label}`);
           void qc.invalidateQueries({ queryKey: ['trial-class-sessions'] });
         }
       } else {
@@ -336,6 +337,9 @@ export default function TrialLessonsPage() {
     const patch: ClassSessionUpdate = { status: nextStatus, notes: trimmedNotes };
 
     // Always try to persist class status directly so standalone trials are supported.
+    if (nextStatus === 'realizada' && (!cls.startAt || !cls.endAt)) {
+      throw new Error('Completa fecha y hora antes de marcar la clase como realizada.');
+    }
     await Trials.updateClassSession(cls.classSessionId, patch);
 
     if (nextStatus === 'realizada') {
@@ -545,6 +549,9 @@ export default function TrialLessonsPage() {
               const student = students.find((p) => p.studentId === cls.studentId);
               const rowPending = statusPendingId === cls.classSessionId;
               const hasBooking = Boolean(cls.bookingId);
+              const updatedDisplay = cls.updatedAt
+                ? formatDateTime(cls.updatedAt)
+                : formatDateTime(cls.endAt ?? cls.startAt);
               return (
                 <Paper
                   key={cls.classSessionId}
@@ -598,6 +605,9 @@ export default function TrialLessonsPage() {
                           {cls.notes}
                         </Typography>
                       )}
+                      <Typography variant="caption" color="text.secondary">
+                        Última actualización: {updatedDisplay || 'No disponible'}
+                      </Typography>
                     </Box>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Button variant="outlined" size="small" onClick={() => openEditDialog(cls)}>
