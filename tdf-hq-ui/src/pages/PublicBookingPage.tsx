@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardContent,
+  Divider,
   Chip,
   Grid,
   MenuItem,
@@ -125,6 +126,19 @@ export default function PublicBookingPage() {
     });
     return map;
   }, [services]);
+  const selectedPrice = servicePriceLookup.get(form.serviceType);
+  const formattedStart = useMemo(() => {
+    if (!form.startsAt) return null;
+    const dt = new Date(form.startsAt);
+    if (Number.isNaN(dt.getTime())) return null;
+    return dt.toLocaleString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }, [form.startsAt]);
 
   return (
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -305,6 +319,52 @@ export default function PublicBookingPage() {
                         </Alert>
                       </Grid>
                     )}
+                    <Grid item xs={12}>
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          bgcolor: 'rgba(255,255,255,0.02)',
+                          borderColor: 'rgba(255,255,255,0.08)',
+                        }}
+                      >
+                        <CardContent>
+                          <Stack spacing={1}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                              Resumen rápido
+                            </Typography>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                              <Chip
+                                label={form.serviceType || 'Servicio'}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                              <Chip
+                                label={formattedStart ? `Inicio: ${formattedStart}` : 'Elige fecha y hora'}
+                                size="small"
+                                variant="outlined"
+                              />
+                              <Chip
+                                label={`Duración: ${form.durationMinutes || 60} min`}
+                                size="small"
+                                variant="outlined"
+                              />
+                              <Chip
+                                label={selectedPrice ? `Referencia: ${selectedPrice}` : 'Precio se confirma contigo'}
+                                size="small"
+                                variant="outlined"
+                              />
+                              <Chip label={`Zona: ${localTimezoneLabel()}`} size="small" variant="outlined" />
+                            </Stack>
+                            <Divider sx={{ my: 1 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              Te enviaremos la confirmación por correo y coordinaremos cualquier ajuste de horario o salas
+                              contigo.
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
                     <Grid item xs={12}>
                       <Button type="submit" variant="contained" size="large" disabled={submitting} fullWidth>
                         {submitting ? 'Enviando…' : 'Confirmar reserva'}
