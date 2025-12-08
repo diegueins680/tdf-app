@@ -1,55 +1,137 @@
 {-# LANGUAGE OverloadedStrings #-}
-module TDF.Contracts.Server where
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE RecordWildCards #-}
+module TDF.Contracts.Server
+  ( server
+  ) where
 
-import           Control.Monad.IO.Class   (liftIO)
-import qualified Data.Aeson               as A
-import           Data.Aeson               ((.:), (.:?), (.!=))
-import qualified Data.ByteString.Lazy     as BL
-import qualified Data.Text                as T
-import           Data.Text.Encoding       (encodeUtf8)
+import           Control.Monad.IO.Class (liftIO)
+import qualified Data.Aeson as A
+import           Data.Aeson ((.=))
+import           Data.Aeson.Types (parseMaybe, withObject, (.:?))
+import qualified Data.ByteString.Lazy as BL
+import           Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import           Data.Time (UTCTime, defaultTimeLocale, formatTime, getCurrentTime)
+import           GHC.Generics (Generic)
 import           Servant
-
+import           System.Directory (createDirectoryIfMissing, doesFileExist)
+import           System.FilePath ((</>))
 import           TDF.Contracts.API
-import qualified TDF.Handlers.InputList   as InputList
+import qualified TDF.Handlers.InputList as InputList
+import           Data.UUID (toText)
+import           Data.UUID.V4 (nextRandom)
+
+data StoredContract = StoredContract
+  { scId        :: Text
+  , scKind      :: Text
+  , scPayload   :: A.Value
+  , scCreatedAt :: UTCTime
+  } deriving (Show, Generic)
+
+instance A.ToJSON StoredContract where
+  toJSON StoredContract{..} = A.object
+    [ "id" .= scId
+    , "kind" .= scKind
+    , "payload" .= scPayload
+    , "created_at" .= scCreatedAt
+    ]
+
+instance A.FromJSON StoredContract where
+  parseJSON = withObject "StoredContract" $ \o ->
+    StoredContract
+      <$> o .: "id"
+      <*> o .: "kind"
+      <*> o .: "payload"
+      <*> o .: "created_at"
+
+contractsDir :: FilePath
+contractsDir = "contracts" </> "store"
+
+contractPath :: Text -> FilePath
+contractPath cid = contractsDir </> T.unpack cid <> ".json"
 
 server :: Server ContractsAPI
 server = createH :<|> pdfH :<|> sendH
   where
     createH :: A.Value -> Handler A.Value
-    createH v = pure (A.object ["status" A..= ("created" :: T.Text), "id" A..= ("uuid-demo" :: T.Text), "payload" A..= v])
+    createH payload = do
+      cid <- liftIO (toText <$> nextRandom)
+      now <- liftIO getCurrentTime
+      let kindText = extractKind payload
+          stored = StoredContract
+            { scId = cid
+            , scKind = kindText
+            , scPayload = payload
+            , scCreatedAt = now
+            }
+      liftIO (persistContract stored)
+      pure (A.object
+        [ "status" .= ("created" :: Text)
+        , "id" .= cid
+        , "kind" .= kindText
+        , "payload" .= payload
+        ])
 
-    pdfH :: T.Text -> Handler BL.ByteString
-    pdfH contractId = do
-      let latex = renderContractLatex contractId
-      result <- liftIO (InputList.generateInputListPdf latex)
-      case result of
-        Right bytes -> pure bytes
-        Left errMsg -> throwError err500 { errBody = BL.fromStrict (encodeUtf8 errMsg) }
+    pdfH :: Text -> Handler BL.ByteString
+    pdfH cid = do
+      mStored <- liftIO (loadContract cid)
+      case mStored of
+        Nothing -> throwError err404 { errBody = "Contract not found" }
+        Just stored -> do
+          let latex = renderContractLatex stored
+          pdfResult <- liftIO (InputList.generateInputListPdf latex)
+          case pdfResult of
+            Left errMsg -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
+            Right pdf -> pure pdf
 
-    sendH :: T.Text -> A.Value -> Handler A.Value
-    sendH _ _ = pure (A.object ["status" A..= ("sent" :: T.Text)])
+    sendH :: Text -> A.Value -> Handler A.Value
+    sendH cid _body = do
+      mStored <- liftIO (loadContract cid)
+      case mStored of
+        Nothing -> throwError err404 { errBody = "Contract not found" }
+        Just _  -> pure (A.object ["status" .= ("sent" :: Text), "id" .= cid])
 
+persistContract :: StoredContract -> IO ()
+persistContract stored = do
+  createDirectoryIfMissing True contractsDir
+  BL.writeFile (contractPath (scId stored)) (A.encode stored)
 
-renderContractLatex :: T.Text -> T.Text
-renderContractLatex contractId =
+loadContract :: Text -> IO (Maybe StoredContract)
+loadContract cid = do
+  let path = contractPath cid
+  exists <- doesFileExist path
+  if not exists
+    then pure Nothing
+    else do
+      bytes <- BL.readFile path
+      pure (A.decode bytes)
+
+renderContractLatex :: StoredContract -> Text
+renderContractLatex StoredContract{..} =
   T.unlines
     [ "\\documentclass{article}"
-    , "\\usepackage[margin=2.5cm]{geometry}"
-    , "\\usepackage{array,booktabs,xcolor}"
-    , "\\definecolor{accent}{RGB}{67,97,238}"
+    , "\\usepackage[margin=1in]{geometry}"
+    , "\\usepackage{parskip}"
     , "\\begin{document}"
-    , "\\begin{center}"
-    , "\\Huge\\bfseries The Dream Factory"
-    , "\\vspace{0.3cm}\\\\textcolor{accent}{Contract}"
-    , "\\end{center}"
-    , "\\vspace{0.6cm}"
-    , "\\noindent Contract ID: \\textbf{" <> latexEscape contractId <> "}\\\\par"
-    , "\\vspace{0.3cm}"
-    , "\\noindent This PDF is a placeholder generated from the API. Replace this with the actual LaTeX template when available."
+    , "\\section*{Contract " <> latexEscape scId <> "}"
+    , "\\textbf{Kind:} " <> latexEscape scKind <> "\\\\"
+    , "\\textbf{Created:} " <> latexEscape (T.pack (formatTime defaultTimeLocale \"%Y-%m-%d %H:%M:%S\" scCreatedAt)) <> "\\\\"
+    , "\\subsection*{Payload}"
+    , "\\begin{verbatim}"
+    , TE.decodeUtf8 (BL.toStrict (A.encode scPayload))
+    , "\\end{verbatim}"
     , "\\end{document}"
     ]
 
-latexEscape :: T.Text -> T.Text
+extractKind :: A.Value -> Text
+extractKind val =
+  case parseMaybe (withObject "payload" (.:? "kind")) val of
+    Just (Just k) | not (T.null (T.strip k)) -> T.strip k
+    _ -> "generic"
+
+latexEscape :: Text -> Text
 latexEscape = T.concatMap escapeChar
   where
     escapeChar c = case c of
@@ -63,3 +145,4 @@ latexEscape = T.concatMap escapeChar
       '~'  -> "\\textasciitilde{}"
       '^'  -> "\\textasciicircum{}"
       '\\' -> "\\textbackslash{}"
+      _    -> T.singleton c

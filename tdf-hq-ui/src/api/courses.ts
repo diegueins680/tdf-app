@@ -1,7 +1,11 @@
 import { get, patch, post } from './client';
 import type { components } from './generated/types';
 
-export type CourseMetadata = components['schemas']['CourseMetadata'];
+export type CourseMetadata = components['schemas']['CourseMetadata'] & {
+  remaining?: number | null;
+  sessionStartHour?: number | null;
+  sessionDurationHours?: number | null;
+};
 export type CourseRegistrationRequest = components['schemas']['CourseRegistrationRequest'];
 export type CourseRegistrationResponse = components['schemas']['CourseRegistrationResponse'];
 export type CourseRegistrationStatusUpdate = components['schemas']['CourseRegistrationStatusUpdate'];

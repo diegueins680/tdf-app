@@ -113,6 +113,10 @@ const normalizePhone = (value: string) => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+// Fallback to keep PayPal usable if the env var is missing in the build.
+const PAYPAL_CLIENT_ID_FALLBACK =
+  'AfPPualkpj5aWoweUi1hL7s94NUo9fZdsN8e6P7v0zftuWAuWJvdNm6aHK_fboeSnZetnTLnnoBesxQ2';
+
 const fireCartMetaEvent = () => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(CART_EVENT));
@@ -121,7 +125,8 @@ const fireCartMetaEvent = () => {
 
 export default function MarketplacePage() {
   const qc = useQueryClient();
-  const paypalClientId = import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '';
+  const paypalClientId =
+    (import.meta.env['VITE_PAYPAL_CLIENT_ID'] as string | undefined)?.trim() ?? PAYPAL_CLIENT_ID_FALLBACK;
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [copyToast, setCopyToast] = useState<string | null>(null);

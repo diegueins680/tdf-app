@@ -23,9 +23,11 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AssetDTO, AssetCheckoutDTO } from '../api/types';
+import type { AssetDTO, AssetCheckoutDTO, PartyDTO, RoomDTO } from '../api/types';
 import { Inventory, type AssetCheckoutRequest, type AssetCheckinRequest, type AssetQrDTO } from '../api/inventory';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
+import { Rooms } from '../api/rooms';
+import { Parties } from '../api/parties';
 
 function normalizeAssets(payload: { items: AssetDTO[] } | AssetDTO[]): AssetDTO[] {
   if (Array.isArray(payload)) return payload;
@@ -38,9 +40,20 @@ export default function InventoryPage() {
     queryKey: ['assets'],
     queryFn: () => Inventory.list().then(normalizeAssets),
   });
+  const roomsQuery = useQuery({
+    queryKey: ['rooms'],
+    queryFn: Rooms.list,
+    staleTime: 5 * 60 * 1000,
+  });
+  const partiesQuery = useQuery({
+    queryKey: ['parties', 'all'],
+    queryFn: () => Parties.list(),
+    staleTime: 5 * 60 * 1000,
+  });
   const [selected, setSelected] = useState<AssetDTO | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
+  const [currentCheckout, setCurrentCheckout] = useState<AssetCheckoutDTO | null>(null);
   const [dialogOpen, setDialogOpen] = useState<'checkout' | 'checkin' | 'qr' | null>(null);
   const [form, setForm] = useState<AssetCheckoutRequest>({
     coTargetKind: 'party',
@@ -58,7 +71,11 @@ export default function InventoryPage() {
 
   const assetHistoryMutation = useMutation({
     mutationFn: (assetId: string) => Inventory.history(assetId),
-    onSuccess: (data) => setHistory(data),
+    onSuccess: (data) => {
+      setHistory(data);
+      const active = data.find((entry) => !entry.returnedAt);
+      setCurrentCheckout(active ?? null);
+    },
   });
 
   const qrMutation = useMutation({
@@ -94,6 +111,18 @@ export default function InventoryPage() {
   });
 
   const openCheckout = (asset: AssetDTO) => {
+    setCurrentCheckout(null);
+    setHistory([]);
+    assetHistoryMutation.mutate(asset.assetId);
+    setForm({
+      coTargetKind: 'party',
+      coTargetParty: '',
+      coTargetRoom: '',
+      coTargetSession: '',
+      coConditionOut: '',
+      coNotes: '',
+      coDueAt: '',
+    });
     setSelected(asset);
     setDialogOpen('checkout');
   };
@@ -122,6 +151,8 @@ export default function InventoryPage() {
 
   const assets = useMemo(() => assetsQuery.data ?? [], [assetsQuery.data]);
   const grouped = useMemo(() => assets, [assets]);
+  const roomOptions = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
+  const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
 
   return (
     <Box sx={{ color: '#e2e8f0' }}>
@@ -195,6 +226,11 @@ export default function InventoryPage() {
         onFormChange={setForm}
         onSubmit={() => selected && checkoutMutation.mutate({ assetId: selected.assetId, payload: form })}
         loading={checkoutMutation.isPending}
+        roomOptions={roomOptions}
+        partyOptions={partyOptions}
+        loadingRooms={roomsQuery.isLoading}
+        loadingParties={partiesQuery.isLoading}
+        currentCheckout={currentCheckout}
       />
 
       <CheckinDialog

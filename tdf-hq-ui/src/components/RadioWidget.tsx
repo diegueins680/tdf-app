@@ -46,11 +46,11 @@ interface Prompt {
   code?: string;
 }
 
-type LoadStreamDetail = {
+interface LoadStreamDetail {
   streamUrl: string;
   stationName?: string;
   stationId?: string;
-};
+}
 
 interface Station {
   id: string;
@@ -173,6 +173,30 @@ export default function RadioWidget() {
     active: false,
   });
   const dragMovedRef = useRef(false);
+  const miniContainerRef = useRef<HTMLDivElement | null>(null);
+  const [miniPosition, setMiniPosition] = useState<{ x: number; y: number }>(() => {
+    if (typeof window === 'undefined') return { x: 12, y: 12 };
+    const fromStorage = window.localStorage.getItem('radio-mini-position');
+    if (fromStorage) {
+      try {
+        const parsed = JSON.parse(fromStorage) as { x?: number; y?: number };
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          return { x: parsed.x, y: parsed.y };
+        }
+      } catch {
+        // ignore parsing errors
+      }
+    }
+    const initialY = Math.max(12, window.innerHeight - 96);
+    return { x: 12, y: initialY };
+  });
+  const [miniDragging, setMiniDragging] = useState(false);
+  const miniDragState = useRef<{ offsetX: number; offsetY: number; active: boolean }>({
+    offsetX: 0,
+    offsetY: 0,
+    active: false,
+  });
+  const miniDragMovedRef = useRef(false);
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
   const [newStationCountry, setNewStationCountry] = useState('');
@@ -191,10 +215,8 @@ export default function RadioWidget() {
   const [editGenre, setEditGenre] = useState('');
   const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
   const [autoSkipOnError, setAutoSkipOnError] = useState(false);
-  const [compactBarVisible, setCompactBarVisible] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return window.localStorage.getItem('radio-mini-visible') !== '0';
-  });
+  // Start visible by default; only hide when the user explicitly minimizes during the session.
+  const [miniBarVisible, setMiniBarVisible] = useState(false);
   const [showCatalogSection, setShowCatalogSection] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
@@ -234,15 +256,6 @@ export default function RadioWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem('radio-mini-visible', compactBarVisible ? '1' : '0');
-    } catch {
-      // ignore
-    }
-  }, [compactBarVisible]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
       window.localStorage.setItem('radio-expanded', expanded ? '1' : '0');
     } catch {
       // ignore
@@ -279,9 +292,19 @@ export default function RadioWidget() {
     if (typeof window === 'undefined') return;
     try {
       const favRaw = window.localStorage.getItem('radio-favorites');
-      if (favRaw) setFavoriteKeys(JSON.parse(favRaw));
+      if (favRaw) {
+        const parsed = JSON.parse(favRaw);
+        if (Array.isArray(parsed)) {
+          setFavoriteKeys(parsed.filter((item): item is string => typeof item === 'string'));
+        }
+      }
       const hidRaw = window.localStorage.getItem('radio-hidden');
-      if (hidRaw) setHiddenKeys(JSON.parse(hidRaw));
+      if (hidRaw) {
+        const parsed = JSON.parse(hidRaw);
+        if (Array.isArray(parsed)) {
+          setHiddenKeys(parsed.filter((item): item is string => typeof item === 'string'));
+        }
+      }
       const favFilter = window.localStorage.getItem('radio-show-favorites');
       if (favFilter) setShowFavoritesOnly(favFilter === '1');
     } catch {
@@ -434,6 +457,22 @@ export default function RadioWidget() {
     },
     [],
   );
+  const clampMiniPosition = useCallback(
+    (x: number, y: number) => {
+      if (typeof window === 'undefined') return { x, y };
+      const rect = miniContainerRef.current?.getBoundingClientRect();
+      const margin = 12;
+      const width = rect?.width ?? 240;
+      const height = rect?.height ?? 72;
+      const maxX = Math.max(margin, window.innerWidth - width - margin);
+      const maxY = Math.max(margin, window.innerHeight - height - margin);
+      return {
+        x: Math.min(Math.max(margin, x), maxX),
+        y: Math.min(Math.max(margin, y), maxY),
+      };
+    },
+    [],
+  );
 
   // Hydrate initial position
   useEffect(() => {
@@ -471,26 +510,34 @@ export default function RadioWidget() {
     if (typeof window === 'undefined') return;
     const onResize = () => {
       setPosition((p) => clampPosition(p.x, p.y));
+      setMiniPosition((p) => clampMiniPosition(p.x, p.y));
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [clampPosition]);
+  }, [clampMiniPosition, clampPosition]);
+
+  useEffect(() => {
+    setMiniPosition((p) => clampMiniPosition(p.x, p.y));
+  }, [clampMiniPosition]);
 
   // Drag handlers
+  const isInteractiveTarget = useCallback((target?: HTMLElement | null) => {
+    const tag = target?.tagName?.toLowerCase();
+    return (
+      tag === 'button' ||
+      tag === 'a' ||
+      tag === 'input' ||
+      tag === 'textarea' ||
+      tag === 'select' ||
+      tag === 'option' ||
+      target?.closest('[data-no-drag]')
+    );
+  }, []);
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       const target = e.target as HTMLElement | null;
       const dragHandle = target?.closest('[data-drag-handle]');
-      const tag = target?.tagName?.toLowerCase();
-      const isInteractive =
-        tag === 'button' ||
-        tag === 'a' ||
-        tag === 'input' ||
-        tag === 'textarea' ||
-        tag === 'select' ||
-        tag === 'option' ||
-        target?.closest('[data-no-drag]');
-
+      const isInteractive = isInteractiveTarget(target);
       // Only start drag on the handle or non-interactive areas.
       if (!dragHandle && isInteractive) {
         return;
@@ -501,7 +548,19 @@ export default function RadioWidget() {
       setDragging(true);
       target?.setPointerCapture?.(e.pointerId);
     },
-    [position.x, position.y],
+    [isInteractiveTarget, position.x, position.y],
+  );
+  const onMiniPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (isInteractiveTarget(target)) return;
+      e.preventDefault();
+      miniDragMovedRef.current = false;
+      miniDragState.current = { offsetX: e.clientX - miniPosition.x, offsetY: e.clientY - miniPosition.y, active: true };
+      setMiniDragging(true);
+      target?.setPointerCapture?.(e.pointerId);
+    },
+    [isInteractiveTarget, miniPosition.x, miniPosition.y],
   );
 
   useEffect(() => {
@@ -529,6 +588,31 @@ export default function RadioWidget() {
       window.removeEventListener('pointerup', up);
     };
   }, [clampPosition, dragging]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!miniDragging || !miniDragState.current.active) return;
+    const move = (e: PointerEvent) => {
+      if (!miniDragState.current.active) return;
+      miniDragMovedRef.current = true;
+      const next = clampMiniPosition(e.clientX - miniDragState.current.offsetX, e.clientY - miniDragState.current.offsetY);
+      setMiniPosition(next);
+      try {
+        window.localStorage.setItem('radio-mini-position', JSON.stringify(next));
+      } catch {
+        // ignore storage errors
+      }
+    };
+    const up = () => {
+      miniDragState.current.active = false;
+      setMiniDragging(false);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  }, [clampMiniPosition, miniDragging]);
 
   // Hydrate prompts and radio settings from localStorage to keep user submissions/settings across reloads.
   useEffect(() => {
@@ -675,7 +759,7 @@ export default function RadioWidget() {
         const station: Station = {
           id,
           stationId: detail.stationId,
-          name: detail.stationName?.trim() || 'Stream compartido',
+          name: detail.stationName?.trim() ?? 'Stream compartido',
           streamUrl: detail.streamUrl,
           mood: 'Compartido',
           prompts: [],
@@ -755,11 +839,28 @@ export default function RadioWidget() {
     const trimmed = (value ?? '').trim();
     return trimmed === '' ? undefined : trimmed;
   }, []);
-  const normalizeMaybe = normalizeField;
   const clearFilters = useCallback(() => {
     setSearchCountry('');
     setSearchGenre('');
     void refetchStreams();
+  }, [refetchStreams]);
+  const handleImportClick = useCallback(() => {
+    void (async () => {
+      setImporting(true);
+      setImportMessage(null);
+      setApiError(null);
+      try {
+        const res = await RadioAPI.importSources({ rirLimit: 800 });
+        setImportMessage(`Importadas ${res.rirInserted} nuevas, ${res.rirUpdated} actualizadas de ${res.rirProcessed} streams.`);
+        void refetchStreams();
+        setLastUpdatedTs(Date.now());
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'No se pudo importar el catálogo.';
+        setImportMessage(msg);
+      } finally {
+        setImporting(false);
+      }
+    })();
   }, [refetchStreams]);
   const persistActiveStream = useCallback(
     async (url: string, name?: string, country?: string, genre?: string) => {
@@ -876,55 +977,56 @@ export default function RadioWidget() {
   }, []);
 
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        left: position.x,
-        top: position.y,
-      zIndex: 1400,
-      width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
-      cursor: dragging ? 'grabbing' : 'grab',
-      touchAction: 'none',
-      userSelect: 'none',
-      }}
-      ref={containerRef}
-      onPointerDown={expanded ? onPointerDown : undefined}
-      tabIndex={0}
-      onKeyDown={(e) => {
-        const step = e.shiftKey ? 20 : 10;
-        const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
-        if (['input', 'textarea'].includes(tag ?? '')) return;
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-          e.preventDefault();
-          setPosition((p) => {
-            const next = clampPosition(
-              e.key === 'ArrowLeft' ? p.x - step : e.key === 'ArrowRight' ? p.x + step : p.x,
-              e.key === 'ArrowUp' ? p.y - step : e.key === 'ArrowDown' ? p.y + step : p.y,
-            );
-            try {
-              window.localStorage.setItem('radio-position', JSON.stringify(next));
-            } catch {
-              // ignore
+    <>
+      {!miniBarVisible && (
+        <Box
+          sx={{
+            position: 'fixed',
+            left: position.x,
+            top: position.y,
+            zIndex: 1400,
+            width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
+            cursor: dragging ? 'grabbing' : 'grab',
+            touchAction: 'none',
+            userSelect: 'none',
+          }}
+          ref={containerRef}
+          onPointerDown={onPointerDown}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            const step = e.shiftKey ? 20 : 10;
+            const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+            if (['input', 'textarea'].includes(tag ?? '')) return;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+              e.preventDefault();
+              setPosition((p) => {
+                const next = clampPosition(
+                  e.key === 'ArrowLeft' ? p.x - step : e.key === 'ArrowRight' ? p.x + step : p.x,
+                  e.key === 'ArrowUp' ? p.y - step : e.key === 'ArrowDown' ? p.y + step : p.y,
+                );
+                try {
+                  window.localStorage.setItem('radio-position', JSON.stringify(next));
+                } catch {
+                  // ignore
+                }
+                return next;
+              });
+              return;
             }
-            return next;
-          });
-          return;
-        }
-        if (e.key.toLowerCase() === 'f') {
-          e.preventDefault();
-          setShowFavoritesOnly((v) => !v);
-        }
-        if (e.key.toLowerCase() === 'r') {
-          e.preventDefault();
-          resetPosition();
-        }
-        if (e.key.toLowerCase() === 'n') {
-          e.preventDefault();
-          jumpToNextStation();
-        }
-      }}
-    >
-      {expanded && (
+            if (e.key.toLowerCase() === 'f') {
+              e.preventDefault();
+              setShowFavoritesOnly((v) => !v);
+            }
+            if (e.key.toLowerCase() === 'r') {
+              e.preventDefault();
+              resetPosition();
+            }
+            if (e.key.toLowerCase() === 'n') {
+              e.preventDefault();
+              jumpToNextStation();
+            }
+          }}
+        >
       <Card
         elevation={6}
         sx={{ borderRadius: 3, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'grab' }}
@@ -949,14 +1051,9 @@ export default function RadioWidget() {
             Arrastra para mover
           </Typography>
           <Box sx={{ flex: 1 }} />
-          <Tooltip title={compactBarVisible ? 'Ocultar mini barra' : 'Mostrar mini barra'}>
-            <IconButton
-              size="small"
-              onClick={() => setCompactBarVisible((v) => !v)}
-              data-no-drag
-              color={compactBarVisible ? 'primary' : 'inherit'}
-            >
-              <FiberManualRecordIcon fontSize="small" />
+          <Tooltip title="Ocultar radio y mostrar mini barra">
+            <IconButton size="small" onClick={() => setMiniBarVisible(true)} data-no-drag>
+              <VisibilityOffIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Volver a la esquina">
@@ -1047,7 +1144,9 @@ export default function RadioWidget() {
                 variant="outlined"
                 size="small"
                 startIcon={<ShareIcon fontSize="small" />}
-                onClick={handleShare}
+                onClick={() => {
+                  void handleShare();
+                }}
                 data-no-drag
               >
                 Compartir stream
@@ -1168,24 +1267,7 @@ export default function RadioWidget() {
                         variant="outlined"
                         color="secondary"
                         startIcon={<CloudDownloadIcon fontSize="small" />}
-                        onClick={async () => {
-                          setImporting(true);
-                          setImportMessage(null);
-                          setApiError(null);
-                          try {
-                            const res = await RadioAPI.importSources({ rirLimit: 800 });
-                            setImportMessage(
-                              `Importadas ${res.rirInserted} nuevas, ${res.rirUpdated} actualizadas de ${res.rirProcessed} streams.`,
-                            );
-                            void refetchStreams();
-                            setLastUpdatedTs(Date.now());
-                          } catch (err) {
-                            const msg = err instanceof Error ? err.message : 'No se pudo importar el catálogo.';
-                            setImportMessage(msg);
-                          } finally {
-                            setImporting(false);
-                          }
-                        }}
+                        onClick={handleImportClick}
                         disabled={importing}
                         data-no-drag
                         sx={{ minWidth: { sm: 200 } }}
@@ -1475,17 +1557,18 @@ export default function RadioWidget() {
           </CardContent>
         </Collapse>
       </Card>
+    </Box>
       )}
       {/* Audio is programmatically controlled; captions are not available for live streams. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} preload="none" aria-hidden="true" />
-      {compactBarVisible && (
+      {miniBarVisible && (
         <Box
           sx={{
             position: 'fixed',
-            bottom: 12,
-            left: 12,
-            zIndex: 1350,
+            left: miniPosition.x,
+            top: miniPosition.y,
+            zIndex: 1400,
             bgcolor: 'background.paper',
             boxShadow: 6,
             borderRadius: 2,
@@ -1496,24 +1579,48 @@ export default function RadioWidget() {
             gap: 0.75,
             border: '1px solid',
             borderColor: 'divider',
+            cursor: miniDragging ? 'grabbing' : 'grab',
+            touchAction: 'none',
+            userSelect: 'none',
+            minWidth: 220,
+          }}
+          ref={miniContainerRef}
+          onPointerDown={onMiniPointerDown}
+          onClick={(e) => {
+            if (miniDragging || miniDragMovedRef.current) {
+              miniDragMovedRef.current = false;
+              return;
+            }
+            const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+            if (tag === 'button' || tag === 'svg' || tag === 'path') return;
+            setMiniBarVisible(false);
+            setExpanded(true);
           }}
         >
+          <DragIndicatorIcon fontSize="small" color="action" />
           <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
-            <IconButton size="small" onClick={togglePlay}>
+            <IconButton size="small" onClick={togglePlay} data-no-drag>
               {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
           <Tooltip title="Saltar al siguiente">
-            <IconButton size="small" onClick={jumpToNextStation}>
+            <IconButton size="small" onClick={jumpToNextStation} data-no-drag>
               <SkipNextIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Abrir reproductor">
-            <IconButton size="small" onClick={() => setExpanded(true)}>
+          <Tooltip title="Mostrar radio">
+            <IconButton
+              size="small"
+              onClick={() => {
+                setMiniBarVisible(false);
+                setExpanded(true);
+              }}
+              data-no-drag
+            >
               <ExpandLessIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ minWidth: 0, maxWidth: 220 }}>
             <Typography variant="caption" fontWeight={700} noWrap>
               {activeStation.name}
             </Typography>
@@ -1521,13 +1628,8 @@ export default function RadioWidget() {
               {activeStation.genre ?? activeStation.mood}
             </Typography>
           </Box>
-          <Tooltip title="Cerrar mini barra">
-            <IconButton size="small" onClick={() => setCompactBarVisible(false)}>
-              <VisibilityOffIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
         </Box>
       )}
-    </Box>
+    </>
   );
 }

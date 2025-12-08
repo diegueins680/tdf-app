@@ -506,7 +506,7 @@ export default function MarketplaceOrdersPage() {
       </Stack>
       {paidTotal > 0 && paidVisible === 0 && filtersDirty && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          Hay órdenes pagadas, pero no coinciden con los filtros actuales. Ajusta los filtros o desmarca "Solo con pago".
+          Hay órdenes pagadas, pero no coinciden con los filtros actuales. Ajusta los filtros o desmarca &quot;Solo con pago&quot;.
         </Alert>
       )}
 

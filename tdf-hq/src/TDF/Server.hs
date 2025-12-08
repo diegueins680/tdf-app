@@ -61,6 +61,7 @@ import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
+import           TDF.Contracts.API (ContractsAPI)
 import           TDF.Config (AppConfig(..))
 import           TDF.DB
 import           TDF.Models
@@ -78,6 +79,7 @@ import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.ServerFeedback (feedbackServer)
+import qualified TDF.Contracts.Server as Contracts
 import           TDF.Trials.API (TrialsAPI)
 import           TDF.Trials.Server (trialsServer)
 import qualified TDF.Meta as Meta
@@ -205,6 +207,7 @@ server =
   :<|> cmsPublicServer
   :<|> marketplacePublicServer
   :<|> labelPublicServer
+  :<|> contractsServer
   :<|> socialEventsServer
   :<|> radioPresencePublicServer
   :<|> protectedServer
@@ -899,6 +902,9 @@ courseMetadataFor cfg mWaContact slugVal
         , price = productionCoursePrice
         , currency = "USD"
         , capacity = productionCourseCapacity
+        , remaining = productionCourseCapacity
+        , sessionStartHour = 15  -- 10:00 Quito (UTC-5)
+        , sessionDurationHours = 4
         , locationLabel = "TDF Records – Quito"
         , locationMapUrl = "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6"
         , daws = ["Logic", "Luna"]
@@ -2259,22 +2265,27 @@ courseCalendarBookings cfg =
       zipWith (mkBooking meta) ([1..] :: [Int]) (Courses.sessions meta)
   where
     mkBooking CourseMetadata{..} idx CourseSession{..} =
-      let startUtc = UTCTime date (secondsToDiffTime (15 * 60 * 60)) -- 10:00 Quito (UTC-5)
-          endUtc   = addUTCTime (4 * 60 * 60) startUtc               -- 4-hour block
+      let startUtc = UTCTime date (secondsToDiffTime (fromIntegral sessionStartHour * 60 * 60)) -- hour in UTC, calendar applies TZ
+          endUtc   = addUTCTime (fromIntegral sessionDurationHours * 60 * 60) startUtc
       in BookingDTO
            { bookingId          = negate (fromIntegral (1000 + idx))
            , title              = "Curso: " <> label
            , startsAt           = startUtc
            , endsAt             = endUtc
            , status             = "Confirmed"
-           , notes              = Just ("Curso " <> slug)
+           , notes              = Just ("Curso " <> slug <> " · USD " <> T.pack (show (round price :: Int)))
            , partyId            = Nothing
            , serviceType        = Just "Curso Producción Musical"
            , serviceOrderId     = Nothing
            , serviceOrderTitle  = Nothing
            , customerName       = Nothing
            , partyDisplayName   = Nothing
-           , resources          = []
+            , resources          = []
+            , courseSlug         = Just slug
+            , coursePrice        = Just price
+            , courseCapacity     = Just capacity
+            , courseRemaining    = Just remaining
+            , courseLocation     = Just locationLabel
            }
 
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
@@ -2329,6 +2340,11 @@ createBooking user req = do
           , customerName = Nothing
           , partyDisplayName = Nothing
           , resources   = []
+          , courseSlug = Nothing
+          , coursePrice = Nothing
+          , courseCapacity = Nothing
+          , courseRemaining = Nothing
+          , courseLocation = Nothing
           }
     pure (headDef fallback dtos)
   pure dto
@@ -2427,6 +2443,11 @@ buildBookingDTOs bookings = do
         , customerName      = customerNameText <|> fallbackCustomer
         , partyDisplayName  = partyDisplay
         , resources   = resources
+        , courseSlug        = Nothing
+        , coursePrice       = Nothing
+        , courseCapacity    = Nothing
+        , courseRemaining   = Nothing
+        , courseLocation    = Nothing
         }
 
 loadPartyDisplayMap :: [Key Party] -> SqlPersistT IO (Map.Map (Key Party) Text)
@@ -3243,6 +3264,11 @@ marketplaceAdminServer user =
 
 labelPublicServer :: ServerT LabelAPI AppM
 labelPublicServer = listLabelTracks :<|> createLabelTrack :<|> updateLabelTrack :<|> deleteLabelTrack
+
+contractsServer :: ServerT ContractsAPI AppM
+contractsServer = hoistServer contractsProxy lift Contracts.server
+  where
+    contractsProxy = Proxy :: Proxy ContractsAPI
 
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do

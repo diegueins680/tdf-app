@@ -163,7 +163,6 @@ function Shell() {
           </Box>
         </Box>
       </Box>
-      <RadioWidget />
     </Box>
   );
 }
@@ -271,6 +270,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<PublicBranding><NotFoundPage /></PublicBranding>} />
       </Routes>
+      <RadioWidget />
     </>
   );
 }
