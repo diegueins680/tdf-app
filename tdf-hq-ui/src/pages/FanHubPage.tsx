@@ -29,6 +29,7 @@ import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
+import { Parties } from '../api/parties';
 import { useSession } from '../session/SessionContext';
 import { Link as RouterLink } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
@@ -59,7 +60,7 @@ function StatPill({ label, value }: { label: string; value: number }) {
 }
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
-  const { session } = useSession();
+  const { session, login } = useSession();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -197,6 +198,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     mutationFn: Fans.updateMyArtistProfile,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['artist-profile', viewerId] });
+    },
+  });
+  const enableFanRoleMutation = useMutation({
+    mutationFn: async () => {
+      if (!session?.partyId) throw new Error('No encontramos tu cuenta para activar el rol Fan.');
+      await Parties.addRole(session.partyId, 'Fan');
+      const nextRoles = Array.from(new Set([...(session.roles ?? []), 'Fan']));
+      login({ ...session, roles: nextRoles });
+      await qc.invalidateQueries({ queryKey: ['fan-profile', viewerId] });
+      await qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
     },
   });
 
@@ -786,8 +797,27 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         </Grid>
 
         {!isFan && !canManageReleases && session && (
-          <Alert severity="info">
-            Este usuario no tiene rol de Fan/Customer, por lo que no cargamos el perfil fan. Agrega el rol Fan para evitar errores 403 en esta sección.
+          <Alert
+            severity="info"
+            action={
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => enableFanRoleMutation.mutate()}
+                disabled={enableFanRoleMutation.isPending}
+              >
+                {enableFanRoleMutation.isPending ? 'Activando…' : 'Convertirme en fan'}
+              </Button>
+            }
+          >
+            Activa tu rol Fan para ver el feed y editar tu perfil. Lo aplicamos sólo a tu cuenta.
+            {enableFanRoleMutation.isError && (
+              <Typography variant="body2" color="error">
+                {enableFanRoleMutation.error instanceof Error
+                  ? enableFanRoleMutation.error.message
+                  : 'No pudimos activar el rol.'}
+              </Typography>
+            )}
           </Alert>
         )}
 

@@ -22,16 +22,27 @@ export default function InscripcionPage() {
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
     setBusy(true);
+    setError(null);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/leads/${leadId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, name, email }),
       });
-      if (res.ok) setDone(true);
+      if (!res.ok) {
+        setError('No pudimos validar tu enlace. Revisa que sea el link más reciente.');
+        return;
+      }
+      const body = (await res.json().catch(() => ({}))) as { ok?: boolean };
+      if (body.ok) {
+        setDone(true);
+      } else {
+        setError('No pudimos completar tu inscripción. Revisa el enlace e inténtalo de nuevo.');
+      }
     } finally {
       setBusy(false);
     }
@@ -43,6 +54,12 @@ export default function InscripcionPage() {
   };
 
   const title = slug?.replace(/-/g, ' ') ?? 'Programa';
+  const enrollmentUrl =
+    typeof window !== 'undefined'
+      ? slug
+        ? `${window.location.origin}/inscripcion/${slug}`
+        : window.location.href
+      : '';
 
   const renderFrame = (children: React.ReactNode) => (
     <Box
@@ -107,8 +124,8 @@ export default function InscripcionPage() {
           Inscripción — {title}
         </Typography>
         <Typography variant="body2" color="rgba(226,232,240,0.8)">
-          Presencial (cupo 10). Sábados 13, 20, 27 dic 2025 y 3 ene 2026. 16 h totales. DAWs: Logic y Luna. Incluye
-          grabaciones y certificado. Precio: $150 USD. Descuento por referidos.
+          Confirma tus datos para reservar tu cupo. Validamos el enlace y el token antes de registrar la inscripción.
+          Si el enlace expiró, escribe por WhatsApp para recibir uno nuevo.
         </Typography>
       </Stack>
       <Stack spacing={2}>
@@ -148,8 +165,14 @@ export default function InscripcionPage() {
           }}
         />
         <Alert severity="info" sx={{ bgcolor: 'rgba(14,165,233,0.08)', color: '#e0f2fe' }}>
-          Asegúrate de usar el mismo correo con el que conversamos para validar tu cupo.
+          Asegúrate de usar el mismo correo con el que conversamos para validar tu cupo. Si ves un error de enlace, pide
+          que te reenvíen el link: {enrollmentUrl}
         </Alert>
+        {error && (
+          <Alert severity="error" sx={{ bgcolor: 'rgba(239,68,68,0.08)', color: '#fecdd3' }}>
+            {error}
+          </Alert>
+        )}
       </Stack>
       <Stack direction="row" spacing={2} justifyContent="flex-end">
         <Button type="submit" variant="contained" disabled={busy} sx={{ textTransform: 'none', fontWeight: 800 }}>

@@ -155,6 +155,8 @@ export default function BookingsPage() {
     subtitle?: string;
     price?: string;
     location?: string;
+    slug?: string;
+    shareUrl?: string;
   } | null>(null);
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
 
@@ -394,12 +396,17 @@ export default function BookingsPage() {
     const ext = info.event.extendedProps ?? {};
     if (ext['isCourse']) {
       setDialogOpen(false);
+      const slug = (ext['courseSlug'] as string | undefined) || undefined;
+      const shareUrl =
+        slug && typeof window !== 'undefined' ? `${window.location.origin}/inscripcion/${slug}` : undefined;
       setCourseReadOnlyInfo({
         title: info.event.title ?? 'Bloque de curso',
         range: formatEventRange((info.event as any).start, (info.event as any).end),
         subtitle: (ext['courseSubtitle'] as string | undefined) || undefined,
         price: (ext['priceText'] as string | undefined) || undefined,
         location: (ext['locationText'] as string | undefined) || undefined,
+        slug,
+        shareUrl,
       });
       setCourseNotice('Los bloques del curso son de solo lectura. Revisa los detalles del horario aquí.');
       return;
@@ -559,6 +566,38 @@ export default function BookingsPage() {
             <Alert severity="info" variant="outlined">
               Este bloque es de solo lectura. Para editarlo, ajusta el calendario del curso.
             </Alert>
+            {(courseReadOnlyInfo?.slug || courseReadOnlyInfo?.shareUrl) && (
+              <Stack direction="row" spacing={1}>
+                {courseReadOnlyInfo?.slug && (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    component="a"
+                    href={`/inscripcion/${courseReadOnlyInfo.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Abrir landing
+                  </Button>
+                )}
+                {courseReadOnlyInfo?.shareUrl && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(courseReadOnlyInfo.shareUrl ?? '');
+                        setCourseNotice('Link copiado. Compártelo con estudiantes desde aquí.');
+                      } catch {
+                        setCourseNotice('No pudimos copiar el link. Intenta de nuevo.');
+                      }
+                    }}
+                  >
+                    Copiar link
+                  </Button>
+                )}
+              </Stack>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
