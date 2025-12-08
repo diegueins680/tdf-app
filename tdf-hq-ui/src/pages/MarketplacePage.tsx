@@ -686,7 +686,16 @@ export default function MarketplacePage() {
         setPaypalDialogOpen(false);
       },
     });
-    void buttons.render(container);
+    if (buttons.isEligible && !buttons.isEligible()) {
+      setPaypalError('PayPal no está disponible para este dispositivo o navegador.');
+      return;
+    }
+    buttons
+      .render(container)
+      .catch(() => {
+        setPaypalError('No pudimos cargar PayPal. Revisa bloqueadores o intenta de nuevo.');
+        setPaypalDialogOpen(false);
+      });
     return () => {
       if (buttons.close) buttons.close();
       container.innerHTML = '';
