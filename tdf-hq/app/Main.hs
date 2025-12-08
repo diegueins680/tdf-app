@@ -23,7 +23,6 @@ import           TDF.Cors                 (corsPolicy)
 import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
 import           TDF.Cron       (startCoursePaymentReminderJob)
 import           TDF.DB         (Env(..), ConnectionPool, makePool)
-import qualified TDF.DB         as DB
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
 import           TDF.Trials.Models (migrateTrials)

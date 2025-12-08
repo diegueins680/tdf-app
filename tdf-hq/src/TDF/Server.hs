@@ -22,7 +22,6 @@ import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isPrefixOf)
 import           Data.Foldable (for_)
 import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
-import qualified Data.Map.Strict as Map
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
 import           Data.Aeson (Value, object, (.=), eitherDecode, FromJSON(..), encode)
@@ -124,7 +123,6 @@ import           TDF.WhatsApp.Client (sendText)
 import           Network.HTTP.Client (Manager, RequestBody(..), Response, newManager, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
-import           System.Environment (lookupEnv)
 import           Network.HTTP.Types.Status (statusCode)
 import           System.Environment (lookupEnv)
 import qualified TDF.Trials.Models as Trials
@@ -273,10 +271,10 @@ seedHQ rawToken = do
 requireSeedToken :: Maybe Text -> AppM ()
 requireSeedToken rawToken = do
   Env{..} <- ask
-  let encode = BL.fromStrict . TE.encodeUtf8
-      missingHeader = throwError err401 { errBody = encode "Missing X-Seed-Token header" }
-      disabled = throwError err403 { errBody = encode "Seeding endpoint disabled" }
-      invalid = throwError err403 { errBody = encode "Invalid seed token" }
+  let encodeBody = BL.fromStrict . TE.encodeUtf8
+      missingHeader = throwError err401 { errBody = encodeBody "Missing X-Seed-Token header" }
+      disabled = throwError err403 { errBody = encodeBody "Seeding endpoint disabled" }
+      invalid = throwError err403 { errBody = encodeBody "Invalid seed token" }
   secret <- maybe disabled pure (seedTriggerToken envConfig)
   token  <- maybe missingHeader (pure . T.strip) rawToken
   when (T.null token) missingHeader
