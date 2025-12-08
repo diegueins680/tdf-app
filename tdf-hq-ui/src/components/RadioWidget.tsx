@@ -1264,15 +1264,15 @@ export default function RadioWidget() {
                         Solo favoritos
                       </Button>
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         color="secondary"
+                        size="small"
                         startIcon={<CloudDownloadIcon fontSize="small" />}
                         onClick={handleImportClick}
                         disabled={importing}
                         data-no-drag
-                        sx={{ minWidth: { sm: 200 } }}
                       >
-                        {importing ? 'Importando...' : 'Importar catálogo'}
+                        {importing ? 'Importando...' : 'Importar'}
                       </Button>
                       {lastUpdatedTs && (
                         <Typography variant="caption" color="text.secondary" sx={{ minWidth: { sm: 200 } }}>
@@ -1282,6 +1282,9 @@ export default function RadioWidget() {
                     </Stack>
                     {(countryOptions.length > 0 || genreOptions.length > 0) && (
                       <Stack spacing={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          Sugerencias rápidas:
+                        </Typography>
                         {countryOptions.length > 0 && (
                           <>
                             <datalist id="radio-country-options">
@@ -1291,7 +1294,7 @@ export default function RadioWidget() {
                             </datalist>
                             <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
                               <Typography variant="caption" color="text.secondary">
-                                País sugerido:
+                                País:
                               </Typography>
                               {countryOptions.map((c) => (
                                 <Chip key={`country-${c}`} size="small" label={c} onClick={() => setSearchCountry(c)} />
@@ -1308,7 +1311,7 @@ export default function RadioWidget() {
                             </datalist>
                             <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
                               <Typography variant="caption" color="text.secondary">
-                                Género sugerido:
+                                Género:
                               </Typography>
                               {genreOptions.map((g) => (
                                 <Chip key={`genre-${g}`} size="small" label={g} onClick={() => setSearchGenre(g)} />

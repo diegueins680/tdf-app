@@ -469,7 +469,7 @@ export default function TeachersPage() {
         </Stack>
       </Box>
 
-      {(usingDemoTeachers || usingDemoClasses) && (
+      {teachers.length === 0 && classes.length === 0 && (
         <Alert severity="info" sx={{ borderRadius: 2 }}>
           No hay datos todavía para profesores o clases. Agrega profesores (rol Teacher) y clases en el módulo de escuela para verlos aquí.
         </Alert>

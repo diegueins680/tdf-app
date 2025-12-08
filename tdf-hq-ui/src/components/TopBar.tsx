@@ -210,9 +210,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
 
   useEffect(() => {
     if (quickNavOpen) {
-      setTimeout(() => {
-        quickInputRef.current?.focus();
-      }, 0);
+      setTimeout(() => quickInputRef.current?.focus(), 0);
     }
   }, [quickNavOpen]);
 
@@ -319,8 +317,8 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               aria-haspopup="true"
               aria-expanded={resourcesOpen ? 'true' : undefined}
               aria-label="Abrir recursos"
-              ref={resourcesButtonRef}
               aria-keyshortcuts="Alt+R"
+              ref={resourcesButtonRef}
             >
               Recursos
             </Button>
@@ -460,7 +458,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         maxWidth="sm"
       >
         <DialogTitle>Ir a otra sección</DialogTitle>
-          <DialogContent>
+        <DialogContent>
             <TextField
               fullWidth
               placeholder="Escribe para buscar (ej: inventario, leads, marketplace)"
