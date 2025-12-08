@@ -42,6 +42,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useNavigate } from 'react-router-dom';
+import { Countries } from '../api/countries';
 
 interface Prompt {
   text: string;
@@ -280,6 +281,13 @@ export default function RadioWidget() {
   const keyFor = useCallback((station: Station) => station.streamUrl.toLowerCase(), []);
   const countryQuery = searchCountry.trim();
   const genreQuery = searchGenre.trim();
+  const countriesQuery = useQuery({
+    queryKey: ['countries'],
+    queryFn: Countries.list,
+    staleTime: 12 * 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+    retry: false,
+  });
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -417,7 +425,12 @@ export default function RadioWidget() {
     () => allStations.find((s) => s.id === activeId) ?? defaultStation,
     [activeId, allStations, defaultStation],
   );
-  const countryOptions = useMemo(() => RADIO_COUNTRIES, []);
+  const countryOptions = useMemo(() => {
+    const fromApi = countriesQuery.data?.map((c) => c.countryName || c.countryCode).filter(Boolean) ?? [];
+    const trimmed = fromApi.map((c) => c.trim()).filter((c) => c.length > 0);
+    if (trimmed.length > 0) return trimmed;
+    return RADIO_COUNTRIES;
+  }, [countriesQuery.data]);
   const genreOptions = useMemo(() => {
     const opts = new Set<string>();
     allStations.forEach((s) => {

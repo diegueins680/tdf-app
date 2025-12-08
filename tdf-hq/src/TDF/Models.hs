@@ -531,6 +531,12 @@ ReferralClaim
     UniqueReferralClaim codeId email
     deriving Show Generic
 
+Country
+    code Text
+    name Text
+    UniqueCountryCode code
+    deriving Show Generic
+
 Cohort
     Id UUID default=gen_random_uuid()
     slug     Text

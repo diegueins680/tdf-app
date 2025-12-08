@@ -435,6 +435,11 @@ driveServer _ mAccessToken DriveUploadForm{..} = do
   dto <- liftIO $ uploadToDrive manager accessToken duFile nameOverride folder
   pure dto
 
+countriesServer :: AppM [CountryDTO]
+countriesServer = do
+  countries <- runDb $ selectList [] [Asc CountryName]
+  pure (map toCountryDTO countries)
+
 protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
        partyServer user
@@ -461,6 +466,7 @@ protectedServer user =
   :<|> cmsAdminServer user
   :<|> driveServer user
   :<|> radioServer user
+  :<|> countriesServer
   :<|> futureServer
 
 calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
