@@ -102,6 +102,13 @@ curl -X PUT http://localhost:8080/api/users/1/roles \
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Implementation details
 - **[IMPROVEMENTS_COMPLETED.md](IMPROVEMENTS_COMPLETED.md)** - Completed improvements log
 
+#### CMS (página pública Records)
+- Slugs separados por tipo para carga dinámica desde BD (no un solo entry):
+  - `records-release-*`: cada release (payload con `title`, `artist`, `releasedOn`, `description/blurb`, `cover`, `links[]`).
+  - `records-session-*`: cada video de sesión (`youtubeId`, `title`, `duration?`, `guests?`, `description?`).
+  - `records-recording-*`: cada tarjeta de “Grabaciones recientes” (`title`, `image`, `description`, `artist?`, `recordedAt?`, `vibe?`).
+- El frontend usa el endpoint público `GET /cms/contents?locale=es&slugPrefix=records-...` para poblar hero, releases, sesiones y grabaciones.
+
 ## 🚀 Deployment & Operations
 
 ### Deployment Guides

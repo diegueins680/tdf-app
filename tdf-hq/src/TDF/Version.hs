@@ -18,6 +18,9 @@ import           GHC.Generics                 (Generic)
 import           Language.Haskell.TH.Syntax   (runIO)
 import           Paths_tdf_hq                 (version)
 import           System.Environment           (lookupEnv)
+import qualified System.IO.Error              as IOError
+import qualified Data.Text.IO                 as TIO
+import           Control.Applicative          ((<|>))
 
 data VersionInfo = VersionInfo
   { name      :: Text
@@ -47,12 +50,15 @@ getVersionInfo = do
 
 resolveCommit :: IO Text
 resolveCommit = do
-  mEnv <- firstJustM lookupEnv commitEnvVars
-  let envCommit       = mEnv >>= canonCommit . T.pack
-      fallbackCommit  = fromMaybe "dev" compiledCommit
-  pure (fromMaybe fallbackCommit envCommit)
+  mEnv  <- firstJustM lookupEnv commitEnvVars
+  mFile <- readMaybeFile commitFilePath
+  let envCommit      = mEnv >>= canonCommit . T.pack
+      fileCommit     = mFile >>= canonCommit
+      fallbackCommit = fromMaybe "dev" compiledCommit
+  pure (fromMaybe fallbackCommit (envCommit <|> fileCommit))
   where
     compiledCommit = canonCommit (T.pack $(gitHash))
+    commitFilePath = "/app/COMMIT"
 
 canonCommit :: Text -> Maybe Text
 canonCommit txt =
@@ -64,8 +70,10 @@ canonCommit txt =
 
 resolveBuildTime :: IO Text
 resolveBuildTime = do
-  mEnv <- firstJustM lookupEnv buildTimeEnvVars
-  pure (maybe compiledBuildTime T.pack mEnv)
+  mEnv  <- firstJustM lookupEnv buildTimeEnvVars
+  mFile <- readMaybeFile "/app/BUILD_TIME"
+  let envVal  = fmap T.pack mEnv
+  pure (fromMaybe compiledBuildTime (envVal <|> mFile))
 
 compiledBuildTime :: Text
 compiledBuildTime = T.pack $(do
@@ -91,6 +99,7 @@ commitEnvVars =
   , "KOYEB_GIT_COMMIT_SHA"
   , "KOYEB_DEPLOYMENT_GIT_SHA"
   , "KOYEB_DEPLOYMENT_GIT_COMMIT"
+  , "FLY_GIT_SHA"
   ]
 
 buildTimeEnvVars :: [String]
@@ -98,6 +107,7 @@ buildTimeEnvVars =
   [ "BUILD_TIME"
   , "SOURCE_BUILD_TIME"
   , "RENDER_BUILD_TIME"
+  , "FLY_BUILD_TIME"
   ]
 
 firstJustM :: Monad m => (a -> m (Maybe b)) -> [a] -> m (Maybe b)
@@ -107,3 +117,10 @@ firstJustM f (x:xs) = do
   case res of
     Just val -> pure (Just val)
     Nothing  -> firstJustM f xs
+
+readMaybeFile :: FilePath -> IO (Maybe Text)
+readMaybeFile path = do
+  result <- IOError.tryIOError (TIO.readFile path)
+  case result of
+    Left _  -> pure Nothing
+    Right t -> pure (Just (T.strip t))

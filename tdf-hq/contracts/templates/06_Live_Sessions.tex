@@ -1,0 +1,275 @@
+% !TeX program = xelatex
+% !TeX encoding = UTF-8 Unicode
+% ==========================================================
+%  CONTRATO DE PARTICIPACIÓN — TDF Live Sessions (v2)
+%  Estética cuidada + logo TDF + fallbacks
+% ==========================================================
+\documentclass[11pt,a4paper]{article}
+
+% -------------------- Paquetes de tipografía y estética ----
+\usepackage{fontspec}              % UTF-8 + OpenType
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{xcolor,graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{array,longtable,booktabs}
+\usepackage{ifthen}
+\usepackage{svg}                   % Preferido para .svg (con fallback)
+\usepackage{parskip}               % Párrafo sin sangría, con espacio
+\usepackage{fancyhdr}
+\IfFileExists{microtype.sty}{\usepackage[protrusion=true,expansion=false]{microtype}}{}
+
+% -------------------- Geometría y colores ------------------
+\geometry{left=25mm,right=25mm,top=25mm,bottom=25mm}
+\definecolor{TDFaccent}{HTML}{FF5A00}
+\definecolor{TDFink}{HTML}{222222}
+\hypersetup{colorlinks=true,linkcolor=TDFaccent,urlcolor=TDFaccent}
+\color{TDFink}
+
+% -------------------- Fuentes ------------------------------
+\setmainfont{TeX Gyre Pagella}            % Serif elegante
+\newfontfamily\Heading{TeX Gyre Heros}    % Sans limpia para títulos
+
+% -------------------- Títulos con acento -------------------
+\titleformat{\section}
+  {\Large\bfseries\Heading\color{TDFink}}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\normalsize\bfseries\Heading\color{TDFink}}{\thesubsection}{0.6em}{}
+\newcommand{\accentbar}{\textcolor{TDFaccent}{\rule{\linewidth}{1.2pt}}}
+
+% -------------------- Cabecera / Pie -----------------------
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\footnotesize \textsf{TDF Live Sessions — Contrato de Participación (v2)}}
+\fancyfoot[R]{\footnotesize \thepage}
+
+% -------------------- Variables editables ------------------
+\newcommand{\TDFRazon}{TDF Records}
+\newcommand{\TDFRUC}{1716535511}
+\newcommand{\TDFDomicilio}{Felix Oralabal N45-55, Quito, Ecuador}
+\newcommand{\TDFEmail}{info@tdfrecords.net}
+
+\newcommand{\ArtistaNombre}{Holger Quiñonez}
+\newcommand{\ArtistaRep}{Rafael Alfaro}
+\newcommand{\ArtistaID}{1711801280}
+\newcommand{\ArtistaDomicilio}{Quito, Ecuador}
+\newcommand{\ArtistaEmail}{alfaro593@gmail.com}
+\newcommand{\ArtistaTel}{0995771404}
+
+\newcommand{\FirstReleaseDias}{8}
+\newcommand{\TopeRecoup}{2\,500} % USD
+
+% ==========================================================
+\begin{document}
+% ==========================================================
+
+% -------------------- PORTADA ------------------------------
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+  % Logo con fallbacks (PDF/PNG si el SVG no puede procesarse)
+  \IfFileExists{LOGO_TDF.pdf}{
+    \includegraphics[width=.52\linewidth]{LOGO_TDF.pdf}
+  }{
+    \IfFileExists{LOGO_TDF.png}{
+      \includegraphics[width=.52\linewidth]{LOGO_TDF.png}
+    }{
+      \IfFileExists{LOGOTDF.svg}{
+        \includesvg[width=.92\linewidth]{LOGOTDF}
+      }{
+        % Intento adicional si el archivo se llama "LOGO TDF.*" con espacio
+        \IfFileExists{LOGO TDF.pdf}{
+          \includegraphics[width=.92\linewidth]{LOGO TDF.pdf}
+        }{
+          \IfFileExists{LOGO TDF.png}{
+            \includegraphics[width=.92\linewidth]{LOGO TDF.png}
+          }{
+            \IfFileExists{LOGOTDF.svg}{
+              \includesvg[width=.92\linewidth]{LOGOTDF}
+            }{
+              {\Huge\bfseries\Heading TDF RECORDS}
+            }
+          }
+        }
+      }
+    }
+  }
+
+  \vspace{2.1cm}
+  {\Huge\bfseries\Heading CONTRATO DE PARTICIPACIÓN}\par
+  \vspace{4pt}
+  {\large\Heading TDF Live Sessions}\par
+  \vspace{6pt}\accentbar
+
+  \vfill
+  {\large\bfseries \ArtistaNombre}\par
+  \vspace{2pt}
+  \small Fecha: \today
+\end{titlepage}
+
+% -------------------- PARTES -------------------------------
+\section{Partes}
+\accentbar
+
+Este contrato (el “\textbf{Contrato}”) se celebra entre:
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \textbf{\TDFRazon} (RUC \TDFRUC), con domicilio en \TDFDomicilio, correo de notificaciones \href{mailto:\TDFEmail}{\TDFEmail} (“\textbf{TDF}”).
+  \item \textbf{\ArtistaNombre}, representado por \textbf{\ArtistaRep}, C.I./RUC \ArtistaID, con domicilio en \ArtistaDomicilio, correo \href{mailto:\ArtistaEmail}{\ArtistaEmail}, teléfono \ArtistaTel\ (el “\textbf{Artista}”).
+\end{itemize}
+
+% -------------------- OBJETO -------------------------------
+\section{Objeto}
+\accentbar
+
+TDF producirá y fijará una sesión musical en vivo (la “\textbf{Sesión}”) en \textbf{TDF Estudio (Quito) — sin público —} compuesta por:
+\begin{enumerate}[leftmargin=*,label=\alph*)]
+  \item performance de hasta \textbf{30 minutos};
+  \item mini‑entrevista y material \textit{behind‑the‑scenes};
+  \item captación de audio multipista y video 4K multicámara.
+\end{enumerate}
+Las fechas se coordinarán con preferencia por \textbf{sábados} como día base de grabación y \textbf{estreno en domingo}. Cualquier locación externa requerirá \textbf{Addendum} con estándar técnico TDF y equipo TDF al mando.
+
+% -------------------- PRODUCCIÓN Y TÉCNICA -----------------
+\section{Producción y técnica}
+\accentbar
+\begin{enumerate}[leftmargin=*,label=\arabic*.]
+  \item \textbf{Rider:} el Artista entregará \textbf{rider técnico}, \textbf{setlist} y \textbf{un solo input list para toda la Sesión} (incluyendo BPM y tonalidad por tema, y gear preferido del inventario) con al menos \textbf{48 horas} de antelación. Los cambios posteriores se aceptan solo si producción confirma viabilidad.
+  \item \textbf{Backline:} TDF proveerá batería, amplificadores y teclado estándar, salvo pacto distinto por escrito. Si se usan instrumentos del Artista, deben llegar ajustados y afinados.
+  \item \textbf{Ambiente:} no habrá captación de “stems de público” al ser una Sesión sin audiencia.
+  \item \textbf{Normas de set:} aplican las del \textbf{Anexo I}.
+  \item \textbf{Créditos de producción (para títulos y descripciones):}\\
+        Video / Dirección de fotografía: \textbf{Francisco Almeida}.\\
+        Edición: \textbf{Lucía Orbea Bastl}.\\
+        Producción visual / dirección de arte: \textbf{Claudia Palma}.\\
+        Community Management: \textbf{Camila Maldonado} (únicamente CM).
+  \item \textbf{Staff técnico:} TDF decide asignación de ingenieros, operadores y asistentes. El Artista podrá sugerir referencias de mezcla, no personal técnico.
+  \item \textbf{Re‑takes:} hasta \textbf{2 tomas completas} por canción cuando el horario lo permita; tomas adicionales quedan a criterio de producción.
+\end{enumerate}
+
+% -------------------- DERECHOS Y CRÉDITOS ------------------
+\section{Derechos, cesión y créditos}
+\accentbar
+\begin{enumerate}[leftmargin=*,label=\arabic*.]
+  \item El Artista \textbf{cede a TDF}, con carácter \textbf{exclusivo, perpetuo y mundial}, todos los derechos patrimoniales de fijación, reproducción, distribución, comunicación pública, transformación, sincronización y cualesquiera otros sobre los másters de audio y audiovisual de la Sesión, en cualquier formato presente o futuro (incluyendo VR y metaverso).
+  \item La \textbf{propiedad de los másters} de audio y audiovisual será de \textbf{TDF}.
+  \item \textbf{Créditos:} TDF acreditará al Artista como “\ArtistaNombre — TDF Live Sessions” en metadatos, descripción y miniaturas.
+  \item \textbf{First‑release:} el Artista no publicará por su cuenta material de la Sesión durante \textbf{\FirstReleaseDias\ días} contados desde el estreno oficial por TDF.
+  \item \textbf{Obras originales:} el repertorio será \textbf{sólo obras originales} o debidamente licenciadas; el Artista garantiza contar con los derechos necesarios para fijar e interpretar.
+  \item \textbf{Uso promocional:} TDF podrá utilizar fragmentos, stems y capturas de backstage para promoción cruzada en redes, medios y pauta digital.
+\end{enumerate}
+
+% -------------------- MODELO ECONÓMICO ---------------------
+\section{Modelo económico, contabilidad y pagos}
+\accentbar
+\begin{enumerate}[leftmargin=*,label=\arabic*.]
+  \item \textbf{Recuperación de costos:} los ingresos brutos asociados a la Sesión (YouTube/Adsense, DSPs, patrocinios in‑video, sincronizaciones y reventas de NFT si aplicaran) se destinarán primero a \textbf{recuperar costos} de producción detallados en el \textbf{Anexo II}, con \textbf{tope máximo USD \TopeRecoup}.
+  \item \textbf{Split:} una vez recuperados los costos, las utilidades netas se repartirán \textbf{50\% TDF / 50\% Artista}.
+  \item \textbf{Liquidación:} TDF rendirá cuentas con \textbf{periodicidad anual}, en USD, pagando dentro de \textbf{10 días} tras el cierre del período.
+  \item \textbf{NFT reventa (si existiere):} \textbf{royalty 10\%} compartido 50/50.
+\end{enumerate}
+
+% -------------------- ENTREGABLES Y REVISIONES -------------
+\section{Entregables y revisiones}
+\accentbar
+\begin{enumerate}[leftmargin=*,label=\arabic*.]
+  \item \textbf{Entregables:} este Contrato \textbf{no} establece obligación de entrega de materiales al Artista (video, audio o stems). Cualquier entrega será a \textbf{discreción de TDF}.
+  \item \textbf{Escucha crítica:} se realizará una \textbf{sesión de escucha} en el estudio; las observaciones deberán presentarse \textbf{durante} dicha sesión.
+  \item \textbf{Postproducción y QC (objetivos):} \textbf{edición 48h}, \textbf{mezcla 48h}, \textbf{master/color/QC 48h}. \textbf{QC: Audio (TDF)}.
+  \item \textbf{Embargo:} el Artista no publicará material de la Sesión antes del estreno sin autorización de TDF.
+  \item \textbf{Promoción (best effort):} el Artista hará su mejor esfuerzo por publicar \textbf{10} piezas (previo y posterior) etiquetando @tdfrecords.
+  \item \textbf{Respaldo de multitracks:} TDF conservará los proyectos y multitracks \textbf{90 días} después del estreno; no se obliga a retenerlos más allá de ese plazo.
+\end{enumerate}
+
+% -------------------- CANCELACIONES / SEGUROS --------------
+\section{Cancelaciones, seguros y fuerza mayor}
+\accentbar
+\begin{enumerate}[leftmargin=*,label=\arabic*.]
+  \item \textbf{Cancelación del Artista:} si cancela con menos de \textbf{72 horas}, reembolsará a TDF el \textbf{50\%} de costos directos no recuperables.
+  \item \textbf{Cancelación de TDF:} si cancela sin fuerza mayor, cubrirá traslados comprobados del Artista y reagendará en un máximo de \textbf{60 días}.
+  \item \textbf{Fuerza mayor:} sismo, corte eléctrico, orden sanitaria u otros eventos fuera de control eximen de responsabilidad.
+  \item \textbf{Seguros e instrumentos:} TDF mantiene RC; en caso de robo por negligencia de TDF, cobertura hasta \textbf{USD 2\,000} por instrumento o su valor de mercado (lo menor).
+\end{enumerate}
+
+% -------------------- DATOS / LEY APLICABLE ----------------
+\section{Protección de datos, comunicaciones y ley aplicable}
+\accentbar
+\begin{enumerate}[leftmargin=*,label=\arabic*.]
+  \item El Artista autoriza el uso de \textbf{nombre, imagen y voz} para promoción de TDF y de la Sesión.
+  \item \textbf{Comunicaciones:} válidas en \TDFEmail\ y \ArtistaEmail.
+  \item \textbf{Idioma y jurisdicción:} español; ley ecuatoriana; tribunales de \textbf{Quito, Ecuador}.
+  \item \textbf{Firma electrónica:} se admite DocuSign u otra plataforma certificada con plena validez.
+\end{enumerate}
+
+% -------------------- FIRMAS --------------------------------
+\section*{Firmas}
+\accentbar
+\vspace{2mm}
+\noindent
+\begin{tabular}{p{0.48\textwidth} p{0.48\textwidth}}
+\textbf{\TDFRazon} & \textbf{\ArtistaNombre} \\
+\rule{0.9\linewidth}{0.4pt} & \rule{0.9\linewidth}{0.4pt} \\
+Nombre: Diego Saá & Representante: \ArtistaRep \\
+Cargo: Productor Ejecutivo & C.I./RUC: \ArtistaID \\
+Fecha: \rule{0.45\linewidth}{0.4pt} & Fecha: \rule{0.45\linewidth}{0.4pt} \\
+\end{tabular}
+
+\newpage
+% ==================== ANEXO I ==============================
+\section*{ANEXO I — Normas de set y seguridad}
+\accentbar
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \textbf{Sin público}; acceso restringido a equipo y Artista.
+  \item \textbf{Prohibido} humo, fuego, pirotecnia, confeti, líquidos cerca de equipos u otros riesgos.
+  \item \textbf{Cables y rutas} libres; no obstruir salidas; orden y limpieza en el set.
+  \item \textbf{Volumen} según indicación de FOH/monitores; pausas para cámara/óptica cuando producción lo solicite.
+  \item \textbf{Props} del Artista deberán ser autorizados por dirección de arte/producción antes de su montaje.
+  \item \textbf{Alimentación eléctrica:} solo personal de TDF puede conectar/desconectar equipos al patch o regletas del estudio.
+\end{itemize}
+
+\newpage
+% ==================== ANEXO II =============================
+\section*{ANEXO II — Costos recuperables (tope USD \TopeRecoup)}
+\accentbar
+\small
+\begin{longtable}{p{9cm} r}
+\toprule
+\textbf{Rubro} & \textbf{USD} \\
+\midrule
+Alquiler de estudio & \\ 
+Equipo de cámaras/luces & \\
+Edición de video & \\
+Mezcla de audio & \\
+Mastering & \\
+Diseño gráfico / thumbnails & \\
+Publicidad / Ads & \\
+Logística / catering / transporte & \\
+Otros (especificar) & \\
+\midrule
+\textbf{TOTAL (no exceder tope)} & \\
+\bottomrule
+\end{longtable}
+\normalsize
+\emph{Cualquier gasto por encima del tope requiere autorización escrita previa del Artista.}
+
+\newpage
+% ==================== ANEXO III ============================
+\section*{ANEXO III — Datos bancarios para liquidaciones}
+\accentbar
+\begin{longtable}{p{5cm} p{10cm}}
+\toprule
+\textbf{Campo} & \textbf{Dato} \\
+\midrule
+Beneficiario & \ArtistaNombre \\
+C.I./RUC & \ArtistaID \\
+Banco & \\
+Tipo de cuenta & \\
+Número de cuenta & \\
+Correo para pagos & \ArtistaEmail \\
+Teléfono de contacto & \ArtistaTel \\
+\bottomrule
+\end{longtable}
+
+\end{document}

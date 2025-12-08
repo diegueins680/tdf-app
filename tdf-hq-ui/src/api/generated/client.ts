@@ -2,10 +2,10 @@
 import type { components } from './types';
 import { getStoredSessionToken } from '../../session/SessionContext';
 
-export type User = components['schemas']['User'];
-export type PartyRole = components['schemas']['PartyRole'];
-export type PartyStatus = components['schemas']['PartyStatus'];
-export type UserRoleUpdate = components['schemas']['UserRoleUpdate'];
+export type Role = components['schemas']['Role'];
+export type UserSummary = components['schemas']['UserRoleSummary'];
+type RoleInput = Role | (string & Record<never, never>);
+export type UserRoleUpdate = { roles: RoleInput[] };
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
 
@@ -39,25 +39,25 @@ export class ApiClient {
       throw new Error(`API error: ${response.status} ${details}`);
     }
 
-    if (response.status === 204) {
+    const raw = await response.text();
+    if (!raw || raw.trim() === '') {
       return undefined as T;
     }
-
-    return response.json();
+    return JSON.parse(raw) as T;
   }
 
   // Get all users with their roles
-  async getUsers(): Promise<User[]> {
-    return this.request<User[]>('/api/users');
+  async getUsers(): Promise<UserSummary[]> {
+    return this.request<UserSummary[]>('/api/users');
   }
 
   // Get roles for a specific user
-  async getUserRoles(userId: number): Promise<PartyRole[]> {
-    return this.request<PartyRole[]>(`/api/users/${userId}/roles`);
+  async getUserRoles(userId: number): Promise<Role[]> {
+    return this.request<Role[]>(`/api/users/${userId}/roles`);
   }
 
   // Update roles for a user
-  async updateUserRoles(userId: number, roles: PartyRole[]): Promise<void> {
+  async updateUserRoles(userId: number, roles: RoleInput[]): Promise<void> {
     const body: UserRoleUpdate = { roles };
     await this.request<void>(`/api/users/${userId}/roles`, {
       method: 'PUT',

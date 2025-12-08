@@ -14,9 +14,11 @@ module TDF.Profiles.Artist
 
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import qualified Data.Map.Strict           as Map
+import qualified Data.Set                  as Set
 import           Data.List                 (foldl')
 import           Data.Maybe                (listToMaybe)
 import           Data.Text                 (Text)
+import qualified Data.Text                 as T
 import           Data.Time                 (UTCTime, getCurrentTime)
 import           Database.Persist
 import           Database.Persist.Sql      (SqlPersistT, fromSqlKey)
@@ -34,6 +36,14 @@ upsertArtistProfileRecord
   -> UTCTime
   -> SqlPersistT m ArtistProfileDTO
 upsertArtistProfileRecord artistKey ArtistProfileUpsert{..} now = do
+  let trimmedDisplay = fmap T.strip apuDisplayName
+      displayUpdate =
+        case trimmedDisplay of
+          Just name | not (T.null name) -> Just (M.PartyDisplayName =. name)
+          _                             -> Nothing
+  case displayUpdate of
+    Just upd -> update artistKey [upd]
+    Nothing  -> pure ()
   _ <- upsert
     ArtistProfile
       { artistProfileArtistPartyId    = artistKey
@@ -67,10 +77,14 @@ upsertArtistProfileRecord artistKey ArtistProfileUpsert{..} now = do
     , ArtistProfileUpdatedAt        =. Just now
     ]
   mDto <- loadArtistProfileDTO artistKey
-  maybe (pure (emptyDto artistKey)) pure mDto
+  case mDto of
+    Just dto -> pure dto
+    Nothing -> do
+      hasAccount <- artistHasUserAccount [artistKey]
+      pure (emptyDto artistKey hasAccount)
 
-emptyDto :: PartyId -> ArtistProfileDTO
-emptyDto artistKey = ArtistProfileDTO
+emptyDto :: PartyId -> Bool -> ArtistProfileDTO
+emptyDto artistKey hasAccount = ArtistProfileDTO
   { apArtistId         = fromSqlKey artistKey
   , apDisplayName      = ""
   , apSlug             = Nothing
@@ -86,6 +100,7 @@ emptyDto artistKey = ArtistProfileDTO
   , apGenres           = Nothing
   , apHighlights       = Nothing
   , apFollowerCount    = 0
+  , apHasUserAccount   = hasAccount
   }
 
 loadAllArtistProfilesDTO :: MonadIO m => SqlPersistT m [ArtistProfileDTO]
@@ -106,7 +121,11 @@ loadOrCreateArtistProfileDTO :: MonadIO m => PartyId -> SqlPersistT m ArtistProf
 loadOrCreateArtistProfileDTO artistId = do
   _ <- ensureArtistProfileEntity artistId
   mDto <- loadArtistProfileDTO artistId
-  pure (maybe (emptyDto artistId) id mDto)
+  case mDto of
+    Just dto -> pure dto
+    Nothing -> do
+      hasAccount <- artistHasUserAccount [artistId]
+      pure (emptyDto artistId hasAccount)
 
 ensureArtistProfileEntity :: MonadIO m => PartyId -> SqlPersistT m (Entity ArtistProfile)
 ensureArtistProfileEntity artistId = do
@@ -140,7 +159,16 @@ buildArtistProfileDTOs profiles = do
   let artistIds = map (artistProfileArtistPartyId . entityVal) profiles
   nameMap <- fetchPartyNameMap artistIds
   followerCounts <- fetchFollowerCounts artistIds
-  pure (map (artistProfileEntityToDTO nameMap followerCounts) profiles)
+  accountMap <- fetchArtistAccountMap artistIds
+  pure (map (artistProfileEntityToDTO nameMap followerCounts accountMap) profiles)
+
+fetchArtistAccountMap :: MonadIO m => [PartyId] -> SqlPersistT m (Map.Map PartyId Bool)
+fetchArtistAccountMap ids
+  | null ids  = pure Map.empty
+  | otherwise = do
+      creds <- selectList [UserCredentialPartyId <-. ids] []
+      let partyIds = Set.fromList (map (userCredentialPartyId . entityVal) creds)
+      pure $ Map.fromList [ (pid, True) | pid <- Set.toList partyIds ]
 
 fetchPartyNameMap :: MonadIO m => [PartyId] -> SqlPersistT m (Map.Map PartyId Text)
 fetchPartyNameMap partyIds = do
@@ -164,12 +192,14 @@ fetchArtistProfileMap ids
 artistProfileEntityToDTO
   :: Map.Map PartyId Text
   -> Map.Map PartyId Int
+  -> Map.Map PartyId Bool
   -> Entity ArtistProfile
   -> ArtistProfileDTO
-artistProfileEntityToDTO nameMap followMap (Entity _ prof) =
+artistProfileEntityToDTO nameMap followMap accountMap (Entity _ prof) =
   let artistId = artistProfileArtistPartyId prof
       displayName = Map.findWithDefault "Artista" artistId nameMap
       followerCount = Map.findWithDefault 0 artistId followMap
+      hasAccount = Map.findWithDefault False artistId accountMap
   in ArtistProfileDTO
       { apArtistId         = fromSqlKey artistId
       , apDisplayName      = displayName
@@ -186,4 +216,12 @@ artistProfileEntityToDTO nameMap followMap (Entity _ prof) =
       , apGenres           = artistProfileGenres prof
       , apHighlights       = artistProfileHighlights prof
       , apFollowerCount    = followerCount
+      , apHasUserAccount   = hasAccount
       }
+
+artistHasUserAccount :: MonadIO m => [PartyId] -> SqlPersistT m Bool
+artistHasUserAccount [] = pure False
+artistHasUserAccount ids = do
+  let keySet = Set.fromList ids
+  creds <- selectList [UserCredentialPartyId <-. Set.toList keySet] [LimitTo 1]
+  pure (not (null creds))
