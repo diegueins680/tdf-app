@@ -167,7 +167,10 @@ data ParsedEvent = ParsedEvent
   }
 
 runDB :: SqlPersistT IO a -> AppM a
-runDB action = do
+runDB = runDb
+
+runDb :: SqlPersistT IO a -> AppM a
+runDb action = do
   Env{..} <- ask
   liftIO $ runSqlPool action envPool
 
