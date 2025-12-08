@@ -390,16 +390,16 @@ export default function BookingsPage() {
     }
   };
 
-  const handleEventClick = (info: { event: { id: string; extendedProps?: { isCourse?: boolean } } }) => {
-    if (info.event.extendedProps?.isCourse) {
+  const handleEventClick = (info: { event: { id: string; title?: string; extendedProps?: Record<string, unknown> } }) => {
+    const ext = info.event.extendedProps ?? {};
+    if (ext['isCourse']) {
       setDialogOpen(false);
-      const props = info.event.extendedProps ?? {};
       setCourseReadOnlyInfo({
         title: info.event.title ?? 'Bloque de curso',
         range: formatEventRange((info.event as any).start, (info.event as any).end),
-        subtitle: (props as { courseSubtitle?: string }).courseSubtitle,
-        price: (props as { priceText?: string }).priceText,
-        location: (props as { locationText?: string }).locationText,
+        subtitle: (ext['courseSubtitle'] as string | undefined) || undefined,
+        price: (ext['priceText'] as string | undefined) || undefined,
+        location: (ext['locationText'] as string | undefined) || undefined,
       });
       setCourseNotice('Los bloques del curso son de solo lectura. Revisa los detalles del horario aquí.');
       return;
