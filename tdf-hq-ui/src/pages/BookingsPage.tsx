@@ -268,6 +268,9 @@ export default function BookingsPage() {
     }
   }, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
 
+  const formatForInput = (date: Date) =>
+    DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm");
+
   useEffect(() => {
     if (prefillHandled || dialogOpen) return;
     try {
@@ -291,9 +294,6 @@ export default function BookingsPage() {
       setPrefillHandled(true);
     }
   }, [dialogOpen, formatForInput, prefillHandled]);
-
-  const formatForInput = (date: Date) =>
-    DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm");
 
   const openDialogForRange = (start: Date, end: Date) => {
     setStartInput(formatForInput(start));
