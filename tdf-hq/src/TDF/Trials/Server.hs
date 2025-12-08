@@ -920,7 +920,8 @@ privateTrialsServer user@AuthedUser{..} =
 
     teachersH :: AppM [TeacherDTO]
     teachersH = do
-      teacherRoles <- selectList [Models.PartyRoleRole ==. Teacher, Models.PartyRoleActive ==. True] []
+      -- Show any party that has the Teacher role, regardless of the active flag on the PartyRole entry.
+      teacherRoles <- selectList [Models.PartyRoleRole ==. Teacher] []
       let teacherIds = map (Models.partyRolePartyId . entityVal) teacherRoles
 
       parties <- if null teacherIds

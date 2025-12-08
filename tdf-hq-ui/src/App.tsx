@@ -33,6 +33,7 @@ import ClassesPage from './pages/ClassesPage';
 import ReportsPage from './pages/ReportsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import PublicProfilePage from './pages/PublicProfilePage';
+import SocialPage from './pages/SocialPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
 import LabelProjectsPage from './pages/LabelProjectsPage';
 import LabelReleasesPage from './pages/LabelReleasesPage';
