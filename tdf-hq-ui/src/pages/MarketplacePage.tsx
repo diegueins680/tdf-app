@@ -156,7 +156,8 @@ export default function MarketplacePage() {
   const paypalClientId = useMemo<string>(() => {
     const baked = String(import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
     const runtimeVal: string = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
-    return baked !== '' ? baked : runtimeVal;
+    const cleanedRuntime = runtimeVal.trim();
+    return baked !== '' ? baked : cleanedRuntime;
   }, []);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState<string | null>(null);

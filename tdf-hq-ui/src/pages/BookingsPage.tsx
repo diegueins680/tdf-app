@@ -177,14 +177,23 @@ export default function BookingsPage() {
   const [prefillNotice, setPrefillNotice] = useState(false);
   const [autoAssignMessage, setAutoAssignMessage] = useState('');
   const [template, setTemplate] = useState<string>('');
+  const toEventDate = (value: Date | string | null | undefined) => {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value === 'string') {
+      const parsed = DateTime.fromISO(value);
+      if (parsed.isValid) return parsed.toJSDate();
+    }
+    return null;
+  };
   const conflicts = useMemo(() => {
     if (!startInput || !endInput) return [];
     const start = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
     const end = DateTime.fromFormat(endInput, "yyyy-LL-dd'T'HH:mm", { zone });
     if (!start.isValid || !end.isValid) return [];
     return events.filter((ev) => {
-      const evStart = ev.start as Date | null;
-      const evEnd = ev.end as Date | null;
+      const evStart = toEventDate(ev.start);
+      const evEnd = toEventDate(ev.end);
       if (!evStart || !evEnd) return false;
       return start.toJSDate() < evEnd && end.toJSDate() > evStart;
     });

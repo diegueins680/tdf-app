@@ -490,7 +490,7 @@ function FormCard({
   isFull: boolean;
   whatsappHref: string;
 }) {
-  const disableInputs = submitted || isFull;
+  const disableInputs = submitted || isFull || submitting;
   const seatsText = isFull ? 'Cupos agotados. Escríbenos y te avisamos si se libera un cupo.' : 'Cupos limitados.';
   return (
     <Card
@@ -646,6 +646,7 @@ function FormCard({
                 href={whatsappHref}
                 target="_blank"
                 rel="noreferrer"
+                disabled={submitting}
               >
                 Escríbenos por WhatsApp
               </Button>
@@ -653,6 +654,11 @@ function FormCard({
                 Volver al inicio
               </Button>
             </Stack>
+            {submitting && (
+              <Typography variant="caption" color="text.secondary">
+                Procesando tu inscripción...
+              </Typography>
+            )}
           </Stack>
         </Alert>
       )}
