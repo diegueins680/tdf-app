@@ -213,6 +213,11 @@ export interface BookingDTO {
   customerName?: string | null;
   partyDisplayName?: string | null;
   resources: BookingResourceDTO[];
+  courseSlug?: string | null;
+  coursePrice?: number | null;
+  courseCapacity?: number | null;
+  courseRemaining?: number | null;
+  courseLocation?: string | null;
 }
 
 export interface VersionInfo {

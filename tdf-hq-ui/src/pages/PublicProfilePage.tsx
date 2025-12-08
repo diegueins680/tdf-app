@@ -120,7 +120,7 @@ export default function PublicProfilePage() {
                 {party.displayName}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {party.legalName || party.displayName}
+                {party.legalName ?? party.displayName}
               </Typography>
             </Box>
               {!isSelf && session?.partyId && (
@@ -142,7 +142,7 @@ export default function PublicProfilePage() {
                       Escuchando ahora
                     </Typography>
                     <Typography variant="subtitle1" fontWeight={700}>
-                      {presence.rpStationName || presence.rpStreamUrl}
+                      {presence.rpStationName ?? presence.rpStreamUrl}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {new Date(presence.rpUpdatedAt).toLocaleTimeString()}

@@ -33,6 +33,7 @@ import ClassesPage from './pages/ClassesPage';
 import ReportsPage from './pages/ReportsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import PublicProfilePage from './pages/PublicProfilePage';
+import SocialPageView from './pages/SocialPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
 import LabelProjectsPage from './pages/LabelProjectsPage';
 import LabelReleasesPage from './pages/LabelReleasesPage';
@@ -162,7 +163,6 @@ function Shell() {
           </Box>
         </Box>
       </Box>
-      <RadioWidget />
     </Box>
   );
 }
@@ -201,6 +201,7 @@ export default function App() {
 
           <Route path="/inicio" element={<FanHubPage />} />
           <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
+          <Route path="/social" element={<SocialPageView />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/acerca" element={<AboutPage />} />
@@ -269,6 +270,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<PublicBranding><NotFoundPage /></PublicBranding>} />
       </Routes>
+      <RadioWidget />
     </>
   );
 }

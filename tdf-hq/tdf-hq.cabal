@@ -28,6 +28,9 @@ executable tdf-hq-exe
     TDF.API.Rooms
     TDF.API.Sessions
     TDF.API.Radio
+    TDF.Contracts.API
+    TDF.Contracts.Server
+    TDF.Contracts.Types
     TDF.API.SocialEventsAPI
     TDF.API.Types
     TDF.API.WhatsApp
@@ -142,6 +145,9 @@ test-suite tdf-hq-test
     TDF.API.Instagram
     TDF.API.Calendar
     TDF.API.Label
+    TDF.Contracts.API
+    TDF.Contracts.Server
+    TDF.Contracts.Types
     TDF.API.Marketplace
     TDF.API.LiveSessions
     TDF.API.Radio

@@ -19,6 +19,7 @@ import {
   TextField,
   Typography,
   IconButton,
+  Tooltip,
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -656,10 +657,8 @@ export default function RecordsPublicPage() {
   const releasesQuery = useCmsContents('records-release-', 'es');
   const recordingsQuery = useCmsContents('records-recording-', 'es');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const bookingToken =
-    import.meta.env['VITE_PUBLIC_BOOKING_TOKEN'] ??
-    import.meta.env['VITE_API_DEMO_TOKEN'] ??
-    '';
+  const envVars = import.meta.env as Record<string, string | undefined>;
+  const bookingToken = envVars['VITE_PUBLIC_BOOKING_TOKEN'] ?? envVars['VITE_API_DEMO_TOKEN'] ?? '';
   const hasBookingToken = Boolean(bookingToken);
   const { session, login, setApiToken } = useSession();
   const modules = useMemo(() => {
@@ -834,25 +833,29 @@ export default function RecordsPublicPage() {
             />
             {canMaintainCms && (
               <Stack direction="row" spacing={1}>
-                <Button
-                  component={RouterLink}
-                  to="/configuracion/cms"
-                  variant="outlined"
-                  size="small"
-                  startIcon={<EditIcon />}
-                  sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
-                >
-                  Gestionar CMS
-                </Button>
-                <Button
-                  component={RouterLink}
-                  to="/label/releases"
-                  variant="outlined"
-                  size="small"
-                  sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
-                >
-                  Releases (CRUD)
-                </Button>
+                <Tooltip title="Abrir CMS (records-*)">
+                  <Button
+                    component={RouterLink}
+                    to="/configuracion/cms"
+                    variant="outlined"
+                    size="small"
+                    startIcon={<EditIcon />}
+                    sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
+                  >
+                    Gestionar CMS
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Ir a CRUD de releases">
+                  <Button
+                    component={RouterLink}
+                    to="/label/releases"
+                    variant="outlined"
+                    size="small"
+                    sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
+                  >
+                    Releases (CRUD)
+                  </Button>
+                </Tooltip>
               </Stack>
             )}
             <Typography variant="h2" sx={{ fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.05 }}>
@@ -914,15 +917,16 @@ export default function RecordsPublicPage() {
               title="Fotos del estudio"
               actions={
                 canMaintainCms ? (
-                  <IconButton
-                    component={RouterLink}
-                    to="/configuracion/cms?slug=records-recording-"
-                    size="small"
-                    sx={{ color: 'rgba(229,231,235,0.9)' }}
-                    title="Editar fotos (CMS)"
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
+                  <Tooltip title="Editar fotos (CMS records-recording-*)">
+                    <IconButton
+                      component={RouterLink}
+                      to="/configuracion/cms?slug=records-recording-"
+                      size="small"
+                      sx={{ color: 'rgba(229,231,235,0.9)' }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 ) : null
               }
             >
@@ -944,15 +948,16 @@ export default function RecordsPublicPage() {
               title="TDF Sessions"
               actions={
                 canMaintainCms ? (
-                  <IconButton
-                    component={RouterLink}
-                    to="/configuracion/cms?slug=records-session-"
-                    size="small"
-                    sx={{ color: 'rgba(229,231,235,0.9)' }}
-                    title="Editar sesiones (CMS)"
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
+                  <Tooltip title="Editar sesiones (CMS records-session-*)">
+                    <IconButton
+                      component={RouterLink}
+                      to="/configuracion/cms?slug=records-session-"
+                      size="small"
+                      sx={{ color: 'rgba(229,231,235,0.9)' }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 ) : null
               }
             >
@@ -972,24 +977,26 @@ export default function RecordsPublicPage() {
               actions={
                 canMaintainCms ? (
                   <Stack direction="row" spacing={0.5}>
-                    <IconButton
-                      component={RouterLink}
-                      to="/configuracion/cms?slug=records-release-"
-                      size="small"
-                      sx={{ color: 'rgba(229,231,235,0.9)' }}
-                      title="Editar releases (CMS)"
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      component={RouterLink}
-                      to="/label/releases"
-                      size="small"
-                      sx={{ color: 'rgba(229,231,235,0.9)' }}
-                      title="CRUD de releases"
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
+                    <Tooltip title="Editar releases (CMS records-release-*)">
+                      <IconButton
+                        component={RouterLink}
+                        to="/configuracion/cms?slug=records-release-"
+                        size="small"
+                        sx={{ color: 'rgba(229,231,235,0.9)' }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Ir a CRUD de releases">
+                      <IconButton
+                        component={RouterLink}
+                        to="/label/releases"
+                        size="small"
+                        sx={{ color: 'rgba(229,231,235,0.9)' }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Stack>
                 ) : null
               }
