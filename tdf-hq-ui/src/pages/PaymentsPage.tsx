@@ -80,6 +80,14 @@ function PaymentForm({
   const [invoiceId, setInvoiceId] = useState<string>('');
   const [orderId, setOrderId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const invoiceOptions = useMemo(
+    () => Array.from(new Set(payments.map((p) => p.payInvoiceId).filter(Boolean))).map((v) => String(v)),
+    [payments],
+  );
+  const orderOptions = useMemo(
+    () => Array.from(new Set(payments.map((p) => p.payOrderId).filter(Boolean))).map((v) => String(v)),
+    [payments],
+  );
   const lastPaymentForParty = useMemo(() => {
     if (!selectedParty) return null;
     return (
@@ -277,21 +285,37 @@ function PaymentForm({
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              label="Factura (ID opcional)"
-              fullWidth
+            <Autocomplete
+              freeSolo
+              options={invoiceOptions}
               value={invoiceId}
-              onChange={(e) => setInvoiceId(e.target.value)}
-              placeholder="Vincula con factura si aplica"
+              onChange={(_, value) => setInvoiceId(value ?? '')}
+              inputValue={invoiceId}
+              onInputChange={(_, value) => setInvoiceId(value)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Factura (ID opcional)"
+                  placeholder="Vincula con factura si aplica"
+                />
+              )}
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              label="Orden (ID opcional)"
-              fullWidth
+            <Autocomplete
+              freeSolo
+              options={orderOptions}
               value={orderId}
-              onChange={(e) => setOrderId(e.target.value)}
-              placeholder="Vincula con orden si aplica"
+              onChange={(_, value) => setOrderId(value ?? '')}
+              inputValue={orderId}
+              onInputChange={(_, value) => setOrderId(value)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Orden (ID opcional)"
+                  placeholder="Vincula con orden si aplica"
+                />
+              )}
             />
           </Grid>
           <Grid item xs={12}>

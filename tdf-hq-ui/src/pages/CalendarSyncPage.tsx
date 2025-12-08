@@ -4,6 +4,7 @@ import {
   Alert,
   Box,
   Button,
+  Autocomplete,
   Chip,
   Divider,
   Grid,
@@ -26,6 +27,8 @@ export default function CalendarSyncPage() {
   const [fromInput, setFromInput] = useState('');
   const [toInput, setToInput] = useState('');
   const [connectedCalendar, setConnectedCalendar] = useState<string | null>(null);
+  const [accountEmail, setAccountEmail] = useState('');
+  const [calendarHistory, setCalendarHistory] = useState<string[]>([]);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [appliedRemoteConfig, setAppliedRemoteConfig] = useState(false);
@@ -74,6 +77,8 @@ export default function CalendarSyncPage() {
     const storedRange = window.localStorage.getItem('calendar-sync.range');
     const storedConnected = window.localStorage.getItem('calendar-sync.connected');
     const storedLastSync = window.localStorage.getItem('calendar-sync.lastSyncAt');
+    const storedAccount = window.localStorage.getItem('calendar-sync.account');
+    const storedHistory = window.localStorage.getItem('calendar-sync.history');
 
     if (storedId) {
       setCalendarId(storedId);
@@ -82,6 +87,15 @@ export default function CalendarSyncPage() {
     }
     if (storedConnected) setConnectedCalendar(storedConnected);
     if (storedLastSync) setLastSyncAt(storedLastSync);
+    if (storedAccount) setAccountEmail(storedAccount);
+    if (storedHistory) {
+      try {
+        const parsed = JSON.parse(storedHistory) as string[];
+        if (Array.isArray(parsed)) setCalendarHistory(parsed);
+      } catch {
+        // ignore malformed history
+      }
+    }
 
     if (storedRange) {
       try {
@@ -101,6 +115,11 @@ export default function CalendarSyncPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem('calendar-sync.calendarId', calendarId);
+    if (calendarId) {
+      const nextHistory = Array.from(new Set([calendarId, ...calendarHistory])).slice(0, 5);
+      setCalendarHistory(nextHistory);
+      window.localStorage.setItem('calendar-sync.history', JSON.stringify(nextHistory));
+    }
   }, [calendarId]);
 
   useEffect(() => {
@@ -117,6 +136,11 @@ export default function CalendarSyncPage() {
     if (typeof window === 'undefined') return;
     if (lastSyncAt) window.localStorage.setItem('calendar-sync.lastSyncAt', lastSyncAt);
   }, [lastSyncAt]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('calendar-sync.account', accountEmail.trim());
+  }, [accountEmail]);
 
   const fromIso = useMemo(() => toUtcIso(fromInput), [fromInput, toUtcIso]);
   const toIso = useMemo(() => toUtcIso(toInput), [toInput, toUtcIso]);
@@ -201,6 +225,11 @@ export default function CalendarSyncPage() {
     setShowValidation(true);
     if (!trimmedCalendarId || !code.trim()) return;
     exchangeMutation.mutate();
+    const nextHistory = Array.from(new Set([trimmedCalendarId, ...calendarHistory])).slice(0, 5);
+    setCalendarHistory(nextHistory);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('calendar-sync.history', JSON.stringify(nextHistory));
+    }
   };
 
   const handleSync = () => {
@@ -218,8 +247,12 @@ export default function CalendarSyncPage() {
       window.localStorage.removeItem('calendar-sync.range');
       window.localStorage.removeItem('calendar-sync.connected');
       window.localStorage.removeItem('calendar-sync.lastSyncAt');
+      window.localStorage.removeItem('calendar-sync.account');
+      window.localStorage.removeItem('calendar-sync.history');
     }
     setCalendarId('primary');
+    setAccountEmail('');
+    setCalendarHistory([]);
   };
 
   useEffect(() => {
@@ -280,16 +313,25 @@ export default function CalendarSyncPage() {
           )}
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
-              <TextField
-                label="Calendar ID"
-                fullWidth
+              <Autocomplete
+                freeSolo
+                options={calendarHistory}
                 value={calendarId}
-                onChange={(e) => setCalendarId(e.target.value)}
-                helperText={calendarIdError || 'Ej: primary o calendar-id@group.calendar.google.com'}
-                required
-                error={Boolean(calendarIdError)}
-                FormHelperTextProps={calendarIdError ? { sx: { color: 'error.main' } } : undefined}
-                placeholder="primary"
+                onChange={(_, value) => setCalendarId(value ?? '')}
+                inputValue={calendarId}
+                onInputChange={(_, value) => setCalendarId(value)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Calendar ID"
+                    fullWidth
+                    helperText={calendarIdError || 'Ej: primary o calendar-id@group.calendar.google.com'}
+                    required
+                    error={Boolean(calendarIdError)}
+                    FormHelperTextProps={calendarIdError ? { sx: { color: 'error.main' } } : undefined}
+                    placeholder="primary"
+                  />
+                )}
               />
             </Grid>
             <Grid item xs={12} md={4}>
@@ -318,6 +360,16 @@ export default function CalendarSyncPage() {
                 InputLabelProps={{ shrink: true }}
                 error={Boolean(toInput && !toIso)}
                 helperText={toInput && !toIso ? 'Fecha inválida, usa el selector.' : 'Déjalo vacío para traer todo.'}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Cuenta Google (opcional)"
+                fullWidth
+                value={accountEmail}
+                onChange={(e) => setAccountEmail(e.target.value)}
+                placeholder="tu.correo@gmail.com"
+                helperText="Solo para referencia; ayuda a recordar qué cuenta está conectada."
               />
             </Grid>
           </Grid>
