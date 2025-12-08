@@ -30,4 +30,13 @@ export const Bookings = {
   }) => post<BookingDTO>('/bookings', body),
   update: (bookingId: number, body: BookingUpdatePayload) =>
     put<BookingDTO>(`/bookings/${bookingId}`, body),
+  createPublic: (body: {
+    pbFullName: string;
+    pbEmail: string;
+    pbPhone?: string | null;
+    pbServiceType: string;
+    pbStartsAt: string;
+    pbDurationMinutes?: number | null;
+    pbNotes?: string | null;
+  }) => post<BookingDTO>('/bookings/public', body),
 };

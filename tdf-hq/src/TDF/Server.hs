@@ -211,6 +211,7 @@ server =
   :<|> contractsServer
   :<|> socialEventsServer
   :<|> radioPresencePublicServer
+  :<|> bookingPublicServer
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -1126,29 +1127,44 @@ normalizeUtm (Just UTMTags{..}) =
 -- Ensure a Party/UserCredential exists for a registration email. Returns (username, tempPassword) only when a new
 -- credential was created.
 ensureUserAccount :: Maybe Text -> Text -> AppM (Maybe (Text, Text))
-ensureUserAccount mName emailAddr = do
+ensureUserAccount mName emailAddr = snd <$> ensurePartyWithAccount mName emailAddr Nothing
+
+ensurePartyWithAccount :: Maybe Text -> Text -> Maybe Text -> AppM (Key Party, Maybe (Text, Text))
+ensurePartyWithAccount mName emailAddr mPhone = do
   now <- liftIO getCurrentTime
+  let display = case fmap T.strip mName of
+        Just nameTxt | not (T.null nameTxt) -> nameTxt
+        _                                   -> emailAddr
+      phoneClean = mPhone >>= normalizePhone
   partyId <- runDB $ do
     mParty <- selectFirst [PartyPrimaryEmail ==. Just emailAddr] []
     case mParty of
-      Just (Entity pid _) -> pure pid
-      Nothing -> do
-        let display = fromMaybe emailAddr mName
-        insert Party
-          { partyLegalName = Nothing
-          , partyDisplayName = display
-          , partyIsOrg = False
-          , partyTaxId = Nothing
-          , partyPrimaryEmail = Just emailAddr
-          , partyPrimaryPhone = Nothing
-          , partyWhatsapp = Nothing
-          , partyInstagram = Nothing
-          , partyEmergencyContact = Nothing
-          , partyNotes = Nothing
-          , partyCreatedAt = now
-          }
+      Just (Entity pid party) -> do
+        let updates = catMaybes
+              [ if isJust (partyDisplayName party) || T.null display
+                  then Nothing
+                  else Just (PartyDisplayName =. display)
+              , case phoneClean of
+                  Just phone | isNothing (partyPrimaryPhone party) -> Just (PartyPrimaryPhone =. Just phone)
+                  _ -> Nothing
+              ]
+        unless (null updates) (update pid updates)
+        pure pid
+      Nothing -> insert Party
+        { partyLegalName = Nothing
+        , partyDisplayName = display
+        , partyIsOrg = False
+        , partyTaxId = Nothing
+        , partyPrimaryEmail = Just emailAddr
+        , partyPrimaryPhone = phoneClean
+        , partyWhatsapp = Nothing
+        , partyInstagram = Nothing
+        , partyEmergencyContact = Nothing
+        , partyNotes = Nothing
+        , partyCreatedAt = now
+        }
   mCred <- runDB $ selectFirst [UserCredentialPartyId ==. partyId] []
-  case mCred of
+  newCred <- case mCred of
     Just _ -> pure Nothing
     Nothing -> do
       username <- runDB (generateUniqueUsername (deriveBaseUsername mName emailAddr) partyId)
@@ -1166,6 +1182,7 @@ ensureUserAccount mName emailAddr = do
         _ <- upsert (PartyRole partyId Fan True) [PartyRoleActive =. True]
         pure ()
       pure (Just (username, tempPassword))
+  pure (partyId, newCred)
 
 deriveBaseUsername :: Maybe Text -> Text -> Text
 deriveBaseUsername mName emailAddr =
@@ -2257,6 +2274,9 @@ addRole user pidI (RolePayload roleTxt) = do
         Nothing -> ReadOnly
 
 -- Bookings
+bookingPublicServer :: ServerT Api.BookingPublicAPI AppM
+bookingPublicServer = createPublicBooking
+
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
 bookingServer user =
        listBookings user
@@ -2304,6 +2324,73 @@ courseCalendarBookings cfg =
             , courseRemaining    = Just remaining
             , courseLocation     = Just locationLabel
            }
+
+createPublicBooking :: PublicBookingReq -> AppM BookingDTO
+createPublicBooking PublicBookingReq{..} = do
+  when (T.null (T.strip pbFullName)) (throwBadRequest "nombre requerido")
+  when (T.null (T.strip pbEmail)) (throwBadRequest "email requerido")
+  let serviceTypeClean = normalizeOptionalInput (Just pbServiceType)
+  when (isNothing serviceTypeClean) (throwBadRequest "serviceType requerido")
+  let durationMins = max 30 (fromMaybe 60 pbDurationMinutes)
+      endsAt       = addUTCTime (fromIntegral durationMins * 60) pbStartsAt
+      notesClean   = normalizeOptionalInput pbNotes
+  (partyId, _) <- ensurePartyWithAccount (Just (T.strip pbFullName)) (T.strip pbEmail) pbPhone
+  Env pool _ <- ask
+  resourceKeys <- liftIO $ flip runSqlPool pool $
+    resolveResourcesForBooking serviceTypeClean [] pbStartsAt endsAt
+  now <- liftIO getCurrentTime
+  let bookingRecord = Booking
+        { bookingTitle          = buildTitle serviceTypeClean pbFullName
+        , bookingServiceOrderId = Nothing
+        , bookingPartyId        = Just partyId
+        , bookingServiceType    = serviceTypeClean
+        , bookingStartsAt       = pbStartsAt
+        , bookingEndsAt         = endsAt
+        , bookingStatus         = Tentative
+        , bookingCreatedBy      = Nothing
+        , bookingNotes          = notesClean
+        , bookingCreatedAt      = now
+        }
+  dto <- liftIO $ flip runSqlPool pool $ do
+    bookingId <- insert bookingRecord
+    let uniqueResources = nub resourceKeys
+    forM_ (zip [0 :: Int ..] uniqueResources) $ \(idx, key) ->
+      insert_ BookingResource
+        { bookingResourceBookingId = bookingId
+        , bookingResourceResourceId = key
+        , bookingResourceRole = if idx == 0 then "primary" else "secondary"
+        }
+    created <- getJustEntity bookingId
+    dtos <- buildBookingDTOs [created]
+    let fallback = BookingDTO
+          { bookingId          = fromSqlKey bookingId
+          , title              = bookingTitle bookingRecord
+          , startsAt           = bookingStartsAt bookingRecord
+          , endsAt             = bookingEndsAt bookingRecord
+          , status             = T.pack (show (bookingStatus bookingRecord))
+          , notes              = bookingNotes bookingRecord
+          , partyId            = Just (fromSqlKey partyId)
+          , serviceType        = bookingServiceType bookingRecord
+          , serviceOrderId     = Nothing
+          , serviceOrderTitle  = Nothing
+          , customerName       = Just pbFullName
+          , partyDisplayName   = Just pbFullName
+          , resources          = []
+          , courseSlug         = Nothing
+          , coursePrice        = Nothing
+          , courseCapacity     = Nothing
+          , courseRemaining    = Nothing
+          , courseLocation     = Nothing
+          }
+    pure (headDef fallback dtos)
+  pure dto
+  where
+    headDef defVal xs =
+      case xs of
+        (y:_) -> y
+        []    -> defVal
+    buildTitle (Just svc) nameTxt = svc <> " · " <> nameTxt
+    buildTitle Nothing nameTxt    = "Reserva · " <> nameTxt
 
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
 createBooking user req = do

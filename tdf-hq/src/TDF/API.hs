@@ -104,6 +104,9 @@ type BookingAPI =
   :<|> ReqBody '[JSON] CreateBookingReq :> Post '[JSON] BookingDTO
   :<|> Capture "bookingId" Int64 :> ReqBody '[JSON] UpdateBookingReq :> Put '[JSON] BookingDTO
 
+type BookingPublicAPI =
+       "bookings" :> "public" :> ReqBody '[JSON] PublicBookingReq :> Post '[JSON] BookingDTO
+
 type PackageAPI =
        "products" :> Get '[JSON] [PackageProductDTO]
   :<|> "purchases" :> ReqBody '[JSON] PackagePurchaseReq :> Post '[JSON] NoContent
@@ -221,6 +224,7 @@ type API =
   :<|> "contracts" :> ContractsAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> RadioPublicAPI
+  :<|> BookingPublicAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
 data HealthStatus = HealthStatus { status :: String, db :: String }
@@ -249,6 +253,17 @@ data UpdateBookingReq = UpdateBookingReq
   , ubEndsAt      :: Maybe UTCTime
   } deriving (Show, Generic)
 instance FromJSON UpdateBookingReq
+
+data PublicBookingReq = PublicBookingReq
+  { pbFullName         :: Text
+  , pbEmail            :: Text
+  , pbPhone            :: Maybe Text
+  , pbServiceType      :: Text
+  , pbStartsAt         :: UTCTime
+  , pbDurationMinutes  :: Maybe Int
+  , pbNotes            :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON PublicBookingReq
 
 data AdsInquiry = AdsInquiry
   { aiName    :: Maybe Text

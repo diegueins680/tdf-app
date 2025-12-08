@@ -62,6 +62,7 @@ import TidalAgentPage from './pages/TidalAgentPage';
 import LabelAssetsPage from './pages/LabelAssetsPage';
 import LabelTracksPage from './pages/LabelTracksPage';
 import AdminDiagnosticsPage from './pages/AdminDiagnosticsPage';
+import PublicBookingPage from './pages/PublicBookingPage';
 
 function Shell() {
   const { session } = useSession();
@@ -186,6 +187,7 @@ export default function App() {
         <Route path="/records" element={<PublicBranding><RecordsPublicPage /></PublicBranding>} />
         <Route path="/inventario/scan/:token" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />
         <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
+        <Route path="/reservar" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />
         <Route path="/login" element={<PublicBranding><LoginPage /></PublicBranding>} />
         <Route path="/herramientas/creador-musical" element={<PublicBranding><MusicMakerPage /></PublicBranding>} />
         <Route element={<Shell />}>
