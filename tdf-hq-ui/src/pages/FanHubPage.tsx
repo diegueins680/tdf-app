@@ -562,6 +562,18 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 Reproduce lanzamientos sin salir del hub: si hay enlaces de Spotify o YouTube los cargamos en el reproductor
                 embebido.
               </Typography>
+              {!session && (
+                <Alert
+                  severity="info"
+                  action={
+                    <Button component={RouterLink} to="/login" size="small" variant="contained">
+                      Inicia sesión
+                    </Button>
+                  }
+                >
+                  Ingresa con tu cuenta para ver lanzamientos personalizados y seguir artistas.
+                </Alert>
+              )}
               {!canSeeReleaseFeed && (
                 <Alert severity="info">Inicia sesión con rol Fan/Customer para ver lanzamientos personalizados.</Alert>
               )}

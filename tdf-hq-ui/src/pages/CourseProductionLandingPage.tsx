@@ -626,20 +626,40 @@ function FormCard({
                 disabled={disableInputs || submitting}
                 startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <CelebrationIcon />}
                 sx={{ mt: 1 }}
+          >
+            {isFull ? 'Cupos agotados' : submitted ? 'Inscripción recibida' : 'Enviar inscripción'}
+          </Button>
+        </Stack>
+      </Box>
+      {submitted && (
+        <Alert severity="success">
+          <Stack spacing={1}>
+            <Typography fontWeight={700}>¡Inscripción recibida!</Typography>
+            <Typography variant="body2">
+              Te contactaremos por correo/WhatsApp para confirmar tu cupo y pago. Si no ves el mensaje en 5 minutos, escríbenos.
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button
+                variant="contained"
+                startIcon={<WhatsAppIcon />}
+                component="a"
+                href={whatsappHref}
+                target="_blank"
+                rel="noreferrer"
               >
-                {isFull ? 'Cupos agotados' : submitted ? 'Inscripción recibida' : 'Enviar inscripción'}
+                Escríbenos por WhatsApp
+              </Button>
+              <Button component="a" href="/" variant="outlined">
+                Volver al inicio
               </Button>
             </Stack>
-          </Box>
-          {submitted && (
-            <Alert severity="success">
-              ¡Gracias! Hemos recibido tu inscripción. Te contactaremos por correo/WhatsApp con los pasos para completar el pago.
-            </Alert>
-          )}
-          {submitError && (
-            <Alert severity="error">
-              No pudimos registrar tu inscripción. Intenta de nuevo o escríbenos por WhatsApp.
-            </Alert>
+          </Stack>
+        </Alert>
+      )}
+      {submitError && (
+        <Alert severity="error">
+          No pudimos registrar tu inscripción. Intenta de nuevo o escríbenos por WhatsApp.
+        </Alert>
           )}
         </Stack>
       </CardContent>

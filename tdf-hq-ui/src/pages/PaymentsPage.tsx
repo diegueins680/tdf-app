@@ -26,6 +26,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PaymentCreate, PaymentDTO, PartyDTO } from '../api/types';
 import { Payments } from '../api/payments';
 import { Parties } from '../api/parties';
+import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import type { DriveFileInfo } from '../services/googleDrive';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'COP'];
@@ -321,44 +323,28 @@ function PaymentForm({
             />
           </Grid>
           <Grid item xs={12}>
-            <Stack spacing={1}>
-              <Button
-                variant="outlined"
-                component="label"
-                size="small"
-              >
-                {attachmentName ? `Adjunto: ${attachmentName}` : 'Subir comprobante (PDF/imagen)'}
-                <input
-                  type="file"
-                  hidden
-                  accept="application/pdf,image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (file.size > 4 * 1024 * 1024) {
-                      setError('El archivo supera 4MB. Sube un comprobante más ligero.');
-                      return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      const result = reader.result;
-                      if (typeof result === 'string') {
-                        setAttachmentUrl(result);
-                        setAttachmentName(file.name);
-                        setError(null);
-                      }
-                    };
-                    reader.readAsDataURL(file);
-                  }}
-                />
-              </Button>
+            <Stack spacing={1.5}>
+              <GoogleDriveUploadWidget
+                label={attachmentName ? `Adjunto: ${attachmentName}` : 'Subir comprobante (PDF/imagen) a Drive'}
+                helperText="Se almacenará en Drive y guardaremos el enlace público."
+                accept="application/pdf,image/*"
+                multiple={false}
+                dense
+                onComplete={(files: DriveFileInfo[]) => {
+                  const file = files[0];
+                  if (!file) return;
+                  setAttachmentUrl(file.webViewLink || file.webContentLink || '');
+                  setAttachmentName(file.name);
+                  setError(null);
+                }}
+              />
               <TextField
                 label="URL de respaldo (opcional)"
                 fullWidth
                 value={attachmentUrl}
                 onChange={(e) => setAttachmentUrl(e.target.value)}
                 placeholder="Link a comprobante o carpeta"
-                helperText="Puedes subir un archivo o pegar un enlace."
+                helperText="Puedes pegar un enlace existente si ya tienes el archivo."
               />
             </Stack>
           </Grid>

@@ -334,110 +334,153 @@ export default function CalendarSyncPage() {
           {configQuery.isError && (
             <Alert severity="warning">No pudimos leer la configuración guardada. Intenta recargar o revisar permisos.</Alert>
           )}
+          <Typography variant="subtitle1" fontWeight={700}>
+            Pasos guiados
+          </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
-              <Autocomplete
-                freeSolo
-                options={calendarHistory}
-                value={calendarId}
-                onChange={(_, value) => setCalendarId(value ?? '')}
-                inputValue={calendarId}
-                onInputChange={(_, value) => setCalendarId(value)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Calendar ID"
-                    fullWidth
-                    helperText={calendarIdError || 'Ej: primary o calendar-id@group.calendar.google.com'}
-                    required
-                    error={Boolean(calendarIdError)}
-                    FormHelperTextProps={calendarIdError ? { sx: { color: 'error.main' } } : undefined}
-                    placeholder="primary"
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Stack spacing={1}>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Paso 1 · Conectar con Google
+                  </Typography>
+                  <Autocomplete
+                    freeSolo
+                    options={calendarHistory}
+                    value={calendarId}
+                    onChange={(_, value) => setCalendarId(value ?? '')}
+                    inputValue={calendarId}
+                    onInputChange={(_, value) => setCalendarId(value)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Calendar ID"
+                        fullWidth
+                        helperText={calendarIdError || 'Ej: primary o calendar-id@group.calendar.google.com'}
+                        required
+                        error={Boolean(calendarIdError)}
+                        FormHelperTextProps={calendarIdError ? { sx: { color: 'error.main' } } : undefined}
+                        placeholder="primary"
+                      />
+                    )}
                   />
-                )}
-              />
+                  <TextField
+                    label="Cuenta Google (opcional)"
+                    fullWidth
+                    value={accountEmail}
+                    onChange={(e) => setAccountEmail(e.target.value)}
+                    placeholder="tu.correo@gmail.com"
+                    helperText="Solo referencia; ayuda a recordar qué cuenta está conectada."
+                  />
+                  <Button
+                    variant="contained"
+                    startIcon={<LinkIcon />}
+                    onClick={handleQuickConnect}
+                    disabled={authUrlMutation.isPending}
+                  >
+                    Abrir consentimiento
+                  </Button>
+                  <Button
+                    variant="text"
+                    startIcon={<LinkIcon />}
+                    onClick={() => authUrlMutation.mutate()}
+                    disabled={authUrlMutation.isPending}
+                  >
+                    Reabrir URL
+                  </Button>
+                </Stack>
+              </Paper>
             </Grid>
             <Grid item xs={12} md={4}>
-              <TextField
-                label="Desde (opcional)"
-                fullWidth
-                type="datetime-local"
-                value={fromInput}
-                onChange={(e) => setFromInput(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                error={Boolean(fromInput && !fromIso)}
-                helperText={
-                  fromInput && !fromIso
-                    ? 'Fecha inválida, usa el selector.'
-                    : 'Se convierte a UTC automáticamente.'
-                }
-              />
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Stack spacing={1}>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Paso 2 · Guardar tokens
+                  </Typography>
+                  <TextField
+                    label="Code (pegado desde Google)"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    error={Boolean(codeError)}
+                    helperText={codeError || 'Pega el code mostrado por Google tras aceptar el consentimiento.'}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleSaveTokens}
+                    disabled={!code.trim() || !trimmedCalendarId || exchangeMutation.isPending}
+                  >
+                    Guardar tokens
+                  </Button>
+                  {exchangeMutation.isSuccess && <Alert severity="success">Tokens guardados.</Alert>}
+                  {exchangeMutation.isError && (
+                    <Alert severity="error">No se pudo intercambiar el code. Revisa el client_id/secret y el redirect.</Alert>
+                  )}
+                </Stack>
+              </Paper>
             </Grid>
             <Grid item xs={12} md={4}>
-              <TextField
-                label="Hasta (opcional)"
-                fullWidth
-                type="datetime-local"
-                value={toInput}
-                onChange={(e) => setToInput(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                error={Boolean(toInput && !toIso)}
-                helperText={toInput && !toIso ? 'Fecha inválida, usa el selector.' : 'Déjalo vacío para traer todo.'}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                label="Cuenta Google (opcional)"
-                fullWidth
-                value={accountEmail}
-                onChange={(e) => setAccountEmail(e.target.value)}
-                placeholder="tu.correo@gmail.com"
-                helperText="Solo para referencia; ayuda a recordar qué cuenta está conectada."
-              />
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Stack spacing={1}>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Paso 3 · Sincronizar rango
+                  </Typography>
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Chip label="Este mes" onClick={() => applyRangePreset('thisMonth')} variant="outlined" />
+                    <Chip label="Próximos 30 días" onClick={() => applyRangePreset('next30')} variant="outlined" />
+                    <Chip label="Últimos 30 días" onClick={() => applyRangePreset('last30')} variant="outlined" />
+                    <Button size="small" onClick={clearRange}>
+                      Limpiar rango
+                    </Button>
+                  </Stack>
+                  <TextField
+                    label="Desde (opcional)"
+                    fullWidth
+                    type="datetime-local"
+                    value={fromInput}
+                    onChange={(e) => setFromInput(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    error={Boolean(fromInput && !fromIso)}
+                    helperText={
+                      fromInput && !fromIso
+                        ? 'Fecha inválida, usa el selector.'
+                        : 'Se convierte a UTC automáticamente.'
+                    }
+                  />
+                  <TextField
+                    label="Hasta (opcional)"
+                    fullWidth
+                    type="datetime-local"
+                    value={toInput}
+                    onChange={(e) => setToInput(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    error={Boolean(toInput && !toIso)}
+                    helperText={
+                      toInput && !toIso ? 'Fecha inválida, usa el selector.' : 'Déjalo vacío para traer todo.'
+                    }
+                  />
+                  {rangeError && <Alert severity="warning">{rangeError}</Alert>}
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<SyncIcon />}
+                    onClick={handleSync}
+                    disabled={!trimmedCalendarId || syncMutation.isPending || Boolean(rangeError)}
+                  >
+                    Sincronizar ahora
+                  </Button>
+                  <Typography variant="caption" color="text.secondary">
+                    Última sync: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Sin sincronizar'}
+                  </Typography>
+                  {syncMutation.isError && <Alert severity="error">La sincronización falló.</Alert>}
+                  {syncMutation.isSuccess && (
+                    <Alert severity="success">
+                      Sync OK: {syncMutation.data.updated} actualizados, {syncMutation.data.created} creados, {syncMutation.data.deleted} cancelados.
+                    </Alert>
+                  )}
+                </Stack>
+              </Paper>
             </Grid>
           </Grid>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <Button
-              variant="contained"
-              startIcon={<LinkIcon />}
-              onClick={handleQuickConnect}
-              disabled={authUrlMutation.isPending}
-            >
-              Conectar con Google
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<LinkIcon />}
-              onClick={() => authUrlMutation.mutate()}
-              disabled={authUrlMutation.isPending}
-            >
-              Reabrir URL de consentimiento
-            </Button>
-            <TextField
-              label="Code (pegado desde Google)"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              sx={{ minWidth: 320 }}
-              error={Boolean(codeError)}
-              helperText={codeError || 'Pega el code mostrado por Google tras aceptar el consentimiento.'}
-            />
-            <Button
-              variant="contained"
-              onClick={handleSaveTokens}
-              disabled={!code.trim() || !trimmedCalendarId || exchangeMutation.isPending}
-            >
-              Guardar tokens
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              startIcon={<SyncIcon />}
-              onClick={handleSync}
-              disabled={!trimmedCalendarId || syncMutation.isPending || Boolean(rangeError)}
-            >
-              Sincronizar ahora
-            </Button>
-          </Stack>
           {exchangeMutation.isError && (
             <Alert severity="error">No se pudo intercambiar el code. Revisa el client_id/secret y el redirect.</Alert>
           )}

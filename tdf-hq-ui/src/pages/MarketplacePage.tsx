@@ -180,11 +180,15 @@ export default function MarketplacePage() {
   const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
   const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string } | null>(null);
   const [paypalError, setPaypalError] = useState<string | null>(null);
+  const paypalEnabled = Boolean(paypalClientId);
   const datafastFormRef = useRef<HTMLDivElement>(null);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastError, setDatafastError] = useState<string | null>(null);
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
+  const [datafastUnavailable, setDatafastUnavailable] = useState(false);
+  const showPaypalOption = paypalEnabled;
+  const showDatafastOption = !datafastUnavailable;
   const [paymentMethod, setPaymentMethod] = useState<'contact' | 'card' | 'paypal'>(() => {
     if (typeof window === 'undefined') return 'contact';
     const saved = localStorage.getItem(PAYMENT_PREF_KEY);
@@ -436,9 +440,14 @@ export default function MarketplacePage() {
       setDatafastCheckout(dto);
       setDatafastDialogOpen(true);
       setDatafastError(null);
+      setDatafastUnavailable(false);
       setDatafastWidgetKey((k) => k + 1);
     },
-    onError: () => setDatafastError('No pudimos iniciar el pago con tarjeta. Revisa tus datos.'),
+    onError: () => {
+      setDatafastError('No pudimos iniciar el pago con tarjeta. Revisa tus datos.');
+      setDatafastUnavailable(true);
+      setPaymentMethod('contact');
+    },
   });
 
   const createPaypalOrderMutation = useMutation({
@@ -576,6 +585,20 @@ export default function MarketplacePage() {
     if (!isValidEmail) return 'Ingresa un correo válido.';
     return '';
   }, [cartItemCount, hasCartItems, isValidEmail, isValidName]);
+  useEffect(() => {
+    if (!paypalEnabled && (modules.has('ops') || modules.has('admin'))) {
+      console.warn('PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID en build o runtime.');
+    }
+  }, [paypalEnabled, modules]);
+
+  useEffect(() => {
+    if (paymentMethod === 'paypal' && !showPaypalOption) {
+      setPaymentMethod('contact');
+    }
+    if (paymentMethod === 'card' && !showDatafastOption) {
+      setPaymentMethod('contact');
+    }
+  }, [paymentMethod, showDatafastOption, showPaypalOption]);
   const resetFilters = () => {
     setSearch('');
     setCategory('all');
@@ -991,7 +1014,17 @@ export default function MarketplacePage() {
         )}
 
         {listingsQuery.isError && (
-          <Alert severity="error">No pudimos cargar el marketplace. Intenta de nuevo.</Alert>
+          <Alert
+            severity="warning"
+            action={
+              <Button size="small" onClick={() => listingsQuery.refetch()}>
+                Reintentar
+              </Button>
+            }
+          >
+            No pudimos cargar el marketplace. Puede ser un bloqueo de red/CORS o el servicio está caído. Intenta recargar
+            o vuelve a intentar en unos minutos.
+          </Alert>
         )}
 
         <Grid container spacing={3} id="marketplace-listings">
@@ -1540,26 +1573,31 @@ export default function MarketplacePage() {
                           onClick={() => setPaymentMethod('contact')}
                           size="small"
                         />
-                        <Chip
-                          label="Tarjeta (Datafast)"
-                          color={paymentMethod === 'card' ? 'primary' : 'default'}
-                          variant={paymentMethod === 'card' ? 'filled' : 'outlined'}
-                          onClick={() => setPaymentMethod('card')}
-                          size="small"
-                        />
-                        <Chip
-                          label="PayPal"
-                          color={paymentMethod === 'paypal' ? 'primary' : 'default'}
-                          variant={paymentMethod === 'paypal' ? 'filled' : 'outlined'}
-                          onClick={() => setPaymentMethod('paypal')}
-                          size="small"
-                          disabled={!paypalClientId}
-                        />
+                        {showDatafastOption && (
+                          <Chip
+                            label="Tarjeta (Datafast)"
+                            color={paymentMethod === 'card' ? 'primary' : 'default'}
+                            variant={paymentMethod === 'card' ? 'filled' : 'outlined'}
+                            onClick={() => setPaymentMethod('card')}
+                            size="small"
+                          />
+                        )}
+                        {showPaypalOption && (
+                          <Chip
+                            label="PayPal"
+                            color={paymentMethod === 'paypal' ? 'primary' : 'default'}
+                            variant={paymentMethod === 'paypal' ? 'filled' : 'outlined'}
+                            onClick={() => setPaymentMethod('paypal')}
+                            size="small"
+                          />
+                        )}
                       </Stack>
-                      {!paypalClientId && (
-                        <Typography variant="caption" color="text.secondary">
-                          Configura VITE_PAYPAL_CLIENT_ID para habilitar PayPal.
-                        </Typography>
+                      {(!showPaypalOption || !showDatafastOption) && (modules.has('ops') || modules.has('admin')) && (
+                        <Alert severity="warning" variant="outlined" sx={{ mt: 0.5 }}>
+                          {!showPaypalOption
+                            ? 'PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID.'
+                            : 'Datafast no disponible en este momento.'}
+                        </Alert>
                       )}
                     {paymentMethod === 'card' && (
                       <Stack direction="row" spacing={0.5} alignItems="center">
@@ -1597,13 +1635,63 @@ export default function MarketplacePage() {
                     <Alert severity="error">No pudimos crear el pedido. Revisa tus datos.</Alert>
                   )}
                     {datafastError && (
-                      <Alert severity="warning" onClose={() => setDatafastError(null)}>
-                        {datafastError}
+                      <Alert
+                        severity="warning"
+                        onClose={() => setDatafastError(null)}
+                        action={
+                          <Stack direction="row" spacing={1}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              onClick={() => {
+                                setDatafastError(null);
+                                handleDatafastCheckout();
+                              }}
+                            >
+                              Reintentar pago
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="text"
+                              component="a"
+                              href="mailto:dev@tdfrecords.com"
+                            >
+                              Necesito ayuda
+                            </Button>
+                          </Stack>
+                        }
+                      >
+                        {datafastError} · Verifica tu banco o prueba nuevamente.
                       </Alert>
                     )}
                     {paypalError && (
-                      <Alert severity="warning" onClose={() => setPaypalError(null)}>
-                        {paypalError}
+                      <Alert
+                        severity="warning"
+                        onClose={() => setPaypalError(null)}
+                        action={
+                          <Stack direction="row" spacing={1}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              onClick={() => {
+                                setPaypalError(null);
+                                handlePaypalCheckout();
+                              }}
+                            >
+                              Reintentar PayPal
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="text"
+                              component="a"
+                              href="mailto:dev@tdfrecords.com"
+                            >
+                              Necesito ayuda
+                            </Button>
+                          </Stack>
+                        }
+                      >
+                        {paypalError} · Revisa tu sesión o intenta otra vez.
                       </Alert>
                     )}
                   </Stack>
