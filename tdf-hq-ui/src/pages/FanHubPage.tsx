@@ -10,8 +10,13 @@ import {
   CardActionArea,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   Link,
+  LinearProgress,
   Snackbar,
   IconButton,
   Stack,
@@ -25,14 +30,13 @@ import YouTubeIcon from '@mui/icons-material/YouTube';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
 import { useSession } from '../session/SessionContext';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
@@ -62,6 +66,7 @@ function StatPill({ label, value }: { label: string; value: number }) {
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session, login } = useSession();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -140,9 +145,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     apuHighlights: '',
   });
   const [heroImageFileName, setHeroImageFileName] = useState<string>('');
-  const [heroImageError, setHeroImageError] = useState<string | null>(null);
   const [expandedFeatured, setExpandedFeatured] = useState<Set<number>>(() => new Set());
   const [fanRoleToast, setFanRoleToast] = useState<string | null>(null);
+  const [releaseLinkDraft, setReleaseLinkDraft] = useState<string>('');
+  const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
 
   useEffect(() => {
     if (profileQuery.data) {
@@ -175,7 +182,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         apuHighlights: dto.apHighlights ?? '',
       });
       setHeroImageFileName(dto.apHeroImageUrl ? 'Imagen existente' : '');
-      setHeroImageError(null);
     }
   }, [artistProfileQuery.data, session?.partyId]);
   useEffect(() => {
@@ -335,7 +341,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const visibleFeed = releaseFeed.slice(0, feedLimit);
 
   const handleFollowToggle = (artistId: number, currentlyFollowing: boolean) => {
-    if (!viewerId) return;
+    if (!viewerId) {
+      setLoginPromptOpen(true);
+      return;
+    }
     if (currentlyFollowing) {
       unfollowMutation.mutate(artistId);
     } else {
@@ -346,8 +355,25 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const handleUploadTrigger = (release: ReleaseFeedItem) => {
     setUploadError(null);
     setPendingUploadRelease(release);
-    setUploadingReleaseId(release.arReleaseId);
-    audioFileInputRef.current?.click();
+    setReleaseLinkDraft(release.arSpotifyUrl ?? release.arYoutubeUrl ?? '');
+    setUploadingReleaseId(null);
+  };
+
+  const persistReleaseStream = async (release: ReleaseFeedItem, streamUrl: string) => {
+    const normalized = streamUrl.trim();
+    const isYoutube = /youtu\.?be|youtube\.com/.test(normalized.toLowerCase());
+    const payload = {
+      aruArtistId: release.arArtistId,
+      aruTitle: release.arTitle,
+      aruReleaseDate: release.arReleaseDate ?? null,
+      aruDescription: release.arDescription ?? null,
+      aruCoverImageUrl: release.arCoverImageUrl ?? null,
+      aruSpotifyUrl: isYoutube ? release.arSpotifyUrl ?? null : normalized,
+      aruYoutubeUrl: isYoutube ? normalized : release.arYoutubeUrl ?? null,
+    };
+    await Admin.updateArtistRelease(release.arReleaseId, payload);
+    void releaseFeedQuery.refetch();
+    setReleaseUploadToast('Stream actualizado.');
   };
 
   const handleAudioFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -358,22 +384,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
     try {
       setUploadError(null);
+      setUploadingReleaseId(pendingUploadRelease.arReleaseId);
       await ensureAccessToken();
       const driveFile = await uploadToDrive(file);
       await makeFilePublic(driveFile.id);
       const publicUrl = buildPublicContentUrl(driveFile.id);
       setReleaseAudioMap((prev) => ({ ...prev, [pendingUploadRelease.arReleaseId]: publicUrl }));
-      const payload = {
-        aruArtistId: pendingUploadRelease.arArtistId,
-        aruTitle: pendingUploadRelease.arTitle,
-        aruReleaseDate: pendingUploadRelease.arReleaseDate ?? null,
-        aruDescription: pendingUploadRelease.arDescription ?? null,
-        aruCoverImageUrl: pendingUploadRelease.arCoverImageUrl ?? null,
-        aruSpotifyUrl: publicUrl,
-        aruYoutubeUrl: pendingUploadRelease.arYoutubeUrl ?? null,
-      };
-      await Admin.updateArtistRelease(pendingUploadRelease.arReleaseId, payload);
-      void releaseFeedQuery.refetch();
+      await persistReleaseStream(pendingUploadRelease, publicUrl);
+      setReleaseUploadToast('Audio subido y listo para reproducir.');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'No pudimos subir el audio a Drive.';
       setUploadError(msg);
@@ -410,6 +428,27 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     );
   };
 
+  const handleSaveReleaseLink = async () => {
+    if (!pendingUploadRelease) return;
+    const trimmed = releaseLinkDraft.trim();
+    if (!trimmed) {
+      setUploadError('Pega un enlace de Spotify o YouTube.');
+      return;
+    }
+    setUploadError(null);
+    try {
+      setUploadingReleaseId(pendingUploadRelease.arReleaseId);
+      await persistReleaseStream(pendingUploadRelease, trimmed);
+      setPendingUploadRelease(null);
+      setReleaseLinkDraft('');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No pudimos guardar el enlace.';
+      setUploadError(msg);
+    } finally {
+      setUploadingReleaseId(null);
+    }
+  };
+
   const normalizeField = (value?: string | null) => {
     const trimmed = value?.trim();
     return trimmed && trimmed.length > 0 ? trimmed : null;
@@ -436,33 +475,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     reader.readAsDataURL(file);
   };
 
-
-  const handleHeroImageFileChange = (file: File | null) => {
-    if (!file) {
-      setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
-      setHeroImageFileName('');
-      return;
-    }
-    const maxBytes = 6 * 1024 * 1024;
-    if (file.size > maxBytes) {
-      setHeroImageError('El archivo supera 6 MB. Usa una imagen más liviana.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        const dataUrl = reader.result;
-        setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: dataUrl }));
-        setHeroImageFileName(file.name);
-        setHeroImageError(null);
-      } else {
-        setHeroImageError('No pudimos leer la imagen seleccionada.');
-        setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
-      }
-    };
-    reader.onerror = () => setHeroImageError('No pudimos leer la imagen seleccionada.');
-    reader.readAsDataURL(file);
-  };
 
   const handleSaveArtistProfile = () => {
     if (!session?.partyId) return;
@@ -686,14 +698,89 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             )}
                             {canManageReleases && (
                               <GoogleDriveUploadWidget
-                                label="Subir audio (Drive)"
-                                helperText="Carga el máster de este release."
+                                label="Avanzado: Subir audio desde Drive"
+                                helperText="Opcional: usa Drive si ya tienes el máster listo allí."
                                 accept="audio/*"
                                 multiple={false}
                                 dense
+                                onComplete={(files) => {
+                                  const link = files[0]?.webContentLink ?? files[0]?.webViewLink;
+                                  if (!link) return;
+                                  setPendingUploadRelease(release);
+                                  setReleaseLinkDraft(link);
+                                  void (async () => {
+                                    try {
+                                      setUploadingReleaseId(release.arReleaseId);
+                                      await persistReleaseStream(release, link);
+                                      setPendingUploadRelease(null);
+                                      setReleaseLinkDraft('');
+                                    } catch (err) {
+                                      const msg = err instanceof Error ? err.message : 'No pudimos guardar el enlace.';
+                                      setUploadError(msg);
+                                    } finally {
+                                      setUploadingReleaseId(null);
+                                    }
+                                  })();
+                                }}
                               />
                             )}
                           </Stack>
+                        )}
+                        {canManageReleases && pendingUploadRelease?.arReleaseId === release.arReleaseId && (
+                          <Box
+                            sx={{
+                              mt: 2,
+                              p: 2,
+                              borderRadius: 2,
+                              border: '1px dashed',
+                              borderColor: 'divider',
+                              bgcolor: 'background.default',
+                            }}
+                          >
+                            <Stack spacing={1.5}>
+                              <Typography variant="subtitle2" fontWeight={700}>
+                                Adjuntar stream rápidamente
+                              </Typography>
+                              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                <TextField
+                                  label="Link de Spotify o YouTube"
+                                  placeholder="Pega un enlace de streaming"
+                                  value={releaseLinkDraft}
+                                  onChange={(event) => setReleaseLinkDraft(event.target.value)}
+                                  fullWidth
+                                />
+                                <Button
+                                  variant="contained"
+                                  onClick={() => void handleSaveReleaseLink()}
+                                  disabled={uploadingReleaseId === release.arReleaseId}
+                                >
+                                  Guardar link
+                                </Button>
+                                <Button
+                                  variant="outlined"
+                                  startIcon={<CloudUploadIcon />}
+                                  onClick={() => audioFileInputRef.current?.click()}
+                                  disabled={uploadingReleaseId === release.arReleaseId}
+                                >
+                                  Subir audio
+                                </Button>
+                                <Button
+                                  variant="text"
+                                  onClick={() => {
+                                    setPendingUploadRelease(null);
+                                    setReleaseLinkDraft('');
+                                  }}
+                                >
+                                  Cancelar
+                                </Button>
+                              </Stack>
+                              {uploadingReleaseId === release.arReleaseId && <LinearProgress />}
+                              <Typography variant="caption" color="text.secondary">
+                                Guarda con link directo o sube el máster; usaremos el stream más reciente.
+                              </Typography>
+                              {uploadError && <Alert severity="warning">{uploadError}</Alert>}
+                            </Stack>
+                          </Box>
                         )}
                       </Box>
                     );
@@ -780,7 +867,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               variant="contained"
                               size="small"
                               onClick={() => handleFollowToggle(artist.apArtistId, false)}
-                              disabled={!viewerId || followMutation.isPending || unfollowMutation.isPending}
+                              disabled={followMutation.isPending || unfollowMutation.isPending}
                             >
                               Seguir
                             </Button>
@@ -843,36 +930,60 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             }
           >
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="flex-start">
-              <Box sx={{ position: 'relative', width: 88, height: 88 }}>
-                <Avatar
-                  src={profileDraft.fpuAvatarUrl ?? undefined}
-                  alt={profileDraft.fpuDisplayName ?? session?.displayName ?? ''}
-                  sx={{ width: 88, height: 88 }}
-                />
-                <IconButton
+              <Stack spacing={1} alignItems="center" sx={{ minWidth: 140 }}>
+                <Box sx={{ position: 'relative', width: 104, height: 104 }}>
+                  <Avatar
+                    src={profileDraft.fpuAvatarUrl ?? undefined}
+                    alt={profileDraft.fpuDisplayName ?? session?.displayName ?? ''}
+                    sx={{ width: 104, height: 104 }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={() => avatarInputRef.current?.click()}
+                    sx={{
+                      position: 'absolute',
+                      bottom: -8,
+                      right: -8,
+                      bgcolor: 'primary.main',
+                      color: '#fff',
+                      boxShadow: 2,
+                      '&:hover': { bgcolor: 'primary.dark' },
+                    }}
+                    aria-label="Editar avatar"
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={avatarInputRef}
+                    onChange={handleAvatarFileChange}
+                    style={{ display: 'none' }}
+                  />
+                </Box>
+                <TextField
+                  label="Avatar (pega link o sube)"
+                  placeholder="https://..."
+                  value={profileDraft.fpuAvatarUrl ?? ''}
+                  onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: event.target.value }))}
+                  fullWidth
                   size="small"
-                  onClick={() => avatarInputRef.current?.click()}
-                  sx={{
-                    position: 'absolute',
-                    bottom: -6,
-                    right: -6,
-                    bgcolor: 'primary.main',
-                    color: '#fff',
-                    boxShadow: 2,
-                    '&:hover': { bgcolor: 'primary.dark' },
-                  }}
-                  aria-label="Editar avatar"
-                >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={avatarInputRef}
-                  onChange={handleAvatarFileChange}
-                  style={{ display: 'none' }}
                 />
-              </Box>
+                <Stack direction="row" spacing={1}>
+                  <Button size="small" variant="contained" onClick={() => avatarInputRef.current?.click()}>
+                    Subir imagen
+                  </Button>
+                  {profileDraft.fpuAvatarUrl && (
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: '' }))}
+                    >
+                      Quitar
+                    </Button>
+                  )}
+                </Stack>
+              </Stack>
               <Stack flex={1} spacing={2}>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                   <TextField
@@ -895,12 +1006,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     onChange={(event) =>
                       setProfileDraft((prev) => ({ ...prev, fpuFavoriteGenres: event.target.value }))
                     }
-                    fullWidth
-                  />
-                  <TextField
-                    label="Avatar (URL)"
-                    value={profileDraft.fpuAvatarUrl ?? ''}
-                    onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: event.target.value }))}
                     fullWidth
                   />
                 </Stack>
@@ -956,19 +1061,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     fullWidth
                   />
                 </Stack>
-                <GoogleDriveUploadWidget
-                  label="Subir portada a Drive"
-                  helperText="Carga la portada en Drive; guardaremos el enlace automáticamente."
-                  onComplete={(files) => {
-                    const link = files[0]?.webViewLink ?? files[0]?.webContentLink;
-                    if (link) {
-                      setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
-                      setHeroImageFileName('Imagen en Drive');
-                    }
-                  }}
-                  accept="image/*"
-                  dense
-                />
                 <TextField
                   label="Ciudad"
                   value={artistDraft.apuCity ?? ''}
@@ -985,28 +1077,38 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 />
                 <Stack spacing={1}>
                   <Typography variant="body2" fontWeight={700}>
-                    Imagen principal
+                    Portada principal (hosteada)
                   </Typography>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems="center">
-                    <Button
-                      component="label"
-                      startIcon={<UploadFileIcon />}
-                      variant="outlined"
-                      sx={{ alignSelf: 'flex-start' }}
-                    >
-                      Seleccionar imagen
-                      <input
-                        type="file"
-                        accept="image/*"
-                        hidden
-                        onChange={(e) => handleHeroImageFileChange(e.target.files?.[0] ?? null)}
-                      />
-                    </Button>
-                    {heroImageFileName && (
-                      <Typography variant="body2" color="text.secondary">
-                        {heroImageFileName}
-                      </Typography>
-                    )}
+                  <GoogleDriveUploadWidget
+                    label="Subir portada a Drive"
+                    helperText="Sube la portada; guardaremos el link servido para evitar imágenes pesadas embebidas."
+                    onComplete={(files) => {
+                      const link = files[0]?.webViewLink ?? files[0]?.webContentLink;
+                      if (link) {
+                        setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
+                        setHeroImageFileName(files[0]?.name ?? 'Imagen en Drive');
+                      }
+                    }}
+                    accept="image/*"
+                    dense
+                  />
+                  <TextField
+                    label="URL de portada (opcional)"
+                    placeholder="https://"
+                    value={artistDraft.apuHeroImageUrl ?? ''}
+                    onChange={(event) => {
+                      const val = event.target.value.trim();
+                      if (val.startsWith('data:')) {
+                        setHeroImageFileName('');
+                        setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+                        return;
+                      }
+                      setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: val }));
+                      setHeroImageFileName(val ? 'Imagen enlazada' : '');
+                    }}
+                    fullWidth
+                  />
+                  <Stack direction="row" spacing={1} alignItems="center">
                     {artistDraft.apuHeroImageUrl && (
                       <Button
                         variant="text"
@@ -1016,8 +1118,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           setHeroImageFileName('');
                         }}
                       >
-                        Quitar
+                        Quitar portada
                       </Button>
+                    )}
+                    {heroImageFileName && (
+                      <Typography variant="body2" color="text.secondary">
+                        {heroImageFileName}
+                      </Typography>
                     )}
                   </Stack>
                   {artistDraft.apuHeroImageUrl && (
@@ -1028,9 +1135,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       <CardMedia component="img" height="180" image={artistDraft.apuHeroImageUrl} alt="Vista previa" />
                     </Card>
                   )}
-                  {heroImageError && <Alert severity="warning">{heroImageError}</Alert>}
                   <Typography variant="caption" color="text.secondary">
-                    Se guardará embebida (data URL). Usa imágenes livianas (&lt; 6 MB).
+                    Guardamos sólo links hospedados (Drive/CDN) para que el perfil cargue rápido.
                   </Typography>
                 </Stack>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
@@ -1225,7 +1331,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             color={isFollowing ? 'inherit' : 'secondary'}
                             size="small"
                             onClick={() => handleFollowToggle(artist.apArtistId, isFollowing)}
-                            disabled={!viewerId || followMutation.isPending || unfollowMutation.isPending}
+                            disabled={followMutation.isPending || unfollowMutation.isPending}
                           >
                             {isFollowing ? 'Siguiendo' : 'Seguir'}
                           </Button>
@@ -1317,11 +1423,38 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         </Grid>
       </Stack>
       </Box>
+      <Dialog open={loginPromptOpen} onClose={() => setLoginPromptOpen(false)}>
+        <DialogTitle>Inicia sesión para seguir artistas</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            Crea una cuenta o inicia sesión para guardar tus artistas favoritos y recibir sus lanzamientos.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLoginPromptOpen(false)}>Cerrar</Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setLoginPromptOpen(false);
+              navigate('/login');
+            }}
+          >
+            Ir a login
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar
         open={Boolean(fanRoleToast)}
         autoHideDuration={3000}
         onClose={() => setFanRoleToast(null)}
         message={fanRoleToast ?? ''}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+      <Snackbar
+        open={Boolean(releaseUploadToast)}
+        autoHideDuration={3200}
+        onClose={() => setReleaseUploadToast(null)}
+        message={releaseUploadToast ?? ''}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </>
