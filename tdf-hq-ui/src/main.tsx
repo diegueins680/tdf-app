@@ -6,8 +6,11 @@ import App from './App';
 import './i18n';
 import { SessionProvider } from './session/SessionContext';
 import { AppThemeProvider } from './theme/AppThemeProvider';
+import { reportMissingEnv } from './utils/env';
 
 const qc = new QueryClient();
+
+reportMissingEnv(['VITE_PAYPAL_CLIENT_ID']);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

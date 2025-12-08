@@ -177,6 +177,18 @@ export default function BookingsPage() {
   const [prefillNotice, setPrefillNotice] = useState(false);
   const [autoAssignMessage, setAutoAssignMessage] = useState('');
   const [template, setTemplate] = useState<string>('');
+  const conflicts = useMemo(() => {
+    if (!startInput || !endInput) return [];
+    const start = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
+    const end = DateTime.fromFormat(endInput, "yyyy-LL-dd'T'HH:mm", { zone });
+    if (!start.isValid || !end.isValid) return [];
+    return events.filter((ev) => {
+      const evStart = ev.start as Date | null;
+      const evEnd = ev.end as Date | null;
+      if (!evStart || !evEnd) return false;
+      return start.toJSDate() < evEnd && end.toJSDate() > evStart;
+    });
+  }, [endInput, events, startInput, zone]);
   const [serviceLocked, setServiceLocked] = useState(false);
 
   const requiresEngineer = (svc: string) => {
@@ -904,6 +916,11 @@ export default function BookingsPage() {
               multiline
               minRows={2}
             />
+            {conflicts.length > 0 && (
+              <Alert severity="warning" variant="outlined">
+                Hay {conflicts.length} bloque(s) que se cruzan con este horario. Revisa disponibilidad antes de guardar.
+              </Alert>
+            )}
             <Autocomplete
               options={engineerOptions}
               getOptionLabel={(option) => option.displayName}
@@ -1008,7 +1025,7 @@ export default function BookingsPage() {
               onChange={(_, value) => setAssignedRoomIds(value.map((room) => room.roomId))}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip {...getTagProps({ index })} label={option.rName} />
+                  <Chip key={option.roomId} {...getTagProps({ index })} label={option.rName} />
                 ))
               }
               renderInput={(params) => (
