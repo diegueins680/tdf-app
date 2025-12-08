@@ -8,7 +8,7 @@ The TDF platform consists of three deployable components:
 
 | Component | Technology | Deployment Target | Status |
 |-----------|-----------|-------------------|--------|
-| **Backend API** | Haskell + PostgreSQL | Koyeb | Production |
+| **Backend API** | Haskell + PostgreSQL | Koyeb / Fly.io | Production |
 | **Web UI** | React/Vite SPA | Cloudflare Pages / Vercel | Production |
 | **Mobile App** | Expo/React Native | App Store / Play Store | Development |
 
@@ -25,7 +25,7 @@ The TDF platform consists of three deployable components:
 - Docker knowledge (for containerized deployment)
 
 ### For Frontend
-- Node.js 18+ installed locally for builds
+- Node.js 20.19+ installed locally for builds
 - API endpoint URL ready
 
 ### For Mobile
@@ -182,6 +182,25 @@ server {
 
 ---
 
+## Backend Deployment (Fly.io)
+
+Fly powers the production `tdf-hq` API. Deployments must inject the git SHA so `/version` returns the running commit.
+
+The deployment flow is:
+
+1. Build and push `diegueins680/tdf-hq:<commit-sha>` to Docker Hub with the helper script.
+2. Tell Fly to deploy that prebuilt image (`fly deploy --image ...`).
+
+Steps:
+
+1. Install Docker (with Buildx) and authenticate to Docker Hub (`docker login`). CI does this via `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` secrets.
+2. Install and authenticate Fly CLI (`fly auth login`).
+3. Run `scripts/fly-deploy.sh [fly deploy flags]` from the repo root. The script:
+   - Captures `git rev-parse HEAD`.
+   - Builds and pushes `diegueins680/tdf-hq:<sha>` (override via `DOCKER_IMAGE_REPO`/`DOCKER_IMAGE_TAG`).
+   - Calls `fly deploy --image ... --env SOURCE_COMMIT=... --env GIT_SHA=...`.
+4. For manual Fly commands, pass the same env vars (`--env SOURCE_COMMIT=$(git rev-parse HEAD) --env GIT_SHA=$(git rev-parse HEAD)`) and reference the pushed Docker Hub image to avoid re-building inside Fly.
+
 ## Frontend Deployment
 
 ### Option 1: Cloudflare Pages (Recommended)
@@ -210,7 +229,7 @@ Cloudflare Pages offers excellent performance with global CDN.
 Add in Cloudflare Pages settings:
 
 ```env
-NODE_VERSION=18
+NODE_VERSION=20.19.1
 VITE_API_BASE=https://your-api.koyeb.app
 VITE_TZ=America/Guayaquil
 ```

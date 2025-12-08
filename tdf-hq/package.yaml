@@ -30,6 +30,11 @@ dependencies:
   - http-client-tls
   - postgresql-simple
   - random
+  - vector
+  - directory
+  - filepath
+  - servant-multipart
+  - uuid
 
 extra-source-files:
   - sql/2025-11-16_leads_whatsapp.sql

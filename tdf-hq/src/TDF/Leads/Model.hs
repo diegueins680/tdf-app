@@ -7,7 +7,7 @@ import Database.PostgreSQL.Simple
 import System.Random (randomRIO)
 
 genToken :: IO Text
-genToken = T.pack <$> mapM (const rand) [1..20]
+genToken = T.pack <$> mapM (const rand) ([1..20] :: [Int])
   where
     alphabet = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9']
     rand = (alphabet !!) <$> randomRIO (0, length alphabet - 1)
@@ -18,7 +18,7 @@ ensureLead conn phone ceId = do
             "SELECT id, token FROM lead WHERE phone_e164 = ? AND course_edition_id = ? LIMIT 1"
             (phone, ceId)
   case rows of
-    [(lid :: Int, tok :: Text)] -> pure (lid, tok)
+    ((lid, tok):_) -> pure (lid, tok)
     _ -> do
       tok <- genToken
       result <- query conn

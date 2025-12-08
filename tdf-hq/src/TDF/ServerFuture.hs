@@ -3,12 +3,10 @@
 
 module TDF.ServerFuture where
 
-import           Control.Monad.Reader (MonadReader)
 import           Data.Text            (Text)
 import           Servant
 
 import           TDF.API.Future
-import           TDF.DB               (Env)
 
 -- | Shared helper to quickly craft stub responses.
 stub :: Applicative m => Text -> Text -> m StubResponse
@@ -19,9 +17,7 @@ stub area endpoint = pure StubResponse
   }
 
 futureServer
-  :: ( MonadReader Env m
-     , Applicative m
-     )
+  :: Applicative m
   => ServerT FutureAPI m
 futureServer = accessStubs
           :<|> crmStubs
