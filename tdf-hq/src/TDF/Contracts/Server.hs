@@ -110,20 +110,22 @@ loadContract cid = do
 
 renderContractLatex :: StoredContract -> Text
 renderContractLatex StoredContract{..} =
-  T.unlines
-    [ "\\documentclass{article}"
-    , "\\usepackage[margin=1in]{geometry}"
-    , "\\usepackage{parskip}"
-    , "\\begin{document}"
-    , "\\section*{Contract " <> latexEscape scId <> "}"
-    , "\\textbf{Kind:} " <> latexEscape scKind <> "\\\\"
-    , "\\textbf{Created:} " <> latexEscape (T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" scCreatedAt)) <> "\\\\"
-    , "\\subsection*{Payload}"
-    , "\\begin{verbatim}"
-    , TE.decodeUtf8 (BL.toStrict (A.encode scPayload))
-    , "\\end{verbatim}"
-    , "\\end{document}"
-    ]
+  let createdTxt = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" scCreatedAt)
+      lineBreak = " \\\\"
+   in T.unlines
+        [ "\\documentclass{article}"
+        , "\\usepackage[margin=1in]{geometry}"
+        , "\\usepackage{parskip}"
+        , "\\begin{document}"
+        , "\\section*{Contract " <> latexEscape scId <> "}"
+        , "\\textbf{Kind:} " <> latexEscape scKind <> lineBreak
+        , "\\textbf{Created:} " <> latexEscape createdTxt <> lineBreak
+        , "\\subsection*{Payload}"
+        , "\\begin{verbatim}"
+        , TE.decodeUtf8 (BL.toStrict (A.encode scPayload))
+        , "\\end{verbatim}"
+        , "\\end{document}"
+        ]
 
 extractKind :: A.Value -> Text
 extractKind val =
