@@ -24,7 +24,7 @@ import           Data.Foldable (for_)
 import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
-import           Data.Aeson (Value, object, (.=), eitherDecode, FromJSON(..), encode)
+import           Data.Aeson (Value(..), object, (.=), eitherDecode, FromJSON(..), encode)
 import           Data.Aeson.Types (parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -166,6 +166,40 @@ data ParsedEvent = ParsedEvent
   , peRawPayload :: Maybe CMS.AesonValue
   }
 
+data GoogleIdTokenInfo = GoogleIdTokenInfo
+  { gitAud            :: Text
+  , gitEmail          :: Text
+  , gitEmailVerified  :: Bool
+  , gitName           :: Maybe Text
+  , gitPicture        :: Maybe Text
+  , gitSub            :: Text
+  , gitIss            :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON GoogleIdTokenInfo where
+  parseJSON = withObject "GoogleIdTokenInfo" $ \o -> do
+    gitAud <- o .: "aud"
+    gitEmail <- o .: "email"
+    gitSub <- o .: "sub"
+    gitName <- o .:? "name"
+    gitPicture <- o .:? "picture"
+    gitIss <- o .:? "iss"
+    gitEmailVerified <- parseEmailVerified o
+    pure GoogleIdTokenInfo{..}
+    where
+      parseEmailVerified obj = do
+        mVal <- obj .:? "email_verified"
+        pure $ case mVal of
+          Just (Bool b)   -> b
+          Just (String t) -> let lowered = T.toLower (T.strip t) in lowered == "true" || lowered == "1"
+          _               -> False
+
+data GoogleProfile = GoogleProfile
+  { gpEmail   :: Text
+  , gpName    :: Maybe Text
+  , gpPicture :: Maybe Text
+  } deriving (Show)
+
 runDB :: SqlPersistT IO a -> AppM a
 runDB = runDb
 
@@ -194,6 +228,7 @@ server =
        versionServer
   :<|> health
   :<|> login
+  :<|> googleLogin
   :<|> signup
   :<|> changePassword
   :<|> authV1Server
@@ -1141,7 +1176,7 @@ ensurePartyWithAccount mName emailAddr mPhone = do
     case mParty of
       Just (Entity pid party) -> do
         let updates = catMaybes
-              [ if isJust (partyDisplayName party) || T.null display
+              [ if not (T.null (M.partyDisplayName party)) || T.null display
                   then Nothing
                   else Just (PartyDisplayName =. display)
               , case phoneClean of
@@ -1252,6 +1287,111 @@ login LoginRequest{..} = do
     Right res -> pure res
   where
     throwAuthError msg = throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+googleLogin :: GoogleLoginRequest -> AppM LoginResponse
+googleLogin GoogleLoginRequest{..} = do
+  let tokenClean = T.strip idToken
+  when (T.null tokenClean) $ throwBadRequest "Google idToken is required"
+  Env pool cfg <- ask
+  let mClientId = googleClientId cfg
+  when (isNothing mClientId) $
+    throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Google Sign-In is not configured") }
+  manager <- liftIO $ newManager tlsManagerSettings
+  verification <- liftIO $ verifyGoogleIdToken manager tokenClean mClientId
+  case verification of
+    Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+    Right profile -> do
+      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin profile)
+      case result of
+        Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
+        Right resp -> pure resp
+
+verifyGoogleIdToken :: Manager -> Text -> Maybe Text -> IO (Either Text GoogleProfile)
+verifyGoogleIdToken manager rawToken mExpectedClientId = do
+  let encoded = BS8.unpack (urlEncode True (TE.encodeUtf8 rawToken))
+  req <- parseRequest ("https://oauth2.googleapis.com/tokeninfo?id_token=" <> encoded)
+  respResult <- try (httpLbs req manager)
+    :: IO (Either SomeException (Response BL.ByteString))
+  case respResult of
+    Left _ ->
+      pure (Left "No pudimos validar tu sesión con Google. Intenta nuevamente.")
+    Right resp ->
+      let status = statusCode (responseStatus resp)
+      in if status /= 200
+         then pure (Left "Tu sesión de Google es inválida o expiró.")
+         else case eitherDecode (responseBody resp) of
+           Left _ -> pure (Left "No pudimos validar tu sesión con Google.")
+           Right info -> pure (validate info)
+  where
+    validate info
+      | not (gitEmailVerified info) =
+          Left "Tu correo de Google debe estar verificado."
+      | Just expected <- mExpectedClientId
+      , gitAud info /= expected =
+          Left "El token de Google no coincide con el cliente configurado."
+      | not (issuerAllowed (gitIss info)) =
+          Left "El token de Google proviene de un emisor no permitido."
+      | otherwise =
+          let normalizedEmail = T.toLower (T.strip (gitEmail info))
+              normalizedName  = cleanOptional (gitName info)
+              profile = GoogleProfile
+                { gpEmail   = normalizedEmail
+                , gpName    = normalizedName <|> Just normalizedEmail
+                , gpPicture = gitPicture info
+                }
+          in Right profile
+
+issuerAllowed :: Maybe Text -> Bool
+issuerAllowed Nothing = True
+issuerAllowed (Just issRaw) =
+  let issuer = T.toLower (T.strip issRaw)
+  in "accounts.google.com" `T.isInfixOf` issuer
+
+completeGoogleLogin :: GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeGoogleLogin GoogleProfile{..} = do
+  mExisting <- lookupByEmail gpEmail
+  case mExisting of
+    Just (Entity _ cred)
+      | not (userCredentialActive cred) ->
+          pure (Left "Cuenta deshabilitada. Contacta a soporte.")
+      | otherwise -> do
+          token <- createTokenWithLabel (userCredentialPartyId cred) (Just ("google-login:" <> gpEmail))
+          mUser <- loadAuthedUser token
+          case mUser of
+            Nothing   -> pure (Left "No pudimos cargar tu perfil.")
+            Just user -> pure (Right (toLoginResponse token user))
+    Nothing -> do
+      now <- liftIO getCurrentTime
+      let displayName = fromMaybe gpEmail (cleanOptional gpName)
+          partyRecord = Party
+            { partyLegalName        = Nothing
+            , partyDisplayName      = displayName
+            , partyIsOrg            = False
+            , partyTaxId            = Nothing
+            , partyPrimaryEmail     = Just gpEmail
+            , partyPrimaryPhone     = Nothing
+            , partyWhatsapp         = Nothing
+            , partyInstagram        = Nothing
+            , partyEmergencyContact = Nothing
+            , partyNotes            = Nothing
+            , partyCreatedAt        = now
+            }
+      pid <- insert partyRecord
+      applyRoles pid [Customer, Fan]
+      ensureFanProfileIfMissing pid displayName now
+      tempPassword <- liftIO generateTemporaryPassword
+      hashed <- liftIO (hashPasswordText tempPassword)
+      _ <- insert UserCredential
+        { userCredentialPartyId      = pid
+        , userCredentialUsername     = gpEmail
+        , userCredentialPasswordHash = hashed
+        , userCredentialActive       = True
+        }
+      token <- createTokenWithLabel pid (Just ("google-login:" <> gpEmail))
+      mUser <- loadAuthedUser token
+      case mUser of
+        Nothing   -> pure (Left "No pudimos cargar tu perfil.")
+        Just user -> pure (Right (toLoginResponse token user))
 
 runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
 runLogin identifier pwd = do
@@ -1403,7 +1543,7 @@ signup SignupRequest
                 , userCredentialPasswordHash = hashed
                 , userCredentialActive       = True
                 }
-              ensureFanProfile pid partyLabel nowVal
+              ensureFanProfileIfMissing pid partyLabel nowVal
               token <- createSessionToken pid emailVal
               mUser <- loadAuthedUser token
               case mUser of
@@ -1460,21 +1600,6 @@ signup SignupRequest
                   let existingRoles = map (partyRoleRole . entityVal) activeRoles
                       label = M.partyDisplayName party
                   pure (Right (artistKey, label, existingRoles))
-
-    ensureFanProfile pid label nowVal = do
-      mProfile <- getBy (UniqueFanProfile pid)
-      case mProfile of
-        Just _ -> pure ()
-        Nothing -> insert_ FanProfile
-          { fanProfileFanPartyId     = pid
-          , fanProfileDisplayName    = Just label
-          , fanProfileAvatarUrl      = Nothing
-          , fanProfileFavoriteGenres = Nothing
-          , fanProfileBio            = Nothing
-          , fanProfileCity           = Nothing
-          , fanProfileCreatedAt      = nowVal
-          , fanProfileUpdatedAt      = Nothing
-          }
 
 data PasswordChangeError
   = PasswordInvalid
@@ -1970,6 +2095,27 @@ toLoginResponse token AuthedUser{..} = LoginResponse
   , roles   = auRoles
   , modules = map moduleName (Set.toList auModules)
   }
+
+ensureFanProfileIfMissing :: PartyId -> Text -> UTCTime -> SqlPersistT IO ()
+ensureFanProfileIfMissing pid label nowVal = do
+  mProfile <- getBy (UniqueFanProfile pid)
+  case mProfile of
+    Just _ -> pure ()
+    Nothing -> insert_ FanProfile
+      { fanProfileFanPartyId     = pid
+      , fanProfileDisplayName    = Just label
+      , fanProfileAvatarUrl      = Nothing
+      , fanProfileFavoriteGenres = Nothing
+      , fanProfileBio            = Nothing
+      , fanProfileCity           = Nothing
+      , fanProfileCreatedAt      = nowVal
+      , fanProfileUpdatedAt      = Nothing
+      }
+
+generateTemporaryPassword :: IO Text
+generateTemporaryPassword = do
+  randomUuid <- nextRandom
+  pure ("google-" <> toText randomUuid)
 
 createSessionToken :: PartyId -> Text -> SqlPersistT IO Text
 createSessionToken pid uname =

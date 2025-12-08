@@ -23,6 +23,20 @@ export async function loginRequest(payload: { username: string; password: string
   return res.json() as Promise<LoginResponseDTO>;
 }
 
+export async function googleLoginRequest(payload: { idToken: string }): Promise<LoginResponseDTO> {
+  const res = await fetch(`${API_BASE}/login/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const trimmed = text.trim();
+    throw new Error(trimmed === '' ? 'No pudimos iniciar sesión con Google.' : trimmed);
+  }
+  return res.json() as Promise<LoginResponseDTO>;
+}
+
 export async function requestPasswordReset(email: string): Promise<void> {
   const res = await fetch(`${API_BASE}/v1/password-reset`, {
     method: 'POST',

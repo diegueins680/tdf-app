@@ -390,6 +390,11 @@ data LoginRequest = LoginRequest
   } deriving (Show, Generic)
 instance FromJSON LoginRequest
 
+data GoogleLoginRequest = GoogleLoginRequest
+  { idToken :: Text
+  } deriving (Show, Generic)
+instance FromJSON GoogleLoginRequest
+
 data SignupRequest = SignupRequest
   { firstName       :: Text
   , lastName        :: Text

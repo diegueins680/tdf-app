@@ -54,6 +54,27 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           description: Invalid credentials
+  /login/google:
+    post:
+      summary: Login with Google
+      description: Validates a Google ID token and issues a session. Creates a Customer/Fan account when the email is new.
+      operationId: loginWithGoogle
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleLoginRequest'
+      responses:
+        '200':
+          description: Authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid or expired Google token
   /signup:
     post:
       summary: Create an account
@@ -689,6 +710,13 @@ components:
           type: string
           format: password
           example: changeme123
+    GoogleLoginRequest:
+      type: object
+      required: [idToken]
+      properties:
+        idToken:
+          type: string
+          description: Google ID token returned by Google Identity Services
     SignupRequest:
       type: object
       required: [firstName, lastName, email, password]

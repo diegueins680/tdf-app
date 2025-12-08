@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -37,7 +37,7 @@ import { Navigate, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
 import { useThemeMode } from '../theme/AppThemeProvider';
-import { loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
+import { googleLoginRequest, loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
 import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
 import { Fans } from '../api/fans';
 import type { ArtistProfileDTO } from '../api/types';
@@ -63,6 +63,67 @@ const pickLandingPath = (roles: string[], modules?: string[]) => {
   return '/inicio';
 };
 
+declare global {
+  interface Window {
+    google?: {
+      accounts?: {
+        id?: {
+          initialize: (options: Record<string, unknown>) => void;
+          renderButton: (element: HTMLElement, options: Record<string, unknown>) => void;
+          prompt: (callback?: (notification: unknown) => void) => void;
+        };
+      };
+    };
+  }
+}
+
+const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
+let googleScriptPromise: Promise<void> | null = null;
+
+const loadGoogleScript = () => {
+  if (googleScriptPromise) return googleScriptPromise;
+  googleScriptPromise = new Promise<void>((resolve, reject) => {
+    if (typeof window === 'undefined') {
+      resolve();
+      return;
+    }
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true });
+      if (existing.dataset['loaded'] === 'true') {
+        resolve();
+      }
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = GOOGLE_SCRIPT_SRC;
+    script.async = true;
+    script.defer = true;
+    script.dataset['loaded'] = 'false';
+    script.onload = () => {
+      script.dataset['loaded'] = 'true';
+      resolve();
+    };
+    script.onerror = () => reject(new Error('No se pudo cargar Google Sign-In.'));
+    document.head.appendChild(script);
+  });
+  return googleScriptPromise;
+};
+
+const parseGoogleIdToken = (token: string): { email?: string; name?: string } | null => {
+  try {
+    const [, payload] = token.split('.');
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const decoded = atob(padded);
+    return JSON.parse(decoded) as { email?: string; name?: string };
+  } catch (error) {
+    console.warn('Failed to parse Google ID token', error);
+    return null;
+  }
+};
+
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -86,12 +147,19 @@ export default function LoginPage() {
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
+  const googleClientId = import.meta.env['VITE_GOOGLE_CLIENT_ID'] ?? '';
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+  const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
+  const googleInitRef = useRef(false);
 
   const { session, login } = useSession();
   const navigate = useNavigate();
   const { mode, toggleMode } = useThemeMode();
   const loginMutation = useMutation({
     mutationFn: (payload: { username: string; password: string }) => loginRequest(payload),
+  });
+  const googleLoginMutation = useMutation({
+    mutationFn: (payload: { idToken: string }) => googleLoginRequest(payload),
   });
   const resetMutation = useMutation({
     mutationFn: (email: string) => requestPasswordReset(email),
@@ -212,6 +280,97 @@ export default function LoginPage() {
       setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
     }
   };
+
+  const handleGoogleCredential = useCallback(
+    async (credentialResponse: { credential?: string }) => {
+      const credential = credentialResponse?.credential;
+      const parsed = credential ? parseGoogleIdToken(credential) : null;
+      const fallbackName = parsed?.name ?? parsed?.email ?? 'Cuenta Google';
+      const fallbackUsername = parsed?.email ?? 'google-user';
+      if (!credential) {
+        const message = 'No recibimos la credencial de Google.';
+        if (signupDialogOpen) {
+          setSignupFeedback({ type: 'error', message });
+        } else {
+          setFormError(message);
+        }
+        return;
+      }
+      try {
+        const response = await googleLoginMutation.mutateAsync({ idToken: credential });
+        const normalizedRoles = response.roles?.map((role) => role.toLowerCase()) ?? [];
+        const landingPath = pickLandingPath(normalizedRoles, response.modules);
+        login(
+          {
+            username: fallbackUsername,
+            displayName: fallbackName,
+            roles: normalizedRoles,
+            apiToken: response.token,
+            modules: response.modules,
+            partyId: response.partyId,
+          },
+          { remember: true },
+        );
+        setSignupDialogOpen(false);
+        setSignupFeedback(null);
+        navigate(landingPath, { replace: true });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.';
+        if (signupDialogOpen) {
+          setSignupFeedback({ type: 'error', message });
+        } else {
+          setFormError(message);
+        }
+      }
+    },
+    [googleLoginMutation, login, navigate, signupDialogOpen],
+  );
+
+  useEffect(() => {
+    if (!googleClientId) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        await loadGoogleScript();
+        if (cancelled) return;
+        const google = window.google?.accounts?.id;
+        if (!google) return;
+        if (!googleInitRef.current) {
+          google.initialize({
+            client_id: googleClientId,
+            callback: handleGoogleCredential,
+            ux_mode: 'popup',
+            auto_select: false,
+          });
+          googleInitRef.current = true;
+        }
+        if (googleButtonRef.current) {
+          googleButtonRef.current.innerHTML = '';
+          google.renderButton(googleButtonRef.current, {
+            theme: 'outline',
+            size: 'large',
+            width: 320,
+            text: 'continue_with',
+          });
+          google.prompt();
+        }
+        if (signupDialogOpen && googleSignupButtonRef.current) {
+          googleSignupButtonRef.current.innerHTML = '';
+          google.renderButton(googleSignupButtonRef.current, {
+            theme: 'outline',
+            size: 'large',
+            width: 320,
+            text: 'signup_with',
+          });
+        }
+      } catch (error) {
+        console.warn('Google Sign-In initialization failed', error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [googleClientId, handleGoogleCredential, signupDialogOpen]);
 
   const openResetDialog = () => {
     setResetDialogOpen(true);
@@ -424,6 +583,18 @@ export default function LoginPage() {
               </Stack>
             )}
 
+            {googleClientId && (
+              <Stack spacing={1} alignItems="center">
+                <Typography variant="body2" color="text.secondary">
+                  O continúa con Google
+                </Typography>
+                <Box
+                  ref={googleButtonRef}
+                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44 }}
+                />
+              </Stack>
+            )}
+
             <FormControlLabel
               control={
                 <Checkbox
@@ -517,6 +688,17 @@ export default function LoginPage() {
         <DialogTitle>Crear cuenta</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
+            {googleClientId && (
+              <Stack spacing={1} alignItems="center">
+                <Typography variant="body2" color="text.secondary">
+                  Crear e ingresar con Google
+                </Typography>
+                <Box
+                  ref={googleSignupButtonRef}
+                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44 }}
+                />
+              </Stack>
+            )}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 label="Nombre"

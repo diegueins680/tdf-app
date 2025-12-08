@@ -126,6 +126,7 @@ type ReceiptAPI =
 type HealthAPI = Get '[JSON] HealthStatus
 
 type LoginAPI = ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
+type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] LoginResponse
 
 type SignupAPI = ReqBody '[JSON] SignupRequest :> Post '[JSON] LoginResponse
 
@@ -207,6 +208,7 @@ type API =
        VersionAPI
   :<|> "health" :> HealthAPI
   :<|> "login"  :> LoginAPI
+  :<|> "login"  :> "google" :> GoogleLoginAPI
   :<|> "signup" :> SignupAPI
   :<|> "password" :> PasswordAPI
   :<|> "v1" :> AuthV1API

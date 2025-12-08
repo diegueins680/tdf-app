@@ -31,6 +31,7 @@ data AppConfig = AppConfig
   , seedTriggerToken :: Maybe Text
   , appBaseUrl      :: Maybe Text
   , emailConfig     :: Maybe EmailConfig
+  , googleClientId  :: Maybe Text
   } deriving (Show)
 
 dbConnString :: AppConfig -> String
@@ -54,6 +55,7 @@ loadConfig = do
   mig        <- get "RUN_MIGRATIONS" "true"
   seedEnv    <- lookupEnv "SEED_TRIGGER_TOKEN"
   baseUrlEnv <- lookupEnv "HQ_APP_URL"
+  googleClientIdEnv <- lookupEnv "GOOGLE_CLIENT_ID"
   smtpHostEnv <- lookupEnv "SMTP_HOST"
   smtpPortEnv <- lookupEnv "SMTP_PORT"
   smtpUserEnv <- lookupEnv "SMTP_USERNAME" <|> lookupEnv "SMTP_USER"
@@ -74,6 +76,7 @@ loadConfig = do
     , seedTriggerToken = mkSeedToken seedEnv
     , appBaseUrl = fmap (T.strip . T.pack) baseUrlEnv
     , emailConfig = mkEmailConfig smtpHostEnv smtpUserEnv smtpPassEnv smtpFromEnv smtpFromNameEnv smtpPortEnv smtpTlsEnv
+    , googleClientId = fmap (T.strip . T.pack) googleClientIdEnv
     }
   where
     get k def = fmap (fromMaybe def) (lookupEnv k)
