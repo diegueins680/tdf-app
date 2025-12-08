@@ -885,7 +885,17 @@ loadCourseMetadata rawSlug = do
   waEnv <- liftIO loadWhatsAppEnv
   let normalized = normalizeSlug rawSlug
       meta = courseMetadataFor envConfig (waContactNumber waEnv) normalized
-  maybe (throwNotFound "Curso no encontrado") pure meta
+  case meta of
+    Nothing -> throwNotFound "Curso no encontrado"
+    Just baseMeta -> do
+      -- Count all registrations (including pendientes) to show remaining seats.
+      countRegs <- runDB $
+        count
+          [ ME.CourseRegistrationCourseSlug ==. normalizeSlug (Courses.slug baseMeta)
+          , ME.CourseRegistrationStatus !=. "cancelled"
+          ]
+      let remainingSeats = max 0 (productionCourseCapacity - fromIntegral countRegs)
+      pure baseMeta { remaining = remainingSeats }
 
 courseMetadataFor :: AppConfig -> Maybe Text -> Text -> Maybe CourseMetadata
 courseMetadataFor cfg mWaContact slugVal
