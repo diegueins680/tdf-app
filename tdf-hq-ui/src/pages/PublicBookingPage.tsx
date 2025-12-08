@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   Grid,
   MenuItem,
   Stack,
@@ -34,6 +35,14 @@ const toLocalInputValue = (date: Date) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(
     date.getMinutes(),
   )}`;
+};
+
+const localTimezoneLabel = () => {
+  if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'tu zona horaria';
+  const dtf = Intl.DateTimeFormat(undefined, { timeZoneName: 'short' });
+  const parts = dtf.formatToParts(new Date());
+  const zone = parts.find((p) => p.type === 'timeZoneName')?.value;
+  return zone ?? 'tu zona horaria';
 };
 
 export default function PublicBookingPage() {
@@ -75,9 +84,20 @@ export default function PublicBookingPage() {
       return;
     }
 
+    const parsedStart = new Date(form.startsAt);
+    if (Number.isNaN(parsedStart.getTime())) {
+      setError('Selecciona una fecha y hora válida.');
+      return;
+    }
+    const now = new Date();
+    if (parsedStart.getTime() < now.getTime() + 15 * 60 * 1000) {
+      setError('Elige un horario al menos 15 minutos en el futuro.');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const startsAtIso = new Date(form.startsAt).toISOString();
+      const startsAtIso = parsedStart.toISOString();
       const dto = await Bookings.createPublic({
         pbFullName: form.fullName.trim(),
         pbEmail: form.email.trim(),
@@ -130,6 +150,9 @@ export default function PublicBookingPage() {
               <Typography variant="body1" color="text.secondary">
                 Completa tus datos y agenda el horario que prefieras. Confirmaremos la reserva por correo y, si aún no
                 tienes cuenta, crearemos tu acceso automáticamente.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Horarios mostrados en <strong>{localTimezoneLabel()}</strong>.
               </Typography>
             </Stack>
 
@@ -230,14 +253,28 @@ export default function PublicBookingPage() {
                       />
                     </Grid>
                     <Grid item xs={12} sm={5}>
-                      <TextField
-                        label="Duración (min)"
-                        type="number"
-                        value={form.durationMinutes}
-                        onChange={(e) => setForm((prev) => ({ ...prev, durationMinutes: Number(e.target.value) }))}
-                        fullWidth
-                        inputProps={{ min: 30, step: 15 }}
-                      />
+                      <Stack spacing={1}>
+                        <TextField
+                          label="Duración (min)"
+                          type="number"
+                          value={form.durationMinutes}
+                          onChange={(e) => setForm((prev) => ({ ...prev, durationMinutes: Number(e.target.value) }))}
+                          fullWidth
+                          inputProps={{ min: 30, step: 15 }}
+                        />
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {[30, 60, 90, 120].map((value) => (
+                            <Chip
+                              key={value}
+                              label={`${value} min`}
+                              size="small"
+                              color={form.durationMinutes === value ? 'primary' : 'default'}
+                              onClick={() => setForm((prev) => ({ ...prev, durationMinutes: value }))}
+                              sx={{ borderRadius: 999 }}
+                            />
+                          ))}
+                        </Stack>
+                      </Stack>
                     </Grid>
                     <Grid item xs={12}>
                       <TextField
