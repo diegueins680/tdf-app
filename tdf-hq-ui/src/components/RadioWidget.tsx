@@ -39,6 +39,8 @@ import SkipNextIcon from '@mui/icons-material/SkipNext';
 import BoltIcon from '@mui/icons-material/Bolt';
 import ShareIcon from '@mui/icons-material/Share';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useNavigate } from 'react-router-dom';
 
 interface Prompt {
@@ -219,6 +221,10 @@ export default function RadioWidget() {
   const [autoSkipOnError, setAutoSkipOnError] = useState(false);
   // Start visible by default; only hide when the user explicitly minimizes during the session.
   const [miniBarVisible, setMiniBarVisible] = useState(false);
+  const [pinned, setPinned] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('radio-pinned') === '1';
+  });
   const [showCatalogSection, setShowCatalogSection] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
@@ -263,6 +269,14 @@ export default function RadioWidget() {
       // ignore
     }
   }, [expanded]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-pinned', pinned ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [pinned]);
 
   const radioSearch = useQuery<RadioStreamDTO[], Error>({
     queryKey: ['radio-streams', countryQuery.toLowerCase(), genreQuery.toLowerCase()],
@@ -988,12 +1002,12 @@ export default function RadioWidget() {
             top: position.y,
             zIndex: 1400,
             width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
-            cursor: dragging ? 'grabbing' : 'grab',
+            cursor: pinned ? 'default' : dragging ? 'grabbing' : 'grab',
             touchAction: 'none',
             userSelect: 'none',
           }}
           ref={containerRef}
-          onPointerDown={onPointerDown}
+          onPointerDown={pinned ? undefined : onPointerDown}
           tabIndex={0}
           onKeyDown={(e) => {
             const step = e.shiftKey ? 20 : 10;
@@ -1050,9 +1064,19 @@ export default function RadioWidget() {
         >
           <DragIndicatorIcon fontSize="small" color="action" />
           <Typography variant="caption" color="text.secondary" fontWeight={600}>
-            Arrastra para mover
+            {pinned ? 'Fijado' : 'Arrastra para mover'}
           </Typography>
           <Box sx={{ flex: 1 }} />
+          <Tooltip title={pinned ? 'Permitir mover' : 'Fijar posición'}>
+            <IconButton
+              size="small"
+              onClick={() => setPinned((v) => !v)}
+              data-no-drag
+              color={pinned ? 'primary' : 'inherit'}
+            >
+              <PushPinIcon fontSize="small" sx={{ transform: pinned ? 'rotate(25deg)' : 'none' }} />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Ocultar radio y mostrar mini barra">
             <IconButton size="small" onClick={() => setMiniBarVisible(true)} data-no-drag>
               <VisibilityOffIcon fontSize="small" />
@@ -1629,7 +1653,7 @@ export default function RadioWidget() {
               }}
               data-no-drag
             >
-              <ExpandLessIcon fontSize="small" />
+              <OpenInFullIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Box sx={{ minWidth: 0, maxWidth: 220 }}>

@@ -69,6 +69,13 @@ export default function BookingsPage() {
     }
     return parsed.toISO() ?? value;
   };
+  const formatEventRange = (start?: Date | null, end?: Date | null) => {
+    if (!start) return '';
+    const startStr = DateTime.fromJSDate(start).setZone(zone).toFormat('ccc d LLL, HH:mm');
+    if (!end) return startStr;
+    const endStr = DateTime.fromJSDate(end).setZone(zone).toFormat('HH:mm');
+    return `${startStr} - ${endStr}`;
+  };
 
   const extractEngineerFromNotes = (raw?: string | null) => {
     if (!raw) return { engineer: '', engineerId: null as number | null, notesBody: '' };
@@ -141,6 +148,14 @@ export default function BookingsPage() {
   const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Confirmed');
   const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [courseNotice, setCourseNotice] = useState<string | null>(null);
+  const [courseReadOnlyInfo, setCourseReadOnlyInfo] = useState<{
+    title: string;
+    range: string;
+    subtitle?: string;
+    price?: string;
+    location?: string;
+  } | null>(null);
   const serviceTypes = useMemo(() => loadServiceTypes(), []);
 
   const requiresEngineer = (svc: string) => {
@@ -378,7 +393,15 @@ export default function BookingsPage() {
   const handleEventClick = (info: { event: { id: string; extendedProps?: { isCourse?: boolean } } }) => {
     if (info.event.extendedProps?.isCourse) {
       setDialogOpen(false);
-      window.alert('Este bloque pertenece al curso de Producción Musical y es de solo lectura.');
+      const props = info.event.extendedProps ?? {};
+      setCourseReadOnlyInfo({
+        title: info.event.title ?? 'Bloque de curso',
+        range: formatEventRange((info.event as any).start, (info.event as any).end),
+        subtitle: (props as { courseSubtitle?: string }).courseSubtitle,
+        price: (props as { priceText?: string }).priceText,
+        location: (props as { locationText?: string }).locationText,
+      });
+      setCourseNotice('Los bloques del curso son de solo lectura. Revisa los detalles del horario aquí.');
       return;
     }
     const bookingId = Number.parseInt(info.event.id, 10);
@@ -443,6 +466,11 @@ export default function BookingsPage() {
   return (
     <>
       <Typography variant="h5" gutterBottom>Agenda</Typography>
+      {courseNotice && (
+        <Alert severity="info" sx={{ mb: 1 }} onClose={() => setCourseNotice(null)}>
+          {courseNotice}
+        </Alert>
+      )}
       {calendarError && <Alert severity="warning" sx={{ mb: 1 }}>{calendarError}</Alert>}
       {bookingsQuery.isLoading && <div>Cargando...</div>}
       {bookingsQuery.error && <div>Error: {bookingsQuery.error.message}</div>}
@@ -505,6 +533,37 @@ export default function BookingsPage() {
           }}
         />
       </Paper>
+
+      <Dialog open={Boolean(courseReadOnlyInfo)} onClose={() => { setCourseReadOnlyInfo(null); setCourseNotice(null); }} maxWidth="xs" fullWidth>
+        <DialogTitle>Bloque de curso</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1}>
+            <Typography variant="subtitle1" fontWeight={700}>
+              {courseReadOnlyInfo?.title ?? 'Curso'}
+            </Typography>
+            {courseReadOnlyInfo?.range && (
+              <Typography variant="body2" color="text.secondary">
+                {courseReadOnlyInfo.range}
+              </Typography>
+            )}
+            {[courseReadOnlyInfo?.subtitle, courseReadOnlyInfo?.location, courseReadOnlyInfo?.price]
+              .filter(Boolean)
+              .map((line, idx) => (
+                <Typography key={idx} variant="body2">
+                  {line}
+                </Typography>
+              ))}
+            <Alert severity="info" variant="outlined">
+              Este bloque es de solo lectura. Para editarlo, ajusta el calendario del curso.
+            </Alert>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setCourseReadOnlyInfo(null); setCourseNotice(null); }} color="inherit">
+            Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Nueva sesión en el calendario</DialogTitle>

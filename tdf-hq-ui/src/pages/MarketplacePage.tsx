@@ -1180,6 +1180,11 @@ export default function MarketplacePage() {
                             <Typography variant="caption" color="text.secondary">
                               Sin foto
                             </Typography>
+                            {!canManagePhotos && (
+                              <Typography variant="caption" color="text.secondary">
+                                Las fotos las gestiona Operación.
+                              </Typography>
+                            )}
                             {canManagePhotos && (
                               <Button
                                 size="small"
