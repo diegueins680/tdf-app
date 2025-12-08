@@ -4,7 +4,7 @@ import Network.Wai (Middleware, Request, requestHeaders)
 import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
-import Data.Char (isSpace)
+import Data.Char (isSpace, toLower)
 import Control.Applicative ((<|>))
 import Data.List (dropWhileEnd, intercalate, nub)
 
@@ -15,6 +15,10 @@ corsPolicy = do
             <|> lookupEnv "ALLOW_ORIGIN"
             <|> lookupEnv "CORS_ALLOW_ORIGINS"
             <|> lookupEnv "CORS_ALLOW_ORIGIN"
+  allowAllEnv <- lookupEnv "ALLOW_ALL_ORIGINS"
+             <|> lookupEnv "CORS_ALLOW_ALL_ORIGINS"
+  disableDefaultsEnv <- lookupEnv "CORS_DISABLE_DEFAULTS"
+                    <|> lookupEnv "DISABLE_DEFAULT_CORS"
   let defaults =
         [ "http://localhost:5173"
         , "http://127.0.0.1:5173"
@@ -24,13 +28,19 @@ corsPolicy = do
       parsed = maybe [] splitComma originsEnv
       normalized = map normalizeOrigin parsed
       filtered = filter (not . null) normalized
-      origins = nub (if null filtered then defaults else filtered)
-      wildcard = any (== "*") origins
-      allowPagesDevWildcard = True
+      includeDefaults = not (maybe False parseBool disableDefaultsEnv)
+      merged = (if includeDefaults then defaults else []) ++ filtered
+      deduped = nub merged
+      allowAll = maybe False parseBool allowAllEnv || any (== "*") deduped
+      effective =
+        if null deduped
+          then if includeDefaults then defaults else []
+          else deduped
+      wildcard = allowAll || any (== "*") deduped
       originSetting =
         if wildcard
           then Nothing
-          else Just (map BS.pack origins, True)
+          else Just (map BS.pack effective, True)
       basePolicy = simpleCorsResourcePolicy
         { corsOrigins            = originSetting
         , corsRequestHeaders     = "authorization":"content-type":"x-requested-with":simpleHeaders
@@ -38,16 +48,28 @@ corsPolicy = do
         , corsRequireOrigin      = False
         , corsIgnoreFailures     = False
         }
+      allowPagesDevWildcard = True
       allowAllPolicy = basePolicy { corsOrigins = Nothing }
       pagesHost origin =
         let lowered = BS.map toLower origin
         in ".pages.dev" `BS.isSuffixOf` lowered || ".vercel.app" `BS.isSuffixOf` lowered
       choosePolicy :: Request -> Maybe CorsResourcePolicy
       choosePolicy req =
-        case lookup "origin" (requestHeaders req) of
-          Just o | allowPagesDevWildcard && pagesHost o -> Just allowAllPolicy
-          _ -> Just basePolicy
-  putStrLn $ "[cors] origins=" <> (if wildcard then "*" else intercalate "," origins)
+        if allowAll
+          then Just allowAllPolicy
+          else
+            case lookup "origin" (requestHeaders req) of
+              Just o | allowPagesDevWildcard && pagesHost o -> Just allowAllPolicy
+              _ -> Just basePolicy
+      originLog =
+        if wildcard
+          then "*"
+          else if null effective then "(none)" else intercalate "," effective
+      notes =
+        (if includeDefaults then "" else " defaults=off")
+          <> (if allowAll then " allowAll=true" else "")
+          <> (if null deduped && includeDefaults && not allowAll then " (fallback to defaults)" else "")
+  putStrLn $ "[cors] origins=" <> originLog <> notes
   putStrLn $ "[cors] pages.dev wildcard=" <> show allowPagesDevWildcard
   pure (cors choosePolicy)
 
@@ -71,3 +93,13 @@ normalizeOrigin = dropTrailingSlash . trim
 
 trim :: String -> String
 trim = dropWhileEnd isSpace . dropWhile isSpace
+
+parseBool :: String -> Bool
+parseBool raw =
+  case map toLower (trim raw) of
+    "1"      -> True
+    "true"   -> True
+    "yes"    -> True
+    "on"     -> True
+    "*"      -> True
+    _        -> False

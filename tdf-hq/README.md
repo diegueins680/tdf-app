@@ -131,7 +131,7 @@ A formal test suite is not yet wired up. Add Hspec specs under `test/`, update `
 
 - If you see database connection errors, verify credentials match a running PostgreSQL instance or use Docker Compose.
 - To regenerate seeds from scratch, set `RESET_DB=true` and `SEED_DB=true` for a single `stack run` invocation, then revert to defaults.
-- CORS origins can be extended via `ALLOW_ORIGINS` (comma-separated list) or `ALLOW_ORIGIN` environment variables without code changes.
+- CORS defaults allow localhost and Pages/Vercel domains; extend via `ALLOW_ORIGINS`/`ALLOW_ORIGIN`, set `ALLOW_ALL_ORIGINS=true` to open during debugging, or `CORS_DISABLE_DEFAULTS=true` to rely only on your list.
 
 ---
 
