@@ -974,7 +974,9 @@ loadCourseMetadata rawSlug = do
       [ ME.CourseRegistrationCourseSlug ==. normalized
       , ME.CourseRegistrationStatus !=. "cancelled"
       ]
-  let remainingSeats = max 0 (Courses.capacity baseMeta - fromIntegral countRegs)
+  let baseCapacity :: Int
+      baseCapacity = Courses.capacity (baseMeta :: CourseMetadata)
+      remainingSeats = max 0 (baseCapacity - fromIntegral countRegs)
   pure baseMeta { Courses.remaining = remainingSeats }
 
 loadCourseMetadataFromDB :: AppConfig -> WhatsAppEnv -> Text -> AppM (Maybe CourseMetadata)
@@ -1142,8 +1144,8 @@ saveCourse Courses.CourseUpsert{..} = do
     deleteWhere [Trials.CourseSessionModelCourseId ==. courseId]
     deleteWhere [Trials.CourseSyllabusItemCourseId ==. courseId]
 
-    let sessionPayload = zip [1..] sessions
-    for_ sessionPayload $ \(idx :: Int, CourseSessionIn{..}) -> do
+    let sessionPayload = zip [1 :: Int ..] sessions
+    for_ sessionPayload $ \(idx, CourseSessionIn{..}) -> do
       let ordVal = withOrder idx order
       insert_ Trials.CourseSessionModel
         { Trials.courseSessionModelCourseId = courseId
@@ -1152,8 +1154,8 @@ saveCourse Courses.CourseUpsert{..} = do
         , Trials.courseSessionModelOrder = Just ordVal
         }
 
-    let syllabusPayload = zip [1..] syllabus
-    for_ syllabusPayload $ \(idx :: Int, CourseSyllabusIn{..}) -> do
+    let syllabusPayload = zip [1 :: Int ..] syllabus
+    for_ syllabusPayload $ \(idx, CourseSyllabusIn{..}) -> do
       let ordVal = withOrder idx order
       insert_ Trials.CourseSyllabusItem
         { Trials.courseSyllabusItemCourseId = courseId
@@ -1233,9 +1235,14 @@ toCourseRegistrationDTO (Entity rid reg) =
 
 createOrUpdateRegistration :: Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
 createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
-  meta <- loadCourseMetadata rawSlug
+  metaRaw <- loadCourseMetadata rawSlug
+  let Courses.CourseMetadata{ Courses.slug = metaSlug
+                            , Courses.sessions = metaSessions
+                            , Courses.title = metaTitle
+                            , Courses.landingUrl = metaLanding
+                            } = metaRaw
   now <- liftIO getCurrentTime
-  let slugVal = normalizeSlug (Courses.slug meta)
+  let slugVal = normalizeSlug metaSlug
       nameClean = cleanOptional fullName
       sourceClean = normalizeSource source
       howHeardClean = cleanOptional howHeard
@@ -1269,7 +1276,7 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)
         , ME.CourseRegistrationUpdatedAt =. now
         ]
-      sendConfirmation meta nameClean normalizedEmail mNewUser
+      sendConfirmation metaRaw metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
     _ -> do
       regId <- runDB $ insert ME.CourseRegistration
@@ -1287,23 +1294,19 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.courseRegistrationCreatedAt = now
         , ME.courseRegistrationUpdatedAt = now
         }
-      sendConfirmation meta nameClean normalizedEmail mNewUser
+      sendConfirmation metaRaw metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
   where
-    sendConfirmation meta nameClean mEmail mNewUser =
+    sendConfirmation meta metaTitle metaLanding metaSessions nameClean mEmail mNewUser =
       case mEmail of
         Nothing -> pure ()
         Just emailAddr -> do
           Env{..} <- ask
           let emailSvc = EmailSvc.mkEmailService envConfig
               displayName = fromMaybe "" nameClean
-              CourseMetadata{ title = courseTitle
-                            , sessions = metaSessions
-                            , landingUrl = landing
-                            } = meta
               datesSummary =
                 let fmt d = T.pack (formatTime defaultTimeLocale "%d %b %Y" d)
-                in T.intercalate ", " (map (fmt . Courses.date) metaSessions)
+                in T.intercalate ", " (map (\Courses.CourseSession{ Courses.date = d } -> fmt d) metaSessions)
           -- Check if email is configured before attempting to send
           case EmailSvc.esConfig emailSvc of
             Nothing -> liftIO $ do
@@ -1346,10 +1349,14 @@ extractTextMessages WAMetaWebhook{entry} =
 
 sendWhatsappReply :: WhatsAppEnv -> Text -> AppM ()
 sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid} phone = do
-  meta <- loadCourseMetadata productionCourseSlug
+  metaRaw <- loadCourseMetadata productionCourseSlug
+  let Courses.CourseMetadata{ Courses.title = metaTitle
+                            , Courses.capacity = metaCapacity
+                            , Courses.landingUrl = metaLanding
+                            } = metaRaw
   manager <- liftIO $ newManager tlsManagerSettings
-  let msg = "¡Gracias por tu interés en " <> Courses.title meta <> "! Aquí tienes el link de inscripción: "
-            <> landingUrl meta <> ". Cupos limitados (" <> T.pack (show (Courses.capacity meta)) <> ")."
+  let msg = "¡Gracias por tu interés en " <> metaTitle <> "! Aquí tienes el link de inscripción: "
+            <> metaLanding <> ". Cupos limitados (" <> T.pack (show metaCapacity) <> ")."
   _ <- liftIO $ sendText manager tok pid phone msg
   pure ()
 sendWhatsappReply _ _ = pure ()
