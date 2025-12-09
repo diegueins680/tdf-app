@@ -67,6 +67,7 @@ import           TDF.Models
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO
+import qualified TDF.DTO as DTO
 import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, moduleName, loadAuthedUser)
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
@@ -419,7 +420,7 @@ listEngineersPublic = do
     engineerRoles <- selectList [PartyRoleRole ==. Engineer, PartyRoleActive ==. True] []
     let partyIds = map (partyRolePartyId . entityVal) engineerRoles
     parties <- selectList [PartyId <-. partyIds] [Asc PartyDisplayName]
-    pure [PublicEngineerDTO (fromSqlKey pid) (partyDisplayName p) | Entity pid p <- parties]
+    pure [PublicEngineerDTO (fromSqlKey pid) (M.partyDisplayName p) | Entity pid p <- parties]
 
 whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM
 whatsappWebhookServer =
@@ -2791,17 +2792,17 @@ notifyEngineerIfNeeded booking = do
   mEngineer <- liftIO $ flip runSqlPool pool $ case engineerPartyId booking of
     Just pid -> get (toSqlKey (fromIntegral pid) :: Key Party)
     Nothing  -> pure Nothing
-  let displayName = engineerName booking
-        <|> (partyDisplayName <$> mEngineer)
+  let displayName = DTO.engineerName booking
+        <|> (M.partyDisplayName <$> mEngineer)
       emailAddr = mEngineer >>= partyPrimaryEmail
   case emailAddr of
     Nothing -> pure ()
     Just engineerEmail -> do
       let name = fromMaybe engineerEmail displayName
           emailSvc = EmailSvc.mkEmailService cfg
-          subjectSvc = fromMaybe "Reserva" (serviceType booking)
-          startTxt = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" (startsAt booking))
-          customer = customerName booking <|> partyDisplayName booking
+          subjectSvc = fromMaybe "Reserva" (DTO.serviceType booking)
+          startTxt = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" (DTO.startsAt booking))
+          customer = DTO.customerName booking <|> DTO.partyDisplayName booking
       liftIO $
         EmailSvc.sendEngineerBooking
           emailSvc
@@ -2810,7 +2811,7 @@ notifyEngineerIfNeeded booking = do
           subjectSvc
           startTxt
           customer
-          (notes booking)
+          (DTO.notes booking)
 
 resolveResourcesForBooking :: Maybe Text -> [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
 resolveResourcesForBooking service requested start end = do
