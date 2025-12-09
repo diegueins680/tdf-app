@@ -2803,6 +2803,7 @@ notifyEngineerIfNeeded booking = do
           subjectSvc = fromMaybe "Reserva" (DTO.serviceType booking)
           startTxt = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" (DTO.startsAt booking))
           customer = DTO.customerName booking <|> DTO.partyDisplayName booking
+          noteText = DTO.notes (booking :: DTO.BookingDTO)
       liftIO $
         EmailSvc.sendEngineerBooking
           emailSvc
@@ -2811,7 +2812,7 @@ notifyEngineerIfNeeded booking = do
           subjectSvc
           startTxt
           customer
-          (DTO.notes booking)
+          noteText
 
 resolveResourcesForBooking :: Maybe Text -> [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
 resolveResourcesForBooking service requested start end = do
