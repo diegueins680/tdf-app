@@ -180,6 +180,7 @@ export default function BookingsPage() {
   const [serviceLocked, setServiceLocked] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateStartInput, setDuplicateStartInput] = useState('');
+  const defaultServiceName = serviceTypes[0]?.name ?? '';
   const conflicts = useMemo(() => {
     if (!startInput || !endInput) return [];
     const start = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
@@ -307,6 +308,15 @@ export default function BookingsPage() {
     }
   }, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
 
+  useEffect(() => {
+    if (serviceType || !defaultServiceName) return;
+    setServiceType(defaultServiceName);
+    const defaults = defaultRoomsForService(defaultServiceName);
+    if (defaults.length) {
+      setAssignedRoomIds(defaults.map((room) => room.roomId));
+    }
+  }, [defaultRoomsForService, defaultServiceName, serviceType]);
+
   const formatForInput = useCallback(
     (date: Date) => DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm"),
     [zone],
@@ -346,34 +356,41 @@ export default function BookingsPage() {
 
   const handleDateClick = (info: { date: Date }) => {
     const start = info.date;
-    const end = DateTime.fromJSDate(start).plus({ minutes: 60 }).toJSDate();
+    const initialService = defaultServiceName;
+    const duration = initialService ? defaultMinutesForService(initialService) : 60;
+    const end = DateTime.fromJSDate(start).plus({ minutes: duration }).toJSDate();
     setMode('create');
     setEditingId(null);
     setTitle('Bloque de estudio');
     setNotes('');
-    setServiceType('');
+    setServiceType(initialService);
     setEngineerName('');
     setCustomerName('');
     setCustomerPartyId(null);
-    const defaults = defaultRoomsForService('');
+    const defaults = defaultRoomsForService(initialService);
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
     openDialogForRange(start, end);
   };
 
   const handleSelect = (info: { start: Date; end: Date }) => {
+    const initialService = defaultServiceName;
+    const defaultDuration = initialService ? defaultMinutesForService(initialService) : 60;
     setMode('create');
     setEditingId(null);
     setTitle('Bloque de estudio');
     setNotes('');
-    setServiceType('');
+    setServiceType(initialService);
     setEngineerName('');
     setCustomerName('');
     setCustomerPartyId(null);
-    const defaults = defaultRoomsForService('');
+    const defaults = defaultRoomsForService(initialService);
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
-    openDialogForRange(info.start, info.end ?? DateTime.fromJSDate(info.start).plus({ minutes: 60 }).toJSDate());
+    openDialogForRange(
+      info.start,
+      info.end ?? DateTime.fromJSDate(info.start).plus({ minutes: defaultDuration }).toJSDate(),
+    );
   };
 
   const toUtcIso = (value: string) => {

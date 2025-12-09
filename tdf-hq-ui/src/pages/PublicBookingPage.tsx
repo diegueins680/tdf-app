@@ -57,6 +57,9 @@ const localTimezoneLabel = () => {
   return zone ?? 'tu zona horaria';
 };
 
+const formatHour = (date: Date) =>
+  date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
 export default function PublicBookingPage() {
   const services = useMemo(() => loadServiceTypes(), []);
   const defaultService = services[0]?.name ?? 'Reserva';
@@ -169,11 +172,21 @@ export default function PublicBookingPage() {
       setError('Elige un horario al menos 15 minutos en el futuro.');
       return;
     }
-    const proposedEnd = new Date(parsedStart.getTime() + Math.max(30, Number(form.durationMinutes) || 60) * 60 * 1000);
-    const startsBeforeOpen = parsedStart.getHours() < OPEN_HOURS.start;
-    const endsAfterClose = proposedEnd.getHours() >= OPEN_HOURS.end;
-    if (startsBeforeOpen || endsAfterClose) {
-      setError(`Nuestro horario es ${OPEN_HOURS.start}:00 - ${OPEN_HOURS.end}:00. Ajusta la hora o la duración.`);
+    const durationMinutes = Math.max(30, Number(form.durationMinutes) || 60);
+    const open = new Date(parsedStart);
+    open.setHours(OPEN_HOURS.start, 0, 0, 0);
+    const close = new Date(parsedStart);
+    close.setHours(OPEN_HOURS.end, 0, 0, 0);
+    const proposedEnd = new Date(parsedStart.getTime() + durationMinutes * 60 * 1000);
+    if (parsedStart < open) {
+      setError(`Nuestro horario es ${OPEN_HOURS.start}:00 - ${OPEN_HOURS.end}:00. Ajusta la hora de inicio (abrimos a las ${formatHour(open)}).`);
+      return;
+    }
+    if (proposedEnd > close) {
+      const remaining = Math.max(0, Math.floor((close.getTime() - parsedStart.getTime()) / 60000));
+      setError(
+        `La cita debe terminar antes de las ${formatHour(close)} (${localTimezoneLabel()}). Con esa hora, el máximo es ${remaining} min.`,
+      );
       return;
     }
     if (requiresEngineer(form.serviceType) && !form.engineerId && !form.engineerName.trim()) {
@@ -190,7 +203,7 @@ export default function PublicBookingPage() {
         pbPhone: form.phone.trim() || null,
         pbServiceType: form.serviceType.trim(),
         pbStartsAt: startsAtIso,
-        pbDurationMinutes: Math.max(30, Number(form.durationMinutes) || 60),
+        pbDurationMinutes: durationMinutes,
         pbNotes: form.notes.trim() || null,
         pbEngineerPartyId: form.engineerId,
         pbEngineerName: form.engineerName.trim() || null,
@@ -232,6 +245,27 @@ export default function PublicBookingPage() {
     return lowered.includes('graba') || lowered.includes('mezcl') || lowered.includes('master');
   };
 
+  const bookingWindow = useMemo(() => {
+    if (!form.startsAt) return null;
+    const startDate = new Date(form.startsAt);
+    if (Number.isNaN(startDate.getTime())) return null;
+    const duration = Math.max(30, Number(form.durationMinutes) || 60);
+    const open = new Date(startDate);
+    open.setHours(OPEN_HOURS.start, 0, 0, 0);
+    const close = new Date(startDate);
+    close.setHours(OPEN_HOURS.end, 0, 0, 0);
+    const end = new Date(startDate.getTime() + duration * 60 * 1000);
+    return { startDate, end, open, close, duration };
+  }, [form.durationMinutes, form.startsAt]);
+
+  const maxDurationUntilClose = useMemo(() => {
+    if (!bookingWindow) return null;
+    const diffMs = bookingWindow.close.getTime() - bookingWindow.startDate.getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes <= 0) return 0;
+    return minutes;
+  }, [bookingWindow]);
+
   const engineerValue =
     (engineers.find((opt) => opt.peId === form.engineerId) as PublicEngineer | undefined) ??
     (form.engineerName ? { peId: -1, peName: form.engineerName } : null);
@@ -250,16 +284,25 @@ export default function PublicBookingPage() {
   };
 
   const outOfHours = useMemo(() => {
-    const dt = new Date(form.startsAt);
-    if (Number.isNaN(dt.getTime())) return null;
-    const end = new Date(dt.getTime() + Math.max(30, Number(form.durationMinutes) || 60) * 60 * 1000);
-    const startsBefore = dt.getHours() < OPEN_HOURS.start;
-    const endsAfter = end.getHours() >= OPEN_HOURS.end;
-    if (startsBefore || endsAfter) {
-      return `Horario operativo: ${OPEN_HOURS.start}:00 - ${OPEN_HOURS.end}:00 (${localTimezoneLabel()}). Te sugerimos mover la cita.`;
+    if (!bookingWindow) return null;
+    const { startDate, end, open, close } = bookingWindow;
+    if (startDate < open) {
+      return `Abrimos a las ${formatHour(open)}. Ajusta la hora de inicio. (${localTimezoneLabel()})`;
+    }
+    if (end > close) {
+      return `La duración seleccionada pasa el cierre (${formatHour(close)}). Acorta minutos o mueve la cita. (${localTimezoneLabel()})`;
     }
     return null;
-  }, [form.durationMinutes, form.startsAt]);
+  }, [bookingWindow]);
+
+  const durationLimitLabel = useMemo(() => {
+    if (maxDurationUntilClose == null) return null;
+    const closeLabel = bookingWindow?.close ? formatHour(bookingWindow.close) : `${OPEN_HOURS.end}:00`;
+    if (maxDurationUntilClose <= 0) {
+      return `Elige otra hora: el cierre (${closeLabel}) es antes de este inicio.`;
+    }
+    return `Máximo ${maxDurationUntilClose} min con la hora elegida (cierre ${closeLabel}).`;
+  }, [bookingWindow?.close, maxDurationUntilClose]);
 
   return (
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -439,24 +482,34 @@ export default function PublicBookingPage() {
                     <Grid item xs={12} sm={5}>
                       <Stack spacing={1}>
                         <TextField
-                          label="Duración (min)"
-                          type="number"
-                          value={form.durationMinutes}
-                          onChange={(e) => setForm((prev) => ({ ...prev, durationMinutes: Number(e.target.value) }))}
-                          fullWidth
-                          inputProps={{ min: 30, step: 15 }}
-                        />
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {[30, 60, 90, 120].map((value) => (
-                            <Chip
-                              key={value}
-                              label={`${value} min`}
-                              size="small"
-                              color={form.durationMinutes === value ? 'primary' : 'default'}
-                              onClick={() => setForm((prev) => ({ ...prev, durationMinutes: value }))}
-                              sx={{ borderRadius: 999 }}
-                            />
-                          ))}
+                        label="Duración (min)"
+                        type="number"
+                        value={form.durationMinutes}
+                        onChange={(e) => setForm((prev) => ({ ...prev, durationMinutes: Number(e.target.value) }))}
+                        fullWidth
+                        inputProps={{
+                          min: 30,
+                          step: 15,
+                          max: maxDurationUntilClose && maxDurationUntilClose > 0 ? maxDurationUntilClose : undefined,
+                        }}
+                        helperText={durationLimitLabel ?? undefined}
+                      />
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        {[30, 60, 90, 120].map((value) => (
+                          <Chip
+                            key={value}
+                            label={`${value} min`}
+                            size="small"
+                            color={form.durationMinutes === value ? 'primary' : 'default'}
+                            onClick={() => setForm((prev) => ({ ...prev, durationMinutes: value }))}
+                            disabled={Boolean(
+                              maxDurationUntilClose !== null &&
+                                maxDurationUntilClose > 0 &&
+                                value > maxDurationUntilClose,
+                            )}
+                            sx={{ borderRadius: 999 }}
+                          />
+                        ))}
                         </Stack>
                       </Stack>
                     </Grid>
@@ -467,15 +520,15 @@ export default function PublicBookingPage() {
                     )}
                     {requiresEngineer(form.serviceType) && (
                       <Grid item xs={12}>
-                    <Autocomplete<string | PublicEngineer, false, false, true>
-                      options={engineers}
-                      getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
-                      loading={engineersLoading && engineers.length > 0}
-                      freeSolo
-                      value={engineerValue}
-                      onChange={(_evt, value) => {
-                        if (!value) {
-                          setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
+                        <Autocomplete<string | PublicEngineer, false, false, true>
+                          options={engineers}
+                          getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
+                          loading={engineersLoading}
+                          freeSolo
+                          value={engineerValue}
+                          onChange={(_evt, value) => {
+                            if (!value) {
+                              setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
                               return;
                             }
                             const id = typeof value === 'string' ? null : value.peId;

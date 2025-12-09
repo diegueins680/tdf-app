@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Alert, Box, Chip, Container, Paper, Stack, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Alert, Box, Button, Chip, Container, Paper, Stack, TextField, Typography } from '@mui/material';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { LiveSessionIntakeForm } from './LiveSessionIntakePage';
 import { useSession } from '../session/SessionContext';
@@ -8,26 +8,31 @@ import { useSession } from '../session/SessionContext';
 export default function LiveSessionPublicPage() {
   const [sp] = useSearchParams();
   const tokenFromQuery = sp.get('token') ?? sp.get('t') ?? '';
-  const fallbackToken = import.meta.env.VITE_LIVE_SESSIONS_PUBLIC_TOKEN ?? '';
-  const token = useMemo(() => tokenFromQuery || fallbackToken, [tokenFromQuery, fallbackToken]);
   const { session, login, setApiToken } = useSession();
+  const [accessCode, setAccessCode] = useState(() => tokenFromQuery);
+  const hasAccessCode = Boolean(accessCode.trim());
 
   useEffect(() => {
-    if (!token) return;
+    if (tokenFromQuery) setAccessCode(tokenFromQuery);
+  }, [tokenFromQuery]);
+
+  useEffect(() => {
+    const code = accessCode.trim();
+    if (!code) return;
     if (!session) {
       login(
         {
           username: 'live-session-intake',
           displayName: 'Live Sessions Intake',
           roles: [],
-          apiToken: token,
+          apiToken: code,
         },
         { remember: false },
       );
-    } else if (!session.apiToken) {
-      setApiToken(token);
+    } else if (!session.apiToken || session.apiToken !== code) {
+      setApiToken(code);
     }
-  }, [token, session, login, setApiToken]);
+  }, [accessCode, session, login, setApiToken]);
 
   return (
     <Box
@@ -72,12 +77,38 @@ export default function LiveSessionPublicPage() {
                   Comparte quiénes tocan, tus redes y la disponibilidad tentativa. Si ya trabajamos juntos, busca los nombres para autocompletar los datos.
                 </Typography>
               </Stack>
-              {!token && (
-                <Alert severity="warning" sx={{ bgcolor: 'rgba(251,191,36,0.12)', color: '#fef08a' }}>
-                  Agrega el token de intake en la URL (?token=xxx) o define VITE_LIVE_SESSIONS_PUBLIC_TOKEN para poder enviar el formulario.
-                </Alert>
-              )}
-              <LiveSessionIntakeForm variant="public" requireTerms />
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle2" color="rgba(226,232,240,0.85)">
+                  Ingresa el código de acceso que te compartimos para autenticar el envío.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <TextField
+                    label="Código de acceso"
+                    type="password"
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value)}
+                    placeholder="Pega el código recibido"
+                    fullWidth
+                    InputLabelProps={{ sx: { color: '#cbd5f5' } }}
+                  />
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    component={RouterLink}
+                    to="/feedback?topic=live-sessions"
+                  >
+                    Solicitar acceso
+                  </Button>
+                </Stack>
+                {!accessCode.trim() && (
+                  <Alert severity="error" sx={{ bgcolor: 'rgba(248,113,113,0.12)', color: '#fecdd3' }}>
+                    Ingresa el código antes de completar el formulario. Sin código no podremos recibir tu solicitud.
+                  </Alert>
+                )}
+              </Stack>
+              <Box sx={{ opacity: hasAccessCode ? 1 : 0.35, pointerEvents: hasAccessCode ? 'auto' : 'none' }}>
+                <LiveSessionIntakeForm variant="public" requireTerms />
+              </Box>
             </Stack>
           </Paper>
         </Stack>

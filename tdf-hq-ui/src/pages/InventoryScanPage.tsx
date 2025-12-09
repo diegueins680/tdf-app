@@ -14,6 +14,7 @@ export default function InventoryScanPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [checkoutForm, setCheckoutForm] = useState<AssetCheckoutRequest>({ coTargetKind: 'party' });
   const [checkinForm, setCheckinForm] = useState<AssetCheckinRequest>({});
+  const [nextToken, setNextToken] = useState('');
 
   const loadAsset = useCallback(async () => {
     if (!token) return;
@@ -52,8 +53,49 @@ export default function InventoryScanPage() {
     onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-in.'),
   });
 
+  const normalizedStatus = asset?.status?.toLowerCase() ?? '';
+  const isCheckedOut = normalizedStatus.includes('book') || normalizedStatus.includes('out');
+  const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStatus.includes('retired');
+  const actionsDisabled = isUnavailable;
+
   if (!token) {
-    return <Container maxWidth="sm"><Alert severity="error">Token QR no encontrado.</Alert></Container>;
+    return (
+      <Container maxWidth="sm">
+        <Stack spacing={2}>
+          <Alert severity="error">Token QR no encontrado.</Alert>
+          <Card>
+            <CardContent>
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle1">Pega el código para abrir un equipo</Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <TextField
+                    label="Código QR"
+                    placeholder="Token del QR"
+                    value={nextToken}
+                    onChange={(e) => setNextToken(e.target.value)}
+                    fullWidth
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      const target = nextToken.trim();
+                      if (!target) return;
+                      navigate(`/inventario/scan/${target}`);
+                    }}
+                    disabled={!nextToken.trim()}
+                  >
+                    Abrir equipo
+                  </Button>
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  Escanea el QR físico para abrir el token o pide el enlace compartible.
+                </Typography>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Stack>
+      </Container>
+    );
   }
 
   return (
@@ -78,7 +120,12 @@ export default function InventoryScanPage() {
                   </Stack>
                   <Typography variant="body2">Condición: {asset.condition ?? '—'}</Typography>
                   <Typography variant="body2">Ubicación: {asset.location ?? '—'}</Typography>
-                  {asset.status.toLowerCase() === 'booked' ? (
+                  {isUnavailable && (
+                    <Alert severity="warning" sx={{ mt: 1 }}>
+                      Este equipo está marcado como {asset.status}. Confirma que puede moverse antes de continuar.
+                    </Alert>
+                  )}
+                  {isCheckedOut ? (
                     <>
                       <Typography variant="subtitle1" sx={{ mt: 2 }}>Registrar check-in</Typography>
                       <TextField
@@ -89,6 +136,7 @@ export default function InventoryScanPage() {
                         multiline
                         minRows={2}
                         sx={{ mt: 1 }}
+                        disabled={actionsDisabled}
                       />
                       <TextField
                         label="Notas"
@@ -98,8 +146,14 @@ export default function InventoryScanPage() {
                         multiline
                         minRows={2}
                         sx={{ mt: 1 }}
+                        disabled={actionsDisabled}
                       />
-                      <Button variant="contained" sx={{ mt: 2 }} onClick={() => checkinMutation.mutate()} disabled={checkinMutation.isPending}>
+                      <Button
+                        variant="contained"
+                        sx={{ mt: 2 }}
+                        onClick={() => checkinMutation.mutate()}
+                        disabled={checkinMutation.isPending || actionsDisabled}
+                      >
                         {checkinMutation.isPending ? 'Registrando…' : 'Check-in'}
                       </Button>
                       <Button variant="text" sx={{ mt: 1 }} onClick={() => void loadAsset()} disabled={checkinMutation.isPending}>
@@ -115,6 +169,7 @@ export default function InventoryScanPage() {
                         onChange={(e) => setCheckoutForm({ ...checkoutForm, coTargetParty: e.target.value })}
                         fullWidth
                         sx={{ mt: 1 }}
+                        disabled={actionsDisabled}
                       />
                       <TextField
                         label="Notas"
@@ -124,8 +179,14 @@ export default function InventoryScanPage() {
                         multiline
                         minRows={2}
                         sx={{ mt: 1 }}
+                        disabled={actionsDisabled}
                       />
-                      <Button variant="contained" sx={{ mt: 2 }} onClick={() => checkoutMutation.mutate()} disabled={checkoutMutation.isPending}>
+                      <Button
+                        variant="contained"
+                        sx={{ mt: 2 }}
+                        onClick={() => checkoutMutation.mutate()}
+                        disabled={checkoutMutation.isPending || actionsDisabled}
+                      >
                         {checkoutMutation.isPending ? 'Registrando…' : 'Check-out'}
                       </Button>
                       <Button variant="text" sx={{ mt: 1 }} onClick={() => void loadAsset()} disabled={checkoutMutation.isPending}>
@@ -133,9 +194,29 @@ export default function InventoryScanPage() {
                       </Button>
                     </>
                   )}
-                  <Button variant="outlined" sx={{ mt: 2 }} onClick={() => navigate('/reservar')}>
-                    Escanear otro / agendar
-                  </Button>
+                  <Stack spacing={1.5} sx={{ mt: 2 }}>
+                    <Typography variant="subtitle1">¿Escanear otro equipo?</Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                      <TextField
+                        label="Código QR"
+                        placeholder="Token del siguiente equipo"
+                        value={nextToken}
+                        onChange={(e) => setNextToken(e.target.value)}
+                        fullWidth
+                      />
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          const target = nextToken.trim();
+                          if (!target) return;
+                          navigate(`/inventario/scan/${target}`);
+                        }}
+                        disabled={!nextToken.trim()}
+                      >
+                        Abrir
+                      </Button>
+                    </Stack>
+                  </Stack>
                 </Stack>
               </CardContent>
             </Card>
