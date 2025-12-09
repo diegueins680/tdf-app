@@ -83,6 +83,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: 'CONFIGURACIÓN',
     items: [
       { label: 'Inscripciones curso', path: '/configuracion/inscripciones-curso' },
+      { label: 'Cursos', path: '/configuracion/cursos' },
       { label: 'Logs', path: '/configuracion/logs' },
       { label: 'Estado sistema', path: '/configuracion/estado' },
       { label: 'Usuarios admin', path: '/configuracion/usuarios-admin' },

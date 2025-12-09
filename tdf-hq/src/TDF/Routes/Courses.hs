@@ -64,6 +64,7 @@ data CourseMetadata = CourseMetadata
   } deriving (Show, Generic)
 
 instance ToJSON CourseMetadata
+instance FromJSON CourseMetadata
 
 data UTMTags = UTMTags
   { source   :: Maybe Text

@@ -55,6 +55,7 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   paquetes: 'Paquetes',
   configuracion: 'Configuración',
   'inscripciones-curso': 'Inscripciones curso',
+  cursos: 'Cursos',
   logs: 'Logs',
   estado: 'Estado sistema',
   'usuarios-admin': 'Usuarios admin',

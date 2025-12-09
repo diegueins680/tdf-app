@@ -24,7 +24,7 @@ import           Data.Foldable (for_)
 import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set as Set
-import           Data.Aeson (Value(..), object, (.=), eitherDecode, FromJSON(..), encode)
+import           Data.Aeson (Value(..), object, (.=), eitherDecode, FromJSON(..), encode, fromJSON, Result(..))
 import           Data.Aeson.Types (parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -942,18 +942,41 @@ loadCourseMetadata rawSlug = do
   Env{..} <- ask
   waEnv <- liftIO loadWhatsAppEnv
   let normalized = normalizeSlug rawSlug
-      meta = courseMetadataFor envConfig (waContactNumber waEnv) normalized
-  case meta of
+  cmsMeta <- loadCourseMetadataFromCMS normalized
+  baseMeta <- case cmsMeta <|> courseMetadataFor envConfig (waContactNumber waEnv) normalized of
     Nothing -> throwNotFound "Curso no encontrado"
-    Just baseMeta -> do
-      -- Count all registrations (including pendientes) to show remaining seats.
-      countRegs <- runDB $
-        count
-          [ ME.CourseRegistrationCourseSlug ==. normalizeSlug (Courses.slug baseMeta)
-          , ME.CourseRegistrationStatus !=. "cancelled"
-          ]
-      let remainingSeats = max 0 (productionCourseCapacity - fromIntegral countRegs)
-      pure baseMeta { remaining = remainingSeats }
+    Just m  -> pure m
+  -- Count all registrations (including pendientes) to show remaining seats.
+  countRegs <- runDB $
+    count
+      [ ME.CourseRegistrationCourseSlug ==. normalizeSlug (Courses.slug baseMeta)
+      , ME.CourseRegistrationStatus !=. "cancelled"
+      ]
+  let remainingSeats = max 0 (Courses.capacity baseMeta - fromIntegral countRegs)
+  pure baseMeta { Courses.remaining = remainingSeats }
+
+loadCourseMetadataFromCMS :: Text -> AppM (Maybe CourseMetadata)
+loadCourseMetadataFromCMS slugVal = do
+  Env{..} <- ask
+  let cmsSlug = "course:" <> slugVal
+  mContent <- runDB $ selectFirst
+    [ CMS.CmsContentSlug ==. cmsSlug
+    , CMS.CmsContentStatus ==. "published"
+    ]
+    [ Desc CMS.CmsContentPublishedAt
+    , Desc CMS.CmsContentVersion
+    ]
+  case mContent of
+    Nothing -> pure Nothing
+    Just (Entity _ c) -> do
+      let mVal = CMS.unAesonValue <$> CMS.cmsContentPayload c
+      case mVal of
+        Nothing -> pure Nothing
+        Just val -> case fromJSON val of
+          Success meta -> pure (Just meta)
+          Error err -> do
+            liftIO $ hPutStrLn stderr ("[CourseMetadata] Failed to decode CMS payload for " <> T.unpack cmsSlug <> ": " <> err)
+            pure Nothing
 
 courseMetadataFor :: AppConfig -> Maybe Text -> Text -> Maybe CourseMetadata
 courseMetadataFor cfg mWaContact slugVal

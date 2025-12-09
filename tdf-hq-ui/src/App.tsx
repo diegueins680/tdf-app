@@ -63,6 +63,7 @@ import LabelAssetsPage from './pages/LabelAssetsPage';
 import LabelTracksPage from './pages/LabelTracksPage';
 import AdminDiagnosticsPage from './pages/AdminDiagnosticsPage';
 import PublicBookingPage from './pages/PublicBookingPage';
+import CourseBuilderPage from './pages/CourseBuilderPage';
 
 function Shell() {
   const { session } = useSession();
@@ -260,6 +261,7 @@ export default function App() {
 
           <Route path="/configuracion" element={<Outlet />}>
             <Route path="inscripciones-curso" element={<CourseRegistrationsAdminPage />} />
+            <Route path="cursos" element={<CourseBuilderPage />} />
             <Route path="usuarios-admin" element={<AdminUsersPage />} />
             <Route path="estado" element={<SystemStatusPage />} />
             <Route path="logs" element={<LogsPage />} />
