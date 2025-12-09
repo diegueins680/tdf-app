@@ -259,6 +259,25 @@ export default function RadioWidget() {
     transition: 'opacity 0.2s ease',
     '&:hover': { opacity: 1 },
   } as const;
+  const sizeOptions = {
+    compact: { width: { xs: '95%', sm: 340 }, bodyHeight: '55vh' },
+    cozy: { width: { xs: '95%', sm: 440 }, bodyHeight: '68vh' },
+    roomy: { width: { xs: '95%', sm: 540 }, bodyHeight: '80vh' },
+  } as const;
+  type PanelSize = keyof typeof sizeOptions;
+  const [panelSize, setPanelSize] = useState<PanelSize>(() => {
+    if (typeof window === 'undefined') return 'cozy';
+    const stored = window.localStorage.getItem('radio-panel-size') as PanelSize | null;
+    if (stored && sizeOptions[stored]) return stored;
+    return 'cozy';
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('radio-panel-size', panelSize);
+    } catch {
+      // ignore
+    }
+  }, [panelSize]);
   const defaultStation = useMemo<Station>(
     () =>
       CURATED_STATIONS[0] ?? {
@@ -1041,10 +1060,12 @@ export default function RadioWidget() {
             left: position.x,
             top: position.y,
             zIndex: 1400,
-            width: expanded ? { xs: '95%', sm: 420 } : { xs: 220, sm: 260 },
+            width: expanded ? sizeOptions[panelSize].width : { xs: 220, sm: 260 },
             cursor: pinned ? 'default' : dragging ? 'grabbing' : 'grab',
             touchAction: 'none',
             userSelect: 'none',
+            maxHeight: expanded ? sizeOptions[panelSize].bodyHeight : 'none',
+            overflow: 'visible',
           }}
           ref={containerRef}
           onPointerDown={pinned ? undefined : onPointerDown}
@@ -1205,7 +1226,7 @@ export default function RadioWidget() {
             <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
               Reproduciendo: {activeStation.name}
             </Typography>
-            <Stack direction="row" spacing={1} mt={1} alignItems="center">
+            <Stack direction="row" spacing={1} mt={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
               <Button
                 variant="outlined"
                 size="small"
@@ -1247,8 +1268,33 @@ export default function RadioWidget() {
         </CardContent>
         <Collapse in={expanded}>
           <Divider />
-          <CardContent sx={{ p: 2 }}>
+          <CardContent
+            sx={{
+              p: 2,
+              maxHeight: sizeOptions[panelSize].bodyHeight,
+              overflowY: 'auto',
+              pr: 1,
+            }}
+          >
               <Stack spacing={1.5}>
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                  <Typography variant="caption" color="text.secondary">
+                    Tamaño del widget:
+                  </Typography>
+                  {(['compact', 'cozy', 'roomy'] as PanelSize[]).map((key) => (
+                    <Chip
+                      key={key}
+                      size="small"
+                      label={key === 'compact' ? 'S' : key === 'cozy' ? 'M' : 'L'}
+                      color={panelSize === key ? 'primary' : 'default'}
+                      onClick={() => setPanelSize(key)}
+                      sx={{ borderRadius: 999 }}
+                    />
+                  ))}
+                  <Typography variant="caption" color="text.secondary">
+                    Desplázate para ver más secciones.
+                  </Typography>
+                </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
                   <Typography variant="body2" color="text.secondary">
                     Estaciones del mundo (usa el widget para escuchar):
