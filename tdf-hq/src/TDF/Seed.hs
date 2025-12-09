@@ -306,6 +306,7 @@ coreStaffDefaultPassword = "changeme123"
 coreStaffSeeds :: [StaffSeed]
 coreStaffSeeds =
   [ StaffSeed "Esteban Muñoz" "mixandlivesound@gmail.com" [Engineer, Teacher, StudioManager]
+  , StaffSeed "Diego Saa" "diego@tdfrecords.net" [Engineer]
   , StaffSeed "Emanuele Pilo-Pais" "interfacerandom@gmail.com" [AandR]
   , StaffSeed "Claudia Palma" "unaclaudiapalma@gmail.com" [LiveSessionsProducer]
   , StaffSeed "Fabricio Alomía" "fabro.sounds@gmail.com" [Teacher]

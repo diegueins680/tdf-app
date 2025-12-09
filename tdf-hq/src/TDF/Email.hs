@@ -8,6 +8,7 @@ module TDF.Email
   , sendCoursePaymentReminderEmail
   , sendMarketplaceOrderEmail
   , sendTestEmail
+  , sendEngineerBookingEmail
   ) where
 
 import           Control.Exception        (SomeException, try)
