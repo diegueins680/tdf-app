@@ -2657,7 +2657,7 @@ updateBooking user bookingIdI req = do
   result <- liftIO $ flip runSqlPool pool $ do
     mBooking <- getEntity bookingId
     case mBooking of
-      Nothing -> pure Nothing
+      Nothing -> pure (Left err404)
       Just (Entity _ current) -> do
         let applyText fallback Nothing = fallback
             applyText fallback (Just val) =
@@ -2672,15 +2672,19 @@ updateBooking user bookingIdI req = do
               , bookingStatus      = maybe (bookingStatus current) (parseStatusWithDefault (bookingStatus current)) (ubStatus req)
               , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
               , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
-              , bookingEngineerPartyId = maybe (bookingEngineerPartyId current) (fmap (toSqlKey . fromIntegral)) (ubEngineerPartyId req)
+              , bookingEngineerPartyId = maybe (bookingEngineerPartyId current) (Just . toSqlKey . fromIntegral) (ubEngineerPartyId req)
               , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
               }
-        when (requiresEngineer (bookingServiceType updated) && isNothing (bookingEngineerPartyId updated) && isNothing (bookingEngineerName updated)) $
-          throwBadRequest "Selecciona un ingeniero para grabación/mezcla/mastering"
-        replace bookingId updated
-        dtos <- buildBookingDTOs [Entity bookingId updated]
-        pure (listToMaybe dtos)
-  maybe (throwError err404) pure result
+            missingEngineer = requiresEngineer (bookingServiceType updated)
+              && isNothing (bookingEngineerPartyId updated)
+              && isNothing (bookingEngineerName updated)
+        if missingEngineer
+          then pure (Left err400 { errBody = "Selecciona un ingeniero para grabación/mezcla/mastering" })
+          else do
+            replace bookingId updated
+            dtos <- buildBookingDTOs [Entity bookingId updated]
+            pure (maybe (Left err500) Right (listToMaybe dtos))
+  either throwError pure result
 
 
 loadBookingResourceMap :: [Key Booking] -> SqlPersistT IO (Map.Map (Key Booking) [BookingResourceDTO])
@@ -2803,7 +2807,7 @@ notifyEngineerIfNeeded booking = do
           subjectSvc = fromMaybe "Reserva" (DTO.serviceType booking)
           startTxt = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" (DTO.startsAt booking))
           customer = DTO.customerName booking <|> DTO.partyDisplayName booking
-          noteText = case booking of DTO.BookingDTO{notes = ns} -> ns
+          noteText = case booking of DTO.BookingDTO{DTO.notes = ns} -> ns
       liftIO $
         EmailSvc.sendEngineerBooking
           emailSvc
