@@ -8,33 +8,48 @@ module TDF.ServerRadio
   ) where
 
 import           Control.Applicative    ((<|>))
-import           Control.Exception      (SomeException, try)
+import           Control.Exception      (SomeException, try, displayException)
 import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
 import           Data.Int               (Int64)
-import           Data.List              (foldl', findIndex)
+import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
-import           Data.Maybe             (catMaybes, fromMaybe)
+import           Data.Maybe             (catMaybes, fromMaybe, isNothing)
+import qualified Data.ByteString        as BS
+import qualified Data.CaseInsensitive   as CI
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
+import           Data.Text.Encoding.Error (lenientDecode)
 import           Data.Time              (UTCTime, getCurrentTime)
 import qualified Data.ByteString.Lazy   as BL
 import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Desc, LimitTo), deleteBy, getBy, insert,
                                          selectList, selectFirst, update)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant                (NoContent(..), ServerError, ServerT, err400, errBody, throwError, (:<|>)(..))
-import           Network.HTTP.Client    (Manager, httpLbs, newManager, parseRequest, responseBody)
+import           Network.HTTP.Client    (Manager, httpLbs, newManager, parseRequest, responseBody, responseHeaders,
+                                         responseTimeoutMicro, requestHeaders, Request(..))
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 
 import           TDF.API.Radio          (RadioAPI)
 import           TDF.API.Types          (RadioStreamDTO(..), RadioStreamUpsert(..), RadioPresenceDTO(..),
-                                         RadioPresenceUpsert(..), RadioImportRequest(..), RadioImportResult(..))
+                                         RadioPresenceUpsert(..), RadioImportRequest(..), RadioImportResult(..),
+                                         RadioMetadataRefreshRequest(..), RadioMetadataRefreshResult(..))
 import           TDF.Auth               (AuthedUser(..))
 import           TDF.DB                 (Env(..))
 import           TDF.Models
+
+data StreamMetadata = StreamMetadata
+  { smName  :: Maybe Text
+  , smGenre :: Maybe Text
+  }
+
+lookupHeader :: BS.ByteString -> [(CI.CI BS.ByteString, BS.ByteString)] -> Maybe BS.ByteString
+lookupHeader key hdrs =
+  let target = CI.mk key
+  in fmap snd (find (\(k, _) -> k == target) hdrs)
 
 radioServer
   :: forall m.
@@ -48,6 +63,7 @@ radioServer user =
        searchStreams
   :<|> upsertActive
   :<|> importStreams
+  :<|> refreshMetadata
   :<|> getSelfPresence
   :<|> upsertPresence
   :<|> clearPresence
@@ -102,6 +118,45 @@ radioServer user =
         , rirInserted  = inserted
         , rirUpdated   = updated
         , rirSources   = sources
+        }
+
+    refreshMetadata :: RadioMetadataRefreshRequest -> m RadioMetadataRefreshResult
+    refreshMetadata RadioMetadataRefreshRequest{..} = do
+      let cap = max 1 (min 2000 (fromMaybe 400 rmrLimit))
+          onlyMissing = fromMaybe False rmrOnlyMissing
+      now <- liftIO getCurrentTime
+      Env{..} <- ask
+      rows <- liftIO $ flip runSqlPool envPool $
+        selectList [RadioStreamIsActive ==. True] [Desc RadioStreamUpdatedAt]
+      let candidates =
+            take cap $
+              if onlyMissing
+                then filter (\(Entity _ RadioStream{..}) -> isNothing radioStreamName || isNothing radioStreamGenre) rows
+                else rows
+      manager <- liftIO $ newManager tlsManagerSettings
+      results <- forM candidates $ \(Entity sid stream) -> do
+        metaResult <- liftIO $ fetchStreamMetadata manager (radioStreamStreamUrl stream)
+        case metaResult of
+          Left _ -> do
+            liftIO $ flip runSqlPool envPool $
+              update sid [RadioStreamLastCheckedAt =. Just now]
+            pure False
+          Right StreamMetadata{..} -> do
+            liftIO $ flip runSqlPool envPool $
+              update sid
+                [ RadioStreamName =. (smName <|> radioStreamName stream)
+                , RadioStreamGenre =. (smGenre <|> radioStreamGenre stream)
+                , RadioStreamLastCheckedAt =. Just now
+                , RadioStreamUpdatedAt =. now
+                ]
+            pure True
+      let processed = length candidates
+          updated = length (filter id results)
+          failed = processed - updated
+      pure RadioMetadataRefreshResult
+        { rmrProcessed = processed
+        , rmrUpdated   = updated
+        , rmrFailed    = failed
         }
 
     saveStream :: UTCTime -> RadioStreamUpsert -> SqlPersistT IO (Entity RadioStream, Bool)
@@ -241,6 +296,27 @@ radioServer user =
       let noProto = fromMaybe url (T.stripPrefix "https://" url <|> T.stripPrefix "http://" url)
           host = T.takeWhile (/= '/') noProto
       in if T.null host then "Radio" else host
+
+    fetchStreamMetadata :: Manager -> Text -> IO (Either Text StreamMetadata)
+    fetchStreamMetadata manager url = do
+      result <- try $ do
+        req0 <- parseRequest (T.unpack url)
+        let req = req0
+              { requestHeaders = ("Icy-MetaData","1") : ("User-Agent","tdf-radio-metadata/1.0") : requestHeaders req0
+              , responseTimeout = responseTimeoutMicro 5000000
+              }
+        httpLbs req manager
+      pure $ case result of
+        Left (ex :: SomeException) ->
+          Left (T.pack (displayException ex))
+        Right resp ->
+          let hdrs = responseHeaders resp
+              lookupTxt nameKey = fmap (TE.decodeUtf8With lenientDecode) (lookupHeader nameKey hdrs)
+              metaName = lookupTxt "icy-name"
+              metaGenre = lookupTxt "icy-genre"
+          in if isNothing metaName && isNothing metaGenre
+               then Left "no metadata"
+               else Right StreamMetadata { smName = metaName, smGenre = metaGenre }
 
     toDTO :: Entity RadioStream -> RadioStreamDTO
     toDTO (Entity sid RadioStream{..}) =

@@ -724,6 +724,21 @@ data RadioImportResult = RadioImportResult
 instance ToJSON RadioImportResult
 instance FromJSON RadioImportResult
 
+data RadioMetadataRefreshRequest = RadioMetadataRefreshRequest
+  { rmrLimit       :: Maybe Int
+  , rmrOnlyMissing :: Maybe Bool
+  } deriving (Show, Generic)
+instance ToJSON RadioMetadataRefreshRequest
+instance FromJSON RadioMetadataRefreshRequest
+
+data RadioMetadataRefreshResult = RadioMetadataRefreshResult
+  { rmrProcessed :: Int
+  , rmrUpdated   :: Int
+  , rmrFailed    :: Int
+  } deriving (Show, Generic)
+instance ToJSON RadioMetadataRefreshResult
+instance FromJSON RadioMetadataRefreshResult
+
 data RadioPresenceDTO = RadioPresenceDTO
   { rpPartyId     :: Int64
   , rpStreamUrl   :: Text

@@ -9,7 +9,8 @@ import           Data.Text     (Text)
 import           Data.Int      (Int64)
 import           Servant
 
-import           TDF.API.Types (RadioStreamDTO, RadioStreamUpsert, RadioPresenceDTO, RadioPresenceUpsert, RadioImportRequest, RadioImportResult)
+import           TDF.API.Types (RadioStreamDTO, RadioStreamUpsert, RadioPresenceDTO, RadioPresenceUpsert, RadioImportRequest,
+                                RadioImportResult, RadioMetadataRefreshRequest, RadioMetadataRefreshResult)
 
 type RadioAPI =
   "radio" :>
@@ -25,6 +26,10 @@ type RadioAPI =
         :> "import"
         :> ReqBody '[JSON] RadioImportRequest
         :> Post '[JSON] RadioImportResult
+   :<|> "streams"
+         :> "refresh-metadata"
+         :> ReqBody '[JSON] RadioMetadataRefreshRequest
+         :> Post '[JSON] RadioMetadataRefreshResult
    :<|> "presence"
          :> Get '[JSON] (Maybe RadioPresenceDTO)
    :<|> "presence"
