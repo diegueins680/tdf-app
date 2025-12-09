@@ -74,6 +74,10 @@ stack setup
 stack build
 stack run
 
+# Google Sign-In (optional)
+# Set GOOGLE_CLIENT_ID in tdf-hq/.env and VITE_GOOGLE_CLIENT_ID in tdf-hq-ui/.env
+# Use a Web OAuth client from Google Cloud; both values should match
+
 # 4. Web UI setup (new terminal)
 cd tdf-hq-ui
 cp .env.example .env
