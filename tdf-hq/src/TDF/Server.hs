@@ -419,7 +419,11 @@ listEngineersPublic = do
   liftIO $ flip runSqlPool pool $ do
     engineerRoles <- selectList [PartyRoleRole ==. Engineer, PartyRoleActive ==. True] []
     let partyIds = map (partyRolePartyId . entityVal) engineerRoles
-    parties <- selectList [PartyId <-. partyIds] [Asc PartyDisplayName]
+    parties <- selectList
+      [ PartyId <-. partyIds
+      , PartyPrimaryEmail !=. Nothing -- evita cuentas de sistema sin correo (p.ej. "Scheduling")
+      ]
+      [Asc PartyDisplayName]
     pure [PublicEngineerDTO (fromSqlKey pid) (M.partyDisplayName p) | Entity pid p <- parties]
 
 whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM
