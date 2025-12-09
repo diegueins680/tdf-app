@@ -89,6 +89,9 @@ cd tdf-mobile
 # Set EXPO_PUBLIC_API_BASE=http://localhost:8080
 # Set EXPO_PUBLIC_UPLOAD_URL=http://localhost:8080/drive/upload (for inventory photos)
 npm run start
+
+# Optional: Radio streaming stack
+# See streaming/README.md and set RADIO_INGEST_BASE / RADIO_PUBLIC_BASE in backend env.
 ```
 
 ### Inventory photos (Google Drive proxy)

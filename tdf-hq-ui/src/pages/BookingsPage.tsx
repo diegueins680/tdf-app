@@ -180,6 +180,8 @@ export default function BookingsPage() {
   const [serviceLocked, setServiceLocked] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateStartInput, setDuplicateStartInput] = useState('');
+  const [durationManuallyAdjusted, setDurationManuallyAdjusted] = useState(false);
+  const [roomsManuallyAdjusted, setRoomsManuallyAdjusted] = useState(false);
   const defaultServiceName = serviceTypes[0]?.name ?? '';
   const conflicts = useMemo(() => {
     if (!startInput || !endInput) return [];
@@ -300,22 +302,24 @@ export default function BookingsPage() {
     onError: (err) => setCreateContactError(err instanceof Error ? err.message : 'No se pudo crear el contacto.'),
   });
 
-  useEffect(() => {
-    if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
-    const defaults = defaultRoomsForService(serviceType);
-    if (defaults.length) {
-      setAssignedRoomIds(defaults.map((room) => room.roomId));
-    }
-  }, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
+useEffect(() => {
+  if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
+  const defaults = defaultRoomsForService(serviceType);
+  if (defaults.length) {
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
+    setRoomsManuallyAdjusted(false);
+  }
+}, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
 
-  useEffect(() => {
-    if (serviceType || !defaultServiceName) return;
-    setServiceType(defaultServiceName);
-    const defaults = defaultRoomsForService(defaultServiceName);
-    if (defaults.length) {
-      setAssignedRoomIds(defaults.map((room) => room.roomId));
-    }
-  }, [defaultRoomsForService, defaultServiceName, serviceType]);
+useEffect(() => {
+  if (serviceType || !defaultServiceName) return;
+  setServiceType(defaultServiceName);
+  const defaults = defaultRoomsForService(defaultServiceName);
+  if (defaults.length) {
+    setAssignedRoomIds(defaults.map((room) => room.roomId));
+    setRoomsManuallyAdjusted(false);
+  }
+}, [defaultRoomsForService, defaultServiceName, serviceType]);
 
   const formatForInput = useCallback(
     (date: Date) => DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm"),
@@ -348,11 +352,13 @@ export default function BookingsPage() {
     }
   }, [dialogOpen, formatForInput, prefillHandled]);
 
-  const openDialogForRange = (start: Date, end: Date) => {
-    setStartInput(formatForInput(start));
-    setEndInput(formatForInput(end));
-    setDialogOpen(true);
-  };
+const openDialogForRange = (start: Date, end: Date) => {
+  setStartInput(formatForInput(start));
+  setEndInput(formatForInput(end));
+  setDialogOpen(true);
+  setDurationManuallyAdjusted(false);
+  setRoomsManuallyAdjusted(false);
+};
 
   const handleDateClick = (info: { date: Date }) => {
     const start = info.date;
@@ -940,7 +946,10 @@ export default function BookingsPage() {
               label="Inicio"
               type="datetime-local"
               value={startInput}
-              onChange={(e) => setStartInput(e.target.value)}
+              onChange={(e) => {
+                setStartInput(e.target.value);
+                setDurationManuallyAdjusted(true);
+              }}
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
@@ -948,7 +957,10 @@ export default function BookingsPage() {
               label="Fin"
               type="datetime-local"
               value={endInput}
-              onChange={(e) => setEndInput(e.target.value)}
+              onChange={(e) => {
+                setEndInput(e.target.value);
+                setDurationManuallyAdjusted(true);
+              }}
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
@@ -1059,13 +1071,18 @@ export default function BookingsPage() {
               disabled={serviceLocked}
               onChange={(e) => {
                 const value = e.target.value;
+                const wasDurationManual = durationManuallyAdjusted;
+                const wasRoomsManual = roomsManuallyAdjusted;
+                setDurationManuallyAdjusted(false);
+                setRoomsManuallyAdjusted(false);
                 setServiceType(value);
                 const messageParts: string[] = [];
-                if (mode === 'create' || assignedRoomIds.length === 0) {
+                if (!wasRoomsManual || assignedRoomIds.length === 0) {
                   const defaults = defaultRoomsForService(value);
                   if (defaults.length) {
                     setAssignedRoomIds(defaults.map((room) => room.roomId));
                     messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
+                    setRoomsManuallyAdjusted(false);
                   }
                 }
                 if (requiresEngineer(value) && !engineerName && engineerOptions.length > 0) {
@@ -1076,10 +1093,11 @@ export default function BookingsPage() {
                 }
                 const minutes = defaultMinutesForService(value);
                 const startDt = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
-                if (startDt.isValid && minutes > 0) {
+                if (!wasDurationManual && startDt.isValid && minutes > 0) {
                   const endDt = startDt.plus({ minutes });
                   setEndInput(endDt.toFormat("yyyy-LL-dd'T'HH:mm"));
                   messageParts.push(`Duración ajustada a ${minutes} min`);
+                  setDurationManuallyAdjusted(false);
                 }
                 setAutoAssignMessage(messageParts.join(' · '));
               }}
@@ -1103,7 +1121,10 @@ export default function BookingsPage() {
               options={rooms}
               getOptionLabel={(option) => option.rName}
               value={assignedRooms}
-              onChange={(_, value) => setAssignedRoomIds(value.map((room) => room.roomId))}
+              onChange={(_, value) => {
+                setAssignedRoomIds(value.map((room) => room.roomId));
+                setRoomsManuallyAdjusted(true);
+              }}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip {...getTagProps({ index })} label={option.rName} />

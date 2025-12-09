@@ -53,10 +53,9 @@ export default function InventoryScanPage() {
     onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-in.'),
   });
 
-  const normalizedStatus = asset?.status?.toLowerCase() ?? '';
-  const isCheckedOut = normalizedStatus.includes('book') || normalizedStatus.includes('out');
-  const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStatus.includes('retired');
-  const actionsDisabled = isUnavailable;
+const normalizedStatus = asset?.status?.toLowerCase() ?? '';
+const isCheckedOut = normalizedStatus.includes('book') || normalizedStatus.includes('out');
+const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStatus.includes('retired');
 
   if (!token) {
     return (
@@ -120,12 +119,16 @@ export default function InventoryScanPage() {
                   </Stack>
                   <Typography variant="body2">Condición: {asset.condition ?? '—'}</Typography>
                   <Typography variant="body2">Ubicación: {asset.location ?? '—'}</Typography>
-                  {isUnavailable && (
-                    <Alert severity="warning" sx={{ mt: 1 }}>
-                      Este equipo está marcado como {asset.status}. Confirma que puede moverse antes de continuar.
-                    </Alert>
-                  )}
-                  {isCheckedOut ? (
+                  {isUnavailable ? (
+                    <Stack spacing={1.5} sx={{ mt: 2 }}>
+                      <Alert severity="warning">
+                        Este equipo está marcado como {asset.status}. No se permite check-in/out mientras esté fuera de servicio.
+                      </Alert>
+                      <Button variant="outlined" onClick={() => void loadAsset()}>
+                        Refrescar estado
+                      </Button>
+                    </Stack>
+                  ) : isCheckedOut ? (
                     <>
                       <Typography variant="subtitle1" sx={{ mt: 2 }}>Registrar check-in</Typography>
                       <TextField
@@ -136,7 +139,6 @@ export default function InventoryScanPage() {
                         multiline
                         minRows={2}
                         sx={{ mt: 1 }}
-                        disabled={actionsDisabled}
                       />
                       <TextField
                         label="Notas"
@@ -146,13 +148,12 @@ export default function InventoryScanPage() {
                         multiline
                         minRows={2}
                         sx={{ mt: 1 }}
-                        disabled={actionsDisabled}
                       />
                       <Button
                         variant="contained"
                         sx={{ mt: 2 }}
                         onClick={() => checkinMutation.mutate()}
-                        disabled={checkinMutation.isPending || actionsDisabled}
+                        disabled={checkinMutation.isPending}
                       >
                         {checkinMutation.isPending ? 'Registrando…' : 'Check-in'}
                       </Button>
@@ -169,7 +170,6 @@ export default function InventoryScanPage() {
                         onChange={(e) => setCheckoutForm({ ...checkoutForm, coTargetParty: e.target.value })}
                         fullWidth
                         sx={{ mt: 1 }}
-                        disabled={actionsDisabled}
                       />
                       <TextField
                         label="Notas"
@@ -179,13 +179,12 @@ export default function InventoryScanPage() {
                         multiline
                         minRows={2}
                         sx={{ mt: 1 }}
-                        disabled={actionsDisabled}
                       />
                       <Button
                         variant="contained"
                         sx={{ mt: 2 }}
                         onClick={() => checkoutMutation.mutate()}
-                        disabled={checkoutMutation.isPending || actionsDisabled}
+                        disabled={checkoutMutation.isPending}
                       >
                         {checkoutMutation.isPending ? 'Registrando…' : 'Check-out'}
                       </Button>

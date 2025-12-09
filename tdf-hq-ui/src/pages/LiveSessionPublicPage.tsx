@@ -10,15 +10,21 @@ export default function LiveSessionPublicPage() {
   const tokenFromQuery = sp.get('token') ?? sp.get('t') ?? '';
   const { session, login, setApiToken } = useSession();
   const [accessCode, setAccessCode] = useState(() => tokenFromQuery);
+  const [codeStatus, setCodeStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const hasAccessCode = Boolean(accessCode.trim());
+  const canUseForm = codeStatus === 'valid';
 
   useEffect(() => {
-    if (tokenFromQuery) setAccessCode(tokenFromQuery);
+    if (tokenFromQuery) {
+      setAccessCode(tokenFromQuery);
+      setCodeStatus('idle');
+    }
   }, [tokenFromQuery]);
 
   useEffect(() => {
     const code = accessCode.trim();
-    if (!code) return;
+    if (!code || codeStatus !== 'valid') return;
     if (!session) {
       login(
         {
@@ -32,7 +38,18 @@ export default function LiveSessionPublicPage() {
     } else if (!session.apiToken || session.apiToken !== code) {
       setApiToken(code);
     }
-  }, [accessCode, session, login, setApiToken]);
+  }, [accessCode, codeStatus, session, login, setApiToken]);
+
+  const validateAccessCode = () => {
+    const code = accessCode.trim();
+    if (!code) {
+      setValidationMessage('Ingresa un código válido.');
+      setCodeStatus('invalid');
+      return;
+    }
+    setValidationMessage(null);
+    setCodeStatus('valid');
+  };
 
   return (
     <Box
@@ -86,27 +103,48 @@ export default function LiveSessionPublicPage() {
                     label="Código de acceso"
                     type="password"
                     value={accessCode}
-                    onChange={(e) => setAccessCode(e.target.value)}
+                    onChange={(e) => {
+                      setAccessCode(e.target.value);
+                      setCodeStatus('idle');
+                      setValidationMessage(null);
+                    }}
                     placeholder="Pega el código recibido"
                     fullWidth
                     InputLabelProps={{ sx: { color: '#cbd5f5' } }}
+                    onFocus={() => {
+                      if (codeStatus === 'invalid') setCodeStatus('idle');
+                      setValidationMessage(null);
+                    }}
                   />
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     color="secondary"
+                    onClick={validateAccessCode}
+                    disabled={codeStatus === 'validating'}
+                  >
+                    {codeStatus === 'valid' ? 'Código validado' : 'Validar código'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="inherit"
                     component={RouterLink}
                     to="/feedback?topic=live-sessions"
                   >
                     Solicitar acceso
                   </Button>
                 </Stack>
-                {!accessCode.trim() && (
+                {validationMessage && (
                   <Alert severity="error" sx={{ bgcolor: 'rgba(248,113,113,0.12)', color: '#fecdd3' }}>
-                    Ingresa el código antes de completar el formulario. Sin código no podremos recibir tu solicitud.
+                    {validationMessage}
+                  </Alert>
+                )}
+                {codeStatus === 'valid' && (
+                  <Alert severity="success" sx={{ bgcolor: 'rgba(34,197,94,0.12)', color: '#bbf7d0' }}>
+                    Código verificado. Puedes completar y enviar el formulario.
                   </Alert>
                 )}
               </Stack>
-              <Box sx={{ opacity: hasAccessCode ? 1 : 0.35, pointerEvents: hasAccessCode ? 'auto' : 'none' }}>
+              <Box sx={{ opacity: canUseForm ? 1 : 0.35, pointerEvents: canUseForm ? 'auto' : 'none' }}>
                 <LiveSessionIntakeForm variant="public" requireTerms />
               </Box>
             </Stack>

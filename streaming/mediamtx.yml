@@ -1,0 +1,21 @@
+logLevel: info
+
+paths:
+  all:
+    source: publisher
+    runOnReady: |
+      mkdir -p /hls/$MTX_PATH && \
+      ffmpeg -i rtsp://127.0.0.1:8554/$MTX_PATH \
+        -c:a aac -b:a 128k -f hls -hls_time 6 -hls_list_size 5 -hls_flags delete_segments+append_list \
+        /hls/$MTX_PATH/index.m3u8
+
+rtmp:
+  enabled: yes
+
+rtsp:
+  enabled: yes
+
+hls:
+  enabled: yes
+  allowOrigin: "*"
+  directory: /hls
