@@ -165,6 +165,7 @@ radioServer user =
       [ "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
       , "https://www.rcast.net/dir"
       , "https://www.internet-radio.com"
+      , "https://raw.githubusercontent.com/junguler/m3u-radio-music-playlists/master/all.m3u"
       ]
 
     fetchSource :: Manager -> Text -> IO [RadioStreamUpsert]
@@ -181,6 +182,8 @@ radioServer user =
     canonicalSource src
       | "github.com/mikepierce/internet-radio-streams" `T.isInfixOf` src =
           "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
+      | "github.com/junguler/m3u-radio-music-playlists" `T.isInfixOf` src =
+          "https://raw.githubusercontent.com/junguler/m3u-radio-music-playlists/master/all.m3u"
       | T.isSuffixOf ".csv" src = src
       | otherwise = src
 
