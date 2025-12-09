@@ -151,6 +151,8 @@ export default function LoginPage() {
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const googleInitRef = useRef(false);
+  const [googleStatus, setGoogleStatus] = useState<string | null>(null);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
   const { session, login } = useSession();
   const navigate = useNavigate();
@@ -297,6 +299,8 @@ export default function LoginPage() {
         return;
       }
       try {
+        setGoogleStatus('Conectando con Google…');
+        setGoogleError(null);
         const response = await googleLoginMutation.mutateAsync({ idToken: credential });
         const normalizedRoles = response.roles?.map((role) => role.toLowerCase()) ?? [];
         const landingPath = pickLandingPath(normalizedRoles, response.modules);
@@ -316,11 +320,14 @@ export default function LoginPage() {
         navigate(landingPath, { replace: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.';
+        setGoogleError(message);
         if (signupDialogOpen) {
           setSignupFeedback({ type: 'error', message });
         } else {
           setFormError(message);
         }
+      } finally {
+        setGoogleStatus(null);
       }
     },
     [googleLoginMutation, login, navigate, signupDialogOpen],
@@ -592,6 +599,16 @@ export default function LoginPage() {
                   ref={googleButtonRef}
                   sx={{ display: 'flex', justifyContent: 'center', minHeight: 44 }}
                 />
+                {googleStatus && (
+                  <Typography variant="caption" color="text.secondary">
+                    {googleStatus}
+                  </Typography>
+                )}
+                {googleError && (
+                  <Alert severity="warning" sx={{ width: '100%' }}>
+                    {googleError}
+                  </Alert>
+                )}
               </Stack>
             )}
 
@@ -697,6 +714,16 @@ export default function LoginPage() {
                   ref={googleSignupButtonRef}
                   sx={{ display: 'flex', justifyContent: 'center', minHeight: 44 }}
                 />
+                {googleStatus && (
+                  <Typography variant="caption" color="text.secondary">
+                    {googleStatus}
+                  </Typography>
+                )}
+                {googleError && (
+                  <Alert severity="warning" sx={{ width: '100%' }}>
+                    {googleError}
+                  </Alert>
+                )}
               </Stack>
             )}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

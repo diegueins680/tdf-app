@@ -132,11 +132,11 @@ export default function PublicBookingPage() {
     Engineers.listPublic()
       .then((list) => {
         setEngineers(list);
-        setEngineersError(null);
+        setEngineersError(list.length === 0 ? 'Escribe el nombre del ingeniero manualmente.' : null);
       })
       .catch(() => {
         setEngineers([]);
-        setEngineersError('No pudimos cargar la lista de ingenieros. Ingresa el nombre manualmente.');
+        setEngineersError('Ingresa el nombre manualmente (catálogo no disponible).');
       })
       .finally(() => setEngineersLoading(false));
   }, []);

@@ -6,5 +6,12 @@ export interface PublicEngineer {
 }
 
 export const Engineers = {
-  listPublic: () => get<PublicEngineer[]>('/engineers'),
+  listPublic: async () => {
+    try {
+      return await get<PublicEngineer[]>('/engineers');
+    } catch (error) {
+      console.warn('Engineer catalog unavailable, falling back to manual entry', error);
+      return [];
+    }
+  },
 };

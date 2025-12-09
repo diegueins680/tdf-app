@@ -93,11 +93,49 @@ export default function TidalAgentPage() {
           </Typography>
         </Stack>
 
-        {configError && <Alert severity="warning">{configError}</Alert>}
+        {configError && (
+          <Alert severity="warning">
+            {configError}{' '}
+            <Button
+              href="/configuracion/preferencias"
+              size="small"
+              color="inherit"
+              sx={{ ml: 1 }}
+            >
+              Ir a integraciones
+            </Button>
+          </Alert>
+        )}
 
-        <Card variant="outlined">
-          <CardContent>
-            <Stack spacing={2}>
+        {!config && (
+          <Card variant="outlined">
+            <CardContent>
+              <Stack spacing={1}>
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Falta configurar la API
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Define `VITE_TIDAL_AGENT_API_KEY` (o `VITE_OPENAI_API_KEY`) en las variables de entorno y vuelve a
+                  desplegar. Luego refresca esta página.
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  <Button href="/configuracion/preferencias" variant="contained">
+                    Abrir configuraciones
+                  </Button>
+                  <Button href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" variant="text">
+                    Crear API key
+                  </Button>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        )}
+
+        {config && (
+          <>
+            <Card variant="outlined">
+              <CardContent>
+                <Stack spacing={2}>
               <TextField
                 label="Describe el patrón"
                 placeholder="ej. groove techno con bombo a negras y hats sincopados"
@@ -281,9 +319,11 @@ export default function TidalAgentPage() {
           </CardContent>
         </Card>
 
-        <Alert severity="info" variant="outlined">
-          Env vars: define `VITE_TIDAL_AGENT_API_KEY` (o `VITE_OPENAI_API_KEY`), opcional `VITE_TIDAL_AGENT_API_URL` y `VITE_TIDAL_AGENT_MODEL`.
-        </Alert>
+            <Alert severity="info" variant="outlined">
+              Env vars: define `VITE_TIDAL_AGENT_API_KEY` (o `VITE_OPENAI_API_KEY`), opcional `VITE_TIDAL_AGENT_API_URL` y `VITE_TIDAL_AGENT_MODEL`.
+            </Alert>
+          </>
+        )}
       </Stack>
     </Box>
   );

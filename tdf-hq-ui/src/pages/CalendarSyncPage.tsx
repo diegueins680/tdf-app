@@ -36,6 +36,7 @@ export default function CalendarSyncPage() {
   const [appliedRemoteConfig, setAppliedRemoteConfig] = useState(false);
   const [autoExchanging, setAutoExchanging] = useState(false);
   const [copyToast, setCopyToast] = useState<string | null>(null);
+  const [syncToast, setSyncToast] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
 
   const trimmedCalendarId = calendarId.trim();
   const location = useLocation();
@@ -194,9 +195,16 @@ export default function CalendarSyncPage() {
       if (typeof window !== 'undefined') {
         window.localStorage.setItem('calendar-sync.lastSyncAt', ts);
       }
-      setCopyToast(`Sync completada: ${res.created} creados, ${res.updated} actualizados.`);
+      setSyncToast({
+        severity: 'success',
+        message: `Sync OK (${new Date(ts).toLocaleString()}): ${res.created} creados, ${res.updated} actualizados.`,
+      });
     },
-    onError: () => setCopyToast('No pudimos sincronizar ahora. Intenta más tarde.'),
+    onError: () =>
+      setSyncToast({
+        severity: 'error',
+        message: 'No pudimos sincronizar ahora. Revisa credenciales y rango.',
+      }),
   });
 
   const configQuery = useQuery({
@@ -517,6 +525,15 @@ export default function CalendarSyncPage() {
                   >
                     Sincronizar ahora
                   </Button>
+                  <Button
+                    href="/configuracion/logs"
+                    size="small"
+                    startIcon={<LinkIcon />}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Ver últimos logs
+                  </Button>
                   <Typography variant="caption" color="text.secondary">
                     Última sync: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Sin sincronizar'}
                   </Typography>
@@ -588,6 +605,19 @@ export default function CalendarSyncPage() {
           </Stack>
         </Stack>
       </Paper>
+      <Snackbar
+        open={Boolean(syncToast)}
+        autoHideDuration={3200}
+        onClose={() => setSyncToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        {syncToast ? (
+          <Alert severity={syncToast.severity} onClose={() => setSyncToast(null)} variant="filled" sx={{ width: '100%' }}>
+            {syncToast.message}
+          </Alert>
+        ) : undefined}
+      </Snackbar>
+
       <Snackbar
         open={Boolean(copyToast)}
         autoHideDuration={2200}
