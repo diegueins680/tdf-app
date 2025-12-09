@@ -36,6 +36,7 @@ data CourseSession = CourseSession
   } deriving (Show, Generic)
 
 instance ToJSON CourseSession
+instance FromJSON CourseSession
 
 data SyllabusItem = SyllabusItem
   { title  :: Text
@@ -43,6 +44,7 @@ data SyllabusItem = SyllabusItem
   } deriving (Show, Generic)
 
 instance ToJSON SyllabusItem
+instance FromJSON SyllabusItem
 
 data CourseMetadata = CourseMetadata
   { slug           :: Text
