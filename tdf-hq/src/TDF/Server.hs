@@ -2679,7 +2679,7 @@ updateBooking user bookingIdI req = do
               && isNothing (bookingEngineerPartyId updated)
               && isNothing (bookingEngineerName updated)
         case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
-          Left msg -> pure (Left err400 { errBody = TE.encodeUtf8 msg })
+          Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
           Right () -> do
             replace bookingId updated
             dtos <- buildBookingDTOs [Entity bookingId updated]
