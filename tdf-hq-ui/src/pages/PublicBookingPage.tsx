@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Autocomplete,
-  type AutocompleteValue,
   Box,
   Button,
   Card,
@@ -37,6 +36,7 @@ interface FormState {
   notes: string;
   engineerId: number | null;
   engineerName: string;
+  resourceLabels: string[];
 }
 
 const toLocalInputValue = (date: Date) => {
@@ -48,6 +48,8 @@ const toLocalInputValue = (date: Date) => {
 
 const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
+const ROOM_OPTIONS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
+const DIEGO_DEFAULT_NAME = 'Diego Saá';
 
 const localTimezoneLabel = () => {
   if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'tu zona horaria';
@@ -60,6 +62,33 @@ const localTimezoneLabel = () => {
 const formatHour = (date: Date) =>
   date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
+const normalizeService = (service: string) => service.trim().toLowerCase();
+const stripDiacritics = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+
+const defaultRoomsForService = (service: string) => {
+  const norm = normalizeService(service);
+  const plain = stripDiacritics(norm);
+  if (plain.includes('grabacion banda') || plain.includes('band recording')) return ['Live Room', 'Control Room'];
+  if (plain.includes('grabacion vocal') || plain.includes('vocal recording') || norm.includes('vocal'))
+    return ['Vocal Booth', 'Control Room'];
+  if (plain.includes('mezcla') || norm.includes('mix')) return ['Control Room'];
+  if (plain.includes('master')) return ['Control Room'];
+  if (plain.includes('dj')) return ['DJ Booth'];
+  return [];
+};
+
+const sameRooms = (a: string[], b: string[]) => {
+  if (a.length !== b.length) return false;
+  const sort = (list: string[]) => [...list].map(normalizeService).sort();
+  const [as, bs] = [sort(a), sort(b)];
+  return as.every((val, idx) => val === bs[idx]);
+};
+
+const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
+  const hasDiego = list.some((eng) => normalizeService(eng.peName).includes('diego saá') || normalizeService(eng.peName).includes('diego saa'));
+  return hasDiego ? list : [...list, { peId: -1, peName: DIEGO_DEFAULT_NAME }];
+};
+
 export default function PublicBookingPage() {
   const services = useMemo(() => loadServiceTypes(), []);
   const defaultService = services[0]?.name ?? 'Reserva';
@@ -68,6 +97,7 @@ export default function PublicBookingPage() {
     const start = new Date();
     start.setMinutes(start.getMinutes() + 90);
     start.setSeconds(0, 0);
+    const initialRooms = defaultRoomsForService(defaultService);
     return {
       fullName: '',
       email: '',
@@ -77,7 +107,8 @@ export default function PublicBookingPage() {
       durationMinutes: 60,
       notes: '',
       engineerId: null,
-      engineerName: '',
+      engineerName: DIEGO_DEFAULT_NAME,
+      resourceLabels: initialRooms,
     };
   });
   const [submitting, setSubmitting] = useState(false);
@@ -100,6 +131,7 @@ export default function PublicBookingPage() {
         email: stored.email ?? prev.email,
         phone: stored.phone ?? prev.phone,
         serviceType: stored.serviceType ?? prev.serviceType,
+        resourceLabels: defaultRoomsForService(stored.serviceType ?? prev.serviceType),
       }));
       setRememberProfile(true);
     } catch {
@@ -134,12 +166,21 @@ export default function PublicBookingPage() {
     setEngineersLoading(true);
     Engineers.listPublic()
       .then((list) => {
-        setEngineers(list);
-        setEngineersError(list.length === 0 ? 'Escribe el nombre del ingeniero manualmente.' : null);
+        const withDiego = ensureDiegoOption(list);
+        setEngineers(withDiego);
+        setEngineersError(withDiego.length === 0 ? 'Escribe el nombre del ingeniero manualmente.' : null);
+        setForm((prev) => {
+          if (prev.engineerName.trim()) return prev;
+          return { ...prev, engineerName: DIEGO_DEFAULT_NAME, engineerId: null };
+        });
       })
       .catch(() => {
         setEngineers([]);
         setEngineersError('Ingresa el nombre manualmente (catálogo no disponible).');
+        setForm((prev) => {
+          if (prev.engineerName.trim()) return prev;
+          return { ...prev, engineerName: DIEGO_DEFAULT_NAME, engineerId: null };
+        });
       })
       .finally(() => setEngineersLoading(false));
   }, []);
@@ -195,6 +236,7 @@ export default function PublicBookingPage() {
     }
 
     setSubmitting(true);
+    const uniqueRooms = Array.from(new Set(form.resourceLabels));
     try {
       const startsAtIso = parsedStart.toISOString();
       const dto = await Bookings.createPublic({
@@ -207,6 +249,7 @@ export default function PublicBookingPage() {
         pbNotes: form.notes.trim() || null,
         pbEngineerPartyId: form.engineerId,
         pbEngineerName: form.engineerName.trim() || null,
+        pbResourceIds: uniqueRooms.length ? uniqueRooms : null,
       });
       setSuccess(dto);
     } catch (err) {
@@ -244,6 +287,20 @@ export default function PublicBookingPage() {
     const lowered = service.toLowerCase();
     return lowered.includes('graba') || lowered.includes('mezcl') || lowered.includes('master');
   };
+
+  useEffect(() => {
+    if (!requiresEngineer(form.serviceType)) return;
+    if (form.engineerName.trim()) return;
+    setForm((prev) => ({ ...prev, engineerName: DIEGO_DEFAULT_NAME, engineerId: null }));
+  }, [form.engineerName, form.serviceType]);
+
+  useEffect(() => {
+    const defaults = defaultRoomsForService(form.serviceType);
+    setForm((prev) => {
+      if (sameRooms(prev.resourceLabels, defaults)) return prev;
+      return { ...prev, resourceLabels: defaults };
+    });
+  }, [form.serviceType]);
 
   const bookingWindow = useMemo(() => {
     if (!form.startsAt) return null;
@@ -467,6 +524,31 @@ export default function PublicBookingPage() {
                         {services.length === 0 && <MenuItem value={defaultService}>{defaultService}</MenuItem>}
                       </TextField>
                     </Grid>
+                    <Grid item xs={12}>
+                      <Autocomplete
+                        multiple
+                        options={[...ROOM_OPTIONS]}
+                        value={form.resourceLabels}
+                        onChange={(_, value) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            resourceLabels: value,
+                          }))
+                        }
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => <Chip {...getTagProps({ index })} label={option} />)
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Salas asignadas"
+                            placeholder="Elegimos automáticamente según el servicio"
+                            helperText="Cambiamos las salas si cambias el tipo de servicio. Ajusta si necesitas otra combinación."
+                          />
+                        )}
+                        disableCloseOnSelect
+                      />
+                    </Grid>
                     <Grid item xs={12} sm={7}>
                       <TextField
                         label="Fecha y hora"
@@ -630,6 +712,13 @@ export default function PublicBookingPage() {
                                 color="primary"
                                 variant="outlined"
                               />
+                              {form.resourceLabels.length > 0 && (
+                                <Chip
+                                  label={`Salas: ${form.resourceLabels.join(' + ')}`}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              )}
                               <Chip
                                 label={formattedStart ? `Inicio: ${formattedStart}` : 'Elige fecha y hora'}
                                 size="small"

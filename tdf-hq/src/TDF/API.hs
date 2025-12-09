@@ -34,7 +34,7 @@ import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
 import           TDF.Routes.Academy (AcademyAPI)
-import           TDF.Routes.Courses (CoursesPublicAPI, WhatsAppWebhookAPI)
+import           TDF.Routes.Courses (CoursesPublicAPI, CoursesAdminAPI, WhatsAppWebhookAPI)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 import           TDF.API.Feedback    (FeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
@@ -197,6 +197,7 @@ type ProtectedAPI =
   :<|> "instagram" :> InstagramAPI
   :<|> "social" :> SocialAPI
   :<|> AdsAdminAPI
+  :<|> "admin" :> CoursesAdminAPI
   :<|> "calendar" :> CalendarAPI
   :<|> CmsAdminAPI
   :<|> DriveAPI
@@ -271,6 +272,7 @@ data PublicBookingReq = PublicBookingReq
   , pbNotes            :: Maybe Text
   , pbEngineerPartyId  :: Maybe Int64
   , pbEngineerName     :: Maybe Text
+  , pbResourceIds      :: Maybe [Text]
   } deriving (Show, Generic)
 instance FromJSON PublicBookingReq
 

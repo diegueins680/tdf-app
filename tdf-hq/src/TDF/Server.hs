@@ -110,7 +110,11 @@ import           TDF.Routes.Courses ( CoursesPublicAPI
                                     , SyllabusItem(..)
                                     , CourseRegistrationRequest(..)
                                     , CourseRegistrationResponse(..)
+                                    , CourseRegistrationStatusUpdate(..)
                                     , UTMTags(..)
+                                    , CourseUpsert(..)
+                                    , CourseSessionIn(..)
+                                    , CourseSyllabusIn(..)
                                     )
 import qualified TDF.Routes.Courses as Courses
 import           TDF.WhatsApp.Types ( WAMetaWebhook(..)
@@ -396,6 +400,32 @@ coursesPublicServer =
     courseMetadataH slug = loadCourseMetadata slug
     registrationH slug payload = createOrUpdateRegistration slug payload
 
+coursesAdminServer :: AuthedUser -> ServerT Courses.CoursesAdminAPI AppM
+coursesAdminServer user =
+       upsertCourseH
+  :<|> listRegistrationsH
+  :<|> getRegistrationH
+  :<|> updateStatusH
+  where
+    requireCourseAdmin = unless (hasRole Admin user || hasRole Webmaster user) $
+      throwError err403
+
+    upsertCourseH payload = do
+      requireCourseAdmin
+      saveCourse payload
+
+    listRegistrationsH mSlug mStatus mLimit = do
+      requireCourseAdmin
+      listCourseRegistrations mSlug mStatus mLimit
+
+    getRegistrationH slug regId = do
+      requireCourseAdmin
+      fetchCourseRegistration slug regId
+
+    updateStatusH slug regId statusPayload = do
+      requireCourseAdmin
+      updateCourseRegistrationStatus slug regId statusPayload
+
 radioPresencePublicServer :: Int64 -> AppM (Maybe RadioPresenceDTO)
 radioPresencePublicServer partyId = do
   when (partyId <= 0) $ throwBadRequest "Invalid party id"
@@ -514,6 +544,7 @@ protectedServer user =
   :<|> instagramServer
   :<|> socialServer user
   :<|> adsAdminServer user
+  :<|> coursesAdminServer user
   :<|> calendarServer user
   :<|> cmsAdminServer user
   :<|> driveServer user
@@ -901,12 +932,6 @@ calendarServer user =
 productionCourseSlug :: Text
 productionCourseSlug = "produccion-musical-dic-2025"
 
-productionCoursePrice :: Double
-productionCoursePrice = 150
-
-productionCourseCapacity :: Int
-productionCourseCapacity = 10
-
 data WhatsAppEnv = WhatsAppEnv
   { waToken        :: Maybe Text
   , waPhoneId      :: Maybe Text
@@ -942,107 +967,89 @@ loadCourseMetadata rawSlug = do
   Env{..} <- ask
   waEnv <- liftIO loadWhatsAppEnv
   let normalized = normalizeSlug rawSlug
-  cmsMeta <- loadCourseMetadataFromCMS normalized
-  baseMeta <- case cmsMeta <|> courseMetadataFor envConfig (waContactNumber waEnv) normalized of
-    Nothing -> throwNotFound "Curso no encontrado"
-    Just m  -> pure m
-  -- Count all registrations (including pendientes) to show remaining seats.
+  mDbMeta <- loadCourseMetadataFromDB envConfig waEnv normalized
+  baseMeta <- maybe (throwNotFound "Curso no encontrado") pure mDbMeta
   countRegs <- runDB $
     count
-      [ ME.CourseRegistrationCourseSlug ==. normalizeSlug (Courses.slug baseMeta)
+      [ ME.CourseRegistrationCourseSlug ==. normalized
       , ME.CourseRegistrationStatus !=. "cancelled"
       ]
   let remainingSeats = max 0 (Courses.capacity baseMeta - fromIntegral countRegs)
   pure baseMeta { Courses.remaining = remainingSeats }
 
-loadCourseMetadataFromCMS :: Text -> AppM (Maybe CourseMetadata)
-loadCourseMetadataFromCMS slugVal = do
-  Env{..} <- ask
-  let cmsSlug = "course:" <> slugVal
-  mContent <- runDB $ selectFirst
-    [ CMS.CmsContentSlug ==. cmsSlug
-    , CMS.CmsContentStatus ==. "published"
-    ]
-    [ Desc CMS.CmsContentPublishedAt
-    , Desc CMS.CmsContentVersion
-    ]
-  case mContent of
-    Nothing -> pure Nothing
-    Just (Entity _ c) -> do
-      let mVal = CMS.unAesonValue <$> CMS.cmsContentPayload c
-      case mVal of
-        Nothing -> pure Nothing
-        Just val -> case fromJSON val of
-          Success meta -> pure (Just meta)
-          Error err -> do
-            liftIO $ hPutStrLn stderr ("[CourseMetadata] Failed to decode CMS payload for " <> T.unpack cmsSlug <> ": " <> err)
-            pure Nothing
+loadCourseMetadataFromDB :: AppConfig -> WhatsAppEnv -> Text -> AppM (Maybe CourseMetadata)
+loadCourseMetadataFromDB cfg waEnv slugVal = do
+  runDB $ do
+    mCourse <- getBy (Trials.UniqueCourseSlug slugVal)
+    case mCourse of
+      Nothing -> pure Nothing
+      Just (Entity cid course) -> do
+        sessions <- selectList
+          [Trials.CourseSessionModelCourseId ==. cid]
+          [Asc Trials.CourseSessionModelOrder, Asc Trials.CourseSessionModelDate]
+        syllabus <- selectList
+          [Trials.CourseSyllabusItemCourseId ==. cid]
+          [Asc Trials.CourseSyllabusItemOrder, Asc Trials.CourseSyllabusItemId]
+        pure $ Just (toCourseMetadata cfg waEnv course sessions syllabus)
 
-courseMetadataFor :: AppConfig -> Maybe Text -> Text -> Maybe CourseMetadata
-courseMetadataFor cfg mWaContact slugVal
-  | slugVal /= productionCourseSlug = Nothing
-  | otherwise =
-      let landingUrlVal = buildLandingUrl cfg
-          whatsappUrl   = buildWhatsappCta mWaContact landingUrlVal
-      in Just CourseMetadata
-        { slug = productionCourseSlug
-        , title = "Curso de Producción Musical"
-        , subtitle = "Presencial · 4 sábados · 16 horas"
-        , format = "Presencial"
-        , duration = "4 sábados · 16 horas"
-        , price = productionCoursePrice
-        , currency = "USD"
-        , capacity = productionCourseCapacity
-        , remaining = productionCourseCapacity
-        , sessionStartHour = 15  -- 10:00 Quito (UTC-5)
-        , sessionDurationHours = 4
-        , locationLabel = "TDF Records – Quito"
-        , locationMapUrl = "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6"
-        , daws = ["Logic", "Luna"]
-        , includes =
-            [ "Acceso a grabaciones"
-            , "Certificado de participación"
-            , "Mentorías"
-            , "Grupo de WhatsApp"
-            , "Acceso a la plataforma de TDF Records"
-            ]
-        , sessions =
-            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2025 12 13)
-            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2025 12 20)
-            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2025 12 27)
-            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 1 3)
-            ]
-        , syllabus =
-            [ SyllabusItem "Primer sábado – Introducción a la producción musical"
-                [ "Conceptos básicos"
-                , "Herramientas esenciales y software"
-                ]
-            , SyllabusItem "Segundo sábado – Grabación y captura de audio"
-                [ "Técnicas de grabación"
-                , "Configuración de micrófonos y espacios"
-                ]
-            , SyllabusItem "Tercer sábado – Mezcla y edición"
-                [ "Ecualización, compresión y efectos"
-                , "Técnicas de balance y panoramización"
-                ]
-            , SyllabusItem "Cuarto sábado – Masterización y publicación"
-                [ "Técnicas de masterización"
-                , "Preparación para distribución digital"
-                ]
-            ]
-        , whatsappCtaUrl = whatsappUrl
-        , landingUrl = landingUrlVal
-        }
+toCourseMetadata
+  :: AppConfig
+  -> WhatsAppEnv
+  -> Trials.Course
+  -> [Entity Trials.CourseSessionModel]
+  -> [Entity Trials.CourseSyllabusItem]
+  -> CourseMetadata
+toCourseMetadata cfg waEnv course sessions syllabus =
+  let slugVal = Trials.courseSlug course
+      landingUrlVal =
+        fromMaybe (buildLandingUrlFor cfg slugVal) (cleanOptional (Trials.courseLandingUrl course))
+      whatsappUrl =
+        fromMaybe
+          (buildWhatsappCtaFor (waContactNumber waEnv) (Trials.courseTitle course) landingUrlVal)
+          (cleanOptional (Trials.courseWhatsappCtaUrl course))
+      dawsList = filter (not . T.null) (maybe [] (map T.strip) (Trials.courseDaws course))
+      includesList = filter (not . T.null) (maybe [] (map T.strip) (Trials.courseIncludes course))
+      toSession (Entity _ s) =
+        CourseSession
+          { label = Trials.courseSessionModelLabel s
+          , date = Trials.courseSessionModelDate s
+          }
+      toSyllabus (Entity _ s) =
+        SyllabusItem
+          { title = Trials.courseSyllabusItemTitle s
+          , topics = filter (not . T.null . T.strip) (Trials.courseSyllabusItemTopics s)
+          }
+  in CourseMetadata
+      { slug = slugVal
+      , title = Trials.courseTitle course
+      , subtitle = fromMaybe "" (Trials.courseSubtitle course)
+      , format = fromMaybe "" (Trials.courseFormat course)
+      , duration = fromMaybe "" (Trials.courseDuration course)
+      , price = fromIntegral (Trials.coursePriceCents course) / 100
+      , currency = Trials.courseCurrency course
+      , capacity = Trials.courseCapacity course
+      , remaining = Trials.courseCapacity course
+      , sessionStartHour = fromMaybe 0 (Trials.courseSessionStartHour course)
+      , sessionDurationHours = fromMaybe 0 (Trials.courseSessionDurationHours course)
+      , locationLabel = fromMaybe "" (Trials.courseLocationLabel course)
+      , locationMapUrl = fromMaybe "" (Trials.courseLocationMapUrl course)
+      , daws = dawsList
+      , includes = includesList
+      , sessions = map toSession sessions
+      , syllabus = map toSyllabus syllabus
+      , whatsappCtaUrl = whatsappUrl
+      , landingUrl = landingUrlVal
+      }
 
-buildLandingUrl :: AppConfig -> Text
-buildLandingUrl cfg =
+buildLandingUrlFor :: AppConfig -> Text -> Text
+buildLandingUrlFor cfg slugVal =
   let rawBase = fromMaybe "https://tdf-app.pages.dev" (appBaseUrl cfg)
       base = T.dropWhileEnd (== '/') rawBase
-  in base <> "/curso/" <> productionCourseSlug
+  in base <> "/curso/" <> slugVal
 
-buildWhatsappCta :: Maybe Text -> Text -> Text
-buildWhatsappCta mNumber landingUrl =
-  let msg = "INSCRIBIRME Curso Produccion Musical " <> landingUrl
+buildWhatsappCtaFor :: Maybe Text -> Text -> Text -> Text
+buildWhatsappCtaFor mNumber courseTitle landingUrl =
+  let msg = "INSCRIBIRME " <> courseTitle <> " " <> landingUrl
       encoded = TE.decodeUtf8 (urlEncode True (TE.encodeUtf8 msg))
       cleanNumber txt = T.filter isDigit txt
   in case mNumber >>= nonEmpty of
@@ -1052,6 +1059,172 @@ buildWhatsappCta mNumber landingUrl =
     nonEmpty txt =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
+
+saveCourse :: CourseUpsert -> AppM CourseMetadata
+saveCourse Courses.CourseUpsert{..} = do
+  now <- liftIO getCurrentTime
+  Env{..} <- ask
+  waEnv <- liftIO loadWhatsAppEnv
+  let slugVal = normalizeSlug slug
+      titleClean = T.strip title
+      subtitleClean = cleanOptional subtitle
+      formatClean = cleanOptional format
+      durationClean = cleanOptional duration
+      currencyClean = let cur = T.strip currency in if T.null cur then "USD" else cur
+      capacityClean = max 0 capacity
+      priceCentsClean = max 0 priceCents
+      startHourClean = fmap (max 0) sessionStartHour
+      durationHoursClean = fmap (max 0) sessionDurationHours
+      locationLabelClean = cleanOptional locationLabel
+      locationMapUrlClean = cleanOptional locationMapUrl
+      landingUrlClean = cleanOptional landingUrl
+      landingResolved = fromMaybe (buildLandingUrlFor envConfig slugVal) landingUrlClean
+      whatsappClean = cleanOptional whatsappCtaUrl
+      whatsappResolved = fromMaybe (buildWhatsappCtaFor (waContactNumber waEnv) titleClean landingResolved) whatsappClean
+      dawsClean = normalizeList daws
+      includesClean = normalizeList includes
+      normalizeList xs =
+        case filter (not . T.null) (map T.strip xs) of
+          [] -> Nothing
+          ys -> Just ys
+      sanitizeTopics = filter (not . T.null . T.strip)
+      withOrder fallbackIdx mOrder = fromMaybe fallbackIdx mOrder
+  runDB $ do
+    mExisting <- getBy (Trials.UniqueCourseSlug slugVal)
+    courseId <- case mExisting of
+      Nothing -> insert Trials.Course
+        { Trials.courseSlug = slugVal
+        , Trials.courseTitle = titleClean
+        , Trials.courseSubtitle = subtitleClean
+        , Trials.courseFormat = formatClean
+        , Trials.courseDuration = durationClean
+        , Trials.coursePriceCents = priceCentsClean
+        , Trials.courseCurrency = currencyClean
+        , Trials.courseCapacity = capacityClean
+        , Trials.courseSessionStartHour = startHourClean
+        , Trials.courseSessionDurationHours = durationHoursClean
+        , Trials.courseLocationLabel = locationLabelClean
+        , Trials.courseLocationMapUrl = locationMapUrlClean
+        , Trials.courseWhatsappCtaUrl = Just whatsappResolved
+        , Trials.courseLandingUrl = Just landingResolved
+        , Trials.courseDaws = dawsClean
+        , Trials.courseIncludes = includesClean
+        , Trials.courseCreatedAt = now
+        , Trials.courseUpdatedAt = now
+        }
+      Just (Entity cid _) -> do
+        update cid
+          [ Trials.CourseSlug =. slugVal
+          , Trials.CourseTitle =. titleClean
+          , Trials.CourseSubtitle =. subtitleClean
+          , Trials.CourseFormat =. formatClean
+          , Trials.CourseDuration =. durationClean
+          , Trials.CoursePriceCents =. priceCentsClean
+          , Trials.CourseCurrency =. currencyClean
+          , Trials.CourseCapacity =. capacityClean
+          , Trials.CourseSessionStartHour =. startHourClean
+          , Trials.CourseSessionDurationHours =. durationHoursClean
+          , Trials.CourseLocationLabel =. locationLabelClean
+          , Trials.CourseLocationMapUrl =. locationMapUrlClean
+          , Trials.CourseWhatsappCtaUrl =. Just whatsappResolved
+          , Trials.CourseLandingUrl =. Just landingResolved
+          , Trials.CourseDaws =. dawsClean
+          , Trials.CourseIncludes =. includesClean
+          , Trials.CourseUpdatedAt =. now
+          ]
+        pure cid
+
+    deleteWhere [Trials.CourseSessionModelCourseId ==. courseId]
+    deleteWhere [Trials.CourseSyllabusItemCourseId ==. courseId]
+
+    let sessionPayload = zip [1..] sessions
+    for_ sessionPayload $ \(idx :: Int, CourseSessionIn{..}) -> do
+      let ordVal = withOrder idx order
+      insert_ Trials.CourseSessionModel
+        { Trials.courseSessionModelCourseId = courseId
+        , Trials.courseSessionModelLabel = T.strip label
+        , Trials.courseSessionModelDate = date
+        , Trials.courseSessionModelOrder = Just ordVal
+        }
+
+    let syllabusPayload = zip [1..] syllabus
+    for_ syllabusPayload $ \(idx :: Int, CourseSyllabusIn{..}) -> do
+      let ordVal = withOrder idx order
+      insert_ Trials.CourseSyllabusItem
+        { Trials.courseSyllabusItemCourseId = courseId
+        , Trials.courseSyllabusItemTitle = T.strip title
+        , Trials.courseSyllabusItemTopics = sanitizeTopics topics
+        , Trials.courseSyllabusItemOrder = Just ordVal
+        }
+  loadCourseMetadata slugVal
+
+listCourseRegistrations
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Int
+  -> AppM [DTO.CourseRegistrationDTO]
+listCourseRegistrations mSlug mStatus mLimit = do
+  let filters = catMaybes
+        [ (\s -> ME.CourseRegistrationCourseSlug ==. normalizeSlug s) <$> cleanOptional mSlug
+        , (\s -> ME.CourseRegistrationStatus ==. T.toLower (T.strip s)) <$> cleanOptional mStatus
+        ]
+      capped = max 1 (min 500 (fromMaybe 200 mLimit))
+  rows <- runDB $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo capped]
+  pure (map toCourseRegistrationDTO rows)
+
+fetchCourseRegistration :: Text -> Int64 -> AppM DTO.CourseRegistrationDTO
+fetchCourseRegistration rawSlug regId = do
+  let slugVal = normalizeSlug rawSlug
+      key = toSqlKey regId
+  mRow <- runDB $ getEntity key
+  case mRow of
+    Nothing -> throwNotFound "Registro no encontrado"
+    Just ent@(Entity _ reg)
+      | ME.courseRegistrationCourseSlug reg /= slugVal -> throwNotFound "Registro no encontrado"
+      | otherwise -> pure (toCourseRegistrationDTO ent)
+
+updateCourseRegistrationStatus
+  :: Text
+  -> Int64
+  -> CourseRegistrationStatusUpdate
+  -> AppM CourseRegistrationResponse
+updateCourseRegistrationStatus rawSlug regId CourseRegistrationStatusUpdate{..} = do
+  let slugVal = normalizeSlug rawSlug
+      newStatus = T.toLower (T.strip status)
+      key = toSqlKey regId
+  when (T.null newStatus) $
+    throwBadRequest "status requerido"
+  now <- liftIO getCurrentTime
+  mRow <- runDB $ getEntity key
+  case mRow of
+    Nothing -> throwNotFound "Registro no encontrado"
+    Just (Entity _ reg)
+      | ME.courseRegistrationCourseSlug reg /= slugVal -> throwNotFound "Registro no encontrado"
+      | otherwise -> do
+          runDB $ update key
+            [ ME.CourseRegistrationStatus =. newStatus
+            , ME.CourseRegistrationUpdatedAt =. now
+            ]
+          pure CourseRegistrationResponse { id = regId, status = newStatus }
+
+toCourseRegistrationDTO :: Entity ME.CourseRegistration -> DTO.CourseRegistrationDTO
+toCourseRegistrationDTO (Entity rid reg) =
+  DTO.CourseRegistrationDTO
+    { DTO.crId = fromSqlKey rid
+    , DTO.crCourseSlug = ME.courseRegistrationCourseSlug reg
+    , DTO.crFullName = ME.courseRegistrationFullName reg
+    , DTO.crEmail = ME.courseRegistrationEmail reg
+    , DTO.crPhoneE164 = ME.courseRegistrationPhoneE164 reg
+    , DTO.crSource = ME.courseRegistrationSource reg
+    , DTO.crStatus = ME.courseRegistrationStatus reg
+    , DTO.crHowHeard = ME.courseRegistrationHowHeard reg
+    , DTO.crUtmSource = ME.courseRegistrationUtmSource reg
+    , DTO.crUtmMedium = ME.courseRegistrationUtmMedium reg
+    , DTO.crUtmCampaign = ME.courseRegistrationUtmCampaign reg
+    , DTO.crUtmContent = ME.courseRegistrationUtmContent reg
+    , DTO.crCreatedAt = ME.courseRegistrationCreatedAt reg
+    , DTO.crUpdatedAt = ME.courseRegistrationUpdatedAt reg
+    }
 
 createOrUpdateRegistration :: Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
 createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
@@ -1170,8 +1343,8 @@ sendWhatsappReply :: WhatsAppEnv -> Text -> AppM ()
 sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid} phone = do
   meta <- loadCourseMetadata productionCourseSlug
   manager <- liftIO $ newManager tlsManagerSettings
-  let msg = "¡Gracias por tu interés en el Curso de Producción Musical! Aquí tienes el link de inscripción: "
-            <> landingUrl meta <> ". Cupos limitados (" <> T.pack (show productionCourseCapacity) <> ")."
+  let msg = "¡Gracias por tu interés en " <> Courses.title meta <> "! Aquí tienes el link de inscripción: "
+            <> landingUrl meta <> ". Cupos limitados (" <> T.pack (show (Courses.capacity meta)) <> ")."
   _ <- liftIO $ sendText manager tok pid phone msg
   pure ()
 sendWhatsappReply _ _ = pure ()
@@ -2470,46 +2643,57 @@ bookingServer user =
 listBookings :: AuthedUser -> AppM [BookingDTO]
 listBookings user = do
   requireModule user ModuleScheduling
-  Env pool cfg <- ask
+  Env pool _ <- ask
   liftIO $ do
     dbBookings <- flip runSqlPool pool $ do
       bookings <- selectList [] [Desc BookingId]
       buildBookingDTOs bookings
-    let courseSessions = courseCalendarBookings cfg
+    courseSessions <- flip runSqlPool pool courseCalendarBookings
     pure (dbBookings ++ courseSessions)
 
-courseCalendarBookings :: AppConfig -> [BookingDTO]
-courseCalendarBookings cfg =
-  case courseMetadataFor cfg Nothing productionCourseSlug of
-    Nothing   -> []
-    Just meta ->
-      zipWith (mkBooking meta) ([1..] :: [Int]) (Courses.sessions meta)
-  where
-    mkBooking CourseMetadata{..} idx CourseSession{..} =
-      let startUtc = UTCTime date (secondsToDiffTime (fromIntegral sessionStartHour * 60 * 60)) -- hour in UTC, calendar applies TZ
-          endUtc   = addUTCTime (fromIntegral sessionDurationHours * 60 * 60) startUtc
-      in BookingDTO
-           { bookingId          = negate (fromIntegral (1000 + idx))
-           , title              = "Curso: " <> label
-           , startsAt           = startUtc
-           , endsAt             = endUtc
-           , status             = "Confirmed"
-           , notes              = Just ("Curso " <> slug <> " · USD " <> T.pack (show (round price :: Int)))
-           , partyId            = Nothing
-           , engineerPartyId    = Nothing
-           , engineerName       = Nothing
-           , serviceType        = Just "Curso Producción Musical"
-           , serviceOrderId     = Nothing
-           , serviceOrderTitle  = Nothing
-           , customerName       = Nothing
-           , partyDisplayName   = Nothing
-            , resources          = []
-            , courseSlug         = Just slug
-            , coursePrice        = Just price
-            , courseCapacity     = Just capacity
-            , courseRemaining    = Just remaining
-            , courseLocation     = Just locationLabel
-           }
+courseCalendarBookings :: SqlPersistT IO [BookingDTO]
+courseCalendarBookings = do
+  courses <- selectList [] []
+  fmap concat $ forM courses $ \(Entity courseId course) -> do
+    regCount <- count
+      [ ME.CourseRegistrationCourseSlug ==. Trials.courseSlug course
+      , ME.CourseRegistrationStatus !=. "cancelled"
+      ]
+    sessions <- selectList [Trials.CourseSessionModelCourseId ==. courseId] [Asc Trials.CourseSessionModelOrder, Asc Trials.CourseSessionModelDate]
+    let metaTitle = Trials.courseTitle course
+        slugVal = Trials.courseSlug course
+        capacityVal = Trials.courseCapacity course
+        remainingVal = max 0 (capacityVal - fromIntegral regCount)
+        startHour = fromMaybe 0 (Trials.courseSessionStartHour course)
+        durationHours = fromMaybe 0 (Trials.courseSessionDurationHours course)
+        coursePriceD = fromIntegral (Trials.coursePriceCents course) / 100
+        mkBooking idx (Entity _ s) =
+          let dateVal = Trials.courseSessionModelDate s
+              startUtc = UTCTime dateVal (secondsToDiffTime (fromIntegral startHour * 60 * 60))
+              endUtc   = addUTCTime (fromIntegral durationHours * 60 * 60) startUtc
+          in BookingDTO
+               { bookingId          = negate (fromIntegral (1000 + idx))
+               , title              = "Curso: " <> Trials.courseSessionModelLabel s
+               , startsAt           = startUtc
+               , endsAt             = endUtc
+               , status             = "course"
+               , notes              = Just ("Curso: " <> metaTitle)
+               , partyId            = Nothing
+               , engineerPartyId    = Nothing
+               , engineerName       = Nothing
+               , serviceType        = Just "Curso"
+               , serviceOrderId     = Nothing
+               , serviceOrderTitle  = Nothing
+               , customerName       = Nothing
+               , partyDisplayName   = Nothing
+               , resources          = []
+               , courseSlug         = Just slugVal
+               , coursePrice        = Just coursePriceD
+               , courseCapacity     = Just capacityVal
+               , courseRemaining    = Just remainingVal
+               , courseLocation     = Trials.courseLocationLabel course
+               }
+    pure (zipWith mkBooking [1..] sessions)
 
 createPublicBooking :: PublicBookingReq -> AppM BookingDTO
 createPublicBooking PublicBookingReq{..} = do
@@ -2528,7 +2712,7 @@ createPublicBooking PublicBookingReq{..} = do
   (partyId, _) <- ensurePartyWithAccount (Just (T.strip pbFullName)) (T.strip pbEmail) pbPhone
   Env pool _ <- ask
   resourceKeys <- liftIO $ flip runSqlPool pool $
-    resolveResourcesForBooking serviceTypeClean [] pbStartsAt endsAt
+    resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) pbStartsAt endsAt
   mEngineerParty <- case engineerIdClean of
     Nothing -> pure Nothing
     Just pid -> liftIO $ flip runSqlPool pool $ get (toSqlKey (fromIntegral pid) :: Key Party)
@@ -2859,17 +3043,18 @@ resolveResourcesForBooking service requested start end = do
     else defaultResourcesForService service start end
 
 resolveRequestedResources :: [Text] -> SqlPersistT IO [Key Resource]
-resolveRequestedResources ids = fmap catMaybes $ mapM lookupResource ids
-  where
-    lookupResource :: Text -> SqlPersistT IO (Maybe (Key Resource))
-    lookupResource rid =
-      case fromPathPiece rid of
-        Nothing  -> pure Nothing
-        Just key -> do
-          mRes <- get key
-          case mRes of
-            Just res | resourceResourceType res == Room && resourceActive res -> pure (Just key)
-            _        -> pure Nothing
+resolveRequestedResources rawIds = do
+  rooms <- selectList [ResourceResourceType ==. Room, ResourceActive ==. True] [Asc ResourceId]
+  let indexById = Map.fromList $ map (\(Entity k room) -> (k, room)) rooms
+      indexByName = Map.fromList $ map (\(Entity k room) -> (T.toLower (resourceName room), k)) rooms
+      resolveOne rid =
+        case fromPathPiece rid of
+          Just key | Map.member key indexById -> Just key
+          _ ->
+            let normalized = T.toLower (T.strip rid)
+            in Map.lookup normalized indexByName
+      dedupKeys = Set.toList . Set.fromList
+  pure $ dedupKeys (mapMaybe resolveOne rawIds)
 
 defaultResourcesForService :: Maybe Text -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
 defaultResourcesForService Nothing _ _ = pure []
@@ -2878,21 +3063,32 @@ defaultResourcesForService (Just service) start end = do
   rooms <- selectList [ResourceResourceType ==. Room, ResourceActive ==. True] [Asc ResourceId]
   let findByName name = find (\(Entity _ room) -> T.toLower (resourceName room) == T.toLower name) rooms
       boothPredicate (Entity _ room) = "booth" `T.isInfixOf` T.toLower (resourceName room)
-  case normalized of
-    "band recording" ->
+      controlRoom = findByName "Control Room"
+      liveRoom    = findByName "Live Room"
+      vocalBooth  =
+        findByName "Vocal Booth"
+          <|> find (\(Entity _ room) ->
+                let lower = T.toLower (resourceName room)
+                in "vocal" `T.isInfixOf` lower || "booth" `T.isInfixOf` lower) rooms
+      djBooths =
+        let candidateNames = ["Booth 1","Booth 2","Booth A","Booth B","DJ Booth 1","DJ Booth 2","DJ Booth"]
+            nameMatches = mapMaybe findByName candidateNames
+            boothMatches = filter boothPredicate rooms
+        in dedupeEntities (nameMatches ++ boothMatches)
+  case () of
+    _ | normalized `elem` ["band recording", "grabacion banda", "grabación banda"] ->
       pure $ map entityKey $ catMaybes (map findByName ["Live Room", "Control Room"])
-    "vocal recording" ->
-      let vocal = findByName "Vocal Booth" <|> find (\(Entity _ room) -> let lower = T.toLower (resourceName room) in "vocal" `T.isInfixOf` lower || "booth" `T.isInfixOf` lower) rooms
-          control = findByName "Control Room"
-      in pure $ map entityKey $ catMaybes [vocal, control]
-    "band rehearsal" ->
+    _ | normalized `elem` ["vocal recording", "grabacion vocal", "grabación vocal"] ->
+      pure $ map entityKey $ catMaybes [vocalBooth, controlRoom]
+    _ | "mix" `T.isInfixOf` normalized || "mezcla" `T.isInfixOf` normalized ->
+      pure $ maybe [] (pure . entityKey) controlRoom
+    _ | "master" `T.isInfixOf` normalized ->
+      pure $ maybe [] (pure . entityKey) controlRoom
+    _ | normalized `elem` ["band rehearsal", "ensayo banda"] ->
       pure $ maybe [] (pure . entityKey) (findByName "Live Room")
-    "dj booth rental" -> do
-      let candidateNames = ["Booth 1","Booth 2","Booth A","Booth B","DJ Booth 1","DJ Booth 2"]
-          nameMatches = mapMaybe findByName candidateNames
-          boothMatches = filter boothPredicate rooms
-          candidates = dedupeEntities (nameMatches ++ boothMatches)
-      pickBooth candidates
+    _ | normalized `elem` ["dj booth rental", "practica de dj", "práctica de dj", "dj practice"] ||
+        "dj" `T.isInfixOf` normalized -> do
+      pickBooth djBooths
     _ -> pure []
   where
     pickBooth [] = pure []

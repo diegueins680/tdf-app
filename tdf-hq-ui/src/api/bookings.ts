@@ -40,5 +40,6 @@ export const Bookings = {
     pbNotes?: string | null;
     pbEngineerPartyId?: number | null;
     pbEngineerName?: string | null;
+    pbResourceIds?: string[] | null;
   }) => post<BookingDTO>('/bookings/public', body),
 };
