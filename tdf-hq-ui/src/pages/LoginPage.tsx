@@ -668,6 +668,11 @@ export default function LoginPage() {
                   Ir al Fan Hub
                 </Link>
               </Typography>
+              {!googleClientId && (
+                <Typography variant="caption" color="text.secondary">
+                  Login con Google no disponible en este entorno.
+                </Typography>
+              )}
             </Stack>
           </Stack>
         </Paper>

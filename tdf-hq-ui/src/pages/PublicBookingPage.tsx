@@ -235,6 +235,9 @@ export default function PublicBookingPage() {
   const engineerValue =
     (engineers.find((opt) => opt.peId === form.engineerId) as PublicEngineer | undefined) ??
     (form.engineerName ? { peId: -1, peName: form.engineerName } : null);
+  const engineerHelper =
+    engineersError ??
+    (engineers.length === 0 ? 'Escribe el nombre del ingeniero asignado (catálogo no disponible).' : 'Selecciona o escribe el ingeniero asignado.');
 
   const clearSavedProfile = () => {
     setRememberProfile(false);
@@ -464,15 +467,15 @@ export default function PublicBookingPage() {
                     )}
                     {requiresEngineer(form.serviceType) && (
                       <Grid item xs={12}>
-                        <Autocomplete<string | PublicEngineer, false, false, true>
-                          options={engineers}
-                          getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
-                          loading={engineersLoading}
-                          freeSolo
-                          value={engineerValue}
-                          onChange={(_evt, value) => {
-                            if (!value) {
-                              setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
+                    <Autocomplete<string | PublicEngineer, false, false, true>
+                      options={engineers}
+                      getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
+                      loading={engineersLoading && engineers.length > 0}
+                      freeSolo
+                      value={engineerValue}
+                      onChange={(_evt, value) => {
+                        if (!value) {
+                          setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
                               return;
                             }
                             const id = typeof value === 'string' ? null : value.peId;
@@ -496,7 +499,12 @@ export default function PublicBookingPage() {
                                   </>
                                 ),
                               }}
-                              helperText={engineersError ?? 'Selecciona o escribe el ingeniero asignado.'}
+                              helperText={
+                                engineersError ??
+                                (engineers.length === 0 && !engineersLoading
+                                  ? 'Escribe el nombre del ingeniero (catálogo no disponible).'
+                                  : 'Selecciona o escribe el ingeniero asignado.')
+                              }
                             />
                           )}
                         />

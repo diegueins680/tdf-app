@@ -36,7 +36,7 @@ export default function CalendarSyncPage() {
   const [appliedRemoteConfig, setAppliedRemoteConfig] = useState(false);
   const [autoExchanging, setAutoExchanging] = useState(false);
   const [copyToast, setCopyToast] = useState<string | null>(null);
-  const [syncToast, setSyncToast] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
+  const [syncToast, setSyncToast] = useState<{ message: string; severity: 'success' | 'error' | 'info' } | null>(null);
 
   const trimmedCalendarId = calendarId.trim();
   const location = useLocation();
@@ -212,6 +212,15 @@ export default function CalendarSyncPage() {
     queryFn: () => CalendarApi.getConfig(),
     staleTime: 5 * 60 * 1000,
   });
+
+  const testConnection = useCallback(async () => {
+    const res = await configQuery.refetch();
+    setSyncToast(
+      res.data
+        ? { severity: 'info', message: 'Conexión verificada con el proveedor de calendario.' }
+        : { severity: 'error', message: 'No pudimos validar la conexión. Revisa las credenciales.' },
+    );
+  }, [configQuery]);
 
   const authUrlMutation = useMutation({
     mutationFn: CalendarApi.getAuthUrl,
@@ -547,6 +556,18 @@ export default function CalendarSyncPage() {
           )}
           {exchangeMutation.isSuccess && <Alert severity="success">Tokens guardados.</Alert>}
           {syncMutation.isError && <Alert severity="error">La sincronización falló.</Alert>}
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<LinkIcon />}
+              onClick={() => {
+                void testConnection();
+              }}
+            >
+              Probar conexión
+            </Button>
+          </Stack>
           {syncMutation.isSuccess && (
             <Alert severity="success">
               Sync OK: {syncMutation.data.updated} actualizados, {syncMutation.data.created} creados, {syncMutation.data.deleted} cancelados.

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -38,6 +38,21 @@ export default function TidalAgentPage() {
   const [showRaw, setShowRaw] = useState(false);
   const [historyMode, setHistoryMode] = useState<'full' | 'code'>('full');
   const [target, setTarget] = useState<'d1' | 'd2' | 'd3' | 'd4'>('d1');
+  const [pinned, setPinned] = useState<HistoryItem | null>(null);
+
+  const exportRecentHistory = useCallback(async () => {
+    const recent = history.slice(0, 5);
+    if (recent.length === 0) return;
+    const payload = recent.map((item, idx) => `#${idx + 1}\n${item.code}`).join('\n\n');
+    try {
+      await navigator.clipboard.writeText(payload);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (err) {
+      console.warn('No se pudo exportar el historial', err);
+      setError('No se pudo exportar el historial.');
+    }
+  }, [history]);
 
   const handleSubmit = async () => {
     if (!config) return;
@@ -157,6 +172,17 @@ export default function TidalAgentPage() {
                 >
                   {loading ? 'Generando…' : 'Generar código'}
                 </Button>
+                {history.length > 0 && (
+                  <Button
+                    variant="outlined"
+                    startIcon={<ContentCopyIcon />}
+                    onClick={() => {
+                      void exportRecentHistory();
+                    }}
+                  >
+                    Exportar últimos
+                  </Button>
+                )}
                 {code && (
                   <Button
                     variant="outlined"
@@ -222,6 +248,49 @@ export default function TidalAgentPage() {
                     </Typography>
                     <Chip label={history.length} size="small" color="info" />
                   </Stack>
+                  {pinned && (
+                    <Card variant="outlined" sx={{ borderColor: 'primary.main' }}>
+                      <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="subtitle2" color="text.secondary">
+                            Fijado
+                          </Typography>
+                          <Chip label="Pinned" size="small" color="primary" />
+                        </Stack>
+                        <Typography variant="body2" color="text.secondary">
+                          {pinned.prompt}
+                        </Typography>
+                        <Box
+                          sx={{
+                            bgcolor: 'rgba(148,163,184,0.08)',
+                            border: '1px dashed',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            p: 1,
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                            whiteSpace: 'pre-line',
+                          }}
+                        >
+                          {pinned.code}
+                        </Box>
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            size="small"
+                            startIcon={<ContentCopyIcon fontSize="small" />}
+                            onClick={() => {
+                              navigator.clipboard.writeText(pinned.code).catch((err) => console.warn(err));
+                            }}
+                          >
+                            Copiar
+                          </Button>
+                          <Button size="small" onClick={() => setPinned(null)}>
+                            Quitar pin
+                          </Button>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  )}
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Button
                       size="small"
@@ -279,6 +348,15 @@ export default function TidalAgentPage() {
                             }}
                           >
                             Usar prompt
+                          </Button>
+                          <Button
+                            size="small"
+                            variant={pinned?.code === item.code ? 'contained' : 'outlined'}
+                            onClick={() => {
+                              setPinned((prev) => (prev?.code === item.code ? null : item));
+                            }}
+                          >
+                            {pinned?.code === item.code ? 'Quitar pin' : 'Fijar'}
                           </Button>
                           <Button
                             size="small"

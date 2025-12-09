@@ -17,6 +17,7 @@ import {
   DialogActions,
   InputLabel,
   MenuItem,
+  Paper,
   Select,
   type SelectChangeEvent,
   Tooltip,
@@ -1033,8 +1034,29 @@ export default function MarketplacePage() {
             }
           >
             No pudimos cargar el marketplace. Puede ser un bloqueo de red/CORS o el servicio está caído. Intenta recargar
-            o vuelve a intentar en unos minutos.
+            o vuelve a intentar en unos minutos.{' '}
+            <Button
+              size="small"
+              href="/configuracion/estado"
+              sx={{ ml: 1 }}
+              target="_blank"
+              rel="noreferrer"
+              color="inherit"
+            >
+              Reportar problema
+            </Button>
           </Alert>
+        )}
+
+        {listingsQuery.isError && (
+          <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, textAlign: 'center' }}>
+            <Typography variant="h6" gutterBottom>
+              Catálogo temporalmente no disponible
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Verifica tu conexión o vuelve más tarde. Si el problema persiste, avísanos desde la sección de estado.
+            </Typography>
+          </Paper>
         )}
 
         <Grid container spacing={3} id="marketplace-listings" alignItems="stretch">
