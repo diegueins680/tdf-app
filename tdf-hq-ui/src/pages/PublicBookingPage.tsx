@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -7,6 +7,7 @@ import {
   CardContent,
   Divider,
   Chip,
+  Checkbox,
   Grid,
   MenuItem,
   Stack,
@@ -20,6 +21,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import { Bookings } from '../api/bookings';
 import type { BookingDTO } from '../api/types';
 import { loadServiceTypes } from '../utils/serviceTypesStore';
+import { useSession } from '../session/SessionContext';
 
 interface FormState {
   fullName: string;
@@ -38,6 +40,8 @@ const toLocalInputValue = (date: Date) => {
   )}`;
 };
 
+const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
+
 const localTimezoneLabel = () => {
   if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'tu zona horaria';
   const dtf = Intl.DateTimeFormat(undefined, { timeZoneName: 'short' });
@@ -49,6 +53,7 @@ const localTimezoneLabel = () => {
 export default function PublicBookingPage() {
   const services = useMemo(() => loadServiceTypes(), []);
   const defaultService = services[0]?.name ?? 'Reserva';
+  const { session, logout } = useSession();
   const [form, setForm] = useState<FormState>(() => {
     const start = new Date();
     start.setMinutes(start.getMinutes() + 90);
@@ -66,6 +71,49 @@ export default function PublicBookingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<BookingDTO | null>(null);
+  const [rememberProfile, setRememberProfile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (!raw) return;
+      const stored = JSON.parse(raw) as Partial<FormState>;
+      setForm((prev) => ({
+        ...prev,
+        fullName: stored.fullName ?? prev.fullName,
+        email: stored.email ?? prev.email,
+        phone: stored.phone ?? prev.phone,
+        serviceType: stored.serviceType ?? prev.serviceType,
+      }));
+      setRememberProfile(true);
+    } catch {
+      // ignore parsing issues
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!session?.displayName) return;
+    setForm((prev) => {
+      if (prev.fullName.trim()) return prev;
+      return { ...prev, fullName: session.displayName };
+    });
+  }, [session]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!rememberProfile) {
+      window.localStorage.removeItem(PROFILE_STORAGE_KEY);
+      return;
+    }
+    const payload = {
+      fullName: form.fullName.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      serviceType: form.serviceType,
+    };
+    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(payload));
+  }, [rememberProfile, form.fullName, form.email, form.phone, form.serviceType]);
 
   const handleSubmit = async (evt: React.FormEvent) => {
     evt.preventDefault();
@@ -173,6 +221,49 @@ export default function PublicBookingPage() {
                 <Chip label="2. Confirmamos por email" size="small" variant="outlined" />
                 <Chip label="3. Coordinamos por WhatsApp si lo dejas" size="small" variant="outlined" />
               </Stack>
+              <Card
+                variant="outlined"
+                sx={{
+                  mt: 1,
+                  borderColor: 'rgba(255,255,255,0.12)',
+                  bgcolor: 'rgba(255,255,255,0.02)',
+                }}
+              >
+                <CardContent sx={{ py: 1.5, px: 2 }}>
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={1}
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    justifyContent="space-between"
+                    useFlexGap
+                    flexWrap="wrap"
+                  >
+                    <Stack spacing={0.3}>
+                      <Typography variant="subtitle2">¿Ya tienes cuenta?</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Inicia sesión y saltamos tus datos para esta reserva. Si no tienes cuenta, puedes crearla rápido.
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                      <Button size="small" variant="outlined" href="/login?redirect=/reservar">
+                        Iniciar sesión
+                      </Button>
+                      <Button size="small" variant="text" href="/login?redirect=/reservar">
+                        Crear cuenta
+                      </Button>
+                      {session && (
+                        <Chip
+                          label={`Conectado como ${session.displayName}`}
+                          color="primary"
+                          onDelete={logout}
+                          variant="outlined"
+                          sx={{ borderRadius: 999 }}
+                        />
+                      )}
+                    </Stack>
+                  </Stack>
+                </CardContent>
+              </Card>
             </Stack>
 
             <Grid container spacing={2}>
@@ -305,6 +396,18 @@ export default function PublicBookingPage() {
                         minRows={3}
                         placeholder="Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)"
                       />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Checkbox
+                          checked={rememberProfile}
+                          onChange={(e) => setRememberProfile(e.target.checked)}
+                          size="small"
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          Recordar mis datos en este navegador para la próxima vez.
+                        </Typography>
+                      </Stack>
                     </Grid>
                     {error && (
                       <Grid item xs={12}>
