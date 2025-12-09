@@ -32,11 +32,14 @@ import           Servant                (NoContent(..), ServerError, ServerT, er
 import           Network.HTTP.Client    (Manager, httpLbs, newManager, parseRequest, responseBody, responseHeaders,
                                          responseTimeoutMicro, requestHeaders, Request(..))
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Data.UUID              (toText)
+import           Data.UUID.V4           (nextRandom)
 
 import           TDF.API.Radio          (RadioAPI)
 import           TDF.API.Types          (RadioStreamDTO(..), RadioStreamUpsert(..), RadioPresenceDTO(..),
                                          RadioPresenceUpsert(..), RadioImportRequest(..), RadioImportResult(..),
-                                         RadioMetadataRefreshRequest(..), RadioMetadataRefreshResult(..))
+                                         RadioMetadataRefreshRequest(..), RadioMetadataRefreshResult(..),
+                                         RadioTransmissionRequest(..), RadioTransmissionInfo(..))
 import           TDF.Auth               (AuthedUser(..))
 import           TDF.DB                 (Env(..))
 import           TDF.Models
@@ -68,6 +71,7 @@ radioServer user =
   :<|> upsertPresence
   :<|> clearPresence
   :<|> getPresenceByParty
+  :<|> createTransmission
   where
     searchStreams :: Maybe Text -> Maybe Text -> m [RadioStreamDTO]
     searchStreams mCountry mGenre = do
@@ -99,12 +103,15 @@ radioServer user =
               xs -> xs
           cap = max 1 (min 2000 (fromMaybe 800 rirLimit))
       manager <- liftIO $ newManager tlsManagerSettings
-      fetched <- liftIO $ fmap concat $
+      fetchedResults <- liftIO $
         forM cleanedSources $ \src -> do
           res <- try (fetchSource manager src)
-          case res of
-            Left (_ :: SomeException) -> pure []
-            Right items               -> pure items
+          pure $ case res of
+            Left (ex :: SomeException) -> Left (src, T.pack (displayException ex))
+            Right items                -> Right (src, items)
+      let successes = [ items | Right (_, items) <- fetchedResults ]
+          failedSources = [ src | Left (src, _) <- fetchedResults ]
+          fetched = concat successes
       let deduped =
             take cap
               . Map.elems
@@ -123,6 +130,8 @@ radioServer user =
         , rirInserted  = inserted
         , rirUpdated   = updated
         , rirSources   = cleanedSources
+        , rirFailed    = length failedSources
+        , rirFailedSources = failedSources
         }
 
     refreshMetadata :: RadioMetadataRefreshRequest -> m RadioMetadataRefreshResult
@@ -413,3 +422,40 @@ radioServer user =
         , rpStationId   = partyRadioPresenceStationId
         , rpUpdatedAt   = partyRadioPresenceUpdatedAt
         }
+
+    createTransmission :: RadioTransmissionRequest -> m RadioTransmissionInfo
+    createTransmission RadioTransmissionRequest{..} = do
+      now <- liftIO getCurrentTime
+      Env{..} <- ask
+      streamKey <- liftIO (toText <$> nextRandom)
+      ingestBase <- liftIO (readEnv "RADIO_INGEST_BASE" "rtmp://localhost/live")
+      listenBase <- liftIO (readEnv "RADIO_PUBLIC_BASE" "https://stream.tdf.com/live")
+      let publicUrl = appendPath listenBase streamKey
+          ingestUrl = appendPath ingestBase streamKey
+          upsertPayload = RadioStreamUpsert
+            { rsuStreamUrl = publicUrl
+            , rsuName      = rtrName
+            , rsuCountry   = rtrCountry
+            , rsuGenre     = rtrGenre
+            }
+      entity <- liftIO $ flip runSqlPool envPool $ do
+        (ent, _) <- saveStream now upsertPayload
+        pure ent
+      pure RadioTransmissionInfo
+        { rtiStreamId  = fromIntegral (fromSqlKey (entityKey entity))
+        , rtiStreamUrl = publicUrl
+        , rtiIngestUrl = ingestUrl
+        , rtiStreamKey = streamKey
+        }
+
+    appendPath base path =
+      let trimmed = T.dropWhileEnd (== '/') base
+      in trimmed <> "/" <> path
+
+    readEnv key def = do
+      mVal <- lookupEnv key
+      let cleaned = fmap (T.strip . T.pack) mVal
+      pure $ case cleaned of
+        Nothing   -> def
+        Just txt | T.null txt -> def
+                 | otherwise -> txt

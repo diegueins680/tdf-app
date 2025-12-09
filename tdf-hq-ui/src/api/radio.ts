@@ -28,6 +28,8 @@ export interface RadioImportResult {
   rirInserted: number;
   rirUpdated: number;
   rirSources: string[];
+  rirFailed: number;
+  rirFailedSources: string[];
 }
 
 export const RadioAPI = {

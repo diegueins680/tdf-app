@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Cms } from '../api/cms';
+import { Courses, type CourseUpsert } from '../api/courses';
 
 interface SessionInput { label: string; date: string }
 interface SyllabusInput { title: string; topics: string }
@@ -54,42 +54,35 @@ export default function CourseBuilderPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       const payload = buildPayload();
-      const landing = landingUrl.trim() || `https://tdf-app.pages.dev/curso/${slug}`;
-      await Cms.create({
-        cciSlug: `course:${slug}`,
-        cciLocale: 'es',
-        cciTitle: title.trim(),
-        cciStatus: 'published',
-        cciPayload: {
-          ...payload,
-          landingUrl: landing,
-          remaining: payload.capacity,
-          whatsappCtaUrl: whatsappCtaUrl.trim() || payload.whatsappCtaUrl,
-        },
-      });
+      await Courses.upsert(payload);
     },
   });
 
-  const buildPayload = () => {
-    const cleanCapacity = Number(capacity) || 0;
-    const cleanPrice = Number(price) || 0;
-    const landing = landingUrl.trim() || `https://tdf-app.pages.dev/curso/${slug}`;
-    const sessionStart = Number(sessionStartHour) || 0;
-    const sessionDuration = Number(sessionDurationHours) || 0;
+  const buildPayload = (): CourseUpsert => {
+    const toOptionalNumber = (value: string) => {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      const num = Number(trimmed);
+      return Number.isFinite(num) ? num : null;
+    };
+    const cleanCapacity = Number.isFinite(Number(capacity)) ? Number(capacity) : 0;
+    const cleanPrice = Math.round((Number(price) || 0) * 100);
+    const landing = landingUrl.trim();
+    const sessionStart = toOptionalNumber(sessionStartHour);
+    const sessionDuration = toOptionalNumber(sessionDurationHours);
     return {
       slug: slug.trim(),
       title: title.trim(),
-      subtitle: subtitle.trim(),
-      format: format.trim(),
-      duration: duration.trim(),
-      price: cleanPrice,
+      subtitle: subtitle.trim() || null,
+      format: format.trim() || null,
+      duration: duration.trim() || null,
+      priceCents: cleanPrice,
       currency: currency.trim() || 'USD',
-      capacity: cleanCapacity,
-      remaining: cleanCapacity,
-      sessionStartHour: sessionStart,
-      sessionDurationHours: sessionDuration,
-      locationLabel: locationLabel.trim(),
-      locationMapUrl: locationMapUrl.trim(),
+      capacity: Math.max(0, Math.round(cleanCapacity)),
+      sessionStartHour: sessionStart ?? null,
+      sessionDurationHours: sessionDuration ?? null,
+      locationLabel: locationLabel.trim() || null,
+      locationMapUrl: locationMapUrl.trim() || null,
       daws: splitLines(daws),
       includes: splitLines(includes),
       sessions: sessions
@@ -101,8 +94,8 @@ export default function CourseBuilderPage() {
           title: s.title.trim(),
           topics: splitTopics(s.topics),
         })),
-      whatsappCtaUrl: whatsappCtaUrl.trim() || `https://wa.me/?text=Curso%20${encodeURIComponent(title.trim())}`,
-      landingUrl: landing,
+      whatsappCtaUrl: whatsappCtaUrl.trim() || null,
+      landingUrl: landing || null,
     };
   };
 
@@ -135,7 +128,7 @@ export default function CourseBuilderPage() {
           <Typography variant="overline" color="text.secondary">Cursos</Typography>
           <Typography variant="h4" fontWeight={800}>Crear curso</Typography>
           <Typography color="text.secondary">
-            Publica un nuevo curso. Requiere permisos de administrador/webmaster (usa CMS debajo).
+            Publica un nuevo curso. Requiere permisos de administrador/webmaster (guarda en tablas de Escuela).
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>

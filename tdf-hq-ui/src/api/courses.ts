@@ -10,6 +10,39 @@ export type CourseRegistrationRequest = components['schemas']['CourseRegistratio
 export type CourseRegistrationResponse = components['schemas']['CourseRegistrationResponse'];
 export type CourseRegistrationStatusUpdate = components['schemas']['CourseRegistrationStatusUpdate'];
 
+export interface CourseSessionIn {
+  label: string;
+  date: string;
+  order?: number | null;
+}
+
+export interface CourseSyllabusIn {
+  title: string;
+  topics: string[];
+  order?: number | null;
+}
+
+export interface CourseUpsert {
+  slug: string;
+  title: string;
+  subtitle?: string | null;
+  format?: string | null;
+  duration?: string | null;
+  priceCents: number;
+  currency: string;
+  capacity: number;
+  sessionStartHour?: number | null;
+  sessionDurationHours?: number | null;
+  locationLabel?: string | null;
+  locationMapUrl?: string | null;
+  whatsappCtaUrl?: string | null;
+  landingUrl?: string | null;
+  daws: string[];
+  includes: string[];
+  sessions: CourseSessionIn[];
+  syllabus: CourseSyllabusIn[];
+}
+
 export interface CourseRegistrationDTO {
   crId: number;
   crCourseSlug: string;
@@ -30,6 +63,7 @@ export interface CourseRegistrationDTO {
 const courseBase = (slug: string) => `/public/courses/${slug}`;
 
 export const Courses = {
+  upsert: (payload: CourseUpsert) => post<CourseMetadata>('/admin/courses', payload),
   getMetadata: (slug: string) => get<CourseMetadata>(courseBase(slug)),
   register: (slug: string, payload: CourseRegistrationRequest) =>
     post<CourseRegistrationResponse>(`${courseBase(slug)}/registrations`, payload),

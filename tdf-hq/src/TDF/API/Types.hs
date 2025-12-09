@@ -720,6 +720,8 @@ data RadioImportResult = RadioImportResult
   , rirInserted  :: Int
   , rirUpdated   :: Int
   , rirSources   :: [Text]
+  , rirFailed    :: Int
+  , rirFailedSources :: [Text]
   } deriving (Show, Generic)
 instance ToJSON RadioImportResult
 instance FromJSON RadioImportResult
@@ -738,6 +740,23 @@ data RadioMetadataRefreshResult = RadioMetadataRefreshResult
   } deriving (Show, Generic)
 instance ToJSON RadioMetadataRefreshResult
 instance FromJSON RadioMetadataRefreshResult
+
+data RadioTransmissionRequest = RadioTransmissionRequest
+  { rtrName    :: Maybe Text
+  , rtrGenre   :: Maybe Text
+  , rtrCountry :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON RadioTransmissionRequest
+instance FromJSON RadioTransmissionRequest
+
+data RadioTransmissionInfo = RadioTransmissionInfo
+  { rtiStreamId  :: Int64
+  , rtiStreamUrl :: Text
+  , rtiIngestUrl :: Text
+  , rtiStreamKey :: Text
+  } deriving (Show, Generic)
+instance ToJSON RadioTransmissionInfo
+instance FromJSON RadioTransmissionInfo
 
 data RadioPresenceDTO = RadioPresenceDTO
   { rpPartyId     :: Int64

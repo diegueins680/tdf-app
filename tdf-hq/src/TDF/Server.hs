@@ -1067,6 +1067,11 @@ saveCourse Courses.CourseUpsert{..} = do
   waEnv <- liftIO loadWhatsAppEnv
   let slugVal = normalizeSlug slug
       titleClean = T.strip title
+  when (T.null slugVal) $
+    throwBadRequest "slug requerido"
+  when (T.null titleClean) $
+    throwBadRequest "titulo requerido"
+  let
       subtitleClean = cleanOptional subtitle
       formatClean = cleanOptional format
       durationClean = cleanOptional duration
