@@ -59,6 +59,7 @@ corsPolicy = do
           then Just allowAllPolicy
           else
             case lookup "origin" (requestHeaders req) of
+              Nothing -> Just allowAllPolicy -- allow health/public probes without CORS failures
               Just o | allowPagesDevWildcard && pagesHost o -> Just allowAllPolicy
               _ -> Just basePolicy
       originLog =
