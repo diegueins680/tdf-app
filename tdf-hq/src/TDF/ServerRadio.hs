@@ -24,6 +24,7 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Text.Encoding.Error (lenientDecode)
 import           Data.Time              (UTCTime, getCurrentTime)
+import           System.Environment     (lookupEnv)
 import qualified Data.ByteString.Lazy   as BL
 import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Desc, LimitTo), deleteBy, getBy, insert,
                                          selectList, selectFirst, update)
@@ -67,11 +68,11 @@ radioServer user =
   :<|> upsertActive
   :<|> importStreams
   :<|> refreshMetadata
+  :<|> createTransmission
   :<|> getSelfPresence
   :<|> upsertPresence
   :<|> clearPresence
   :<|> getPresenceByParty
-  :<|> createTransmission
   where
     searchStreams :: Maybe Text -> Maybe Text -> m [RadioStreamDTO]
     searchStreams mCountry mGenre = do
