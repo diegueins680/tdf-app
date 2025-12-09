@@ -2492,9 +2492,9 @@ createPublicBooking PublicBookingReq{..} = do
   when (isNothing serviceTypeClean) (throwBadRequest "serviceType requerido")
   let engineerIdClean  = pbEngineerPartyId >>= (\i -> if i > 0 then Just i else Nothing)
       engineerNameClean = normalizeOptionalInput pbEngineerName
-  when (requiresEngineer serviceTypeClean) $
-    when (isNothing engineerIdClean && isNothing engineerNameClean) $
-      throwBadRequest "Selecciona un ingeniero para grabación/mezcla/mastering"
+  case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
+    Left msg -> throwBadRequest msg
+    Right () -> pure ()
   let durationMins = max 30 (fromMaybe 60 pbDurationMinutes)
       endsAt       = addUTCTime (fromIntegral durationMins * 60) pbStartsAt
       notesClean   = normalizeOptionalInput pbNotes
@@ -2579,9 +2579,9 @@ createBooking user req = do
       engineerNameClean = normalizeOptionalInput (cbEngineerName req)
       partyKey         = fmap (toSqlKey . fromIntegral) (cbPartyId req)
       requestedRooms   = fromMaybe [] (cbResourceIds req)
-  when (requiresEngineer serviceTypeClean) $
-    when (isNothing engineerIdClean && isNothing engineerNameClean) $
-      throwBadRequest "Selecciona un ingeniero para grabación/mezcla/mastering"
+  case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
+    Left msg -> throwBadRequest msg
+    Right () -> pure ()
 
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean requestedRooms (cbStartsAt req) (cbEndsAt req)
@@ -2678,9 +2678,9 @@ updateBooking user bookingIdI req = do
             missingEngineer = requiresEngineer (bookingServiceType updated)
               && isNothing (bookingEngineerPartyId updated)
               && isNothing (bookingEngineerName updated)
-        if missingEngineer
-          then pure (Left err400 { errBody = "Selecciona un ingeniero para grabación/mezcla/mastering" })
-          else do
+        case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
+          Left msg -> pure (Left err400 { errBody = TE.encodeUtf8 msg })
+          Right () -> do
             replace bookingId updated
             dtos <- buildBookingDTOs [Entity bookingId updated]
             pure (maybe (Left err500) Right (listToMaybe dtos))
@@ -2788,6 +2788,12 @@ requiresEngineer Nothing = False
 requiresEngineer (Just svc) =
   let lowered = T.toLower (T.strip svc)
   in any (`T.isInfixOf` lowered) ["graba", "mezcl", "master"]
+
+validateEngineer :: Maybe Text -> Maybe Int64 -> Maybe Text -> Either Text ()
+validateEngineer svc mEngineerId mEngineerName
+  | requiresEngineer svc && isNothing mEngineerId && maybe True T.null (fmap T.strip mEngineerName) =
+      Left "Selecciona un ingeniero para grabación/mezcla/mastering"
+  | otherwise = Right ()
 
 notifyEngineerIfNeeded :: BookingDTO -> AppM ()
 notifyEngineerIfNeeded BookingDTO{engineerPartyId = Nothing, engineerName = Nothing} = pure ()
