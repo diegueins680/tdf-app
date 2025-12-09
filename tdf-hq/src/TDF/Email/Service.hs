@@ -8,6 +8,7 @@ module TDF.Email.Service
   , sendCoursePaymentReminder
   , sendTestEmail
   , sendMarketplaceOrder
+  , sendEngineerBooking
   ) where
 
 import Data.Text (Text)
@@ -72,3 +73,7 @@ sendTestEmail svc name email subject bodyLines mCtaUrl =
 sendMarketplaceOrder :: EmailService -> Text -> Text -> Text -> Text -> [Text] -> IO ()
 sendMarketplaceOrder svc name email orderId totalDisplay items =
   Email.sendMarketplaceOrderEmail (esConfig svc) (esAppBase svc) name email orderId totalDisplay items
+
+sendEngineerBooking :: EmailService -> Text -> Text -> Text -> Text -> Maybe Text -> Maybe Text -> IO ()
+sendEngineerBooking svc name email serviceLabel startsAtLabel mCustomer mNotes =
+  Email.sendEngineerBookingEmail (esConfig svc) (esAppBase svc) name email serviceLabel startsAtLabel mCustomer mNotes

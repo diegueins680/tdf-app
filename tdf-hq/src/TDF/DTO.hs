@@ -267,6 +267,8 @@ data BookingDTO = BookingDTO
   , status      :: Text
   , notes       :: Maybe Text
   , partyId     :: Maybe Int64
+  , engineerPartyId :: Maybe Int64
+  , engineerName :: Maybe Text
   , serviceType :: Maybe Text
   , serviceOrderId    :: Maybe Int64
   , serviceOrderTitle :: Maybe Text

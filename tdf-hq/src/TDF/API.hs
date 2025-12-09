@@ -226,6 +226,7 @@ type API =
   :<|> "contracts" :> ContractsAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> RadioPublicAPI
+  :<|> "engineers" :> Get '[JSON] [PublicEngineerDTO]
   :<|> BookingPublicAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
@@ -241,6 +242,8 @@ data CreateBookingReq = CreateBookingReq
   , cbStatus      :: Text
   , cbNotes       :: Maybe Text
   , cbPartyId     :: Maybe Int64
+  , cbEngineerPartyId :: Maybe Int64
+  , cbEngineerName :: Maybe Text
   , cbServiceType :: Maybe Text
   , cbResourceIds :: Maybe [Text]
   } deriving (Show, Generic)
@@ -253,6 +256,8 @@ data UpdateBookingReq = UpdateBookingReq
   , ubNotes       :: Maybe Text
   , ubStartsAt    :: Maybe UTCTime
   , ubEndsAt      :: Maybe UTCTime
+  , ubEngineerPartyId :: Maybe Int64
+  , ubEngineerName :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON UpdateBookingReq
 
@@ -264,8 +269,16 @@ data PublicBookingReq = PublicBookingReq
   , pbStartsAt         :: UTCTime
   , pbDurationMinutes  :: Maybe Int
   , pbNotes            :: Maybe Text
+  , pbEngineerPartyId  :: Maybe Int64
+  , pbEngineerName     :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON PublicBookingReq
+
+data PublicEngineerDTO = PublicEngineerDTO
+  { peId   :: Int64
+  , peName :: Text
+  } deriving (Show, Generic)
+instance ToJSON PublicEngineerDTO
 
 data AdsInquiry = AdsInquiry
   { aiName    :: Maybe Text

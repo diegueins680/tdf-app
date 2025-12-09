@@ -38,5 +38,7 @@ export const Bookings = {
     pbStartsAt: string;
     pbDurationMinutes?: number | null;
     pbNotes?: string | null;
+    pbEngineerPartyId?: number | null;
+    pbEngineerName?: string | null;
   }) => post<BookingDTO>('/bookings/public', body),
 };

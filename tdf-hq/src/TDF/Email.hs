@@ -203,6 +203,40 @@ sendMarketplaceOrderEmail (Just cfg) mBase name email orderId totalDisplay items
       mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just tracking)
   sendMailWithLogging cfg toAddr subject mail
 
+-- Notify engineers about newly assigned bookings.
+sendEngineerBookingEmail
+  :: Maybe EmailConfig
+  -> Maybe Text -- ^ optional app base URL
+  -> Text   -- ^ engineer name
+  -> Text   -- ^ engineer email
+  -> Text   -- ^ service type
+  -> Text   -- ^ starts at label
+  -> Maybe Text -- ^ customer name
+  -> Maybe Text -- ^ notes
+  -> IO ()
+sendEngineerBookingEmail Nothing _base _name _email _svc _start _customer _notes =
+  putStrLn "[Email] SMTP not configured; skipped engineer booking notification."
+sendEngineerBookingEmail (Just cfg) mBase name email serviceLabel startsAtLabel mCustomer mNotes = do
+  let subject   = "Nueva reserva asignada - " <> serviceLabel
+      preheader = "Tienes una sesión asignada. Revisa detalles y confirma disponibilidad."
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      baseUrl   = fromMaybe "https://tdf-app.pages.dev" mBase
+      sanitized =
+        let trimmed = T.dropWhileEnd (== '/') baseUrl
+        in if T.null trimmed then baseUrl else trimmed
+      calendarUrl = sanitized <> "/estudio/calendario"
+      bodyLines =
+        [ "Se creó una reserva que te asigna como ingeniero."
+        , "Servicio: " <> serviceLabel
+        , "Inicio: " <> startsAtLabel
+        , "Cliente: " <> fromMaybe "—" mCustomer
+        , "Notas: " <> fromMaybe "—" mNotes
+        , "Ver calendario: " <> calendarUrl
+        ]
+      toAddr = Address (Just name) email
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just calendarUrl)
+  sendMailWithLogging cfg toAddr subject mail
+
 -- Send a test/custom email for diagnostics.
 sendTestEmail
   :: Maybe EmailConfig

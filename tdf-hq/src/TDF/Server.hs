@@ -246,6 +246,7 @@ server =
   :<|> contractsServer
   :<|> socialEventsServer
   :<|> radioPresencePublicServer
+  :<|> listEngineersPublic
   :<|> bookingPublicServer
   :<|> protectedServer
 
@@ -410,6 +411,15 @@ radioPresencePublicServer partyId = do
         , rpStationId   = partyRadioPresenceStationId
         , rpUpdatedAt   = partyRadioPresenceUpdatedAt
         }
+
+listEngineersPublic :: AppM [PublicEngineerDTO]
+listEngineersPublic = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    engineerRoles <- selectList [PartyRoleRole ==. Engineer, PartyRoleActive ==. True] []
+    let partyIds = map (partyRolePartyId . entityVal) engineerRoles
+    parties <- selectList [PartyId <-. partyIds] [Asc PartyDisplayName]
+    pure [PublicEngineerDTO (fromSqlKey pid) (partyDisplayName p) | Entity pid p <- parties]
 
 whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM
 whatsappWebhookServer =
@@ -2458,6 +2468,8 @@ courseCalendarBookings cfg =
            , status             = "Confirmed"
            , notes              = Just ("Curso " <> slug <> " · USD " <> T.pack (show (round price :: Int)))
            , partyId            = Nothing
+           , engineerPartyId    = Nothing
+           , engineerName       = Nothing
            , serviceType        = Just "Curso Producción Musical"
            , serviceOrderId     = Nothing
            , serviceOrderTitle  = Nothing
@@ -2477,6 +2489,11 @@ createPublicBooking PublicBookingReq{..} = do
   when (T.null (T.strip pbEmail)) (throwBadRequest "email requerido")
   let serviceTypeClean = normalizeOptionalInput (Just pbServiceType)
   when (isNothing serviceTypeClean) (throwBadRequest "serviceType requerido")
+  let engineerIdClean  = pbEngineerPartyId >>= (\i -> if i > 0 then Just i else Nothing)
+      engineerNameClean = normalizeOptionalInput pbEngineerName
+  when (requiresEngineer serviceTypeClean) $
+    when (isNothing engineerIdClean && isNothing engineerNameClean) $
+      throwBadRequest "Selecciona un ingeniero para grabación/mezcla/mastering"
   let durationMins = max 30 (fromMaybe 60 pbDurationMinutes)
       endsAt       = addUTCTime (fromIntegral durationMins * 60) pbStartsAt
       notesClean   = normalizeOptionalInput pbNotes
@@ -2484,12 +2501,20 @@ createPublicBooking PublicBookingReq{..} = do
   Env pool _ <- ask
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean [] pbStartsAt endsAt
+  mEngineerParty <- case engineerIdClean of
+    Nothing -> pure Nothing
+    Just pid -> liftIO $ flip runSqlPool pool $ get (toSqlKey (fromIntegral pid) :: Key Party)
+  let resolvedEngineerName =
+        engineerNameClean
+          <|> (M.partyDisplayName <$> mEngineerParty)
   now <- liftIO getCurrentTime
   let bookingRecord = Booking
         { bookingTitle          = buildTitle serviceTypeClean pbFullName
         , bookingServiceOrderId = Nothing
         , bookingPartyId        = Just partyId
         , bookingServiceType    = serviceTypeClean
+        , bookingEngineerPartyId = engineerIdClean >>= (Just . toSqlKey . fromIntegral)
+        , bookingEngineerName    = resolvedEngineerName
         , bookingStartsAt       = pbStartsAt
         , bookingEndsAt         = endsAt
         , bookingStatus         = Tentative
@@ -2516,6 +2541,8 @@ createPublicBooking PublicBookingReq{..} = do
           , status             = T.pack (show (bookingStatus bookingRecord))
           , notes              = bookingNotes bookingRecord
           , partyId            = Just (fromSqlKey partyId)
+          , engineerPartyId    = fmap fromSqlKey (bookingEngineerPartyId bookingRecord)
+          , engineerName       = bookingEngineerName bookingRecord
           , serviceType        = bookingServiceType bookingRecord
           , serviceOrderId     = Nothing
           , serviceOrderTitle  = Nothing
@@ -2529,6 +2556,7 @@ createPublicBooking PublicBookingReq{..} = do
           , courseLocation     = Nothing
           }
     pure (headDef fallback dtos)
+  notifyEngineerIfNeeded dto
   pure dto
   where
     headDef defVal xs =
@@ -2546,17 +2574,30 @@ createBooking user req = do
 
   let status'          = parseStatusWithDefault Confirmed (cbStatus req)
       serviceTypeClean = normalizeOptionalInput (cbServiceType req)
+      engineerIdClean  = cbEngineerPartyId req >>= (\i -> if i > 0 then Just i else Nothing)
+      engineerNameClean = normalizeOptionalInput (cbEngineerName req)
       partyKey         = fmap (toSqlKey . fromIntegral) (cbPartyId req)
       requestedRooms   = fromMaybe [] (cbResourceIds req)
+  when (requiresEngineer serviceTypeClean) $
+    when (isNothing engineerIdClean && isNothing engineerNameClean) $
+      throwBadRequest "Selecciona un ingeniero para grabación/mezcla/mastering"
 
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean requestedRooms (cbStartsAt req) (cbEndsAt req)
+  mEngineerParty <- case engineerIdClean of
+    Nothing -> pure Nothing
+    Just pid -> liftIO $ flip runSqlPool pool $ get (toSqlKey (fromIntegral pid) :: Key Party)
+  let resolvedEngineerName =
+        engineerNameClean
+          <|> (M.partyDisplayName <$> mEngineerParty)
 
   let bookingRecord = Booking
         { bookingTitle          = cbTitle req
         , bookingServiceOrderId = Nothing
         , bookingPartyId        = partyKey
         , bookingServiceType    = serviceTypeClean
+        , bookingEngineerPartyId = engineerIdClean >>= (Just . toSqlKey . fromIntegral)
+        , bookingEngineerName    = resolvedEngineerName
         , bookingStartsAt       = cbStartsAt req
         , bookingEndsAt         = cbEndsAt req
         , bookingStatus         = status'
@@ -2584,6 +2625,8 @@ createBooking user req = do
           , status      = T.pack (show (bookingStatus bookingRecord))
           , notes       = bookingNotes bookingRecord
           , partyId     = fmap fromSqlKey partyKey
+          , engineerPartyId = fmap fromSqlKey (bookingEngineerPartyId bookingRecord)
+          , engineerName = bookingEngineerName bookingRecord
           , serviceType = bookingServiceType bookingRecord
           , serviceOrderId = Nothing
           , serviceOrderTitle = Nothing
@@ -2597,6 +2640,7 @@ createBooking user req = do
           , courseLocation = Nothing
           }
     pure (headDef fallback dtos)
+  notifyEngineerIfNeeded dto
   pure dto
   where
     headDef defVal xs =
@@ -2627,7 +2671,11 @@ updateBooking user bookingIdI req = do
               , bookingStatus      = maybe (bookingStatus current) (parseStatusWithDefault (bookingStatus current)) (ubStatus req)
               , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
               , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
+              , bookingEngineerPartyId = maybe (bookingEngineerPartyId current) (fmap (toSqlKey . fromIntegral)) (ubEngineerPartyId req)
+              , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
               }
+        when (requiresEngineer (bookingServiceType updated) && isNothing (bookingEngineerPartyId updated) && isNothing (bookingEngineerName updated)) $
+          throwBadRequest "Selecciona un ingeniero para grabación/mezcla/mastering"
         replace bookingId updated
         dtos <- buildBookingDTOs [Entity bookingId updated]
         pure (listToMaybe dtos)
@@ -2687,6 +2735,8 @@ buildBookingDTOs bookings = do
         , status      = T.pack (show (bookingStatus b))
         , notes       = bookingNotes b
         , partyId     = fmap fromSqlKey (bookingPartyId b)
+        , engineerPartyId = fmap fromSqlKey (bookingEngineerPartyId b)
+        , engineerName    = bookingEngineerName b
         , serviceType = bookingServiceType b
         , serviceOrderId    = fmap fromSqlKey (bookingServiceOrderId b)
         , serviceOrderTitle = serviceOrderTitleText <|> fallbackOrderTitle
@@ -2727,6 +2777,40 @@ parseStatusWithDefault fallback raw =
   in case readMaybe (T.unpack cleaned) of
        Just s  -> s
        Nothing -> fallback
+
+requiresEngineer :: Maybe Text -> Bool
+requiresEngineer Nothing = False
+requiresEngineer (Just svc) =
+  let lowered = T.toLower (T.strip svc)
+  in any (`T.isInfixOf` lowered) ["graba", "mezcl", "master"]
+
+notifyEngineerIfNeeded :: BookingDTO -> AppM ()
+notifyEngineerIfNeeded BookingDTO{engineerPartyId = Nothing, engineerName = Nothing} = pure ()
+notifyEngineerIfNeeded booking = do
+  Env pool cfg <- ask
+  mEngineer <- liftIO $ flip runSqlPool pool $ case engineerPartyId booking of
+    Just pid -> get (toSqlKey (fromIntegral pid) :: Key Party)
+    Nothing  -> pure Nothing
+  let displayName = engineerName booking
+        <|> (partyDisplayName <$> mEngineer)
+      emailAddr = mEngineer >>= partyPrimaryEmail
+  case emailAddr of
+    Nothing -> pure ()
+    Just engineerEmail -> do
+      let name = fromMaybe engineerEmail displayName
+          emailSvc = EmailSvc.mkEmailService cfg
+          subjectSvc = fromMaybe "Reserva" (serviceType booking)
+          startTxt = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" (startsAt booking))
+          customer = customerName booking <|> partyDisplayName booking
+      liftIO $
+        EmailSvc.sendEngineerBooking
+          emailSvc
+          name
+          engineerEmail
+          subjectSvc
+          startTxt
+          customer
+          (notes booking)
 
 resolveResourcesForBooking :: Maybe Text -> [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
 resolveResourcesForBooking service requested start end = do

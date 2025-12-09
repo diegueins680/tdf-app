@@ -342,6 +342,8 @@ Booking
     serviceOrderId   ServiceOrderId Maybe
     partyId          PartyId Maybe
     serviceType      Text Maybe
+    engineerPartyId  PartyId Maybe
+    engineerName     Text Maybe
     startsAt         UTCTime
     endsAt           UTCTime
     status           BookingStatus

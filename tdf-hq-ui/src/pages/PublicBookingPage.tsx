@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -8,6 +9,7 @@ import {
   Divider,
   Chip,
   Checkbox,
+  CircularProgress,
   Grid,
   MenuItem,
   Stack,
@@ -20,6 +22,7 @@ import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import PersonIcon from '@mui/icons-material/Person';
 import { Bookings } from '../api/bookings';
 import type { BookingDTO } from '../api/types';
+import { Engineers, type PublicEngineer } from '../api/engineers';
 import { loadServiceTypes } from '../utils/serviceTypesStore';
 import { useSession } from '../session/SessionContext';
 
@@ -31,6 +34,8 @@ interface FormState {
   startsAt: string;
   durationMinutes: number;
   notes: string;
+  engineerId: number | null;
+  engineerName: string;
 }
 
 const toLocalInputValue = (date: Date) => {
@@ -66,12 +71,16 @@ export default function PublicBookingPage() {
       startsAt: toLocalInputValue(start),
       durationMinutes: 60,
       notes: '',
+      engineerId: null,
+      engineerName: '',
     };
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<BookingDTO | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
+  const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
+  const [engineersLoading, setEngineersLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -115,6 +124,14 @@ export default function PublicBookingPage() {
     window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(payload));
   }, [rememberProfile, form.fullName, form.email, form.phone, form.serviceType]);
 
+  useEffect(() => {
+    setEngineersLoading(true);
+    Engineers.listPublic()
+      .then(setEngineers)
+      .catch(() => setEngineers([]))
+      .finally(() => setEngineersLoading(false));
+  }, []);
+
   const handleSubmit = async (evt: React.FormEvent) => {
     evt.preventDefault();
     setError(null);
@@ -143,6 +160,10 @@ export default function PublicBookingPage() {
       setError('Elige un horario al menos 15 minutos en el futuro.');
       return;
     }
+    if (requiresEngineer(form.serviceType) && !form.engineerId && !form.engineerName.trim()) {
+      setError('Selecciona un ingeniero para grabación/mezcla/mastering.');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -155,6 +176,8 @@ export default function PublicBookingPage() {
         pbStartsAt: startsAtIso,
         pbDurationMinutes: Math.max(30, Number(form.durationMinutes) || 60),
         pbNotes: form.notes.trim() || null,
+        pbEngineerPartyId: form.engineerId,
+        pbEngineerName: form.engineerName.trim() || null,
       });
       setSuccess(dto);
     } catch (err) {
@@ -187,6 +210,11 @@ export default function PublicBookingPage() {
       minute: '2-digit',
     });
   }, [form.startsAt]);
+
+  const requiresEngineer = (service: string) => {
+    const lowered = service.toLowerCase();
+    return lowered.includes('graba') || lowered.includes('mezcl') || lowered.includes('master');
+  };
 
   const clearSavedProfile = () => {
     setRememberProfile(false);
@@ -396,6 +424,50 @@ export default function PublicBookingPage() {
                         </Stack>
                       </Stack>
                     </Grid>
+                    {requiresEngineer(form.serviceType) && (
+                      <Grid item xs={12}>
+                        <Autocomplete
+                          options={engineers}
+                          getOptionLabel={(opt) => opt.peName}
+                          loading={engineersLoading}
+                          value={
+                            engineers.find((opt) => opt.peId === form.engineerId) ??
+                            (form.engineerName
+                              ? { peId: -1, peName: form.engineerName }
+                              : null)
+                          }
+                          onChange={(_evt, value) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              engineerId: value?.peId ?? null,
+                              engineerName: value?.peName ?? '',
+                            }))
+                          }
+                          inputValue={form.engineerName}
+                          onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, engineerName: value }))}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Ingeniero asignado"
+                              placeholder="Elige quién llevará la sesión"
+                              required
+                              InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                  <>
+                                    {engineersLoading ? <CircularProgress size={16} /> : null}
+                                    {params.InputProps.endAdornment}
+                                  </>
+                                ),
+                              }}
+                            />
+                          )}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          Requerido para grabación, mezcla o mastering. Si no encuentras a tu ingeniero, escríbenos en notas.
+                        </Typography>
+                      </Grid>
+                    )}
                     <Grid item xs={12}>
                       <TextField
                         label="Notas para el equipo"
@@ -476,6 +548,18 @@ export default function PublicBookingPage() {
                                 variant="outlined"
                               />
                               <Chip label={`Zona: ${localTimezoneLabel()}`} size="small" variant="outlined" />
+                              {requiresEngineer(form.serviceType) && (
+                                <Chip
+                                  label={
+                                    form.engineerName.trim()
+                                      ? `Ingeniero: ${form.engineerName}`
+                                      : 'Selecciona ingeniero'
+                                  }
+                                  size="small"
+                                  color={form.engineerName.trim() ? 'primary' : 'default'}
+                                  variant="outlined"
+                                />
+                              )}
                             </Stack>
                             <Divider sx={{ my: 1 }} />
                             <Typography variant="body2" color="text.secondary">
