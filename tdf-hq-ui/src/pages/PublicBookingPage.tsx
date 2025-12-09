@@ -188,6 +188,16 @@ export default function PublicBookingPage() {
     });
   }, [form.startsAt]);
 
+  const clearSavedProfile = () => {
+    setRememberProfile(false);
+    setForm((prev) => ({
+      ...prev,
+      fullName: '',
+      email: '',
+      phone: '',
+    }));
+  };
+
   return (
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
       <Card
@@ -407,6 +417,14 @@ export default function PublicBookingPage() {
                         <Typography variant="body2" color="text.secondary">
                           Recordar mis datos en este navegador para la próxima vez.
                         </Typography>
+                        <Button
+                          size="small"
+                          variant="text"
+                          onClick={clearSavedProfile}
+                          sx={{ ml: 'auto' }}
+                        >
+                          Limpiar datos guardados
+                        </Button>
                       </Stack>
                     </Grid>
                     {error && (
