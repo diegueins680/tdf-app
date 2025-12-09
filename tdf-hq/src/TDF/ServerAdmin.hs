@@ -62,7 +62,7 @@ import           TDF.Auth               ( AuthedUser
                                         )
 import           TDF.DB                 (Env(..))
 import           TDF.Models
-import           TDF.ModelsExtra (DropdownOption(..), CourseRegistration(..))
+import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
@@ -71,12 +71,8 @@ import qualified TDF.Services           as Services
 import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         , upsertArtistProfileRecord
                                         )
-import           TDF.Routes.Courses     ( CourseRegistrationStatusUpdate(..)
-                                        , CourseRegistrationResponse(..)
-                                        )
 import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), addLog, getRecentLogs, clearLogs )
 import           TDF.DTO                ( LogEntryDTO(..) )
-import           TDF.DTO                ( CourseRegistrationDTO(..) )
 import           System.IO              (hPutStrLn, stderr)
 
 adminServer
@@ -94,7 +90,6 @@ adminServer user =
   :<|> artistsRouter
   :<|> logsRouter
   :<|> emailTestHandler
-  :<|> courseRegistrationsRouter
   where
     seedHandler = do
       ensureModule ModuleAdmin user
@@ -154,28 +149,6 @@ adminServer user =
           liftIO $ addLog LogInfo msg
           liftIO $ hPutStrLn stderr (T.unpack msg)
           pure EmailTestResponse { status = "sent", message = Nothing }
-
-    courseRegistrationsRouter =
-      listCourseRegistrations :<|> getRegistration :<|> updateRegistrationStatus
-
-    listCourseRegistrations mSlug mStatus mLimit = do
-      ensureModule ModuleAdmin user
-      let filters =
-            maybe [] (\slugTxt -> [ME.CourseRegistrationCourseSlug ==. normaliseCategory slugTxt]) mSlug
-            ++ maybe [] (\statusTxt -> [ME.CourseRegistrationStatus ==. normalizeStatusText statusTxt]) mStatus
-          limitN = fromMaybe 200 mLimit
-      entities <- withPool $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo limitN]
-      pure (map toCourseRegistrationDTO entities)
-
-    getRegistration slug regId = do
-      ensureModule ModuleAdmin user
-      let key = toSqlKey regId :: Key ME.CourseRegistration
-          slugKey = normaliseCategory slug
-      mReg <- withPool $ getEntity key
-      case mReg of
-        Nothing -> throwError err404
-        Just (Entity _ reg) | ME.courseRegistrationCourseSlug reg /= slugKey -> throwError err404
-        Just ent -> pure (toCourseRegistrationDTO ent)
 
     roleDetail role = RoleDetailDTO
       { role    = role
@@ -242,28 +215,6 @@ adminServer user =
             ]
           entity <- withPool $ getJustEntity releaseKey
           pure (artistReleaseEntityToDTOAdmin entity)
-
-    updateRegistrationStatus slug regId CourseRegistrationStatusUpdate{..} = do
-      ensureModule ModuleAdmin user
-      let normalizedSlug = T.toLower (T.strip slug)
-      normalizedStatus <- normaliseStatus status
-      let regKey = toSqlKey regId :: Key CourseRegistration
-      now <- liftIO getCurrentTime
-      entity <- withPool $ get regKey
-      reg <- maybe (throwError err404) pure entity
-      when (ME.courseRegistrationCourseSlug reg /= normalizedSlug) $
-        throwError err404
-      withPool $ update regKey
-        [ ME.CourseRegistrationStatus =. normalizedStatus
-        , ME.CourseRegistrationUpdatedAt =. now
-        ]
-      pure CourseRegistrationResponse { id = regId, status = normalizedStatus }
-
-    normaliseStatus raw =
-      let trimmed = T.toLower (T.strip raw)
-      in if trimmed `elem` ["pending_payment", "paid", "cancelled"]
-           then pure trimmed
-           else throwError err400 { errBody = "Estado inválido; usa pending_payment, paid o cancelled" }
 
     listOptions rawCategory mIncludeInactive = do
       ensureModule ModuleAdmin user
@@ -595,21 +546,3 @@ levelToText :: LogLevel -> Text
 levelToText LogInfo = "info"
 levelToText LogWarning = "warning"
 levelToText LogError = "error"
-
-toCourseRegistrationDTO :: Entity ME.CourseRegistration -> CourseRegistrationDTO
-toCourseRegistrationDTO (Entity regId reg) = CourseRegistrationDTO
-  { crId          = fromSqlKey regId
-  , crCourseSlug  = ME.courseRegistrationCourseSlug reg
-  , crFullName    = ME.courseRegistrationFullName reg
-  , crEmail       = ME.courseRegistrationEmail reg
-  , crPhoneE164   = ME.courseRegistrationPhoneE164 reg
-  , crSource      = ME.courseRegistrationSource reg
-  , crStatus      = ME.courseRegistrationStatus reg
-  , crHowHeard    = ME.courseRegistrationHowHeard reg
-  , crUtmSource   = ME.courseRegistrationUtmSource reg
-  , crUtmMedium   = ME.courseRegistrationUtmMedium reg
-  , crUtmCampaign = ME.courseRegistrationUtmCampaign reg
-  , crUtmContent  = ME.courseRegistrationUtmContent reg
-  , crCreatedAt   = ME.courseRegistrationCreatedAt reg
-  , crUpdatedAt   = ME.courseRegistrationUpdatedAt reg
-  }

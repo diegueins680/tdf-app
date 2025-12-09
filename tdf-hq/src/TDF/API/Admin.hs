@@ -17,8 +17,6 @@ import           TDF.API.Types ( DropdownOptionCreate
                                 )
 import           Data.Aeson (FromJSON, ToJSON)
 import           GHC.Generics (Generic)
-import           TDF.Routes.Courses (CoursesAdminAPI)
-
 import           Data.Int      (Int64)
 import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert, LogEntryDTO)
 
@@ -59,7 +57,6 @@ type AdminAPI =
   :<|> "artists" :> ArtistAdminAPI
   :<|> "logs" :> LogsAPI
   :<|> "email-test" :> ReqBody '[JSON] EmailTestRequest :> Post '[JSON] EmailTestResponse
-  :<|> CoursesAdminAPI
 
 data EmailTestRequest = EmailTestRequest
   { etrEmail   :: Text
