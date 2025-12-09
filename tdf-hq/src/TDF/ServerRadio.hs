@@ -92,11 +92,15 @@ radioServer user =
 
     importStreams :: RadioImportRequest -> m RadioImportResult
     importStreams RadioImportRequest{..} = do
-      let sources = fromMaybe defaultSources rirSources
-          cap     = max 1 (min 2000 (fromMaybe 800 rirLimit))
+      let rawSources = fromMaybe defaultSources rirSources
+          cleanedSources =
+            case filter (not . T.null) (map (T.strip . canonicalSource) rawSources) of
+              [] -> defaultSources
+              xs -> xs
+          cap = max 1 (min 2000 (fromMaybe 800 rirLimit))
       manager <- liftIO $ newManager tlsManagerSettings
       fetched <- liftIO $ fmap concat $
-        forM sources $ \src -> do
+        forM cleanedSources $ \src -> do
           res <- try (fetchSource manager src)
           case res of
             Left (_ :: SomeException) -> pure []
@@ -105,7 +109,8 @@ radioServer user =
             take cap
               . Map.elems
               . foldl' (\m item -> Map.insertWith (const id) (T.toLower (rsuStreamUrl item)) item m) Map.empty
-              $ fetched
+              . filter (isStreamUrl . rsuStreamUrl)
+              $ map normalizeUpsert fetched
       now <- liftIO getCurrentTime
       Env{..} <- ask
       (inserted, updated) <- liftIO $ flip runSqlPool envPool $ do
@@ -117,7 +122,7 @@ radioServer user =
         { rirProcessed = length deduped
         , rirInserted  = inserted
         , rirUpdated   = updated
-        , rirSources   = sources
+        , rirSources   = cleanedSources
         }
 
     refreshMetadata :: RadioMetadataRefreshRequest -> m RadioMetadataRefreshResult
@@ -214,6 +219,14 @@ radioServer user =
       case fmap T.strip mTxt of
         Just txt | not (T.null txt) -> Just txt
         _                           -> Nothing
+
+    normalizeUpsert :: RadioStreamUpsert -> RadioStreamUpsert
+    normalizeUpsert u =
+      u { rsuStreamUrl = T.strip (rsuStreamUrl u)
+        , rsuName      = normalizeMaybe (rsuName u)
+        , rsuCountry   = normalizeMaybe (rsuCountry u)
+        , rsuGenre     = normalizeMaybe (rsuGenre u)
+        }
 
     defaultSources :: [Text]
     defaultSources =
