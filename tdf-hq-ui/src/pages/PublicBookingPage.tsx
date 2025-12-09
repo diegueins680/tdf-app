@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Autocomplete,
+  type AutocompleteValue,
   Box,
   Button,
   Card,
@@ -81,6 +82,7 @@ export default function PublicBookingPage() {
   const [rememberProfile, setRememberProfile] = useState(false);
   const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
   const [engineersLoading, setEngineersLoading] = useState(false);
+  const [engineersError, setEngineersError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -127,8 +129,14 @@ export default function PublicBookingPage() {
   useEffect(() => {
     setEngineersLoading(true);
     Engineers.listPublic()
-      .then(setEngineers)
-      .catch(() => setEngineers([]))
+      .then((list) => {
+        setEngineers(list);
+        setEngineersError(null);
+      })
+      .catch(() => {
+        setEngineers([]);
+        setEngineersError('No pudimos cargar la lista de ingenieros. Ingresa el nombre manualmente.');
+      })
       .finally(() => setEngineersLoading(false));
   }, []);
 
@@ -215,6 +223,10 @@ export default function PublicBookingPage() {
     const lowered = service.toLowerCase();
     return lowered.includes('graba') || lowered.includes('mezcl') || lowered.includes('master');
   };
+
+  const engineerValue =
+    (engineers.find((opt) => opt.peId === form.engineerId) as PublicEngineer | undefined) ??
+    (form.engineerName ? { peId: -1, peName: form.engineerName } : null);
 
   const clearSavedProfile = () => {
     setRememberProfile(false);
@@ -426,23 +438,21 @@ export default function PublicBookingPage() {
                     </Grid>
                     {requiresEngineer(form.serviceType) && (
                       <Grid item xs={12}>
-                        <Autocomplete
+                        <Autocomplete<string | PublicEngineer, false, false, true>
                           options={engineers}
-                          getOptionLabel={(opt) => opt.peName}
+                          getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
                           loading={engineersLoading}
-                          value={
-                            engineers.find((opt) => opt.peId === form.engineerId) ??
-                            (form.engineerName
-                              ? { peId: -1, peName: form.engineerName }
-                              : null)
-                          }
-                          onChange={(_evt, value) =>
-                            setForm((prev) => ({
-                              ...prev,
-                              engineerId: value?.peId ?? null,
-                              engineerName: value?.peName ?? '',
-                            }))
-                          }
+                          freeSolo
+                          value={engineerValue}
+                          onChange={(_evt, value) => {
+                            if (!value) {
+                              setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
+                              return;
+                            }
+                            const id = typeof value === 'string' ? null : value.peId;
+                            const name = typeof value === 'string' ? value : value.peName;
+                            setForm((prev) => ({ ...prev, engineerId: id, engineerName: name }));
+                          }}
                           inputValue={form.engineerName}
                           onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, engineerName: value }))}
                           renderInput={(params) => (
@@ -460,6 +470,7 @@ export default function PublicBookingPage() {
                                   </>
                                 ),
                               }}
+                              helperText={engineersError ?? 'Selecciona o escribe el ingeniero asignado.'}
                             />
                           )}
                         />
