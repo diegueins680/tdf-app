@@ -47,6 +47,7 @@ const toLocalInputValue = (date: Date) => {
 };
 
 const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
+const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 
 const localTimezoneLabel = () => {
   if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'tu zona horaria';
@@ -168,6 +169,13 @@ export default function PublicBookingPage() {
       setError('Elige un horario al menos 15 minutos en el futuro.');
       return;
     }
+    const proposedEnd = new Date(parsedStart.getTime() + Math.max(30, Number(form.durationMinutes) || 60) * 60 * 1000);
+    const startsBeforeOpen = parsedStart.getHours() < OPEN_HOURS.start;
+    const endsAfterClose = proposedEnd.getHours() >= OPEN_HOURS.end;
+    if (startsBeforeOpen || endsAfterClose) {
+      setError(`Nuestro horario es ${OPEN_HOURS.start}:00 - ${OPEN_HOURS.end}:00. Ajusta la hora o la duración.`);
+      return;
+    }
     if (requiresEngineer(form.serviceType) && !form.engineerId && !form.engineerName.trim()) {
       setError('Selecciona un ingeniero para grabación/mezcla/mastering.');
       return;
@@ -237,6 +245,18 @@ export default function PublicBookingPage() {
       phone: '',
     }));
   };
+
+  const outOfHours = useMemo(() => {
+    const dt = new Date(form.startsAt);
+    if (Number.isNaN(dt.getTime())) return null;
+    const end = new Date(dt.getTime() + Math.max(30, Number(form.durationMinutes) || 60) * 60 * 1000);
+    const startsBefore = dt.getHours() < OPEN_HOURS.start;
+    const endsAfter = end.getHours() >= OPEN_HOURS.end;
+    if (startsBefore || endsAfter) {
+      return `Horario operativo: ${OPEN_HOURS.start}:00 - ${OPEN_HOURS.end}:00 (${localTimezoneLabel()}). Te sugerimos mover la cita.`;
+    }
+    return null;
+  }, [form.durationMinutes, form.startsAt]);
 
   return (
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -410,6 +430,7 @@ export default function PublicBookingPage() {
                         fullWidth
                         InputLabelProps={{ shrink: true }}
                         required
+                        helperText={`Horario disponible: ${OPEN_HOURS.start}:00 - ${OPEN_HOURS.end}:00 (${localTimezoneLabel()})`}
                       />
                     </Grid>
                     <Grid item xs={12} sm={5}>
@@ -436,6 +457,11 @@ export default function PublicBookingPage() {
                         </Stack>
                       </Stack>
                     </Grid>
+                    {outOfHours && (
+                      <Grid item xs={12}>
+                        <Alert severity="warning">{outOfHours}</Alert>
+                      </Grid>
+                    )}
                     {requiresEngineer(form.serviceType) && (
                       <Grid item xs={12}>
                         <Autocomplete<string | PublicEngineer, false, false, true>

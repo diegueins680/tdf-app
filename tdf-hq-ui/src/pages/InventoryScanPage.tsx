@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Chip, Container, Stack, TextField, Typography } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,29 +11,32 @@ export default function InventoryScanPage() {
   const navigate = useNavigate();
   const [asset, setAsset] = useState<AssetDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const [checkoutForm, setCheckoutForm] = useState<AssetCheckoutRequest>({ coTargetKind: 'party' });
   const [checkinForm, setCheckinForm] = useState<AssetCheckinRequest>({});
 
-  useEffect(() => {
-    const load = async () => {
-      if (!token) return;
-      try {
-        const data = await Inventory.byQrToken(token);
-        setAsset(data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'No pudimos cargar el equipo.');
-      }
-    };
-    void load();
+  const loadAsset = useCallback(async () => {
+    if (!token) return;
+    try {
+      const data = await Inventory.byQrToken(token);
+      setAsset(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No pudimos cargar el equipo.');
+    }
   }, [token]);
+
+  useEffect(() => {
+    void loadAsset();
+  }, [loadAsset]);
 
   const checkoutMutation = useMutation({
     mutationFn: () =>
       asset ? Inventory.checkout(asset.assetId, checkoutForm) : Promise.reject(new Error('No asset')),
-    onSuccess: () => {
+    onSuccess: async () => {
       void qc.invalidateQueries({ queryKey: ['assets'] });
-      navigate('/operacion/inventario');
+      await loadAsset();
+      setFeedback('Equipo marcado como check-out.');
     },
     onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-out.'),
   });
@@ -41,9 +44,10 @@ export default function InventoryScanPage() {
   const checkinMutation = useMutation({
     mutationFn: () =>
       asset ? Inventory.checkin(asset.assetId, checkinForm) : Promise.reject(new Error('No asset')),
-    onSuccess: () => {
+    onSuccess: async () => {
       void qc.invalidateQueries({ queryKey: ['assets'] });
-      navigate('/operacion/inventario');
+      await loadAsset();
+      setFeedback('Equipo marcado como devuelto.');
     },
     onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-in.'),
   });
@@ -57,6 +61,11 @@ export default function InventoryScanPage() {
       <Container maxWidth="sm">
         <Stack spacing={2}>
           <Typography variant="h5" fontWeight={800}>Escaneo de equipo</Typography>
+          {feedback && (
+            <Alert severity="success" onClose={() => setFeedback(null)}>
+              {feedback}
+            </Alert>
+          )}
           {error && <Alert severity="error">{error}</Alert>}
           {asset ? (
             <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -93,6 +102,9 @@ export default function InventoryScanPage() {
                       <Button variant="contained" sx={{ mt: 2 }} onClick={() => checkinMutation.mutate()} disabled={checkinMutation.isPending}>
                         {checkinMutation.isPending ? 'Registrando…' : 'Check-in'}
                       </Button>
+                      <Button variant="text" sx={{ mt: 1 }} onClick={() => void loadAsset()} disabled={checkinMutation.isPending}>
+                        Refrescar estado
+                      </Button>
                     </>
                   ) : (
                     <>
@@ -116,8 +128,14 @@ export default function InventoryScanPage() {
                       <Button variant="contained" sx={{ mt: 2 }} onClick={() => checkoutMutation.mutate()} disabled={checkoutMutation.isPending}>
                         {checkoutMutation.isPending ? 'Registrando…' : 'Check-out'}
                       </Button>
+                      <Button variant="text" sx={{ mt: 1 }} onClick={() => void loadAsset()} disabled={checkoutMutation.isPending}>
+                        Refrescar estado
+                      </Button>
                     </>
                   )}
+                  <Button variant="outlined" sx={{ mt: 2 }} onClick={() => navigate('/reservar')}>
+                    Escanear otro / agendar
+                  </Button>
                 </Stack>
               </CardContent>
             </Card>

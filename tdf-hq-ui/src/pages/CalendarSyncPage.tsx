@@ -259,7 +259,7 @@ export default function CalendarSyncPage() {
 
   const handleSync = () => {
     setShowValidation(true);
-    if (!trimmedCalendarId || rangeError || (fromInput && !fromIso) || (toInput && !toIso)) return;
+    if (!trimmedCalendarId || !connectedCalendar || rangeError || (fromInput && !fromIso) || (toInput && !toIso)) return;
     syncMutation.mutate();
   };
 
@@ -319,19 +319,9 @@ export default function CalendarSyncPage() {
           <Typography variant="h5" fontWeight={800}>
             Integración Google Calendar
           </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-            <Alert severity="info" variant="outlined" sx={{ flexGrow: 1 }}>
-              {`Última sync: ${lastSyncSummary}`}
-            </Alert>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => syncMutation.mutate()}
-              disabled={syncMutation.isPending || !trimmedCalendarId || Boolean(rangeError)}
-            >
-              {syncMutation.isPending ? 'Sincronizando…' : 'Sync ahora'}
-            </Button>
-          </Stack>
+          <Alert severity="info" variant="outlined">
+            {`Última sync: ${lastSyncSummary}`}
+          </Alert>
           <Typography color="text.secondary">
             Conecta tu calendario y sincroniza eventos a la base de datos para usarlos en reportes, agenda interna y
             posteriores automatizaciones. Usa los pasos: 1) conectar con Google, 2) pegar el code, 3) guardar tokens, 4) sincronizar.
@@ -355,14 +345,6 @@ export default function CalendarSyncPage() {
             />
             <Button size="small" onClick={handleDisconnect} variant="outlined" color="inherit">
               Desconectar y limpiar
-            </Button>
-          </Stack>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Chip label="Este mes" onClick={() => applyRangePreset('thisMonth')} variant="outlined" />
-            <Chip label="Próximos 30 días" onClick={() => applyRangePreset('next30')} variant="outlined" />
-            <Chip label="Últimos 30 días" onClick={() => applyRangePreset('last30')} variant="outlined" />
-            <Button size="small" onClick={clearRange}>
-              Limpiar rango
             </Button>
           </Stack>
           {configQuery.isError && (
@@ -524,23 +506,25 @@ export default function CalendarSyncPage() {
                     color="secondary"
                     startIcon={<SyncIcon />}
                     onClick={handleSync}
-                    disabled={!trimmedCalendarId || syncMutation.isPending || Boolean(rangeError)}
+                    disabled={
+                      !trimmedCalendarId ||
+                      !connectedCalendar ||
+                      syncMutation.isPending ||
+                      Boolean(rangeError) ||
+                      (fromInput && !fromIso) ||
+                      (toInput && !toIso)
+                    }
                   >
                     Sincronizar ahora
                   </Button>
                   <Typography variant="caption" color="text.secondary">
                     Última sync: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Sin sincronizar'}
                   </Typography>
-                  {syncMutation.isError && <Alert severity="error">La sincronización falló.</Alert>}
-                  {syncMutation.isSuccess && (
-                    <Alert severity="success">
-                      Sync OK: {syncMutation.data.updated} actualizados, {syncMutation.data.created} creados, {syncMutation.data.deleted} cancelados.
-                    </Alert>
-                  )}
                 </Stack>
               </Paper>
             </Grid>
           </Grid>
+          <Divider />
           {exchangeMutation.isError && (
             <Alert severity="error">No se pudo intercambiar el code. Revisa el client_id/secret y el redirect.</Alert>
           )}
@@ -551,31 +535,6 @@ export default function CalendarSyncPage() {
               Sync OK: {syncMutation.data.updated} actualizados, {syncMutation.data.created} creados, {syncMutation.data.deleted} cancelados.
             </Alert>
           )}
-          <Divider />
-          <Stack spacing={1}>
-            <Typography variant="h6" fontWeight={700}>
-              Rango a sincronizar (opcional)
-            </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap">
-              <Button size="small" variant="outlined" onClick={() => applyRangePreset('next30')}>
-                Próximos 30 días
-              </Button>
-              <Button size="small" variant="outlined" onClick={() => applyRangePreset('last30')}>
-                Últimos 30 días
-              </Button>
-              <Button size="small" variant="outlined" onClick={() => applyRangePreset('thisMonth')}>
-                Mes en curso
-              </Button>
-              <Button size="small" onClick={clearRange}>
-                Sin filtro
-              </Button>
-            </Stack>
-            {rangeError && <Alert severity="warning">{rangeError}</Alert>}
-            <Typography variant="body2" color="text.secondary">
-              Las fechas usan tu zona local ({zone}) y se guardan en UTC. Deja ambos campos vacíos para sincronizar todos los
-              eventos disponibles.
-            </Typography>
-          </Stack>
         </Stack>
       </Paper>
 

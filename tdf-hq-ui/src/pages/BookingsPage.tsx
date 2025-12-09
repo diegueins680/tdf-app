@@ -843,7 +843,14 @@ export default function BookingsPage() {
       </Dialog>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Nueva sesión en el calendario</DialogTitle>
+        <DialogTitle>
+          {mode === 'edit' ? 'Editar sesión' : 'Nueva sesión en el calendario'}
+          {startInput && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+              {formatEventRange(new Date(startInput), endInput ? new Date(endInput) : null)}
+            </Typography>
+          )}
+        </DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} component="form" onSubmit={handleCreate}>
             {formError && <Alert severity="error">{formError}</Alert>}
@@ -974,7 +981,8 @@ export default function BookingsPage() {
             />
             {conflicts.length > 0 && (
               <Alert severity="warning" variant="outlined">
-                Hay {conflicts.length} bloque(s) que se cruzan con este horario. Revisa disponibilidad antes de guardar.
+                Conflicto con {conflicts.length} reserva(s):{' '}
+                {conflicts.slice(0, 3).map((c) => c.title ?? 'reserva').join(', ')}. Ajusta horario o salas.
               </Alert>
             )}
             <Autocomplete
@@ -1095,10 +1103,9 @@ export default function BookingsPage() {
               noOptionsText="No hay salas registradas"
             />
             {conflicts.length > 0 && (
-              <Alert severity="warning" variant="outlined">
-                Conflicto con {conflicts.length} reserva(s):{' '}
-                {conflicts.slice(0, 3).map((c) => c.title ?? 'reserva').join(', ')}. Ajusta horario o salas.
-              </Alert>
+              <Typography variant="caption" color="warning.main">
+                Revisa las reservas que se cruzan antes de guardar.
+              </Typography>
             )}
             {autoAssignMessage && (
               <Typography variant="caption" color="primary">
