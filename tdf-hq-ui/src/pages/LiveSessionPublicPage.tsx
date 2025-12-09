@@ -23,6 +23,12 @@ export default function LiveSessionPublicPage() {
   }, [tokenFromQuery]);
 
   useEffect(() => {
+    if (tokenFromQuery && codeStatus === 'idle') {
+      void validateAccessCode();
+    }
+  }, [codeStatus, tokenFromQuery]);
+
+  useEffect(() => {
     const code = accessCode.trim();
     if (!code || codeStatus !== 'valid') return;
     if (!session) {
@@ -40,15 +46,30 @@ export default function LiveSessionPublicPage() {
     }
   }, [accessCode, codeStatus, session, login, setApiToken]);
 
-  const validateAccessCode = () => {
+  const validateAccessCode = async () => {
     const code = accessCode.trim();
     if (!code) {
       setValidationMessage('Ingresa un código válido.');
       setCodeStatus('invalid');
       return;
     }
+    setCodeStatus('validating');
     setValidationMessage(null);
-    setCodeStatus('valid');
+    try {
+      const base = (import.meta.env.VITE_API_BASE as string | undefined) ?? '';
+      if (base) {
+        const res = await fetch(`${base}/live-sessions/intake/ping`, {
+          headers: { Authorization: `Bearer ${code}` },
+        });
+        if (!res.ok) {
+          throw new Error('invalid');
+        }
+      }
+      setCodeStatus('valid');
+    } catch {
+      setCodeStatus('invalid');
+      setValidationMessage('Código inválido o expirado. Solicita uno nuevo.');
+    }
   };
 
   return (
@@ -122,7 +143,11 @@ export default function LiveSessionPublicPage() {
                     onClick={validateAccessCode}
                     disabled={codeStatus === 'validating'}
                   >
-                    {codeStatus === 'valid' ? 'Código validado' : 'Validar código'}
+                    {codeStatus === 'validating'
+                      ? 'Validando…'
+                      : codeStatus === 'valid'
+                        ? 'Código validado'
+                        : 'Validar código'}
                   </Button>
                   <Button
                     variant="outlined"
