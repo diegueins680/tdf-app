@@ -2803,7 +2803,7 @@ notifyEngineerIfNeeded booking = do
           subjectSvc = fromMaybe "Reserva" (DTO.serviceType booking)
           startTxt = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" (DTO.startsAt booking))
           customer = DTO.customerName booking <|> DTO.partyDisplayName booking
-          noteText = DTO.notes (booking :: DTO.BookingDTO)
+          noteText = case booking of DTO.BookingDTO{notes = ns} -> ns
       liftIO $
         EmailSvc.sendEngineerBooking
           emailSvc
