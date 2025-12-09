@@ -511,8 +511,8 @@ export default function CalendarSyncPage() {
                       !connectedCalendar ||
                       syncMutation.isPending ||
                       Boolean(rangeError) ||
-                      (fromInput && !fromIso) ||
-                      (toInput && !toIso)
+                      (Boolean(fromInput) && !fromIso) ||
+                      (Boolean(toInput) && !toIso)
                     }
                   >
                     Sincronizar ahora
