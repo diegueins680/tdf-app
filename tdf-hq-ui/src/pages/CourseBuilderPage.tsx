@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
   Alert,
@@ -68,8 +68,16 @@ const generateSlug = (title: string, startDate: string | null) => {
   return [titleSlug, monthSlug, year].filter(Boolean).join('-');
 };
 
+const PUBLIC_BASE =
+  (import.meta.env['VITE_PUBLIC_BASE'] as string | undefined)?.replace(/\/+$/, '') ??
+  (typeof window !== 'undefined' && window.location.origin
+    ? window.location.origin.replace(/\/+$/, '')
+    : 'https://tdf-app.pages.dev');
+const COURSE_PATH_BASE =
+  (import.meta.env['VITE_PUBLIC_COURSE_BASE'] as string | undefined)?.replace(/\/+$/, '') ??
+  `${PUBLIC_BASE}/curso`;
+
 const DEFAULT_TITLE = 'Curso de Producción Musical';
-const DEFAULT_LANDING_BASE = 'https://tdf-app.pages.dev/curso';
 const DEFAULT_SLUG = generateSlug(DEFAULT_TITLE, DEFAULT_SESSIONS[0]?.date ?? null);
 
 export default function CourseBuilderPage() {
@@ -85,7 +93,8 @@ export default function CourseBuilderPage() {
   const [locationLabel, setLocationLabel] = useState('TDF Records – Quito');
   const [locationMapUrl, setLocationMapUrl] = useState('https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6');
   const [whatsappCtaUrl, setWhatsappCtaUrl] = useState('https://wa.me/593995413168?text=Quiero%20inscribirme%20al%20curso');
-  const [landingUrl, setLandingUrl] = useState(`${DEFAULT_LANDING_BASE}/${DEFAULT_SLUG}`);
+  const landingFor = useCallback((s: string) => `${COURSE_PATH_BASE}/${s}`, []);
+  const [landingUrl, setLandingUrl] = useState(landingFor(DEFAULT_SLUG));
   const [landingUrlTouched, setLandingUrlTouched] = useState(false);
   const [includes, setIncludes] = useState('Acceso a grabaciones\nCertificado de participación\nMentorías\nGrupo de WhatsApp\nAcceso a la plataforma de TDF Records');
   const [daws, setDaws] = useState('Logic\nLuna');
@@ -97,13 +106,17 @@ export default function CourseBuilderPage() {
 
   useEffect(() => {
     if (!landingUrlTouched) {
-      setLandingUrl(`${DEFAULT_LANDING_BASE}/${slug}`);
+      setLandingUrl(landingFor(slug));
     }
-  }, [slug, landingUrlTouched]);
+  }, [slug, landingUrlTouched, landingFor]);
 
   const handleLandingUrlChange = (value: string) => {
     setLandingUrl(value);
     setLandingUrlTouched(true);
+  };
+  const handleResetLanding = () => {
+    setLandingUrl(landingFor(slug));
+    setLandingUrlTouched(false);
   };
 
   const createMutation = useMutation({
@@ -175,6 +188,7 @@ export default function CourseBuilderPage() {
   };
 
   const payloadPreview = JSON.stringify(buildPayload(), null, 2);
+  const canResetLanding = landingUrlTouched && landingUrl !== landingFor(slug);
 
   return (
     <Stack spacing={3}>
@@ -204,13 +218,30 @@ export default function CourseBuilderPage() {
       <Card variant="outlined">
         <CardContent>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Slug (auto)"
+                fullWidth
+                value={slug}
+                InputProps={{ readOnly: true }}
+                helperText="Se genera con el título y la fecha de inicio."
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
               <TextField
                 label="Landing URL"
                 fullWidth
                 value={landingUrl}
                 onChange={(e) => handleLandingUrlChange(e.target.value)}
+                helperText={canResetLanding ? 'Editaste la URL; puedes restablecer la sugerida.' : undefined}
               />
+              {canResetLanding && (
+                <Box sx={{ mt: 0.5 }}>
+                  <Button size="small" onClick={handleResetLanding}>
+                    Restablecer URL sugerida
+                  </Button>
+                </Box>
+              )}
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField label="Título" fullWidth value={title} onChange={(e) => setTitle(e.target.value)} />

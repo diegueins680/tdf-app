@@ -13,6 +13,10 @@ import {
   LinearProgress,
   MenuItem,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Stack,
   TextField,
   Typography,
@@ -78,6 +82,7 @@ export default function CmsAdminPage() {
   const [minVersionFilter, setMinVersionFilter] = useState<number | null>(null);
   const [loadingLiveOnDemand, setLoadingLiveOnDemand] = useState(false);
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
+  const [pendingVersion, setPendingVersion] = useState<CmsContentDTO | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -169,6 +174,15 @@ export default function CmsAdminPage() {
   const liveVersion = liveContent?.ccdVersion ?? null;
   const draftBehindLive =
     editingVersion !== null && liveVersion !== null ? editingVersion < liveVersion : false;
+  const pendingPayloadPreview = useMemo(
+    () => (pendingVersion ? JSON.stringify(pendingVersion.ccdPayload ?? {}, null, 2) : ''),
+    [pendingVersion],
+  );
+  const livePayloadPreview = useMemo(
+    () => JSON.stringify(liveContent?.ccdPayload ?? {}, null, 2),
+    [liveContent],
+  );
+  const pendingEqualsLive = pendingVersion ? pendingPayloadPreview === livePayloadPreview : false;
 
   const handleCreate = () => {
     let parsed: unknown = null;
@@ -189,19 +203,7 @@ export default function CmsAdminPage() {
     setEditingFromId(null);
   };
 
-  const handleLoadLive = () => {
-    if (!liveContent) return;
-    setTitle(liveContent.ccdTitle ?? '');
-    setStatus((liveContent.ccdStatus as 'draft' | 'published') ?? 'draft');
-    setEditingFromId(liveContent.ccdId);
-    try {
-      setPayload(JSON.stringify(liveContent.ccdPayload ?? {}, null, 2));
-    } catch {
-      setPayload('{}');
-    }
-  };
-
-  const handleLoadVersion = (v: CmsContentDTO) => {
+  const loadVersionIntoForm = (v: CmsContentDTO) => {
     setSlugFilter(v.ccdSlug);
     setLocaleFilter(v.ccdLocale);
     setTitle(v.ccdTitle ?? '');
@@ -212,6 +214,21 @@ export default function CmsAdminPage() {
     } catch {
       setPayload('{}');
     }
+  };
+
+  const handleLoadLive = () => {
+    if (!liveContent) return;
+    loadVersionIntoForm(liveContent);
+  };
+
+  const handleLoadVersion = (v: CmsContentDTO) => {
+    setPendingVersion(v);
+  };
+
+  const handleConfirmLoadVersion = () => {
+    if (!pendingVersion) return;
+    loadVersionIntoForm(pendingVersion);
+    setPendingVersion(null);
   };
 
   const handleFormatPayload = () => {
@@ -258,6 +275,89 @@ export default function CmsAdminPage() {
 
   return (
     <Stack spacing={3}>
+      <Dialog
+        open={Boolean(pendingVersion)}
+        onClose={() => setPendingVersion(null)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Cargar versión en el formulario</DialogTitle>
+        <DialogContent dividers>
+          {pendingVersion && (
+            <Stack spacing={1.5}>
+              <Typography fontWeight={700}>{pendingVersion.ccdTitle ?? pendingVersion.ccdSlug}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                v{pendingVersion.ccdVersion} · {pendingVersion.ccdStatus} · {pendingVersion.ccdLocale} ·{' '}
+                {pendingVersion.ccdPublishedAt
+                  ? `publicado ${new Date(pendingVersion.ccdPublishedAt).toLocaleString()}`
+                  : `última edición ${new Date(pendingVersion.ccdUpdatedAt).toLocaleString()}`}
+              </Typography>
+              <Typography variant="body2">
+                Live actual:{' '}
+                {liveContent
+                  ? `v${liveContent.ccdVersion} (${liveContent.ccdStatus} · ${liveContent.ccdLocale})`
+                  : 'no hay versión publicada'}
+              </Typography>
+              <Typography variant="body2" color={pendingEqualsLive ? 'text.secondary' : 'warning.main'}>
+                {pendingEqualsLive
+                  ? 'El payload coincide con la versión en vivo.'
+                  : 'Revisa los payloads antes de sobrescribir el editor.'}
+              </Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Payload de la versión seleccionada
+                  </Typography>
+                  <Box
+                    component="pre"
+                    sx={{
+                      mt: 0.5,
+                      p: 1,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      bgcolor: 'rgba(148,163,184,0.04)',
+                      fontSize: 12,
+                      maxHeight: 260,
+                      overflow: 'auto',
+                    }}
+                  >
+                    {pendingPayloadPreview || '{}'}
+                  </Box>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Payload en vivo
+                  </Typography>
+                  <Box
+                    component="pre"
+                    sx={{
+                      mt: 0.5,
+                      p: 1,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      bgcolor: 'rgba(148,163,184,0.04)',
+                      fontSize: 12,
+                      maxHeight: 260,
+                      overflow: 'auto',
+                    }}
+                  >
+                    {livePayloadPreview || '{}'}
+                  </Box>
+                </Box>
+              </Stack>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingVersion(null)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleConfirmLoadVersion} disabled={!pendingVersion}>
+            Cargar en formulario
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems="flex-start">
         <Box>
           <Typography variant="overline" color="text.secondary">CMS</Typography>

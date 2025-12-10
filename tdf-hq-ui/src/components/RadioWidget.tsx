@@ -36,6 +36,8 @@ import StarBorderIcon from '@mui/icons-material/StarBorder';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import Slider from '@mui/material/Slider';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import BoltIcon from '@mui/icons-material/Bolt';
 import ShareIcon from '@mui/icons-material/Share';
@@ -189,6 +191,7 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 
 export default function RadioWidget() {
   const navigate = useNavigate();
+  const LAST_AUDIO_INPUT_KEY = 'radio-last-audio-input';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
   const [dragging, setDragging] = useState(false);
@@ -259,11 +262,29 @@ export default function RadioWidget() {
   const [broadcastLoading, setBroadcastLoading] = useState(false);
   const [broadcastError, setBroadcastError] = useState<string | null>(null);
   const [broadcastForm, setBroadcastForm] = useState({ name: '', genre: '', country: '' });
+  const [inputLevel, setInputLevel] = useState(0);
+  const meterRafRef = useRef<number | null>(null);
+  const meterContextRef = useRef<AudioContext | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
-  const [selectedAudioInput, setSelectedAudioInput] = useState<string>('');
+  const [selectedAudioInput, setSelectedAudioInput] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      return window.localStorage.getItem(LAST_AUDIO_INPUT_KEY) ?? '';
+    } catch {
+      return '';
+    }
+  });
   const [browserBroadcastState, setBrowserBroadcastState] = useState<'idle' | 'starting' | 'live'>('idle');
   const [browserBroadcastError, setBrowserBroadcastError] = useState<string | null>(null);
   const browserBroadcastRef = useRef<{ pc: RTCPeerConnection; stream: MediaStream } | null>(null);
+  const [inputTestLevel, setInputTestLevel] = useState<number | null>(null);
+  const [inputTestActive, setInputTestActive] = useState(false);
+  const inputTestStreamRef = useRef<MediaStream | null>(null);
+  const inputTestFrameRef = useRef<number | null>(null);
+  const inputTestAudioCtxRef = useRef<AudioContext | null>(null);
   const controlFadeSx = {
     opacity: 0.65,
     transition: 'opacity 0.2s ease',
@@ -302,9 +323,20 @@ export default function RadioWidget() {
   );
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [activeId, setActiveId] = useState<string>(defaultStation.id);
+  const [activeId, setActiveId] = useState<string>(() => {
+    if (typeof window === 'undefined') return defaultStation.id;
+    const stored = window.localStorage.getItem('radio-active-id');
+    return stored || defaultStation.id;
+  });
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0.8;
+    const raw = window.localStorage.getItem('radio-volume');
+    const parsed = raw ? Number(raw) : NaN;
+    if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 1) return parsed;
+    return 0.8;
+  });
   const [playbackWarning, setPlaybackWarning] = useState<string | null>(null);
   const [promptDraft, setPromptDraft] = useState('');
   const promptInputRef = useRef<HTMLInputElement | null>(null);
@@ -337,19 +369,33 @@ export default function RadioWidget() {
       // ignore
     }
   }, [pinned]);
+  const meterLevel = inputTestActive && inputTestLevel !== null ? inputTestLevel : inputLevel;
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = muted ? 0 : volume;
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem('radio-volume', volume.toString());
+      } catch {
+        // ignore
+      }
+    }
+  }, [muted, volume]);
 
   const refreshAudioInputs = useCallback(async () => {
     if (!mediaDevicesSupported || !navigator.mediaDevices?.enumerateDevices) return;
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
+      if (!devices) return;
       const inputs = devices.filter((d) => d.kind === 'audioinput');
       setBrowserBroadcastError(null);
       setAudioInputs(inputs);
-      if (!selectedAudioInput && inputs.length > 0) {
-        const firstInput = inputs[0];
-        if (firstInput) {
-          setSelectedAudioInput(firstInput.deviceId);
-        }
+      const exists = inputs.find((d) => d.deviceId === selectedAudioInput);
+      if (exists) return;
+      const firstInput = inputs[0];
+      if (firstInput) {
+        setSelectedAudioInput(firstInput.deviceId);
       }
     } catch {
       setBrowserBroadcastError('No pudimos leer tus entradas de audio. Revisa permisos del navegador.');
@@ -359,6 +405,28 @@ export default function RadioWidget() {
   useEffect(() => {
     void refreshAudioInputs();
   }, [refreshAudioInputs]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = window.localStorage.getItem(LAST_AUDIO_INPUT_KEY);
+      if (stored && !selectedAudioInput) {
+        setSelectedAudioInput(stored);
+      }
+    } catch {
+      // ignore
+    }
+  }, [LAST_AUDIO_INPUT_KEY, selectedAudioInput]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!selectedAudioInput) return;
+    try {
+      window.localStorage.setItem(LAST_AUDIO_INPUT_KEY, selectedAudioInput);
+    } catch {
+      // ignore
+    }
+  }, [LAST_AUDIO_INPUT_KEY, selectedAudioInput]);
 
   useEffect(() => {
     if (!mediaDevicesSupported || !navigator.mediaDevices?.addEventListener) return;
@@ -516,6 +584,14 @@ export default function RadioWidget() {
     },
     [keyFor],
   );
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-active-id', activeId);
+    } catch {
+      // ignore
+    }
+  }, [activeId]);
   const hideStation = useCallback(
     (station: Station) => {
       const key = keyFor(station);
@@ -1015,6 +1091,103 @@ export default function RadioWidget() {
     });
   }, []);
 
+  const stopLevelMonitor = useCallback(() => {
+    if (meterRafRef.current) {
+      cancelAnimationFrame(meterRafRef.current);
+      meterRafRef.current = null;
+    }
+    if (meterContextRef.current) {
+      meterContextRef.current.close().catch(() => undefined);
+      meterContextRef.current = null;
+    }
+    setInputLevel(0);
+  }, []);
+
+  const stopInputTest = useCallback(() => {
+    if (inputTestFrameRef.current) {
+      cancelAnimationFrame(inputTestFrameRef.current);
+      inputTestFrameRef.current = null;
+    }
+    inputTestStreamRef.current?.getTracks().forEach((t) => t.stop());
+    inputTestStreamRef.current = null;
+    if (inputTestAudioCtxRef.current) {
+      inputTestAudioCtxRef.current.close().catch(() => undefined);
+      inputTestAudioCtxRef.current = null;
+    }
+    setInputTestLevel(null);
+    setInputTestActive(false);
+  }, []);
+
+  const startInputTest = useCallback(async () => {
+    if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) {
+      setBrowserBroadcastError('Tu navegador no permite capturar audio.');
+      return;
+    }
+    try {
+      setInputTestActive(true);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { deviceId: selectedAudioInput || undefined },
+      });
+      inputTestStreamRef.current = stream;
+      const AudioCtor = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtor) {
+        setInputTestLevel(null);
+        return;
+      }
+      const ctx = new AudioCtor();
+      inputTestAudioCtxRef.current = ctx;
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      const data = new Uint8Array(analyser.fftSize);
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      const tick = () => {
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i += 1) {
+          const v = data[i] - 128;
+          sum += v * v;
+        }
+        const rms = Math.min(1, Math.sqrt(sum / data.length) / 128);
+        setInputTestLevel(rms);
+        inputTestFrameRef.current = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudo acceder al micrófono.';
+      setBrowserBroadcastError(msg);
+      stopInputTest();
+    }
+  }, [mediaDevicesSupported, selectedAudioInput, stopInputTest]);
+
+  useEffect(() => () => stopInputTest(), [stopInputTest]);
+
+  const startLevelMonitor = useCallback(
+    (stream: MediaStream) => {
+      stopLevelMonitor();
+      if (typeof AudioContext === 'undefined') return;
+      const ctx = new AudioContext();
+      meterContextRef.current = ctx;
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      const data = new Uint8Array(analyser.fftSize);
+      source.connect(analyser);
+      const tick = () => {
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i += 1) {
+          const v = data[i] - 128;
+          sum += v * v;
+        }
+        const rms = Math.min(1, Math.sqrt(sum / data.length) / 128);
+        setInputLevel(rms);
+        meterRafRef.current = requestAnimationFrame(tick);
+      };
+      tick();
+    },
+    [stopLevelMonitor],
+  );
+
   const stopBrowserBroadcast = useCallback(() => {
     const current = browserBroadcastRef.current;
     if (current) {
@@ -1024,13 +1197,15 @@ export default function RadioWidget() {
     }
     browserBroadcastRef.current = null;
     setBrowserBroadcastState('idle');
-  }, []);
+    stopLevelMonitor();
+  }, [stopLevelMonitor]);
 
   const startBrowserBroadcast = useCallback(async () => {
     if (browserBroadcastState === 'live') {
       stopBrowserBroadcast();
       return;
     }
+    stopInputTest();
     setBrowserBroadcastError(null);
     setBrowserBroadcastState('starting');
     try {
@@ -1044,6 +1219,7 @@ export default function RadioWidget() {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { deviceId: selectedAudioInput || undefined },
       });
+      startLevelMonitor(stream);
       const pc = new RTCPeerConnection({
         iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
       });
@@ -1089,9 +1265,30 @@ export default function RadioWidget() {
     createBroadcast,
     mediaDevicesSupported,
     selectedAudioInput,
+    startLevelMonitor,
     stopBrowserBroadcast,
     waitForIceGathering,
   ]);
+
+  const handlePreviewPlay = useCallback(async () => {
+    if (!broadcastInfo?.rtiStreamUrl) return;
+    setPreviewError(null);
+    setPreviewLoading(true);
+    try {
+      const audio = previewAudioRef.current ?? new Audio();
+      audio.crossOrigin = 'anonymous';
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = broadcastInfo.rtiStreamUrl;
+      previewAudioRef.current = audio;
+      await audio.play();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No pudimos reproducir el stream.';
+      setPreviewError(msg);
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, [broadcastInfo?.rtiStreamUrl]);
   const persistActiveStream = useCallback(
     async (url: string, name?: string, country?: string, genre?: string) => {
       try {
@@ -1617,24 +1814,67 @@ export default function RadioWidget() {
                                   ))
                                 )}
                               </TextField>
-                              <Button
-                                variant={browserBroadcastState === 'live' ? 'outlined' : 'contained'}
-                                color={browserBroadcastState === 'live' ? 'error' : 'primary'}
-                                onClick={() => {
-                                  void startBrowserBroadcast();
-                                }}
-                                disabled={
-                                  !mediaDevicesSupported || browserBroadcastState === 'starting' || broadcastLoading
-                                }
-                                startIcon={<FiberManualRecordIcon color="error" fontSize="small" />}
-                              >
-                                {browserBroadcastState === 'live'
-                                  ? 'Detener transmisión'
-                                  : browserBroadcastState === 'starting'
-                                    ? 'Conectando…'
-                                    : 'Ir en vivo aquí'}
-                              </Button>
+                              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
+                                <Button
+                                  variant={browserBroadcastState === 'live' ? 'outlined' : 'contained'}
+                                  color={browserBroadcastState === 'live' ? 'error' : 'primary'}
+                                  onClick={() => {
+                                    void startBrowserBroadcast();
+                                  }}
+                                  disabled={
+                                    !mediaDevicesSupported || browserBroadcastState === 'starting' || broadcastLoading
+                                  }
+                                  startIcon={<FiberManualRecordIcon color="error" fontSize="small" />}
+                                >
+                                  {browserBroadcastState === 'live'
+                                    ? 'Detener transmisión'
+                                    : browserBroadcastState === 'starting'
+                                      ? 'Conectando…'
+                                      : 'Ir en vivo aquí'}
+                                </Button>
+                                <Button
+                                  variant={inputTestActive ? 'outlined' : 'text'}
+                                  onClick={() => {
+                                    if (inputTestActive) {
+                                      stopInputTest();
+                                    } else {
+                                      void startInputTest();
+                                    }
+                                  }}
+                                  disabled={!mediaDevicesSupported || browserBroadcastState === 'starting'}
+                                >
+                                  {inputTestActive ? 'Detener prueba' : 'Probar entrada'}
+                                </Button>
+                              </Stack>
                             </Stack>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="caption" color="text.secondary">
+                                Nivel de entrada
+                              </Typography>
+                              <Box
+                                sx={{
+                                  flex: 1,
+                                  height: 8,
+                                  bgcolor: 'rgba(148,163,184,0.16)',
+                                  borderRadius: 1,
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    width: `${Math.round(Math.min(1, meterLevel || 0) * 100)}%`,
+                                    height: '100%',
+                                    bgcolor:
+                                      meterLevel && meterLevel > 0.7
+                                        ? 'error.main'
+                                        : meterLevel && meterLevel > 0.4
+                                          ? 'warning.main'
+                                          : 'success.main',
+                                    transition: 'width 120ms linear',
+                                  }}
+                                />
+                              </Box>
+                            </Box>
                             {browserBroadcastState === 'live' && (
                               <Chip label="En vivo desde este navegador" size="small" color="success" />
                             )}
@@ -1755,6 +1995,22 @@ export default function RadioWidget() {
                               <Typography variant="caption" color="text.secondary">
                                 Para evitar software externo, pulsa “Ir en vivo aquí” (usa el WHIP automáticamente). Si prefieres OBS/Larix, coloca Ingest + Stream Key, o usa el enlace WHIP con clientes WebRTC. Comparte el URL público o agrégalo como estación personalizada.
                               </Typography>
+                              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  startIcon={<PlayArrowIcon />}
+                                  onClick={() => void handlePreviewPlay()}
+                                  disabled={!broadcastInfo?.rtiStreamUrl || previewLoading}
+                                >
+                                  {previewLoading ? 'Reproduciendo…' : 'Probar reproducción'}
+                                </Button>
+                                {previewError && (
+                                  <Typography variant="caption" color="error">
+                                    {previewError}
+                                  </Typography>
+                                )}
+                              </Stack>
                             </Stack>
                           )}
                         </Stack>
