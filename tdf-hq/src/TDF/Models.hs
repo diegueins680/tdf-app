@@ -306,6 +306,8 @@ ServiceCatalog
     pricingModel     PricingModel
     defaultRateCents Int Maybe
     taxBps           Int Maybe
+    currency         Text default='USD'
+    billingUnit      Text Maybe
     active           Bool
     deriving Show Generic
 ServiceOrder

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings } from '../api/bookings';
-import type { BookingDTO, PartyCreate, PartyDTO } from '../api/types';
+import type { BookingDTO, PartyCreate, PartyDTO, ServiceCatalogDTO } from '../api/types';
 import {
   Typography,
   Paper,
@@ -26,10 +26,11 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DateTime } from 'luxon';
-import { loadServiceTypes } from '../utils/serviceTypesStore';
+import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
 import { Parties } from '../api/parties';
+import { Services } from '../api/services';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -47,6 +48,11 @@ export default function BookingsPage() {
   const partiesQuery = useQuery<PartyDTO[]>({
     queryKey: ['parties', 'all'],
     queryFn: () => Parties.list(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const serviceCatalogQuery = useQuery<ServiceCatalogDTO[]>({
+    queryKey: ['service-catalog', 'internal'],
+    queryFn: () => Services.list(),
     staleTime: 5 * 60 * 1000,
   });
   const qc = useQueryClient();
@@ -172,7 +178,10 @@ export default function BookingsPage() {
   const [createContactOpen, setCreateContactOpen] = useState(false);
   const [createContactForm, setCreateContactForm] = useState({ name: '', email: '', phone: '' });
   const [createContactError, setCreateContactError] = useState<string | null>(null);
-  const serviceTypes = useMemo(() => loadServiceTypes(), []);
+  const serviceTypes = useMemo<ServiceType[]>(
+    () => mergeServiceTypes(serviceCatalogQuery.data, { sort: false }),
+    [serviceCatalogQuery.data],
+  );
   const [prefillHandled, setPrefillHandled] = useState(false);
   const [prefillNotice, setPrefillNotice] = useState(false);
   const [autoAssignMessage, setAutoAssignMessage] = useState('');
@@ -183,6 +192,15 @@ export default function BookingsPage() {
   const [durationManuallyAdjusted, setDurationManuallyAdjusted] = useState(false);
   const [roomsManuallyAdjusted, setRoomsManuallyAdjusted] = useState(false);
   const defaultServiceName = serviceTypes[0]?.name ?? '';
+  const formatServiceLabel = useCallback(
+    (svc: ServiceType) => {
+      if (svc.priceCents == null) return svc.name;
+      const price = (svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      const unit = svc.billingUnit ? ` / ${svc.billingUnit}` : '';
+      return `${svc.name} — ${svc.currency} ${price}${unit}`;
+    },
+    [],
+  );
   const conflicts = useMemo(() => {
     if (!startInput || !endInput) return [];
     const start = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
@@ -1110,8 +1128,7 @@ const openDialogForRange = (start: Date, end: Date) => {
               <MenuItem value="">(Sin asignar)</MenuItem>
               {serviceTypes.map((svc) => (
                 <MenuItem key={svc.id} value={svc.name}>
-                  {svc.name} — {svc.currency} {svc.price}
-                  {svc.billingUnit ? ` / ${svc.billingUnit}` : ''}
+                  {formatServiceLabel(svc)}
                 </MenuItem>
               ))}
             </TextField>

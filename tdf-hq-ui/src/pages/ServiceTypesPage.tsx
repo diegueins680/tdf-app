@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -19,29 +19,84 @@ import {
   TableRow,
   TextField,
   Typography,
+  MenuItem,
+  FormControlLabel,
+  Checkbox,
+  Chip,
+  CircularProgress,
 } from '@mui/material';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { defaultServiceTypes, loadServiceTypes, saveServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
+import { Services } from '../api/services';
+import type {
+  PricingModel,
+  ServiceCatalogCreate,
+  ServiceCatalogDTO,
+  ServiceCatalogUpdate,
+  ServiceKind,
+} from '../api/types';
+import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 
 interface FormState {
   id?: string;
   name: string;
-  price: number | '';
+  price: string;
   currency: string;
   billingUnit: string;
+  kind: ServiceKind;
+  pricingModel: PricingModel;
+  taxBps: string;
+  active: boolean;
 }
 
+const SERVICE_KIND_OPTIONS: ServiceKind[] = ['Recording', 'Mixing', 'Mastering', 'Rehearsal', 'Classes', 'EventProduction'];
+const PRICING_MODEL_OPTIONS: PricingModel[] = ['Hourly', 'PerSong', 'Package', 'Quote', 'Retainer'];
+const SERVICE_QUERY_KEY = ['service-catalog', 'admin'];
+
+const formatPrice = (svc: ServiceType) => {
+  if (svc.priceCents == null) return '—';
+  const amount = svc.priceCents / 100;
+  return `${svc.currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+};
+
 export default function ServiceTypesPage() {
-  const [items, setItems] = useState<ServiceType[]>(defaultServiceTypes);
+  const qc = useQueryClient();
+  const servicesQuery = useQuery<ServiceCatalogDTO[]>({
+    queryKey: SERVICE_QUERY_KEY,
+    queryFn: () => Services.list(true),
+    staleTime: 5 * 60 * 1000,
+  });
+  const items = useMemo<ServiceType[]>(
+    () => mergeServiceTypes(servicesQuery.data, { includeInactive: true, sort: false }),
+    [servicesQuery.data],
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState<FormState>({ name: '', price: '', currency: 'USD', billingUnit: '' });
+  const [form, setForm] = useState<FormState>({
+    name: '',
+    price: '',
+    currency: 'USD',
+    billingUnit: '',
+    kind: 'Recording',
+    pricingModel: 'Hourly',
+    taxBps: '',
+    active: true,
+  });
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setItems(loadServiceTypes());
-  }, []);
+  const createMutation = useMutation({
+    mutationFn: (payload: ServiceCatalogCreate) => Services.create(payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: SERVICE_QUERY_KEY }),
+  });
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: ServiceCatalogUpdate }) => Services.update(id, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: SERVICE_QUERY_KEY }),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => Services.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: SERVICE_QUERY_KEY }),
+  });
 
   const sortedItems = useMemo(
     () => [...items].sort((a, b) => a.name.localeCompare(b.name)),
@@ -49,7 +104,16 @@ export default function ServiceTypesPage() {
   );
 
   const handleOpenNew = () => {
-    setForm({ name: '', price: '', currency: 'USD', billingUnit: '' });
+    setForm({
+      name: '',
+      price: '',
+      currency: 'USD',
+      billingUnit: '',
+      kind: 'Recording',
+      pricingModel: 'Hourly',
+      taxBps: '',
+      active: true,
+    });
     setError(null);
     setDialogOpen(true);
   };
@@ -58,43 +122,81 @@ export default function ServiceTypesPage() {
     setForm({
       id: item.id,
       name: item.name,
-      price: item.price,
+      price: item.priceCents != null ? String(item.priceCents / 100) : '',
       currency: item.currency,
       billingUnit: item.billingUnit ?? '',
+      kind: (item.kind as ServiceKind) ?? 'Recording',
+      pricingModel: (item.pricingModel as PricingModel) ?? 'Hourly',
+      taxBps: item.taxBps != null ? String(item.taxBps) : '',
+      active: item.active,
     });
     setError(null);
     setDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    const next = items.filter((it) => it.id !== id);
-    setItems(next);
-    saveServiceTypes(next);
+    if (!window.confirm('¿Desactivar este servicio del catálogo?')) return;
+    deleteMutation.mutate(id, {
+      onError: (err) =>
+        setError(err instanceof Error ? err.message : 'No se pudo desactivar el servicio.'),
+    });
   };
 
-  const handleSubmit = (evt: React.FormEvent) => {
+  const handleSubmit = async (evt: React.FormEvent) => {
     evt.preventDefault();
-    if (!form.name.trim()) {
+    const cleanName = form.name.trim();
+    if (!cleanName) {
       setError('Agrega un nombre.');
       return;
     }
-    if (form.price === '' || Number.isNaN(Number(form.price))) {
+    const priceNumber = form.price === '' ? null : Number(form.price);
+    if (form.price !== '' && (Number.isNaN(priceNumber) || priceNumber < 0)) {
       setError('Agrega un precio válido.');
       return;
     }
-    const entity: ServiceType = {
-      id: form.id ?? `svc-${Date.now()}`,
-      name: form.name.trim(),
-      price: Number(form.price),
-      currency: form.currency.trim() || 'USD',
-      billingUnit: form.billingUnit.trim() || undefined,
-    };
-    const exists = items.some((it) => it.id === entity.id);
-    const next = exists ? items.map((it) => (it.id === entity.id ? entity : it)) : [...items, entity];
-    setItems(next);
-    saveServiceTypes(next);
-    setDialogOpen(false);
+    const rateCents = priceNumber == null ? null : Math.round(priceNumber * 100);
+    const taxNumber = form.taxBps === '' ? null : Number(form.taxBps);
+    if (form.taxBps !== '' && (Number.isNaN(taxNumber) || taxNumber < 0)) {
+      setError('Impuesto inválido.');
+      return;
+    }
+    const currency = form.currency.trim() || 'USD';
+    const billingUnit = form.billingUnit.trim() || null;
+    setError(null);
+    try {
+      if (form.id) {
+        await updateMutation.mutateAsync({
+          id: form.id,
+          payload: {
+            scuName: cleanName,
+            scuKind: form.kind,
+            scuPricingModel: form.pricingModel,
+            scuRateCents: rateCents,
+            scuCurrency: currency,
+            scuBillingUnit: billingUnit,
+            scuTaxBps: taxNumber,
+            scuActive: form.active,
+          },
+        });
+      } else {
+        await createMutation.mutateAsync({
+          sccName: cleanName,
+          sccKind: form.kind,
+          sccPricingModel: form.pricingModel,
+          sccRateCents: rateCents,
+          sccCurrency: currency,
+          sccBillingUnit: billingUnit,
+          sccTaxBps: taxNumber,
+          sccActive: form.active,
+        });
+      }
+      setDialogOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el servicio.');
+    }
   };
+
+  const isLoading = servicesQuery.isLoading;
 
   return (
     <Box sx={{ color: '#e2e8f0' }}>
@@ -114,6 +216,11 @@ export default function ServiceTypesPage() {
 
       <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <CardContent>
+          {servicesQuery.isError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              No se pudo cargar el catálogo de servicios. Usando valores locales por ahora.
+            </Alert>
+          )}
           {sortedItems.length === 0 ? (
             <Alert severity="info">Aún no tienes servicios. Crea el primero.</Alert>
           ) : (
@@ -123,6 +230,9 @@ export default function ServiceTypesPage() {
                   <TableCell>Servicio</TableCell>
                   <TableCell>Precio</TableCell>
                   <TableCell>Unidad</TableCell>
+                  <TableCell>Tipo</TableCell>
+                  <TableCell>Modelo</TableCell>
+                  <TableCell>Estado</TableCell>
                   <TableCell align="right">Acciones</TableCell>
                 </TableRow>
               </TableHead>
@@ -130,10 +240,18 @@ export default function ServiceTypesPage() {
                 {sortedItems.map((item) => (
                   <TableRow key={item.id} hover>
                     <TableCell>{item.name}</TableCell>
-                    <TableCell>
-                      {item.currency} {item.price.toLocaleString(undefined, { minimumFractionDigits: 0 })}
-                    </TableCell>
+                    <TableCell>{formatPrice(item)}</TableCell>
                     <TableCell>{item.billingUnit ?? '—'}</TableCell>
+                    <TableCell>{item.kind ?? '—'}</TableCell>
+                    <TableCell>{item.pricingModel ?? '—'}</TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={item.active ? 'Activo' : 'Inactivo'}
+                        color={item.active ? 'success' : 'default'}
+                        variant={item.active ? 'filled' : 'outlined'}
+                      />
+                    </TableCell>
                     <TableCell align="right">
                       <IconButton size="small" onClick={() => handleEdit(item)}>
                         <EditIcon fontSize="small" />
@@ -146,6 +264,14 @@ export default function ServiceTypesPage() {
                 ))}
               </TableBody>
             </Table>
+          )}
+          {isLoading && (
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
+              <CircularProgress size={18} />
+              <Typography variant="body2" color="text.secondary">
+                Cargando servicios...
+              </Typography>
+            </Stack>
           )}
         </CardContent>
       </Card>
@@ -169,9 +295,8 @@ export default function ServiceTypesPage() {
                   label="Precio"
                   type="number"
                   value={form.price}
-                  onChange={(e) => setForm((prev) => ({ ...prev, price: Number(e.target.value) }))}
+                  onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
                   fullWidth
-                  required
                 />
               </Grid>
               <Grid item xs={6}>
@@ -191,6 +316,59 @@ export default function ServiceTypesPage() {
                   fullWidth
                 />
               </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  select
+                  label="Tipo"
+                  value={form.kind}
+                  onChange={(e) => setForm((prev) => ({ ...prev, kind: e.target.value as ServiceKind }))}
+                  fullWidth
+                >
+                  {SERVICE_KIND_OPTIONS.map((kind) => (
+                    <MenuItem key={kind} value={kind}>
+                      {kind}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  select
+                  label="Modelo de cobro"
+                  value={form.pricingModel}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, pricingModel: e.target.value as PricingModel }))
+                  }
+                  fullWidth
+                >
+                  {PRICING_MODEL_OPTIONS.map((model) => (
+                    <MenuItem key={model} value={model}>
+                      {model}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label="Impuesto (bps)"
+                  type="number"
+                  value={form.taxBps}
+                  onChange={(e) => setForm((prev) => ({ ...prev, taxBps: e.target.value }))}
+                  fullWidth
+                  helperText="Base points ej. 1200 = 12%"
+                />
+              </Grid>
+              <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center' }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={form.active}
+                      onChange={(e) => setForm((prev) => ({ ...prev, active: e.target.checked }))}
+                    />
+                  }
+                  label="Activo en cat&aacute;logo"
+                />
+              </Grid>
               {error && (
                 <Grid item xs={12}>
                   <Alert severity="error">{error}</Alert>
@@ -200,8 +378,8 @@ export default function ServiceTypesPage() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained">
-              Guardar
+            <Button type="submit" variant="contained" disabled={createMutation.isLoading || updateMutation.isLoading}>
+              {createMutation.isLoading || updateMutation.isLoading ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogActions>
         </form>

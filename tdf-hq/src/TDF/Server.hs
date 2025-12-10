@@ -74,7 +74,7 @@ import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceLi
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers (socialEventsServer)
-import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsServer, sessionsServer)
+import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
 import qualified Data.Map.Strict            as Map
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
@@ -252,6 +252,7 @@ server =
   :<|> contractsServer
   :<|> socialEventsServer
   :<|> radioPresencePublicServer
+  :<|> serviceCatalogPublicServer
   :<|> listEngineersPublic
   :<|> bookingPublicServer
   :<|> protectedServer
@@ -528,6 +529,7 @@ protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
        partyServer user
   :<|> bookingServer user
+  :<|> serviceCatalogServer user
   :<|> packageServer user
   :<|> invoiceServer user
   :<|> receiptServer user
@@ -934,9 +936,9 @@ calendarServer user =
 productionCourseSlug :: Text
 productionCourseSlug = "produccion-musical-dic-2025"
 productionCoursePrice :: Double
-productionCoursePrice = 150
+productionCoursePrice = 349
 productionCourseCapacity :: Int
-productionCourseCapacity = 10
+productionCourseCapacity = 16
 
 -- Backward-compatible helpers used by cron jobs
 buildLandingUrl :: AppConfig -> Text
@@ -948,24 +950,42 @@ courseMetadataFor cfg mWaContact slugVal =
     then Nothing
     else
       let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
+          sessions =
+            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2025 12 13)
+            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2025 12 20)
+            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2025 12 27)
+            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 1 3)
+            ]
+          syllabus =
+            [ SyllabusItem "Introducción a la producción musical" ["Conceptos básicos", "Herramientas esenciales"]
+            , SyllabusItem "Grabación y captura de audio" ["Técnicas de grabación", "Configuración de micrófonos"]
+            , SyllabusItem "Mezcla y edición" ["Ecualización y compresión", "Balance y panoramización"]
+            , SyllabusItem "Masterización y publicación" ["Mastering", "Distribución digital"]
+            ]
       in Just CourseMetadata
         { slug = productionCourseSlug
         , title = "Curso de Producción Musical"
-        , subtitle = "Presencial"
+        , subtitle = "Presencial · 4 sábados · 16 horas"
         , format = "Presencial"
-        , duration = "4 sábados"
+        , duration = "4 sábados · 16 horas"
         , price = productionCoursePrice
         , currency = "USD"
         , capacity = productionCourseCapacity
         , remaining = productionCourseCapacity
-        , sessionStartHour = 0
-        , sessionDurationHours = 0
-        , locationLabel = ""
-        , locationMapUrl = ""
-        , daws = []
-        , includes = []
-        , sessions = []
-        , syllabus = []
+        , sessionStartHour = 15
+        , sessionDurationHours = 4
+        , locationLabel = "TDF Records – Quito"
+        , locationMapUrl = "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6"
+        , daws = ["Logic", "Luna"]
+        , includes =
+            [ "Acceso a grabaciones"
+            , "Certificado de participación"
+            , "Mentorías"
+            , "Grupo de WhatsApp"
+            , "Acceso a la plataforma de TDF Records"
+            ]
+        , sessions = sessions
+        , syllabus = syllabus
         , whatsappCtaUrl = whatsappUrl
         , landingUrl = buildLandingUrl cfg
         }

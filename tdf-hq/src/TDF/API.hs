@@ -40,6 +40,7 @@ import           TDF.API.Feedback    (FeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
+import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
 import           TDF.Contracts.API (ContractsAPI)
 import           TDF.DTO (CountryDTO)
@@ -180,6 +181,7 @@ type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
 type ProtectedAPI =
        "parties"  :> PartyAPI
   :<|> "bookings" :> BookingAPI
+  :<|> ServiceCatalogAPI
   :<|> "packages" :> PackageAPI
   :<|> "invoices" :> InvoiceAPI
   :<|> "receipts" :> ReceiptAPI
@@ -228,6 +230,7 @@ type API =
   :<|> "contracts" :> ContractsAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> RadioPublicAPI
+  :<|> ServiceCatalogPublicAPI
   :<|> "engineers" :> Get '[JSON] [PublicEngineerDTO]
   :<|> BookingPublicAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI

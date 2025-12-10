@@ -18,7 +18,7 @@ import           GHC.Generics (Generic)
 import           Network.HTTP.Media ((//))
 import           Servant.API  (Accept(..), MimeUnrender(..), OctetStream, PlainText)
 
-import           TDF.Models   (RoleEnum)
+import           TDF.Models   (PricingModel, RoleEnum, ServiceKind)
 
 data Page a = Page
   { items    :: [a]
@@ -130,6 +130,49 @@ data UserRoleUpdatePayload = UserRoleUpdatePayload
 
 instance ToJSON UserRoleUpdatePayload
 instance FromJSON UserRoleUpdatePayload
+
+data ServiceCatalogDTO = ServiceCatalogDTO
+  { scId            :: Int64
+  , scName          :: Text
+  , scKind          :: ServiceKind
+  , scPricingModel  :: PricingModel
+  , scRateCents     :: Maybe Int
+  , scCurrency      :: Text
+  , scBillingUnit   :: Maybe Text
+  , scTaxBps        :: Maybe Int
+  , scActive        :: Bool
+  } deriving (Show, Generic)
+
+instance ToJSON ServiceCatalogDTO
+instance FromJSON ServiceCatalogDTO
+
+data ServiceCatalogCreate = ServiceCatalogCreate
+  { sccName         :: Text
+  , sccKind         :: Maybe ServiceKind
+  , sccPricingModel :: Maybe PricingModel
+  , sccRateCents    :: Maybe Int
+  , sccCurrency     :: Maybe Text
+  , sccBillingUnit  :: Maybe Text
+  , sccTaxBps       :: Maybe Int
+  , sccActive       :: Maybe Bool
+  } deriving (Show, Generic)
+
+instance ToJSON ServiceCatalogCreate
+instance FromJSON ServiceCatalogCreate
+
+data ServiceCatalogUpdate = ServiceCatalogUpdate
+  { scuName         :: Maybe Text
+  , scuKind         :: Maybe ServiceKind
+  , scuPricingModel :: Maybe PricingModel
+  , scuRateCents    :: Maybe (Maybe Int)
+  , scuCurrency     :: Maybe Text
+  , scuBillingUnit  :: Maybe (Maybe Text)
+  , scuTaxBps       :: Maybe (Maybe Int)
+  , scuActive       :: Maybe Bool
+  } deriving (Show, Generic)
+
+instance ToJSON ServiceCatalogUpdate
+instance FromJSON ServiceCatalogUpdate
 
 data BandOptionsDTO = BandOptionsDTO
   { roles  :: [DropdownOptionDTO]

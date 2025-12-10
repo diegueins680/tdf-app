@@ -236,6 +236,50 @@ export interface HealthStatus {
   version?: string | null;
 }
 
+export type ServiceKind =
+  | 'Recording'
+  | 'Mixing'
+  | 'Mastering'
+  | 'Rehearsal'
+  | 'Classes'
+  | 'EventProduction';
+
+export type PricingModel = 'Hourly' | 'PerSong' | 'Package' | 'Quote' | 'Retainer';
+
+export interface ServiceCatalogDTO {
+  scId: number;
+  scName: string;
+  scKind: ServiceKind;
+  scPricingModel: PricingModel;
+  scRateCents?: number | null;
+  scCurrency: string;
+  scBillingUnit?: string | null;
+  scTaxBps?: number | null;
+  scActive: boolean;
+}
+
+export interface ServiceCatalogCreate {
+  sccName: string;
+  sccKind?: ServiceKind | null;
+  sccPricingModel?: PricingModel | null;
+  sccRateCents?: number | null;
+  sccCurrency?: string | null;
+  sccBillingUnit?: string | null;
+  sccTaxBps?: number | null;
+  sccActive?: boolean | null;
+}
+
+export interface ServiceCatalogUpdate {
+  scuName?: string;
+  scuKind?: ServiceKind | null;
+  scuPricingModel?: PricingModel | null;
+  scuRateCents?: number | null;
+  scuCurrency?: string | null;
+  scuBillingUnit?: string | null;
+  scuTaxBps?: number | null;
+  scuActive?: boolean | null;
+}
+
 export interface RoomDTO {
   roomId: string;
   rName: string;

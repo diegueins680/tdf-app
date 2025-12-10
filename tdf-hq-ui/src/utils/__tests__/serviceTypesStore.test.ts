@@ -1,54 +1,67 @@
-import { defaultServiceTypes, loadServiceTypes, saveServiceTypes, type ServiceType } from '../serviceTypesStore';
+import { defaultServiceTypes, mapServiceCatalogDto, mergeServiceTypes } from '../serviceTypesStore';
+import type { ServiceCatalogDTO } from '../../api/types';
 
 describe('serviceTypesStore', () => {
-  beforeEach(() => {
-    localStorage.clear();
+  it('returns defaults when there is no API data', () => {
+    expect(mergeServiceTypes()).toEqual(defaultServiceTypes);
+    expect(mergeServiceTypes([])).toEqual(defaultServiceTypes);
   });
 
-  it('returns defaults when storage is empty', () => {
-    const result = loadServiceTypes();
-    expect(result).toEqual(defaultServiceTypes);
+  it('maps service catalog DTOs to service types', () => {
+    const dto: ServiceCatalogDTO = {
+      scId: 1,
+      scName: 'Grabación Deluxe',
+      scKind: 'Recording',
+      scPricingModel: 'Hourly',
+      scRateCents: 12500,
+      scCurrency: 'USD',
+      scBillingUnit: 'hora',
+      scTaxBps: 1000,
+      scActive: true,
+    };
+    const mapped = mapServiceCatalogDto(dto);
+    expect(mapped).toMatchObject({
+      id: '1',
+      name: 'Grabación Deluxe',
+      priceCents: 12500,
+      currency: 'USD',
+      billingUnit: 'hora',
+      kind: 'Recording',
+      pricingModel: 'Hourly',
+      taxBps: 1000,
+      active: true,
+    });
   });
 
-  it('returns defaults when storage has invalid JSON', () => {
-    localStorage.setItem('tdf-service-types', '{not json');
-    const result = loadServiceTypes();
-    expect(result).toEqual(defaultServiceTypes);
-  });
-
-  it('returns stored values when JSON is valid', () => {
-    const custom: ServiceType[] = [
-      { id: 'custom', name: 'Custom', price: 10, currency: 'USD', billingUnit: 'unit' },
+  it('filters inactive services unless includeInactive is true', () => {
+    const items: ServiceCatalogDTO[] = [
+      {
+        scId: 1,
+        scName: 'Activo',
+        scKind: 'Recording',
+        scPricingModel: 'Hourly',
+        scRateCents: 1000,
+        scCurrency: 'USD',
+        scBillingUnit: 'hora',
+        scTaxBps: 1200,
+        scActive: true,
+      },
+      {
+        scId: 2,
+        scName: 'Inactivo',
+        scKind: 'Mixing',
+        scPricingModel: 'PerSong',
+        scRateCents: 2000,
+        scCurrency: 'USD',
+        scBillingUnit: 'canción',
+        scTaxBps: 1200,
+        scActive: false,
+      },
     ];
-    localStorage.setItem('tdf-service-types', JSON.stringify(custom));
+    const activeOnly = mergeServiceTypes(items);
+    expect(activeOnly.some((svc) => svc.name === 'Inactivo')).toBe(false);
 
-    const result = loadServiceTypes();
-    expect(result).toEqual(
-      expect.arrayContaining([
-        custom[0],
-        expect.objectContaining({ name: 'Grabación de Banda' }),
-        expect.objectContaining({ name: 'Grabación de Voz' }),
-      ]),
-    );
-  });
-
-  it('saves service types to localStorage', () => {
-    const custom: ServiceType[] = [
-      { id: 'save', name: 'Save Me', price: 20, currency: 'USD' },
-    ];
-    saveServiceTypes(custom);
-    const stored = localStorage.getItem('tdf-service-types');
-    expect(stored).toBe(JSON.stringify(custom));
-  });
-
-  it('is SSR-safe and falls back to defaults when window is undefined', () => {
-    const realWindow = (globalThis as { window?: unknown }).window;
-    (globalThis as { window?: unknown }).window = undefined;
-    try {
-      const result = loadServiceTypes();
-      expect(result).toEqual(defaultServiceTypes);
-    } finally {
-      (globalThis as { window?: unknown }).window = realWindow;
-    }
+    const withInactive = mergeServiceTypes(items, { includeInactive: true });
+    expect(withInactive.some((svc) => svc.name === 'Inactivo')).toBe(true);
   });
 });

@@ -56,13 +56,17 @@ seedAll = do
     pure (disp, pid)
 
   -- Service Catalog
-  let svc name kind pm rate tax = ServiceCatalog name kind pm rate tax True
-  _ <- insertUnique (svc "Recording" Recording Hourly Nothing (Just 1200))
-  _ <- insertUnique (svc "Mixing" Mixing PerSong Nothing (Just 1200))
-  _ <- insertUnique (svc "Mastering" Mastering PerSong Nothing (Just 1200))
-  _ <- insertUnique (svc "Rehearsal" Rehearsal Hourly (Just (15*100)) (Just 1200))
-  _ <- insertUnique (svc "Classes" Classes Package Nothing (Just 1200))
-  _ <- insertUnique (svc "Event Production" EventProduction Quote Nothing (Just 1200))
+  let svcSeeds =
+        [ ("Grabación de Banda", Recording, Hourly, Just (50 * 100), Just 1200, "USD", Just "hora")
+        , ("Grabación de Voz", Recording, Hourly, Just (35 * 100), Just 1200, "USD", Just "hora")
+        , ("Mezcla", Mixing, PerSong, Just (120 * 100), Just 1200, "USD", Just "canción")
+        , ("Mastering", Mastering, PerSong, Just (70 * 100), Just 1200, "USD", Just "canción")
+        , ("Ensayo", Rehearsal, Hourly, Just (30 * 100), Just 1200, "USD", Just "hora")
+        , ("Podcast", EventProduction, PerSong, Just (80 * 100), Just 1200, "USD", Just "episodio")
+        , ("Clases", Classes, Package, Nothing, Just 1200, "USD", Just "paquete")
+        , ("Producción de eventos", EventProduction, Quote, Nothing, Just 1200, "USD", Nothing)
+        ]
+  mapM_ ensureServiceCatalog svcSeeds
 
   -- Pipelines: seed sample cards for Mixing/Mastering
   let pipelineSeeds =
@@ -198,6 +202,7 @@ seedAll = do
 
   seedInventoryAssets
   seedMarketplaceListings
+  seedProductionCourse now
   seedHolgerSession now
   seedAcademy now
 
@@ -205,6 +210,104 @@ seedAll = do
 
 slugify :: Text -> Text
 slugify = T.toLower . T.replace " " "-"
+
+seedProductionCourse :: UTCTime -> SqlPersistT IO ()
+seedProductionCourse now = do
+  let slugVal = "produccion-musical-dic-2025"
+      courseTitle = "Curso de Producción Musical"
+      subtitleTxt = Just "Presencial · 4 sábados · 16 horas"
+      formatTxt = Just "Presencial"
+      durationTxt = Just "4 sábados · 16 horas"
+      priceCentsVal = 34900
+      currencyVal = "USD"
+      capacityVal = 16
+      sessionStart = Just 15
+      sessionDuration = Just 4
+      locationLabel = Just "TDF Records – Quito"
+      locationMap = Just "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6"
+      whatsappCta = Just "https://wa.me/593995413168?text=Quiero%20inscribirme%20al%20curso"
+      landingUrl = Just "https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
+      dawsList = Just ["Logic", "Luna"]
+      includesList = Just
+        [ "Acceso a grabaciones"
+        , "Certificado de participación"
+        , "Mentorías"
+        , "Grupo de WhatsApp"
+        , "Acceso a la plataforma de TDF Records"
+        ]
+      sessions =
+        [ ("Sábado 1 · Introducción", fromGregorian 2025 12 13)
+        , ("Sábado 2 · Grabación", fromGregorian 2025 12 20)
+        , ("Sábado 3 · Mezcla", fromGregorian 2025 12 27)
+        , ("Sábado 4 · Masterización", fromGregorian 2026 1 3)
+        ]
+      syllabus =
+        [ ("Introducción a la producción musical", ["Conceptos básicos", "Herramientas esenciales"])
+        , ("Grabación y captura de audio", ["Técnicas de grabación", "Configuración de micrófonos"])
+        , ("Mezcla y edición", ["Ecualización y compresión", "Balance y panoramización"])
+        , ("Masterización y publicación", ["Mastering", "Distribución digital"])
+        ]
+  mCourse <- getBy (Trials.UniqueCourseSlug slugVal)
+  courseId <- case mCourse of
+    Nothing -> insert Trials.Course
+      { Trials.courseSlug = slugVal
+      , Trials.courseTitle = courseTitle
+      , Trials.courseSubtitle = subtitleTxt
+      , Trials.courseFormat = formatTxt
+      , Trials.courseDuration = durationTxt
+      , Trials.coursePriceCents = priceCentsVal
+      , Trials.courseCurrency = currencyVal
+      , Trials.courseCapacity = capacityVal
+      , Trials.courseSessionStartHour = sessionStart
+      , Trials.courseSessionDurationHours = sessionDuration
+      , Trials.courseLocationLabel = locationLabel
+      , Trials.courseLocationMapUrl = locationMap
+      , Trials.courseWhatsappCtaUrl = whatsappCta
+      , Trials.courseLandingUrl = landingUrl
+      , Trials.courseDaws = dawsList
+      , Trials.courseIncludes = includesList
+      , Trials.courseCreatedAt = now
+      , Trials.courseUpdatedAt = now
+      }
+    Just (Entity cid existing) -> do
+      replace cid existing
+        { Trials.courseTitle = courseTitle
+        , Trials.courseSubtitle = subtitleTxt
+        , Trials.courseFormat = formatTxt
+        , Trials.courseDuration = durationTxt
+        , Trials.coursePriceCents = priceCentsVal
+        , Trials.courseCurrency = currencyVal
+        , Trials.courseCapacity = capacityVal
+        , Trials.courseSessionStartHour = sessionStart
+        , Trials.courseSessionDurationHours = sessionDuration
+        , Trials.courseLocationLabel = locationLabel
+        , Trials.courseLocationMapUrl = locationMap
+        , Trials.courseWhatsappCtaUrl = whatsappCta
+        , Trials.courseLandingUrl = landingUrl
+        , Trials.courseDaws = dawsList
+        , Trials.courseIncludes = includesList
+        , Trials.courseCreatedAt = Trials.courseCreatedAt existing
+        , Trials.courseUpdatedAt = now
+        }
+      pure cid
+
+  deleteWhere [Trials.CourseSessionModelCourseId ==. courseId]
+  forM_ (zip [1 :: Int ..] sessions) $ \(idx, (labelTxt, dayVal)) ->
+    insert_ Trials.CourseSessionModel
+      { Trials.courseSessionModelCourseId = courseId
+      , Trials.courseSessionModelLabel = labelTxt
+      , Trials.courseSessionModelDate = dayVal
+      , Trials.courseSessionModelOrder = Just idx
+      }
+
+  deleteWhere [Trials.CourseSyllabusItemCourseId ==. courseId]
+  forM_ (zip [1 :: Int ..] syllabus) $ \(idx, (titleTxt, topics)) ->
+    insert_ Trials.CourseSyllabusItem
+      { Trials.courseSyllabusItemCourseId = courseId
+      , Trials.courseSyllabusItemTitle = titleTxt
+      , Trials.courseSyllabusItemTopics = topics
+      , Trials.courseSyllabusItemOrder = Just idx
+      }
 
 seedAcademy :: UTCTime -> SqlPersistT IO ()
 seedAcademy now = do
@@ -497,6 +600,38 @@ roleSlug ReadOnly      = "readonly"
 roleSlug Customer      = "customer"
 roleSlug Fan           = "fan"
 roleSlug Maintenance   = "maintenance"
+
+ensureServiceCatalog
+  :: (Text, ServiceKind, PricingModel, Maybe Int, Maybe Int, Text, Maybe Text)
+  -> SqlPersistT IO ()
+ensureServiceCatalog (nameTxt, kind, pricing, rateCents, taxBps, currencyTxt, billingUnit) = do
+  let nameClean = T.strip nameTxt
+      currencyClean =
+        let c = T.strip currencyTxt
+        in if T.null c then "USD" else c
+  existing <- selectFirst [ServiceCatalogName ==. nameClean] []
+  case existing of
+    Just (Entity svcId _) ->
+      update svcId
+        [ ServiceCatalogKind =. kind
+        , ServiceCatalogPricingModel =. pricing
+        , ServiceCatalogDefaultRateCents =. rateCents
+        , ServiceCatalogTaxBps =. taxBps
+        , ServiceCatalogCurrency =. currencyClean
+        , ServiceCatalogBillingUnit =. billingUnit
+        , ServiceCatalogActive =. True
+        ]
+    Nothing -> do
+      void $ insert ServiceCatalog
+        { serviceCatalogName = nameClean
+        , serviceCatalogKind = kind
+        , serviceCatalogPricingModel = pricing
+        , serviceCatalogDefaultRateCents = rateCents
+        , serviceCatalogTaxBps = taxBps
+        , serviceCatalogCurrency = currencyClean
+        , serviceCatalogBillingUnit = billingUnit
+        , serviceCatalogActive = True
+        }
 
 ensureStaff :: UTCTime -> Text -> Maybe Text -> RoleEnum -> Text -> Text -> Text -> SqlPersistT IO (Key Party)
 ensureStaff now name mlegal role token uname pwd = do

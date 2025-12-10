@@ -1,51 +1,106 @@
+import type { ServiceCatalogDTO } from '../api/types';
+
 export interface ServiceType {
   id: string;
   name: string;
-  price: number;
+  priceCents: number | null;
   currency: string;
-  billingUnit?: string;
+  billingUnit?: string | null;
+  kind?: string;
+  pricingModel?: string;
+  taxBps?: number | null;
+  active: boolean;
 }
-
-const STORAGE_KEY = 'tdf-service-types';
-
-const normalize = (value: string) =>
-  value
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
-    .trim();
-
-const BAND_SERVICE: ServiceType = { id: 'band-rec', name: 'Grabación de Banda', price: 50, currency: 'USD', billingUnit: 'hora' };
-const VOCAL_SERVICE: ServiceType = { id: 'vocal-rec', name: 'Grabación de Voz', price: 35, currency: 'USD', billingUnit: 'hora' };
 
 export const defaultServiceTypes: ServiceType[] = [
-  BAND_SERVICE,
-  VOCAL_SERVICE,
-  { id: 'mix', name: 'Mezcla', price: 120, currency: 'USD', billingUnit: 'canción' },
-  { id: 'master', name: 'Mastering', price: 70, currency: 'USD', billingUnit: 'canción' },
-  { id: 'ensayo', name: 'Ensayo', price: 30, currency: 'USD', billingUnit: 'hora' },
-  { id: 'podcast', name: 'Podcast', price: 80, currency: 'USD', billingUnit: 'episodio' },
+  {
+    id: 'band-rec',
+    name: 'Grabación de Banda',
+    priceCents: 50 * 100,
+    currency: 'USD',
+    billingUnit: 'hora',
+    kind: 'Recording',
+    pricingModel: 'Hourly',
+    taxBps: 1200,
+    active: true,
+  },
+  {
+    id: 'vocal-rec',
+    name: 'Grabación de Voz',
+    priceCents: 35 * 100,
+    currency: 'USD',
+    billingUnit: 'hora',
+    kind: 'Recording',
+    pricingModel: 'Hourly',
+    taxBps: 1200,
+    active: true,
+  },
+  {
+    id: 'mix',
+    name: 'Mezcla',
+    priceCents: 120 * 100,
+    currency: 'USD',
+    billingUnit: 'canción',
+    kind: 'Mixing',
+    pricingModel: 'PerSong',
+    taxBps: 1200,
+    active: true,
+  },
+  {
+    id: 'master',
+    name: 'Mastering',
+    priceCents: 70 * 100,
+    currency: 'USD',
+    billingUnit: 'canción',
+    kind: 'Mastering',
+    pricingModel: 'PerSong',
+    taxBps: 1200,
+    active: true,
+  },
+  {
+    id: 'ensayo',
+    name: 'Ensayo',
+    priceCents: 30 * 100,
+    currency: 'USD',
+    billingUnit: 'hora',
+    kind: 'Rehearsal',
+    pricingModel: 'Hourly',
+    taxBps: 1200,
+    active: true,
+  },
+  {
+    id: 'podcast',
+    name: 'Podcast',
+    priceCents: 80 * 100,
+    currency: 'USD',
+    billingUnit: 'episodio',
+    kind: 'EventProduction',
+    pricingModel: 'PerSong',
+    taxBps: 1200,
+    active: true,
+  },
 ];
 
-export function loadServiceTypes(): ServiceType[] {
-  if (typeof window === 'undefined') return defaultServiceTypes;
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return defaultServiceTypes;
-  try {
-    const parsed = JSON.parse(raw) as ServiceType[];
-    if (!Array.isArray(parsed)) return defaultServiceTypes;
-    const filtered = parsed.filter((p) => normalize(p.name) !== 'grabacion');
-    const hasBand = filtered.some((p) => normalize(p.name) === normalize(BAND_SERVICE.name));
-    const hasVocal = filtered.some((p) => normalize(p.name) === normalize(VOCAL_SERVICE.name));
-    const withBand = hasBand ? filtered : [BAND_SERVICE, ...filtered];
-    const withVocal = hasVocal ? withBand : [VOCAL_SERVICE, ...withBand];
-    return withVocal;
-  } catch {
-    return defaultServiceTypes;
-  }
-}
+export const mapServiceCatalogDto = (dto: ServiceCatalogDTO): ServiceType => ({
+  id: String(dto.scId),
+  name: dto.scName,
+  priceCents: dto.scRateCents ?? null,
+  currency: dto.scCurrency,
+  billingUnit: dto.scBillingUnit ?? null,
+  kind: dto.scKind,
+  pricingModel: dto.scPricingModel,
+  taxBps: dto.scTaxBps ?? null,
+  active: dto.scActive,
+});
 
-export function saveServiceTypes(list: ServiceType[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-}
+export const mergeServiceTypes = (
+  items?: ServiceCatalogDTO[] | null,
+  opts: { includeInactive?: boolean; sort?: boolean } = {},
+): ServiceType[] => {
+  if (!items || items.length === 0) return defaultServiceTypes;
+  const filtered = opts.includeInactive ? items : items.filter((svc) => svc.scActive);
+  if (filtered.length === 0) return defaultServiceTypes;
+  const mapped = filtered.map(mapServiceCatalogDto);
+  if (opts.sort === false) return mapped;
+  return mapped.sort((a, b) => a.name.localeCompare(b.name));
+};

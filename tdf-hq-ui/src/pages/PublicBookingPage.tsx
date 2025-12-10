@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
   Autocomplete,
@@ -24,9 +25,10 @@ import PersonIcon from '@mui/icons-material/Person';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import { API_BASE_URL } from '../api/client';
-import type { BookingDTO } from '../api/types';
+import type { BookingDTO, ServiceCatalogDTO } from '../api/types';
 import { Engineers, type PublicEngineer } from '../api/engineers';
-import { loadServiceTypes } from '../utils/serviceTypesStore';
+import { Services } from '../api/services';
+import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { useSession } from '../session/SessionContext';
 
 interface FormState {
@@ -116,7 +118,15 @@ const buildInitialForm = (defaultService: string) => {
 };
 
 export default function PublicBookingPage() {
-  const services = useMemo(() => loadServiceTypes(), []);
+  const serviceCatalogQuery = useQuery<ServiceCatalogDTO[]>({
+    queryKey: ['service-catalog', 'public'],
+    queryFn: () => Services.listPublic(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const services = useMemo<ServiceType[]>(
+    () => mergeServiceTypes(serviceCatalogQuery.data, { sort: false }),
+    [serviceCatalogQuery.data],
+  );
   const defaultService = services[0]?.name ?? 'Reserva';
   const { session, logout } = useSession();
   const userTimeZone = useMemo(() => {
@@ -142,6 +152,17 @@ export default function PublicBookingPage() {
   const [availabilityStatus, setAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable' | 'unknown'>('idle');
   const [availabilityNote, setAvailabilityNote] = useState<string | null>(null);
   const [assignEngineerLater, setAssignEngineerLater] = useState(false);
+
+  useEffect(() => {
+    if (!services.length) return;
+    setForm((prev) => {
+      const serviceStillValid = services.some((svc) => svc.name === prev.serviceType);
+      if (serviceStillValid) return prev;
+      const nextService = services[0]?.name ?? prev.serviceType;
+      if (!nextService || nextService === prev.serviceType) return prev;
+      return { ...prev, serviceType: nextService, resourceLabels: defaultRoomsForService(nextService) };
+    });
+  }, [services]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -385,19 +406,20 @@ export default function PublicBookingPage() {
   const servicePriceLookup = useMemo(() => {
     const map = new Map<string, string>();
     services.forEach((svc) => {
-      const price = `${svc.currency} ${svc.price.toLocaleString(undefined, { minimumFractionDigits: 0 })}`;
+      if (svc.priceCents == null) return;
+      const display = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
       const unit = svc.billingUnit ? ` / ${svc.billingUnit}` : '';
-      map.set(svc.name, `${price}${unit}`);
+      map.set(svc.name, `${display}${unit}`);
     });
     return map;
   }, [services]);
   const estimatePriceLabel = useMemo(() => {
     const svc = services.find((s) => s.name === form.serviceType);
-    if (!svc) return null;
-    const base = `${svc.currency} ${svc.price.toLocaleString(undefined, { minimumFractionDigits: 0 })}`;
+    if (!svc || svc.priceCents == null) return null;
+    const base = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
     if (svc.billingUnit && svc.billingUnit.toLowerCase().includes('hora')) {
       const hours = Math.max(0.5, (Number(form.durationMinutes) || 60) / 60);
-      const total = svc.price * hours;
+      const total = (svc.priceCents / 100) * hours;
       return `${svc.currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} aprox (${hours.toFixed(1)}h)`;
     }
     return `${base}${svc.billingUnit ? ` / ${svc.billingUnit}` : ''}`;
