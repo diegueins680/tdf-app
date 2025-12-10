@@ -74,7 +74,7 @@ import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceLi
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers (socialEventsServer)
-import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
+import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
 import qualified Data.Map.Strict            as Map
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
@@ -252,6 +252,7 @@ server =
   :<|> contractsServer
   :<|> socialEventsServer
   :<|> radioPresencePublicServer
+  :<|> roomsPublicServer
   :<|> serviceCatalogPublicServer
   :<|> listEngineersPublic
   :<|> bookingPublicServer

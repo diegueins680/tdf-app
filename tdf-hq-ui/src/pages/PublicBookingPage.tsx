@@ -25,9 +25,10 @@ import PersonIcon from '@mui/icons-material/Person';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import { API_BASE_URL } from '../api/client';
-import type { BookingDTO, ServiceCatalogDTO } from '../api/types';
+import type { BookingDTO, RoomDTO, ServiceCatalogDTO } from '../api/types';
 import { Engineers, type PublicEngineer } from '../api/engineers';
 import { Services } from '../api/services';
+import { Rooms } from '../api/rooms';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { useSession } from '../session/SessionContext';
 
@@ -57,7 +58,7 @@ const roundToNext = (date: Date, minutes: number) => {
 
 const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
-const ROOM_OPTIONS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
+const ROOM_FALLBACKS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
 
 const zoneLabel = (zone: string) => {
   try {
@@ -70,20 +71,42 @@ const zoneLabel = (zone: string) => {
 const normalizeService = (service: string) => service.trim().toLowerCase();
 const stripDiacritics = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
-const defaultRoomsForService = (service: string) => {
+const defaultRoomsForService = (service: string, roomOptions: string[]) => {
   const norm = normalizeService(service);
   const plain = stripDiacritics(norm);
   const hasAny = (...needles: string[]) => needles.some((needle) => plain.includes(needle));
+  const pick = (needle: string) =>
+    roomOptions.find((room) => room.toLowerCase().includes(needle.toLowerCase()));
+  const picks = (...needles: string[]) => needles.map(pick).filter(Boolean) as string[];
 
-  if (hasAny('grabacion de banda', 'grabacion banda', 'band recording', 'banda'))
-    return ['Live Room', 'Control Room'];
-  if (hasAny('grabacion de voz', 'grabacion voz', 'grabacion vocal', 'vocal recording', 'voz'))
-    return ['Live Room', 'Vocal Booth'];
-  if (hasAny('mezcla', 'mix')) return ['Control Room'];
-  if (hasAny('master')) return ['Control Room'];
-  if (hasAny('podcast')) return ['Control Room', 'Vocal Booth'];
-  if (hasAny('ensayo', 'rehearsal')) return ['Live Room'];
-  if (hasAny('dj')) return ['DJ Booth'];
+  if (hasAny('grabacion de banda', 'grabacion banda', 'band recording', 'banda')) {
+    const candidates = picks('live', 'control');
+    if (candidates.length) return candidates;
+  }
+  if (hasAny('grabacion de voz', 'grabacion voz', 'grabacion vocal', 'vocal recording', 'voz')) {
+    const candidates = picks('live', 'vocal');
+    if (candidates.length) return candidates;
+  }
+  if (hasAny('mezcla', 'mix')) {
+    const candidates = picks('control');
+    if (candidates.length) return candidates;
+  }
+  if (hasAny('master')) {
+    const candidates = picks('control');
+    if (candidates.length) return candidates;
+  }
+  if (hasAny('podcast')) {
+    const candidates = picks('control', 'vocal');
+    if (candidates.length) return candidates;
+  }
+  if (hasAny('ensayo', 'rehearsal')) {
+    const candidates = picks('live');
+    if (candidates.length) return candidates;
+  }
+  if (hasAny('dj')) {
+    const candidates = picks('dj');
+    if (candidates.length) return candidates;
+  }
   return [];
 };
 
@@ -98,11 +121,11 @@ const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
   return list;
 };
 
-const buildInitialForm = (defaultService: string) => {
+const buildInitialForm = (defaultService: string, roomOptions: string[]) => {
   const start = new Date();
   start.setMinutes(start.getMinutes() + 90);
   start.setSeconds(0, 0);
-  const initialRooms = defaultRoomsForService(defaultService);
+  const initialRooms = defaultRoomsForService(defaultService, roomOptions);
   return {
     fullName: '',
     email: '',
@@ -123,10 +146,20 @@ export default function PublicBookingPage() {
     queryFn: () => Services.listPublic(),
     staleTime: 5 * 60 * 1000,
   });
+  const roomsQuery = useQuery<RoomDTO[]>({
+    queryKey: ['rooms', 'public'],
+    queryFn: () => Rooms.listPublic(),
+    staleTime: 5 * 60 * 1000,
+  });
   const services = useMemo<ServiceType[]>(
     () => mergeServiceTypes(serviceCatalogQuery.data, { sort: false }),
     [serviceCatalogQuery.data],
   );
+  const roomOptions = useMemo<string[]>(() => {
+    const apiRooms = (roomsQuery.data ?? []).map((r) => r.rName).filter(Boolean);
+    const unique = Array.from(new Set(apiRooms));
+    return unique.length ? unique : [...ROOM_FALLBACKS];
+  }, [roomsQuery.data]);
   const defaultService = services[0]?.name ?? 'Reserva';
   const { session, logout } = useSession();
   const userTimeZone = useMemo(() => {
@@ -140,7 +173,7 @@ export default function PublicBookingPage() {
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
   const studioCurrency = useMemo(() => services[0]?.currency ?? 'USD', [services]);
-  const [form, setForm] = useState<FormState>(() => buildInitialForm(defaultService));
+  const [form, setForm] = useState<FormState>(() => buildInitialForm(defaultService, roomOptions));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<BookingDTO | null>(null);
@@ -160,9 +193,21 @@ export default function PublicBookingPage() {
       if (serviceStillValid) return prev;
       const nextService = services[0]?.name ?? prev.serviceType;
       if (!nextService || nextService === prev.serviceType) return prev;
-      return { ...prev, serviceType: nextService, resourceLabels: defaultRoomsForService(nextService) };
+      return { ...prev, serviceType: nextService, resourceLabels: defaultRoomsForService(nextService, roomOptions) };
     });
-  }, [services]);
+  }, [services, roomOptions]);
+
+  useEffect(() => {
+    setForm((prev) => {
+      const suggested = defaultRoomsForService(prev.serviceType, roomOptions);
+      if (sameRooms(prev.resourceLabels, suggested)) return prev;
+      const matchesFallback = sameRooms(prev.resourceLabels, Array.from(ROOM_FALLBACKS));
+      if (prev.resourceLabels.length === 0 || matchesFallback) {
+        return { ...prev, resourceLabels: suggested };
+      }
+      return prev;
+    });
+  }, [roomOptions, form.serviceType]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -179,13 +224,13 @@ export default function PublicBookingPage() {
         email: stored.email ?? prev.email,
         phone: stored.phone ?? prev.phone,
         serviceType: nextService,
-        resourceLabels: defaultRoomsForService(nextService),
+        resourceLabels: defaultRoomsForService(nextService, roomOptions),
       }));
       setRememberProfile(true);
     } catch {
       // ignore parsing issues
     }
-  }, [defaultService, services]);
+  }, [defaultService, services, roomOptions]);
 
   useEffect(() => {
     if (!session?.displayName) return;
@@ -263,9 +308,9 @@ export default function PublicBookingPage() {
     setSuccess(null);
     setError(null);
     setSubmitting(false);
-    setForm(buildInitialForm(defaultService));
+    setForm(buildInitialForm(defaultService, roomOptions));
     setAssignEngineerLater(false);
-  }, [defaultService]);
+  }, [defaultService, roomOptions]);
 
   useEffect(() => {
     const parsed = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
@@ -449,8 +494,8 @@ export default function PublicBookingPage() {
     return bookingWindow.startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
   }, [bookingWindow]);
   const suggestedRooms = useMemo(
-    () => defaultRoomsForService(form.serviceType),
-    [form.serviceType],
+    () => defaultRoomsForService(form.serviceType, roomOptions),
+    [form.serviceType, roomOptions],
   );
   const hasCustomRooms = useMemo(
     () => !sameRooms(form.resourceLabels, suggestedRooms),
@@ -492,7 +537,11 @@ export default function PublicBookingPage() {
   useEffect(() => {
     setForm((prev) => {
       if (sameRooms(prev.resourceLabels, suggestedRooms)) return prev;
-      return { ...prev, resourceLabels: suggestedRooms };
+      const matchesFallback = sameRooms(prev.resourceLabels, Array.from(ROOM_FALLBACKS));
+      if (prev.resourceLabels.length === 0 || matchesFallback) {
+        return { ...prev, resourceLabels: suggestedRooms };
+      }
+      return prev;
     });
   }, [form.serviceType, suggestedRooms]);
 
@@ -939,7 +988,7 @@ export default function PublicBookingPage() {
                     <Grid item xs={12}>
                       <Autocomplete
                         multiple
-                        options={[...ROOM_OPTIONS]}
+                        options={roomOptions}
                         value={form.resourceLabels}
                         onChange={(_, value) =>
                           setForm((prev) => ({

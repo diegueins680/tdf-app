@@ -24,6 +24,7 @@ import {
   Checkbox,
   Chip,
   CircularProgress,
+  Autocomplete,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import AddIcon from '@mui/icons-material/Add';
@@ -100,6 +101,21 @@ export default function ServiceTypesPage() {
 
   const sortedItems = useMemo(
     () => [...items].sort((a, b) => a.name.localeCompare(b.name)),
+    [items],
+  );
+  const currencyOptions = useMemo(
+    () => Array.from(new Set(items.map((item) => item.currency).filter(Boolean))),
+    [items],
+  );
+  const unitOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          items
+            .map((item) => item.billingUnit)
+            .filter((unit): unit is string => Boolean(unit && unit.trim())),
+        ),
+      ),
     [items],
   );
 
@@ -300,20 +316,25 @@ export default function ServiceTypesPage() {
                 />
               </Grid>
               <Grid item xs={6}>
-                <TextField
-                  label="Moneda"
+                <Autocomplete
+                  freeSolo
+                  options={currencyOptions}
                   value={form.currency}
-                  onChange={(e) => setForm((prev) => ({ ...prev, currency: e.target.value }))}
-                  fullWidth
-                  required
+                  onChange={(_evt, value) => setForm((prev) => ({ ...prev, currency: value ?? prev.currency }))}
+                  onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, currency: value }))}
+                  renderInput={(params) => <TextField {...params} label="Moneda" required fullWidth />}
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
-                  label="Unidad (hora, canción, episodio...)"
+                <Autocomplete
+                  freeSolo
+                  options={unitOptions}
                   value={form.billingUnit}
-                  onChange={(e) => setForm((prev) => ({ ...prev, billingUnit: e.target.value }))}
-                  fullWidth
+                  onChange={(_evt, value) => setForm((prev) => ({ ...prev, billingUnit: value ?? '' }))}
+                  onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, billingUnit: value }))}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Unidad (hora, canción, episodio...)" fullWidth />
+                  )}
                 />
               </Grid>
               <Grid item xs={6}>

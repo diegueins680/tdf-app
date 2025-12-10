@@ -8,7 +8,7 @@
 
 module TDF.ServerExtra where
 
-import           Control.Monad              (filterM, unless, when)
+import           Control.Monad              (filterM, unless, when, join)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask, asks)
@@ -34,7 +34,7 @@ import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPie
 import           TDF.API.Inventory          (InventoryAPI)
 import           TDF.API.Bands              (BandsAPI)
 import           TDF.API.Pipelines          (PipelinesAPI)
-import           TDF.API.Rooms              (RoomsAPI)
+import           TDF.API.Rooms              (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Services           (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.Types
@@ -829,11 +829,23 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
             getEntity roomKey
       maybe (throwError err404) (pure . toRoomDTO) result
 
-    toRoomDTO (Entity key room) = RoomDTO
-      { roomId    = toPathPiece key
-      , rName     = roomName room
-      , rBookable = roomIsBookable room
-      }
+toRoomDTO :: Entity Room -> RoomDTO
+toRoomDTO (Entity key room) = RoomDTO
+  { roomId    = toPathPiece key
+  , rName     = roomName room
+  , rBookable = roomIsBookable room
+  }
+
+roomsPublicServer
+  :: ( MonadReader Env m
+     , MonadIO m
+     )
+  => ServerT RoomsPublicAPI m
+roomsPublicServer = do
+  entities <- withPool $ selectList
+    [RoomIsBookable ==. True]
+    [Asc RoomName]
+  pure (map toRoomDTO entities)
 
 serviceCatalogPublicServer
   :: ( MonadReader Env m
@@ -888,14 +900,14 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
 
     updateH rawId ServiceCatalogUpdate{..} = do
       ensureModule ModuleScheduling user
-      svcKey <- parseKey @M.ServiceCatalog rawId
-      let rateCandidate = scuRateCents >>= id
-          taxCandidate  = scuTaxBps >>= id
+      let svcKey = toSqlKey rawId :: Key M.ServiceCatalog
+      let rateCandidate = join scuRateCents
+          taxCandidate  = join scuTaxBps
       when (maybe False (< 0) rateCandidate) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
       when (maybe False (< 0) taxCandidate) $
         throwError err400 { errBody = "Impuesto inválido" }
-      nameClean <- traverse normalizeNameMaybe scuName
+      let nameClean = join (normalizeNameMaybe <$> scuName)
       case nameClean of
         Just nm -> do
           conflict <- withPool $ selectFirst
@@ -918,7 +930,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
                   , (M.ServiceCatalogDefaultRateCents =.) <$> scuRateCents
                   , (M.ServiceCatalogTaxBps =.) <$> scuTaxBps
                   , (M.ServiceCatalogCurrency =.) . normalizeCurrency <$> scuCurrency
-                  , (M.ServiceCatalogBillingUnit =.) <$> (normalizeTextMaybe =<< scuBillingUnit)
+                  , (M.ServiceCatalogBillingUnit =.) <$> join (normalizeTextMaybe <$> scuBillingUnit)
                   , (M.ServiceCatalogActive =.) <$> scuActive
                   ]
             unless (null updates) (update svcKey updates)
@@ -927,7 +939,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
 
     deleteH rawId = do
       ensureModule ModuleScheduling user
-      svcKey <- parseKey @M.ServiceCatalog rawId
+      let svcKey = toSqlKey rawId :: Key M.ServiceCatalog
       found <- withPool $ do
         mSvc <- getEntity svcKey
         case mSvc of

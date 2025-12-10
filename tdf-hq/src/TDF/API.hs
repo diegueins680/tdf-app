@@ -23,7 +23,7 @@ import           TDF.API.Inventory (InventoryAPI)
 import           TDF.API.Payments (PaymentsAPI)
 import           TDF.API.Instagram (InstagramAPI)
 import           TDF.API.Pipelines (PipelinesAPI)
-import           TDF.API.Rooms     (RoomsAPI)
+import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions  (SessionsAPI)
 import           TDF.API.Drive     (DriveAPI)
 import           TDF.API.Types     (LooseJSON, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
@@ -230,6 +230,7 @@ type API =
   :<|> "contracts" :> ContractsAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> RadioPublicAPI
+  :<|> RoomsPublicAPI
   :<|> ServiceCatalogPublicAPI
   :<|> "engineers" :> Get '[JSON] [PublicEngineerDTO]
   :<|> BookingPublicAPI
