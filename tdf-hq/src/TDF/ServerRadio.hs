@@ -429,7 +429,7 @@ radioServer user =
       now <- liftIO getCurrentTime
       Env{..} <- ask
       streamKey <- liftIO (toText <$> nextRandom)
-      listenBase <- liftIO (readEnv "RADIO_PUBLIC_BASE" "https://stream.tdf.com/live")
+      listenBase <- liftIO (readEnv "RADIO_PUBLIC_BASE" "https://tdf-hq.fly.dev/live")
       let fallbackIngest = deriveBase listenBase "rtmp" "/live"
           fallbackWhip   = deriveBase listenBase "https" "/whip"
       ingestBase <- liftIO (readEnv "RADIO_INGEST_BASE" fallbackIngest)

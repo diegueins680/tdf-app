@@ -28,6 +28,15 @@ const getRedirectUri = () =>
   (import.meta.env as Record<string, string | undefined>)['VITE_GOOGLE_DRIVE_REDIRECT_URI'];
 const getFolderId = () => (import.meta.env as Record<string, string | undefined>)['VITE_GOOGLE_DRIVE_FOLDER_ID'];
 
+export const driveConfigError = () => {
+  const clientId = getClientId();
+  const redirect = getRedirectUri();
+  if (!clientId || !redirect) {
+    return 'Faltan VITE_GOOGLE_DRIVE_CLIENT_ID o VITE_GOOGLE_DRIVE_REDIRECT_URI';
+  }
+  return null;
+};
+
 const base64UrlEncode = (buffer: ArrayBuffer | Uint8Array) => {
   const view = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   return btoa(String.fromCharCode(...view))
