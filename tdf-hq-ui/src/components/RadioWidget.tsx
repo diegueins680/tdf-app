@@ -28,7 +28,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { generateTidalCode } from '../utils/tidalAgent';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { RadioAPI, type RadioStreamDTO } from '../api/radio';
+import { RadioAPI, type RadioStreamDTO, type RadioTransmissionInfo } from '../api/radio';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -254,6 +254,10 @@ export default function RadioWidget() {
   const [showCatalogSection, setShowCatalogSection] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [broadcastInfo, setBroadcastInfo] = useState<RadioTransmissionInfo | null>(null);
+  const [broadcastLoading, setBroadcastLoading] = useState(false);
+  const [broadcastError, setBroadcastError] = useState<string | null>(null);
+  const [broadcastForm, setBroadcastForm] = useState({ name: '', genre: '', country: '' });
   const controlFadeSx = {
     opacity: 0.65,
     transition: 'opacity 0.2s ease',
@@ -928,6 +932,28 @@ export default function RadioWidget() {
       }
     })();
   }, [refetchStreams]);
+
+  const handleCreateBroadcast = useCallback(() => {
+    void (async () => {
+      setBroadcastLoading(true);
+      setBroadcastError(null);
+      try {
+        const resp = await RadioAPI.createTransmission({
+          name: broadcastForm.name || undefined,
+          genre: broadcastForm.genre || undefined,
+          country: broadcastForm.country || undefined,
+        });
+        setBroadcastInfo(resp);
+        setApiError(null);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'No se pudo crear la transmisión.';
+        setBroadcastError(msg);
+        setBroadcastInfo(null);
+      } finally {
+        setBroadcastLoading(false);
+      }
+    })();
+  }, [broadcastForm.country, broadcastForm.genre, broadcastForm.name]);
   const persistActiveStream = useCallback(
     async (url: string, name?: string, country?: string, genre?: string) => {
       try {
@@ -1399,6 +1425,120 @@ export default function RadioWidget() {
                         </Typography>
                       )}
                     </Stack>
+
+                    <Card variant="outlined" sx={{ mt: 1 }}>
+                      <CardContent>
+                        <Stack spacing={1}>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <FiberManualRecordIcon color="error" fontSize="small" />
+                            <Typography variant="subtitle1" fontWeight={700}>
+                              Transmitir mi audio
+                            </Typography>
+                          </Stack>
+                          <Typography variant="body2" color="text.secondary">
+                            Genera un stream para emitir desde tu dispositivo (OBS/RTMP). Usa el ingest y el stream key que se generan aquí.
+                          </Typography>
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            <TextField
+                              label="Nombre"
+                              value={broadcastForm.name}
+                              onChange={(e) => setBroadcastForm((p) => ({ ...p, name: e.target.value }))}
+                              fullWidth
+                              size="small"
+                            />
+                            <TextField
+                              label="Género"
+                              value={broadcastForm.genre}
+                              onChange={(e) => setBroadcastForm((p) => ({ ...p, genre: e.target.value }))}
+                              fullWidth
+                              size="small"
+                            />
+                            <TextField
+                              label="País"
+                              value={broadcastForm.country}
+                              onChange={(e) => setBroadcastForm((p) => ({ ...p, country: e.target.value }))}
+                              fullWidth
+                              size="small"
+                            />
+                          </Stack>
+                          {broadcastError && <Typography color="error">{broadcastError}</Typography>}
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={handleCreateBroadcast}
+                            disabled={broadcastLoading}
+                            startIcon={<FiberManualRecordIcon color="error" fontSize="small" />}
+                          >
+                            {broadcastLoading ? 'Creando…' : 'Crear transmisión'}
+                          </Button>
+                          {broadcastInfo && (
+                            <Stack spacing={1}>
+                              <Typography variant="subtitle2">Configura tu emisor</Typography>
+                              <TextField
+                                label="Ingest URL"
+                                value={broadcastInfo.rtiIngestUrl}
+                                InputProps={{
+                                  readOnly: true,
+                                  endAdornment: (
+                                    <Tooltip title="Copiar">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => void navigator.clipboard.writeText(broadcastInfo.rtiIngestUrl)}
+                                      >
+                                        <ContentCopyIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  ),
+                                }}
+                                fullWidth
+                                size="small"
+                              />
+                              <TextField
+                                label="Stream Key"
+                                value={broadcastInfo.rtiStreamKey}
+                                InputProps={{
+                                  readOnly: true,
+                                  endAdornment: (
+                                    <Tooltip title="Copiar">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => void navigator.clipboard.writeText(broadcastInfo.rtiStreamKey)}
+                                      >
+                                        <ContentCopyIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  ),
+                                }}
+                                fullWidth
+                                size="small"
+                              />
+                              <TextField
+                                label="URL público"
+                                value={broadcastInfo.rtiStreamUrl}
+                                InputProps={{
+                                  readOnly: true,
+                                  endAdornment: (
+                                    <Tooltip title="Copiar">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => void navigator.clipboard.writeText(broadcastInfo.rtiStreamUrl)}
+                                      >
+                                        <ContentCopyIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  ),
+                                }}
+                                fullWidth
+                                size="small"
+                              />
+                              <Typography variant="caption" color="text.secondary">
+                                Coloca Ingest + Stream Key en tu software (OBS, Larix). Comparte el URL público o agrégalo como estación personalizada.
+                              </Typography>
+                            </Stack>
+                          )}
+                        </Stack>
+                      </CardContent>
+                    </Card>
                     {(countryOptions.length > 0 || genreOptions.length > 0) && (
                       <Stack spacing={0.5}>
                         <Typography variant="caption" color="text.secondary">

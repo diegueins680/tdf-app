@@ -32,6 +32,19 @@ export interface RadioImportResult {
   rirFailedSources: string[];
 }
 
+export interface RadioTransmissionRequest {
+  name?: string | null;
+  genre?: string | null;
+  country?: string | null;
+}
+
+export interface RadioTransmissionInfo {
+  rtiStreamId: number;
+  rtiStreamUrl: string;
+  rtiIngestUrl: string;
+  rtiStreamKey: string;
+}
+
 export const RadioAPI = {
   search: (params?: { country?: string; genre?: string }) => {
     const searchParams = new URLSearchParams();
@@ -46,13 +59,10 @@ export const RadioAPI = {
     partyId ? get<RadioPresenceDTO | null>(`/radio/presence/${partyId}`) : get<RadioPresenceDTO | null>('/radio/presence'),
   setPresence: (payload: RadioPresenceUpsert) => post<RadioPresenceDTO>('/radio/presence', payload),
   clearPresence: () => del<void>('/radio/presence'),
-  createTransmission: (payload: { name?: string; genre?: string; country?: string }) =>
-    post<{ rtiStreamId: number; rtiStreamUrl: string; rtiIngestUrl: string; rtiStreamKey: string }>(
-      '/radio/transmissions',
-      {
-        rtrName: payload.name,
-        rtrGenre: payload.genre,
-        rtrCountry: payload.country,
-      },
-    ),
+  createTransmission: (payload: RadioTransmissionRequest) =>
+    post<RadioTransmissionInfo>('/radio/transmissions', {
+      rtrName: payload.name,
+      rtrGenre: payload.genre,
+      rtrCountry: payload.country,
+    }),
 };

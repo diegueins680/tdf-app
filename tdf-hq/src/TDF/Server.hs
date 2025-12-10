@@ -1144,7 +1144,7 @@ saveCourse Courses.CourseUpsert{..} = do
     deleteWhere [Trials.CourseSessionModelCourseId ==. courseId]
     deleteWhere [Trials.CourseSyllabusItemCourseId ==. courseId]
 
-    let sessionPayload = zip [1 :: Int ..] sessions
+    let sessionPayload = zip [1..] sessions
     for_ sessionPayload $ \(idx, CourseSessionIn{..}) -> do
       let ordVal = withOrder idx order
       insert_ Trials.CourseSessionModel
@@ -1154,7 +1154,7 @@ saveCourse Courses.CourseUpsert{..} = do
         , Trials.courseSessionModelOrder = Just ordVal
         }
 
-    let syllabusPayload = zip [1 :: Int ..] syllabus
+    let syllabusPayload = zip [1..] syllabus
     for_ syllabusPayload $ \(idx, CourseSyllabusIn{..}) -> do
       let ordVal = withOrder idx order
       insert_ Trials.CourseSyllabusItem
@@ -1276,7 +1276,7 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)
         , ME.CourseRegistrationUpdatedAt =. now
         ]
-      sendConfirmation metaRaw metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
+      sendConfirmation metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
     _ -> do
       regId <- runDB $ insert ME.CourseRegistration
@@ -1294,10 +1294,10 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.courseRegistrationCreatedAt = now
         , ME.courseRegistrationUpdatedAt = now
         }
-      sendConfirmation metaRaw metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
+      sendConfirmation metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
   where
-    sendConfirmation meta metaTitle metaLanding metaSessions nameClean mEmail mNewUser =
+    sendConfirmation courseTitle landing metaSessions nameClean mEmail mNewUser =
       case mEmail of
         Nothing -> pure ()
         Just emailAddr -> do
