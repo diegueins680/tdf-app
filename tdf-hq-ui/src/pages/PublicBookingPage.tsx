@@ -296,6 +296,14 @@ export default function PublicBookingPage() {
     if (!bookingWindow) return null;
     return bookingWindow.startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
   }, [bookingWindow]);
+  const suggestedRooms = useMemo(
+    () => defaultRoomsForService(form.serviceType),
+    [form.serviceType],
+  );
+  const hasCustomRooms = useMemo(
+    () => !sameRooms(form.resourceLabels, suggestedRooms),
+    [form.resourceLabels, suggestedRooms],
+  );
 
   const requiresEngineer = (service: string) => {
     const lowered = service.toLowerCase();
@@ -303,12 +311,11 @@ export default function PublicBookingPage() {
   };
 
   useEffect(() => {
-    const defaults = defaultRoomsForService(form.serviceType);
     setForm((prev) => {
-      if (sameRooms(prev.resourceLabels, defaults)) return prev;
-      return { ...prev, resourceLabels: defaults };
+      if (sameRooms(prev.resourceLabels, suggestedRooms)) return prev;
+      return { ...prev, resourceLabels: suggestedRooms };
     });
-  }, [form.serviceType]);
+  }, [form.serviceType, suggestedRooms]);
 
   const maxDurationUntilClose = useMemo(() => {
     if (!bookingWindow) return null;
@@ -561,11 +568,38 @@ export default function PublicBookingPage() {
                             {...params}
                             label="Salas asignadas"
                             placeholder="Elegimos automáticamente según el servicio"
-                            helperText="Cambiamos las salas si cambias el tipo de servicio. Ajusta si necesitas otra combinación."
+                            helperText="Sugerimos salas según el servicio; ajusta si necesitas otra combinación o déjanos elegir."
                           />
                         )}
                         disableCloseOnSelect
                       />
+                      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mt: 1 }}>
+                        <Chip
+                          label="Usar salas sugeridas"
+                          color={hasCustomRooms ? 'default' : 'primary'}
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              resourceLabels: suggestedRooms,
+                            }))
+                          }
+                        />
+                        <Chip
+                          label="No estoy seguro, elijan por mí"
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              resourceLabels: [],
+                            }))
+                          }
+                          variant="outlined"
+                        />
+                        {suggestedRooms.length > 0 && (
+                          <Typography variant="caption" color="text.secondary">
+                            Recomendado para {form.serviceType}: {suggestedRooms.join(' + ')}
+                          </Typography>
+                        )}
+                      </Stack>
                     </Grid>
                     <Grid item xs={12} sm={7}>
                       <TextField

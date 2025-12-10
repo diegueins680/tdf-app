@@ -72,14 +72,18 @@ export default function LabelReleasesPage() {
   const [search, setSearch] = useState('');
   const [banner, setBanner] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [usedFanFallback, setUsedFanFallback] = useState(false);
 
   const artistsQuery = useQuery({
     queryKey: ['admin', 'artists'],
     queryFn: async () => {
       try {
-        return await Admin.listArtistProfiles();
+        const adminArtists = await Admin.listArtistProfiles();
+        setUsedFanFallback(false);
+        return adminArtists;
       } catch (err) {
         console.warn('Admin artists fetch failed, falling back to fan list', err);
+        setUsedFanFallback(true);
         return Fans.listArtists();
       }
     },
@@ -212,6 +216,13 @@ export default function LabelReleasesPage() {
           Gestiona lanzamientos del catálogo, vincúlalos a artistas y agrega links de streaming para el hub de fans.
         </Typography>
       </Stack>
+
+      {usedFanFallback && (
+        <Alert severity="warning">
+          No pudimos cargar artistas con credenciales de admin; mostrando la lista pública como referencia.
+          Algunos campos internos pueden no estar disponibles.
+        </Alert>
+      )}
 
       {alertMessage && (
         <Alert severity={error ? 'error' : 'success'} onClose={() => (error ? setError(null) : setBanner(null))}>

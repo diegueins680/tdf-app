@@ -97,6 +97,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return payload ?? {};
   }, [cmsQuery.data]);
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
+  const hasAuthToken = Boolean(session?.apiToken);
+  const isAuthenticated = Boolean(hasAuthToken && viewerId);
 
   const artistsQuery = useQuery({
     queryKey: ['fan-artists'],
@@ -107,18 +109,18 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const profileQuery = useQuery({
     queryKey: ['fan-profile', viewerId],
     queryFn: Fans.getProfile,
-    enabled: Boolean(viewerId && isFan),
+    enabled: Boolean(viewerId && isFan && hasAuthToken),
   });
 
   const followsQuery = useQuery({
     queryKey: ['fan-follows', viewerId],
     queryFn: Fans.listFollows,
-    enabled: Boolean(viewerId && isFan),
+    enabled: Boolean(viewerId && isFan && hasAuthToken),
   });
   const artistProfileQuery = useQuery({
     queryKey: ['artist-profile', viewerId],
     queryFn: Fans.getMyArtistProfile,
-    enabled: Boolean(viewerId) && canEditArtist,
+    enabled: Boolean(viewerId && canEditArtist && hasAuthToken),
   });
 
   const [profileDraft, setProfileDraft] = useState<FanProfileUpdate>({
@@ -244,7 +246,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     const roles = session?.roles?.map((r) => r.toLowerCase()) ?? [];
     return roles.some((role) => role.includes('admin') || role.includes('manager') || role.includes('label'));
   }, [session?.roles]);
-  const canSeeReleaseFeed = isFan || canManageReleases;
+  const canSeeReleaseFeed = (isFan || canManageReleases) && hasAuthToken;
   const [releaseAudioMap, setReleaseAudioMap] = useState<Record<number, string>>({});
   const audioFileInputRef = useRef<HTMLInputElement | null>(null);
   const [pendingUploadRelease, setPendingUploadRelease] = useState<ReleaseFeedItem | null>(null);
@@ -540,7 +542,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           <Typography variant="body1" color="text.secondary">
             {cmsPayload?.heroSubtitle ?? 'Sigue a tus artistas favoritos, recibe lanzamientos y escucha sus playlists oficiales en Spotify y YouTube.'}
           </Typography>
-          {!session && (
+          {!isAuthenticated && (
             <Typography variant="body2">
               ¿Quieres guardar tus artistas?{' '}
               <Link component={RouterLink} to="/login" underline="hover">
@@ -550,6 +552,27 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+        {(artistsQuery.isError || profileQuery.isError || followsQuery.isError || artistProfileQuery.isError) && (
+          <Alert
+            severity="warning"
+            action={
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  void artistsQuery.refetch();
+                  void profileQuery.refetch();
+                  void followsQuery.refetch();
+                  void artistProfileQuery.refetch();
+                }}
+              >
+                Reintentar
+              </Button>
+            }
+          >
+            Tuvimos un problema cargando tu información. Revisa tu conexión o intenta de nuevo.
+          </Alert>
+        )}
 
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
@@ -562,7 +585,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 Reproduce lanzamientos sin salir del hub: si hay enlaces de Spotify o YouTube los cargamos en el reproductor
                 embebido.
               </Typography>
-              {!session && (
+              {!isAuthenticated && (
                 <Alert
                   severity="info"
                   action={

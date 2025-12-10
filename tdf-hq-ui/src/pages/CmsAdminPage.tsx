@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -26,6 +26,7 @@ const defaultSlugs = [
 ];
 
 const locales = ['es', 'en'];
+const STORAGE_KEY = 'tdf-cms-admin:last-selection';
 
 const PUBLIC_BASE =
   typeof window !== 'undefined' && window.location.origin
@@ -47,12 +48,56 @@ const livePathForSlug = (slug: string) => {
 
 export default function CmsAdminPage() {
   const qc = useQueryClient();
-  const [slugFilter, setSlugFilter] = useState<string>('records-public');
-  const [localeFilter, setLocaleFilter] = useState<string>('es');
+  const [slugFilter, setSlugFilter] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'records-public';
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? (JSON.parse(raw) as { slug?: string }) : null;
+      return parsed?.slug ?? 'records-public';
+    } catch {
+      return 'records-public';
+    }
+  });
+  const [localeFilter, setLocaleFilter] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'es';
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? (JSON.parse(raw) as { locale?: string }) : null;
+      return parsed?.locale ?? 'es';
+    } catch {
+      return 'es';
+    }
+  });
   const [title, setTitle] = useState('');
   const [payload, setPayload] = useState('{}');
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
   const [editingFromId, setEditingFromId] = useState<number | null>(null);
+  const [payloadError, setPayloadError] = useState<string | null>(null);
+  const [formattedPayload, setFormattedPayload] = useState<string>('{}');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
+  const [minVersionFilter, setMinVersionFilter] = useState<number | null>(null);
+  const [loadingLiveOnDemand, setLoadingLiveOnDemand] = useState(false);
+  const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ slug: slugFilter, locale: localeFilter }));
+    } catch {
+      // ignore storage issues
+    }
+  }, [slugFilter, localeFilter]);
+
+  useEffect(() => {
+    try {
+      const parsed = JSON.parse(payload);
+      setPayloadError(null);
+      setFormattedPayload(JSON.stringify(parsed, null, 2));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'JSON inválido';
+      setPayloadError(msg);
+    }
+  }, [payload]);
 
   const listQuery = useQuery({
     queryKey: ['cms-content', slugFilter, localeFilter],
@@ -90,11 +135,39 @@ export default function CmsAdminPage() {
     },
   });
 
+  const handlePublishAndView = async (v: CmsContentDTO) => {
+    try {
+      await publishMutation.mutateAsync(v.ccdId);
+      if (typeof window !== 'undefined') {
+        const url = `${PUBLIC_BASE}${livePathForSlug(v.ccdSlug)}${
+          v.ccdLocale ? `?locale=${encodeURIComponent(v.ccdLocale)}` : ''
+        }`;
+        window.open(url, '_blank', 'noopener');
+      }
+    } catch {
+      // handled by mutation error UI
+    }
+  };
+
   const versions: CmsContentDTO[] = useMemo(
     () => (Array.isArray(listQuery.data) ? listQuery.data : []),
     [listQuery.data],
   );
   const listDataInvalid = listQuery.data !== undefined && !Array.isArray(listQuery.data);
+  const filteredVersions = useMemo(() => {
+    return versions.filter((v) => {
+      const statusOk = statusFilter === 'all' || v.ccdStatus === statusFilter;
+      const versionOk = minVersionFilter == null || v.ccdVersion >= minVersionFilter;
+      return statusOk && versionOk;
+    });
+  }, [minVersionFilter, statusFilter, versions]);
+  const editingVersion = useMemo(
+    () => versions.find((v) => v.ccdId === editingFromId)?.ccdVersion ?? null,
+    [editingFromId, versions],
+  );
+  const liveVersion = liveContent?.ccdVersion ?? null;
+  const draftBehindLive =
+    editingVersion !== null && liveVersion !== null ? editingVersion < liveVersion : false;
   const liveContent = liveQuery.data;
 
   const handleCreate = () => {
@@ -141,6 +214,32 @@ export default function CmsAdminPage() {
     }
   };
 
+  const handleFormatPayload = () => {
+    if (payloadError) return;
+    setPayload(formattedPayload);
+  };
+
+  const handleFetchLiveNow = async () => {
+    setLoadingLiveOnDemand(true);
+    setLiveFetchError(null);
+    try {
+      const fresh = await Cms.getPublic(slugFilter, localeFilter);
+      setTitle(fresh.ccdTitle ?? '');
+      setStatus((fresh.ccdStatus as 'draft' | 'published') ?? 'draft');
+      setEditingFromId(fresh.ccdId);
+      try {
+        setPayload(JSON.stringify(fresh.ccdPayload ?? {}, null, 2));
+      } catch {
+        setPayload('{}');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No pudimos traer el contenido en vivo.';
+      setLiveFetchError(msg);
+    } finally {
+      setLoadingLiveOnDemand(false);
+    }
+  };
+
   const liveUrl = `${PUBLIC_BASE}${livePathForSlug(slugFilter)}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`;
   const livePayloadPretty = useMemo(() => {
     if (!liveContent) return '';
@@ -151,6 +250,11 @@ export default function CmsAdminPage() {
       return JSON.stringify(liveContent.ccdPayload ?? {});
     }
   }, [liveContent]);
+  const payloadChanged = useMemo(() => {
+    const livePretty = (livePayloadPretty ?? '').trim();
+    const draftPretty = (formattedPayload ?? '').trim();
+    return livePretty !== '' && draftPretty !== '' && livePretty !== draftPretty;
+  }, [formattedPayload, livePayloadPretty]);
 
   return (
     <Stack spacing={3}>
@@ -264,6 +368,12 @@ export default function CmsAdminPage() {
             <Grid item xs={12} md={7}>
               <Stack spacing={1}>
                 <Typography variant="subtitle1" fontWeight={700}>Editar / crear versión</Typography>
+                {draftBehindLive && (
+                  <Alert severity="info">
+                    La versión en vivo (v{liveVersion}) es más reciente que la que estás editando
+                    {editingVersion ? ` (v${editingVersion})` : ''}. Carga la última publicada para evitar sobrescribir cambios.
+                  </Alert>
+                )}
                 <TextField
                   label="Título"
                   fullWidth
@@ -277,7 +387,34 @@ export default function CmsAdminPage() {
                   minRows={10}
                   value={payload}
                   onChange={(e) => setPayload(e.target.value)}
+                  helperText={
+                    payloadError
+                      ? `Error: ${payloadError}`
+                      : 'Estructura JSON del bloque (usa objetos/arrays). Formatea para validar.'
+                  }
+                  error={Boolean(payloadError)}
                 />
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Button variant="outlined" onClick={handleFormatPayload} disabled={Boolean(payloadError)}>
+                    Formatear JSON
+                  </Button>
+                  <Button
+                    variant="text"
+                    onClick={() => setPayload('{}')}
+                    disabled={createMutation.isPending}
+                  >
+                    Limpiar
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={handleFetchLiveNow}
+                    disabled={loadingLiveOnDemand}
+                  >
+                    {loadingLiveOnDemand ? 'Cargando en vivo...' : 'Cargar última publicada'}
+                  </Button>
+                  {liveFetchError && <Chip label={liveFetchError} color="error" variant="outlined" />}
+                  {payloadChanged && <Chip label="Payload modificado vs en vivo" size="small" color="warning" />}
+                </Stack>
                 <TextField
                   select
                   label="Estado"
@@ -300,6 +437,26 @@ export default function CmsAdminPage() {
                   )}
                   {createMutation.isSuccess && <Alert severity="success">Versión creada.</Alert>}
                 </Stack>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Payload (borrador)"
+                      value={formattedPayload}
+                      multiline
+                      minRows={8}
+                      InputProps={{ readOnly: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Payload en vivo"
+                      value={livePayloadPretty}
+                      multiline
+                      minRows={8}
+                      InputProps={{ readOnly: true }}
+                    />
+                  </Grid>
+                </Grid>
               </Stack>
             </Grid>
           </Grid>
@@ -308,12 +465,48 @@ export default function CmsAdminPage() {
 
       <Paper variant="outlined" sx={{ p: 2.5 }}>
         <Stack spacing={2}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="h6" fontWeight={800}>Versiones</Typography>
-            <Chip label={`${versions.length}`} size="small" />
-            {editingFromId && (
-              <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />
-            )}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="h6" fontWeight={800}>Versiones</Typography>
+              <Chip label={`${filteredVersions.length}/${versions.length}`} size="small" />
+              {editingFromId && (
+                <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />
+              )}
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+              <TextField
+                select
+                size="small"
+                label="Estado"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                sx={{ minWidth: 140 }}
+              >
+                <MenuItem value="all">Todos</MenuItem>
+                <MenuItem value="published">Publicados</MenuItem>
+                <MenuItem value="draft">Borradores</MenuItem>
+                <MenuItem value="archived">Archivados</MenuItem>
+              </TextField>
+              <TextField
+                size="small"
+                type="number"
+                label="Versión mínima"
+                value={minVersionFilter ?? ''}
+                onChange={(e) =>
+                  setMinVersionFilter(e.target.value ? Number(e.target.value) : null)
+                }
+                sx={{ width: 150 }}
+              />
+              <Button
+                size="small"
+                onClick={() => {
+                  setStatusFilter('all');
+                  setMinVersionFilter(null);
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            </Stack>
           </Stack>
           {listQuery.isLoading && <LinearProgress />}
           {listQuery.error && (
@@ -327,7 +520,7 @@ export default function CmsAdminPage() {
             </Alert>
           )}
           <Stack spacing={1.5}>
-            {versions.map((v) => (
+            {filteredVersions.map((v) => (
               <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
@@ -365,6 +558,15 @@ export default function CmsAdminPage() {
                     </Button>
                     <Button
                       size="small"
+                      variant="contained"
+                      color="success"
+                      onClick={() => void handlePublishAndView(v)}
+                      disabled={publishMutation.isPending}
+                    >
+                      Publicar y ver
+                    </Button>
+                    <Button
+                      size="small"
                       variant="text"
                       href={`${PUBLIC_BASE}${livePathForSlug(v.ccdSlug)}${v.ccdLocale ? `?locale=${encodeURIComponent(v.ccdLocale)}` : ''}`}
                       target="_blank"
@@ -388,7 +590,7 @@ export default function CmsAdminPage() {
                 </Stack>
               </Paper>
             ))}
-            {versions.length === 0 && !listQuery.isLoading && (
+            {filteredVersions.length === 0 && !listQuery.isLoading && (
               <Typography color="text.secondary">No hay contenido aún.</Typography>
             )}
           </Stack>
