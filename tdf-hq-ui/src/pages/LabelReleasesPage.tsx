@@ -87,6 +87,7 @@ export default function LabelReleasesPage() {
   const [usedFanFallback, setUsedFanFallback] = useState(false);
   const [filterArtistId, setFilterArtistId] = useState<number | null>(null);
   const [filterWindow, setFilterWindow] = useState<'all' | 'upcoming' | 'past'>('all');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'artist'>('newest');
 
   const artistsQuery = useQuery({
     queryKey: ['admin', 'artists'],
@@ -150,7 +151,7 @@ export default function LabelReleasesPage() {
   const filteredReleases = useMemo(() => {
     const term = search.trim().toLowerCase();
     const now = Date.now();
-    return releases.filter((release) => {
+    const filtered = releases.filter((release) => {
       if (filterArtistId && release.arArtistId !== filterArtistId) return false;
       if (filterWindow !== 'all') {
         const ts = parseDate(release.arReleaseDate);
@@ -169,7 +170,12 @@ export default function LabelReleasesPage() {
         .toLowerCase();
       return haystack.includes(term);
     });
-  }, [filterArtistId, filterWindow, releases, search]);
+    return [...filtered].sort((a, b) => {
+      if (sortOrder === 'artist') return a.artistName.localeCompare(b.artistName);
+      if (sortOrder === 'oldest') return parseDate(a.arReleaseDate) - parseDate(b.arReleaseDate);
+      return parseDate(b.arReleaseDate) - parseDate(a.arReleaseDate);
+    });
+  }, [filterArtistId, filterWindow, releases, search, sortOrder]);
 
   const handleCoverFileChange = (file: File | null) => {
     if (!file) {
@@ -279,9 +285,48 @@ export default function LabelReleasesPage() {
             placeholder="Busca por título/nota/links"
             sx={{ minWidth: 240 }}
           />
+          <TextField
+            select
+            size="small"
+            label="Ordenar"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
+            sx={{ minWidth: 180 }}
+          >
+            <MenuItem value="newest">Más recientes</MenuItem>
+            <MenuItem value="oldest">Más antiguos</MenuItem>
+            <MenuItem value="artist">Por artista</MenuItem>
+          </TextField>
           <Button size="small" onClick={() => { setFilterArtistId(null); setFilterWindow('all'); setSearch(''); }}>
             Limpiar filtros
           </Button>
+        </Stack>
+        <Stack direction="row" spacing={1} flexWrap="wrap">
+          {filterArtistId && (
+            <Chip
+              label={`Artista: ${artists.find((a) => a.apArtistId === filterArtistId)?.apDisplayName ?? ''}`}
+              onDelete={() => setFilterArtistId(null)}
+            />
+          )}
+          {filterWindow !== 'all' && (
+            <Chip
+              label={filterWindow === 'upcoming' ? 'Próximos' : 'Publicados'}
+              onDelete={() => setFilterWindow('all')}
+            />
+          )}
+          {search && <Chip label={`Buscar: ${search}`} onDelete={() => setSearch('')} />}
+          {sortOrder !== 'newest' && (
+            <Chip
+              label={
+                sortOrder === 'artist'
+                  ? 'Orden: artista'
+                  : sortOrder === 'oldest'
+                    ? 'Orden: antiguos'
+                    : 'Orden: recientes'
+              }
+              onDelete={() => setSortOrder('newest')}
+            />
+          )}
         </Stack>
       </Stack>
       <Grid container spacing={2}>
@@ -363,7 +408,11 @@ export default function LabelReleasesPage() {
                         </Tooltip>
                       ),
                     }}
-                    helperText={coverFileName || 'Pega una URL o sube una portada JPG/PNG'}
+                    helperText={
+                      coverFileName
+                        ? `${coverFileName} · ideal 1:1 y menor a 6MB`
+                        : 'Pega una URL o sube una portada JPG/PNG (ideal 1:1, <6MB)'
+                    }
                   />
                 </Stack>
 

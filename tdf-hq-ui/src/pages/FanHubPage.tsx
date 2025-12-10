@@ -39,6 +39,7 @@ import { Parties } from '../api/parties';
 import { useSession } from '../session/SessionContext';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
+import { SessionGate } from '../components/SessionGate';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
 import { ensureAccessToken, uploadToDrive, makeFilePublic, buildPublicContentUrl } from '../services/googleDrive';
@@ -100,7 +101,17 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
   const hasAuthToken = Boolean(session?.apiToken);
   const isAuthenticated = Boolean(hasAuthToken && viewerId);
-  const [genreFilter, setGenreFilter] = useState<string>('');
+  const GENRE_FILTER_KEY = 'fan-hub:genre-filter';
+  const [genreFilter, setGenreFilter] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      return window.localStorage.getItem(GENRE_FILTER_KEY) ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [genreSearch, setGenreSearch] = useState('');
+  const [showAllGenres, setShowAllGenres] = useState(false);
 
   const artistsQuery = useQuery({
     queryKey: ['fan-artists'],
@@ -118,10 +129,28 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     });
     return Array.from(set).sort();
   }, [artists]);
+  const filteredGenreOptions = useMemo(() => {
+    if (!genreSearch.trim()) return genreOptions;
+    const term = genreSearch.trim().toLowerCase();
+    return genreOptions.filter((g) => g.toLowerCase().includes(term));
+  }, [genreOptions, genreSearch]);
+  const visibleGenreOptions = useMemo(() => {
+    if (showAllGenres) return filteredGenreOptions;
+    return filteredGenreOptions.slice(0, 14);
+  }, [filteredGenreOptions, showAllGenres]);
   const filteredArtists = useMemo(() => {
     if (!genreFilter) return artists;
     return artists.filter((a) => (a.apGenres ?? '').toLowerCase().includes(genreFilter.toLowerCase()));
   }, [artists, genreFilter]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(GENRE_FILTER_KEY, genreFilter);
+    } catch {
+      // ignore
+    }
+  }, [GENRE_FILTER_KEY, genreFilter]);
 
   const profileQuery = useQuery({
     queryKey: ['fan-profile', viewerId],
@@ -644,6 +673,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
+            <SessionGate requireToken message="Inicia sesión para ver lanzamientos personalizados.">
             <Card sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="h6">Novedades de tus artistas</Typography>
@@ -911,6 +941,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </Stack>
               )}
             </Card>
+            </SessionGate>
           </Grid>
           <Grid item xs={12} md={4}>
             <Stack spacing={2} height="100%">
@@ -1355,17 +1386,36 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Card>
         )}
 
-        <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" sx={{ mb: 2 }}>
-          <Chip label="Todos los géneros" onClick={() => setGenreFilter('')} color={genreFilter ? 'default' : 'primary'} />
-          {genreOptions.map((g) => (
-            <Chip
-              key={g}
-              label={g}
-              onClick={() => setGenreFilter(g)}
-              color={genreFilter === g ? 'primary' : 'default'}
-              variant={genreFilter === g ? 'filled' : 'outlined'}
+        <Stack spacing={1} sx={{ mb: 2 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
+            <TextField
+              size="small"
+              placeholder="Buscar géneros"
+              value={genreSearch}
+              onChange={(e) => setGenreSearch(e.target.value)}
+              sx={{ minWidth: 200, maxWidth: 320 }}
             />
-          ))}
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => setShowAllGenres((v) => !v)}
+              disabled={filteredGenreOptions.length <= 14}
+            >
+              {showAllGenres ? 'Ver menos' : 'Ver todos'}
+            </Button>
+          </Stack>
+          <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+            <Chip label="Todos los géneros" onClick={() => setGenreFilter('')} color={genreFilter ? 'default' : 'primary'} />
+            {visibleGenreOptions.map((g) => (
+              <Chip
+                key={g}
+                label={g}
+                onClick={() => setGenreFilter(g)}
+                color={genreFilter === g ? 'primary' : 'default'}
+                variant={genreFilter === g ? 'filled' : 'outlined'}
+              />
+            ))}
+          </Stack>
         </Stack>
 
         <Grid container spacing={3} id="artist-list">

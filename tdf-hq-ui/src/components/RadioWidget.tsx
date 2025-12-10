@@ -1228,6 +1228,21 @@ export default function RadioWidget() {
   }, [mediaDevicesSupported, selectedAudioInput, stopInputTest]);
 
   useEffect(() => () => stopInputTest(), [stopInputTest]);
+  useEffect(() => {
+    if (browserBroadcastState !== 'live' || !liveStartedAt) {
+      setLiveElapsedMs(0);
+      return;
+    }
+    const interval = window.setInterval(() => {
+      const elapsed = Date.now() - liveStartedAt;
+      setLiveElapsedMs(elapsed);
+      if (autoStopMinutes > 0 && elapsed >= autoStopMinutes * 60 * 1000) {
+        setBrowserBroadcastError(`Se detuvo automáticamente tras ${autoStopMinutes} min.`);
+        stopBrowserBroadcast();
+      }
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [autoStopMinutes, browserBroadcastState, liveStartedAt, stopBrowserBroadcast]);
 
   const startLevelMonitor = useCallback(
     (stream: MediaStream) => {
@@ -1360,6 +1375,14 @@ export default function RadioWidget() {
       setPreviewLoading(false);
     }
   }, [broadcastInfo?.rtiStreamUrl]);
+
+  const liveElapsedLabel = useMemo(() => {
+    const totalSeconds = Math.max(0, Math.floor(liveElapsedMs / 1000));
+    const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    const s = String(totalSeconds % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  }, [liveElapsedMs]);
   const persistActiveStream = useCallback(
     async (url: string, name?: string, country?: string, genre?: string) => {
       try {
@@ -1981,26 +2004,48 @@ export default function RadioWidget() {
                                   }
                                   startIcon={<FiberManualRecordIcon color="error" fontSize="small" />}
                                 >
-                                  {browserBroadcastState === 'live'
-                                    ? 'Detener transmisión'
-                                    : browserBroadcastState === 'starting'
-                                      ? 'Conectando…'
-                                      : 'Ir en vivo aquí'}
-                                </Button>
-                                <Button
-                                  variant={inputTestActive ? 'outlined' : 'text'}
-                                  onClick={() => {
-                                    if (inputTestActive) {
-                                      stopInputTest();
-                                    } else {
-                                      void startInputTest();
-                                    }
-                                  }}
-                                  disabled={!mediaDevicesSupported || browserBroadcastState === 'starting'}
-                                >
-                                  {inputTestActive ? 'Detener prueba' : 'Probar entrada'}
-                                </Button>
-                              </Stack>
+                              {browserBroadcastState === 'live'
+                                ? 'Detener transmisión'
+                                : browserBroadcastState === 'starting'
+                                  ? 'Conectando…'
+                                  : 'Ir en vivo aquí'}
+                              </Button>
+                              <Button
+                                variant={inputTestActive ? 'outlined' : 'text'}
+                                onClick={() => {
+                                  if (inputTestActive) {
+                                    stopInputTest();
+                                  } else {
+                                    void startInputTest();
+                                  }
+                                }}
+                                disabled={!mediaDevicesSupported || browserBroadcastState === 'starting'}
+                              >
+                                {inputTestActive ? 'Detener prueba' : 'Probar entrada'}
+                              </Button>
+                            </Stack>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
+                              <Chip
+                                label={`Tiempo en vivo: ${liveElapsedLabel}`}
+                                size="small"
+                                color={browserBroadcastState === 'live' ? 'success' : 'default'}
+                              />
+                              <TextField
+                                select
+                                label="Auto-stop"
+                                size="small"
+                                value={autoStopMinutes}
+                                onChange={(e) => setAutoStopMinutes(Number(e.target.value))}
+                                sx={{ minWidth: 140 }}
+                              >
+                                <MenuItem value={0}>Sin límite</MenuItem>
+                                {[30, 60, 90, 120, 180].map((mins) => (
+                                  <MenuItem key={mins} value={mins}>
+                                    {mins} min
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                            </Stack>
                             </Stack>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Typography variant="caption" color="text.secondary">

@@ -138,6 +138,7 @@ export default function PublicBookingPage() {
   const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
   const [engineersLoading, setEngineersLoading] = useState(false);
   const [engineersError, setEngineersError] = useState<string | null>(null);
+  const [durationNotice, setDurationNotice] = useState<string | null>(null);
   const [availabilityStatus, setAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable' | 'unknown'>('idle');
   const [availabilityNote, setAvailabilityNote] = useState<string | null>(null);
   const [assignEngineerLater, setAssignEngineerLater] = useState(false);
@@ -545,6 +546,27 @@ export default function PublicBookingPage() {
     return base;
   }, [availabilityNote, availabilityStatus, bookingWindow?.closeStudio, bookingWindow?.openStudio, studioTimeZone, studioZoneLabel, userZoneLabel, userTimeZone]);
 
+  const computeMaxDurationForStart = useCallback(
+    (startValue: string) => {
+      const startLocal = DateTime.fromISO(startValue, { zone: userTimeZone });
+      if (!startLocal.isValid) return null;
+      const startStudio = startLocal.setZone(studioTimeZone);
+      const closeStudio = startStudio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
+      const diffMinutes = Math.floor(closeStudio.diff(startStudio, 'minutes').minutes);
+      return diffMinutes > 0 ? diffMinutes : 0;
+    },
+    [studioTimeZone, userTimeZone],
+  );
+
+  const clampDurationForStart = useCallback(
+    (startValue: string, desiredMinutes: number) => {
+      const max = computeMaxDurationForStart(startValue);
+      if (max == null || max <= 0) return desiredMinutes;
+      return Math.max(30, Math.min(desiredMinutes, max));
+    },
+    [computeMaxDurationForStart],
+  );
+
   const maxStartIso = useMemo(() => {
     if (!bookingWindow) return undefined;
     const duration = Math.max(30, Number(form.durationMinutes) || 60);
@@ -831,6 +853,7 @@ export default function PublicBookingPage() {
                         type="datetime-local"
                         value={form.startsAt}
                         onChange={(e) => {
+                          setDurationNotice(null);
                           const next = DateTime.fromISO(e.target.value, { zone: userTimeZone });
                           const duration = Math.max(30, Number(form.durationMinutes) || 60);
                           if (!next.isValid) {
@@ -896,7 +919,10 @@ export default function PublicBookingPage() {
                         label="Duración (min)"
                         type="number"
                         value={form.durationMinutes}
-                        onChange={(e) => setForm((prev) => ({ ...prev, durationMinutes: Number(e.target.value) }))}
+                        onChange={(e) => {
+                          setDurationNotice(null);
+                          setForm((prev) => ({ ...prev, durationMinutes: Number(e.target.value) }));
+                        }}
                         fullWidth
                         disabled={formDisabled}
                         inputProps={{
@@ -940,6 +966,11 @@ export default function PublicBookingPage() {
                           );
                         })}
                         </Stack>
+                        {durationNotice && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                            {durationNotice}
+                          </Typography>
+                        )}
                       </Stack>
                     </Grid>
                     {suggestedSlots.length > 0 && (
@@ -953,7 +984,16 @@ export default function PublicBookingPage() {
                               <Tooltip key={slot.value} title={slot.helper}>
                                 <Chip
                                   label={slot.label}
-                                  onClick={() => setForm((prev) => ({ ...prev, startsAt: slot.value }))}
+                                  onClick={() => {
+                                    setDurationNotice(null);
+                                    setForm((prev) => {
+                                      const adjusted = clampDurationForStart(slot.value, prev.durationMinutes);
+                                      if (adjusted < prev.durationMinutes) {
+                                        setDurationNotice(`Ajustamos a ${adjusted} min para terminar antes del cierre.`);
+                                      }
+                                      return { ...prev, startsAt: slot.value, durationMinutes: adjusted };
+                                    });
+                                  }}
                                   variant="outlined"
                                   color="primary"
                                   sx={{ borderRadius: 999 }}
