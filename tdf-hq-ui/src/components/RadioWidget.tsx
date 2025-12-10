@@ -357,17 +357,8 @@ export default function RadioWidget() {
   }, [mediaDevicesSupported, selectedAudioInput]);
 
   useEffect(() => {
-    if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) return;
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        stream.getTracks().forEach((t) => t.stop());
-        return refreshAudioInputs();
-      })
-      .catch(() => {
-        setBrowserBroadcastError('Activa el permiso de audio para transmitir desde este navegador.');
-      });
-  }, [mediaDevicesSupported, refreshAudioInputs]);
+    void refreshAudioInputs();
+  }, [refreshAudioInputs]);
 
   useEffect(() => {
     if (!mediaDevicesSupported || !navigator.mediaDevices?.addEventListener) return;
@@ -1590,7 +1581,7 @@ export default function RadioWidget() {
                             </Typography>
                           </Stack>
                           <Typography variant="body2" color="text.secondary">
-                            Genera un stream y publícalo directo desde tu navegador (elige la entrada de tu tarjeta o micrófono) o con OBS/RTMP usando el ingest y la clave generados.
+                            Genera un stream y publícalo directo desde tu navegador (elige la entrada de tu tarjeta o micrófono) o con OBS/RTMP usando el ingest y la clave generados. Si no quieres configurar nada extra, usa el botón “Ir en vivo aquí”.
                           </Typography>
                           <Stack spacing={1}>
                             <Stack
@@ -1762,7 +1753,7 @@ export default function RadioWidget() {
                                 size="small"
                               />
                               <Typography variant="caption" color="text.secondary">
-                                Coloca Ingest + Stream Key en tu software (OBS, Larix) o usa el enlace WHIP para publicar desde navegador. Comparte el URL público o agrégalo como estación personalizada.
+                                Para evitar software externo, pulsa “Ir en vivo aquí” (usa el WHIP automáticamente). Si prefieres OBS/Larix, coloca Ingest + Stream Key, o usa el enlace WHIP con clientes WebRTC. Comparte el URL público o agrégalo como estación personalizada.
                               </Typography>
                             </Stack>
                           )}
