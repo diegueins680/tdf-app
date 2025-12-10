@@ -150,13 +150,13 @@ export default function ServiceTypesPage() {
       return;
     }
     const priceNumber = form.price === '' ? null : Number(form.price);
-    if (form.price !== '' && (Number.isNaN(priceNumber) || priceNumber < 0)) {
+    if (form.price !== '' && (Number.isNaN(priceNumber ?? NaN) || (priceNumber ?? 0) < 0)) {
       setError('Agrega un precio válido.');
       return;
     }
     const rateCents = priceNumber == null ? null : Math.round(priceNumber * 100);
     const taxNumber = form.taxBps === '' ? null : Number(form.taxBps);
-    if (form.taxBps !== '' && (Number.isNaN(taxNumber) || taxNumber < 0)) {
+    if (form.taxBps !== '' && (Number.isNaN(taxNumber ?? NaN) || (taxNumber ?? 0) < 0)) {
       setError('Impuesto inválido.');
       return;
     }
@@ -378,8 +378,8 @@ export default function ServiceTypesPage() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained" disabled={createMutation.isLoading || updateMutation.isLoading}>
-              {createMutation.isLoading || updateMutation.isLoading ? 'Guardando...' : 'Guardar'}
+            <Button type="submit" variant="contained" disabled={createMutation.isPending || updateMutation.isPending}>
+              {createMutation.isPending || updateMutation.isPending ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogActions>
         </form>
