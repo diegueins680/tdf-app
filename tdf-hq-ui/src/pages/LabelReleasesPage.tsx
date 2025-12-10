@@ -16,6 +16,8 @@ import {
   TextField,
   Tooltip,
   Typography,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -249,40 +251,39 @@ export default function LabelReleasesPage() {
         </Alert>
       )}
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }} flexWrap="wrap">
-        <Autocomplete
-          options={artists}
-          value={artists.find((a) => a.apArtistId === filterArtistId) ?? null}
-          onChange={(_, value) => setFilterArtistId(value?.apArtistId ?? null)}
-          getOptionLabel={(option) => option.apDisplayName}
-          renderInput={(params) => <TextField {...params} label="Filtrar por artista" size="small" sx={{ minWidth: 240 }} />}
-          sx={{ minWidth: 240 }}
-        />
-        <TextField
-          select
-          size="small"
-          label="Ventana"
+      <Stack spacing={1.5}>
+        <Tabs
           value={filterWindow}
-          onChange={(e) => setFilterWindow(e.target.value as typeof filterWindow)}
+          onChange={(_, val) => setFilterWindow(val)}
+          variant="scrollable"
+          scrollButtons="auto"
         >
-          <MenuItem value="all">Todos</MenuItem>
-          <MenuItem value="upcoming">Próximos</MenuItem>
-          <MenuItem value="past">Publicados</MenuItem>
-        </TextField>
-        <Button size="small" onClick={() => { setFilterArtistId(null); setFilterWindow('all'); setSearch(''); }}>
-          Limpiar filtros
-        </Button>
-        {(filterArtistId || filterWindow !== 'all' || search.trim()) && (
-          <Chip
-            label="Todos"
-            onClick={() => { setFilterArtistId(null); setFilterWindow('all'); setSearch(''); }}
-            variant="outlined"
-            color="primary"
-            size="small"
+          <Tab value="all" label="Todos" />
+          <Tab value="upcoming" label="Próximos" />
+          <Tab value="past" label="Publicados" />
+        </Tabs>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }} flexWrap="wrap">
+          <Autocomplete
+            options={artists}
+            value={artists.find((a) => a.apArtistId === filterArtistId) ?? null}
+            onChange={(_, value) => setFilterArtistId(value?.apArtistId ?? null)}
+            getOptionLabel={(option) => option.apDisplayName}
+            renderInput={(params) => <TextField {...params} label="Filtrar por artista" size="small" sx={{ minWidth: 240 }} />}
+            sx={{ minWidth: 240 }}
           />
-        )}
+          <TextField
+            size="small"
+            label="Buscar"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Busca por título/nota/links"
+            sx={{ minWidth: 240 }}
+          />
+          <Button size="small" onClick={() => { setFilterArtistId(null); setFilterWindow('all'); setSearch(''); }}>
+            Limpiar filtros
+          </Button>
+        </Stack>
       </Stack>
-
       <Grid container spacing={2}>
         <Grid item xs={12} md={7}>
           <Card>

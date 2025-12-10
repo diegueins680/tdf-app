@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode, type ChangeEvent } from 'react';
 import {
   Alert,
+  AlertTitle,
   Avatar,
   Box,
   Button,
@@ -168,6 +169,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [releaseLinkDraft, setReleaseLinkDraft] = useState<string>('');
   const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [onboardingVisible, setOnboardingVisible] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem('fanhub-onboarding-dismissed') !== '1';
+  });
 
   useEffect(() => {
     if (profileQuery.data) {
@@ -207,6 +212,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     if (!partyId) return;
     setArtistDraft((prev) => ({ ...prev, apuArtistId: partyId }));
   }, [session?.partyId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!onboardingVisible) {
+      window.localStorage.setItem('fanhub-onboarding-dismissed', '1');
+    }
+  }, [onboardingVisible]);
 
   useEffect(() => {
     if (focusArtist && artistSectionRef.current) {
@@ -568,6 +580,46 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+        {onboardingVisible && (
+          <Alert
+            severity="info"
+            onClose={() => setOnboardingVisible(false)}
+            icon={<VisibilityIcon />}
+          >
+            <AlertTitle>Primeros pasos</AlertTitle>
+            <Stack spacing={1}>
+              <Typography variant="body2">Sigue estos pasos rápidos para sacar provecho:</Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Chip
+                  label={hasFollows ? '✔ Ya sigues artistas' : 'Seguir artistas'}
+                  color={hasFollows ? 'success' : 'default'}
+                  onClick={() => {
+                    const el = document.getElementById('artist-list');
+                    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                />
+                <Chip
+                  label={releaseFeed.length > 0 ? '✔ Lanzamientos vistos' : 'Ver lanzamientos'}
+                  color={releaseFeed.length > 0 ? 'success' : 'default'}
+                  onClick={() => setFeedLimit((prev) => Math.max(prev, 6))}
+                />
+                <Chip
+                  label="Reservar estudio"
+                  component={RouterLink}
+                  to="/reservar"
+                  clickable
+                />
+                <Chip
+                  label="Editar CMS"
+                  component={RouterLink}
+                  to="/configuracion/cms"
+                  clickable
+                  variant="outlined"
+                />
+              </Stack>
+            </Stack>
+          </Alert>
+        )}
         {(artistsQuery.isError || profileQuery.isError || followsQuery.isError || artistProfileQuery.isError) && (
           <Alert
             severity="warning"
@@ -1316,7 +1368,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           ))}
         </Stack>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} id="artist-list">
           {filteredArtists.map((artist) => {
             const spotifyUrl = artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
             const youtubeUrl =
