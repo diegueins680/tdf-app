@@ -344,6 +344,8 @@ export default function PublicBookingPage() {
 
     setSubmitting(true);
     const uniqueRooms = Array.from(new Set(form.resourceLabels));
+    const engineerPartyId = assignEngineerLater ? null : form.engineerId;
+    const engineerName = assignEngineerLater ? null : form.engineerName.trim() || null;
     try {
       const startsAtIso = parsedStartLocal.toUTC().toISO();
       const dto = await Bookings.createPublic({
@@ -354,8 +356,8 @@ export default function PublicBookingPage() {
         pbStartsAt: startsAtIso,
         pbDurationMinutes: durationMinutes,
         pbNotes: form.notes.trim() || null,
-        pbEngineerPartyId: form.engineerId,
-        pbEngineerName: form.engineerName.trim() || null,
+        pbEngineerPartyId: engineerPartyId,
+        pbEngineerName: engineerName,
         pbResourceIds: uniqueRooms.length ? uniqueRooms : null,
       });
       setSuccess(dto);
@@ -486,8 +488,19 @@ export default function PublicBookingPage() {
       successStartIso && typeof successStartIso === 'string'
         ? DateTime.fromISO(successStartIso).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
         : formattedStart ?? form.startsAt;
-    const successDuration = (success as any).pbDurationMinutes ?? form.durationMinutes;
-    const successEngineer = (success as any).pbEngineerName ?? form.engineerName;
+    const successDuration =
+      (success.startsAt && success.endsAt
+        ? Math.max(
+            30,
+            Math.round(
+              DateTime.fromISO(success.endsAt).diff(DateTime.fromISO(success.startsAt), 'minutes').minutes,
+            ),
+          )
+        : null) ?? (success as any).pbDurationMinutes ?? form.durationMinutes;
+    const successEngineer = success.engineerName ?? (success as any).pbEngineerName ?? form.engineerName;
+    const successRooms =
+      success.resources?.map((r) => r.brRoomName).filter((name): name is string => Boolean(name)) ??
+      (form.resourceLabels.length ? form.resourceLabels : []);
 
     return (
       <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -539,9 +552,7 @@ export default function PublicBookingPage() {
                         <Chip label={`Fecha: ${successStartLabel}`} size="small" />
                         <Chip label={`Duración: ${successDuration} min`} size="small" />
                         <Chip label={`Servicio: ${success.serviceType ?? form.serviceType}`} size="small" />
-                        {form.resourceLabels.length > 0 && (
-                          <Chip label={`Salas: ${form.resourceLabels.join(' + ')}`} size="small" />
-                        )}
+                        {successRooms.length > 0 && <Chip label={`Salas: ${successRooms.join(' + ')}`} size="small" />}
                         {successEngineer && <Chip label={`Ingeniero: ${successEngineer}`} size="small" />}
                       </Stack>
                     </CardContent>
@@ -1133,7 +1144,13 @@ export default function PublicBookingPage() {
                           <Stack direction="row" spacing={1} alignItems="center">
                             <Checkbox
                               checked={assignEngineerLater}
-                              onChange={(e) => setAssignEngineerLater(e.target.checked)}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setAssignEngineerLater(checked);
+                                if (checked) {
+                                  setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
+                                }
+                              }}
                               size="small"
                               disabled={formDisabled}
                             />
@@ -1228,37 +1245,6 @@ export default function PublicBookingPage() {
                     {error && (
                       <Grid item xs={12}>
                         <Alert severity="error">{error}</Alert>
-                      </Grid>
-                    )}
-                    {success !== null && (() => {
-                      const created = success as BookingDTO | null;
-                      return (
-                      <Grid item xs={12}>
-                        <Alert severity="success">
-                          Reserva creada. Revisa tu correo para la confirmación. ID:{' '}
-                          <strong>{created?.bookingId}</strong> · Servicio:{' '}
-                          <strong>{created?.serviceType ?? form.serviceType}</strong>
-                        </Alert>
-                      </Grid>
-                      );
-                    })()}
-                    {success !== null && (
-                      <Grid item xs={12}>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                          <Button
-                            variant="outlined"
-                            href="/login?redirect=/estudio/calendario"
-                            size="medium"
-                          >
-                            Ver mi reserva
-                          </Button>
-                          <Button variant="contained" size="medium" onClick={resetForm}>
-                            Crear otra reserva
-                          </Button>
-                          <Button variant="text" size="medium" onClick={() => void copySummary()}>
-                            Copiar resumen
-                          </Button>
-                        </Stack>
                       </Grid>
                     )}
                     <Grid item xs={12}>
