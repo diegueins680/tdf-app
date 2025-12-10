@@ -165,10 +165,10 @@ export default function CmsAdminPage() {
     () => versions.find((v) => v.ccdId === editingFromId)?.ccdVersion ?? null,
     [editingFromId, versions],
   );
+  const liveContent = liveQuery.data;
   const liveVersion = liveContent?.ccdVersion ?? null;
   const draftBehindLive =
     editingVersion !== null && liveVersion !== null ? editingVersion < liveVersion : false;
-  const liveContent = liveQuery.data;
 
   const handleCreate = () => {
     let parsed: unknown = null;
