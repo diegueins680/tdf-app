@@ -301,10 +301,7 @@ export default function RadioWidget() {
     [],
   );
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [expanded, setExpanded] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem('radio-expanded') === '1';
-  });
+  const [expanded, setExpanded] = useState(false);
   const [activeId, setActiveId] = useState<string>(defaultStation.id);
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
