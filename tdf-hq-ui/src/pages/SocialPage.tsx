@@ -85,21 +85,14 @@ export default function SocialPage() {
   );
 
   useEffect(() => {
-    let active = true;
     setShareQrError(null);
-    import('qrcode')
-      .then((mod) => {
-        const QRCode = mod.default ?? mod;
-        return QRCode.toDataURL(sharePayload, { margin: 1, scale: 6 });
-      })
-      .then((dataUrl) => {
-        if (active) setShareQr(dataUrl);
-      })
-      .catch((err) => {
-        console.error('No se pudo generar el QR de vCard', err);
-        if (active) setShareQrError('No pudimos generar el QR.');
-      });
-    return () => { active = false; };
+    try {
+      const url = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(sharePayload)}`;
+      setShareQr(url);
+    } catch (err) {
+      console.error('No se pudo generar el QR de vCard', err);
+      setShareQrError('No pudimos generar el QR.');
+    }
   }, [sharePayload]);
 
   const parsedPayload = useMemo(() => {
