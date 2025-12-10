@@ -1,4 +1,5 @@
 import { get, post, del } from './client';
+const CMS_ADMIN_BASE = '/cms/admin/content';
 
 export interface CmsContentDTO {
   ccdId: number;
@@ -35,9 +36,9 @@ export const Cms = {
     if (params?.slug) search.set('slug', params.slug);
     if (params?.locale) search.set('locale', params.locale);
     const qs = search.toString();
-    return get<CmsContentDTO[]>(`/cms/content${qs ? `?${qs}` : ''}`);
+    return get<CmsContentDTO[]>(`${CMS_ADMIN_BASE}${qs ? `?${qs}` : ''}`);
   },
-  create: (payload: CmsContentIn) => post<CmsContentDTO>('/cms/content', payload),
-  publish: (id: number) => post<CmsContentDTO>(`/cms/content/${id}/publish`, {}),
-  remove: (id: number) => del<void>(`/cms/content/${id}`),
+  create: (payload: CmsContentIn) => post<CmsContentDTO>(CMS_ADMIN_BASE, payload),
+  publish: (id: number) => post<CmsContentDTO>(`${CMS_ADMIN_BASE}/${id}/publish`, {}),
+  remove: (id: number) => del<void>(`${CMS_ADMIN_BASE}/${id}`),
 };

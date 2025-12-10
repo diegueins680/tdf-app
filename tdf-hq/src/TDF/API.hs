@@ -75,7 +75,7 @@ type CmsPublicAPI =
   :<|> "cms" :> "contents" :> QueryParam "locale" Text :> QueryParam "slugPrefix" Text :> Get '[JSON] [CmsContentDTO]
 
 type CmsAdminAPI =
-       "cms" :> "content" :>
+       "cms" :> "admin" :> "content" :>
          ( QueryParam "slug" Text :> QueryParam "locale" Text :> Get '[JSON] [CmsContentDTO]
       :<|> ReqBody '[JSON] CmsContentIn :> Post '[JSON] CmsContentDTO
       :<|> Capture "id" Int :> "publish" :> Post '[JSON] CmsContentDTO

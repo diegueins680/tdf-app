@@ -65,12 +65,17 @@ const stripDiacritics = (text: string) => text.normalize('NFD').replace(/\p{Diac
 const defaultRoomsForService = (service: string) => {
   const norm = normalizeService(service);
   const plain = stripDiacritics(norm);
-  if (plain.includes('grabacion banda') || plain.includes('band recording')) return ['Live Room', 'Control Room'];
-  if (plain.includes('grabacion voz') || plain.includes('grabacion vocal') || plain.includes('vocal recording'))
+  const hasAny = (...needles: string[]) => needles.some((needle) => plain.includes(needle));
+
+  if (hasAny('grabacion de banda', 'grabacion banda', 'band recording', 'banda'))
+    return ['Live Room', 'Control Room'];
+  if (hasAny('grabacion de voz', 'grabacion voz', 'grabacion vocal', 'vocal recording', 'voz'))
     return ['Live Room', 'Vocal Booth'];
-  if (plain.includes('mezcla') || norm.includes('mix')) return ['Control Room'];
-  if (plain.includes('master')) return ['Control Room'];
-  if (plain.includes('dj')) return ['DJ Booth'];
+  if (hasAny('mezcla', 'mix')) return ['Control Room'];
+  if (hasAny('master')) return ['Control Room'];
+  if (hasAny('podcast')) return ['Control Room', 'Vocal Booth'];
+  if (hasAny('ensayo', 'rehearsal')) return ['Live Room'];
+  if (hasAny('dj')) return ['DJ Booth'];
   return [];
 };
 

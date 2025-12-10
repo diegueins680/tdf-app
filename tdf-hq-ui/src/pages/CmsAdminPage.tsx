@@ -90,7 +90,11 @@ export default function CmsAdminPage() {
     },
   });
 
-  const versions: CmsContentDTO[] = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+  const versions: CmsContentDTO[] = useMemo(
+    () => (Array.isArray(listQuery.data) ? listQuery.data : []),
+    [listQuery.data],
+  );
+  const listDataInvalid = listQuery.data !== undefined && !Array.isArray(listQuery.data);
   const liveContent = liveQuery.data;
 
   const handleCreate = () => {
@@ -310,26 +314,43 @@ export default function CmsAdminPage() {
             {editingFromId && (
               <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />
             )}
-            </Stack>
-            {listQuery.isLoading && <LinearProgress />}
-            {listQuery.error && (
-              <Alert severity="error">
-                {listQuery.error instanceof Error ? listQuery.error.message : 'Error al cargar contenido.'}
+          </Stack>
+          {listQuery.isLoading && <LinearProgress />}
+          {listQuery.error && (
+            <Alert severity="error">
+              {listQuery.error instanceof Error ? listQuery.error.message : 'Error al cargar contenido.'}
+            </Alert>
+          )}
+          {listDataInvalid && (
+            <Alert severity="warning">
+              Respuesta inesperada del servidor. Revisa las credenciales o intenta de nuevo.
             </Alert>
           )}
           <Stack spacing={1.5}>
-                    {versions.map((v) => (
-                      <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-                          <Box sx={{ flexGrow: 1 }}>
-                            <Typography fontWeight={700}>{v.ccdTitle ?? v.ccdSlug}</Typography>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
+            {versions.map((v) => (
+              <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1}
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                >
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography fontWeight={700}>{v.ccdTitle ?? v.ccdSlug}</Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
                       <Chip label={v.ccdSlug} size="small" />
                       <Chip label={v.ccdLocale} size="small" />
                       <Chip label={`v${v.ccdVersion}`} size="small" />
-                      <Chip label={v.ccdStatus} size="small" color={v.ccdStatus === 'published' ? 'success' : 'default'} />
+                      <Chip
+                        label={v.ccdStatus}
+                        size="small"
+                        color={v.ccdStatus === 'published' ? 'success' : 'default'}
+                      />
                       {v.ccdPublishedAt && (
-                      <Chip label={`pub: ${new Date(v.ccdPublishedAt).toLocaleString()}`} size="small" variant="outlined" />
+                        <Chip
+                          label={`pub: ${new Date(v.ccdPublishedAt).toLocaleString()}`}
+                          size="small"
+                          variant="outlined"
+                        />
                       )}
                     </Stack>
                   </Box>
@@ -354,7 +375,13 @@ export default function CmsAdminPage() {
                     <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
                       Editar en formulario
                     </Button>
-                    <Button size="small" variant="text" color="error" onClick={() => deleteMutation.mutate(v.ccdId)} disabled={deleteMutation.isPending}>
+                    <Button
+                      size="small"
+                      variant="text"
+                      color="error"
+                      onClick={() => deleteMutation.mutate(v.ccdId)}
+                      disabled={deleteMutation.isPending}
+                    >
                       Borrar
                     </Button>
                   </Stack>

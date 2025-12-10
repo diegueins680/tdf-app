@@ -3,7 +3,7 @@ module Main where
 
 import qualified Network.Wai.Handler.Warp as Warp
 import           Control.Concurrent      (threadDelay)
-import           Control.Exception       (SomeException, try)
+import           Control.Exception       (SomeException, handle, try)
 import           Control.Monad            (forM_, when)
 import qualified Data.ByteString.Char8    as BS
 import           Data.Int                (Int64)
@@ -14,8 +14,9 @@ import           Database.Persist         ( (=.), upsert )
 import           Database.Persist.Sql     (SqlPersistT, Single(..), rawExecute, rawSql, runMigration,
                                            runSqlPool, toSqlKey)
 import           Database.Persist.Types   (PersistValue (PersistText))
-import           Network.HTTP.Types       (RequestHeaders)
-import           Network.Wai              (Middleware, responseHeaders, requestHeaders, mapResponseHeaders)
+import           Network.HTTP.Types       (RequestHeaders, status500)
+import           Network.Wai              (Middleware, mapResponseHeaders, requestHeaders, responseHeaders,
+                                           responseLBS)
 import           System.IO                (hSetEncoding, stdout, stderr)
 import           GHC.IO.Encoding          (utf8, setLocaleEncoding)
 import           Text.Read                (readMaybe)
@@ -57,20 +58,36 @@ main = do
   let env = Env{ envPool = pool, envConfig = cfg }
   appCors <- corsPolicy
   let app = mkApp env
+      -- Ensure Warp-generated exception responses still carry CORS headers so browsers don't block them.
+      addCorsToExceptionResponse ex =
+        let base = Warp.defaultOnExceptionResponse ex
+            hs = responseHeaders base
+            extra =
+              [ ("Access-Control-Allow-Origin", "*")
+              , ("Vary", "Origin")
+              ]
+            merged = extra ++ filter (\(k, _) -> k /= "Access-Control-Allow-Origin" && k /= "Vary") hs
+        in mapResponseHeaders (const merged) base
+      warpSettings =
+        Warp.setPort (appPort cfg) $
+          Warp.setOnExceptionResponse addCorsToExceptionResponse Warp.defaultSettings
       addCorsFallback :: Middleware
-      addCorsFallback next req send = next req $ \res -> do
-        let hs = responseHeaders res
-            originHeader = lookup "origin" (requestHeaders req :: RequestHeaders)
+      addCorsFallback next req send =
+        let originHeader = lookup "origin" (requestHeaders req :: RequestHeaders)
             originValue = maybe "*" id originHeader
             extra =
               [ ("Access-Control-Allow-Origin", originValue)
               , ("Vary", "Origin")
               ]
-            merged = extra ++ filter (\(k, _) -> k /= "Access-Control-Allow-Origin" && k /= "Vary") hs
-        send (mapResponseHeaders (const merged) res)
+            applyHeaders res =
+              let hs = responseHeaders res
+                  merged = extra ++ filter (\(k, _) -> k /= "Access-Control-Allow-Origin" && k /= "Vary") hs
+              in mapResponseHeaders (const merged) res
+        in handle (\(_ :: SomeException) -> send (responseLBS status500 extra "Internal server error")) $
+             next req (\res -> send (applyHeaders res))
 
   startCoursePaymentReminderJob env
-  Warp.run (appPort cfg) (addCorsFallback (appCors app))
+  Warp.runSettings warpSettings (addCorsFallback (appCors app))
 
 resetSchema :: SqlPersistT IO ()
 resetSchema = do

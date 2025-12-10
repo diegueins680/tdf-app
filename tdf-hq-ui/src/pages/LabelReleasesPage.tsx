@@ -75,12 +75,19 @@ export default function LabelReleasesPage() {
 
   const artistsQuery = useQuery({
     queryKey: ['admin', 'artists'],
-    queryFn: () => Admin.listArtistProfiles(),
+    queryFn: async () => {
+      try {
+        return await Admin.listArtistProfiles();
+      } catch (err) {
+        console.warn('Admin artists fetch failed, falling back to fan list', err);
+        return Fans.listArtists();
+      }
+    },
   });
 
   const releasesQuery = useQuery({
     queryKey: ['admin', 'artist-releases'],
-    enabled: (artistsQuery.data?.length ?? 0) > 0,
+    enabled: artistsQuery.isSuccess,
     queryFn: async () => {
       const artists = artistsQuery.data ?? [];
       const releasesPerArtist = await Promise.all(
@@ -116,6 +123,11 @@ export default function LabelReleasesPage() {
 
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
   const releases = useMemo(() => releasesQuery.data ?? [], [releasesQuery.data]);
+  const artistsError = useMemo(() => {
+    if (!artistsQuery.isError) return null;
+    if (artistsQuery.error instanceof Error) return artistsQuery.error.message;
+    return 'No pudimos cargar los artistas.';
+  }, [artistsQuery.error, artistsQuery.isError]);
 
   const filteredReleases = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -217,15 +229,33 @@ export default function LabelReleasesPage() {
                   <Button
                     size="small"
                     startIcon={<RefreshIcon />}
-                    onClick={() => void qc.invalidateQueries({ queryKey: ['admin', 'artist-releases'] })}
+                    onClick={() => {
+                      void qc.invalidateQueries({ queryKey: ['admin', 'artists'] });
+                      void qc.invalidateQueries({ queryKey: ['admin', 'artist-releases'] });
+                    }}
                   >
                     Recargar
                   </Button>
                 </Stack>
 
+                {artistsError && (
+                  <Alert
+                    severity="error"
+                    action={
+                      <Button size="small" color="inherit" onClick={() => artistsQuery.refetch()}>
+                        Reintentar
+                      </Button>
+                    }
+                  >
+                    No pudimos cargar los artistas. {artistsError}
+                  </Alert>
+                )}
+
                 <Autocomplete
                   options={artists}
                   getOptionLabel={(option: ArtistProfileDTO) => option.apDisplayName}
+                  loading={artistsQuery.isFetching}
+                  noOptionsText={artistsQuery.isFetching ? 'Cargando...' : 'Sin artistas disponibles'}
                   value={artists.find((a) => a.apArtistId === form.artistId) ?? null}
                   onChange={(_, value) => setForm((prev) => ({ ...prev, artistId: value?.apArtistId ?? null }))}
                   renderInput={(params) => <TextField {...params} label="Artista" placeholder="Busca por nombre" />}
