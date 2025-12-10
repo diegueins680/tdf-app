@@ -66,8 +66,8 @@ const defaultRoomsForService = (service: string) => {
   const norm = normalizeService(service);
   const plain = stripDiacritics(norm);
   if (plain.includes('grabacion banda') || plain.includes('band recording')) return ['Live Room', 'Control Room'];
-  if (plain.includes('grabacion vocal') || plain.includes('vocal recording') || norm.includes('vocal'))
-    return ['Vocal Booth', 'Control Room'];
+  if (plain.includes('grabacion voz') || plain.includes('grabacion vocal') || plain.includes('vocal recording'))
+    return ['Live Room', 'Vocal Booth'];
   if (plain.includes('mezcla') || norm.includes('mix')) return ['Control Room'];
   if (plain.includes('master')) return ['Control Room'];
   if (plain.includes('dj')) return ['DJ Booth'];
@@ -131,19 +131,22 @@ export default function PublicBookingPage() {
       const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
       if (!raw) return;
       const stored = JSON.parse(raw) as Partial<FormState>;
+      const allowedServices = new Set(services.map((s) => s.name));
+      const storedService = stored.serviceType ?? defaultService;
+      const nextService = allowedServices.has(storedService) ? storedService : defaultService;
       setForm((prev) => ({
         ...prev,
         fullName: stored.fullName ?? prev.fullName,
         email: stored.email ?? prev.email,
         phone: stored.phone ?? prev.phone,
-        serviceType: stored.serviceType ?? prev.serviceType,
-        resourceLabels: defaultRoomsForService(stored.serviceType ?? prev.serviceType),
+        serviceType: nextService,
+        resourceLabels: defaultRoomsForService(nextService),
       }));
       setRememberProfile(true);
     } catch {
       // ignore parsing issues
     }
-  }, []);
+  }, [defaultService, services]);
 
   useEffect(() => {
     if (!session?.displayName) return;

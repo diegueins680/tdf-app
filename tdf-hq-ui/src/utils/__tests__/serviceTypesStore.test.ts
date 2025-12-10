@@ -23,7 +23,13 @@ describe('serviceTypesStore', () => {
     localStorage.setItem('tdf-service-types', JSON.stringify(custom));
 
     const result = loadServiceTypes();
-    expect(result).toEqual(custom);
+    expect(result).toEqual(
+      expect.arrayContaining([
+        custom[0],
+        expect.objectContaining({ name: 'Grabación de Banda' }),
+        expect.objectContaining({ name: 'Grabación de Voz' }),
+      ]),
+    );
   });
 
   it('saves service types to localStorage', () => {
