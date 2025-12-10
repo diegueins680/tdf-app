@@ -142,6 +142,27 @@ export default function PublicBookingPage() {
   const [availabilityStatus, setAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable' | 'unknown'>('idle');
   const [availabilityNote, setAvailabilityNote] = useState<string | null>(null);
   const [assignEngineerLater, setAssignEngineerLater] = useState(false);
+  const copySummary = useCallback(async () => {
+    const svc = form.serviceType;
+    const start = formattedStart ?? form.startsAt;
+    const duration = `${form.durationMinutes} min`;
+    const price = estimatePriceLabel ?? selectedPrice ?? 'Por confirmar';
+    const lines = [
+      `Reserva TDF`,
+      `Servicio: ${svc}`,
+      `Inicio: ${start}`,
+      `Duración: ${duration}`,
+      `Precio ref: ${price}`,
+    ];
+    const summary = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(summary);
+      setAvailabilityNote('Resumen copiado.');
+      setTimeout(() => setAvailabilityNote(null), 1800);
+    } catch {
+      setAvailabilityNote('No pudimos copiar el resumen.');
+    }
+  }, [estimatePriceLabel, form.durationMinutes, form.serviceType, formattedStart, selectedPrice, form.startsAt]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -930,7 +951,13 @@ export default function PublicBookingPage() {
                           step: 15,
                           max: maxDurationUntilClose && maxDurationUntilClose > 0 ? maxDurationUntilClose : undefined,
                         }}
-                        helperText={durationLimitLabel ?? undefined}
+                        helperText={
+                          outOfHours
+                            ? outOfHours
+                            : durationLimitLabel
+                              ? durationLimitLabel
+                              : `Precios en ${studioCurrency}`
+                        }
                       />
                       {estimatePriceLabel && (
                         <Typography variant="body2" color="text.secondary">
@@ -1012,58 +1039,62 @@ export default function PublicBookingPage() {
                     )}
                     {requiresEngineer(form.serviceType) && (
                       <Grid item xs={12}>
-                        <Autocomplete<string | PublicEngineer, false, false, true>
-                          options={engineers}
-                          getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
-                          loading={engineersLoading}
-                          freeSolo
-                          disabled={formDisabled}
-                          value={engineerValue}
-                          onChange={(_evt, value) => {
-                            if (!value) {
-                              setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
-                              return;
-                            }
-                            const id = typeof value === 'string' ? null : value.peId;
-                            const name = typeof value === 'string' ? value : value.peName;
-                            setForm((prev) => ({ ...prev, engineerId: id, engineerName: name }));
-                          }}
-                          inputValue={form.engineerName}
-                          onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, engineerName: value }))}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              label="Ingeniero asignado"
-                              placeholder="Elige quién llevará la sesión"
-                              required={!assignEngineerLater}
-                              InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                  <>
-                                    {engineersLoading ? <CircularProgress size={16} /> : null}
-                                    {params.InputProps.endAdornment}
-                                  </>
-                                ),
+                        <Stack spacing={1}>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Checkbox
+                              checked={assignEngineerLater}
+                              onChange={(e) => setAssignEngineerLater(e.target.checked)}
+                              size="small"
+                              disabled={formDisabled}
+                            />
+                            <Typography variant="body2" color="text.secondary">
+                              Asignar ingeniero después
+                            </Typography>
+                          </Stack>
+                          {!assignEngineerLater && (
+                            <Autocomplete<string | PublicEngineer, false, false, true>
+                              options={engineers}
+                              getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
+                              loading={engineersLoading}
+                              freeSolo
+                              disabled={formDisabled}
+                              value={engineerValue}
+                              onChange={(_evt, value) => {
+                                if (!value) {
+                                  setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
+                                  return;
+                                }
+                                const id = typeof value === 'string' ? null : value.peId;
+                                const name = typeof value === 'string' ? value : value.peName;
+                                setForm((prev) => ({ ...prev, engineerId: id, engineerName: name }));
                               }}
-                              helperText={
-                                engineersError ??
-                                (engineers.length === 0 && !engineersLoading
-                                  ? 'Escribe el nombre del ingeniero (catálogo no disponible).'
-                                  : 'Selecciona o escribe el ingeniero asignado.')
-                              }
+                              inputValue={form.engineerName}
+                              onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, engineerName: value }))}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Ingeniero asignado"
+                                  placeholder="Elige quién llevará la sesión"
+                                  required
+                                  InputProps={{
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                      <>
+                                        {engineersLoading ? <CircularProgress size={16} /> : null}
+                                        {params.InputProps.endAdornment}
+                                      </>
+                                    ),
+                                  }}
+                                  helperText={
+                                    engineersError ??
+                                    (engineers.length === 0 && !engineersLoading
+                                      ? 'Escribe el nombre del ingeniero (catálogo no disponible).'
+                                      : 'Selecciona o escribe el ingeniero asignado.')
+                                  }
+                                />
+                              )}
                             />
                           )}
-                        />
-                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
-                          <Checkbox
-                            checked={assignEngineerLater}
-                            onChange={(e) => setAssignEngineerLater(e.target.checked)}
-                            size="small"
-                            disabled={formDisabled}
-                          />
-                          <Typography variant="body2" color="text.secondary">
-                            Asignar ingeniero después
-                          </Typography>
                         </Stack>
                         <Typography variant="caption" color="text.secondary">
                           Requerido para grabación, mezcla o mastering. Si no encuentras a tu ingeniero, escríbenos en notas.
@@ -1129,6 +1160,9 @@ export default function PublicBookingPage() {
                           </Button>
                           <Button variant="contained" size="medium" onClick={resetForm}>
                             Crear otra reserva
+                          </Button>
+                          <Button variant="text" size="medium" onClick={() => void copySummary()}>
+                            Copiar resumen
                           </Button>
                         </Stack>
                       </Grid>

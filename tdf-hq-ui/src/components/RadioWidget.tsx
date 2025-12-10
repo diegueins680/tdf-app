@@ -306,6 +306,11 @@ export default function RadioWidget() {
     '&:hover': { opacity: 1 },
   } as const;
   const mediaDevicesSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
+  const [recentStations, setRecentStations] = useState<Station[]>([]);
+  const [muteOnLoad, setMuteOnLoad] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('radio-mute-on-load') === '1';
+  });
   const sizeOptions = {
     compact: { width: { xs: '95%', sm: 340 }, bodyHeight: '55vh' },
     cozy: { width: { xs: '95%', sm: 440 }, bodyHeight: '68vh' },
@@ -392,6 +397,22 @@ export default function RadioWidget() {
       // ignore
     }
   }, [showAdvanced]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-mute-on-load', muteOnLoad ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [muteOnLoad]);
+  useEffect(() => {
+    setRecentStations((prev) => {
+      if (!isPlaying || !activeStation.streamUrl) return prev;
+      const exists = prev.find((s) => s.id === activeStation.id);
+      const next = [activeStation, ...(exists ? prev.filter((s) => s.id !== activeStation.id) : prev)];
+      return next.slice(0, 3);
+    });
+  }, [activeStation, isPlaying]);
   const meterLevel = inputTestActive && inputTestLevel !== null ? inputTestLevel : inputLevel;
   useEffect(() => {
     if (audioRef.current) {
@@ -987,12 +1008,12 @@ export default function RadioWidget() {
         setActiveId(id);
       }
       setExpanded(true);
-      setMuted(false);
-      setIsPlaying(true);
+      setMuted(muteOnLoad);
+      setIsPlaying(!muteOnLoad);
     };
     window.addEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
     return () => window.removeEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
-  }, [availableStations]);
+  }, [availableStations, muteOnLoad]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -1678,6 +1699,26 @@ export default function RadioWidget() {
               <Typography variant="caption" color="text.secondary" noWrap>
                 {activeStation.name} · {activeStation.mood}
               </Typography>
+              {recentStations.length > 1 && (
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Recientes:
+                  </Typography>
+                  {recentStations.slice(1).map((s) => (
+                    <Chip
+                      key={s.id}
+                      label={s.name}
+                      size="small"
+                      onClick={() => {
+                        setActiveId(s.id);
+                        setIsPlaying(false);
+                        setMuted(muteOnLoad);
+                      }}
+                      variant="outlined"
+                    />
+                  ))}
+                </Stack>
+              )}
             </Box>
             <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
               <IconButton onClick={togglePlay} color="primary" data-no-drag>
@@ -1735,6 +1776,18 @@ export default function RadioWidget() {
                 </Button>
               </Stack>
             </Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={muteOnLoad}
+                  onChange={(e) => setMuteOnLoad(e.target.checked)}
+                  color="warning"
+                />
+              }
+              label="Silenciar al cargar"
+              sx={{ ml: 1 }}
+            />
             <Tooltip title={showAdvanced ? 'Ocultar catálogo y transmisión' : 'Mostrar catálogo y transmisión'}>
               <IconButton
                 onClick={() => setShowAdvanced((v) => !v)}

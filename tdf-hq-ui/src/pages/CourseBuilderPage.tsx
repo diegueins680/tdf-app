@@ -128,6 +128,15 @@ export default function CourseBuilderPage() {
     });
     return errors;
   }, [sessions]);
+  const syllabusErrors = useMemo(() => {
+    const errors: string[] = [];
+    syllabus.forEach((s, idx) => {
+      if (!s.title.trim() && !s.topics.trim()) {
+        errors[idx] = 'Completa título o temas';
+      }
+    });
+    return errors;
+  }, [syllabus]);
 
   useEffect(() => {
     if (!landingUrlTouched) {
@@ -393,6 +402,8 @@ export default function CourseBuilderPage() {
                     fullWidth
                     value={s.title}
                     onChange={(e) => handleSyllabusChange(idx, 'title', e.target.value)}
+                    error={Boolean(syllabusErrors[idx])}
+                    helperText={syllabusErrors[idx] ?? undefined}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -401,6 +412,7 @@ export default function CourseBuilderPage() {
                     fullWidth
                     value={s.topics}
                     onChange={(e) => handleSyllabusChange(idx, 'topics', e.target.value)}
+                    error={Boolean(syllabusErrors[idx])}
                   />
                 </Grid>
               </Grid>
@@ -416,6 +428,19 @@ export default function CourseBuilderPage() {
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6" fontWeight={800}>Revisar y publicar</Typography>
+            <Card variant="outlined" sx={{ backgroundColor: 'rgba(148,163,184,0.06)' }}>
+              <CardContent>
+                <Typography variant="subtitle2" gutterBottom>CTA preview</Typography>
+                <Stack spacing={0.5}>
+                  <Typography variant="body2" color="text.secondary">
+                    Landing: {landingUrl || '—'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    WhatsApp CTA: {whatsappCtaUrl || '—'}
+                  </Typography>
+                </Stack>
+              </CardContent>
+            </Card>
             <TextField
               label="Payload"
               multiline

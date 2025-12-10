@@ -37,6 +37,11 @@ type SamplePayload = {
   heroSubtitle?: string;
   locale?: string;
 } & Record<string, unknown>;
+const schemaHints: Record<string, string[]> = {
+  'records-public': ['heroTitle', 'heroSubtitle', 'cards[]'],
+  'fan-hub': ['heroTitle', 'ctaWhatsapp', 'featuredArtists[]'],
+  'course-production': ['heroTitle', 'ctaPrimary', 'sessions[]'],
+};
 const samplePayloads: Record<string, SamplePayload> = {
   'records-public': {
     heroTitle: 'Lanzamientos destacados',
@@ -53,6 +58,11 @@ const samplePayloads: Record<string, SamplePayload> = {
     heroSubtitle: 'Reserva tu cupo con clases hands-on.',
     locale: 'es',
   },
+};
+const slugSchemas: Record<string, string[]> = {
+  'records-public': ['heroTitle (string)', 'heroSubtitle (string)', 'ctaText (string)', 'ctaUrl (string)'],
+  'fan-hub': ['heroTitle', 'heroSubtitle', 'ctaWhatsapp', 'sections (array)'],
+  'course-production': ['heroTitle', 'heroSubtitle', 'bullets (array)', 'ctaPrimary'],
 };
 const PUBLIC_BASE =
   typeof window !== 'undefined' && window.location.origin
@@ -615,7 +625,7 @@ export default function CmsAdminPage() {
                   helperText={
                     payloadError
                       ? `Error: ${payloadError}`
-                      : 'Estructura JSON del bloque (usa objetos/arrays). Formatea para validar.'
+                      : `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHints[slugFilter]?.join(', ') ?? '—'}`
                   }
                   error={Boolean(payloadError)}
                 />
