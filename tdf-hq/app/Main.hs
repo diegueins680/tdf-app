@@ -14,7 +14,7 @@ import           Database.Persist         ( (=.), upsert )
 import           Database.Persist.Sql     (SqlPersistT, Single(..), rawExecute, rawSql, runMigration,
                                            runSqlPool, toSqlKey)
 import           Database.Persist.Types   (PersistValue (PersistText))
-import           Network.HTTP.Types       (hOrigin)
+import           Network.HTTP.Types       (RequestHeaders)
 import           Network.Wai              (Middleware, responseHeaders, requestHeaders, mapResponseHeaders)
 import           System.IO                (hSetEncoding, stdout, stderr)
 import           GHC.IO.Encoding          (utf8, setLocaleEncoding)
@@ -61,7 +61,7 @@ main = do
       addCorsFallback next req send = next req $ \res -> do
         let hs = responseHeaders res
             hasOrigin = any (\(k, _) -> k == "Access-Control-Allow-Origin") hs
-            originHeader = lookup hOrigin (requestHeaders req)
+            originHeader = lookup "origin" (requestHeaders req :: RequestHeaders)
             originValue = maybe "*" id originHeader
             extra = if hasOrigin then [] else [("Access-Control-Allow-Origin", originValue)]
             merged = extra ++ hs
