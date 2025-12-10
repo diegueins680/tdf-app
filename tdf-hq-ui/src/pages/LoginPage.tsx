@@ -570,66 +570,97 @@ export default function LoginPage() {
               </Typography>
             </Stack>
 
-            {showApiToken && (
-              <Tabs
-                value={tab}
-                onChange={(_, value) => setTab(value as LoginTab)}
-                variant="fullWidth"
-              >
-                <Tab value="password" label="CONTRASEÑA" />
-                <Tab value="token" label="TOKEN API" />
-              </Tabs>
-            )}
-
-            {tab === 'password' || !showApiToken ? (
+            {showApiToken ? (
               <Stack spacing={2}>
-                <TextField
-                  label="Usuario o correo *"
-                  type="text"
-                  value={identifier}
-                  onChange={(event) => setIdentifier(event.target.value)}
-                  fullWidth
-                  autoComplete="username"
-                  helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
-                />
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                  <Typography variant="subtitle2">Opciones avanzadas</Typography>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => {
+                      setShowApiToken(false);
+                      setTab('password');
+                    }}
+                  >
+                    Ocultar
+                  </Button>
+                </Stack>
+                <Tabs value={tab} onChange={(_, value) => setTab(value as LoginTab)} variant="fullWidth">
+                  <Tab value="password" label="CONTRASEÑA" />
+                  <Tab value="token" label="TOKEN API" />
+                </Tabs>
+                {tab === 'password' ? (
+                  <Stack spacing={2}>
+                    <TextField
+                      label="Usuario o correo *"
+                      type="text"
+                      value={identifier}
+                      onChange={(event) => setIdentifier(event.target.value)}
+                      fullWidth
+                      autoComplete="username"
+                      helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
+                    />
 
-                <TextField
-                  label="Contraseña *"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  fullWidth
-                  autoComplete="current-password"
-                />
+                    <TextField
+                      label="Contraseña *"
+                      type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      fullWidth
+                      autoComplete="current-password"
+                    />
+                  </Stack>
+                ) : (
+                  <Stack spacing={2}>
+                    <TextField
+                      label="Token API *"
+                      value={tokenValue}
+                      onChange={(event) => setTokenValue(event.target.value)}
+                      fullWidth
+                      placeholder="tdf_xxxx-xxxx"
+                    />
+                    <Typography variant="caption" color="text.secondary">
+                      Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
+                    </Typography>
+                  </Stack>
+                )}
               </Stack>
             ) : (
-              <Stack spacing={2}>
-                <TextField
-                  label="Token API *"
-                  value={tokenValue}
-                  onChange={(event) => setTokenValue(event.target.value)}
-                  fullWidth
-                  placeholder="tdf_xxxx-xxxx"
-                />
-                <Typography variant="caption" color="text.secondary">
-                  Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
-                </Typography>
-              </Stack>
-            )}
-            {!showApiToken && (
-              <Stack spacing={0.5}>
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={() => {
-                    setShowApiToken(true);
-                    setTab('token');
-                  }}
-                  sx={{ alignSelf: 'flex-start', px: 0 }}
-                >
-                  ¿Tienes un token API? Usar token temporal
-                </Button>
-              </Stack>
+              <>
+                <Stack spacing={2}>
+                  <TextField
+                    label="Usuario o correo *"
+                    type="text"
+                    value={identifier}
+                    onChange={(event) => setIdentifier(event.target.value)}
+                    fullWidth
+                    autoComplete="username"
+                    helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
+                  />
+
+                  <TextField
+                    label="Contraseña *"
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    fullWidth
+                    autoComplete="current-password"
+                  />
+                </Stack>
+                <Stack spacing={0.5}>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => {
+                      setShowApiToken(true);
+                      setTab('token');
+                    }}
+                    sx={{ alignSelf: 'flex-start', px: 0 }}
+                  >
+                    Opciones avanzadas: usar token API
+                  </Button>
+                </Stack>
+              </>
             )}
 
             {googleClientId && (

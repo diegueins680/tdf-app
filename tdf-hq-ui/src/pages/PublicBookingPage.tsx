@@ -500,6 +500,95 @@ export default function PublicBookingPage() {
     return minutes;
   }, [bookingWindow]);
 
+  if (success) {
+    const successStartIso =
+      (success as any).pbStartsAt ?? (success as any).cbStartsAt ?? (success as any).ubStartsAt ?? success.startsAt;
+    const successStartLabel =
+      successStartIso && typeof successStartIso === 'string'
+        ? DateTime.fromISO(successStartIso).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
+        : formattedStart ?? form.startsAt;
+    const successDuration = (success as any).pbDurationMinutes ?? form.durationMinutes;
+    const successEngineer = (success as any).pbEngineerName ?? form.engineerName;
+
+    return (
+      <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+        <Card
+          sx={{
+            maxWidth: 880,
+            width: '100%',
+            borderRadius: 3,
+            boxShadow: '0 18px 72px rgba(15,17,24,0.26)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.02), rgba(30,64,175,0.06))',
+          }}
+        >
+          <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+            <Stack spacing={2.5}>
+              <Stack spacing={0.6}>
+                <Typography variant="overline" color="text.secondary">
+                  Agenda pública
+                </Typography>
+                <Typography variant="h4" fontWeight={800}>
+                  Reserva enviada
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Revisa tu correo para la confirmación. Si necesitas ajustes de horario o salas, responde al correo y lo
+                  coordinamos contigo.
+                </Typography>
+              </Stack>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Alert severity="success">
+                    Reserva creada. ID <strong>{success.bookingId}</strong> · Servicio:{' '}
+                    <strong>{success.serviceType ?? form.serviceType}</strong>
+                  </Alert>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      bgcolor: 'rgba(255,255,255,0.02)',
+                      borderColor: 'rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <CardContent>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Resumen
+                      </Typography>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                        <Chip label={`Fecha: ${successStartLabel}`} size="small" />
+                        <Chip label={`Duración: ${successDuration} min`} size="small" />
+                        <Chip label={`Servicio: ${success.serviceType ?? form.serviceType}`} size="small" />
+                        {form.resourceLabels.length > 0 && (
+                          <Chip label={`Salas: ${form.resourceLabels.join(' + ')}`} size="small" />
+                        )}
+                        {successEngineer && <Chip label={`Ingeniero: ${successEngineer}`} size="small" />}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                    <Button variant="outlined" href="/login?redirect=/estudio/calendario" size="medium">
+                      Ver mi reserva
+                    </Button>
+                    <Button variant="contained" size="medium" onClick={resetForm}>
+                      Crear otra reserva
+                    </Button>
+                    <Button variant="text" size="medium" onClick={() => void copySummary()}>
+                      Copiar resumen
+                    </Button>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
+
   const engineerValue =
     (engineers.find((opt) => opt.peId === form.engineerId) as PublicEngineer | undefined) ??
     (form.engineerName ? { peId: -1, peName: form.engineerName } : null);

@@ -29,6 +29,7 @@ import { Admin } from '../api/admin';
 import { Fans } from '../api/fans';
 import type { ArtistProfileDTO, ArtistReleaseDTO, ArtistReleaseUpsert } from '../api/types';
 import StreamingPlayer from '../components/StreamingPlayer';
+import { SessionGate } from '../components/SessionGate';
 import { buildReleaseStreamingSources } from '../utils/media';
 
 type ReleaseRow = ArtistReleaseDTO & {
@@ -234,6 +235,7 @@ export default function LabelReleasesPage() {
   const alertMessage = error ?? banner;
 
   return (
+    <SessionGate message="Inicia sesión como admin para gestionar releases.">
     <Stack spacing={3}>
       <Stack spacing={0.5}>
         <Typography variant="h4" fontWeight={700}>
@@ -651,5 +653,6 @@ export default function LabelReleasesPage() {
         </CardContent>
       </Card>
     </Stack>
+    </SessionGate>
   );
 }

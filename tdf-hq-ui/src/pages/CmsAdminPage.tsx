@@ -22,6 +22,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Cms, type CmsContentDTO, type CmsContentIn } from '../api/cms';
+import { SessionGate } from '../components/SessionGate';
 
 const defaultSlugs = [
   'records-public',
@@ -356,6 +357,7 @@ export default function CmsAdminPage() {
   );
 
   return (
+    <SessionGate message="Inicia sesión para administrar contenido público.">
     <Stack spacing={3}>
       <Dialog
         open={Boolean(pendingVersion)}
@@ -863,5 +865,6 @@ export default function CmsAdminPage() {
         </Stack>
       </Paper>
     </Stack>
+    </SessionGate>
   );
 }
