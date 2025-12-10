@@ -92,7 +92,7 @@ export default function CourseBuilderPage() {
   const [sessions, setSessions] = useState<SessionInput[]>(DEFAULT_SESSIONS);
   const [syllabus, setSyllabus] = useState<SyllabusInput[]>(DEFAULT_SYLLABUS);
 
-  const startDate = useMemo(() => findEarliestSessionDate(sessions), [sessions]);
+  const startDate = useMemo<string | null>(() => findEarliestSessionDate(sessions) ?? null, [sessions]);
   const slug = useMemo(() => generateSlug(title, startDate), [title, startDate]);
 
   useEffect(() => {
