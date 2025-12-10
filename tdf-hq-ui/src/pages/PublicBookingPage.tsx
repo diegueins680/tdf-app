@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -47,6 +47,10 @@ const toLocalInputValue = (date: Date) => {
     date.getMinutes(),
   )}`;
 };
+const roundToNext = (date: Date, minutes: number) => {
+  const ms = minutes * 60 * 1000;
+  return new Date(Math.ceil(date.getTime() / ms) * ms);
+};
 
 const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
@@ -91,6 +95,25 @@ const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
   return list;
 };
 
+const buildInitialForm = (defaultService: string) => {
+  const start = new Date();
+  start.setMinutes(start.getMinutes() + 90);
+  start.setSeconds(0, 0);
+  const initialRooms = defaultRoomsForService(defaultService);
+  return {
+    fullName: '',
+    email: '',
+    phone: '',
+    serviceType: defaultService,
+    startsAt: toLocalInputValue(start),
+    durationMinutes: 60,
+    notes: '',
+    engineerId: null,
+    engineerName: '',
+    resourceLabels: initialRooms,
+  };
+};
+
 export default function PublicBookingPage() {
   const services = useMemo(() => loadServiceTypes(), []);
   const defaultService = services[0]?.name ?? 'Reserva';
@@ -105,24 +128,7 @@ export default function PublicBookingPage() {
   );
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
-  const [form, setForm] = useState<FormState>(() => {
-    const start = new Date();
-    start.setMinutes(start.getMinutes() + 90);
-    start.setSeconds(0, 0);
-    const initialRooms = defaultRoomsForService(defaultService);
-    return {
-      fullName: '',
-      email: '',
-      phone: '',
-      serviceType: defaultService,
-      startsAt: toLocalInputValue(start),
-      durationMinutes: 60,
-      notes: '',
-      engineerId: null,
-      engineerName: '',
-      resourceLabels: initialRooms,
-    };
-  });
+  const [form, setForm] = useState<FormState>(() => buildInitialForm(defaultService));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<BookingDTO | null>(null);
@@ -200,6 +206,38 @@ export default function PublicBookingPage() {
       })
       .finally(() => setEngineersLoading(false));
   }, []);
+
+  const formDisabled = submitting || Boolean(success);
+
+  const sanitizeStart = useCallback(
+    (candidate: DateTime, durationMinutes: number) => {
+      if (!candidate.isValid) return candidate;
+      const now = DateTime.now().setZone(userTimeZone).plus({ minutes: 15 });
+      let next = candidate < now ? now : candidate;
+      const openStudio = next.setZone(studioTimeZone).set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
+      const closeStudio = next.setZone(studioTimeZone).set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
+
+      let startStudio = next.setZone(studioTimeZone);
+      if (startStudio < openStudio) {
+        next = openStudio.setZone(userTimeZone);
+        startStudio = next.setZone(studioTimeZone);
+      }
+      const latestStartStudio = closeStudio.minus({ minutes: durationMinutes });
+      if (startStudio > latestStartStudio) {
+        const clamped = latestStartStudio < openStudio ? openStudio : latestStartStudio;
+        next = clamped.setZone(userTimeZone);
+      }
+      return next;
+    },
+    [studioTimeZone, userTimeZone],
+  );
+
+  const resetForm = useCallback(() => {
+    setSuccess(null);
+    setError(null);
+    setSubmitting(false);
+    setForm(buildInitialForm(defaultService));
+  }, [defaultService]);
 
   const handleSubmit = async (evt: React.FormEvent) => {
     evt.preventDefault();
@@ -301,7 +339,37 @@ export default function PublicBookingPage() {
     });
     return map;
   }, [services]);
+  const estimatePriceLabel = useMemo(() => {
+    const svc = services.find((s) => s.name === form.serviceType);
+    if (!svc) return null;
+    const base = `${svc.currency} ${svc.price.toLocaleString(undefined, { minimumFractionDigits: 0 })}`;
+    if (svc.billingUnit && svc.billingUnit.toLowerCase().includes('hora')) {
+      const hours = Math.max(0.5, (Number(form.durationMinutes) || 60) / 60);
+      const total = svc.price * hours;
+      return `${svc.currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} aprox (${hours.toFixed(1)}h)`;
+    }
+    return `${base}${svc.billingUnit ? ` / ${svc.billingUnit}` : ''}`;
+  }, [form.durationMinutes, form.serviceType, services]);
   const selectedPrice = servicePriceLookup.get(form.serviceType);
+
+  const minStartDate = useMemo(() => {
+    const nowStudio = DateTime.now().setZone(studioTimeZone);
+    const openToday = nowStudio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
+    const closeToday = nowStudio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
+    let candidate = nowStudio.plus({ minutes: 15 });
+    if (candidate < openToday) candidate = openToday;
+    if (candidate > closeToday) candidate = openToday.plus({ days: 1 });
+    return candidate.setZone(userTimeZone);
+  }, [studioTimeZone, userTimeZone]);
+
+  const minStartValue = useMemo(() => toLocalInputValue(minStartDate.toJSDate()), [minStartDate]);
+
+  useEffect(() => {
+    const current = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
+    if (!current.isValid || current < minStartDate) {
+      setForm((prev) => ({ ...prev, startsAt: minStartValue }));
+    }
+  }, [form.startsAt, minStartDate, minStartValue, userTimeZone]);
   const formattedStart = useMemo(() => {
     if (!bookingWindow) return null;
     return bookingWindow.startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
@@ -319,6 +387,33 @@ export default function PublicBookingPage() {
     const lowered = service.toLowerCase();
     return lowered.includes('graba') || lowered.includes('mezcl') || lowered.includes('master');
   };
+
+  const firstAvailable = useCallback(
+    (dayOffset: number) => {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 15);
+      now.setSeconds(0, 0);
+      const targetDay = new Date(now);
+      targetDay.setDate(targetDay.getDate() + dayOffset);
+      const start = new Date(
+        targetDay.getFullYear(),
+        targetDay.getMonth(),
+        targetDay.getDate(),
+        OPEN_HOURS.start,
+        0,
+        0,
+        0,
+      );
+      const baseline = dayOffset === 0 && now > start ? now : start;
+      const rounded = roundToNext(baseline, 30);
+      const limited =
+        rounded.getHours() >= OPEN_HOURS.end
+          ? new Date(targetDay.getFullYear(), targetDay.getMonth(), targetDay.getDate(), OPEN_HOURS.end - 1, 30, 0, 0)
+          : rounded;
+      return limited;
+    },
+    [],
+  );
 
   useEffect(() => {
     setForm((prev) => {
@@ -396,33 +491,55 @@ export default function PublicBookingPage() {
     return `Horario del estudio: ${open.toFormat('HH:mm')} - ${close.toFormat('HH:mm')} (${studioZoneLabel}). Tu zona: ${openUser.toFormat('HH:mm')} - ${closeUser.toFormat('HH:mm')} (${userZoneLabel}).`;
   }, [bookingWindow?.closeStudio, bookingWindow?.openStudio, studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
 
+  const maxStartIso = useMemo(() => {
+    if (!bookingWindow) return undefined;
+    const duration = Math.max(30, Number(form.durationMinutes) || 60);
+    const latestStudio = bookingWindow.closeStudio.minus({ minutes: duration });
+    const latestUser = latestStudio.setZone(userTimeZone);
+    return toLocalInputValue(latestUser.toJSDate());
+  }, [bookingWindow, form.durationMinutes, userTimeZone]);
+
   const suggestedSlots = useMemo(() => {
     const slots: { value: string; label: string; helper: string }[] = [];
-    const nowUser = DateTime.now().setZone(userTimeZone);
-    const pushSlot = (dt: DateTime, label: string) => {
-      if (!dt.isValid) return;
-      const studio = dt.setZone(studioTimeZone);
-      const openStudio = studio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
-      const closeStudio = studio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
-      if (studio < openStudio || studio > closeStudio.minus({ minutes: 30 })) return;
-      const helper = `${dt.toFormat('EEE dd HH:mm')} (${userZoneLabel}) · Estudio ${studio.toFormat('HH:mm')} (${studioZoneLabel})`;
+    const duration = Math.max(30, Number(form.durationMinutes) || 60);
+    const nowUser = DateTime.now().setZone(userTimeZone).plus({ minutes: 15 });
+    const baseDay = DateTime.fromISO(form.startsAt || '', { zone: userTimeZone });
+    const day = baseDay.isValid ? baseDay.startOf('day') : nowUser.startOf('day');
+
+    const openStudio = day
+      .setZone(studioTimeZone)
+      .set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
+    const closeStudio = day
+      .setZone(studioTimeZone)
+      .set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
+    let cursorUser = openStudio.setZone(userTimeZone);
+    if (cursorUser < nowUser && cursorUser.hasSame(nowUser, 'day')) {
+      cursorUser = nowUser.startOf('minute');
+    }
+
+    const pushSlot = (dtUser: DateTime) => {
+      if (!dtUser.isValid) return;
+      const startStudio = dtUser.setZone(studioTimeZone);
+      const endStudio = startStudio.plus({ minutes: duration });
+      if (startStudio < openStudio || endStudio > closeStudio) return;
+      const helper = `${dtUser.toFormat('EEE dd HH:mm')} (${userZoneLabel}) · Estudio ${startStudio.toFormat('HH:mm')} (${studioZoneLabel})`;
       slots.push({
-        value: toLocalInputValue(dt.toJSDate()),
-        label,
+        value: toLocalInputValue(dtUser.toJSDate()),
+        label: dtUser.toFormat('HH:mm'),
         helper,
       });
     };
 
-    pushSlot(nowUser.plus({ minutes: 60 }), 'En 1 hora');
-    pushSlot(nowUser.plus({ minutes: 180 }), 'En 3 horas');
-    const tomorrowStudioMorning = DateTime.now()
-      .setZone(studioTimeZone)
-      .plus({ days: 1 })
-      .set({ hour: 10, minute: 0, second: 0, millisecond: 0 });
-    pushSlot(tomorrowStudioMorning.setZone(userTimeZone), 'Mañana 10:00 (estudio)');
-    pushSlot(tomorrowStudioMorning.set({ hour: 15 }).setZone(userTimeZone), 'Mañana 15:00 (estudio)');
-    return slots;
-  }, [studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
+    let guard = 0;
+    while (guard < 48) {
+      pushSlot(cursorUser);
+      cursorUser = cursorUser.plus({ minutes: 30 });
+      guard += 1;
+      if (cursorUser.plus({ minutes: duration }) > closeStudio.setZone(userTimeZone)) break;
+    }
+
+    return slots.slice(0, 12);
+  }, [form.durationMinutes, form.startsAt, studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
 
   return (
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -545,6 +662,7 @@ export default function PublicBookingPage() {
                         onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
                         fullWidth
                         required
+                        disabled={formDisabled}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -555,6 +673,7 @@ export default function PublicBookingPage() {
                         onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                         fullWidth
                         required
+                        disabled={formDisabled}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -563,6 +682,7 @@ export default function PublicBookingPage() {
                         value={form.phone}
                         onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
                         fullWidth
+                        disabled={formDisabled}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -573,6 +693,7 @@ export default function PublicBookingPage() {
                         onChange={(e) => setForm((prev) => ({ ...prev, serviceType: e.target.value }))}
                         fullWidth
                         required
+                        disabled={formDisabled}
                       >
                         {services.map((svc) => (
                           <MenuItem key={svc.id} value={svc.name}>
@@ -598,6 +719,7 @@ export default function PublicBookingPage() {
                             resourceLabels: value,
                           }))
                         }
+                        disabled={formDisabled}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => <Chip {...getTagProps({ index })} label={option} />)
                         }
@@ -621,6 +743,7 @@ export default function PublicBookingPage() {
                               resourceLabels: suggestedRooms,
                             }))
                           }
+                          disabled={formDisabled}
                         />
                         <Chip
                           label="No estoy seguro, elijan por mí"
@@ -631,6 +754,7 @@ export default function PublicBookingPage() {
                             }))
                           }
                           variant="outlined"
+                          disabled={formDisabled}
                         />
                         {suggestedRooms.length > 0 && (
                           <Typography variant="caption" color="text.secondary">
@@ -644,12 +768,51 @@ export default function PublicBookingPage() {
                         label="Fecha y hora"
                         type="datetime-local"
                         value={form.startsAt}
-                        onChange={(e) => setForm((prev) => ({ ...prev, startsAt: e.target.value }))}
+                        onChange={(e) => {
+                          const next = DateTime.fromISO(e.target.value, { zone: userTimeZone });
+                          const duration = Math.max(30, Number(form.durationMinutes) || 60);
+                          if (!next.isValid) {
+                            setForm((prev) => ({ ...prev, startsAt: e.target.value }));
+                            return;
+                          }
+                          const safe = sanitizeStart(next, duration);
+                          setForm((prev) => ({ ...prev, startsAt: toLocalInputValue(safe.toJSDate()) }));
+                        }}
                         fullWidth
                         InputLabelProps={{ shrink: true }}
+                        inputProps={{ min: minStartValue, max: maxStartIso, step: 900 }}
                         required
                         helperText={availabilityHelperText}
+                        disabled={formDisabled}
                       />
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          disabled={formDisabled}
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              startsAt: toLocalInputValue(firstAvailable(0)),
+                            }))
+                          }
+                        >
+                          Primer horario hoy
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="text"
+                          disabled={formDisabled}
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              startsAt: toLocalInputValue(firstAvailable(1)),
+                            }))
+                          }
+                        >
+                          Mañana
+                        </Button>
+                      </Stack>
                     </Grid>
                     <Grid item xs={12} sm={5}>
                       <Stack spacing={1}>
@@ -659,6 +822,7 @@ export default function PublicBookingPage() {
                         value={form.durationMinutes}
                         onChange={(e) => setForm((prev) => ({ ...prev, durationMinutes: Number(e.target.value) }))}
                         fullWidth
+                        disabled={formDisabled}
                         inputProps={{
                           min: 30,
                           step: 15,
@@ -674,11 +838,14 @@ export default function PublicBookingPage() {
                             size="small"
                             color={form.durationMinutes === value ? 'primary' : 'default'}
                             onClick={() => setForm((prev) => ({ ...prev, durationMinutes: value }))}
-                            disabled={Boolean(
-                              maxDurationUntilClose !== null &&
-                                maxDurationUntilClose > 0 &&
-                                value > maxDurationUntilClose,
-                            )}
+                            disabled={
+                              formDisabled ||
+                              Boolean(
+                                maxDurationUntilClose !== null &&
+                                  maxDurationUntilClose > 0 &&
+                                  value > maxDurationUntilClose,
+                              )
+                            }
                             sx={{ borderRadius: 999 }}
                           />
                         ))}
@@ -719,6 +886,7 @@ export default function PublicBookingPage() {
                           getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
                           loading={engineersLoading}
                           freeSolo
+                          disabled={formDisabled}
                           value={engineerValue}
                           onChange={(_evt, value) => {
                             if (!value) {
@@ -769,6 +937,7 @@ export default function PublicBookingPage() {
                         multiline
                         minRows={3}
                         placeholder="Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)"
+                        disabled={formDisabled}
                       />
                     </Grid>
                     <Grid item xs={12}>
@@ -777,6 +946,7 @@ export default function PublicBookingPage() {
                           checked={rememberProfile}
                           onChange={(e) => setRememberProfile(e.target.checked)}
                           size="small"
+                          disabled={formDisabled}
                         />
                         <Typography variant="body2" color="text.secondary">
                           Recordar mis datos en este navegador para la próxima vez.
@@ -786,6 +956,7 @@ export default function PublicBookingPage() {
                           variant="text"
                           onClick={clearSavedProfile}
                           sx={{ ml: 'auto' }}
+                          disabled={formDisabled}
                         >
                           Limpiar datos guardados
                         </Button>
@@ -802,6 +973,22 @@ export default function PublicBookingPage() {
                           Reserva creada. Revisa tu correo para la confirmación. ID:{' '}
                           <strong>{success.bookingId}</strong> · Servicio: <strong>{success.serviceType ?? form.serviceType}</strong>
                         </Alert>
+                      </Grid>
+                    )}
+                    {success && (
+                      <Grid item xs={12}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                          <Button
+                            variant="outlined"
+                            href="/login?redirect=/estudio/calendario"
+                            size="medium"
+                          >
+                            Ver mi reserva
+                          </Button>
+                          <Button variant="contained" size="medium" onClick={resetForm}>
+                            Crear otra reserva
+                          </Button>
+                        </Stack>
                       </Grid>
                     )}
                     <Grid item xs={12}>
@@ -869,13 +1056,18 @@ export default function PublicBookingPage() {
                               Te enviaremos la confirmación por correo y coordinaremos cualquier ajuste de horario o salas
                               contigo.
                             </Typography>
+                            {estimatePriceLabel && (
+                              <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                                Estimado: {estimatePriceLabel}
+                              </Typography>
+                            )}
                           </Stack>
                         </CardContent>
                       </Card>
                     </Grid>
                     <Grid item xs={12}>
-                      <Button type="submit" variant="contained" size="large" disabled={submitting} fullWidth>
-                        {submitting ? 'Enviando…' : 'Confirmar reserva'}
+                      <Button type="submit" variant="contained" size="large" disabled={formDisabled} fullWidth>
+                        {success ? 'Reserva enviada' : submitting ? 'Enviando…' : 'Confirmar reserva'}
                       </Button>
                     </Grid>
                   </Grid>

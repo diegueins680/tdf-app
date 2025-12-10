@@ -99,12 +99,28 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
   const hasAuthToken = Boolean(session?.apiToken);
   const isAuthenticated = Boolean(hasAuthToken && viewerId);
+  const [genreFilter, setGenreFilter] = useState<string>('');
 
   const artistsQuery = useQuery({
     queryKey: ['fan-artists'],
     queryFn: Fans.listArtists,
   });
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
+  const genreOptions = useMemo(() => {
+    const set = new Set<string>();
+    artists.forEach((a) => {
+      const raw = a.apGenres ?? '';
+      raw.split(',').forEach((g) => {
+        const trimmed = g.trim();
+        if (trimmed) set.add(trimmed);
+      });
+    });
+    return Array.from(set).sort();
+  }, [artists]);
+  const filteredArtists = useMemo(() => {
+    if (!genreFilter) return artists;
+    return artists.filter((a) => (a.apGenres ?? '').toLowerCase().includes(genreFilter.toLowerCase()));
+  }, [artists, genreFilter]);
 
   const profileQuery = useQuery({
     queryKey: ['fan-profile', viewerId],
@@ -1264,12 +1280,44 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Box>
         )}
 
-        {!isLoading && artists.length === 0 && (
+        {!isLoading && filteredArtists.length === 0 && (
           <Alert severity="info">Pronto encontrarás artistas disponibles para seguir.</Alert>
         )}
 
+        {!hasFollows && suggestedArtists.length > 0 && (
+          <Card sx={{ p: 2, mb: 2 }}>
+            <Typography variant="h6" gutterBottom>Recomendados para ti</Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              {suggestedArtists.map((artist) => (
+                <Chip
+                  key={`sug-${artist.apArtistId}`}
+                  label={artist.apDisplayName}
+                  onClick={() => {
+                    const anchor = document.getElementById(`artist-${artist.apArtistId}`);
+                    anchor?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  variant="outlined"
+                />
+              ))}
+            </Stack>
+          </Card>
+        )}
+
+        <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" sx={{ mb: 2 }}>
+          <Chip label="Todos los géneros" onClick={() => setGenreFilter('')} color={genreFilter ? 'default' : 'primary'} />
+          {genreOptions.map((g) => (
+            <Chip
+              key={g}
+              label={g}
+              onClick={() => setGenreFilter(g)}
+              color={genreFilter === g ? 'primary' : 'default'}
+              variant={genreFilter === g ? 'filled' : 'outlined'}
+            />
+          ))}
+        </Stack>
+
         <Grid container spacing={3}>
-          {artists.map((artist) => {
+          {filteredArtists.map((artist) => {
             const spotifyUrl = artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
             const youtubeUrl =
               artist.apFeaturedVideoUrl ??
@@ -1297,7 +1345,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             const latestRelease = latestReleaseByArtist.get(artist.apArtistId);
             const latestLink = latestRelease?.arSpotifyUrl ?? latestRelease?.arYoutubeUrl ?? null;
             return (
-              <Grid item xs={12} md={6} key={artist.apArtistId}>
+              <Grid item xs={12} md={6} key={artist.apArtistId} id={`artist-${artist.apArtistId}`}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                   <CardActionArea
                     onClick={() => {

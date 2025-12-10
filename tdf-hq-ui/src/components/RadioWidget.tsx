@@ -1560,6 +1560,21 @@ export default function RadioWidget() {
                 {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
               </IconButton>
             </Tooltip>
+            <Box sx={{ minWidth: 140, px: 1 }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <VolumeUpIcon fontSize="small" />
+                <Slider
+                  size="small"
+                  value={muted ? 0 : Math.round(volume * 100)}
+                  onChange={(_, val) => {
+                    const numeric = Array.isArray(val) ? val[0] : val;
+                    setMuted(false);
+                    setVolume(Math.min(1, Math.max(0, numeric / 100)));
+                  }}
+                  sx={{ flex: 1 }}
+                />
+              </Stack>
+            </Box>
             <Tooltip title={autoSkipOnError ? 'Desactivar auto-skip al fallar' : 'Saltar al siguiente si falla'}>
               <IconButton
                 onClick={() => setAutoSkipOnError((v) => !v)}

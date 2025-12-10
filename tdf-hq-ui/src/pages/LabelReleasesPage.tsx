@@ -49,6 +49,15 @@ const toNullable = (value: string | null | undefined) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const isValidSpotify = (url?: string | null) => {
+  if (!url) return false;
+  return /spotify\.com\/(track|album|artist|playlist)\//i.test(url);
+};
+const isValidYoutube = (url?: string | null) => {
+  if (!url) return false;
+  return /youtube\.com|youtu\.be/i.test(url);
+};
+
 const parseDate = (value?: string | null) => {
   if (!value) return 0;
   const iso = value.length === 10 ? `${value}T00:00:00Z` : value;
@@ -73,6 +82,8 @@ export default function LabelReleasesPage() {
   const [banner, setBanner] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [usedFanFallback, setUsedFanFallback] = useState(false);
+  const [filterArtistId, setFilterArtistId] = useState<number | null>(null);
+  const [filterWindow, setFilterWindow] = useState<'all' | 'upcoming' | 'past'>('all');
 
   const artistsQuery = useQuery({
     queryKey: ['admin', 'artists'],
@@ -135,8 +146,15 @@ export default function LabelReleasesPage() {
 
   const filteredReleases = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return releases;
+    const now = Date.now();
     return releases.filter((release) => {
+      if (filterArtistId && release.arArtistId !== filterArtistId) return false;
+      if (filterWindow !== 'all') {
+        const ts = parseDate(release.arReleaseDate);
+        if (filterWindow === 'upcoming' && ts < now) return false;
+        if (filterWindow === 'past' && ts >= now) return false;
+      }
+      if (!term) return true;
       const haystack = [
         release.artistName,
         release.arTitle,
@@ -148,7 +166,7 @@ export default function LabelReleasesPage() {
         .toLowerCase();
       return haystack.includes(term);
     });
-  }, [releases, search]);
+  }, [filterArtistId, filterWindow, releases, search]);
 
   const handleCoverFileChange = (file: File | null) => {
     if (!file) {
@@ -229,6 +247,31 @@ export default function LabelReleasesPage() {
           {alertMessage}
         </Alert>
       )}
+
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }} flexWrap="wrap">
+        <Autocomplete
+          options={artists}
+          value={artists.find((a) => a.apArtistId === filterArtistId) ?? null}
+          onChange={(_, value) => setFilterArtistId(value?.apArtistId ?? null)}
+          getOptionLabel={(option) => option.apDisplayName}
+          renderInput={(params) => <TextField {...params} label="Filtrar por artista" size="small" sx={{ minWidth: 240 }} />}
+          sx={{ minWidth: 240 }}
+        />
+        <TextField
+          select
+          size="small"
+          label="Ventana"
+          value={filterWindow}
+          onChange={(e) => setFilterWindow(e.target.value as typeof filterWindow)}
+        >
+          <MenuItem value="all">Todos</MenuItem>
+          <MenuItem value="upcoming">Próximos</MenuItem>
+          <MenuItem value="past">Publicados</MenuItem>
+        </TextField>
+        <Button size="small" onClick={() => { setFilterArtistId(null); setFilterWindow('all'); setSearch(''); }}>
+          Limpiar filtros
+        </Button>
+      </Stack>
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={7}>
@@ -329,6 +372,12 @@ export default function LabelReleasesPage() {
                     onChange={(event) => setForm((prev) => ({ ...prev, spotifyUrl: event.target.value }))}
                     fullWidth
                     placeholder="https://open.spotify.com/album/..."
+                    error={Boolean(form.spotifyUrl && !isValidSpotify(form.spotifyUrl))}
+                    helperText={
+                      form.spotifyUrl && !isValidSpotify(form.spotifyUrl)
+                        ? 'Usa un enlace válido de Spotify (track/album/artist/playlist).'
+                        : undefined
+                    }
                   />
                   <TextField
                     label="Link de YouTube"
@@ -336,7 +385,21 @@ export default function LabelReleasesPage() {
                     onChange={(event) => setForm((prev) => ({ ...prev, youtubeUrl: event.target.value }))}
                     fullWidth
                     placeholder="https://youtu.be/..."
+                    error={Boolean(form.youtubeUrl && !isValidYoutube(form.youtubeUrl))}
+                    helperText={
+                      form.youtubeUrl && !isValidYoutube(form.youtubeUrl)
+                        ? 'Pega un enlace válido de YouTube.'
+                        : undefined
+                    }
                   />
+                </Stack>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {form.spotifyUrl && isValidSpotify(form.spotifyUrl) && (
+                    <Chip label="Spotify listo" color="success" size="small" icon={<PlayArrowIcon fontSize="small" />} />
+                  )}
+                  {form.youtubeUrl && isValidYoutube(form.youtubeUrl) && (
+                    <Chip label="YouTube listo" color="success" size="small" icon={<YouTubeIcon fontSize="small" />} />
+                  )}
                 </Stack>
 
                 <Box display="flex" justifyContent="flex-end">
@@ -481,6 +544,26 @@ export default function LabelReleasesPage() {
                                       disabled={!release.arYoutubeUrl}
                                     >
                                       YouTube
+                                    </Button>
+                                    <Button
+                                      size="small"
+                                      variant="text"
+                                      onClick={() => {
+                                        setForm({
+                                          artistId: release.arArtistId,
+                                          title: `${release.arTitle} (copia)`,
+                                          releaseDate: release.arReleaseDate ?? '',
+                                          description: release.arDescription ?? '',
+                                          coverImageUrl: release.arCoverImageUrl ?? '',
+                                          spotifyUrl: release.arSpotifyUrl ?? '',
+                                          youtubeUrl: release.arYoutubeUrl ?? '',
+                                        });
+                                        setCoverFileName('');
+                                        setBanner('Formulario rellenado a partir de este release.');
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                      }}
+                                    >
+                                      Duplicar
                                     </Button>
                                   </>
                                 );

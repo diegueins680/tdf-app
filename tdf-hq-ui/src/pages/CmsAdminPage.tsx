@@ -30,6 +30,20 @@ const defaultSlugs = [
 ];
 
 const locales = ['es', 'en'];
+const samplePayloads: Record<string, unknown> = {
+  'records-public': {
+    heroTitle: 'Lanzamientos destacados',
+    heroSubtitle: 'Explora los releases recientes del sello.',
+  },
+  'fan-hub': {
+    heroTitle: 'Descubre artistas emergentes',
+    heroSubtitle: 'Sigue y guarda lanzamientos para escuchar luego.',
+  },
+  'course-production': {
+    heroTitle: 'Producción musical en vivo',
+    heroSubtitle: 'Reserva tu cupo con clases hands-on.',
+  },
+};
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
 
 const PUBLIC_BASE =
@@ -504,6 +518,18 @@ export default function CmsAdminPage() {
                     disabled={createMutation.isPending}
                   >
                     Limpiar
+                  </Button>
+                  <Button
+                    variant="text"
+                    onClick={() => {
+                      const sample = samplePayloads[slugFilter];
+                      if (sample) {
+                        setPayload(JSON.stringify(sample, null, 2));
+                        setTitle(sample.heroTitle ? String((sample as { heroTitle?: string }).heroTitle) : title);
+                      }
+                    }}
+                  >
+                    Cargar ejemplo
                   </Button>
                   <Button
                     variant="outlined"
