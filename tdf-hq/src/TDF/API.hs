@@ -98,6 +98,7 @@ type SocialAPI =
   :<|> "friends" :> Get '[JSON] [PartyFollowDTO]
   :<|> "friends" :> Capture "partyId" Int64 :> Post '[JSON] [PartyFollowDTO]
   :<|> "friends" :> Capture "partyId" Int64 :> Delete '[JSON] NoContent
+  :<|> "suggestions" :> Get '[JSON] [SuggestedFriendDTO]
 
 type BookingAPI =
        Get '[JSON] [BookingDTO]

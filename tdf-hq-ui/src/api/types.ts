@@ -342,6 +342,11 @@ export interface PartyFollowDTO {
   pfStartedAt: string;
 }
 
+export interface SuggestedFriendDTO {
+  sfPartyId: number;
+  sfMutualCount: number;
+}
+
 export interface RadioPresenceDTO {
   rpPartyId: number;
   rpStreamUrl: string;

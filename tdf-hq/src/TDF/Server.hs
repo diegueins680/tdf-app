@@ -19,7 +19,8 @@ import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Data.Int (Int64)
-import           Data.List (find, foldl', nub, isPrefixOf)
+import           Data.List (find, foldl', nub, isPrefixOf, sortOn)
+import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
 import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
@@ -503,6 +504,7 @@ socialServer user =
   :<|> socialListFriends user
   :<|> socialAddFriend user
   :<|> socialRemoveFriend user
+  :<|> socialListSuggestedFriends user
 
 driveServer :: AuthedUser -> ServerT DriveAPI AppM
 driveServer _ mAccessToken DriveUploadForm{..} = do
@@ -2150,6 +2152,36 @@ socialListFriends user = do
     let mutualIds = Set.fromList (map (partyFollowFollowerPartyId . entityVal) reverseRows)
         mutual = filter (\(Entity _ pf) -> partyFollowFollowingPartyId pf `Set.member` mutualIds) following
     pure (map partyFollowEntityToDTO mutual)
+
+-- Suggest friends-of-friends that are not already connected to the user.
+socialListSuggestedFriends :: AuthedUser -> AppM [SuggestedFriendDTO]
+socialListSuggestedFriends user = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    following <- selectList [PartyFollowFollowerPartyId ==. auPartyId user] []
+    followers <- selectList [PartyFollowFollowingPartyId ==. auPartyId user] []
+    let followingIds = map (partyFollowFollowingPartyId . entityVal) following
+        followerIds  = map (partyFollowFollowerPartyId . entityVal) followers
+        directSet    = Set.fromList (auPartyId user : followingIds ++ followerIds)
+        seeds        = Set.toList (Set.delete (auPartyId user) directSet)
+    if null seeds
+      then pure []
+      else do
+        secondDegree <- selectList [PartyFollowFollowerPartyId <-. seeds] []
+        let counts = foldl' (\acc (Entity _ pf) ->
+                              let candidate = partyFollowFollowingPartyId pf
+                              in if Set.member candidate directSet
+                                   then acc
+                                   else Map.insertWith (+) candidate 1 acc
+                            ) Map.empty secondDegree
+            ordered = take 20 $ sortOn (Down . snd) (Map.toList counts)
+        pure
+          [ SuggestedFriendDTO
+              { sfPartyId = fromSqlKey candidateId
+              , sfMutualCount = mutuals
+              }
+          | (candidateId, mutuals) <- ordered
+          ]
 
 socialAddFriend :: AuthedUser -> Int64 -> AppM [PartyFollowDTO]
 socialAddFriend user targetId = do

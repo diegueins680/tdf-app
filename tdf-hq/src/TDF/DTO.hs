@@ -150,6 +150,12 @@ data PartyFollowDTO = PartyFollowDTO
   } deriving (Show, Generic)
 instance ToJSON PartyFollowDTO
 
+data SuggestedFriendDTO = SuggestedFriendDTO
+  { sfPartyId       :: Int64
+  , sfMutualCount   :: Int
+  } deriving (Show, Generic)
+instance ToJSON SuggestedFriendDTO
+
 data RadioPresenceDTO = RadioPresenceDTO
   { rpPartyId     :: Int64
   , rpStreamUrl   :: Text
