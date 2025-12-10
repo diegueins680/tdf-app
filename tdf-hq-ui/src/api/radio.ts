@@ -43,6 +43,7 @@ export interface RadioTransmissionInfo {
   rtiStreamUrl: string;
   rtiIngestUrl: string;
   rtiStreamKey: string;
+  rtiWhipUrl: string;
 }
 
 export const RadioAPI = {

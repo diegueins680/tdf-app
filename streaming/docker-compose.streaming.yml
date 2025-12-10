@@ -6,6 +6,7 @@ services:
     ports:
       - "1935:1935"   # RTMP ingest
       - "8000:8000"   # HLS/LL-HLS/RTSP/RTMP status
+      - "8889:8889"   # WebRTC/WHIP ingest
     volumes:
       - ./mediamtx.yml:/mediamtx.yml:ro
       - ./hls:/hls

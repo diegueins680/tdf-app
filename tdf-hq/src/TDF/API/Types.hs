@@ -754,6 +754,7 @@ data RadioTransmissionInfo = RadioTransmissionInfo
   , rtiStreamUrl :: Text
   , rtiIngestUrl :: Text
   , rtiStreamKey :: Text
+  , rtiWhipUrl   :: Text
   } deriving (Show, Generic)
 instance ToJSON RadioTransmissionInfo
 instance FromJSON RadioTransmissionInfo

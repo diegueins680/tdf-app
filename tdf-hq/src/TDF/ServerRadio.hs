@@ -430,9 +430,11 @@ radioServer user =
       Env{..} <- ask
       streamKey <- liftIO (toText <$> nextRandom)
       ingestBase <- liftIO (readEnv "RADIO_INGEST_BASE" "rtmp://localhost/live")
+      whipBase <- liftIO (readEnv "RADIO_WHIP_BASE" "http://localhost:8889/whip")
       listenBase <- liftIO (readEnv "RADIO_PUBLIC_BASE" "https://stream.tdf.com/live")
       let publicUrl = appendPath listenBase streamKey
           ingestUrl = appendPath ingestBase streamKey
+          whipUrl = appendPath whipBase streamKey
           upsertPayload = RadioStreamUpsert
             { rsuStreamUrl = publicUrl
             , rsuName      = rtrName
@@ -447,6 +449,7 @@ radioServer user =
         , rtiStreamUrl = publicUrl
         , rtiIngestUrl = ingestUrl
         , rtiStreamKey = streamKey
+        , rtiWhipUrl   = whipUrl
         }
 
     appendPath base path =

@@ -91,7 +91,7 @@ cd tdf-mobile
 npm run start
 
 # Optional: Radio streaming stack
-# See streaming/README.md and set RADIO_INGEST_BASE / RADIO_PUBLIC_BASE in backend env.
+# See streaming/README.md and set RADIO_INGEST_BASE / RADIO_PUBLIC_BASE / RADIO_WHIP_BASE in backend env.
 ```
 
 ### Inventory photos (Google Drive proxy)

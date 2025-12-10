@@ -16,6 +16,7 @@ import {
   Button,
   Switch,
   FormControlLabel,
+  MenuItem,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -258,11 +259,17 @@ export default function RadioWidget() {
   const [broadcastLoading, setBroadcastLoading] = useState(false);
   const [broadcastError, setBroadcastError] = useState<string | null>(null);
   const [broadcastForm, setBroadcastForm] = useState({ name: '', genre: '', country: '' });
+  const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioInput, setSelectedAudioInput] = useState<string>('');
+  const [browserBroadcastState, setBrowserBroadcastState] = useState<'idle' | 'starting' | 'live'>('idle');
+  const [browserBroadcastError, setBrowserBroadcastError] = useState<string | null>(null);
+  const browserBroadcastRef = useRef<{ pc: RTCPeerConnection; stream: MediaStream } | null>(null);
   const controlFadeSx = {
     opacity: 0.65,
     transition: 'opacity 0.2s ease',
     '&:hover': { opacity: 1 },
   } as const;
+  const mediaDevicesSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
   const sizeOptions = {
     compact: { width: { xs: '95%', sm: 340 }, bodyHeight: '55vh' },
     cozy: { width: { xs: '95%', sm: 440 }, bodyHeight: '68vh' },
@@ -333,6 +340,46 @@ export default function RadioWidget() {
       // ignore
     }
   }, [pinned]);
+
+  const refreshAudioInputs = useCallback(async () => {
+    if (!mediaDevicesSupported || !navigator.mediaDevices?.enumerateDevices) return;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const inputs = devices.filter((d) => d.kind === 'audioinput');
+      setBrowserBroadcastError(null);
+      setAudioInputs(inputs);
+      if (!selectedAudioInput && inputs.length > 0) {
+        const firstInput = inputs[0];
+        if (firstInput) {
+          setSelectedAudioInput(firstInput.deviceId);
+        }
+      }
+    } catch {
+      setBrowserBroadcastError('No pudimos leer tus entradas de audio. Revisa permisos del navegador.');
+    }
+  }, [mediaDevicesSupported, selectedAudioInput]);
+
+  useEffect(() => {
+    if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) return;
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
+        stream.getTracks().forEach((t) => t.stop());
+        return refreshAudioInputs();
+      })
+      .catch(() => {
+        setBrowserBroadcastError('Activa el permiso de audio para transmitir desde este navegador.');
+      });
+  }, [mediaDevicesSupported, refreshAudioInputs]);
+
+  useEffect(() => {
+    if (!mediaDevicesSupported || !navigator.mediaDevices?.addEventListener) return;
+    const handleChange = () => {
+      void refreshAudioInputs();
+    };
+    navigator.mediaDevices.addEventListener('devicechange', handleChange);
+    return () => navigator.mediaDevices.removeEventListener('devicechange', handleChange);
+  }, [mediaDevicesSupported, refreshAudioInputs]);
 
   const radioSearch = useQuery<RadioStreamDTO[], Error>({
     queryKey: ['radio-streams', countryQuery.toLowerCase(), genreQuery.toLowerCase()],
@@ -933,27 +980,130 @@ export default function RadioWidget() {
     })();
   }, [refetchStreams]);
 
-  const handleCreateBroadcast = useCallback(() => {
-    void (async () => {
-      setBroadcastLoading(true);
-      setBroadcastError(null);
-      try {
-        const resp = await RadioAPI.createTransmission({
-          name: broadcastForm.name || undefined,
-          genre: broadcastForm.genre || undefined,
-          country: broadcastForm.country || undefined,
-        });
-        setBroadcastInfo(resp);
-        setApiError(null);
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : 'No se pudo crear la transmisión.';
-        setBroadcastError(msg);
-        setBroadcastInfo(null);
-      } finally {
-        setBroadcastLoading(false);
-      }
-    })();
+  const createBroadcast = useCallback(async () => {
+    setBroadcastLoading(true);
+    setBroadcastError(null);
+    try {
+      const resp = await RadioAPI.createTransmission({
+        name: broadcastForm.name || undefined,
+        genre: broadcastForm.genre || undefined,
+        country: broadcastForm.country || undefined,
+      });
+      setBroadcastInfo(resp);
+      setApiError(null);
+      return resp;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'No se pudo crear la transmisión.';
+      setBroadcastError(msg);
+      setBroadcastInfo(null);
+      throw new Error(msg);
+    } finally {
+      setBroadcastLoading(false);
+    }
   }, [broadcastForm.country, broadcastForm.genre, broadcastForm.name]);
+
+  const handleCreateBroadcast = useCallback(() => {
+    void createBroadcast().catch(() => undefined);
+  }, [createBroadcast]);
+
+  const waitForIceGathering = useCallback((pc: RTCPeerConnection) => {
+    return new Promise<void>((resolve) => {
+      if (pc.iceGatheringState === 'complete') {
+        resolve();
+        return;
+      }
+      const timeout = setTimeout(() => {
+        pc.removeEventListener('icegatheringstatechange', handler);
+        resolve();
+      }, 2000);
+      const handler = () => {
+        if (pc.iceGatheringState === 'complete') {
+          clearTimeout(timeout);
+          pc.removeEventListener('icegatheringstatechange', handler);
+          resolve();
+        }
+      };
+      pc.addEventListener('icegatheringstatechange', handler);
+    });
+  }, []);
+
+  const stopBrowserBroadcast = useCallback(() => {
+    const current = browserBroadcastRef.current;
+    if (current) {
+      current.stream.getTracks().forEach((t) => t.stop());
+      current.pc.onconnectionstatechange = null;
+      current.pc.close();
+    }
+    browserBroadcastRef.current = null;
+    setBrowserBroadcastState('idle');
+  }, []);
+
+  const startBrowserBroadcast = useCallback(async () => {
+    if (browserBroadcastState === 'live') {
+      stopBrowserBroadcast();
+      return;
+    }
+    setBrowserBroadcastError(null);
+    setBrowserBroadcastState('starting');
+    try {
+      const info = broadcastInfo ?? (await createBroadcast());
+      if (!info?.rtiWhipUrl) {
+        throw new Error('El servidor no expone WHIP/HTTP ingest para publicar desde navegador.');
+      }
+      if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Tu navegador no permite capturar audio.');
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { deviceId: selectedAudioInput || undefined },
+      });
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
+      });
+      stream.getAudioTracks().forEach((track) => pc.addTrack(track, stream));
+      const offer = await pc.createOffer({ offerToReceiveAudio: false, offerToReceiveVideo: false });
+      await pc.setLocalDescription(offer);
+      await waitForIceGathering(pc);
+      const localSdp = pc.localDescription?.sdp;
+      if (!localSdp) {
+        throw new Error('No se pudo preparar la oferta de WebRTC.');
+      }
+      const resp = await fetch(info.rtiWhipUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/sdp' },
+        body: localSdp,
+        mode: 'cors',
+      });
+      if (!resp.ok) {
+        throw new Error(`WHIP respondió ${resp.status}`);
+      }
+      const answerSdp = await resp.text();
+      await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: answerSdp }));
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === 'connected') {
+          setBrowserBroadcastState('live');
+        } else if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
+          setBrowserBroadcastError('La conexión de streaming se cerró.');
+          stopBrowserBroadcast();
+        }
+      };
+      browserBroadcastRef.current = { pc, stream };
+      if (pc.connectionState === 'connected') {
+        setBrowserBroadcastState('live');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudo iniciar el stream desde el navegador.';
+      setBrowserBroadcastError(msg);
+      stopBrowserBroadcast();
+    }
+  }, [
+    broadcastInfo,
+    browserBroadcastState,
+    createBroadcast,
+    mediaDevicesSupported,
+    selectedAudioInput,
+    stopBrowserBroadcast,
+    waitForIceGathering,
+  ]);
   const persistActiveStream = useCallback(
     async (url: string, name?: string, country?: string, genre?: string) => {
       try {
@@ -1076,6 +1226,13 @@ export default function RadioWidget() {
       // ignore persistence issues
     }
   }, [miniBarVisible]);
+
+  useEffect(
+    () => () => {
+      stopBrowserBroadcast();
+    },
+    [stopBrowserBroadcast],
+  );
 
   return (
     <>
@@ -1436,8 +1593,65 @@ export default function RadioWidget() {
                             </Typography>
                           </Stack>
                           <Typography variant="body2" color="text.secondary">
-                            Genera un stream para emitir desde tu dispositivo (OBS/RTMP). Usa el ingest y el stream key que se generan aquí.
+                            Genera un stream y publícalo directo desde tu navegador (elige la entrada de tu tarjeta o micrófono) o con OBS/RTMP usando el ingest y la clave generados.
                           </Typography>
+                          <Stack spacing={1}>
+                            <Stack
+                              direction={{ xs: 'column', sm: 'row' }}
+                              spacing={1}
+                              alignItems={{ xs: 'stretch', sm: 'center' }}
+                            >
+                              <TextField
+                                select
+                                label="Fuente de audio"
+                                value={selectedAudioInput}
+                                onChange={(e) => setSelectedAudioInput(e.target.value)}
+                                fullWidth
+                                size="small"
+                                disabled={!mediaDevicesSupported || browserBroadcastState === 'starting'}
+                                helperText={
+                                  !mediaDevicesSupported
+                                    ? 'Tu navegador no permite captura de audio.'
+                                    : audioInputs.length === 0
+                                      ? 'Concede permiso para listar las entradas.'
+                                      : 'Usa la entrada de tu tarjeta de sonido o micrófono.'
+                                }
+                              >
+                                {audioInputs.length === 0 ? (
+                                  <MenuItem value="" disabled>
+                                    No hay entradas disponibles
+                                  </MenuItem>
+                                ) : (
+                                  audioInputs.map((dev) => (
+                                    <MenuItem key={`${dev.deviceId}-${dev.label}`} value={dev.deviceId}>
+                                      {dev.label || 'Entrada de audio'}
+                                    </MenuItem>
+                                  ))
+                                )}
+                              </TextField>
+                              <Button
+                                variant={browserBroadcastState === 'live' ? 'outlined' : 'contained'}
+                                color={browserBroadcastState === 'live' ? 'error' : 'primary'}
+                                onClick={() => {
+                                  void startBrowserBroadcast();
+                                }}
+                                disabled={
+                                  !mediaDevicesSupported || browserBroadcastState === 'starting' || broadcastLoading
+                                }
+                                startIcon={<FiberManualRecordIcon color="error" fontSize="small" />}
+                              >
+                                {browserBroadcastState === 'live'
+                                  ? 'Detener transmisión'
+                                  : browserBroadcastState === 'starting'
+                                    ? 'Conectando…'
+                                    : 'Ir en vivo aquí'}
+                              </Button>
+                            </Stack>
+                            {browserBroadcastState === 'live' && (
+                              <Chip label="En vivo desde este navegador" size="small" color="success" />
+                            )}
+                            {browserBroadcastError && <Typography color="error">{browserBroadcastError}</Typography>}
+                          </Stack>
                           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                             <TextField
                               label="Nombre"
@@ -1469,7 +1683,7 @@ export default function RadioWidget() {
                             disabled={broadcastLoading}
                             startIcon={<FiberManualRecordIcon color="error" fontSize="small" />}
                           >
-                            {broadcastLoading ? 'Creando…' : 'Crear transmisión'}
+                            {broadcastLoading ? 'Creando…' : 'Generar ingest/clave'}
                           </Button>
                           {broadcastInfo && (
                             <Stack spacing={1}>
@@ -1513,6 +1727,25 @@ export default function RadioWidget() {
                                 size="small"
                               />
                               <TextField
+                                label="Publicar desde navegador (WHIP)"
+                                value={broadcastInfo.rtiWhipUrl}
+                                InputProps={{
+                                  readOnly: true,
+                                  endAdornment: (
+                                    <Tooltip title="Copiar">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => void navigator.clipboard.writeText(broadcastInfo.rtiWhipUrl)}
+                                      >
+                                        <ContentCopyIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  ),
+                                }}
+                                fullWidth
+                                size="small"
+                              />
+                              <TextField
                                 label="URL público"
                                 value={broadcastInfo.rtiStreamUrl}
                                 InputProps={{
@@ -1532,7 +1765,7 @@ export default function RadioWidget() {
                                 size="small"
                               />
                               <Typography variant="caption" color="text.secondary">
-                                Coloca Ingest + Stream Key en tu software (OBS, Larix). Comparte el URL público o agrégalo como estación personalizada.
+                                Coloca Ingest + Stream Key en tu software (OBS, Larix) o usa el enlace WHIP para publicar desde navegador. Comparte el URL público o agrégalo como estación personalizada.
                               </Typography>
                             </Stack>
                           )}
