@@ -135,6 +135,7 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);
+  const [showApiToken, setShowApiToken] = useState(false);
   const [signupForm, setSignupForm] = useState({
     firstName: '',
     lastName: '',
@@ -564,16 +565,18 @@ export default function LoginPage() {
               </Typography>
             </Stack>
 
-            <Tabs
-              value={tab}
-              onChange={(_, value) => setTab(value as LoginTab)}
-              variant="fullWidth"
-            >
-              <Tab value="password" label="CONTRASEÑA" />
-              <Tab value="token" label="TOKEN API" />
-            </Tabs>
+            {showApiToken && (
+              <Tabs
+                value={tab}
+                onChange={(_, value) => setTab(value as LoginTab)}
+                variant="fullWidth"
+              >
+                <Tab value="password" label="CONTRASEÑA" />
+                <Tab value="token" label="TOKEN API" />
+              </Tabs>
+            )}
 
-            {tab === 'password' ? (
+            {tab === 'password' || !showApiToken ? (
               <Stack spacing={2}>
                 <TextField
                   label="Usuario o correo *"
@@ -606,6 +609,21 @@ export default function LoginPage() {
                 <Typography variant="caption" color="text.secondary">
                   Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
                 </Typography>
+              </Stack>
+            )}
+            {!showApiToken && (
+              <Stack spacing={0.5}>
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => {
+                    setShowApiToken(true);
+                    setTab('token');
+                  }}
+                  sx={{ alignSelf: 'flex-start', px: 0 }}
+                >
+                  ¿Tienes un token API? Usar token temporal
+                </Button>
               </Stack>
             )}
 

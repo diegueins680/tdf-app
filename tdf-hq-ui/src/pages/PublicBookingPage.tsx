@@ -867,6 +867,7 @@ export default function PublicBookingPage() {
                                   variant="outlined"
                                   color="primary"
                                   sx={{ borderRadius: 999 }}
+                                  disabled={formDisabled}
                                 />
                               </Tooltip>
                             ))}

@@ -1144,7 +1144,8 @@ export default function RadioWidget() {
         analyser.getByteTimeDomainData(data);
         let sum = 0;
         for (let i = 0; i < data.length; i += 1) {
-          const v = data[i] - 128;
+          const sample = data[i] ?? 128;
+          const v = sample - 128;
           sum += v * v;
         }
         const rms = Math.min(1, Math.sqrt(sum / data.length) / 128);
@@ -1176,7 +1177,8 @@ export default function RadioWidget() {
         analyser.getByteTimeDomainData(data);
         let sum = 0;
         for (let i = 0; i < data.length; i += 1) {
-          const v = data[i] - 128;
+          const sample = data[i] ?? 128;
+          const v = sample - 128;
           sum += v * v;
         }
         const rms = Math.min(1, Math.sqrt(sum / data.length) / 128);
@@ -1568,6 +1570,7 @@ export default function RadioWidget() {
                   value={muted ? 0 : Math.round(volume * 100)}
                   onChange={(_, val) => {
                     const numeric = Array.isArray(val) ? val[0] : val;
+                    if (typeof numeric !== 'number') return;
                     setMuted(false);
                     setVolume(Math.min(1, Math.max(0, numeric / 100)));
                   }}

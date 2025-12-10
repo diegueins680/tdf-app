@@ -30,7 +30,11 @@ const defaultSlugs = [
 ];
 
 const locales = ['es', 'en'];
-const samplePayloads: Record<string, unknown> = {
+type SamplePayload = {
+  heroTitle?: string;
+  heroSubtitle?: string;
+} & Record<string, unknown>;
+const samplePayloads: Record<string, SamplePayload> = {
   'records-public': {
     heroTitle: 'Lanzamientos destacados',
     heroSubtitle: 'Explora los releases recientes del sello.',
@@ -304,7 +308,7 @@ export default function CmsAdminPage() {
                 v{pendingVersion.ccdVersion} · {pendingVersion.ccdStatus} · {pendingVersion.ccdLocale} ·{' '}
                 {pendingVersion.ccdPublishedAt
                   ? `publicado ${new Date(pendingVersion.ccdPublishedAt).toLocaleString()}`
-                  : `última edición ${new Date(pendingVersion.ccdUpdatedAt).toLocaleString()}`}
+                  : `creado ${new Date(pendingVersion.ccdCreatedAt).toLocaleString()}`}
               </Typography>
               <Typography variant="body2">
                 Live actual:{' '}
@@ -525,7 +529,7 @@ export default function CmsAdminPage() {
                       const sample = samplePayloads[slugFilter];
                       if (sample) {
                         setPayload(JSON.stringify(sample, null, 2));
-                        setTitle(sample.heroTitle ? String((sample as { heroTitle?: string }).heroTitle) : title);
+                        if (sample.heroTitle) setTitle(sample.heroTitle);
                       }
                     }}
                   >
