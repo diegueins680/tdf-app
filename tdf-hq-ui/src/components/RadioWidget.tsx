@@ -405,14 +405,6 @@ export default function RadioWidget() {
       // ignore
     }
   }, [muteOnLoad]);
-  useEffect(() => {
-    setRecentStations((prev) => {
-      if (!isPlaying || !activeStation.streamUrl) return prev;
-      const exists = prev.find((s) => s.id === activeStation.id);
-      const next = [activeStation, ...(exists ? prev.filter((s) => s.id !== activeStation.id) : prev)];
-      return next.slice(0, 3);
-    });
-  }, [activeStation, isPlaying]);
   const meterLevel = inputTestActive && inputTestLevel !== null ? inputTestLevel : inputLevel;
   useEffect(() => {
     if (audioRef.current) {
@@ -632,6 +624,14 @@ export default function RadioWidget() {
     setEditCountry(activeStation.country ?? '');
     setEditGenre(activeStation.genre ?? activeStation.mood ?? '');
   }, [activeStation]);
+  useEffect(() => {
+    setRecentStations((prev) => {
+      if (!isPlaying || !activeStation.streamUrl) return prev;
+      const exists = prev.find((s) => s.id === activeStation.id);
+      const next = [activeStation, ...(exists ? prev.filter((s) => s.id !== activeStation.id) : prev)];
+      return next.slice(0, 3);
+    });
+  }, [activeStation, isPlaying]);
   const toggleFavorite = useCallback(
     (station: Station) => {
       const key = keyFor(station);

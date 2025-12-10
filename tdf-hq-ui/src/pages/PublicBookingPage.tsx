@@ -142,27 +142,6 @@ export default function PublicBookingPage() {
   const [availabilityStatus, setAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable' | 'unknown'>('idle');
   const [availabilityNote, setAvailabilityNote] = useState<string | null>(null);
   const [assignEngineerLater, setAssignEngineerLater] = useState(false);
-  const copySummary = useCallback(async () => {
-    const svc = form.serviceType;
-    const start = formattedStart ?? form.startsAt;
-    const duration = `${form.durationMinutes} min`;
-    const price = estimatePriceLabel ?? selectedPrice ?? 'Por confirmar';
-    const lines = [
-      `Reserva TDF`,
-      `Servicio: ${svc}`,
-      `Inicio: ${start}`,
-      `Duración: ${duration}`,
-      `Precio ref: ${price}`,
-    ];
-    const summary = lines.join('\n');
-    try {
-      await navigator.clipboard.writeText(summary);
-      setAvailabilityNote('Resumen copiado.');
-      setTimeout(() => setAvailabilityNote(null), 1800);
-    } catch {
-      setAvailabilityNote('No pudimos copiar el resumen.');
-    }
-  }, [estimatePriceLabel, form.durationMinutes, form.serviceType, formattedStart, selectedPrice, form.startsAt]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -655,6 +634,28 @@ export default function PublicBookingPage() {
     if (availabilityNote) return `${base} ${availabilityNote}`;
     return base;
   }, [availabilityNote, availabilityStatus, bookingWindow?.closeStudio, bookingWindow?.openStudio, studioTimeZone, studioZoneLabel, userZoneLabel, userTimeZone]);
+
+  const copySummary = useCallback(async () => {
+    const svc = form.serviceType;
+    const start = formattedStart ?? form.startsAt;
+    const duration = `${form.durationMinutes} min`;
+    const price = estimatePriceLabel ?? selectedPrice ?? 'Por confirmar';
+    const lines = [
+      `Reserva TDF`,
+      `Servicio: ${svc}`,
+      `Inicio: ${start}`,
+      `Duración: ${duration}`,
+      `Precio ref: ${price}`,
+    ];
+    const summary = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(summary);
+      setAvailabilityNote('Resumen copiado.');
+      setTimeout(() => setAvailabilityNote(null), 1800);
+    } catch {
+      setAvailabilityNote('No pudimos copiar el resumen.');
+    }
+  }, [estimatePriceLabel, form.durationMinutes, form.serviceType, formattedStart, selectedPrice, form.startsAt]);
 
   const computeMaxDurationForStart = useCallback(
     (startValue: string) => {
@@ -1229,15 +1230,19 @@ export default function PublicBookingPage() {
                         <Alert severity="error">{error}</Alert>
                       </Grid>
                     )}
-                    {success && (
+                    {success !== null && (() => {
+                      const created = success as BookingDTO | null;
+                      return (
                       <Grid item xs={12}>
                         <Alert severity="success">
                           Reserva creada. Revisa tu correo para la confirmación. ID:{' '}
-                          <strong>{success.bookingId}</strong> · Servicio: <strong>{success.serviceType ?? form.serviceType}</strong>
+                          <strong>{created?.bookingId}</strong> · Servicio:{' '}
+                          <strong>{created?.serviceType ?? form.serviceType}</strong>
                         </Alert>
                       </Grid>
-                    )}
-                    {success && (
+                      );
+                    })()}
+                    {success !== null && (
                       <Grid item xs={12}>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                           <Button
