@@ -33,7 +33,7 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import { Navigate, useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Navigate, useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
 import { useThemeMode } from '../theme/AppThemeProvider';
@@ -156,6 +156,7 @@ export default function LoginPage() {
 
   const { session, login } = useSession();
   const navigate = useNavigate();
+  const location = useLocation();
   const { mode, toggleMode } = useThemeMode();
   const loginMutation = useMutation({
     mutationFn: (payload: { username: string; password: string }) => loginRequest(payload),
@@ -169,6 +170,12 @@ export default function LoginPage() {
   const signupMutation = useMutation({
     mutationFn: signupRequest,
   });
+  const redirectPath = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const raw = params.get('redirect');
+    if (raw && raw.startsWith('/')) return raw;
+    return null;
+  }, [location.search]);
 
   const {
     data: health,
@@ -264,6 +271,7 @@ export default function LoginPage() {
             : ['staff'];
       const normalized = Array.from(new Set(baseRoles.map((r) => r.toLowerCase())));
       const landingPath = pickLandingPath(normalized, modules);
+      const targetPath = redirectPath ?? landingPath;
 
       login(
         {
@@ -276,7 +284,7 @@ export default function LoginPage() {
         },
         { remember: rememberDevice },
       );
-      navigate(landingPath, { replace: true });
+      navigate(targetPath, { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
       setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
@@ -304,6 +312,7 @@ export default function LoginPage() {
         const response = await googleLoginMutation.mutateAsync({ idToken: credential });
         const normalizedRoles = response.roles?.map((role) => role.toLowerCase()) ?? [];
         const landingPath = pickLandingPath(normalizedRoles, response.modules);
+        const targetPath = redirectPath ?? landingPath;
         login(
           {
             username: fallbackUsername,
@@ -317,7 +326,7 @@ export default function LoginPage() {
         );
         setSignupDialogOpen(false);
         setSignupFeedback(null);
-        navigate(landingPath, { replace: true });
+        navigate(targetPath, { replace: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.';
         setGoogleError(message);
@@ -330,7 +339,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [googleLoginMutation, login, navigate, signupDialogOpen],
+    [googleLoginMutation, login, navigate, redirectPath, signupDialogOpen],
   );
 
   useEffect(() => {
@@ -378,6 +387,15 @@ export default function LoginPage() {
       cancelled = true;
     };
   }, [googleClientId, handleGoogleCredential, signupDialogOpen]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const wantsSignup = params.get('signup');
+    const shouldOpenSignup = wantsSignup && wantsSignup.toLowerCase() !== 'false' && wantsSignup !== '0';
+    if (shouldOpenSignup) {
+      setSignupDialogOpen(true);
+    }
+  }, [location.search]);
 
   const openResetDialog = () => {
     setResetDialogOpen(true);
@@ -466,6 +484,7 @@ export default function LoginPage() {
       const response = await signupMutation.mutateAsync(payload);
       const effectiveRoles = deriveEffectiveRoles(response.roles, selectedRoles);
       const landingPath = pickLandingPath(effectiveRoles, response.modules);
+      const targetPath = redirectPath ?? landingPath;
       const shouldFollowArtists = selectedRoles.includes('Fan') && favoriteArtistIds.length > 0;
       const selectedFanArtistIds = favoriteArtistIds;
       login(
@@ -488,7 +507,7 @@ export default function LoginPage() {
           ),
         );
       }
-      navigate(landingPath, { replace: true });
+      navigate(targetPath, { replace: true });
     } catch (err) {
       setSignupFeedback({
         type: 'error',
@@ -498,7 +517,7 @@ export default function LoginPage() {
   };
 
   if (session) {
-    const landing = pickLandingPath(session.roles ?? [], session.modules);
+    const landing = redirectPath ?? pickLandingPath(session.roles ?? [], session.modules);
     return <Navigate to={landing} replace />;
   }
 

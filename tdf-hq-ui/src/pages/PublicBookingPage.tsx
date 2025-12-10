@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Grid,
   MenuItem,
+  Tooltip,
   Stack,
   TextField,
   Typography,
@@ -158,6 +159,15 @@ export default function PublicBookingPage() {
     setForm((prev) => {
       if (prev.fullName.trim()) return prev;
       return { ...prev, fullName: session.displayName };
+    });
+  }, [session]);
+
+  useEffect(() => {
+    if (!session?.username) return;
+    setForm((prev) => {
+      const normalizedEmail = prev.email.trim() || (session.username.includes('@') ? session.username : '');
+      if (!normalizedEmail || normalizedEmail === prev.email) return prev;
+      return { ...prev, email: normalizedEmail };
     });
   }, [session]);
 
@@ -386,6 +396,34 @@ export default function PublicBookingPage() {
     return `Horario del estudio: ${open.toFormat('HH:mm')} - ${close.toFormat('HH:mm')} (${studioZoneLabel}). Tu zona: ${openUser.toFormat('HH:mm')} - ${closeUser.toFormat('HH:mm')} (${userZoneLabel}).`;
   }, [bookingWindow?.closeStudio, bookingWindow?.openStudio, studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
 
+  const suggestedSlots = useMemo(() => {
+    const slots: { value: string; label: string; helper: string }[] = [];
+    const nowUser = DateTime.now().setZone(userTimeZone);
+    const pushSlot = (dt: DateTime, label: string) => {
+      if (!dt.isValid) return;
+      const studio = dt.setZone(studioTimeZone);
+      const openStudio = studio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
+      const closeStudio = studio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
+      if (studio < openStudio || studio > closeStudio.minus({ minutes: 30 })) return;
+      const helper = `${dt.toFormat('EEE dd HH:mm')} (${userZoneLabel}) · Estudio ${studio.toFormat('HH:mm')} (${studioZoneLabel})`;
+      slots.push({
+        value: toLocalInputValue(dt.toJSDate()),
+        label,
+        helper,
+      });
+    };
+
+    pushSlot(nowUser.plus({ minutes: 60 }), 'En 1 hora');
+    pushSlot(nowUser.plus({ minutes: 180 }), 'En 3 horas');
+    const tomorrowStudioMorning = DateTime.now()
+      .setZone(studioTimeZone)
+      .plus({ days: 1 })
+      .set({ hour: 10, minute: 0, second: 0, millisecond: 0 });
+    pushSlot(tomorrowStudioMorning.setZone(userTimeZone), 'Mañana 10:00 (estudio)');
+    pushSlot(tomorrowStudioMorning.set({ hour: 15 }).setZone(userTimeZone), 'Mañana 15:00 (estudio)');
+    return slots;
+  }, [studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
+
   return (
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
       <Card
@@ -446,7 +484,7 @@ export default function PublicBookingPage() {
                       <Button size="small" variant="outlined" href="/login?redirect=/reservar">
                         Iniciar sesión
                       </Button>
-                      <Button size="small" variant="text" href="/login?redirect=/reservar">
+                      <Button size="small" variant="text" href="/login?signup=1&redirect=/reservar">
                         Crear cuenta
                       </Button>
                       {session && (
@@ -647,6 +685,28 @@ export default function PublicBookingPage() {
                         </Stack>
                       </Stack>
                     </Grid>
+                    {suggestedSlots.length > 0 && (
+                      <Grid item xs={12}>
+                        <Stack spacing={0.5}>
+                          <Typography variant="body2" color="text.secondary">
+                            Sugerencias rápidas
+                          </Typography>
+                          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                            {suggestedSlots.map((slot) => (
+                              <Tooltip key={slot.value} title={slot.helper}>
+                                <Chip
+                                  label={slot.label}
+                                  onClick={() => setForm((prev) => ({ ...prev, startsAt: slot.value }))}
+                                  variant="outlined"
+                                  color="primary"
+                                  sx={{ borderRadius: 999 }}
+                                />
+                              </Tooltip>
+                            ))}
+                          </Stack>
+                        </Stack>
+                      </Grid>
+                    )}
                     {outOfHours && (
                       <Grid item xs={12}>
                         <Alert severity="warning">{outOfHours}</Alert>

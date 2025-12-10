@@ -429,9 +429,11 @@ radioServer user =
       now <- liftIO getCurrentTime
       Env{..} <- ask
       streamKey <- liftIO (toText <$> nextRandom)
-      ingestBase <- liftIO (readEnv "RADIO_INGEST_BASE" "rtmp://localhost/live")
-      whipBase <- liftIO (readEnv "RADIO_WHIP_BASE" "http://localhost:8889/whip")
       listenBase <- liftIO (readEnv "RADIO_PUBLIC_BASE" "https://stream.tdf.com/live")
+      let fallbackIngest = deriveBase listenBase "rtmp" "/live"
+          fallbackWhip   = deriveBase listenBase "https" "/whip"
+      ingestBase <- liftIO (readEnv "RADIO_INGEST_BASE" fallbackIngest)
+      whipBase <- liftIO (readEnv "RADIO_WHIP_BASE" fallbackWhip)
       let publicUrl = appendPath listenBase streamKey
           ingestUrl = appendPath ingestBase streamKey
           whipUrl = appendPath whipBase streamKey
@@ -455,6 +457,14 @@ radioServer user =
     appendPath base path =
       let trimmed = T.dropWhileEnd (== '/') base
       in trimmed <> "/" <> path
+
+    deriveBase :: Text -> Text -> Text -> Text
+    deriveBase baseUrl newScheme newPath =
+      let noScheme = fromMaybe baseUrl (T.stripPrefix "https://" baseUrl <|> T.stripPrefix "http://" baseUrl)
+          host     = T.takeWhile (/= '/') noScheme
+          cleanHost = if T.null host then "localhost" else host
+          normalizedPath = if T.isPrefixOf "/" newPath then newPath else "/" <> newPath
+      in newScheme <> "://" <> cleanHost <> normalizedPath
 
     readEnv key def = do
       mVal <- lookupEnv key
