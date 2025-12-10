@@ -258,7 +258,10 @@ export default function RadioWidget() {
   });
   const [showAdvanced, setShowAdvanced] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem('radio-show-advanced') === '1';
+    const stored = window.localStorage.getItem('radio-show-advanced');
+    if (stored === '1') return true;
+    if (stored === '0') return false;
+    return false; // default to simple mode
   });
   const [showCatalogSection, setShowCatalogSection] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
@@ -1622,13 +1625,22 @@ export default function RadioWidget() {
           <Typography variant="caption" color="text.secondary" fontWeight={600}>
             {pinned ? 'Fijado' : 'Arrastra para mover'}
           </Typography>
-          <Box sx={{ flex: 1 }} />
-          <Tooltip title={pinned ? 'Permitir mover' : 'Fijar posición'}>
-            <IconButton
+            <Box sx={{ flex: 1 }} />
+            <Button
               size="small"
-              onClick={() => setPinned((v) => !v)}
+              variant="text"
+              onClick={() => setShowAdvanced((v) => !v)}
               data-no-drag
-              color={pinned ? 'primary' : 'inherit'}
+              startIcon={showAdvanced ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+            >
+              {showAdvanced ? 'Modo simple' : 'Controles avanzados'}
+            </Button>
+            <Tooltip title={pinned ? 'Permitir mover' : 'Fijar posición'}>
+              <IconButton
+                size="small"
+                onClick={() => setPinned((v) => !v)}
+                data-no-drag
+                color={pinned ? 'primary' : 'inherit'}
             >
               <PushPinIcon fontSize="small" sx={{ transform: pinned ? 'rotate(25deg)' : 'none' }} />
             </IconButton>

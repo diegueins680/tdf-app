@@ -20,6 +20,7 @@ import PendingIcon from '@mui/icons-material/HourglassBottom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Courses, type CourseRegistrationDTO } from '../api/courses';
 import { useSearchParams } from 'react-router-dom';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 
@@ -88,6 +89,7 @@ export default function CourseRegistrationsAdminPage() {
   const [slug, setSlug] = useState(initialSlug);
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
   const queryKey = useMemo(
     () => ['admin', 'course-registrations', { slug, status, limit }],
@@ -103,6 +105,19 @@ export default function CourseRegistrationsAdminPage() {
         limit,
       }),
   });
+  const statusCounts = useMemo(() => {
+    const base = { total: 0, pending_payment: 0, paid: 0, cancelled: 0 };
+    if (!regsQuery.data) return base;
+    return regsQuery.data.reduce(
+      (acc, reg) => {
+        acc.total += 1;
+        const key = reg.crStatus as keyof typeof base;
+        if (key in acc) acc[key] += 1;
+        return acc;
+      },
+      { ...base },
+    );
+  }, [regsQuery.data]);
 
   const updateStatusMutation = useMutation({
     mutationFn: (args: { id: number; newStatus: Exclude<StatusFilter, 'all'> }) =>
@@ -114,6 +129,30 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['admin', 'course-registrations'] });
+  };
+
+  const handleCopyCsv = async () => {
+    if (!regsQuery.data?.length) return;
+    const header = ['id', 'slug', 'nombre', 'email', 'estado', 'creado'];
+    const rows = regsQuery.data.map((reg) => [
+      reg.crId,
+      reg.crCourseSlug,
+      reg.crFullName ?? '',
+      reg.crEmail ?? '',
+      reg.crStatus,
+      reg.crCreatedAt,
+    ]);
+    const csv = [header, ...rows]
+      .map((r) => r.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    try {
+      await navigator.clipboard.writeText(csv);
+      setCopyMessage(`Copiado CSV (${rows.length} filas)`);
+      setTimeout(() => setCopyMessage(null), 2000);
+    } catch {
+      setCopyMessage('No se pudo copiar el CSV');
+      setTimeout(() => setCopyMessage(null), 2000);
+    }
   };
 
   useEffect(() => {
@@ -131,6 +170,10 @@ export default function CourseRegistrationsAdminPage() {
           Inscripciones de cursos
         </Typography>
         <Stack direction="row" spacing={1}>
+          <Chip label={`Total: ${statusCounts.total}`} size="small" />
+          <Chip label={`Pagadas: ${statusCounts.paid}`} size="small" color="success" variant="outlined" />
+          <Chip label={`Pendientes: ${statusCounts.pending_payment}`} size="small" color="warning" variant="outlined" />
+          <Chip label={`Canceladas: ${statusCounts.cancelled}`} size="small" color="error" variant="outlined" />
           <Tooltip title="Refrescar">
             <IconButton onClick={handleRefresh} disabled={regsQuery.isFetching}>
               <RefreshIcon />
@@ -181,6 +224,27 @@ export default function CourseRegistrationsAdminPage() {
             </Button>
           </Grid>
         </Grid>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+          <Typography variant="caption" color="text.secondary">
+            Leyenda de estados:
+          </Typography>
+          <Chip label="Paid" size="small" color="success" />
+          <Chip label="Pending payment" size="small" color="warning" />
+          <Chip label="Cancelled" size="small" color="error" />
+          <Button
+            size="small"
+            startIcon={<ContentCopyIcon fontSize="small" />}
+            onClick={() => void handleCopyCsv()}
+            disabled={!regsQuery.data?.length}
+          >
+            Copiar CSV filtrado
+          </Button>
+          {copyMessage && (
+            <Typography variant="caption" color="text.secondary">
+              {copyMessage}
+            </Typography>
+          )}
+        </Stack>
       </Paper>
 
       <Paper sx={{ p: 3, borderRadius: 3 }}>

@@ -1006,7 +1006,8 @@ loadCourseMetadata rawSlug = do
   waEnv <- liftIO loadWhatsAppEnv
   let normalized = normalizeSlug rawSlug
   mDbMeta <- loadCourseMetadataFromDB envConfig waEnv normalized
-  baseMeta <- maybe (throwNotFound "Curso no encontrado") pure mDbMeta
+  let fallbackMeta = courseMetadataFor envConfig (waContactNumber waEnv) normalized
+  baseMeta <- maybe (maybe (throwNotFound "Curso no encontrado") pure fallbackMeta) pure mDbMeta
   let Courses.CourseMetadata{ Courses.capacity = baseCapacity } = baseMeta
   countRegs <- runDB $
     count
