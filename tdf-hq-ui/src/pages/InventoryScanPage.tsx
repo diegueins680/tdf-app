@@ -12,6 +12,7 @@ export default function InventoryScanPage() {
   const [asset, setAsset] = useState<AssetDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [checkoutForm, setCheckoutForm] = useState<AssetCheckoutRequest>({ coTargetKind: 'party' });
   const [checkinForm, setCheckinForm] = useState<AssetCheckinRequest>({});
   const [nextToken, setNextToken] = useState('');
@@ -38,6 +39,7 @@ export default function InventoryScanPage() {
       void qc.invalidateQueries({ queryKey: ['assets'] });
       await loadAsset();
       setFeedback('Equipo marcado como check-out.');
+      setFormError(null);
     },
     onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-out.'),
   });
@@ -49,9 +51,30 @@ export default function InventoryScanPage() {
       void qc.invalidateQueries({ queryKey: ['assets'] });
       await loadAsset();
       setFeedback('Equipo marcado como devuelto.');
+      setFormError(null);
     },
     onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-in.'),
   });
+
+  const handleCheckoutSubmit = () => {
+    const target = checkoutForm.coTargetParty?.trim() ?? '';
+    if (!target) {
+      setFormError('Agrega un destino para el check-out (persona, sala o referencia).');
+      return;
+    }
+    setFormError(null);
+    checkoutMutation.mutate();
+  };
+
+  const handleCheckinSubmit = () => {
+    const condition = checkinForm.ciConditionIn?.trim() ?? '';
+    if (!condition) {
+      setFormError('Describe la condición al recibir el equipo.');
+      return;
+    }
+    setFormError(null);
+    checkinMutation.mutate();
+  };
 
 const normalizedStatus = asset?.status?.toLowerCase() ?? '';
 const isCheckedOut = normalizedStatus.includes('book') || normalizedStatus.includes('out');
@@ -107,6 +130,11 @@ const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStat
               {feedback}
             </Alert>
           )}
+          {formError && (
+            <Alert severity="warning" onClose={() => setFormError(null)}>
+              {formError}
+            </Alert>
+          )}
           {error && <Alert severity="error">{error}</Alert>}
           {asset ? (
             <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -131,6 +159,20 @@ const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStat
                   ) : isCheckedOut ? (
                     <>
                       <Typography variant="subtitle1" sx={{ mt: 2 }}>Registrar check-in</Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        {['Sin novedades', 'Limpio', 'Con desgaste menor'].map((preset) => (
+                          <Button
+                            key={preset}
+                            size="small"
+                            variant="outlined"
+                            onClick={() =>
+                              setCheckinForm((prev) => ({ ...prev, ciConditionIn: preset }))
+                            }
+                          >
+                            {preset}
+                          </Button>
+                        ))}
+                      </Stack>
                       <TextField
                         label="Condición al entrar"
                         value={checkinForm.ciConditionIn ?? ''}
@@ -152,7 +194,7 @@ const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStat
                       <Button
                         variant="contained"
                         sx={{ mt: 2 }}
-                        onClick={() => checkinMutation.mutate()}
+                        onClick={handleCheckinSubmit}
                         disabled={checkinMutation.isPending}
                       >
                         {checkinMutation.isPending ? 'Registrando…' : 'Check-in'}
@@ -164,6 +206,20 @@ const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStat
                   ) : (
                     <>
                       <Typography variant="subtitle1" sx={{ mt: 2 }}>Registrar check-out</Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        {['Cliente', 'Sala', 'Mantenimiento'].map((preset) => (
+                          <Button
+                            key={preset}
+                            size="small"
+                            variant="outlined"
+                            onClick={() =>
+                              setCheckoutForm((prev) => ({ ...prev, coTargetParty: preset }))
+                            }
+                          >
+                            {preset}
+                          </Button>
+                        ))}
+                      </Stack>
                       <TextField
                         label="Destino (party/ref)"
                         value={checkoutForm.coTargetParty ?? ''}
@@ -183,7 +239,7 @@ const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStat
                       <Button
                         variant="contained"
                         sx={{ mt: 2 }}
-                        onClick={() => checkoutMutation.mutate()}
+                        onClick={handleCheckoutSubmit}
                         disabled={checkoutMutation.isPending}
                       >
                         {checkoutMutation.isPending ? 'Registrando…' : 'Check-out'}

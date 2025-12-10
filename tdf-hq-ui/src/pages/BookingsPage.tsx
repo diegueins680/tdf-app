@@ -520,6 +520,11 @@ const openDialogForRange = (start: Date, end: Date) => {
       setFormError('Revisa las fechas seleccionadas.');
       return;
     }
+    const trimmedService = serviceType.trim();
+    if (!trimmedService) {
+      setFormError('Selecciona un servicio para la sesión.');
+      return;
+    }
     if (DateTime.fromISO(endIso) <= DateTime.fromISO(startIso)) {
       setFormError('La hora de fin debe ser mayor que la de inicio.');
       return;
@@ -540,7 +545,6 @@ const openDialogForRange = (start: Date, end: Date) => {
     }
     const combinedNotes = buildCombinedNotes();
     if (mode === 'edit' && editingId) {
-      const trimmedService = serviceType.trim();
       updateMutation.mutate({
         id: editingId,
         body: {

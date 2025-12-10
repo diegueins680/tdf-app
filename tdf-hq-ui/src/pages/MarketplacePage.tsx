@@ -242,6 +242,11 @@ export default function MarketplacePage() {
   }, [datafastCheckout]);
   const isValidEmail = useMemo(() => /\S+@\S+\.\S+/.test(buyerEmail.trim()), [buyerEmail]);
   const isValidName = useMemo(() => buyerName.trim().length > 1, [buyerName]);
+  const isValidPhone = useMemo(() => {
+    if (contactPref !== 'phone') return true;
+    const cleaned = normalizePhone(buyerPhone) ?? '';
+    return cleaned.length >= 7;
+  }, [buyerPhone, contactPref]);
 
   const listingsQuery = useQuery({
     queryKey: ['marketplace-listings'],
@@ -589,8 +594,9 @@ export default function MarketplacePage() {
     if (!hasCartItems || cartItemCount === 0) return 'Agrega al menos un producto para continuar.';
     if (!isValidName) return 'Ingresa tu nombre para coordinar el pedido.';
     if (!isValidEmail) return 'Ingresa un correo válido.';
+    if (!isValidPhone && contactPref === 'phone') return 'Agrega un teléfono para coordinar por WhatsApp.';
     return '';
-  }, [cartItemCount, hasCartItems, isValidEmail, isValidName]);
+  }, [cartItemCount, contactPref, hasCartItems, isValidEmail, isValidName, isValidPhone]);
   useEffect(() => {
     if (!paypalEnabled && (modules.has('ops') || modules.has('admin'))) {
       console.warn('PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID en build o runtime.');
@@ -726,13 +732,21 @@ export default function MarketplacePage() {
   };
 
   const handleCheckout = () => {
+    if (!isValidName || !isValidEmail || (contactPref === 'phone' && !isValidPhone)) {
+      setToast('Completa tu nombre, correo y teléfono para continuar.');
+      return;
+    }
     checkoutMutation.mutate();
   };
 
   const handleDatafastCheckout = () => {
     setDatafastError(null);
-    if (!hasCartItems || !isValidName || !isValidEmail || cartItemCount === 0) {
-      setDatafastError('Completa tu nombre y correo para pagar con tarjeta.');
+    if (!hasCartItems || !isValidName || !isValidEmail || cartItemCount === 0 || (contactPref === 'phone' && !isValidPhone)) {
+      setDatafastError(
+        contactPref === 'phone'
+          ? 'Completa tu nombre, correo y teléfono para pagar con tarjeta.'
+          : 'Completa tu nombre y correo para pagar con tarjeta.',
+      );
       return;
     }
     datafastCheckoutMutation.mutate();
@@ -740,8 +754,12 @@ export default function MarketplacePage() {
 
   const handlePaypalCheckout = () => {
     setPaypalError(null);
-    if (!hasCartItems || !isValidName || !isValidEmail) {
-      setPaypalError('Completa tu nombre y correo para pagar con PayPal.');
+    if (!hasCartItems || !isValidName || !isValidEmail || (contactPref === 'phone' && !isValidPhone)) {
+      setPaypalError(
+        contactPref === 'phone'
+          ? 'Completa tu nombre, correo y teléfono para pagar con PayPal.'
+          : 'Completa tu nombre y correo para pagar con PayPal.',
+      );
       return;
     }
     createPaypalOrderMutation.mutate();
@@ -1266,7 +1284,17 @@ export default function MarketplacePage() {
                         {item.miBrand && <Chip size="small" label={item.miBrand} variant="outlined" />}
                         {item.miModel && <Chip size="small" label={item.miModel} variant="outlined" />}
                         <Chip size="small" label={item.miCategory} color="default" variant="outlined" />
-                        <Chip size="small" color="primary" label="Venta y Renta" />
+                        <Chip
+                          size="small"
+                          color="primary"
+                          label={
+                            item.miPurpose === 'rent'
+                              ? 'Renta'
+                              : item.miPurpose === 'sale'
+                                ? 'Venta'
+                                : 'Venta y Renta'
+                          }
+                        />
                       </Stack>
                       <Box
                         sx={{
@@ -1646,6 +1674,11 @@ export default function MarketplacePage() {
                         <Typography variant="caption" color="text.secondary">
                           Te contactaremos por {contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'} en menos de 24 h para coordinar pago y entrega.
                         </Typography>
+                        {contactPref === 'phone' && !isValidPhone && (
+                          <Typography variant="caption" color="warning.main">
+                            Agrega un número de teléfono para coordinar por WhatsApp.
+                          </Typography>
+                        )}
                       </Stack>
                       <Stack spacing={1}>
                         <Typography variant="caption" color="text.secondary">
@@ -1697,6 +1730,11 @@ export default function MarketplacePage() {
                             ? 'Continuar con tarjeta'
                             : 'Confirmar pedido'}
                       </Button>
+                      {checkoutDisabledReason && (
+                        <Typography variant="caption" color="text.secondary">
+                          {checkoutDisabledReason} Completa los datos de contacto en esta sección.
+                        </Typography>
+                      )}
                       {checkoutDisabledReason && (
                         <Stack spacing={0.5}>
                           <Alert severity="info" variant="outlined">
@@ -1971,6 +2009,7 @@ export default function MarketplacePage() {
               (paymentMethod === 'paypal' && (!paypalClientId || !paypalReady)) ||
               !isValidName ||
               !isValidEmail ||
+              (contactPref === 'phone' && !isValidPhone) ||
               !hasCartItems ||
               cartItemCount === 0
             }

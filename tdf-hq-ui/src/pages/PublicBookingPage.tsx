@@ -20,6 +20,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import PersonIcon from '@mui/icons-material/Person';
+import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import type { BookingDTO } from '../api/types';
 import { Engineers, type PublicEngineer } from '../api/engineers';
@@ -49,18 +50,14 @@ const toLocalInputValue = (date: Date) => {
 const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const ROOM_OPTIONS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
-const DIEGO_DEFAULT_NAME = 'Diego Saá';
 
-const localTimezoneLabel = () => {
-  if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'tu zona horaria';
-  const dtf = Intl.DateTimeFormat(undefined, { timeZoneName: 'short' });
-  const parts = dtf.formatToParts(new Date());
-  const zone = parts.find((p) => p.type === 'timeZoneName')?.value;
-  return zone ?? 'tu zona horaria';
+const zoneLabel = (zone: string) => {
+  try {
+    return DateTime.now().setZone(zone).toFormat('ZZZZ');
+  } catch {
+    return zone;
+  }
 };
-
-const formatHour = (date: Date) =>
-  date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
 const normalizeService = (service: string) => service.trim().toLowerCase();
 const stripDiacritics = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '');
@@ -85,14 +82,23 @@ const sameRooms = (a: string[], b: string[]) => {
 };
 
 const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
-  const hasDiego = list.some((eng) => normalizeService(eng.peName).includes('diego saá') || normalizeService(eng.peName).includes('diego saa'));
-  return hasDiego ? list : [...list, { peId: -1, peName: DIEGO_DEFAULT_NAME }];
+  return list;
 };
 
 export default function PublicBookingPage() {
   const services = useMemo(() => loadServiceTypes(), []);
   const defaultService = services[0]?.name ?? 'Reserva';
   const { session, logout } = useSession();
+  const userTimeZone = useMemo(() => {
+    if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'UTC';
+    return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+  }, []);
+  const studioTimeZone = useMemo(
+    () => ((import.meta.env['VITE_TZ'] as string | undefined) ?? 'America/Guayaquil'),
+    [],
+  );
+  const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
+  const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
   const [form, setForm] = useState<FormState>(() => {
     const start = new Date();
     start.setMinutes(start.getMinutes() + 90);
@@ -107,7 +113,7 @@ export default function PublicBookingPage() {
       durationMinutes: 60,
       notes: '',
       engineerId: null,
-      engineerName: DIEGO_DEFAULT_NAME,
+      engineerName: '',
       resourceLabels: initialRooms,
     };
   });
@@ -169,18 +175,10 @@ export default function PublicBookingPage() {
         const withDiego = ensureDiegoOption(list);
         setEngineers(withDiego);
         setEngineersError(withDiego.length === 0 ? 'Escribe el nombre del ingeniero manualmente.' : null);
-        setForm((prev) => {
-          if (prev.engineerName.trim()) return prev;
-          return { ...prev, engineerName: DIEGO_DEFAULT_NAME, engineerId: null };
-        });
       })
       .catch(() => {
         setEngineers([]);
         setEngineersError('Ingresa el nombre manualmente (catálogo no disponible).');
-        setForm((prev) => {
-          if (prev.engineerName.trim()) return prev;
-          return { ...prev, engineerName: DIEGO_DEFAULT_NAME, engineerId: null };
-        });
       })
       .finally(() => setEngineersLoading(false));
   }, []);
@@ -203,30 +201,33 @@ export default function PublicBookingPage() {
       return;
     }
 
-    const parsedStart = new Date(form.startsAt);
-    if (Number.isNaN(parsedStart.getTime())) {
+    const parsedStartLocal = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
+    if (!parsedStartLocal.isValid) {
       setError('Selecciona una fecha y hora válida.');
       return;
     }
-    const now = new Date();
-    if (parsedStart.getTime() < now.getTime() + 15 * 60 * 1000) {
+    const now = DateTime.now().setZone(userTimeZone);
+    if (parsedStartLocal < now.plus({ minutes: 15 })) {
       setError('Elige un horario al menos 15 minutos en el futuro.');
       return;
     }
     const durationMinutes = Math.max(30, Number(form.durationMinutes) || 60);
-    const open = new Date(parsedStart);
-    open.setHours(OPEN_HOURS.start, 0, 0, 0);
-    const close = new Date(parsedStart);
-    close.setHours(OPEN_HOURS.end, 0, 0, 0);
-    const proposedEnd = new Date(parsedStart.getTime() + durationMinutes * 60 * 1000);
-    if (parsedStart < open) {
-      setError(`Nuestro horario es ${OPEN_HOURS.start}:00 - ${OPEN_HOURS.end}:00. Ajusta la hora de inicio (abrimos a las ${formatHour(open)}).`);
+    const startStudio = parsedStartLocal.setZone(studioTimeZone);
+    const openStudio = startStudio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
+    const closeStudio = startStudio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
+    const proposedEndStudio = startStudio.plus({ minutes: durationMinutes });
+    const openUser = openStudio.setZone(userTimeZone);
+    const closeUser = closeStudio.setZone(userTimeZone);
+    if (startStudio < openStudio) {
+      setError(
+        `Nuestro horario es ${openStudio.toFormat('HH:mm')} - ${closeStudio.toFormat('HH:mm')} (${studioZoneLabel}). En tu zona (${userZoneLabel}) eso es ${openUser.toFormat('HH:mm')} - ${closeUser.toFormat('HH:mm')}.`,
+      );
       return;
     }
-    if (proposedEnd > close) {
-      const remaining = Math.max(0, Math.floor((close.getTime() - parsedStart.getTime()) / 60000));
+    if (proposedEndStudio > closeStudio) {
+      const remaining = Math.max(0, Math.floor(closeStudio.diff(startStudio, 'minutes').minutes));
       setError(
-        `La cita debe terminar antes de las ${formatHour(close)} (${localTimezoneLabel()}). Con esa hora, el máximo es ${remaining} min.`,
+        `La cita debe terminar antes de las ${closeStudio.toFormat('HH:mm')} (${studioZoneLabel}). Con esa hora, el máximo es ${remaining} min.`,
       );
       return;
     }
@@ -238,7 +239,7 @@ export default function PublicBookingPage() {
     setSubmitting(true);
     const uniqueRooms = Array.from(new Set(form.resourceLabels));
     try {
-      const startsAtIso = parsedStart.toISOString();
+      const startsAtIso = parsedStartLocal.toUTC().toISO();
       const dto = await Bookings.createPublic({
         pbFullName: form.fullName.trim(),
         pbEmail: form.email.trim(),
@@ -260,6 +261,19 @@ export default function PublicBookingPage() {
     }
   };
 
+  const bookingWindow = useMemo(() => {
+    if (!form.startsAt) return null;
+    const startLocal = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
+    if (!startLocal.isValid) return null;
+    const duration = Math.max(30, Number(form.durationMinutes) || 60);
+    const startStudio = startLocal.setZone(studioTimeZone);
+    const openStudio = startStudio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
+    const closeStudio = startStudio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
+    const endStudio = startStudio.plus({ minutes: duration });
+    const endLocal = endStudio.setZone(userTimeZone);
+    return { startLocal, endLocal, startStudio, endStudio, openStudio, closeStudio, duration };
+  }, [form.durationMinutes, form.startsAt, studioTimeZone, userTimeZone]);
+
   const servicePriceLookup = useMemo(() => {
     const map = new Map<string, string>();
     services.forEach((svc) => {
@@ -271,28 +285,14 @@ export default function PublicBookingPage() {
   }, [services]);
   const selectedPrice = servicePriceLookup.get(form.serviceType);
   const formattedStart = useMemo(() => {
-    if (!form.startsAt) return null;
-    const dt = new Date(form.startsAt);
-    if (Number.isNaN(dt.getTime())) return null;
-    return dt.toLocaleString(undefined, {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  }, [form.startsAt]);
+    if (!bookingWindow) return null;
+    return bookingWindow.startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
+  }, [bookingWindow]);
 
   const requiresEngineer = (service: string) => {
     const lowered = service.toLowerCase();
     return lowered.includes('graba') || lowered.includes('mezcl') || lowered.includes('master');
   };
-
-  useEffect(() => {
-    if (!requiresEngineer(form.serviceType)) return;
-    if (form.engineerName.trim()) return;
-    setForm((prev) => ({ ...prev, engineerName: DIEGO_DEFAULT_NAME, engineerId: null }));
-  }, [form.engineerName, form.serviceType]);
 
   useEffect(() => {
     const defaults = defaultRoomsForService(form.serviceType);
@@ -302,23 +302,9 @@ export default function PublicBookingPage() {
     });
   }, [form.serviceType]);
 
-  const bookingWindow = useMemo(() => {
-    if (!form.startsAt) return null;
-    const startDate = new Date(form.startsAt);
-    if (Number.isNaN(startDate.getTime())) return null;
-    const duration = Math.max(30, Number(form.durationMinutes) || 60);
-    const open = new Date(startDate);
-    open.setHours(OPEN_HOURS.start, 0, 0, 0);
-    const close = new Date(startDate);
-    close.setHours(OPEN_HOURS.end, 0, 0, 0);
-    const end = new Date(startDate.getTime() + duration * 60 * 1000);
-    return { startDate, end, open, close, duration };
-  }, [form.durationMinutes, form.startsAt]);
-
   const maxDurationUntilClose = useMemo(() => {
     if (!bookingWindow) return null;
-    const diffMs = bookingWindow.close.getTime() - bookingWindow.startDate.getTime();
-    const minutes = Math.floor(diffMs / 60000);
+    const minutes = Math.floor(bookingWindow.closeStudio.diff(bookingWindow.startStudio, 'minutes').minutes);
     if (minutes <= 0) return 0;
     return minutes;
   }, [bookingWindow]);
@@ -326,9 +312,15 @@ export default function PublicBookingPage() {
   const engineerValue =
     (engineers.find((opt) => opt.peId === form.engineerId) as PublicEngineer | undefined) ??
     (form.engineerName ? { peId: -1, peName: form.engineerName } : null);
-  const engineerHelper =
-    engineersError ??
-    (engineers.length === 0 ? 'Escribe el nombre del ingeniero asignado (catálogo no disponible).' : 'Selecciona o escribe el ingeniero asignado.');
+  const engineerHelper = useMemo(() => {
+    if (engineersError) return engineersError;
+    if (requiresEngineer(form.serviceType)) {
+      return 'Requerido para grabación/mezcla/mastering. Selecciona o escribe el ingeniero asignado.';
+    }
+    return engineers.length === 0
+      ? 'Escribe el nombre del ingeniero asignado (catálogo no disponible).'
+      : 'Selecciona o escribe el ingeniero asignado.';
+  }, [engineers.length, engineersError, form.serviceType]);
 
   const clearSavedProfile = () => {
     setRememberProfile(false);
@@ -342,24 +334,42 @@ export default function PublicBookingPage() {
 
   const outOfHours = useMemo(() => {
     if (!bookingWindow) return null;
-    const { startDate, end, open, close } = bookingWindow;
-    if (startDate < open) {
-      return `Abrimos a las ${formatHour(open)}. Ajusta la hora de inicio. (${localTimezoneLabel()})`;
+    const { startStudio, endStudio, openStudio, closeStudio } = bookingWindow;
+    if (startStudio < openStudio) {
+      return `Abrimos a las ${openStudio.toFormat('HH:mm')} (${studioZoneLabel}). En tu zona: ${openStudio
+        .setZone(userTimeZone)
+        .toFormat('HH:mm')} (${userZoneLabel}).`;
     }
-    if (end > close) {
-      return `La duración seleccionada pasa el cierre (${formatHour(close)}). Acorta minutos o mueve la cita. (${localTimezoneLabel()})`;
+    if (endStudio > closeStudio) {
+      return `La duración seleccionada pasa el cierre (${closeStudio.toFormat('HH:mm')} ${studioZoneLabel}). Ajusta minutos u horario.`;
     }
     return null;
-  }, [bookingWindow]);
+  }, [bookingWindow, studioZoneLabel, userTimeZone, userZoneLabel]);
 
   const durationLimitLabel = useMemo(() => {
     if (maxDurationUntilClose == null) return null;
-    const closeLabel = bookingWindow?.close ? formatHour(bookingWindow.close) : `${OPEN_HOURS.end}:00`;
+    const closeLabel = bookingWindow?.closeStudio
+      ? `${bookingWindow.closeStudio.toFormat('HH:mm')} (${studioZoneLabel})`
+      : `${OPEN_HOURS.end}:00`;
     if (maxDurationUntilClose <= 0) {
       return `Elige otra hora: el cierre (${closeLabel}) es antes de este inicio.`;
     }
     return `Máximo ${maxDurationUntilClose} min con la hora elegida (cierre ${closeLabel}).`;
-  }, [bookingWindow?.close, maxDurationUntilClose]);
+  }, [bookingWindow?.closeStudio, maxDurationUntilClose, studioZoneLabel]);
+
+  const availabilityHelperText = useMemo(() => {
+    const open = bookingWindow?.openStudio
+      ?? DateTime.now()
+        .setZone(studioTimeZone)
+        .set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
+    const close = bookingWindow?.closeStudio
+      ?? DateTime.now()
+        .setZone(studioTimeZone)
+        .set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
+    const openUser = open.setZone(userTimeZone);
+    const closeUser = close.setZone(userTimeZone);
+    return `Horario del estudio: ${open.toFormat('HH:mm')} - ${close.toFormat('HH:mm')} (${studioZoneLabel}). Tu zona: ${openUser.toFormat('HH:mm')} - ${closeUser.toFormat('HH:mm')} (${userZoneLabel}).`;
+  }, [bookingWindow?.closeStudio, bookingWindow?.openStudio, studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
 
   return (
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -387,7 +397,7 @@ export default function PublicBookingPage() {
                 tienes cuenta, crearemos tu acceso automáticamente.
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Horarios mostrados en <strong>{localTimezoneLabel()}</strong>.
+                Horario del estudio: <strong>{studioZoneLabel}</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
               </Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                 <Chip label="1. Agenda sin crear cuenta" size="small" variant="outlined" />
@@ -558,7 +568,7 @@ export default function PublicBookingPage() {
                         fullWidth
                         InputLabelProps={{ shrink: true }}
                         required
-                        helperText={`Horario disponible: ${OPEN_HOURS.start}:00 - ${OPEN_HOURS.end}:00 (${localTimezoneLabel()})`}
+                        helperText={availabilityHelperText}
                       />
                     </Grid>
                     <Grid item xs={12} sm={5}>
@@ -734,7 +744,11 @@ export default function PublicBookingPage() {
                                 size="small"
                                 variant="outlined"
                               />
-                              <Chip label={`Zona: ${localTimezoneLabel()}`} size="small" variant="outlined" />
+                              <Chip
+                                label={`Zona: Estudio ${studioZoneLabel} · Tú ${userZoneLabel}`}
+                                size="small"
+                                variant="outlined"
+                              />
                               {requiresEngineer(form.serviceType) && (
                                 <Chip
                                   label={
