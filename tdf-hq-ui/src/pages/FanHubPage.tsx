@@ -42,7 +42,7 @@ import { useCmsContent } from '../hooks/useCmsContent';
 import { SessionGate } from '../components/SessionGate';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
-import { ensureAccessToken, uploadToDrive, makeFilePublic, buildPublicContentUrl } from '../services/googleDrive';
+import { ensureAccessToken, uploadToDrive, makeFilePublic, buildPublicContentUrl, driveConfigError } from '../services/googleDrive';
 
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
@@ -202,6 +202,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     if (typeof window === 'undefined') return true;
     return window.localStorage.getItem('fanhub-onboarding-dismissed') !== '1';
   });
+  const driveConfigMessage = useMemo(() => driveConfigError(), []);
+  const driveEnabled = !driveConfigMessage;
 
   useEffect(() => {
     if (profileQuery.data) {
@@ -412,6 +414,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const handleUploadTrigger = (release: ReleaseFeedItem) => {
+    if (!driveEnabled) {
+      setUploadError(driveConfigMessage ?? 'Drive no está configurado.');
+      return;
+    }
     setUploadError(null);
     setPendingUploadRelease(release);
     setReleaseLinkDraft(release.arSpotifyUrl ?? release.arYoutubeUrl ?? '');
@@ -829,34 +835,40 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                                 Ver en YouTube
                               </Button>
                             )}
-                            {canManageReleases && (
-                              <GoogleDriveUploadWidget
-                                label="Avanzado: Subir audio desde Drive"
-                                helperText="Opcional: usa Drive si ya tienes el máster listo allí."
-                                accept="audio/*"
-                                multiple={false}
-                                dense
-                                onComplete={(files) => {
-                                  const link = files[0]?.webContentLink ?? files[0]?.webViewLink;
-                                  if (!link) return;
-                                  setPendingUploadRelease(release);
-                                  setReleaseLinkDraft(link);
-                                  void (async () => {
-                                    try {
-                                      setUploadingReleaseId(release.arReleaseId);
-                                      await persistReleaseStream(release, link);
-                                      setPendingUploadRelease(null);
-                                      setReleaseLinkDraft('');
-                                    } catch (err) {
-                                      const msg = err instanceof Error ? err.message : 'No pudimos guardar el enlace.';
-                                      setUploadError(msg);
-                                    } finally {
-                                      setUploadingReleaseId(null);
-                                    }
-                                  })();
-                                }}
-                              />
-                            )}
+                {canManageReleases && (
+                  driveEnabled ? (
+                    <GoogleDriveUploadWidget
+                      label="Avanzado: Subir audio desde Drive"
+                      helperText="Opcional: usa Drive si ya tienes el máster listo allí."
+                      accept="audio/*"
+                      multiple={false}
+                      dense
+                      onComplete={(files) => {
+                        const link = files[0]?.webContentLink ?? files[0]?.webViewLink;
+                        if (!link) return;
+                        setPendingUploadRelease(release);
+                        setReleaseLinkDraft(link);
+                        void (async () => {
+                          try {
+                            setUploadingReleaseId(release.arReleaseId);
+                            await persistReleaseStream(release, link);
+                            setPendingUploadRelease(null);
+                            setReleaseLinkDraft('');
+                          } catch (err) {
+                            const msg = err instanceof Error ? err.message : 'No pudimos guardar el enlace.';
+                            setUploadError(msg);
+                          } finally {
+                            setUploadingReleaseId(null);
+                          }
+                        })();
+                      }}
+                    />
+                  ) : (
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                      {driveConfigMessage ?? 'Configura Drive para permitir cargas.'}
+                    </Alert>
+                  )
+                )}
                           </Stack>
                         )}
                         {canManageReleases && pendingUploadRelease?.arReleaseId === release.arReleaseId && (
@@ -1213,19 +1225,23 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Typography variant="body2" fontWeight={700}>
                     Portada principal (hosteada)
                   </Typography>
-                  <GoogleDriveUploadWidget
-                    label="Subir portada a Drive"
-                    helperText="Sube la portada; guardaremos el link servido para evitar imágenes pesadas embebidas."
-                    onComplete={(files) => {
-                      const link = files[0]?.webViewLink ?? files[0]?.webContentLink;
-                      if (link) {
-                        setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
-                        setHeroImageFileName(files[0]?.name ?? 'Imagen en Drive');
-                      }
-                    }}
-                    accept="image/*"
-                    dense
-                  />
+                  {driveEnabled ? (
+                    <GoogleDriveUploadWidget
+                      label="Subir portada a Drive"
+                      helperText="Sube la portada; guardaremos el link servido para evitar imágenes pesadas embebidas."
+                      onComplete={(files) => {
+                        const link = files[0]?.webViewLink ?? files[0]?.webContentLink;
+                        if (link) {
+                          setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
+                          setHeroImageFileName(files[0]?.name ?? 'Imagen en Drive');
+                        }
+                      }}
+                      accept="image/*"
+                      dense
+                    />
+                  ) : (
+                    <Alert severity="info">{driveConfigMessage ?? 'Configura Drive para subir portadas.'}</Alert>
+                  )}
                   <TextField
                     label="URL de portada (opcional)"
                     placeholder="https://"

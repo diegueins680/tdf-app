@@ -1,18 +1,46 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module TDF.DTO.SocialEventsDTO
   ( ArtistDTO(..)
+  , ArtistSocialLinksDTO(..)
   , VenueDTO(..)
   , EventDTO(..)
   , RsvpDTO(..)
   , InvitationDTO(..)
   ) where
 
-import           Data.Aeson (FromJSON, ToJSON)
+import           Data.Aeson (FromJSON, ToJSON, withObject, (.:?), (.=), object)
 import           Data.Text  (Text)
 import           Data.Time  (UTCTime)
 import           GHC.Generics (Generic)
+
+data ArtistSocialLinksDTO = ArtistSocialLinksDTO
+  { aslSpotify    :: Maybe Text
+  , aslInstagram  :: Maybe Text
+  , aslTwitter    :: Maybe Text
+  , aslYoutube    :: Maybe Text
+  , aslSoundcloud :: Maybe Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON ArtistSocialLinksDTO where
+  toJSON ArtistSocialLinksDTO{..} = object
+    [ "spotify"    .= aslSpotify
+    , "instagram"  .= aslInstagram
+    , "twitter"    .= aslTwitter
+    , "youtube"    .= aslYoutube
+    , "soundcloud" .= aslSoundcloud
+    ]
+
+instance FromJSON ArtistSocialLinksDTO where
+  parseJSON = withObject "ArtistSocialLinksDTO" $ \o ->
+    ArtistSocialLinksDTO
+      <$> o .:? "spotify"
+      <*> o .:? "instagram"
+      <*> o .:? "twitter"
+      <*> o .:? "youtube"
+      <*> o .:? "soundcloud"
 
 data ArtistDTO = ArtistDTO
   { artistId       :: Maybe Text
@@ -20,6 +48,7 @@ data ArtistDTO = ArtistDTO
   , artistGenres   :: [Text]
   , artistBio      :: Maybe Text
   , artistAvatarUrl :: Maybe Text
+  , artistSocialLinks :: Maybe ArtistSocialLinksDTO
   } deriving (Show, Eq, Generic)
 instance ToJSON ArtistDTO
 instance FromJSON ArtistDTO

@@ -18,9 +18,15 @@ export function useGoogleDriveAuth() {
   const startAuth = useCallback(async (returnTo?: string) => {
     setError(null);
     setStatus('authenticating');
-    const state = returnTo ?? window.location.pathname + window.location.search;
-    const url = await buildAuthUrl(state);
-    window.location.assign(url);
+    try {
+      const state = returnTo ?? window.location.pathname + window.location.search;
+      const url = await buildAuthUrl(state);
+      window.location.assign(url);
+    } catch (err) {
+      setStatus('idle');
+      setError(err instanceof Error ? err.message : 'No se pudo iniciar la autenticación con Drive.');
+      throw err;
+    }
   }, []);
 
   const ensureToken = useCallback(async () => {

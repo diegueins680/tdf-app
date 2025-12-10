@@ -14,11 +14,14 @@ import           Control.Applicative ((<|>))
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import           Text.Read (readMaybe)
 import           Data.Int (Int64)
 import           Data.Time (getCurrentTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           Data.Maybe (isNothing)
+import qualified Data.ByteString.Lazy as BL
+import qualified Data.Aeson as Aeson
 import           Control.Monad (forM, forM_, when)
 
 import           Servant
@@ -29,12 +32,21 @@ import           Database.Persist
 import           Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
 
 import           TDF.API.SocialEventsAPI
-import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..), RsvpDTO(..), InvitationDTO(..))
+import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..), ArtistSocialLinksDTO(..), RsvpDTO(..), InvitationDTO(..))
 import           TDF.DB (Env(..))
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueName)
 import qualified TDF.Models.SocialEventsModels as SM
 
 type AppM = ReaderT Env Handler
+
+decodeSocialLinks :: Maybe T.Text -> Maybe ArtistSocialLinksDTO
+decodeSocialLinks mTxt = do
+  txt <- mTxt
+  Aeson.decodeStrict (TE.encodeUtf8 txt)
+
+encodeSocialLinks :: Maybe ArtistSocialLinksDTO -> Maybe T.Text
+encodeSocialLinks mLinks =
+  fmap (TE.decodeUtf8 . BL.toStrict . Aeson.encode) mLinks
 
 socialEventsServer :: ServerT SocialEventsAPI AppM
 socialEventsServer = eventsServer
@@ -74,13 +86,21 @@ socialEventsServer = eventsServer
         artists <- forM artistLinks $ \(Entity _ link) -> do
           mArtist <- liftIO $ runSqlPool (get (eventArtistArtistId link)) envPool
           pure $ case mArtist of
-            Nothing -> ArtistDTO { artistId = Nothing, artistName = "(unknown)", artistGenres = [], artistBio = Nothing, artistAvatarUrl = Nothing }
+            Nothing -> ArtistDTO
+              { artistId = Nothing
+              , artistName = "(unknown)"
+              , artistGenres = []
+              , artistBio = Nothing
+              , artistAvatarUrl = Nothing
+              , artistSocialLinks = Nothing
+              }
             Just a -> ArtistDTO 
               { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link))))
               , artistName = artistProfileName a
               , artistGenres = maybe [] id (artistProfileGenres a)
               , artistBio = artistProfileBio a
               , artistAvatarUrl = artistProfileAvatarUrl a
+              , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
               }
         pure EventDTO
           { eventId = Just (T.pack (show (fromSqlKey eid)))
@@ -144,13 +164,21 @@ socialEventsServer = eventsServer
               artists <- forM artistLinks $ \(Entity _ link) -> do
                 mArtist <- liftIO $ runSqlPool (get (eventArtistArtistId link)) envPool
                 pure $ case mArtist of
-                  Nothing -> ArtistDTO { artistId = Nothing, artistName = "(unknown)", artistGenres = [], artistBio = Nothing, artistAvatarUrl = Nothing }
+                  Nothing -> ArtistDTO
+                    { artistId = Nothing
+                    , artistName = "(unknown)"
+                    , artistGenres = []
+                    , artistBio = Nothing
+                    , artistAvatarUrl = Nothing
+                    , artistSocialLinks = Nothing
+                    }
                   Just a -> ArtistDTO 
                     { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link))))
                     , artistName = artistProfileName a
                     , artistGenres = maybe [] id (artistProfileGenres a)
                     , artistBio = artistProfileBio a
                     , artistAvatarUrl = artistProfileAvatarUrl a
+                    , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
                     }
               pure $ EventDTO
                 { eventId = Just (T.pack (show num))
@@ -314,6 +342,7 @@ socialEventsServer = eventsServer
           , artistGenres = map (artistGenreGenre . entityVal) genres
           , artistBio = artistProfileBio a
           , artistAvatarUrl = artistProfileAvatarUrl a
+          , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
           }
 
     createArtist :: ArtistDTO -> AppM ArtistDTO
@@ -326,7 +355,7 @@ socialEventsServer = eventsServer
         , artistProfileBio = artistBio dto
         , artistProfileAvatarUrl = artistAvatarUrl dto
         , artistProfileGenres = Just (artistGenres dto)
-        , artistProfileSocialLinks = Nothing
+        , artistProfileSocialLinks = encodeSocialLinks (artistSocialLinks dto)
         , artistProfileCreatedAt = now
         , artistProfileUpdatedAt = now
         }) envPool
@@ -345,6 +374,7 @@ socialEventsServer = eventsServer
         , artistGenres = genreList
         , artistBio = artistBio dto
         , artistAvatarUrl = artistAvatarUrl dto
+        , artistSocialLinks = artistSocialLinks dto
         }
 
     getArtist :: T.Text -> AppM ArtistDTO
@@ -365,6 +395,7 @@ socialEventsServer = eventsServer
                 , artistGenres = map (artistGenreGenre . entityVal) genres
                 , artistBio = artistProfileBio a
                 , artistAvatarUrl = artistProfileAvatarUrl a
+                , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
                 }
 
     updateArtist :: T.Text -> ArtistDTO -> AppM ArtistDTO
@@ -379,6 +410,7 @@ socialEventsServer = eventsServer
                                           , ArtistProfileBio =. artistBio dto
                                           , ArtistProfileAvatarUrl =. artistAvatarUrl dto
                                           , ArtistProfileGenres =. Just (artistGenres dto)
+                                          , ArtistProfileSocialLinks =. encodeSocialLinks (artistSocialLinks dto)
                                           , ArtistProfileUpdatedAt =. now
                                           ]) envPool
           -- Update genres
