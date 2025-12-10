@@ -23,7 +23,6 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import LinkIcon from '@mui/icons-material/Link';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import QRCode from 'qrcode';
 import { Parties } from '../api/parties';
 import { SocialAPI } from '../api/social';
 import type { PartyDTO, PartyFollowDTO } from '../api/types';
@@ -88,7 +87,11 @@ export default function SocialPage() {
   useEffect(() => {
     let active = true;
     setShareQrError(null);
-    QRCode.toDataURL(sharePayload, { margin: 1, scale: 6 })
+    import('qrcode')
+      .then((mod) => {
+        const QRCode = mod.default ?? mod;
+        return QRCode.toDataURL(sharePayload, { margin: 1, scale: 6 });
+      })
       .then((dataUrl) => {
         if (active) setShareQr(dataUrl);
       })
