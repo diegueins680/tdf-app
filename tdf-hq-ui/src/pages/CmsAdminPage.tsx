@@ -492,6 +492,9 @@ export default function CmsAdminPage() {
                     {editingVersion ? ` (v${editingVersion})` : ''}. Carga la última publicada para evitar sobrescribir cambios.
                   </Alert>
                 )}
+                <Alert severity="info" sx={{ mb: 1 }}>
+                  Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para cada slug (no valida contra un esquema aún).
+                </Alert>
                 <TextField
                   label="Título"
                   fullWidth

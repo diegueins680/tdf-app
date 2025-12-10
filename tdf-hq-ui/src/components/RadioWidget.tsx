@@ -255,6 +255,10 @@ export default function RadioWidget() {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem('radio-pinned') === '1';
   });
+  const [showAdvanced, setShowAdvanced] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('radio-show-advanced') === '1';
+  });
   const [showCatalogSection, setShowCatalogSection] = useState(true);
   const [showAddSection, setShowAddSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
@@ -268,6 +272,7 @@ export default function RadioWidget() {
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewStatus, setPreviewStatus] = useState<'idle' | 'connecting' | 'live' | 'error'>('idle');
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
   const [selectedAudioInput, setSelectedAudioInput] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
@@ -369,6 +374,14 @@ export default function RadioWidget() {
       // ignore
     }
   }, [pinned]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-show-advanced', showAdvanced ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [showAdvanced]);
   const meterLevel = inputTestActive && inputTestLevel !== null ? inputTestLevel : inputLevel;
   useEffect(() => {
     if (audioRef.current) {
@@ -435,6 +448,17 @@ export default function RadioWidget() {
     };
     navigator.mediaDevices.addEventListener('devicechange', handleChange);
     return () => navigator.mediaDevices.removeEventListener('devicechange', handleChange);
+  }, [mediaDevicesSupported, refreshAudioInputs]);
+
+  const warmMicPermission = useCallback(async () => {
+    if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) return;
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      setBrowserBroadcastError(null);
+      await refreshAudioInputs();
+    } catch {
+      setBrowserBroadcastError('Necesitamos permiso de micrófono para listar tus entradas.');
+    }
   }, [mediaDevicesSupported, refreshAudioInputs]);
 
   const radioSearch = useQuery<RadioStreamDTO[], Error>({
@@ -1276,6 +1300,7 @@ export default function RadioWidget() {
     if (!broadcastInfo?.rtiStreamUrl) return;
     setPreviewError(null);
     setPreviewLoading(true);
+    setPreviewStatus('connecting');
     try {
       const audio = previewAudioRef.current ?? new Audio();
       audio.crossOrigin = 'anonymous';
@@ -1283,10 +1308,17 @@ export default function RadioWidget() {
       audio.currentTime = 0;
       audio.src = broadcastInfo.rtiStreamUrl;
       previewAudioRef.current = audio;
+      audio.onplaying = () => setPreviewStatus('live');
+      audio.onerror = () => {
+        setPreviewStatus('error');
+        setPreviewError('No pudimos reproducir el stream.');
+      };
       await audio.play();
+      setPreviewStatus('live');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'No pudimos reproducir el stream.';
       setPreviewError(msg);
+      setPreviewStatus('error');
     } finally {
       setPreviewLoading(false);
     }
@@ -1578,6 +1610,16 @@ export default function RadioWidget() {
                 />
               </Stack>
             </Box>
+            <Tooltip title={showAdvanced ? 'Ocultar catálogo y transmisión' : 'Mostrar catálogo y transmisión'}>
+              <IconButton
+                onClick={() => setShowAdvanced((v) => !v)}
+                color={showAdvanced ? 'secondary' : 'inherit'}
+                data-no-drag
+                sx={controlFadeSx}
+              >
+                {showAdvanced ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Tooltip>
             <Tooltip title={autoSkipOnError ? 'Desactivar auto-skip al fallar' : 'Saltar al siguiente si falla'}>
               <IconButton
                 onClick={() => setAutoSkipOnError((v) => !v)}
@@ -1712,7 +1754,7 @@ export default function RadioWidget() {
                   </Stack>
                 </Stack>
 
-              <Collapse in={showCatalogSection} timeout="auto">
+              <Collapse in={showAdvanced && showCatalogSection} timeout="auto">
                 <Stack spacing={1.5}>
                   <Stack spacing={1}>
                     <Typography variant="caption" color="text.secondary">
@@ -1812,26 +1854,31 @@ export default function RadioWidget() {
                                 fullWidth
                                 size="small"
                                 disabled={!mediaDevicesSupported || browserBroadcastState === 'starting'}
-                                helperText={
-                                  !mediaDevicesSupported
-                                    ? 'Tu navegador no permite captura de audio.'
-                                    : audioInputs.length === 0
-                                      ? 'Concede permiso para listar las entradas.'
-                                      : 'Usa la entrada de tu tarjeta de sonido o micrófono.'
-                                }
-                              >
-                                {audioInputs.length === 0 ? (
-                                  <MenuItem value="" disabled>
-                                    No hay entradas disponibles
+                              helperText={
+                                !mediaDevicesSupported
+                                  ? 'Tu navegador no permite captura de audio.'
+                                  : audioInputs.length === 0
+                                    ? 'Concede permiso para listar las entradas.'
+                                    : 'Usa la entrada de tu tarjeta de sonido o micrófono.'
+                              }
+                            >
+                              {audioInputs.length === 0 ? (
+                                <MenuItem value="" disabled>
+                                  No hay entradas disponibles
+                                </MenuItem>
+                              ) : (
+                                audioInputs.map((dev) => (
+                                  <MenuItem key={`${dev.deviceId}-${dev.label}`} value={dev.deviceId}>
+                                    {dev.label || 'Entrada de audio'}
                                   </MenuItem>
-                                ) : (
-                                  audioInputs.map((dev) => (
-                                    <MenuItem key={`${dev.deviceId}-${dev.label}`} value={dev.deviceId}>
-                                      {dev.label || 'Entrada de audio'}
-                                    </MenuItem>
-                                  ))
-                                )}
-                              </TextField>
+                                ))
+                              )}
+                            </TextField>
+                            {audioInputs.length === 0 && mediaDevicesSupported && (
+                              <Button variant="text" size="small" onClick={() => void warmMicPermission()}>
+                                Permitir micrófono
+                              </Button>
+                            )}
                               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
                                 <Button
                                   variant={browserBroadcastState === 'live' ? 'outlined' : 'contained'}
@@ -1893,11 +1940,16 @@ export default function RadioWidget() {
                                 />
                               </Box>
                             </Box>
-                            {browserBroadcastState === 'live' && (
-                              <Chip label="En vivo desde este navegador" size="small" color="success" />
-                            )}
-                            {browserBroadcastError && <Typography color="error">{browserBroadcastError}</Typography>}
-                          </Stack>
+                          {browserBroadcastState === 'live' && (
+                            <Chip label="En vivo desde este navegador" size="small" color="success" />
+                          )}
+                          {browserBroadcastError && <Typography color="error">{browserBroadcastError}</Typography>}
+                          {previewStatus !== 'idle' && (
+                            <Typography variant="caption" color="text.secondary">
+                              Estado de vista previa: {previewStatus === 'live' ? 'En vivo' : previewStatus === 'connecting' ? 'Conectando' : 'Error'}
+                            </Typography>
+                          )}
+                        </Stack>
                           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                             <TextField
                               label="Nombre"
@@ -2023,6 +2075,25 @@ export default function RadioWidget() {
                                 >
                                   {previewLoading ? 'Reproduciendo…' : 'Probar reproducción'}
                                 </Button>
+                                <Chip
+                                  size="small"
+                                  label={
+                                    previewStatus === 'live'
+                                      ? 'En vivo'
+                                      : previewStatus === 'connecting'
+                                        ? 'Conectando...'
+                                        : previewStatus === 'error'
+                                          ? 'Error'
+                                          : 'Sin iniciar'
+                                  }
+                                  color={
+                                    previewStatus === 'live'
+                                      ? 'success'
+                                      : previewStatus === 'error'
+                                        ? 'error'
+                                        : 'default'
+                                  }
+                                />
                                 {previewError && (
                                   <Typography variant="caption" color="error">
                                     {previewError}
@@ -2179,7 +2250,7 @@ export default function RadioWidget() {
                 </Stack>
               </Collapse>
 
-              <Collapse in={showAddSection} timeout="auto">
+              <Collapse in={showAdvanced && showAddSection} timeout="auto">
                 <Stack spacing={1}>
                   <Typography variant="caption" color="text.secondary">
                     Pega una URL de radio (ej. onlineradiobox.com) y guárdala para escucharla aquí.

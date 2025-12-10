@@ -831,24 +831,33 @@ export default function PublicBookingPage() {
                         helperText={durationLimitLabel ?? undefined}
                       />
                       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                        {[30, 60, 90, 120].map((value) => (
-                          <Chip
-                            key={value}
-                            label={`${value} min`}
-                            size="small"
-                            color={form.durationMinutes === value ? 'primary' : 'default'}
-                            onClick={() => setForm((prev) => ({ ...prev, durationMinutes: value }))}
-                            disabled={
-                              formDisabled ||
-                              Boolean(
-                                maxDurationUntilClose !== null &&
-                                  maxDurationUntilClose > 0 &&
-                                  value > maxDurationUntilClose,
-                              )
-                            }
-                            sx={{ borderRadius: 999 }}
-                          />
-                        ))}
+                        {[30, 60, 90, 120].map((value) => {
+                          const disabled =
+                            formDisabled ||
+                            Boolean(
+                              maxDurationUntilClose !== null &&
+                                maxDurationUntilClose > 0 &&
+                                value > maxDurationUntilClose,
+                            );
+                          const tooltip =
+                            disabled && maxDurationUntilClose
+                              ? `Máximo ${maxDurationUntilClose} min con este horario`
+                              : '';
+                          return (
+                            <Tooltip key={value} title={tooltip} disableInteractive>
+                              <span>
+                                <Chip
+                                  label={`${value} min`}
+                                  size="small"
+                                  color={form.durationMinutes === value ? 'primary' : 'default'}
+                                  onClick={() => setForm((prev) => ({ ...prev, durationMinutes: value }))}
+                                  disabled={disabled}
+                                  sx={{ borderRadius: 999, opacity: disabled ? 0.5 : 1 }}
+                                />
+                              </span>
+                            </Tooltip>
+                          );
+                        })}
                         </Stack>
                       </Stack>
                     </Grid>

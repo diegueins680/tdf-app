@@ -272,6 +272,15 @@ export default function LabelReleasesPage() {
         <Button size="small" onClick={() => { setFilterArtistId(null); setFilterWindow('all'); setSearch(''); }}>
           Limpiar filtros
         </Button>
+        {(filterArtistId || filterWindow !== 'all' || search.trim()) && (
+          <Chip
+            label="Todos"
+            onClick={() => { setFilterArtistId(null); setFilterWindow('all'); setSearch(''); }}
+            variant="outlined"
+            color="primary"
+            size="small"
+          />
+        )}
       </Stack>
 
       <Grid container spacing={2}>
