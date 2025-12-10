@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -19,6 +19,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/HourglassBottom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Courses, type CourseRegistrationDTO } from '../api/courses';
+import { useSearchParams } from 'react-router-dom';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 
@@ -80,9 +81,13 @@ const actionButtons = (
 
 export default function CourseRegistrationsAdminPage() {
   const qc = useQueryClient();
-  const [slug, setSlug] = useState('produccion-musical-dic-2025');
-  const [status, setStatus] = useState<StatusFilter>('all');
-  const [limit, setLimit] = useState(200);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSlug = searchParams.get('slug') ?? 'produccion-musical-dic-2025';
+  const initialStatus = (searchParams.get('status') as StatusFilter | null) ?? 'all';
+  const initialLimit = Number(searchParams.get('limit') ?? '200') || 200;
+  const [slug, setSlug] = useState(initialSlug);
+  const [status, setStatus] = useState<StatusFilter>(initialStatus);
+  const [limit, setLimit] = useState(initialLimit);
 
   const queryKey = useMemo(
     () => ['admin', 'course-registrations', { slug, status, limit }],
@@ -110,6 +115,14 @@ export default function CourseRegistrationsAdminPage() {
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['admin', 'course-registrations'] });
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (slug.trim()) params.set('slug', slug.trim());
+    if (status !== 'all') params.set('status', status);
+    if (limit && limit !== 200) params.set('limit', String(limit));
+    setSearchParams(params, { replace: true });
+  }, [slug, status, limit, setSearchParams]);
 
   return (
     <Stack spacing={3}>

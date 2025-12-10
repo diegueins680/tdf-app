@@ -23,6 +23,7 @@ import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import PersonIcon from '@mui/icons-material/Person';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
+import { API_BASE_URL } from '../api/client';
 import type { BookingDTO } from '../api/types';
 import { Engineers, type PublicEngineer } from '../api/engineers';
 import { loadServiceTypes } from '../utils/serviceTypesStore';
@@ -128,6 +129,7 @@ export default function PublicBookingPage() {
   );
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
+  const studioCurrency = useMemo(() => services[0]?.currency ?? 'USD', [services]);
   const [form, setForm] = useState<FormState>(() => buildInitialForm(defaultService));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,6 +138,9 @@ export default function PublicBookingPage() {
   const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
   const [engineersLoading, setEngineersLoading] = useState(false);
   const [engineersError, setEngineersError] = useState<string | null>(null);
+  const [availabilityStatus, setAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable' | 'unknown'>('idle');
+  const [availabilityNote, setAvailabilityNote] = useState<string | null>(null);
+  const [assignEngineerLater, setAssignEngineerLater] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -237,7 +242,47 @@ export default function PublicBookingPage() {
     setError(null);
     setSubmitting(false);
     setForm(buildInitialForm(defaultService));
+    setAssignEngineerLater(false);
   }, [defaultService]);
+
+  useEffect(() => {
+    const parsed = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
+    const duration = Math.max(30, Number(form.durationMinutes) || 60);
+    if (!parsed.isValid) {
+      setAvailabilityStatus('idle');
+      setAvailabilityNote(null);
+      return;
+    }
+    const controller = new AbortController();
+    const startsAtUtc = parsed.toUTC().toISO();
+    if (!startsAtUtc) return;
+    setAvailabilityStatus('checking');
+    setAvailabilityNote(null);
+    const url = `${API_BASE_URL}/bookings/public/availability?startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
+    fetch(url, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const data = (await res.json()) as { available?: boolean; isAvailable?: boolean; reason?: string } | null;
+        const isAvailable = data?.available ?? data?.isAvailable;
+        if (isAvailable === false) {
+          setAvailabilityStatus('unavailable');
+          setAvailabilityNote(data?.reason ?? 'Ese horario ya está reservado.');
+        } else if (isAvailable === true) {
+          setAvailabilityStatus('available');
+          setAvailabilityNote(null);
+        } else {
+          setAvailabilityStatus('unknown');
+          setAvailabilityNote('No pudimos verificar disponibilidad, confirmaremos contigo.');
+        }
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        console.warn('No se pudo verificar disponibilidad', err);
+        setAvailabilityStatus('unknown');
+        setAvailabilityNote('No pudimos verificar disponibilidad, confirmaremos contigo.');
+      });
+    return () => controller.abort();
+  }, [form.durationMinutes, form.startsAt, userTimeZone]);
 
   const handleSubmit = async (evt: React.FormEvent) => {
     evt.preventDefault();
@@ -287,8 +332,12 @@ export default function PublicBookingPage() {
       );
       return;
     }
-    if (requiresEngineer(form.serviceType) && !form.engineerId && !form.engineerName.trim()) {
+    if (requiresEngineer(form.serviceType) && !assignEngineerLater && !form.engineerId && !form.engineerName.trim()) {
       setError('Selecciona un ingeniero para grabación/mezcla/mastering.');
+      return;
+    }
+    if (availabilityStatus === 'unavailable') {
+      setError(availabilityNote ?? 'Ese horario ya está ocupado. Elige otro.');
       return;
     }
 
@@ -488,8 +537,13 @@ export default function PublicBookingPage() {
         .set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
     const openUser = open.setZone(userTimeZone);
     const closeUser = close.setZone(userTimeZone);
-    return `Horario del estudio: ${open.toFormat('HH:mm')} - ${close.toFormat('HH:mm')} (${studioZoneLabel}). Tu zona: ${openUser.toFormat('HH:mm')} - ${closeUser.toFormat('HH:mm')} (${userZoneLabel}).`;
-  }, [bookingWindow?.closeStudio, bookingWindow?.openStudio, studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
+    const base = `Horario del estudio: ${open.toFormat('HH:mm')} - ${close.toFormat('HH:mm')} (${studioZoneLabel}). Tu zona: ${openUser.toFormat('HH:mm')} - ${closeUser.toFormat('HH:mm')} (${userZoneLabel}).`;
+    if (availabilityStatus === 'checking') return `${base} Verificando disponibilidad…`;
+    if (availabilityStatus === 'unavailable') return `${base} Ese horario parece ocupado.`;
+    if (availabilityStatus === 'available') return `${base} Disponible.`;
+    if (availabilityNote) return `${base} ${availabilityNote}`;
+    return base;
+  }, [availabilityNote, availabilityStatus, bookingWindow?.closeStudio, bookingWindow?.openStudio, studioTimeZone, studioZoneLabel, userZoneLabel, userTimeZone]);
 
   const maxStartIso = useMemo(() => {
     if (!bookingWindow) return undefined;
@@ -568,6 +622,9 @@ export default function PublicBookingPage() {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Horario del estudio: <strong>{studioZoneLabel}</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.
               </Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                 <Chip label="1. Agenda sin crear cuenta" size="small" variant="outlined" />
@@ -694,6 +751,11 @@ export default function PublicBookingPage() {
                         fullWidth
                         required
                         disabled={formDisabled}
+                        helperText={
+                          estimatePriceLabel
+                            ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
+                            : `Moneda: ${studioCurrency}`
+                        }
                       >
                         {services.map((svc) => (
                           <MenuItem key={svc.id} value={svc.name}>
@@ -785,11 +847,11 @@ export default function PublicBookingPage() {
                         helperText={availabilityHelperText}
                         disabled={formDisabled}
                       />
-                      <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          disabled={formDisabled}
+                  <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={formDisabled}
                           onClick={() =>
                             setForm((prev) => ({
                               ...prev,
@@ -809,11 +871,25 @@ export default function PublicBookingPage() {
                               startsAt: toLocalInputValue(firstAvailable(1)),
                             }))
                           }
-                        >
-                          Mañana
-                        </Button>
-                      </Stack>
-                    </Grid>
+                    >
+                      Mañana
+                    </Button>
+                    {availabilityStatus === 'unavailable' && (
+                      <Chip
+                        label={availabilityNote ?? 'Horario ocupado'}
+                        color="warning"
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                    {availabilityStatus === 'available' && (
+                      <Chip label="Disponible" color="success" size="small" variant="outlined" />
+                    )}
+                    {availabilityStatus === 'unknown' && availabilityNote && (
+                      <Chip label={availabilityNote} color="default" size="small" variant="outlined" />
+                    )}
+                  </Stack>
+                </Grid>
                     <Grid item xs={12} sm={5}>
                       <Stack spacing={1}>
                         <TextField
@@ -830,6 +906,11 @@ export default function PublicBookingPage() {
                         }}
                         helperText={durationLimitLabel ?? undefined}
                       />
+                      {estimatePriceLabel && (
+                        <Typography variant="body2" color="text.secondary">
+                          Estimado con duración actual: {estimatePriceLabel}
+                        </Typography>
+                      )}
                       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                         {[30, 60, 90, 120].map((value) => {
                           const disabled =
@@ -914,7 +995,7 @@ export default function PublicBookingPage() {
                               {...params}
                               label="Ingeniero asignado"
                               placeholder="Elige quién llevará la sesión"
-                              required
+                              required={!assignEngineerLater}
                               InputProps={{
                                 ...params.InputProps,
                                 endAdornment: (
@@ -933,6 +1014,17 @@ export default function PublicBookingPage() {
                             />
                           )}
                         />
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
+                          <Checkbox
+                            checked={assignEngineerLater}
+                            onChange={(e) => setAssignEngineerLater(e.target.checked)}
+                            size="small"
+                            disabled={formDisabled}
+                          />
+                          <Typography variant="body2" color="text.secondary">
+                            Asignar ingeniero después
+                          </Typography>
+                        </Stack>
                         <Typography variant="caption" color="text.secondary">
                           Requerido para grabación, mezcla o mastering. Si no encuentras a tu ingeniero, escríbenos en notas.
                         </Typography>

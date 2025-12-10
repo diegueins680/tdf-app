@@ -43,6 +43,7 @@ import BoltIcon from '@mui/icons-material/Bolt';
 import ShareIcon from '@mui/icons-material/Share';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import PushPinIcon from '@mui/icons-material/PushPin';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useNavigate } from 'react-router-dom';
 import { Countries } from '../api/countries';
@@ -273,6 +274,12 @@ export default function RadioWidget() {
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewStatus, setPreviewStatus] = useState<'idle' | 'connecting' | 'live' | 'error'>('idle');
+  const customPreviewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [customPreviewStatus, setCustomPreviewStatus] = useState<'idle' | 'loading' | 'playing' | 'error'>('idle');
+  const [customPreviewError, setCustomPreviewError] = useState<string | null>(null);
+  const [liveStartedAt, setLiveStartedAt] = useState<number | null>(null);
+  const [liveElapsedMs, setLiveElapsedMs] = useState(0);
+  const [autoStopMinutes, setAutoStopMinutes] = useState(120);
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
   const [selectedAudioInput, setSelectedAudioInput] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
@@ -1142,6 +1149,42 @@ export default function RadioWidget() {
     setInputTestActive(false);
   }, []);
 
+  const stopBrowserBroadcast = useCallback(() => {
+    const current = browserBroadcastRef.current;
+    if (current) {
+      current.stream.getTracks().forEach((t) => t.stop());
+      current.pc.onconnectionstatechange = null;
+      current.pc.close();
+    }
+    browserBroadcastRef.current = null;
+    setBrowserBroadcastState('idle');
+    stopLevelMonitor();
+    setLiveStartedAt(null);
+    setLiveElapsedMs(0);
+    setPreviewStatus('idle');
+  }, [stopLevelMonitor]);
+
+  const stopAllAudio = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+    }
+    if (customPreviewAudioRef.current) {
+      customPreviewAudioRef.current.pause();
+    }
+    void RadioAPI.clearPresence().catch(() => undefined);
+    stopInputTest();
+    stopBrowserBroadcast();
+    setCustomPreviewStatus('idle');
+    setCustomPreviewError(null);
+    setIsPlaying(false);
+    setPlaybackWarning(null);
+  }, [stopBrowserBroadcast, stopInputTest]);
+
   const startInputTest = useCallback(async () => {
     if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) {
       setBrowserBroadcastError('Tu navegador no permite capturar audio.');
@@ -1214,18 +1257,6 @@ export default function RadioWidget() {
     [stopLevelMonitor],
   );
 
-  const stopBrowserBroadcast = useCallback(() => {
-    const current = browserBroadcastRef.current;
-    if (current) {
-      current.stream.getTracks().forEach((t) => t.stop());
-      current.pc.onconnectionstatechange = null;
-      current.pc.close();
-    }
-    browserBroadcastRef.current = null;
-    setBrowserBroadcastState('idle');
-    stopLevelMonitor();
-  }, [stopLevelMonitor]);
-
   const startBrowserBroadcast = useCallback(async () => {
     if (browserBroadcastState === 'live') {
       stopBrowserBroadcast();
@@ -1271,6 +1302,9 @@ export default function RadioWidget() {
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === 'connected') {
           setBrowserBroadcastState('live');
+          if (!liveStartedAt) {
+            setLiveStartedAt(Date.now());
+          }
         } else if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
           setBrowserBroadcastError('La conexión de streaming se cerró.');
           stopBrowserBroadcast();
@@ -1279,6 +1313,9 @@ export default function RadioWidget() {
       browserBroadcastRef.current = { pc, stream };
       if (pc.connectionState === 'connected') {
         setBrowserBroadcastState('live');
+        if (!liveStartedAt) {
+          setLiveStartedAt(Date.now());
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'No se pudo iniciar el stream desde el navegador.';
@@ -1410,6 +1447,39 @@ export default function RadioWidget() {
       setTestResult('No pudimos validar el stream. Verifica la URL.');
     } finally {
       clearTimeout(timeout);
+    }
+  };
+
+  const previewCustomStream = async () => {
+    if (customPreviewStatus === 'playing') {
+      if (customPreviewAudioRef.current) {
+        customPreviewAudioRef.current.pause();
+      }
+      setCustomPreviewStatus('idle');
+      setCustomPreviewError(null);
+      return;
+    }
+    const url = newStationUrl.trim();
+    if (!url) {
+      setCustomPreviewStatus('error');
+      setCustomPreviewError('Ingresa una URL para previsualizar.');
+      return;
+    }
+    setCustomPreviewError(null);
+    setCustomPreviewStatus('loading');
+    try {
+      const audio = customPreviewAudioRef.current ?? new Audio();
+      audio.pause();
+      audio.currentTime = 0;
+      audio.crossOrigin = 'anonymous';
+      audio.src = url;
+      customPreviewAudioRef.current = audio;
+      await audio.play();
+      setCustomPreviewStatus('playing');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No pudimos reproducir el stream.';
+      setCustomPreviewError(msg);
+      setCustomPreviewStatus('error');
     }
   };
 
@@ -1579,6 +1649,11 @@ export default function RadioWidget() {
                 {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
               </IconButton>
             </Tooltip>
+            <Tooltip title="Detener todo (audio y presencia)">
+              <IconButton onClick={stopAllAudio} color="error" data-no-drag sx={controlFadeSx}>
+                <StopCircleIcon />
+              </IconButton>
+            </Tooltip>
             <Tooltip title={isFavoriteActive ? 'Quitar de favoritos' : 'Marcar favorito'}>
               <IconButton
                 onClick={() => toggleFavorite(activeStation)}
@@ -1599,6 +1674,7 @@ export default function RadioWidget() {
                 <VolumeUpIcon fontSize="small" />
                 <Slider
                   size="small"
+                  aria-label="Volumen"
                   value={muted ? 0 : Math.round(volume * 100)}
                   onChange={(_, val) => {
                     const numeric = Array.isArray(val) ? val[0] : val;
@@ -1606,8 +1682,22 @@ export default function RadioWidget() {
                     setMuted(false);
                     setVolume(Math.min(1, Math.max(0, numeric / 100)));
                   }}
+                  valueLabelDisplay="auto"
                   sx={{ flex: 1 }}
                 />
+                <Typography variant="caption" color="text.secondary">
+                  {Math.round((muted ? 0 : volume) * 100)}%
+                </Typography>
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => {
+                    setMuted(false);
+                    setVolume(0.8);
+                  }}
+                >
+                  Reset
+                </Button>
               </Stack>
             </Box>
             <Tooltip title={showAdvanced ? 'Ocultar catálogo y transmisión' : 'Mostrar catálogo y transmisión'}>
@@ -2335,6 +2425,15 @@ export default function RadioWidget() {
                         Probar stream
                       </Button>
                       <Button
+                        variant={customPreviewStatus === 'playing' ? 'outlined' : 'text'}
+                        onClick={() => {
+                          void previewCustomStream();
+                        }}
+                        data-no-drag
+                      >
+                        {customPreviewStatus === 'playing' ? 'Detener preview' : 'Escuchar preview'}
+                      </Button>
+                      <Button
                         variant="contained"
                         onClick={addCustomStation}
                         disabled={!newStationName.trim() || !newStationUrl.trim()}
@@ -2351,6 +2450,15 @@ export default function RadioWidget() {
                         {testResult}
                       </Typography>
                     </Stack>
+                  )}
+                  {customPreviewStatus !== 'idle' && (
+                    <Typography variant="caption" color={customPreviewStatus === 'error' ? 'error' : 'text.secondary'}>
+                      {customPreviewStatus === 'loading'
+                        ? 'Conectando preview…'
+                        : customPreviewStatus === 'playing'
+                          ? 'Preview reproduciéndose (no se publica).'
+                          : customPreviewError ?? 'No pudimos reproducir la preview.'}
+                    </Typography>
                   )}
                   <LinearProgress
                     variant="indeterminate"

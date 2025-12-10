@@ -103,6 +103,31 @@ export default function CourseBuilderPage() {
 
   const startDate = useMemo<string | null>(() => findEarliestSessionDate(sessions) ?? null, [sessions]);
   const slug = useMemo(() => generateSlug(title, startDate), [title, startDate]);
+  const sessionDateErrors = useMemo(() => {
+    const errors: string[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let lastDate: Date | null = null;
+    sessions.forEach((s, idx) => {
+      const raw = s.date.trim();
+      if (!raw) {
+        errors[idx] = 'Requerido';
+        return;
+      }
+      const parsed = new Date(`${raw}T00:00:00`);
+      if (Number.isNaN(parsed.getTime())) {
+        errors[idx] = 'Fecha inválida';
+        return;
+      }
+      if (parsed < today) {
+        errors[idx] = 'No puede ser en el pasado';
+      } else if (lastDate && parsed < lastDate) {
+        errors[idx] = 'Mantén el orden cronológico';
+      }
+      lastDate = parsed;
+    });
+    return errors;
+  }, [sessions]);
 
   useEffect(() => {
     if (!landingUrlTouched) {
@@ -185,6 +210,14 @@ export default function CourseBuilderPage() {
 
   const handleSyllabusChange = (idx: number, field: keyof SyllabusInput, value: string) => {
     setSyllabus((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
+  };
+
+  const handleDuplicateSession = (idx: number) => {
+    setSessions((prev) => {
+      const copy = prev[idx];
+      if (!copy) return prev;
+      return [...prev.slice(0, idx + 1), { ...copy }, ...prev.slice(idx + 1)];
+    });
   };
 
   const payloadPreview = JSON.stringify(buildPayload(), null, 2);
@@ -304,8 +337,8 @@ export default function CourseBuilderPage() {
           <Stack spacing={2}>
             <Typography variant="h6" fontWeight={800}>Sesiones</Typography>
             {sessions.map((s, idx) => (
-              <Grid container spacing={2} key={idx}>
-                <Grid item xs={12} md={8}>
+              <Grid container spacing={2} key={idx} alignItems="center">
+                <Grid item xs={12} md={6}>
                   <TextField
                     label="Título"
                     fullWidth
@@ -319,7 +352,25 @@ export default function CourseBuilderPage() {
                     fullWidth
                     value={s.date}
                     onChange={(e) => handleSessionChange(idx, 'date', e.target.value)}
+                    error={Boolean(sessionDateErrors[idx])}
+                    helperText={sessionDateErrors[idx] ?? undefined}
                   />
+                </Grid>
+                <Grid item xs={12} md={2}>
+                  <Stack direction="row" spacing={1}>
+                    <Button variant="text" size="small" onClick={() => handleDuplicateSession(idx)}>
+                      Duplicar
+                    </Button>
+                    <Button
+                      variant="text"
+                      size="small"
+                      color="error"
+                      onClick={() => setSessions((prev) => prev.filter((_, i) => i !== idx))}
+                      disabled={sessions.length <= 1}
+                    >
+                      Borrar
+                    </Button>
+                  </Stack>
                 </Grid>
               </Grid>
             ))}

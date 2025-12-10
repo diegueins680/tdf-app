@@ -30,26 +30,30 @@ const defaultSlugs = [
 ];
 
 const locales = ['es', 'en'];
+const STORAGE_KEY = 'tdf-cms-admin:last-selection';
+const DRAFT_PREFIX = 'tdf-cms-admin:draft';
 type SamplePayload = {
   heroTitle?: string;
   heroSubtitle?: string;
+  locale?: string;
 } & Record<string, unknown>;
 const samplePayloads: Record<string, SamplePayload> = {
   'records-public': {
     heroTitle: 'Lanzamientos destacados',
     heroSubtitle: 'Explora los releases recientes del sello.',
+    locale: 'es',
   },
   'fan-hub': {
     heroTitle: 'Descubre artistas emergentes',
     heroSubtitle: 'Sigue y guarda lanzamientos para escuchar luego.',
+    locale: 'es',
   },
   'course-production': {
     heroTitle: 'Producción musical en vivo',
     heroSubtitle: 'Reserva tu cupo con clases hands-on.',
+    locale: 'es',
   },
 };
-const STORAGE_KEY = 'tdf-cms-admin:last-selection';
-
 const PUBLIC_BASE =
   typeof window !== 'undefined' && window.location.origin
     ? window.location.origin.replace(/\/+$/, '')
@@ -66,6 +70,25 @@ const livePathForSlug = (slug: string) => {
     default:
       return `/${slug}`;
   }
+};
+
+type DiffLine = { type: 'same' | 'added' | 'removed'; text: string };
+const buildLineDiff = (left: string, right: string): DiffLine[] => {
+  const leftLines = left.split('\n');
+  const rightLines = right.split('\n');
+  const result: DiffLine[] = [];
+  const max = Math.max(leftLines.length, rightLines.length);
+  for (let i = 0; i < max; i += 1) {
+    const l = leftLines[i];
+    const r = rightLines[i];
+    if (l === r) {
+      if (l !== undefined) result.push({ type: 'same', text: l });
+    } else {
+      if (l !== undefined) result.push({ type: 'removed', text: l });
+      if (r !== undefined) result.push({ type: 'added', text: r });
+    }
+  }
+  return result;
 };
 
 export default function CmsAdminPage() {
@@ -101,6 +124,8 @@ export default function CmsAdminPage() {
   const [loadingLiveOnDemand, setLoadingLiveOnDemand] = useState(false);
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [pendingVersion, setPendingVersion] = useState<CmsContentDTO | null>(null);
+  const [showDraftDiff, setShowDraftDiff] = useState(false);
+  const draftKey = useMemo(() => `${DRAFT_PREFIX}:${slugFilter}:${localeFilter}`, [slugFilter, localeFilter]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -110,6 +135,21 @@ export default function CmsAdminPage() {
       // ignore storage issues
     }
   }, [slugFilter, localeFilter]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(draftKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { title?: string; payload?: string; status?: 'draft' | 'published' };
+      if (parsed.title !== undefined) setTitle(parsed.title);
+      if (parsed.payload !== undefined) setPayload(parsed.payload);
+      if (parsed.status) setStatus(parsed.status);
+      setEditingFromId(null);
+    } catch {
+      // ignore broken drafts
+    }
+  }, [draftKey]);
 
   useEffect(() => {
     try {
@@ -249,6 +289,21 @@ export default function CmsAdminPage() {
     setPendingVersion(null);
   };
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const timer = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(
+          draftKey,
+          JSON.stringify({ title, payload, status }),
+        );
+      } catch {
+        // ignore quota errors
+      }
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [draftKey, payload, status, title]);
+
   const handleFormatPayload = () => {
     if (payloadError) return;
     setPayload(formattedPayload);
@@ -290,6 +345,10 @@ export default function CmsAdminPage() {
     const draftPretty = (formattedPayload ?? '').trim();
     return livePretty !== '' && draftPretty !== '' && livePretty !== draftPretty;
   }, [formattedPayload, livePayloadPretty]);
+  const draftVsLiveDiff = useMemo(
+    () => buildLineDiff(livePayloadPretty || '', formattedPayload || ''),
+    [formattedPayload, livePayloadPretty],
+  );
 
   return (
     <Stack spacing={3}>
@@ -373,6 +432,51 @@ export default function CmsAdminPage() {
           <Button variant="contained" onClick={handleConfirmLoadVersion} disabled={!pendingVersion}>
             Cargar en formulario
           </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={showDraftDiff} onClose={() => setShowDraftDiff(false)} fullWidth maxWidth="md">
+        <DialogTitle>Comparar borrador vs. live</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1}>
+            <Typography variant="body2" color="text.secondary">
+              Se muestra una diff línea por línea entre el payload que editas y el contenido en vivo.
+            </Typography>
+            <Box
+              component="pre"
+              sx={{
+                fontSize: 12,
+                bgcolor: 'rgba(148,163,184,0.04)',
+                p: 1,
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+                maxHeight: 360,
+                overflow: 'auto',
+              }}
+            >
+              {draftVsLiveDiff.map((line, idx) => (
+                <Box
+                  key={`${line.type}-${idx}`}
+                  component="span"
+                  sx={{
+                    display: 'block',
+                    color:
+                      line.type === 'added'
+                        ? 'success.main'
+                        : line.type === 'removed'
+                          ? 'error.main'
+                          : 'text.primary',
+                  }}
+                >
+                  {line.type === 'added' ? '+ ' : line.type === 'removed' ? '- ' : '  '}
+                  {line.text}
+                </Box>
+              ))}
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowDraftDiff(false)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
 
@@ -531,6 +635,8 @@ export default function CmsAdminPage() {
                     onClick={() => {
                       const sample = samplePayloads[slugFilter];
                       if (sample) {
+                        setSlugFilter(slugFilter);
+                        if (sample.locale) setLocaleFilter(sample.locale);
                         setPayload(JSON.stringify(sample, null, 2));
                         if (sample.heroTitle) setTitle(sample.heroTitle);
                       }
@@ -544,6 +650,28 @@ export default function CmsAdminPage() {
                     disabled={loadingLiveOnDemand}
                   >
                     {loadingLiveOnDemand ? 'Cargando en vivo...' : 'Cargar última publicada'}
+                  </Button>
+                  <Button
+                    variant="text"
+                    onClick={handleLoadLive}
+                    disabled={!liveContent}
+                  >
+                    Revertir a en vivo
+                  </Button>
+                  <Button variant="text" onClick={() => setShowDraftDiff(true)} disabled={!livePayloadPretty}>
+                    Comparar con live
+                  </Button>
+                  <Button
+                    variant="text"
+                    onClick={() => {
+                      try {
+                        window.localStorage.setItem(draftKey, JSON.stringify({ title, payload, status }));
+                      } catch {
+                        // ignore
+                      }
+                    }}
+                  >
+                    Guardar borrador local
                   </Button>
                   {liveFetchError && <Chip label={liveFetchError} color="error" variant="outlined" />}
                   {payloadChanged && <Chip label="Payload modificado vs en vivo" size="small" color="warning" />}

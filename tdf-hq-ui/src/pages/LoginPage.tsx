@@ -396,6 +396,11 @@ export default function LoginPage() {
     if (shouldOpenSignup) {
       setSignupDialogOpen(true);
     }
+    const wantsToken = params.get('token') || params.get('apiToken') || params.get('tab');
+    if (wantsToken && wantsToken.toLowerCase().includes('token')) {
+      setShowApiToken(true);
+      setTab('token');
+    }
   }, [location.search]);
 
   const openResetDialog = () => {
