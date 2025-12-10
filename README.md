@@ -107,6 +107,17 @@ npm run start
   ```
   Inventory will upload camera/galería photos via that endpoint and store the returned URL on assets.
 
+### Google Drive uploads (web UI)
+- Needed for the Drive picker flow in the admin UI (uploads via OAuth PKCE).
+- Create an OAuth 2.0 Client ID of type **Web application** in Google Cloud Console. Add `http://localhost:5173/oauth/google-drive/callback` for local dev and your deployed domain (e.g. `https://tdf-app.pages.dev/oauth/google-drive/callback`) as authorized redirect URIs.
+- Set in `tdf-hq-ui/.env`:
+  ```
+  VITE_GOOGLE_DRIVE_CLIENT_ID=<the client ID you created>
+  VITE_GOOGLE_DRIVE_REDIRECT_URI=<one of the authorized redirect URIs above>
+  VITE_GOOGLE_DRIVE_FOLDER_ID=<optional default Drive folder ID for uploads>
+  ```
+- The redirect URI must match exactly one of the authorized URIs on the OAuth client.
+
 ### Using Docker Compose
 
 ```bash

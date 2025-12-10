@@ -22,6 +22,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Cms, type CmsContentDTO, type CmsContentIn } from '../api/cms';
+import ApiErrorNotice from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
 
 const defaultSlugs = [
@@ -355,6 +356,8 @@ export default function CmsAdminPage() {
     () => buildLineDiff(livePayloadPretty || '', formattedPayload || ''),
     [formattedPayload, livePayloadPretty],
   );
+  const safeDraftDiff = Array.isArray(draftVsLiveDiff) ? draftVsLiveDiff : [];
+  const safeFilteredVersions = Array.isArray(filteredVersions) ? filteredVersions : [];
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -461,7 +464,7 @@ export default function CmsAdminPage() {
                 overflow: 'auto',
               }}
             >
-              {draftVsLiveDiff.map((line, idx) => (
+              {safeDraftDiff.map((line, idx) => (
                 <Box
                   key={`${line.type}-${idx}`}
                   component="span"
@@ -553,6 +556,19 @@ export default function CmsAdminPage() {
                     </Stack>
                     {liveQuery.isLoading && <LinearProgress />}
                     {liveQuery.isError && (
+                      <ApiErrorNotice
+                        error={liveQuery.error}
+                        title="No pudimos cargar el contenido publicado"
+                        onRetry={() => liveQuery.refetch()}
+                        showCorsHint
+                        helper={
+                          <Typography variant="caption">
+                            También puedes cargar la última versión publicada con el botón de abajo.
+                          </Typography>
+                        }
+                      />
+                    )}
+                    {!liveQuery.isError && !liveQuery.isLoading && !liveContent && (
                       <Alert severity="warning">
                         <AlertTitle>Sin contenido publicado</AlertTitle>
                         Publica una versión para ver la vista previa en vivo.
@@ -736,7 +752,7 @@ export default function CmsAdminPage() {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="h6" fontWeight={800}>Versiones</Typography>
-              <Chip label={`${filteredVersions.length}/${versions.length}`} size="small" />
+              <Chip label={`${safeFilteredVersions.length}/${versions.length}`} size="small" />
               {editingFromId && (
                 <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />
               )}
@@ -778,9 +794,12 @@ export default function CmsAdminPage() {
           </Stack>
           {listQuery.isLoading && <LinearProgress />}
           {listQuery.error && (
-            <Alert severity="error">
-              {listQuery.error instanceof Error ? listQuery.error.message : 'Error al cargar contenido.'}
-            </Alert>
+            <ApiErrorNotice
+              error={listQuery.error}
+              title="No pudimos cargar la lista de versiones"
+              onRetry={() => listQuery.refetch()}
+              showCorsHint
+            />
           )}
           {listDataInvalid && (
             <Alert severity="warning">
@@ -788,7 +807,7 @@ export default function CmsAdminPage() {
             </Alert>
           )}
           <Stack spacing={1.5}>
-            {filteredVersions.map((v) => (
+            {safeFilteredVersions.map((v) => (
               <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
@@ -858,7 +877,7 @@ export default function CmsAdminPage() {
                 </Stack>
               </Paper>
             ))}
-            {filteredVersions.length === 0 && !listQuery.isLoading && (
+            {safeFilteredVersions.length === 0 && !listQuery.isLoading && (
               <Typography color="text.secondary">No hay contenido aún.</Typography>
             )}
           </Stack>
