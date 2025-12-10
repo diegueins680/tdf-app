@@ -931,6 +931,42 @@ calendarServer user =
 
 productionCourseSlug :: Text
 productionCourseSlug = "produccion-musical-dic-2025"
+productionCoursePrice :: Double
+productionCoursePrice = 150
+productionCourseCapacity :: Int
+productionCourseCapacity = 10
+
+-- Backward-compatible helpers used by cron jobs
+buildLandingUrl :: AppConfig -> Text
+buildLandingUrl cfg = buildLandingUrlFor cfg productionCourseSlug
+
+courseMetadataFor :: AppConfig -> Maybe Text -> Text -> Maybe CourseMetadata
+courseMetadataFor cfg mWaContact slugVal =
+  if normalizeSlug slugVal /= productionCourseSlug
+    then Nothing
+    else
+      let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
+      in Just CourseMetadata
+        { slug = productionCourseSlug
+        , title = "Curso de Producción Musical"
+        , subtitle = "Presencial"
+        , format = "Presencial"
+        , duration = "4 sábados"
+        , price = productionCoursePrice
+        , currency = "USD"
+        , capacity = productionCourseCapacity
+        , remaining = productionCourseCapacity
+        , sessionStartHour = 0
+        , sessionDurationHours = 0
+        , locationLabel = ""
+        , locationMapUrl = ""
+        , daws = []
+        , includes = []
+        , sessions = []
+        , syllabus = []
+        , whatsappCtaUrl = whatsappUrl
+        , landingUrl = buildLandingUrl cfg
+        }
 
 data WhatsAppEnv = WhatsAppEnv
   { waToken        :: Maybe Text
