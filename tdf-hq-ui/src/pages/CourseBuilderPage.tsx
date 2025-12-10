@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
   Alert,
@@ -31,9 +31,49 @@ const DEFAULT_SYLLABUS: SyllabusInput[] = [
   { title: 'Masterización y publicación', topics: 'Mastering; Distribución digital' },
 ];
 
+const MONTH_SLUGS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+const slugifyValue = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+const stripCoursePrefix = (title: string) => title.replace(/^curso\s+(de\s+)?/i, '').trim();
+
+const findEarliestSessionDate = (sessions: SessionInput[]) => {
+  const validDates = sessions
+    .map((s) => s.date.trim())
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d));
+
+  if (!validDates.length) return null;
+  return validDates.sort()[0];
+};
+
+const generateSlug = (title: string, startDate: string | null) => {
+  const cleanedTitle = stripCoursePrefix(title) || title;
+  const titleSlug = slugifyValue(cleanedTitle) || 'curso';
+
+  if (!startDate) return titleSlug;
+  const match = /^(\d{4})-(\d{2})/.exec(startDate);
+  if (!match) return titleSlug;
+
+  const [, year, month] = match;
+  const monthIdx = Number(month) - 1;
+  const monthSlug = MONTH_SLUGS[monthIdx] ?? month;
+
+  return [titleSlug, monthSlug, year].filter(Boolean).join('-');
+};
+
+const DEFAULT_TITLE = 'Curso de Producción Musical';
+const DEFAULT_LANDING_BASE = 'https://tdf-app.pages.dev/curso';
+const DEFAULT_SLUG = generateSlug(DEFAULT_TITLE, DEFAULT_SESSIONS[0]?.date ?? null);
+
 export default function CourseBuilderPage() {
-  const [slug, setSlug] = useState('produccion-musical-dic-2025');
-  const [title, setTitle] = useState('Curso de Producción Musical');
+  const [title, setTitle] = useState(DEFAULT_TITLE);
   const [subtitle, setSubtitle] = useState('Presencial · 4 sábados · 16 horas');
   const [format, setFormat] = useState('Presencial');
   const [duration, setDuration] = useState('4 sábados · 16 horas');
@@ -45,11 +85,26 @@ export default function CourseBuilderPage() {
   const [locationLabel, setLocationLabel] = useState('TDF Records – Quito');
   const [locationMapUrl, setLocationMapUrl] = useState('https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6');
   const [whatsappCtaUrl, setWhatsappCtaUrl] = useState('https://wa.me/593995413168?text=Quiero%20inscribirme%20al%20curso');
-  const [landingUrl, setLandingUrl] = useState('https://tdf-app.pages.dev/curso/produccion-musical-dic-2025');
+  const [landingUrl, setLandingUrl] = useState(`${DEFAULT_LANDING_BASE}/${DEFAULT_SLUG}`);
+  const [landingUrlTouched, setLandingUrlTouched] = useState(false);
   const [includes, setIncludes] = useState('Acceso a grabaciones\nCertificado de participación\nMentorías\nGrupo de WhatsApp\nAcceso a la plataforma de TDF Records');
   const [daws, setDaws] = useState('Logic\nLuna');
   const [sessions, setSessions] = useState<SessionInput[]>(DEFAULT_SESSIONS);
   const [syllabus, setSyllabus] = useState<SyllabusInput[]>(DEFAULT_SYLLABUS);
+
+  const startDate = useMemo(() => findEarliestSessionDate(sessions), [sessions]);
+  const slug = useMemo(() => generateSlug(title, startDate), [title, startDate]);
+
+  useEffect(() => {
+    if (!landingUrlTouched) {
+      setLandingUrl(`${DEFAULT_LANDING_BASE}/${slug}`);
+    }
+  }, [slug, landingUrlTouched]);
+
+  const handleLandingUrlChange = (value: string) => {
+    setLandingUrl(value);
+    setLandingUrlTouched(true);
+  };
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -149,11 +204,13 @@ export default function CourseBuilderPage() {
       <Card variant="outlined">
         <CardContent>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField label="Slug" fullWidth value={slug} onChange={(e) => setSlug(e.target.value)} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Landing URL" fullWidth value={landingUrl} onChange={(e) => setLandingUrl(e.target.value)} />
+            <Grid item xs={12}>
+              <TextField
+                label="Landing URL"
+                fullWidth
+                value={landingUrl}
+                onChange={(e) => handleLandingUrlChange(e.target.value)}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField label="Título" fullWidth value={title} onChange={(e) => setTitle(e.target.value)} />
