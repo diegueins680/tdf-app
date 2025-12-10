@@ -969,14 +969,13 @@ loadCourseMetadata rawSlug = do
   let normalized = normalizeSlug rawSlug
   mDbMeta <- loadCourseMetadataFromDB envConfig waEnv normalized
   baseMeta <- maybe (throwNotFound "Curso no encontrado") pure mDbMeta
+  let Courses.CourseMetadata{ Courses.capacity = baseCapacity } = baseMeta
   countRegs <- runDB $
     count
       [ ME.CourseRegistrationCourseSlug ==. normalized
       , ME.CourseRegistrationStatus !=. "cancelled"
       ]
-  let baseCapacity :: Int
-      baseCapacity = Courses.capacity (baseMeta :: CourseMetadata)
-      remainingSeats = max 0 (baseCapacity - fromIntegral countRegs)
+  let remainingSeats = max 0 (baseCapacity - fromIntegral countRegs)
   pure baseMeta { Courses.remaining = remainingSeats }
 
 loadCourseMetadataFromDB :: AppConfig -> WhatsAppEnv -> Text -> AppM (Maybe CourseMetadata)
