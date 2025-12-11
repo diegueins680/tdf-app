@@ -241,9 +241,23 @@ export default function CourseBuilderPage() {
   const canResetLanding = landingUrlTouched && landingUrl !== landingFor(slug);
 
   const applyMetadata = (meta: CourseMetadata) => {
-    setSlug(meta.slug);
-    setLoadSlug(meta.slug);
-    setTitle(meta.title);
+    const sanitizedSessions =
+      (meta.sessions ?? []).map((s) => ({
+        label: s.label ?? '',
+        date: s.date ?? '',
+      })) || [];
+    const sanitizedSyllabus =
+      (meta.syllabus ?? []).map((s) => ({
+        title: s.title ?? '',
+        topics: (s.topics ?? []).join('; '),
+      })) || [];
+    const safeTitle = meta.title ?? DEFAULT_TITLE;
+    const targetSlug =
+      (meta.slug ?? '').trim() ||
+      generateSlug(safeTitle, findEarliestSessionDate(sanitizedSessions) ?? null);
+
+    setLoadSlug(targetSlug);
+    setTitle(safeTitle);
     setSubtitle(meta.subtitle ?? '');
     setFormat(meta.format ?? '');
     setDuration(meta.duration ?? '');
@@ -255,25 +269,15 @@ export default function CourseBuilderPage() {
     setLocationLabel(meta.locationLabel ?? '');
     setLocationMapUrl(meta.locationMapUrl ?? '');
     setWhatsappCtaUrl(meta.whatsappCtaUrl ?? '');
-    setLandingUrl(meta.landingUrl ?? landingFor(meta.slug));
+    setLandingUrl(meta.landingUrl ?? landingFor(targetSlug));
     setLandingUrlTouched(false);
     setDaws((meta.daws ?? []).join('\n'));
     setIncludes((meta.includes ?? []).join('\n'));
     setInstructorName(meta.instructorName ?? '');
     setInstructorBio(meta.instructorBio ?? '');
     setInstructorAvatarUrl(meta.instructorAvatarUrl ?? '');
-    setSessions(
-      (meta.sessions ?? []).map((s) => ({
-        label: s.label,
-        date: s.date,
-      })),
-    );
-    setSyllabus(
-      (meta.syllabus ?? []).map((s) => ({
-        title: s.title,
-        topics: (s.topics ?? []).join('; '),
-      })),
-    );
+    setSessions(sanitizedSessions.length ? sanitizedSessions : DEFAULT_SESSIONS);
+    setSyllabus(sanitizedSyllabus.length ? sanitizedSyllabus : DEFAULT_SYLLABUS);
   };
 
   const loadCourseMutation = useMutation({
