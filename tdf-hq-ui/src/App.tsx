@@ -64,6 +64,7 @@ import LabelTracksPage from './pages/LabelTracksPage';
 import AdminDiagnosticsPage from './pages/AdminDiagnosticsPage';
 import PublicBookingPage from './pages/PublicBookingPage';
 import CourseBuilderPage from './pages/CourseBuilderPage';
+import UxOptionsPage from './pages/UxOptionsPage';
 
 function Shell() {
   const { session } = useSession();
@@ -268,6 +269,7 @@ export default function App() {
             <Route path="roles-permisos" element={<UserRoleManagement />} />
             <Route path="integraciones/calendario" element={<CalendarSyncPage />} />
             <Route path="cms" element={<CmsAdminPage />} />
+            <Route path="opciones-ux" element={<UxOptionsPage />} />
             <Route path="preferencias" element={<SystemPage />} />
             <Route index element={<Navigate to="roles-permisos" replace />} />
           </Route>

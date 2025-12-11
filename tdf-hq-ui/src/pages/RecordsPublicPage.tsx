@@ -15,6 +15,7 @@ import {
   Grid,
   Link as MuiLink,
   Autocomplete,
+  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -32,6 +33,7 @@ import { Bookings } from '../api/bookings';
 import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { Admin } from '../api/admin';
+import { Services } from '../api/services';
 import { useSession } from '../session/SessionContext';
 import { deriveModulesFromRoles } from '../components/SidebarNav';
 import EditIcon from '@mui/icons-material/Edit';
@@ -64,7 +66,26 @@ function BookingRequestDialog({
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [serviceType, setServiceType] = useState<string>(SERVICE_OPTIONS[0] ?? 'Recording');
+  const [serviceType, setServiceType] = useState<string>('');
+  const serviceCatalogQuery = useQuery({
+    queryKey: ['service-catalog-public'],
+    queryFn: () => Services.listPublic(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const serviceOptions = useMemo(() => {
+    const names = (serviceCatalogQuery.data ?? [])
+      .filter((svc) => svc.scActive !== false)
+      .map((svc) => svc.scName);
+    return names.length > 0 ? names : SERVICE_OPTIONS;
+  }, [serviceCatalogQuery.data]);
+  const defaultServiceType = serviceOptions[0] ?? SERVICE_OPTIONS[0] ?? 'Recording';
+  useEffect(() => {
+    if (!serviceType && defaultServiceType) {
+      setServiceType(defaultServiceType);
+    } else if (serviceOptions.length > 0 && serviceType && !serviceOptions.includes(serviceType)) {
+      setServiceType(defaultServiceType);
+    }
+  }, [serviceOptions, serviceType, defaultServiceType]);
   const initialStartValue = useMemo(
     () =>
       DateTime.now()
@@ -167,11 +188,11 @@ function BookingRequestDialog({
           notes ||
           selectedRoomId ||
           engineerName ||
-          serviceType !== (SERVICE_OPTIONS[0] ?? 'Recording') ||
+          serviceType !== defaultServiceType ||
           startInput !== initialStartValue ||
           duration !== DEFAULT_DURATION,
       ),
-    [contactName, email, phone, notes, selectedRoomId, engineerName, serviceType, startInput, duration, initialStartValue],
+    [contactName, email, phone, notes, selectedRoomId, engineerName, serviceType, startInput, duration, initialStartValue, defaultServiceType],
   );
 
   const formatRange = (isoStart: string, isoEnd: string) =>
@@ -346,12 +367,11 @@ function BookingRequestDialog({
                 onChange={(e) => setServiceType(e.target.value)}
                 fullWidth
                 helperText="Usa nombres predefinidos para reservar cabinas por defecto."
-                SelectProps={{ native: true }}
               >
-                {SERVICE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
+                {serviceOptions.map((opt) => (
+                  <MenuItem key={opt} value={opt}>
                     {opt}
-                  </option>
+                  </MenuItem>
                 ))}
               </TextField>
             </Stack>

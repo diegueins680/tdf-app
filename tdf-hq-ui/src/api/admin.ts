@@ -1,9 +1,12 @@
-import { get, post, put, del } from './client';
+import { get, post, put, del, patch } from './client';
 import type {
   ArtistProfileDTO,
   ArtistProfileUpsert,
   ArtistReleaseDTO,
   ArtistReleaseUpsert,
+  DropdownOptionDTO,
+  DropdownOptionCreate,
+  DropdownOptionUpdate,
 } from './types';
 import type { Role } from './generated/client';
 
@@ -51,4 +54,10 @@ export const Admin = {
     return get(`/admin/logs${params}`);
   },
   clearLogs: () => del('/admin/logs'),
+  listDropdowns: (category: string, includeInactive?: boolean) =>
+    get<DropdownOptionDTO[]>(`/admin/dropdowns/${category}${includeInactive ? '?includeInactive=true' : ''}`),
+  createDropdown: (category: string, payload: DropdownOptionCreate) =>
+    post<DropdownOptionDTO>(`/admin/dropdowns/${category}`, payload),
+  updateDropdown: (category: string, optionId: string, payload: DropdownOptionUpdate) =>
+    patch<DropdownOptionDTO>(`/admin/dropdowns/${category}/${optionId}`, payload),
 };

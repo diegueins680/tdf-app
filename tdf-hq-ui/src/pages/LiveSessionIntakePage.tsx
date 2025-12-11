@@ -19,11 +19,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
-import type { PartyDTO, PartyUpdate } from '../api/types';
+import type { DropdownOptionDTO, PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
 import type { Role } from '../api/generated/client';
 import { submitLiveSessionIntake } from '../api/liveSessions';
 import { getStoredSessionToken } from '../session/SessionContext';
+import { Bands } from '../api/bands';
 
 interface MusicianEntry {
   id: string;
@@ -65,28 +66,6 @@ const emptySong = (): SongEntry => ({
   lyrics: '',
 });
 
-const GENRE_OPTIONS = [
-  'Rock',
-  'Pop',
-  'Hip-Hop',
-  'Rap',
-  'Trap',
-  'Reggaeton',
-  'Indie',
-  'Alternativo',
-  'Metal',
-  'Jazz',
-  'Funk',
-  'R&B',
-  'Soul',
-  'Electronica',
-  'Folk',
-  'Punk',
-  'Regional',
-  'Cumbia',
-  'Ska',
-];
-
 const asNullableString = (value?: string | null): string | null => {
   if (value == null) return null;
   const trimmed = value.trim();
@@ -105,6 +84,12 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
     queryKey: ['parties'],
     queryFn: () => Parties.list(),
     enabled: hasToken,
+  });
+  const { data: bandOptions, isLoading: bandOptionsLoading } = useQuery({
+    queryKey: ['band-options'],
+    queryFn: () => Bands.options(),
+    enabled: hasToken,
+    staleTime: 5 * 60 * 1000,
   });
   const [bandName, setBandName] = useState('');
   const [bandDescription, setBandDescription] = useState('');
@@ -192,6 +177,12 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
         party: p,
       })),
     [parties],
+  );
+  const genreOptions = useMemo(() => bandOptions?.genres ?? [], [bandOptions]);
+  const roleOptions = useMemo(() => bandOptions?.roles ?? [], [bandOptions]);
+  const selectedGenreOption = useMemo(
+    () => genreOptions.find((opt) => opt.value === primaryGenre || opt.label === primaryGenre) ?? null,
+    [genreOptions, primaryGenre],
   );
 
   const createPartyAndUser = async (entry: MusicianEntry): Promise<PartyDTO> => {
@@ -367,12 +358,25 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
               />
             </Grid>
             <Grid item xs={12} md={3}>
-              <Autocomplete
+              <Autocomplete<DropdownOptionDTO, false, false, true>
                 freeSolo
-                options={GENRE_OPTIONS}
-                value={primaryGenre}
-                onChange={(_, value) => setPrimaryGenre(value ?? '')}
+                options={genreOptions}
+                loading={bandOptionsLoading}
+                value={selectedGenreOption}
+                inputValue={primaryGenre}
                 onInputChange={(_, value) => setPrimaryGenre(value)}
+                onChange={(_, value) => {
+                  if (!value) {
+                    setPrimaryGenre('');
+                  } else if (typeof value === 'string') {
+                    setPrimaryGenre(value);
+                  } else {
+                    setPrimaryGenre(value.value);
+                  }
+                }}
+                getOptionLabel={(option) =>
+                  typeof option === 'string' ? option : option.label ?? option.value
+                }
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -380,6 +384,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                     placeholder="Rock, Rap, Pop..."
                   />
                 )}
+                noOptionsText={bandOptionsLoading ? 'Cargando géneros…' : 'Agrega un género'}
               />
             </Grid>
             <Grid item xs={12} md={3}>
@@ -516,12 +521,40 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                     />
                   </Grid>
                   <Grid item xs={12} md={3}>
-                    <TextField
-                      label="Rol en sesión (instrumento)"
-                      value={musician.instrument}
-                      onChange={(e) => handleMusicianChange(musician.id, { instrument: e.target.value, role: e.target.value })}
-                      placeholder="Voz, guitarra, batería…"
-                      fullWidth
+                    <Autocomplete<DropdownOptionDTO, false, false, true>
+                      freeSolo
+                      options={roleOptions}
+                      loading={bandOptionsLoading}
+                      value={
+                        roleOptions.find(
+                          (opt) => opt.value === musician.instrument || opt.label === musician.instrument,
+                        ) ?? null
+                      }
+                      inputValue={musician.instrument}
+                      onInputChange={(_, value) =>
+                        handleMusicianChange(musician.id, { instrument: value, role: value })
+                      }
+                      onChange={(_, value) => {
+                        if (!value) {
+                          handleMusicianChange(musician.id, { instrument: '', role: '' });
+                        } else if (typeof value === 'string') {
+                          handleMusicianChange(musician.id, { instrument: value, role: value });
+                        } else {
+                          handleMusicianChange(musician.id, { instrument: value.value, role: value.value });
+                        }
+                      }}
+                      getOptionLabel={(option) =>
+                        typeof option === 'string' ? option : option.label ?? option.value
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Rol en sesión (instrumento)"
+                          placeholder="Voz, guitarra, batería…"
+                          fullWidth
+                        />
+                      )}
+                      noOptionsText={bandOptionsLoading ? 'Cargando roles…' : 'Agrega un rol'}
                     />
                   </Grid>
                   <Grid item xs={12}>

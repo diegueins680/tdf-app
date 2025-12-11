@@ -40,6 +40,34 @@ export interface PartyUpdate {
   uNotes?: string | null;
 }
 
+export interface DropdownOptionDTO {
+  optionId: string;
+  category: string;
+  value: string;
+  label?: string | null;
+  active: boolean;
+  sortOrder?: number | null;
+}
+
+export interface DropdownOptionCreate {
+  docValue: string;
+  docLabel?: string | null;
+  docSortOrder?: number | null;
+  docActive?: boolean | null;
+}
+
+export interface DropdownOptionUpdate {
+  douValue?: string | null;
+  douLabel?: string | null;
+  douSortOrder?: number | null;
+  douActive?: boolean | null;
+}
+
+export interface BandOptionsDTO {
+  roles: DropdownOptionDTO[];
+  genres: DropdownOptionDTO[];
+}
+
 export interface BookingResourceDTO {
   brRoomId: string;
   brRoomName: string;

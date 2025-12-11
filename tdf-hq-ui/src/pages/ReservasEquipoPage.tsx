@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -22,6 +23,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AssetDTO } from '../api/types';
 import type { AssetCheckoutRequest } from '../api/inventory';
 import { Inventory } from '../api/inventory';
+import { Parties } from '../api/parties';
 
 const statusChip = (status?: string | null) => {
   const lower = (status ?? '').toLowerCase();
@@ -36,6 +38,10 @@ export default function ReservasEquipoPage() {
   const assetsQuery = useQuery({
     queryKey: ['assets-reservas'],
     queryFn: () => Inventory.list().then((payload) => (Array.isArray(payload) ? payload : payload.items ?? [])),
+  });
+  const partiesQuery = useQuery({
+    queryKey: ['parties'],
+    queryFn: () => Parties.list(),
   });
   const [selected, setSelected] = useState<AssetDTO | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -59,6 +65,7 @@ export default function ReservasEquipoPage() {
   });
 
   const assets = useMemo(() => assetsQuery.data ?? [], [assetsQuery.data]);
+  const partyOptions = useMemo(() => partiesQuery.data ?? [], [partiesQuery.data]);
 
   const openReserve = (asset: AssetDTO) => {
     setSelected(asset);
@@ -128,11 +135,42 @@ export default function ReservasEquipoPage() {
             <Typography variant="body2" color="text.secondary">
               {selected?.name}
             </Typography>
-            <TextField
-              label="Para quién / proyecto"
-              fullWidth
-              value={form.coTargetParty ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, coTargetParty: e.target.value }))}
+            <Autocomplete
+              freeSolo
+              options={partyOptions}
+              loading={partiesQuery.isLoading}
+              value={
+                partyOptions.find(
+                  (p) => p.displayName === (form.coTargetParty ?? ''),
+                ) ?? null
+              }
+              inputValue={form.coTargetParty ?? ''}
+              onInputChange={(_, value) =>
+                setForm((prev) => ({ ...prev, coTargetParty: value, coTargetKind: 'party' }))
+              }
+              onChange={(_, value) => {
+                if (!value) {
+                  setForm((prev) => ({ ...prev, coTargetParty: '', coTargetKind: 'party' }));
+                } else if (typeof value === 'string') {
+                  setForm((prev) => ({ ...prev, coTargetParty: value, coTargetKind: 'party' }));
+                } else {
+                  setForm((prev) => ({ ...prev, coTargetParty: value.displayName, coTargetKind: 'party' }));
+                }
+              }}
+              getOptionLabel={(option) =>
+                typeof option === 'string'
+                  ? option
+                  : `${option.displayName}${option.primaryEmail ? ` · ${option.primaryEmail}` : ''}`
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Para quién / proyecto"
+                  placeholder="Busca un contacto o escribe un nombre"
+                  fullWidth
+                />
+              )}
+              noOptionsText={partiesQuery.isLoading ? 'Cargando contactos…' : 'Sin contactos'}
             />
             <TextField
               label="Fecha/hora de devolución (opcional)"

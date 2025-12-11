@@ -90,6 +90,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Roles y permisos', path: '/configuracion/roles-permisos' },
       { label: 'Calendario Google', path: '/configuracion/integraciones/calendario' },
       { label: 'CMS', path: '/configuracion/cms' },
+      { label: 'Opciones UX', path: '/configuracion/opciones-ux' },
       { label: 'Preferencias', path: '/configuracion/preferencias' },
     ],
   },
