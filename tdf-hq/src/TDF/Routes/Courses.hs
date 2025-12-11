@@ -62,6 +62,9 @@ data CourseMetadata = CourseMetadata
   , locationMapUrl :: Text
   , daws           :: [Text]
   , includes       :: [Text]
+  , instructorName :: Maybe Text
+  , instructorBio  :: Maybe Text
+  , instructorAvatarUrl :: Maybe Text
   , sessions       :: [CourseSession]
   , syllabus       :: [SyllabusItem]
   , whatsappCtaUrl :: Text
@@ -140,6 +143,9 @@ data CourseUpsert = CourseUpsert
   , landingUrl           :: Maybe Text
   , daws                 :: [Text]
   , includes             :: [Text]
+  , instructorName       :: Maybe Text
+  , instructorBio        :: Maybe Text
+  , instructorAvatarUrl  :: Maybe Text
   , sessions             :: [CourseSessionIn]
   , syllabus             :: [CourseSyllabusIn]
   } deriving (Show, Generic)

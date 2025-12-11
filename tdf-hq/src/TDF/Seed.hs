@@ -218,7 +218,7 @@ seedProductionCourse now = do
       subtitleTxt = Just "Presencial · 4 sábados · 16 horas"
       formatTxt = Just "Presencial"
       durationTxt = Just "4 sábados · 16 horas"
-      priceCentsVal = 34900
+      priceCentsVal = 15000
       currencyVal = "USD"
       capacityVal = 16
       sessionStart = Just 15
@@ -227,8 +227,17 @@ seedProductionCourse now = do
       locationMap = Just "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6"
       whatsappCta = Just "https://wa.me/593995413168?text=Quiero%20inscribirme%20al%20curso"
       landingUrl = Just "https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
-      dawsList = Nothing :: Maybe [Text]
-      includesList = Nothing :: Maybe [Text]
+      dawsList = Just ["Logic", "Luna"]
+      includesList = Just
+        [ "Acceso a grabaciones"
+        , "Certificado de participación"
+        , "Mentorías"
+        , "Grupo de WhatsApp"
+        , "Acceso a la plataforma de TDF Records"
+        ]
+      instructorName = Just "Esteban Muñoz"
+      instructorBio = Just "Productor en TDF Records. 10+ años grabando bandas, rap y electrónica."
+      instructorAvatar = Just "https://tdf-app.pages.dev/assets/esteban-munoz.jpg"
       sessions =
         [ ("Sábado 1 · Introducción", fromGregorian 2025 12 13)
         , ("Sábado 2 · Grabación", fromGregorian 2025 12 20)
@@ -260,6 +269,9 @@ seedProductionCourse now = do
       , Trials.courseLandingUrl = landingUrl
       , Trials.courseDaws = dawsList
       , Trials.courseIncludes = includesList
+      , Trials.courseInstructorName = instructorName
+      , Trials.courseInstructorBio = instructorBio
+      , Trials.courseInstructorAvatarUrl = instructorAvatar
       , Trials.courseCreatedAt = now
       , Trials.courseUpdatedAt = now
       }
@@ -280,6 +292,9 @@ seedProductionCourse now = do
         , Trials.courseLandingUrl = landingUrl
         , Trials.courseDaws = dawsList
         , Trials.courseIncludes = includesList
+        , Trials.courseInstructorName = instructorName
+        , Trials.courseInstructorBio = instructorBio
+        , Trials.courseInstructorAvatarUrl = instructorAvatar
         , Trials.courseCreatedAt = Trials.courseCreatedAt existing
         , Trials.courseUpdatedAt = now
         }

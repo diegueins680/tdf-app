@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Courses, type CourseUpsert } from '../api/courses';
+import { Courses, type CourseUpsert, type CourseMetadata } from '../api/courses';
 
 interface SessionInput { label: string; date: string }
 interface SyllabusInput { title: string; topics: string }
@@ -85,7 +85,7 @@ export default function CourseBuilderPage() {
   const [subtitle, setSubtitle] = useState('Presencial · 4 sábados · 16 horas');
   const [format, setFormat] = useState('Presencial');
   const [duration, setDuration] = useState('4 sábados · 16 horas');
-  const [price, setPrice] = useState('349');
+  const [price, setPrice] = useState('150');
   const [currency, setCurrency] = useState('USD');
   const [capacity, setCapacity] = useState('16');
   const [sessionStartHour, setSessionStartHour] = useState('15');
@@ -98,8 +98,13 @@ export default function CourseBuilderPage() {
   const [landingUrlTouched, setLandingUrlTouched] = useState(false);
   const [includes, setIncludes] = useState('Acceso a grabaciones\nCertificado de participación\nMentorías\nGrupo de WhatsApp\nAcceso a la plataforma de TDF Records');
   const [daws, setDaws] = useState('Logic\nLuna');
+  const [instructorName, setInstructorName] = useState('Esteban Muñoz');
+  const [instructorBio, setInstructorBio] = useState('Productor en TDF Records. 10+ años grabando bandas, rap y electrónica.');
+  const [instructorAvatarUrl, setInstructorAvatarUrl] = useState('https://tdf-app.pages.dev/assets/esteban-munoz.jpg');
   const [sessions, setSessions] = useState<SessionInput[]>(DEFAULT_SESSIONS);
   const [syllabus, setSyllabus] = useState<SyllabusInput[]>(DEFAULT_SYLLABUS);
+  const [loadSlug, setLoadSlug] = useState('');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const startDate = useMemo<string | null>(() => findEarliestSessionDate(sessions) ?? null, [sessions]);
   const slug = useMemo(() => generateSlug(title, startDate), [title, startDate]);
@@ -187,6 +192,9 @@ export default function CourseBuilderPage() {
       locationMapUrl: locationMapUrl.trim() || null,
       daws: splitLines(daws),
       includes: splitLines(includes),
+      instructorName: instructorName.trim() || null,
+      instructorBio: instructorBio.trim() || null,
+      instructorAvatarUrl: instructorAvatarUrl.trim() || null,
       sessions: sessions
         .filter((s) => s.label.trim() && s.date.trim())
         .map((s) => ({ label: s.label.trim(), date: s.date.trim() })),
@@ -232,6 +240,55 @@ export default function CourseBuilderPage() {
   const payloadPreview = JSON.stringify(buildPayload(), null, 2);
   const canResetLanding = landingUrlTouched && landingUrl !== landingFor(slug);
 
+  const applyMetadata = (meta: CourseMetadata) => {
+    setSlug(meta.slug);
+    setLoadSlug(meta.slug);
+    setTitle(meta.title);
+    setSubtitle(meta.subtitle ?? '');
+    setFormat(meta.format ?? '');
+    setDuration(meta.duration ?? '');
+    setPrice(meta.price ? String(Math.round(meta.price)) : '0');
+    setCurrency(meta.currency ?? 'USD');
+    setCapacity(meta.capacity ? String(meta.capacity) : '0');
+    setSessionStartHour(meta.sessionStartHour != null ? String(meta.sessionStartHour) : '');
+    setSessionDurationHours(meta.sessionDurationHours != null ? String(meta.sessionDurationHours) : '');
+    setLocationLabel(meta.locationLabel ?? '');
+    setLocationMapUrl(meta.locationMapUrl ?? '');
+    setWhatsappCtaUrl(meta.whatsappCtaUrl ?? '');
+    setLandingUrl(meta.landingUrl ?? landingFor(meta.slug));
+    setLandingUrlTouched(false);
+    setDaws((meta.daws ?? []).join('\n'));
+    setIncludes((meta.includes ?? []).join('\n'));
+    setInstructorName(meta.instructorName ?? '');
+    setInstructorBio(meta.instructorBio ?? '');
+    setInstructorAvatarUrl(meta.instructorAvatarUrl ?? '');
+    setSessions(
+      (meta.sessions ?? []).map((s) => ({
+        label: s.label,
+        date: s.date,
+      })),
+    );
+    setSyllabus(
+      (meta.syllabus ?? []).map((s) => ({
+        title: s.title,
+        topics: (s.topics ?? []).join('; '),
+      })),
+    );
+  };
+
+  const loadCourseMutation = useMutation({
+    mutationFn: async () => {
+      const target = loadSlug.trim() || slug.trim();
+      if (!target) throw new Error('Ingresa un slug.');
+      const meta = await Courses.getMetadata(target);
+      applyMetadata(meta);
+      setLoadError(null);
+    },
+    onError: () => {
+      setLoadError('No pudimos cargar ese curso.');
+    },
+  });
+
   return (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="flex-start" spacing={2}>
@@ -247,6 +304,34 @@ export default function CourseBuilderPage() {
           <Chip label={`Estado: ${createMutation.isSuccess ? 'Publicado' : 'Borrador'}`} />
         </Stack>
       </Stack>
+      <Card variant="outlined">
+        <CardContent>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
+            <TextField
+              label="Cargar curso existente (slug)"
+              value={loadSlug}
+              onChange={(e) => setLoadSlug(e.target.value)}
+              size="small"
+              sx={{ minWidth: { md: 260 } }}
+            />
+            <Stack direction="row" spacing={1}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => loadCourseMutation.mutate()}
+                disabled={loadCourseMutation.isPending}
+              >
+                {loadCourseMutation.isPending ? 'Cargando…' : 'Cargar curso'}
+              </Button>
+              {loadError && (
+                <Typography variant="caption" color="error">
+                  {loadError}
+                </Typography>
+              )}
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
 
       {createMutation.isSuccess && (
         <Alert severity="success">
@@ -327,6 +412,33 @@ export default function CourseBuilderPage() {
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField label="Incluye" fullWidth multiline minRows={3} value={includes} onChange={(e) => setIncludes(e.target.value)} />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Instructor principal"
+                fullWidth
+                value={instructorName}
+                onChange={(e) => setInstructorName(e.target.value)}
+                helperText="Nombre visible en la landing."
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Foto/Avatar del instructor (URL)"
+                fullWidth
+                value={instructorAvatarUrl}
+                onChange={(e) => setInstructorAvatarUrl(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Bio del instructor"
+                fullWidth
+                multiline
+                minRows={3}
+                value={instructorBio}
+                onChange={(e) => setInstructorBio(e.target.value)}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField label="WhatsApp CTA" fullWidth value={whatsappCtaUrl} onChange={(e) => setWhatsappCtaUrl(e.target.value)} />

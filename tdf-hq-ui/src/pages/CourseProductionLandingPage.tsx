@@ -189,7 +189,7 @@ export default function CourseProductionLandingPage() {
                 isFull={isFull}
                 whatsappHref={whatsappHref}
               />
-              <InstructorCard />
+              <InstructorCard meta={meta} />
               {meta?.locationLabel && meta?.locationMapUrl && (
                 <LocationCard label={meta.locationLabel} mapUrl={meta.locationMapUrl} />
               )}
@@ -201,13 +201,19 @@ export default function CourseProductionLandingPage() {
   );
 }
 
-function InstructorCard() {
+function InstructorCard({ meta }: { meta?: CourseMetadata }) {
   const handleImageError = (e: SyntheticEvent<HTMLImageElement>) => {
     const target = e.currentTarget;
     if (target.src !== INSTRUCTOR_IMAGE_FALLBACK) {
       target.src = INSTRUCTOR_IMAGE_FALLBACK;
     }
   };
+
+  const name = meta?.instructorName ?? 'Esteban Muñoz';
+  const bio =
+    meta?.instructorBio ??
+    'Productor e ingeniero residente en TDF Records, con experiencia en grabación, mezcla y masterización en Logic y Luna. Te acompañará en sesiones prácticas dentro del control room del estudio.';
+  const avatar = meta?.instructorAvatarUrl ?? INSTRUCTOR_IMAGE_URL;
 
   return (
     <Card
@@ -220,21 +226,21 @@ function InstructorCard() {
     >
       <CardMedia
         component="img"
-        image={INSTRUCTOR_IMAGE_URL}
-        alt="Esteban Muñoz en el control room"
+        image={avatar}
+        alt={name}
         onError={handleImageError}
         sx={{ height: 220, objectFit: 'cover' }}
       />
       <CardContent sx={{ pb: 3 }}>
         <Stack direction="row" spacing={2} alignItems="center" mb={1}>
           <Avatar
-            alt="Esteban Muñoz"
-            src={INSTRUCTOR_IMAGE_URL}
+            alt={name}
+            src={avatar}
             imgProps={{ onError: handleImageError }}
           />
           <Box>
             <Typography variant="subtitle1" sx={{ color: '#f8fafc', fontWeight: 700 }}>
-              Esteban Muñoz
+              {name}
             </Typography>
             <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.7)' }}>
               Ingeniero de mezcla · Mentor del curso
@@ -242,8 +248,7 @@ function InstructorCard() {
           </Box>
         </Stack>
         <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-          Productor e ingeniero residente en TDF Records, con experiencia en grabación, mezcla y masterización
-          en Logic y Luna. Te acompañará en sesiones prácticas dentro del control room del estudio.
+          {bio}
         </Typography>
       </CardContent>
     </Card>

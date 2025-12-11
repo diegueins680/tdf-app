@@ -5,6 +5,9 @@ export type CourseMetadata = components['schemas']['CourseMetadata'] & {
   remaining?: number | null;
   sessionStartHour?: number | null;
   sessionDurationHours?: number | null;
+  instructorName?: string | null;
+  instructorBio?: string | null;
+  instructorAvatarUrl?: string | null;
 };
 export type CourseRegistrationRequest = components['schemas']['CourseRegistrationRequest'];
 export type CourseRegistrationResponse = components['schemas']['CourseRegistrationResponse'];
@@ -39,6 +42,9 @@ export interface CourseUpsert {
   landingUrl?: string | null;
   daws: string[];
   includes: string[];
+  instructorName?: string | null;
+  instructorBio?: string | null;
+  instructorAvatarUrl?: string | null;
   sessions: CourseSessionIn[];
   syllabus: CourseSyllabusIn[];
 }

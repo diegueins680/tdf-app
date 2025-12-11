@@ -165,6 +165,9 @@ Course
     landingUrl           Text Maybe
     daws                 [Text] Maybe sqltype=text[]
     includes             [Text] Maybe sqltype=text[]
+    instructorName       Text Maybe
+    instructorBio        Text Maybe
+    instructorAvatarUrl  Text Maybe
     createdAt            UTCTime default=CURRENT_TIMESTAMP
     updatedAt            UTCTime default=CURRENT_TIMESTAMP
     UniqueCourseSlug     slug
