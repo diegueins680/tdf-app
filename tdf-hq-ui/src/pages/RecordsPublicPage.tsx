@@ -37,6 +37,7 @@ import { deriveModulesFromRoles } from '../components/SidebarNav';
 import EditIcon from '@mui/icons-material/Edit';
 
 const BOOKING_ZONE = 'America/Bogota';
+const DEFAULT_DURATION = 120;
 const SERVICE_OPTIONS = [
   'Vocal recording',
   'Band recording',
@@ -64,14 +65,17 @@ function BookingRequestDialog({
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [serviceType, setServiceType] = useState<string>(SERVICE_OPTIONS[0] ?? 'Recording');
-  const [startInput, setStartInput] = useState<string>(
-    DateTime.now()
-      .setZone(BOOKING_ZONE)
-      .plus({ days: 1 })
-      .set({ hour: 10, minute: 0, second: 0, millisecond: 0 })
-      .toFormat("yyyy-LL-dd'T'HH:mm"),
+  const initialStartValue = useMemo(
+    () =>
+      DateTime.now()
+        .setZone(BOOKING_ZONE)
+        .plus({ days: 1 })
+        .set({ hour: 10, minute: 0, second: 0, millisecond: 0 })
+        .toFormat("yyyy-LL-dd'T'HH:mm"),
+    [],
   );
-  const [duration, setDuration] = useState<number>(120);
+  const [startInput, setStartInput] = useState<string>(initialStartValue);
+  const [duration, setDuration] = useState<number>(DEFAULT_DURATION);
   const [notes, setNotes] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState<string>('');
   const [engineerName, setEngineerName] = useState<string>('');
@@ -153,6 +157,22 @@ function BookingRequestDialog({
 
   const nextRoomConflict = roomConflicts[0] ?? null;
   const nextEngineerConflict = engineerConflicts[0] ?? null;
+
+  const isDirty = useMemo(
+    () =>
+      Boolean(
+        contactName ||
+          email ||
+          phone ||
+          notes ||
+          selectedRoomId ||
+          engineerName ||
+          serviceType !== (SERVICE_OPTIONS[0] ?? 'Recording') ||
+          startInput !== initialStartValue ||
+          duration !== DEFAULT_DURATION,
+      ),
+    [contactName, email, phone, notes, selectedRoomId, engineerName, serviceType, startInput, duration, initialStartValue],
+  );
 
   const formatRange = (isoStart: string, isoEnd: string) =>
     `${DateTime.fromISO(isoStart).setZone(BOOKING_ZONE).toFormat("dd LLL yyyy, HH:mm")} - ${DateTime.fromISO(isoEnd)
@@ -262,6 +282,16 @@ function BookingRequestDialog({
     setSuccessMessage(null);
     onClose();
   };
+
+  useEffect(() => {
+    if (!(open && isDirty && !successMessage)) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [open, isDirty, successMessage]);
 
   return (
     <Dialog open={open} onClose={resetAndClose} maxWidth="md" fullWidth>
