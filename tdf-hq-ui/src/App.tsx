@@ -34,6 +34,7 @@ import ReportsPage from './pages/ReportsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import PublicProfilePage from './pages/PublicProfilePage';
 import SocialPageView from './pages/SocialPage';
+import SocialEventsPage from './pages/SocialEventsPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
 import LabelProjectsPage from './pages/LabelProjectsPage';
 import LabelReleasesPage from './pages/LabelReleasesPage';
@@ -162,7 +163,14 @@ function Shell() {
           <Container maxWidth="xl" sx={{ pt: 10, pb: 6 }}>
             <Outlet />
           </Container>
-          <Box sx={{ position: 'fixed', bottom: 24, right: 32 }}>
+          <Box
+            sx={(theme) => ({
+              position: 'fixed',
+              right: { xs: 16, md: 32 },
+              bottom: `calc(${theme.spacing(10)} + env(safe-area-inset-bottom, 0px))`,
+              zIndex: theme.zIndex.tooltip,
+            })}
+          >
             <ApiStatusChip />
           </Box>
         </Box>
@@ -207,6 +215,7 @@ export default function App() {
           <Route path="/inicio" element={<FanHubPage />} />
           <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
           <Route path="/social" element={<SocialPageView />} />
+          <Route path="/social/eventos" element={<SocialEventsPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/acerca" element={<AboutPage />} />

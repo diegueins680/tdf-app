@@ -63,15 +63,16 @@ export default function SocialPage() {
   const [shareQrError, setShareQrError] = useState<string | null>(null);
   const [payloadInput, setPayloadInput] = useState('');
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
 
   const { partiesQuery, byId } = usePartiesMap();
   const myParty = session?.partyId ? byId.get(session.partyId) : null;
 
   useEffect(() => {
     if (!myParty) return;
-    setShareName((prev) => prev ?? myParty.displayName ?? myParty.legalName ?? '');
-    setShareEmail((prev) => prev ?? myParty.primaryEmail ?? '');
-    setSharePhone((prev) => prev ?? myParty.primaryPhone ?? myParty.whatsapp ?? '');
+    setShareName((prev) => (prev?.trim() ? prev : myParty.displayName ?? myParty.legalName ?? ''));
+    setShareEmail((prev) => (prev?.trim() ? prev : myParty.primaryEmail ?? ''));
+    setSharePhone((prev) => (prev?.trim() ? prev : myParty.primaryPhone ?? myParty.whatsapp ?? ''));
   }, [myParty]);
 
   const sharePayload = useMemo(
@@ -152,12 +153,18 @@ export default function SocialPage() {
     onSuccess: () => {
       setAddId('');
       invalidateAll();
+      setFeedback({ kind: 'success', message: 'Listo, conexión agregada.' });
     },
+    onError: (err) => setFeedback({ kind: 'error', message: err.message }),
   });
 
   const removeMutation = useMutation({
     mutationFn: (targetId: number) => SocialAPI.removeFriend(targetId),
-    onSuccess: invalidateAll,
+    onSuccess: () => {
+      invalidateAll();
+      setFeedback({ kind: 'success', message: 'Actualizamos tus conexiones.' });
+    },
+    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
 
   const exchangeMutation = useMutation<void, Error>({
@@ -169,7 +176,9 @@ export default function SocialPage() {
     onSuccess: () => {
       setPayloadInput('');
       invalidateAll();
+      setFeedback({ kind: 'success', message: 'Intercambio registrado.' });
     },
+    onError: (err) => setFeedback({ kind: 'error', message: err.message }),
   });
 
   const tabData: Record<TabKey, { data?: PartyFollowDTO[]; empty: string }> = {
@@ -202,10 +211,33 @@ export default function SocialPage() {
         <Stack direction="row" alignItems="center" spacing={1}>
           <Typography variant="h4" fontWeight={800}>Conexiones</Typography>
           <Chip label={session?.partyId ? `Tu ID: ${session.partyId}` : 'Sin sesión'} size="small" />
+          {session?.partyId && (
+            <Button
+              size="small"
+              variant="text"
+              startIcon={<ContentCopyIcon fontSize="small" />}
+              onClick={() => void handleCopy(String(session.partyId))}
+            >
+              Copiar ID
+            </Button>
+          )}
         </Stack>
         <Typography color="text.secondary">
           Administra seguidores, seguidos y amigos mutuos. Usa el ID de perfil para agregar amigos.
         </Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            Explora eventos sociales y envía invitaciones desde la vista dedicada.
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            component="a"
+            href="/social/eventos"
+          >
+            Ir a eventos
+          </Button>
+        </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
           <Autocomplete
             sx={{ minWidth: 260 }}
@@ -246,7 +278,11 @@ export default function SocialPage() {
             Refrescar
           </Button>
       </Stack>
-        {addMutation.error && <Alert severity="error">{addMutation.error.message}</Alert>}
+        {(addMutation.error || feedback) && (
+          <Alert severity={feedback?.kind === 'error' || addMutation.error ? 'error' : 'success'}>
+            {addMutation.error?.message ?? feedback?.message}
+          </Alert>
+        )}
       </Stack>
 
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 3 }}>

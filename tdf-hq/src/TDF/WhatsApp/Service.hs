@@ -12,6 +12,7 @@ module TDF.WhatsApp.Service
 import Data.Aeson (Value, object, (.=))
 import Data.Text (Text)
 import qualified Data.Text as T
+import Control.Applicative ((<|>))
 import System.Environment (lookupEnv)
 import Network.HTTP.Client (Manager, newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
@@ -27,6 +28,7 @@ data WhatsAppConfig = WhatsAppConfig
   , courseSlug    :: Text
   , courseRegUrl  :: Maybe Text
   , appBaseUrl    :: Text
+  , waApiVersion  :: Text
   }
 
 data WhatsAppService = WhatsAppService
@@ -48,6 +50,7 @@ loadConfig = do
   mSlug <- lookupEnv "COURSE_EDITION_SLUG"
   mReg  <- lookupEnv "COURSE_REG_URL"
   mBase <- lookupEnv "HQ_APP_URL"
+  mVersion <- lookupEnv "WA_GRAPH_API_VERSION" <|> lookupEnv "WHATSAPP_API_VERSION"
   let cfg = WhatsAppConfig
         { waToken       = tok
         , waPhoneId     = pid
@@ -55,6 +58,7 @@ loadConfig = do
         , courseSlug    = maybe "produccion-musical-dic-2025" T.pack mSlug
         , courseRegUrl  = fmap T.pack mReg
         , appBaseUrl    = maybe "http://localhost:5173" T.pack mBase
+        , waApiVersion  = maybe "v20.0" T.pack mVersion
         }
   pure cfg
 
@@ -80,7 +84,8 @@ sendViaWA :: WhatsAppService -> Text -> Text -> IO Value
 sendViaWA WhatsAppService{waManager, waConfig} to url = do
   let msg = "¡Gracias por tu interés en el Curso de Producción Musical! Aquí está tu enlace de inscripción: "
             <> url <> "\nCupos limitados (10)."
-  _ <- sendText waManager (waToken waConfig) (waPhoneId waConfig) to msg
+      version = waApiVersion waConfig
+  _ <- sendText waManager version (waToken waConfig) (waPhoneId waConfig) to msg
   pure (object ["ok" .= True])
 
 mintLink :: WhatsAppService -> Connection -> Text -> IO (Text, Int)

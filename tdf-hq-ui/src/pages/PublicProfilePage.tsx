@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   Stack,
   Typography,
@@ -39,6 +40,16 @@ export default function PublicProfilePage() {
     queryFn: SocialAPI.listFriends,
     enabled: Boolean(session?.partyId),
   });
+  const followersQuery = useQuery({
+    queryKey: ['social-followers'],
+    queryFn: SocialAPI.listFollowers,
+    enabled: Boolean(session?.partyId),
+  });
+  const followingQuery = useQuery({
+    queryKey: ['social-following'],
+    queryFn: SocialAPI.listFollowing,
+    enabled: Boolean(session?.partyId),
+  });
 
   const presenceQuery = useQuery({
     queryKey: ['radio-presence', parsedId],
@@ -51,6 +62,14 @@ export default function PublicProfilePage() {
     () => friendsQuery.data?.some((f) => f.pfFollowingId === parsedId) ?? false,
     [friendsQuery.data, parsedId],
   );
+  const youFollow = useMemo(
+    () => followingQuery.data?.some((f) => f.pfFollowingId === parsedId) ?? false,
+    [followingQuery.data, parsedId],
+  );
+  const followsYou = useMemo(
+    () => followersQuery.data?.some((f) => f.pfFollowerId === parsedId) ?? false,
+    [followersQuery.data, parsedId],
+  );
 
   const friendMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
@@ -62,6 +81,8 @@ export default function PublicProfilePage() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['friends'] });
+      void qc.invalidateQueries({ queryKey: ['social-followers'] });
+      void qc.invalidateQueries({ queryKey: ['social-following'] });
     },
   });
 
@@ -122,6 +143,12 @@ export default function PublicProfilePage() {
               <Typography variant="body2" color="text.secondary">
                 {party.legalName ?? party.displayName}
               </Typography>
+              {session?.partyId && (
+                <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }}>
+                  <Chip label={isFriend ? 'Amigos mutuos' : youFollow ? 'Sigues a esta persona' : 'No sigues aún'} size="small" color={isFriend ? 'success' : youFollow ? 'info' : 'default'} />
+                  {followsYou && <Chip label="Te sigue" size="small" color="secondary" />}
+                </Stack>
+              )}
             </Box>
               {!isSelf && session?.partyId && (
                 <Button

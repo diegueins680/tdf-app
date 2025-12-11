@@ -79,6 +79,7 @@ const zoneLabel = (zone: string) => {
 
 const normalizeService = (service: string) => service.trim().toLowerCase();
 const stripDiacritics = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+const START_STEP_MINUTES = 15;
 
 const defaultRoomsForService = (service: string, roomOptions: string[]) => {
   const norm = normalizeService(service);
@@ -131,17 +132,23 @@ const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
   return list;
 };
 
+const alignToStepMinutes = (dt: DateTime, stepMinutes = START_STEP_MINUTES) => {
+  if (!dt.isValid) return dt;
+  const normalized = dt.set({ second: 0, millisecond: 0 });
+  const remainder = normalized.minute % stepMinutes;
+  if (remainder === 0) return normalized;
+  return normalized.plus({ minutes: stepMinutes - remainder });
+};
+
 const buildInitialForm = (defaultService: string, roomOptions: string[]) => {
-  const start = new Date();
-  start.setMinutes(start.getMinutes() + 90);
-  start.setSeconds(0, 0);
+  const start = alignToStepMinutes(DateTime.now().plus({ minutes: 90 }));
   const initialRooms = defaultRoomsForService(defaultService, roomOptions);
   return {
     fullName: '',
     email: '',
     phone: '',
     serviceType: defaultService,
-    startsAt: toLocalInputValue(start),
+    startsAt: toLocalInputValue(start.toJSDate()),
     durationMinutes: 60,
     notes: '',
     engineerId: null,
@@ -310,7 +317,7 @@ export default function PublicBookingPage() {
         const clamped = latestStartStudio < openStudio ? openStudio : latestStartStudio;
         next = clamped.setZone(userTimeZone);
       }
-      return next;
+      return alignToStepMinutes(next);
     },
     [studioTimeZone, userTimeZone],
   );
@@ -501,7 +508,7 @@ export default function PublicBookingPage() {
     let candidate = nowStudio.plus({ minutes: 15 });
     if (candidate < openToday) candidate = openToday;
     if (candidate > closeToday) candidate = openToday.plus({ days: 1 });
-    return candidate.setZone(userTimeZone);
+    return alignToStepMinutes(candidate.setZone(userTimeZone));
   }, [studioTimeZone, userTimeZone]);
 
   const minStartValue = useMemo(() => toLocalInputValue(minStartDate.toJSDate()), [minStartDate]);
@@ -510,6 +517,11 @@ export default function PublicBookingPage() {
     const current = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
     if (!current.isValid || current < minStartDate) {
       setForm((prev) => ({ ...prev, startsAt: minStartValue }));
+      return;
+    }
+    const aligned = alignToStepMinutes(current);
+    if (!aligned.equals(current)) {
+      setForm((prev) => ({ ...prev, startsAt: toLocalInputValue(aligned.toJSDate()) }));
     }
   }, [form.startsAt, minStartDate, minStartValue, userTimeZone]);
   const formattedStart = useMemo(() => {
@@ -1116,7 +1128,7 @@ export default function PublicBookingPage() {
                         }}
                         fullWidth
                         InputLabelProps={{ shrink: true }}
-                        inputProps={{ min: minStartValue, max: maxStartIso, step: 900 }}
+                        inputProps={{ min: minStartValue, max: maxStartIso, step: START_STEP_MINUTES * 60 }}
                         required
                         helperText={availabilityHelperText}
                         disabled={formDisabled}

@@ -1076,16 +1076,16 @@ export default function LoginPage() {
       </Dialog>
 
       <Box
-        sx={{
+        sx={(theme) => ({
           position: 'fixed',
           right: { xs: 12, sm: 24 },
-          bottom: { xs: `calc(env(safe-area-inset-bottom, 12px) + 12px)`, sm: 24 },
+          bottom: `calc(${theme.spacing(10)} + env(safe-area-inset-bottom, 0px))`,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-end',
           gap: 0.75,
-          zIndex: (theme) => theme.zIndex.snackbar,
-        }}
+          zIndex: theme.zIndex.snackbar,
+        })}
       >
         <Fab
           color="primary"
