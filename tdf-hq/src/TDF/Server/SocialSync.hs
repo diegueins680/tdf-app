@@ -53,24 +53,24 @@ socialSyncServer _user =
         existing <- withPool $ getBy (UniqueSocialSyncPost platform (sspExternalPostId payload))
         case existing of
           Just (Entity key _) -> do
-            withPool $ update key (concat
-              [ setMaybe SocialSyncPostCaption (sspCaption payload)
-              , setMaybe SocialSyncPostPermalink (sspPermalink payload)
-              , setMaybe SocialSyncPostMediaUrls mediaText
-              , setMaybe SocialSyncPostPostedAt (sspPostedAt payload)
-              , setMaybe SocialSyncPostTags tagsText
-              , setMaybe SocialSyncPostSummary summaryTxt
-              , setMaybe SocialSyncPostArtistPartyId artistPartyKey
-              , setMaybe SocialSyncPostArtistProfileId artistProfileKey
-              , [SocialSyncPostIngestSource =. ingestSrc]
-              , setMaybe SocialSyncPostLikeCount (sspLikeCount payload)
-              , setMaybe SocialSyncPostCommentCount (sspCommentCount payload)
-              , setMaybe SocialSyncPostShareCount (sspShareCount payload)
-              , setMaybe SocialSyncPostViewCount (sspViewCount payload)
-              , [ SocialSyncPostUpdatedAt =. now
-                , SocialSyncPostFetchedAt =. now
-                ]
-              ])
+            let updates = catMaybes
+                  [ (SocialSyncPostCaption =.) <$> sspCaption payload
+                  , (SocialSyncPostPermalink =.) <$> sspPermalink payload
+                  , (SocialSyncPostMediaUrls =.) <$> mediaText
+                  , (SocialSyncPostPostedAt =.) <$> sspPostedAt payload
+                  , (SocialSyncPostTags =.) <$> tagsText
+                  , (SocialSyncPostSummary =.) <$> summaryTxt
+                  , (SocialSyncPostArtistPartyId =.) <$> artistPartyKey
+                  , (SocialSyncPostArtistProfileId =.) <$> artistProfileKey
+                  , Just (SocialSyncPostIngestSource =. ingestSrc)
+                  , (SocialSyncPostLikeCount =.) <$> sspLikeCount payload
+                  , (SocialSyncPostCommentCount =.) <$> sspCommentCount payload
+                  , (SocialSyncPostShareCount =.) <$> sspShareCount payload
+                  , (SocialSyncPostViewCount =.) <$> sspViewCount payload
+                  , Just (SocialSyncPostUpdatedAt =. now)
+                  , Just (SocialSyncPostFetchedAt =. now)
+                  ]
+            withPool $ update key updates
             pure False
           Nothing -> do
             let record = SocialSyncPost
@@ -219,7 +219,3 @@ toDTO (Entity key SocialSyncPost{..}) =
     , sspdIngestSource = socialSyncPostIngestSource
     , sspdMetrics = metrics
     }
-
-setMaybe :: PersistField a => EntityField SocialSyncPost (Maybe a) -> Maybe a -> [Update SocialSyncPost]
-setMaybe _ Nothing = []
-setMaybe field (Just v) = [field =. Just v]
