@@ -86,6 +86,18 @@ export default function SocialEventsPage() {
     onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
 
+  const respondInvitationMutation = useMutation({
+    mutationFn: ({ eventId, invitationId, status }: { eventId: string; invitationId: string; status: string }) => {
+      if (!session?.partyId) throw new Error('Inicia sesión para responder invitaciones.');
+      return SocialEventsAPI.respondInvitation(eventId, invitationId, status);
+    },
+    onSuccess: (_resp, { eventId }) => {
+      void qc.invalidateQueries({ queryKey: ['social-invitations', eventId] });
+      setFeedback({ kind: 'success', message: 'Respuesta enviada.' });
+    },
+    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
+  });
+
   const renderEventCard = (
     eventId: string,
     title: string,
@@ -97,6 +109,7 @@ export default function SocialEventsPage() {
     capacity?: number | null,
     description?: string | null,
     invitationStatus?: string | null,
+    invitationId?: string | null,
   ) => {
     const inviteDraft = invites[eventId] ?? { partyId: '', message: '' };
     return (
@@ -113,7 +126,29 @@ export default function SocialEventsPage() {
           </Stack>
           <Typography variant="h6" fontWeight={800}>{title}</Typography>
           {invitationStatus && (
-            <Chip label={`Invitación: ${invitationStatus}`} size="small" color="secondary" sx={{ width: 'fit-content' }} />
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+              <Chip label={`Invitación: ${invitationStatus}`} size="small" color="secondary" sx={{ width: 'fit-content' }} />
+              {invitationId && (
+                <>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => respondInvitationMutation.mutate({ eventId, invitationId, status: 'Accepted' })}
+                    disabled={respondInvitationMutation.isPending}
+                  >
+                    Aceptar
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => respondInvitationMutation.mutate({ eventId, invitationId, status: 'Declined' })}
+                    disabled={respondInvitationMutation.isPending}
+                  >
+                    Rechazar
+                  </Button>
+                </>
+              )}
+            </Stack>
           )}
           {venueName && (
             <Typography variant="body2" color="text.secondary">
@@ -258,10 +293,10 @@ export default function SocialEventsPage() {
 
       {eventsQuery.error ? (
         <Alert severity="error">No pudimos cargar los eventos. Intenta de nuevo.</Alert>
-      ) : eventsQuery.isLoading ? (
+      ) : eventsQuery.isLoading || venuesQuery.isLoading ? (
         <Stack direction="row" spacing={1.5} alignItems="center">
           <CircularProgress size={18} />
-          <Typography>Cargando eventos...</Typography>
+          <Typography>Cargando eventos y venues...</Typography>
         </Stack>
       ) : events.length === 0 ? (
         <Alert severity="info">No hay eventos disponibles para este filtro.</Alert>
@@ -280,6 +315,7 @@ export default function SocialEventsPage() {
               ev.eventCapacity ?? null,
               ev.eventDescription ?? null,
               invitationForMe?.invitationStatus ?? null,
+              invitationForMe?.invitationId ?? null,
             );
           })}
         </Grid>

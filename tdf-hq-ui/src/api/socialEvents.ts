@@ -74,6 +74,11 @@ export const SocialEventsAPI = {
       invitationMessage: payload.invitationMessage ?? null,
       invitationStatus: 'Pending',
     }),
+  respondInvitation: (eventId: string, invitationId: string, status: string, message?: string | null) =>
+    post<SocialInvitationDTO>(`/social-events/events/${encodeURIComponent(eventId)}/invitations/${encodeURIComponent(invitationId)}`, {
+      invitationStatus: status,
+      invitationMessage: message ?? null,
+    }),
   rsvp: (eventId: string, partyId: string, status: SocialRsvpDTO['rsvpStatus']) =>
     post<SocialRsvpDTO>(`/social-events/events/${encodeURIComponent(eventId)}/rsvps`, {
       rsvpEventId: eventId,
