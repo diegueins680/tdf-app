@@ -147,6 +147,7 @@ export default function PublicProfilePage() {
                 <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }}>
                   <Chip label={isFriend ? 'Amigos mutuos' : youFollow ? 'Sigues a esta persona' : 'No sigues aún'} size="small" color={isFriend ? 'success' : youFollow ? 'info' : 'default'} />
                   {followsYou && <Chip label="Te sigue" size="small" color="secondary" />}
+                  {!followsYou && !youFollow && <Chip label="Sin conexión" size="small" />}
                 </Stack>
               )}
             </Box>
@@ -189,6 +190,11 @@ export default function PublicProfilePage() {
             {!presence && (
               <Typography variant="body2" color="text.secondary">
                 Esta persona no está escuchando la radio en este momento.
+              </Typography>
+            )}
+            {session?.partyId && (
+              <Typography variant="body2" color="text.secondary">
+                Estado: {isFriend ? 'Conexión mutua' : youFollow ? 'Lo sigues' : followsYou ? 'Te sigue' : 'Sin conexión'}.
               </Typography>
             )}
           </Stack>

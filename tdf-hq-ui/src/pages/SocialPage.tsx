@@ -115,6 +115,12 @@ export default function SocialPage() {
     return null;
   }, [payloadInput]);
 
+  useEffect(() => {
+    if (!feedback) return;
+    const id = window.setTimeout(() => setFeedback(null), 3500);
+    return () => window.clearTimeout(id);
+  }, [feedback]);
+
   const profileUrl = useMemo(() => {
     if (typeof window === 'undefined' || !session?.partyId) return null;
     return `${window.location.origin}/perfil/${session.partyId}`;

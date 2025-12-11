@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import {
   Alert,
   Box,
@@ -21,7 +21,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DateTime } from 'luxon';
-import { SocialEventsAPI } from '../api/socialEvents';
+import { SocialEventsAPI, type SocialInvitationDTO } from '../api/socialEvents';
 import { useSession } from '../session/SessionContext';
 
 type InvitationState = { partyId: string; message: string };
@@ -86,7 +86,18 @@ export default function SocialEventsPage() {
     onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
 
-  const renderEventCard = (eventId: string, title: string, start: string, end: string, venueName: string | null, artists: string[], priceCents?: number | null, capacity?: number | null, description?: string | null) => {
+  const renderEventCard = (
+    eventId: string,
+    title: string,
+    start: string,
+    end: string,
+    venueName: string | null,
+    artists: string[],
+    priceCents?: number | null,
+    capacity?: number | null,
+    description?: string | null,
+    invitationStatus?: string | null,
+  ) => {
     const inviteDraft = invites[eventId] ?? { partyId: '', message: '' };
     return (
       <Card key={eventId} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 3 }}>
@@ -101,6 +112,9 @@ export default function SocialEventsPage() {
             {capacity ? <Chip label={`Cupo: ${capacity}`} size="small" /> : null}
           </Stack>
           <Typography variant="h6" fontWeight={800}>{title}</Typography>
+          {invitationStatus && (
+            <Chip label={`Invitación: ${invitationStatus}`} size="small" color="secondary" sx={{ width: 'fit-content' }} />
+          )}
           {venueName && (
             <Typography variant="body2" color="text.secondary">
               {venueName}
@@ -185,6 +199,20 @@ export default function SocialEventsPage() {
   };
 
   const events = eventsQuery.data ?? [];
+  const invitationQueries = useQueries({
+    queries:
+      hasSession && events.length > 0
+        ? events.map((ev) => ({
+            queryKey: ['social-invitations', ev.eventId ?? ev.eventTitle],
+            queryFn: () => SocialEventsAPI.listInvitations(ev.eventId ?? ev.eventTitle),
+            enabled: Boolean(ev.eventId ?? ev.eventTitle),
+            select: (list: SocialInvitationDTO[]) =>
+              list?.filter(
+                (inv) => String(inv.invitationToPartyId) === String(session?.partyId ?? ''),
+              ) ?? [],
+          }))
+        : [],
+  });
 
   return (
     <Box>
@@ -239,8 +267,9 @@ export default function SocialEventsPage() {
         <Alert severity="info">No hay eventos disponibles para este filtro.</Alert>
       ) : (
         <Grid container spacing={2}>
-          {events.map((ev) =>
-            renderEventCard(
+          {events.map((ev, index) => {
+            const invitationForMe = invitationQueries[index]?.data?.[0] ?? null;
+            return renderEventCard(
               ev.eventId ?? ev.eventTitle,
               ev.eventTitle,
               ev.eventStart,
@@ -250,8 +279,9 @@ export default function SocialEventsPage() {
               ev.eventPriceCents,
               ev.eventCapacity ?? null,
               ev.eventDescription ?? null,
-            ),
-          )}
+              invitationForMe?.invitationStatus ?? null,
+            );
+          })}
         </Grid>
       )}
     </Box>
