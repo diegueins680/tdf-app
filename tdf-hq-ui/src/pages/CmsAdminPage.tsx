@@ -79,7 +79,10 @@ const livePathForSlug = (slug: string) => {
   }
 };
 
-type DiffLine = { type: 'same' | 'added' | 'removed'; text: string };
+interface DiffLine {
+  type: 'same' | 'added' | 'removed';
+  text: string;
+}
 const buildLineDiff = (left: string, right: string): DiffLine[] => {
   const leftLines = left.split('\n');
   const rightLines = right.split('\n');
@@ -559,7 +562,9 @@ export default function CmsAdminPage() {
                       <ApiErrorNotice
                         error={liveQuery.error}
                         title="No pudimos cargar el contenido publicado"
-                        onRetry={() => liveQuery.refetch()}
+                        onRetry={() => {
+                          void liveQuery.refetch();
+                        }}
                         showCorsHint
                         helper={
                           <Typography variant="caption">
@@ -620,7 +625,7 @@ export default function CmsAdminPage() {
                   </Alert>
                 )}
                 <Alert severity="info" sx={{ mb: 1 }}>
-                  Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para cada slug (no valida contra un esquema aún).
+                  Usa el botón &quot;Cargar ejemplo&quot; para ver la estructura sugerida del payload para cada slug (no valida contra un esquema aún).
                 </Alert>
                 <TextField
                   label="Título"
@@ -669,7 +674,9 @@ export default function CmsAdminPage() {
                   </Button>
                   <Button
                     variant="outlined"
-                    onClick={handleFetchLiveNow}
+                    onClick={() => {
+                      void handleFetchLiveNow();
+                    }}
                     disabled={loadingLiveOnDemand}
                   >
                     {loadingLiveOnDemand ? 'Cargando en vivo...' : 'Cargar última publicada'}
@@ -793,14 +800,16 @@ export default function CmsAdminPage() {
             </Stack>
           </Stack>
           {listQuery.isLoading && <LinearProgress />}
-          {listQuery.error && (
-            <ApiErrorNotice
-              error={listQuery.error}
-              title="No pudimos cargar la lista de versiones"
-              onRetry={() => listQuery.refetch()}
-              showCorsHint
-            />
-          )}
+                  {listQuery.error && (
+                    <ApiErrorNotice
+                      error={listQuery.error}
+                      title="No pudimos cargar la lista de versiones"
+                      onRetry={() => {
+                        void listQuery.refetch();
+                      }}
+                      showCorsHint
+                    />
+                  )}
           {listDataInvalid && (
             <Alert severity="warning">
               Respuesta inesperada del servidor. Revisa las credenciales o intenta de nuevo.

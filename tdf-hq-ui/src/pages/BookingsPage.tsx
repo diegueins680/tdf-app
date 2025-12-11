@@ -1148,7 +1148,7 @@ const openDialogForRange = (start: Date, end: Date) => {
               }}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip {...getTagProps({ index })} label={option.rName} />
+                  <Chip {...getTagProps({ index })} key={option.roomId} label={option.rName} />
                 ))
               }
               renderInput={(params) => (

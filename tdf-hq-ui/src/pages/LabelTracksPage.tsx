@@ -24,6 +24,8 @@ import KeyboardIcon from '@mui/icons-material/Keyboard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Label } from '../api/label';
 import type { LabelTrackDTO } from '../api/types';
+import { SessionGate } from '../components/SessionGate';
+import { useSession } from '../session/SessionContext';
 
 export default function LabelTracksPage() {
   const qc = useQueryClient();
@@ -40,17 +42,32 @@ export default function LabelTracksPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
 
+  const { session } = useSession();
+  const roles = useMemo(() => (session?.roles ?? []).map((r) => r.toLowerCase()), [session?.roles]);
+  const isAdmin = roles.some((r) => r.includes('admin'));
+  const isArtist = roles.some((r) => r.includes('artist'));
+  const ownerIdForApi = isAdmin ? undefined : session?.partyId && session.partyId > 0 ? session.partyId : undefined;
+  const ownerKey = isAdmin ? 'tdf' : ownerIdForApi ?? 'missing-owner';
+  const canUseTracks = isAdmin || isArtist;
+  const hasOwnerScope = isAdmin || Boolean(ownerIdForApi);
+  const scopeLabel = isAdmin ? 'TDF Records' : 'Mi artista';
+
   const tracksQuery = useQuery({
-    queryKey: ['label-tracks'],
-    queryFn: Label.listTracks,
+    queryKey: ['label-tracks', ownerKey],
+    queryFn: () => Label.listTracks(ownerIdForApi ?? undefined),
+    enabled: canUseTracks && hasOwnerScope,
   });
 
   const createMutation = useMutation({
-    mutationFn: () => Label.createTrack({ ltcTitle: input.trim(), ltcNote: note.trim() || undefined }),
+    mutationFn: () =>
+      Label.createTrack(
+        { ltcTitle: input.trim(), ltcNote: note.trim() || undefined },
+        ownerIdForApi ?? undefined,
+      ),
     onSuccess: () => {
       setInput('');
       setNote('');
-      void qc.invalidateQueries({ queryKey: ['label-tracks'] });
+      void qc.invalidateQueries({ queryKey: ['label-tracks', ownerKey] });
     },
   });
 
@@ -62,7 +79,7 @@ export default function LabelTracksPage() {
         ...(typeof noteVal !== 'undefined' ? { ltuNote: noteVal } : {}),
       }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['label-tracks'] });
+      void qc.invalidateQueries({ queryKey: ['label-tracks', ownerKey] });
       setToast('Guardado');
     },
   });
@@ -70,7 +87,7 @@ export default function LabelTracksPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => Label.deleteTrack(id),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['label-tracks'] });
+      void qc.invalidateQueries({ queryKey: ['label-tracks', ownerKey] });
       setToast('Eliminado');
     },
   });
@@ -96,7 +113,8 @@ export default function LabelTracksPage() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const tracks = useMemo(() => tracksQuery.data ?? [], [tracksQuery.data]);
+  const tracks = useMemo(() => (hasOwnerScope ? tracksQuery.data ?? [] : []), [hasOwnerScope, tracksQuery.data]);
+  const missingOwner = !isAdmin && !ownerIdForApi;
   const filteredTracks = useMemo(() => {
     const byStatus = statusFilter === 'all' ? tracks : tracks.filter((t) => t.ltStatus === statusFilter);
     const q = query.trim().toLowerCase();
@@ -126,6 +144,10 @@ export default function LabelTracksPage() {
 
   const handleAdd = () => {
     if (!input.trim()) return;
+    if (!hasOwnerScope) {
+      setToast('Asocia tu perfil de artista para crear operaciones.');
+      return;
+    }
     createMutation.mutate();
     setToast('Agregado');
   };
@@ -151,51 +173,72 @@ export default function LabelTracksPage() {
     setEditing(null);
   };
 
-  return (
-    <Stack spacing={3}>
-      <Stack spacing={0.5}>
-        <Typography variant="h4" fontWeight={700}>
-          Label / Tracks
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Captura notas y pendientes rápidos para esta sección.
-        </Typography>
-      </Stack>
+  if (!canUseTracks) {
+    return (
+      <SessionGate message="Inicia sesión para gestionar operaciones.">
+        <Alert severity="warning">Necesitas rol de artista o admin para gestionar operaciones.</Alert>
+      </SessionGate>
+    );
+  }
 
-      <Card>
-        <CardContent>
-          <Stack spacing={2}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-              <TextField
-                id="track-title-input"
-                label="Título"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                fullWidth
-                size="small"
-              />
-              <TextField
-                label="Nota (opcional)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                fullWidth
-                size="small"
-              />
-              <Button
-                variant="contained"
-                onClick={handleAdd}
-                sx={{ minWidth: 140 }}
-                disabled={createMutation.isPending}
-              >
-                {createMutation.isPending ? 'Guardando…' : 'Agregar'}
-              </Button>
-            </Stack>
-            {createMutation.isError && (
-              <Alert severity="error">No pudimos guardar la nota. Intenta de nuevo.</Alert>
+  return (
+    <SessionGate message="Inicia sesión para gestionar tus operaciones.">
+      <Stack spacing={3}>
+        <Stack spacing={0.5}>
+          <Typography variant="h4" fontWeight={700}>
+            {isAdmin ? 'Label / Tracks' : 'Operaciones de artista'}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Captura notas y pendientes rápidos con las mismas herramientas que usa el admin para {scopeLabel}.
+          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Chip label={`Scope: ${scopeLabel}`} color="primary" size="small" />
+            {!isAdmin && session?.displayName && (
+              <Chip label={session.displayName} variant="outlined" size="small" />
             )}
           </Stack>
-        </CardContent>
-      </Card>
+        </Stack>
+
+        {missingOwner && (
+          <Alert severity="warning">
+            No encontramos un artista asociado a tu cuenta. Crea o reclama tu perfil para usar estas operaciones.
+          </Alert>
+        )}
+
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                <TextField
+                  id="track-title-input"
+                  label="Título"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+                <TextField
+                  label="Nota (opcional)"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleAdd}
+                  sx={{ minWidth: 140 }}
+                  disabled={createMutation.isPending || !input.trim() || !hasOwnerScope}
+                >
+                  {createMutation.isPending ? 'Guardando…' : 'Agregar'}
+                </Button>
+              </Stack>
+              {createMutation.isError && (
+                <Alert severity="error">No pudimos guardar la nota. Intenta de nuevo.</Alert>
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
 
       {tracksQuery.isLoading && (
         <Box display="flex" justifyContent="center" py={3}>
@@ -385,16 +428,17 @@ export default function LabelTracksPage() {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={Boolean(toast)}
-        autoHideDuration={2500}
-        onClose={() => setToast(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="success" onClose={() => setToast(null)} sx={{ width: '100%' }}>
-          {toast}
-        </Alert>
-      </Snackbar>
-    </Stack>
+        <Snackbar
+          open={Boolean(toast)}
+          autoHideDuration={2500}
+          onClose={() => setToast(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert severity="success" onClose={() => setToast(null)} sx={{ width: '100%' }}>
+            {toast}
+          </Alert>
+        </Snackbar>
+      </Stack>
+    </SessionGate>
   );
 }

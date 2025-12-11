@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { Alert, Box, Button, Chip, Container, Paper, Stack, TextField, Typography } from '@mui/material';
 import PublicBrandBar from '../components/PublicBrandBar';
@@ -12,7 +12,6 @@ export default function LiveSessionPublicPage() {
   const [accessCode, setAccessCode] = useState(() => tokenFromQuery);
   const [codeStatus, setCodeStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
-  const hasAccessCode = Boolean(accessCode.trim());
   const canUseForm = codeStatus === 'valid';
 
   useEffect(() => {
@@ -26,7 +25,7 @@ export default function LiveSessionPublicPage() {
     if (tokenFromQuery && codeStatus === 'idle') {
       void validateAccessCode();
     }
-  }, [codeStatus, tokenFromQuery]);
+  }, [codeStatus, tokenFromQuery, validateAccessCode]);
 
   useEffect(() => {
     const code = accessCode.trim();
@@ -46,7 +45,7 @@ export default function LiveSessionPublicPage() {
     }
   }, [accessCode, codeStatus, session, login, setApiToken]);
 
-  const validateAccessCode = async () => {
+  const validateAccessCode = useCallback(async () => {
     const code = accessCode.trim();
     if (!code) {
       setValidationMessage('Ingresa un código válido.');
@@ -56,7 +55,7 @@ export default function LiveSessionPublicPage() {
     setCodeStatus('validating');
     setValidationMessage(null);
     try {
-      const base = (import.meta.env.VITE_API_BASE as string | undefined) ?? '';
+      const base = import.meta.env.VITE_API_BASE ?? '';
       if (base) {
         const res = await fetch(`${base}/live-sessions/intake/ping`, {
           headers: { Authorization: `Bearer ${code}` },
@@ -70,7 +69,7 @@ export default function LiveSessionPublicPage() {
       setCodeStatus('invalid');
       setValidationMessage('Código inválido o expirado. Solicita uno nuevo.');
     }
-  };
+  }, [accessCode]);
 
   return (
     <Box
@@ -140,7 +139,9 @@ export default function LiveSessionPublicPage() {
                   <Button
                     variant="contained"
                     color="secondary"
-                    onClick={validateAccessCode}
+                    onClick={() => {
+                      void validateAccessCode();
+                    }}
                     disabled={codeStatus === 'validating'}
                   >
                     {codeStatus === 'validating'

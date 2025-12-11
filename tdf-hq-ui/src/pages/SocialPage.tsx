@@ -69,9 +69,9 @@ export default function SocialPage() {
 
   useEffect(() => {
     if (!myParty) return;
-    setShareName((prev) => prev || myParty.displayName || myParty.legalName || '');
-    setShareEmail((prev) => prev || myParty.primaryEmail || '');
-    setSharePhone((prev) => prev || myParty.primaryPhone || myParty.whatsapp || '');
+    setShareName((prev) => prev ?? myParty.displayName ?? myParty.legalName ?? '');
+    setShareEmail((prev) => prev ?? myParty.primaryEmail ?? '');
+    setSharePhone((prev) => prev ?? myParty.primaryPhone ?? myParty.whatsapp ?? '');
   }, [myParty]);
 
   const sharePayload = useMemo(
@@ -331,7 +331,9 @@ export default function SocialPage() {
                     <Button
                       variant="outlined"
                       startIcon={<ContentCopyIcon />}
-                      onClick={() => handleCopy(sharePayload)}
+                      onClick={() => {
+                        void handleCopy(sharePayload);
+                      }}
                     >
                       Copiar payload
                     </Button>
@@ -339,7 +341,9 @@ export default function SocialPage() {
                       <Button
                         variant="text"
                         startIcon={<LinkIcon />}
-                        onClick={() => handleCopy(profileUrl)}
+                        onClick={() => {
+                          void handleCopy(profileUrl);
+                        }}
                       >
                         Copiar link de perfil
                       </Button>
@@ -412,18 +416,20 @@ export default function SocialPage() {
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Stack spacing={1.5}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Typography variant="h6" fontWeight={800}>Sugerencias de amigos</Typography>
-              <Button
-                size="small"
-                variant="text"
-                startIcon={<RefreshIcon />}
-                onClick={() => suggestionsQuery.refetch()}
-                disabled={suggestionsQuery.isFetching}
-              >
-                Actualizar
-              </Button>
-            </Stack>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography variant="h6" fontWeight={800}>Sugerencias de amigos</Typography>
+                <Button
+                  size="small"
+                  variant="text"
+                  startIcon={<RefreshIcon />}
+                  onClick={() => {
+                    void suggestionsQuery.refetch();
+                  }}
+                  disabled={suggestionsQuery.isFetching}
+                >
+                  Actualizar
+                </Button>
+              </Stack>
             {suggestionsQuery.error ? (
               <Alert severity="error">No pudimos cargar sugerencias. Intenta de nuevo.</Alert>
             ) : suggestionsQuery.isLoading ? (

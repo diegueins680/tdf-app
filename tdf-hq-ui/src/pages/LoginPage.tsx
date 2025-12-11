@@ -27,6 +27,7 @@ import {
   Tabs,
   TextField,
   Typography,
+  useMediaQuery,
   type ChipProps,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -152,6 +153,7 @@ export default function LoginPage() {
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const googleInitRef = useRef(false);
+  const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
   const [googleStatus, setGoogleStatus] = useState<string | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
 
@@ -159,6 +161,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, toggleMode } = useThemeMode();
+  const isMobile = useMediaQuery('(max-width:600px)');
   const loginMutation = useMutation({
     mutationFn: (payload: { username: string; password: string }) => loginRequest(payload),
   });
@@ -174,7 +177,7 @@ export default function LoginPage() {
   const redirectPath = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const raw = params.get('redirect');
-    if (raw && raw.startsWith('/')) return raw;
+    if (raw?.startsWith('/')) return raw;
     return null;
   }, [location.search]);
 
@@ -344,6 +347,28 @@ export default function LoginPage() {
   );
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const clampWidth = (value: number) => Math.max(220, Math.min(Math.round(value), 420));
+    const measureWidth = () => {
+      const widths = [googleButtonRef.current, googleSignupButtonRef.current]
+        .map((node) => node?.getBoundingClientRect().width ?? 0)
+        .filter((value) => value > 0);
+      const widest = widths.length > 0 ? Math.max(...widths) : 0;
+      if (widest > 0) {
+        setGoogleButtonWidth((prev) => {
+          const next = clampWidth(widest);
+          return Math.abs(prev - next) > 1 ? next : prev;
+        });
+      }
+    };
+    measureWidth();
+    window.addEventListener('resize', measureWidth);
+    return () => {
+      window.removeEventListener('resize', measureWidth);
+    };
+  }, [signupDialogOpen]);
+
+  useEffect(() => {
     if (!googleClientId) return;
     let cancelled = false;
     void (async () => {
@@ -361,24 +386,22 @@ export default function LoginPage() {
           });
           googleInitRef.current = true;
         }
-        if (googleButtonRef.current) {
-          googleButtonRef.current.innerHTML = '';
-          google.renderButton(googleButtonRef.current, {
+        const renderGoogleButton = (target: HTMLElement, text: 'continue_with' | 'signup_with') => {
+          target.innerHTML = '';
+          google.renderButton(target, {
             theme: 'outline',
-            size: 'large',
-            width: 320,
-            text: 'continue_with',
+            size: isMobile ? 'medium' : 'large',
+            width: googleButtonWidth,
+            text,
+            shape: 'pill',
           });
+        };
+        if (googleButtonRef.current) {
+          renderGoogleButton(googleButtonRef.current, 'continue_with');
           google.prompt();
         }
         if (signupDialogOpen && googleSignupButtonRef.current) {
-          googleSignupButtonRef.current.innerHTML = '';
-          google.renderButton(googleSignupButtonRef.current, {
-            theme: 'outline',
-            size: 'large',
-            width: 320,
-            text: 'signup_with',
-          });
+          renderGoogleButton(googleSignupButtonRef.current, 'signup_with');
         }
       } catch (error) {
         console.warn('Google Sign-In initialization failed', error);
@@ -387,7 +410,7 @@ export default function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [googleClientId, handleGoogleCredential, signupDialogOpen]);
+  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -396,8 +419,8 @@ export default function LoginPage() {
     if (shouldOpenSignup) {
       setSignupDialogOpen(true);
     }
-    const wantsToken = params.get('token') || params.get('apiToken') || params.get('tab');
-    if (wantsToken && wantsToken.toLowerCase().includes('token')) {
+    const wantsToken = params.get('token') ?? params.get('apiToken') ?? params.get('tab');
+    if (wantsToken?.toLowerCase().includes('token')) {
       setShowApiToken(true);
       setTab('token');
     }
@@ -532,13 +555,19 @@ export default function LoginPage() {
       component="main"
       sx={{
         minHeight: '100vh',
-        bgcolor: 'linear-gradient(135deg, #0b1224 0%, #0f172a 35%, #0d1a2b 100%)',
+        background: 'linear-gradient(135deg, #0b1224 0%, #0f172a 35%, #0b1224 100%)',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        p: { xs: 2, sm: 4 },
+        justifyContent: { xs: 'flex-start', sm: 'center' },
+        px: { xs: 2.5, sm: 4 },
+        pt: { xs: 4, sm: 6 },
+        pb: { xs: `calc(env(safe-area-inset-bottom, 18px) + 20px)`, sm: 6 },
+        isolation: 'isolate',
+        '@supports (min-height: 100dvh)': {
+          minHeight: { xs: '100dvh', sm: '100vh' },
+        },
       }}
     >
       <Box
@@ -560,18 +589,47 @@ export default function LoginPage() {
           }}
           sx={{
             width: '100%',
-            maxWidth: 420,
-            p: { xs: 3, sm: 4 },
-            borderRadius: 4,
+            maxWidth: 440,
+            p: { xs: 2.5, sm: 4 },
+            borderRadius: { xs: 3, sm: 4 },
             boxShadow: '0 24px 80px rgba(15,23,42,0.28)',
             background: 'linear-gradient(145deg, rgba(17,24,39,0.92), rgba(26,31,44,0.9))',
             border: '1px solid rgba(255,255,255,0.06)',
+            backdropFilter: 'blur(8px)',
           }}
         >
-          <Stack spacing={3}>
-            <Stack spacing={1} alignItems="center">
-              <BrandLogo variant="wordmark" size={82} aria-label="TDF Records" sx={{ filter: 'drop-shadow(0 10px 32px rgba(0,0,0,0.35))' }} />
-              <Typography variant="caption" sx={{ letterSpacing: 3, color: 'rgba(226,232,240,0.72)' }}>
+          <Stack spacing={isMobile ? 2.5 : 3}>
+            <Stack
+              spacing={0.75}
+              alignItems="center"
+              sx={{
+                position: 'relative',
+                pb: 0.5,
+                isolation: 'isolate',
+              }}
+            >
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: -18,
+                  background:
+                    'radial-gradient(60% 60% at 50% 28%, rgba(99,102,241,0.18), rgba(56,189,248,0.12) 45%, transparent 70%)',
+                  filter: 'blur(10px)',
+                  opacity: 0.9,
+                  zIndex: 0,
+                }}
+              />
+              <BrandLogo
+                variant="wordmark"
+                size={88}
+                aria-label="TDF Records"
+                sx={{
+                  filter: 'brightness(0) invert(1) drop-shadow(0 14px 34px rgba(0,0,0,0.45))',
+                  opacity: 0.96,
+                  zIndex: 1,
+                }}
+              />
+              <Typography variant="caption" sx={{ letterSpacing: 3, color: 'rgba(255,255,255,0.78)', zIndex: 1 }}>
                 RECORDS · STUDIO · HQ
               </Typography>
             </Stack>
@@ -613,6 +671,7 @@ export default function LoginPage() {
                       onChange={(event) => setIdentifier(event.target.value)}
                       fullWidth
                       autoComplete="username"
+                      inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                       helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
                     />
 
@@ -623,6 +682,7 @@ export default function LoginPage() {
                       onChange={(event) => setPassword(event.target.value)}
                       fullWidth
                       autoComplete="current-password"
+                      inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                     />
                   </Stack>
                 ) : (
@@ -633,6 +693,7 @@ export default function LoginPage() {
                       onChange={(event) => setTokenValue(event.target.value)}
                       fullWidth
                       placeholder="tdf_xxxx-xxxx"
+                      inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                     />
                     <Typography variant="caption" color="text.secondary">
                       Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
@@ -650,6 +711,7 @@ export default function LoginPage() {
                     onChange={(event) => setIdentifier(event.target.value)}
                     fullWidth
                     autoComplete="username"
+                    inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                     helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
                   />
 
@@ -660,6 +722,7 @@ export default function LoginPage() {
                     onChange={(event) => setPassword(event.target.value)}
                     fullWidth
                     autoComplete="current-password"
+                    inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                   />
                 </Stack>
                 <Stack spacing={0.5}>
@@ -685,7 +748,7 @@ export default function LoginPage() {
                 </Typography>
                 <Box
                   ref={googleButtonRef}
-                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44 }}
+                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
                 />
                 {googleStatus && (
                   <Typography variant="caption" color="text.secondary">
@@ -765,8 +828,8 @@ export default function LoginPage() {
           </Stack>
         </Paper>
       </Container>
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-        <Box id="login-radio-mini-slot" sx={{ width: '100%', maxWidth: 420 }} />
+      <Box sx={{ mt: { xs: 2.5, sm: 3 }, display: 'flex', justifyContent: 'center', width: '100%' }}>
+        <Box id="login-radio-mini-slot" sx={{ width: '100%', maxWidth: 440 }} />
       </Box>
       <Dialog open={resetDialogOpen} onClose={closeResetDialog} fullWidth maxWidth="xs">
         <DialogTitle>Recuperar acceso</DialogTitle>
@@ -808,7 +871,7 @@ export default function LoginPage() {
                 </Typography>
                 <Box
                   ref={googleSignupButtonRef}
-                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44 }}
+                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
                 />
                 {googleStatus && (
                   <Typography variant="caption" color="text.secondary">
@@ -979,12 +1042,13 @@ export default function LoginPage() {
       <Box
         sx={{
           position: 'fixed',
-          right: 24,
-          bottom: 24,
+          right: { xs: 12, sm: 24 },
+          bottom: { xs: `calc(env(safe-area-inset-bottom, 12px) + 12px)`, sm: 24 },
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-end',
-          gap: 1,
+          gap: 0.75,
+          zIndex: (theme) => theme.zIndex.snackbar,
         }}
       >
         <Fab

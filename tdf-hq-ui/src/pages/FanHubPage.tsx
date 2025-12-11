@@ -31,6 +31,10 @@ import YouTubeIcon from '@mui/icons-material/YouTube';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import RadioIcon from '@mui/icons-material/Radio';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
@@ -526,9 +530,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const handleAvatarFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const maxBytes = 3 * 1024 * 1024; // 3 MB
+    const maxBytes = 10 * 1024 * 1024; // 10 MB
     if (file.size > maxBytes) {
-      alert('El archivo supera 3 MB. Usa una imagen más liviana.'); // small UX guard; avoid bigger error plumbing here
+      alert('El archivo supera 10 MB. Usa una imagen más liviana.'); // small UX guard; avoid bigger error plumbing here
       return;
     }
     const reader = new FileReader();
@@ -676,6 +680,132 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             Tuvimos un problema cargando tu información. Revisa tu conexión o intenta de nuevo.
           </Alert>
         )}
+
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={3}>
+            <Card
+              variant="outlined"
+              sx={{
+                p: 2.5,
+                height: '100%',
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(14,165,233,0.08))',
+              }}
+            >
+              <Stack spacing={1}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <EventAvailableIcon color="primary" />
+                  <Typography variant="subtitle1" fontWeight={700}>Experiencias y reservas</Typography>
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  Agenda sesiones privadas, listening parties o streams con tus artistas favoritos.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button component={RouterLink} to="/reservar" variant="contained" size="small">
+                    Reservar ahora
+                  </Button>
+                  <Button component={RouterLink} to="/live-sessions/registro" variant="text" size="small">
+                    Streaming en vivo
+                  </Button>
+                </Stack>
+              </Stack>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Card
+              variant="outlined"
+              sx={{
+                p: 2.5,
+                height: '100%',
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(34,197,94,0.08))',
+              }}
+            >
+              <Stack spacing={1}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <WorkspacePremiumIcon color="success" />
+                  <Typography variant="subtitle1" fontWeight={700}>Membresías y tiers</Typography>
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  Accede a beneficios, drops anticipados y contenido exclusivo por artista.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button component={RouterLink} to="/marketplace?category=packages" variant="contained" color="success" size="small">
+                    Ver membresías
+                  </Button>
+                  <Button
+                    component={RouterLink}
+                    to="/marketplace"
+                    variant="text"
+                    size="small"
+                  >
+                    Publicar (label)
+                  </Button>
+                </Stack>
+              </Stack>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Card
+              variant="outlined"
+              sx={{
+                p: 2.5,
+                height: '100%',
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.08))',
+              }}
+            >
+              <Stack spacing={1}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <StorefrontIcon color="info" />
+                  <Typography variant="subtitle1" fontWeight={700}>Marketplace</Typography>
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  Compra merch, bundles digitales y ediciones limitadas directo del artista/label.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button component={RouterLink} to="/marketplace" variant="contained" color="info" size="small">
+                    Abrir marketplace
+                  </Button>
+                  <Button component={RouterLink} to="/records" variant="text" size="small">
+                    Releases del label
+                  </Button>
+                </Stack>
+              </Stack>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Card
+              variant="outlined"
+              sx={{
+                p: 2.5,
+                height: '100%',
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(249,115,22,0.08))',
+              }}
+            >
+              <Stack spacing={1}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <RadioIcon color="secondary" />
+                  <Typography variant="subtitle1" fontWeight={700}>Streaming y radio</Typography>
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  Únete a rooms de streaming o escucha el radio curado mientras sigues artistas.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button component={RouterLink} to="/inicio#radio" variant="contained" color="secondary" size="small">
+                    Abrir radio
+                  </Button>
+                  {session?.partyId && (
+                    <Button component={RouterLink} to={`/perfil/${session.partyId}`} variant="text" size="small">
+                      Ver mi perfil
+                    </Button>
+                  )}
+                </Stack>
+              </Stack>
+            </Card>
+          </Grid>
+        </Grid>
 
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>

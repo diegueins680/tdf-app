@@ -270,7 +270,7 @@ export default function LabelReleasesPage() {
       <Stack spacing={1.5}>
         <Tabs
           value={filterWindow}
-          onChange={(_, val) => setFilterWindow(val)}
+          onChange={(_, val: typeof filterWindow) => setFilterWindow(val)}
           variant="scrollable"
           scrollButtons="auto"
         >
@@ -362,7 +362,13 @@ export default function LabelReleasesPage() {
                   <Alert
                     severity="error"
                     action={
-                      <Button size="small" color="inherit" onClick={() => artistsQuery.refetch()}>
+                      <Button
+                        size="small"
+                        color="inherit"
+                        onClick={() => {
+                          void artistsQuery.refetch();
+                        }}
+                      >
                         Reintentar
                       </Button>
                     }
@@ -393,7 +399,7 @@ export default function LabelReleasesPage() {
                 />
                 {!artistsQuery.isFetching && artists.length === 0 && (
                   <Alert severity="info">
-                    No encontramos artistas aún. Usa "Recargar" o verifica que existan perfiles en el módulo de artistas.
+                    No encontramos artistas aún. Usa &quot;Recargar&quot; o verifica que existan perfiles en el módulo de artistas.
                   </Alert>
                 )}
 

@@ -109,12 +109,12 @@ export default function ServiceTypesPage() {
     [items],
   );
   const unitOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          items
-            .map((item) => item.billingUnit)
-            .filter((unit): unit is string => Boolean(unit && unit.trim())),
+      () =>
+        Array.from(
+          new Set(
+            items
+              .map((item) => item.billingUnit)
+              .filter((unit): unit is string => Boolean(unit?.trim())),
         ),
       ),
     [items],
@@ -302,7 +302,11 @@ export default function ServiceTypesPage() {
       </Card>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={(evt) => {
+            void handleSubmit(evt);
+          }}
+        >
           <DialogTitle>{form.id ? 'Editar servicio' : 'Nuevo servicio'}</DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={2}>

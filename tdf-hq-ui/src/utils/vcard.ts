@@ -13,11 +13,16 @@ export function buildVCardSharePayload(input: {
   phone?: string | null;
   partyId?: number | null;
 }): string {
+  const normalize = (value?: string | null) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return undefined;
+    return trimmed;
+  };
   const payload: VCardPayload = {
     kind: 'vcard-exchange',
-    name: input.name?.trim() || undefined,
-    email: input.email?.trim() || undefined,
-    phone: input.phone?.trim() || undefined,
+    name: normalize(input.name),
+    email: normalize(input.email),
+    phone: normalize(input.phone),
     partyId: typeof input.partyId === 'number' && input.partyId > 0 ? input.partyId : undefined,
     ts: Date.now(),
   };
@@ -28,7 +33,7 @@ export function parseVCardPayload(raw: string): VCardPayload | null {
   if (!raw || raw.trim().length === 0) return null;
   try {
     const parsed = JSON.parse(raw) as Partial<VCardPayload>;
-    if (!parsed || parsed.kind !== 'vcard-exchange') return null;
+    if (parsed?.kind !== 'vcard-exchange') return null;
     const partyId = typeof parsed.partyId === 'number' && parsed.partyId > 0 ? parsed.partyId : null;
     return {
       kind: 'vcard-exchange',

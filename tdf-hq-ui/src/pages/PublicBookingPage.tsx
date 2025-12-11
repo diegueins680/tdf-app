@@ -45,6 +45,14 @@ interface FormState {
   resourceLabels: string[];
 }
 
+type BookingWithAliases = BookingDTO & {
+  pbStartsAt?: string;
+  cbStartsAt?: string;
+  ubStartsAt?: string;
+  pbDurationMinutes?: number;
+  pbEngineerName?: string;
+};
+
 const toLocalInputValue = (date: Date) => {
   const pad = (val: number) => val.toString().padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(
@@ -473,9 +481,9 @@ export default function PublicBookingPage() {
   }, [services]);
   const estimatePriceLabel = useMemo(() => {
     const svc = services.find((s) => s.name === form.serviceType);
-    if (!svc || svc.priceCents == null) return null;
+    if (svc?.priceCents == null) return null;
     const base = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-    if (svc.billingUnit && svc.billingUnit.toLowerCase().includes('hora')) {
+    if (svc.billingUnit?.toLowerCase().includes('hora')) {
       const hours = Math.max(0.5, (Number(form.durationMinutes) || 60) / 60);
       const total = (svc.priceCents / 100) * hours;
       return `${svc.currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} aprox (${hours.toFixed(1)}h)`;
@@ -522,10 +530,11 @@ export default function PublicBookingPage() {
 
   const buildSummary = useCallback(
     (booking?: BookingDTO | null) => {
+      const bookingWithAliases = booking as BookingWithAliases | undefined;
       const successStartIso =
-        (booking as any)?.pbStartsAt ??
-        (booking as any)?.cbStartsAt ??
-        (booking as any)?.ubStartsAt ??
+        bookingWithAliases?.pbStartsAt ??
+        bookingWithAliases?.cbStartsAt ??
+        bookingWithAliases?.ubStartsAt ??
         booking?.startsAt;
       const startLabel =
         successStartIso && typeof successStartIso === 'string'
@@ -537,8 +546,8 @@ export default function PublicBookingPage() {
               30,
               Math.round(DateTime.fromISO(booking.endsAt).diff(DateTime.fromISO(booking.startsAt), 'minutes').minutes),
             )
-          : null) ?? (booking as any)?.pbDurationMinutes ?? form.durationMinutes;
-      const engineerName = booking?.engineerName ?? (booking as any)?.pbEngineerName ?? form.engineerName;
+          : null) ?? bookingWithAliases?.pbDurationMinutes ?? form.durationMinutes;
+      const engineerName = booking?.engineerName ?? bookingWithAliases?.pbEngineerName ?? form.engineerName;
       const roomsFromBooking =
         booking?.resources?.map((r) => r.brRoomName).filter((name): name is string => Boolean(name)) ??
         (form.resourceLabels.length ? form.resourceLabels : suggestedRooms);
@@ -620,116 +629,9 @@ export default function PublicBookingPage() {
     return minutes;
   }, [bookingWindow]);
 
-  if (success) {
-    const successStartIso =
-      (success as any).pbStartsAt ?? (success as any).cbStartsAt ?? (success as any).ubStartsAt ?? success.startsAt;
-    const successStartLabel =
-      successStartIso && typeof successStartIso === 'string'
-        ? DateTime.fromISO(successStartIso).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
-        : formattedStart ?? form.startsAt;
-    const successDuration =
-      (success.startsAt && success.endsAt
-        ? Math.max(
-            30,
-            Math.round(
-              DateTime.fromISO(success.endsAt).diff(DateTime.fromISO(success.startsAt), 'minutes').minutes,
-            ),
-          )
-        : null) ?? (success as any).pbDurationMinutes ?? form.durationMinutes;
-    const successEngineer = success.engineerName ?? (success as any).pbEngineerName ?? form.engineerName;
-    const successRooms =
-      success.resources?.map((r) => r.brRoomName).filter((name): name is string => Boolean(name)) ??
-      (form.resourceLabels.length ? form.resourceLabels : []);
-
-    return (
-      <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
-        <Card
-          sx={{
-            maxWidth: 880,
-            width: '100%',
-            borderRadius: 3,
-            boxShadow: '0 18px 72px rgba(15,17,24,0.26)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.02), rgba(30,64,175,0.06))',
-          }}
-        >
-          <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-            <Stack spacing={2.5}>
-              <Stack spacing={0.6}>
-                <Typography variant="overline" color="text.secondary">
-                  Agenda pública
-                </Typography>
-                <Typography variant="h4" fontWeight={800}>
-                  Reserva enviada
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Revisa tu correo para la confirmación. Si necesitas ajustes de horario o salas, responde al correo y lo
-                  coordinamos contigo.
-                </Typography>
-              </Stack>
-
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Alert severity="success">
-                    Reserva creada. ID <strong>{success.bookingId}</strong> · Servicio:{' '}
-                    <strong>{success.serviceType ?? form.serviceType}</strong>
-                  </Alert>
-                </Grid>
-                <Grid item xs={12}>
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      bgcolor: 'rgba(255,255,255,0.02)',
-                      borderColor: 'rgba(255,255,255,0.08)',
-                    }}
-                  >
-                    <CardContent>
-                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                        Resumen
-                      </Typography>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                        <Chip label={`Fecha: ${successStartLabel}`} size="small" />
-                        <Chip label={`Duración: ${successDuration} min`} size="small" />
-                        <Chip label={`Servicio: ${success.serviceType ?? form.serviceType}`} size="small" />
-                        {successRooms.length > 0 && <Chip label={`Salas: ${successRooms.join(' + ')}`} size="small" />}
-                        {successEngineer && <Chip label={`Ingeniero: ${successEngineer}`} size="small" />}
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                    <Button variant="outlined" href="/login?redirect=/estudio/calendario" size="medium">
-                      Ver mi reserva
-                    </Button>
-                    <Button variant="contained" size="medium" onClick={resetForm}>
-                      Crear otra reserva
-                    </Button>
-                    <Button variant="text" size="medium" onClick={() => void copySummary(success)}>
-                      Copiar resumen
-                    </Button>
-                  </Stack>
-                </Grid>
-              </Grid>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
-    );
-  }
-
   const engineerValue =
-    (engineers.find((opt) => opt.peId === form.engineerId) as PublicEngineer | undefined) ??
+    engineers.find((opt) => opt.peId === form.engineerId) ??
     (form.engineerName ? { peId: -1, peName: form.engineerName } : null);
-  const engineerHelper = useMemo(() => {
-    if (engineersError) return engineersError;
-    if (requiresEngineer(form.serviceType)) {
-      return 'Requerido para grabación/mezcla/mastering. Selecciona o escribe el ingeniero asignado.';
-    }
-    return engineers.length === 0
-      ? 'Escribe el nombre del ingeniero asignado (catálogo no disponible).'
-      : 'Selecciona o escribe el ingeniero asignado.';
-  }, [engineers.length, engineersError, form.serviceType]);
 
   const clearSavedProfile = () => {
     setRememberProfile(false);
@@ -856,6 +758,111 @@ export default function PublicBookingPage() {
     return slots.slice(0, 12);
   }, [form.durationMinutes, form.startsAt, studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
 
+  if (success) {
+    const successWithAliases = success as BookingWithAliases | null;
+    const successStartIso =
+      successWithAliases?.pbStartsAt ?? successWithAliases?.cbStartsAt ?? successWithAliases?.ubStartsAt ?? success.startsAt;
+    const successStartLabel =
+      successStartIso && typeof successStartIso === 'string'
+        ? DateTime.fromISO(successStartIso).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
+        : formattedStart ?? form.startsAt;
+    const successDuration =
+      (success.startsAt && success.endsAt
+        ? Math.max(
+            30,
+            Math.round(
+              DateTime.fromISO(success.endsAt).diff(DateTime.fromISO(success.startsAt), 'minutes').minutes,
+            ),
+          )
+        : null) ?? successWithAliases?.pbDurationMinutes ?? form.durationMinutes;
+    const successEngineer = success.engineerName ?? successWithAliases?.pbEngineerName ?? form.engineerName;
+    const successRooms =
+      success.resources?.map((r) => r.brRoomName).filter((name): name is string => Boolean(name)) ??
+      (form.resourceLabels.length ? form.resourceLabels : []);
+
+    return (
+      <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+        <Card
+          sx={{
+            maxWidth: 880,
+            width: '100%',
+            borderRadius: 3,
+            boxShadow: '0 18px 72px rgba(15,17,24,0.26)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.02), rgba(30,64,175,0.06))',
+          }}
+        >
+          <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+            <Stack spacing={2.5}>
+              <Stack spacing={0.6}>
+                <Typography variant="overline" color="text.secondary">
+                  Agenda pública
+                </Typography>
+                <Typography variant="h4" fontWeight={800}>
+                  Reserva enviada
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Revisa tu correo para la confirmación. Si necesitas ajustes de horario o salas, responde al correo y lo
+                  coordinamos contigo.
+                </Typography>
+              </Stack>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Alert severity="success">
+                    Reserva creada. ID <strong>{success.bookingId}</strong> · Servicio:{' '}
+                    <strong>{success.serviceType ?? form.serviceType}</strong>
+                  </Alert>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      bgcolor: 'rgba(255,255,255,0.02)',
+                      borderColor: 'rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <CardContent>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Resumen
+                      </Typography>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                        <Chip label={`Fecha: ${successStartLabel}`} size="small" />
+                        <Chip label={`Duración: ${successDuration} min`} size="small" />
+                        <Chip label={`Servicio: ${success.serviceType ?? form.serviceType}`} size="small" />
+                        {successRooms.length > 0 && <Chip label={`Salas: ${successRooms.join(' + ')}`} size="small" />}
+                        {successEngineer && <Chip label={`Ingeniero: ${successEngineer}`} size="small" />}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                    <Button variant="outlined" href="/login?redirect=/estudio/calendario" size="medium">
+                      Ver mi reserva
+                    </Button>
+                    <Button variant="contained" size="medium" onClick={resetForm}>
+                      Crear otra reserva
+                    </Button>
+                    <Button
+                      variant="text"
+                      size="medium"
+                      onClick={() => {
+                        void copySummary(success);
+                      }}
+                    >
+                      Copiar resumen
+                    </Button>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
       <Card
@@ -971,7 +978,11 @@ export default function PublicBookingPage() {
               </Grid>
 
               <Grid item xs={12} md={8}>
-                <form onSubmit={handleSubmit}>
+                <form
+                  onSubmit={(event) => {
+                    void handleSubmit(event);
+                  }}
+                >
                   <Grid container spacing={2.5}>
                     <Grid item xs={12} sm={6}>
                       <TextField
@@ -1044,7 +1055,7 @@ export default function PublicBookingPage() {
                         }
                         disabled={formDisabled}
                         renderTags={(value, getTagProps) =>
-                          value.map((option, index) => <Chip {...getTagProps({ index })} label={option} />)
+                          value.map((option, index) => <Chip {...getTagProps({ index })} key={option} label={option} />)
                         }
                         renderInput={(params) => (
                           <TextField
@@ -1167,15 +1178,9 @@ export default function PublicBookingPage() {
                         inputProps={{
                           min: 30,
                           step: 15,
-                          max: maxDurationUntilClose && maxDurationUntilClose > 0 ? maxDurationUntilClose : undefined,
+                          max: maxDurationUntilClose != null && maxDurationUntilClose > 0 ? maxDurationUntilClose : undefined,
                         }}
-                        helperText={
-                          outOfHours
-                            ? outOfHours
-                            : durationLimitLabel
-                              ? durationLimitLabel
-                              : `Precios en ${studioCurrency}`
-                        }
+                        helperText={outOfHours ?? durationLimitLabel ?? `Precios en ${studioCurrency}`}
                       />
                       {estimatePriceLabel && (
                         <Typography variant="body2" color="text.secondary">

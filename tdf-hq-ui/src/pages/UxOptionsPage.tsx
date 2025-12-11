@@ -97,7 +97,9 @@ function OptionRow({
           variant="outlined"
           size="small"
           disabled={!dirty || sortInvalid || saving}
-          onClick={() => onSave(option.optionId, payload)}
+          onClick={() => {
+            void onSave(option.optionId, payload);
+          }}
           sx={{ mr: 1 }}
         >
           {saving ? 'Guardando…' : 'Guardar'}
@@ -209,7 +211,13 @@ export default function UxOptionsPage() {
               }
               label="Incluir inactivas"
             />
-            <Button variant="outlined" onClick={() => optionsQuery.refetch()} disabled={optionsQuery.isFetching}>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                void optionsQuery.refetch();
+              }}
+              disabled={optionsQuery.isFetching}
+            >
               Recargar
             </Button>
           </Stack>

@@ -521,17 +521,17 @@ export default function CalendarSyncPage() {
                   <Button
                     variant="contained"
                     color="secondary"
-                    startIcon={<SyncIcon />}
-                    onClick={handleSync}
-                    disabled={Boolean(
-                      !trimmedCalendarId ||
-                      !connectedCalendar ||
-                      syncMutation.isPending ||
-                      rangeError ||
-                      (fromInput && !fromIso) ||
-                      (toInput && !toIso)
-                    )}
-                  >
+                      startIcon={<SyncIcon />}
+                      onClick={handleSync}
+                      disabled={Boolean(
+                        !trimmedCalendarId ||
+                        !connectedCalendar ||
+                        syncMutation.isPending ||
+                        Boolean(rangeError) ||
+                        (fromInput && !fromIso) ||
+                        (toInput && !toIso)
+                      )}
+                    >
                     Sincronizar ahora
                   </Button>
                   <Button

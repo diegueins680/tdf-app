@@ -3,13 +3,13 @@ import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { API_BASE_URL } from '../api/client';
 
-type Props = {
+interface Props {
   error: unknown;
   title?: string;
   onRetry?: () => void;
   helper?: ReactNode;
   showCorsHint?: boolean;
-};
+}
 
 const describeError = (error: unknown) => {
   if (error instanceof Error) return error.message;
