@@ -264,8 +264,8 @@ seedProductionCourse now = do
       , Trials.courseLocationMapUrl = locationMap
       , Trials.courseWhatsappCtaUrl = whatsappCta
       , Trials.courseLandingUrl = landingUrl
-      , Trials.courseDaws = dawsList
-      , Trials.courseIncludes = includesList
+      , Trials.courseDaws = Just (fromMaybe [] dawsList)
+      , Trials.courseIncludes = Just (fromMaybe [] includesList)
       , Trials.courseCreatedAt = now
       , Trials.courseUpdatedAt = now
       }
