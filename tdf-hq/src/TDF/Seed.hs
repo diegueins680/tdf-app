@@ -227,14 +227,8 @@ seedProductionCourse now = do
       locationMap = Just "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6"
       whatsappCta = Just "https://wa.me/593995413168?text=Quiero%20inscribirme%20al%20curso"
       landingUrl = Just "https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
-      dawsList = Just ["Logic", "Luna"]
-      includesList = Just
-        [ "Acceso a grabaciones"
-        , "Certificado de participación"
-        , "Mentorías"
-        , "Grupo de WhatsApp"
-        , "Acceso a la plataforma de TDF Records"
-        ]
+      dawsList = Nothing :: Maybe [Text]
+      includesList = Nothing :: Maybe [Text]
       sessions =
         [ ("Sábado 1 · Introducción", fromGregorian 2025 12 13)
         , ("Sábado 2 · Grabación", fromGregorian 2025 12 20)
@@ -264,8 +258,8 @@ seedProductionCourse now = do
       , Trials.courseLocationMapUrl = locationMap
       , Trials.courseWhatsappCtaUrl = whatsappCta
       , Trials.courseLandingUrl = landingUrl
-      , Trials.courseDaws = Just (fromMaybe [] dawsList)
-      , Trials.courseIncludes = Just (fromMaybe [] includesList)
+      , Trials.courseDaws = dawsList
+      , Trials.courseIncludes = includesList
       , Trials.courseCreatedAt = now
       , Trials.courseUpdatedAt = now
       }
