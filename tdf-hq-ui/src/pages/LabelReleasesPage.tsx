@@ -95,12 +95,20 @@ export default function LabelReleasesPage() {
     queryFn: async () => {
       try {
         const adminArtists = await Admin.listArtistProfiles();
-        setUsedFanFallback(false);
-        return adminArtists;
+        if (adminArtists.length > 0) {
+          setUsedFanFallback(false);
+          return adminArtists;
+        }
+        console.warn('Lista de artistas de admin vacía, usando fallback público.');
       } catch (err) {
         console.warn('Admin artists fetch failed, falling back to fan list', err);
-        setUsedFanFallback(true);
-        return Fans.listArtists();
+      }
+      setUsedFanFallback(true);
+      try {
+        return await Fans.listArtists();
+      } catch (fanErr) {
+        console.warn('No se pudo cargar artistas de fans', fanErr);
+        throw fanErr;
       }
     },
   });
@@ -368,10 +376,26 @@ export default function LabelReleasesPage() {
                   getOptionLabel={(option: ArtistProfileDTO) => option.apDisplayName}
                   loading={artistsQuery.isFetching}
                   noOptionsText={artistsQuery.isFetching ? 'Cargando...' : 'Sin artistas disponibles'}
+                  filterOptions={(options, state) => {
+                    const term = state.inputValue.trim().toLowerCase();
+                    if (!term) return options;
+                    return options.filter((opt) => {
+                      const haystack = [opt.apDisplayName, opt.apCity ?? '', opt.apSlug ?? '']
+                        .join(' ')
+                        .toLowerCase();
+                      return haystack.includes(term);
+                    });
+                  }}
+                  isOptionEqualToValue={(option, value) => option.apArtistId === value.apArtistId}
                   value={artists.find((a) => a.apArtistId === form.artistId) ?? null}
                   onChange={(_, value) => setForm((prev) => ({ ...prev, artistId: value?.apArtistId ?? null }))}
                   renderInput={(params) => <TextField {...params} label="Artista" placeholder="Busca por nombre" />}
                 />
+                {!artistsQuery.isFetching && artists.length === 0 && (
+                  <Alert severity="info">
+                    No encontramos artistas aún. Usa "Recargar" o verifica que existan perfiles en el módulo de artistas.
+                  </Alert>
+                )}
 
                 <TextField
                   label="Título del release"

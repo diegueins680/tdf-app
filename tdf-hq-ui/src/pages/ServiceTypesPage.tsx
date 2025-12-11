@@ -85,6 +85,7 @@ export default function ServiceTypesPage() {
     active: true,
   });
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ price?: string; tax?: string }>({});
 
   const createMutation = useMutation({
     mutationFn: (payload: ServiceCatalogCreate) => Services.create(payload),
@@ -160,20 +161,28 @@ export default function ServiceTypesPage() {
 
   const handleSubmit = async (evt: React.FormEvent) => {
     evt.preventDefault();
+    setFieldErrors({});
+    setError(null);
     const cleanName = form.name.trim();
     if (!cleanName) {
       setError('Agrega un nombre.');
       return;
     }
-    const priceNumber = form.price === '' ? null : Number(form.price);
-    if (form.price !== '' && (Number.isNaN(priceNumber ?? NaN) || (priceNumber ?? 0) < 0)) {
-      setError('Agrega un precio válido.');
+    const priceRaw = form.price.trim();
+    const priceNumber = priceRaw === '' ? null : Number(priceRaw);
+    const priceInvalid = priceNumber !== null && (Number.isNaN(priceNumber) || priceNumber < 0);
+    if (priceInvalid) {
+      setError('Corrige los campos resaltados.');
+      setFieldErrors((prev) => ({ ...prev, price: 'Usa un valor numérico mayor o igual a 0 o deja vacío.' }));
       return;
     }
-    const rateCents = priceNumber == null ? null : Math.round(priceNumber * 100);
-    const taxNumber = form.taxBps === '' ? null : Number(form.taxBps);
-    if (form.taxBps !== '' && (Number.isNaN(taxNumber ?? NaN) || (taxNumber ?? 0) < 0)) {
-      setError('Impuesto inválido.');
+    const rateCents = priceNumber === null ? null : Math.round(priceNumber * 100);
+    const taxRaw = form.taxBps.trim();
+    const taxNumber = taxRaw === '' ? null : Number(taxRaw);
+    const taxInvalid = taxNumber !== null && (Number.isNaN(taxNumber) || taxNumber < 0);
+    if (taxInvalid) {
+      setError('Corrige los campos resaltados.');
+      setFieldErrors((prev) => ({ ...prev, tax: 'Ingresa puntos base numéricos o deja vacío si no aplica.' }));
       return;
     }
     const currency = form.currency.trim() || 'USD';
@@ -311,8 +320,15 @@ export default function ServiceTypesPage() {
                   label="Precio"
                   type="number"
                   value={form.price}
-                  onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
+                  inputProps={{ inputMode: 'decimal', min: 0 }}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setFieldErrors((prev) => ({ ...prev, price: undefined }));
+                    setForm((prev) => ({ ...prev, price: next }));
+                  }}
                   fullWidth
+                  error={Boolean(fieldErrors.price)}
+                  helperText={fieldErrors.price ?? 'Monto base. Deja vacío si es a cotizar.'}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -374,9 +390,15 @@ export default function ServiceTypesPage() {
                   label="Impuesto (bps)"
                   type="number"
                   value={form.taxBps}
-                  onChange={(e) => setForm((prev) => ({ ...prev, taxBps: e.target.value }))}
+                  inputProps={{ inputMode: 'decimal', min: 0 }}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setFieldErrors((prev) => ({ ...prev, tax: undefined }));
+                    setForm((prev) => ({ ...prev, taxBps: next }));
+                  }}
                   fullWidth
-                  helperText="Base points ej. 1200 = 12%"
+                  error={Boolean(fieldErrors.tax)}
+                  helperText={fieldErrors.tax ?? 'Base points ej. 1200 = 12% (deja vacío si no aplica)'}
                 />
               </Grid>
               <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center' }}>

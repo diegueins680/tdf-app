@@ -1264,6 +1264,14 @@ export default function RadioWidget() {
         setBrowserBroadcastError(`Se detuvo automáticamente tras ${autoStopMinutes} min.`);
         stopBrowserBroadcast();
       }
+      if (
+        autoStopMinutes > 0 &&
+        elapsed >= Math.max(0, autoStopMinutes * 60 * 1000 - 2 * 60 * 1000) &&
+        elapsed < autoStopMinutes * 60 * 1000
+      ) {
+        const minsLeft = Math.ceil((autoStopMinutes * 60 * 1000 - elapsed) / 60000);
+        setBrowserBroadcastError((prev) => prev ?? `Auto-stop en ${minsLeft} min.`);
+      }
     }, 1000);
     return () => window.clearInterval(interval);
   }, [autoStopMinutes, browserBroadcastState, liveStartedAt, stopBrowserBroadcast]);
@@ -1407,6 +1415,16 @@ export default function RadioWidget() {
     const s = String(totalSeconds % 60).padStart(2, '0');
     return `${h}:${m}:${s}`;
   }, [liveElapsedMs]);
+
+  const liveCountdownLabel = useMemo(() => {
+    if (autoStopMinutes <= 0 || browserBroadcastState !== 'live' || !liveStartedAt) return null;
+    const remainingMs = autoStopMinutes * 60 * 1000 - liveElapsedMs;
+    if (remainingMs <= 0) return '00:00';
+    const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+    const m = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+    const s = String(totalSeconds % 60).padStart(2, '0');
+    return `${m}:${s}`;
+  }, [autoStopMinutes, browserBroadcastState, liveElapsedMs, liveStartedAt]);
   const persistActiveStream = useCallback(
     async (url: string, name?: string, country?: string, genre?: string) => {
       try {
@@ -2095,6 +2113,14 @@ export default function RadioWidget() {
                                 size="small"
                                 color={browserBroadcastState === 'live' ? 'success' : 'default'}
                               />
+                              {liveCountdownLabel && (
+                                <Chip
+                                  label={`Auto-stop en ${liveCountdownLabel}`}
+                                  size="small"
+                                  color="warning"
+                                  variant="outlined"
+                                />
+                              )}
                               <TextField
                                 select
                                 label="Auto-stop"

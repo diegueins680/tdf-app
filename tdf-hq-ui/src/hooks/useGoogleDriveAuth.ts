@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   buildAuthUrl,
   clearToken,
+  driveConfigError,
   consumeDriveState,
   ensureAccessToken,
   exchangeCodeForToken,
@@ -17,6 +18,12 @@ export function useGoogleDriveAuth() {
 
   const startAuth = useCallback(async (returnTo?: string) => {
     setError(null);
+    const configWarning = driveConfigError();
+    if (configWarning) {
+      setStatus('idle');
+      setError(configWarning);
+      throw new Error(configWarning);
+    }
     setStatus('authenticating');
     try {
       const state = returnTo ?? window.location.pathname + window.location.search;

@@ -107,7 +107,8 @@ const defaultRoomsForService = (service: string, roomOptions: string[]) => {
     const candidates = picks('dj');
     if (candidates.length) return candidates;
   }
-  return [];
+  const fallback = roomOptions.slice(0, 2).filter(Boolean);
+  return fallback;
 };
 
 const sameRooms = (a: string[], b: string[]) => {
@@ -410,6 +411,18 @@ export default function PublicBookingPage() {
 
     setSubmitting(true);
     const uniqueRooms = Array.from(new Set(form.resourceLabels));
+    const autoRooms = defaultRoomsForService(form.serviceType, roomOptions);
+    const roomsToSend =
+      uniqueRooms.length > 0
+        ? uniqueRooms
+        : autoRooms.length > 0
+          ? autoRooms
+          : roomOptions.length > 0
+            ? roomOptions.slice(0, 1)
+            : [];
+    if (uniqueRooms.length === 0 && roomsToSend.length > 0) {
+      setForm((prev) => ({ ...prev, resourceLabels: roomsToSend }));
+    }
     const engineerPartyId = assignEngineerLater ? null : form.engineerId;
     const engineerName = assignEngineerLater ? null : form.engineerName.trim() || null;
     try {
@@ -424,7 +437,7 @@ export default function PublicBookingPage() {
         pbNotes: form.notes.trim() || null,
         pbEngineerPartyId: engineerPartyId,
         pbEngineerName: engineerName,
-        pbResourceIds: uniqueRooms.length ? uniqueRooms : null,
+        pbResourceIds: roomsToSend.length ? roomsToSend : null,
       });
       setSuccess(dto);
     } catch (err) {
@@ -506,6 +519,61 @@ export default function PublicBookingPage() {
     const lowered = service.toLowerCase();
     return lowered.includes('graba') || lowered.includes('mezcl') || lowered.includes('master');
   };
+
+  const buildSummary = useCallback(
+    (booking?: BookingDTO | null) => {
+      const successStartIso =
+        (booking as any)?.pbStartsAt ??
+        (booking as any)?.cbStartsAt ??
+        (booking as any)?.ubStartsAt ??
+        booking?.startsAt;
+      const startLabel =
+        successStartIso && typeof successStartIso === 'string'
+          ? DateTime.fromISO(successStartIso).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
+          : formattedStart ?? form.startsAt;
+      const duration =
+        (booking?.startsAt && booking?.endsAt
+          ? Math.max(
+              30,
+              Math.round(DateTime.fromISO(booking.endsAt).diff(DateTime.fromISO(booking.startsAt), 'minutes').minutes),
+            )
+          : null) ?? (booking as any)?.pbDurationMinutes ?? form.durationMinutes;
+      const engineerName = booking?.engineerName ?? (booking as any)?.pbEngineerName ?? form.engineerName;
+      const roomsFromBooking =
+        booking?.resources?.map((r) => r.brRoomName).filter((name): name is string => Boolean(name)) ??
+        (form.resourceLabels.length ? form.resourceLabels : suggestedRooms);
+      const price = estimatePriceLabel ?? selectedPrice ?? 'Por confirmar';
+      const lines = [
+        'Reserva TDF',
+        `Servicio: ${booking?.serviceType ?? form.serviceType}`,
+        `Inicio: ${startLabel}`,
+        `Duración: ${duration} min`,
+        `Precio ref: ${price}`,
+      ];
+      if (roomsFromBooking.length) {
+        lines.push(`Salas: ${roomsFromBooking.join(' + ')}`);
+      }
+      if (engineerName) {
+        lines.push(`Ingeniero: ${engineerName}`);
+      }
+      return lines.join('\n');
+    },
+    [estimatePriceLabel, form.durationMinutes, form.engineerName, form.resourceLabels, form.serviceType, form.startsAt, formattedStart, selectedPrice, suggestedRooms, userTimeZone],
+  );
+
+  const copySummary = useCallback(
+    async (booking?: BookingDTO | null) => {
+      try {
+        const summary = buildSummary(booking);
+        await navigator.clipboard.writeText(summary);
+        setAvailabilityNote('Resumen copiado.');
+        setTimeout(() => setAvailabilityNote(null), 1800);
+      } catch {
+        setAvailabilityNote('No pudimos copiar el resumen.');
+      }
+    },
+    [buildSummary],
+  );
 
   const firstAvailable = useCallback(
     (dayOffset: number) => {
@@ -637,7 +705,7 @@ export default function PublicBookingPage() {
                     <Button variant="contained" size="medium" onClick={resetForm}>
                       Crear otra reserva
                     </Button>
-                    <Button variant="text" size="medium" onClick={() => void copySummary()}>
+                    <Button variant="text" size="medium" onClick={() => void copySummary(success)}>
                       Copiar resumen
                     </Button>
                   </Stack>
@@ -716,28 +784,6 @@ export default function PublicBookingPage() {
     if (availabilityNote) return `${base} ${availabilityNote}`;
     return base;
   }, [availabilityNote, availabilityStatus, bookingWindow?.closeStudio, bookingWindow?.openStudio, studioTimeZone, studioZoneLabel, userZoneLabel, userTimeZone]);
-
-  const copySummary = useCallback(async () => {
-    const svc = form.serviceType;
-    const start = formattedStart ?? form.startsAt;
-    const duration = `${form.durationMinutes} min`;
-    const price = estimatePriceLabel ?? selectedPrice ?? 'Por confirmar';
-    const lines = [
-      `Reserva TDF`,
-      `Servicio: ${svc}`,
-      `Inicio: ${start}`,
-      `Duración: ${duration}`,
-      `Precio ref: ${price}`,
-    ];
-    const summary = lines.join('\n');
-    try {
-      await navigator.clipboard.writeText(summary);
-      setAvailabilityNote('Resumen copiado.');
-      setTimeout(() => setAvailabilityNote(null), 1800);
-    } catch {
-      setAvailabilityNote('No pudimos copiar el resumen.');
-    }
-  }, [estimatePriceLabel, form.durationMinutes, form.serviceType, formattedStart, selectedPrice, form.startsAt]);
 
   const computeMaxDurationForStart = useCallback(
     (startValue: string) => {
