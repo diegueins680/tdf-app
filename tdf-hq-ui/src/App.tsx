@@ -198,7 +198,7 @@ export default function App() {
         <Route path="/inventario/scan/:token" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />
         <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
         <Route path="/reservar" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />
-        <Route path="/login" element={<PublicBranding showHeader={false}><LoginPage /></PublicBranding>} />
+        <Route path="/login" element={<PublicBranding showHeader showLoginButton={false}><LoginPage /></PublicBranding>} />
         <Route path="/herramientas/creador-musical" element={<PublicBranding><MusicMakerPage /></PublicBranding>} />
         <Route element={<Shell />}>
           <Route path="/" element={<Navigate to="/inicio" replace />} />

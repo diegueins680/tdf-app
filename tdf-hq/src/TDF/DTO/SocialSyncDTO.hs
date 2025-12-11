@@ -4,6 +4,7 @@
 module TDF.DTO.SocialSyncDTO where
 
 import           Data.Aeson (ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier, omitNothingFields)
+import           Data.Aeson.Types (Options(..))
 import           Data.Char (toLower)
 import           Data.Text (Text)
 import           Data.Time (UTCTime)

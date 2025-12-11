@@ -15,7 +15,7 @@ import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           GHC.Generics (Generic)
 import           Control.Exception (try)
 import qualified Network.HTTP.Client as HC
-import           Network.HTTP.Client (Request, HttpException)
+import           Network.HTTP.Client (Request, HttpException, newManager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.Status (statusCode)
 import qualified Data.ByteString.Lazy as BL
@@ -49,7 +49,7 @@ instance FromJSON InstagramMediaList where
 -- | Fetch media for a given Instagram user id (or handle, if your token supports it).
 fetchUserMedia :: AppConfig -> Text -> Text -> IO (Either Text [InstagramMedia])
 fetchUserMedia cfg accessToken userId = do
-  manager <- HC.newManager tlsManagerSettings
+  manager <- newManager tlsManagerSettings
   let fields = "id,caption,media_url,permalink,timestamp"
       urlTxt = instagramGraphBase cfg <> "/" <> userId <> "/media?fields=" <> fields <> "&access_token=" <> accessToken
       urlStr = T.unpack urlTxt

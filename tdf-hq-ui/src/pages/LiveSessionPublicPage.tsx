@@ -157,7 +157,6 @@ export default function LiveSessionPublicPage() {
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <TextField
                     label="Código de acceso"
-                    type="password"
                     value={accessCode}
                     onChange={(e) => {
                       setAccessCode(e.target.value);

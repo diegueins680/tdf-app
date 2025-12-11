@@ -42,7 +42,7 @@ const demoTokenHosts = demoTokenHostsEnv.length
 const demoTokenValue =
   (import.meta.env['VITE_DEFAULT_DEMO_TOKEN'] as string | undefined)?.trim() ?? 'admin-token';
 
-const normalizeHost = (host: string) => host.split(':')[0].toLowerCase();
+const normalizeHost = (host: string) => (host.split(':')[0] ?? host).toLowerCase();
 export const inferDemoToken = (host?: string): string => {
   if (demoTokenEnv) return demoTokenEnv;
   if (!host) return '';

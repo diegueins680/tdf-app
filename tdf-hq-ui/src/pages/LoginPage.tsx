@@ -42,7 +42,6 @@ import { googleLoginRequest, loginRequest, requestPasswordReset, signupRequest }
 import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
 import { Fans } from '../api/fans';
 import type { ArtistProfileDTO } from '../api/types';
-import BrandLogo from '../components/BrandLogo';
 import { buildSignupPayload, deriveEffectiveRoles, normalizeSignupRoles } from '../utils/roles';
 
 type LoginTab = 'password' | 'token';
@@ -148,6 +147,10 @@ export default function LoginPage() {
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [tokenPasteFeedback, setTokenPasteFeedback] = useState<string | null>(null);
+  const [showApiToken, setShowApiToken] = useState(false);
+  const { session, login } = useSession();
+  const navigate = useNavigate();
+  const location = useLocation();
   const params = new URLSearchParams(location.search);
   const tokenFromUrl = params.get('token');
   const lastSession = session;
@@ -182,9 +185,6 @@ export default function LoginPage() {
     [],
   );
 
-  const { session, login } = useSession();
-  const navigate = useNavigate();
-  const location = useLocation();
   const { mode, toggleMode } = useThemeMode();
   const isMobile = useMediaQuery('(max-width:600px)');
   const loginMutation = useMutation({
@@ -670,43 +670,21 @@ export default function LoginPage() {
           }}
         >
           <Stack spacing={isMobile ? 2.5 : 3}>
-            <Stack
-              spacing={0.75}
-              alignItems="center"
-              sx={{
-                position: 'relative',
-                pb: 0.5,
-                isolation: 'isolate',
-              }}
-            >
-              <Box
+            <Stack spacing={1} alignItems="flex-start">
+              <Chip
+                label="TDF Records"
+                size="small"
                 sx={{
-                  position: 'absolute',
-                  inset: -18,
-                  background:
-                    'radial-gradient(60% 60% at 50% 28%, rgba(99,102,241,0.18), rgba(56,189,248,0.12) 45%, transparent 70%)',
-                  filter: 'blur(10px)',
-                  opacity: 0.9,
-                  zIndex: 0,
+                  bgcolor: 'rgba(148,163,184,0.16)',
+                  color: '#e2e8f0',
+                  borderColor: 'rgba(148,163,184,0.45)',
+                  letterSpacing: 0.8,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
                 }}
+                variant="outlined"
               />
-              <BrandLogo
-                variant="wordmark"
-                size={88}
-                aria-label="TDF Records"
-                sx={{
-                  filter: 'brightness(0) invert(1) drop-shadow(0 14px 34px rgba(0,0,0,0.45))',
-                  opacity: 0.96,
-                  zIndex: 1,
-                }}
-              />
-              <Typography variant="caption" sx={{ letterSpacing: 3, color: 'rgba(255,255,255,0.78)', zIndex: 1 }}>
-                RECORDS · STUDIO · HQ
-              </Typography>
-            </Stack>
-
-            <Stack spacing={1}>
-              <Typography variant="h5" fontWeight={600}>
+              <Typography variant="h5" fontWeight={700}>
                 Iniciar sesión
               </Typography>
               <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>

@@ -8,9 +8,11 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 export default function PublicBranding({
   children,
   showHeader = true,
+  showLoginButton = true,
 }: {
   children: ReactNode;
   showHeader?: boolean;
+  showLoginButton?: boolean;
 }) {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const open = Boolean(menuAnchor);
@@ -43,15 +45,17 @@ export default function PublicBranding({
                 </Box>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1.5}>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  component={RouterLink}
-                  to="/login"
-                  sx={{ textTransform: 'none' }}
-                >
-                  Ingresar
-                </Button>
+                {showLoginButton && (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    component={RouterLink}
+                    to="/login"
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Ingresar
+                  </Button>
+                )}
                 <Tooltip title="Más opciones">
                   <IconButton
                     aria-label="Más opciones"
