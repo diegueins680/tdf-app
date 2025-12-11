@@ -220,6 +220,6 @@ toDTO (Entity key SocialSyncPost{..}) =
     , sspdMetrics = metrics
     }
 
-setIfJust :: (a -> b) -> Maybe a -> [b]
+setIfJust :: EntityField SocialSyncPost a -> Maybe a -> [Update SocialSyncPost]
 setIfJust _ Nothing  = []
-setIfJust f (Just v) = [f v]
+setIfJust field (Just v) = [field =. v]
