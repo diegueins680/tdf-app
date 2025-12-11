@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -86,6 +86,13 @@ export default function ServiceTypesPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ price?: string; tax?: string }>({});
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (dialogOpen) {
+      setTimeout(() => nameInputRef.current?.focus(), 50);
+    }
+  }, [dialogOpen]);
 
   const createMutation = useMutation({
     mutationFn: (payload: ServiceCatalogCreate) => Services.create(payload),
@@ -317,6 +324,7 @@ export default function ServiceTypesPage() {
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                   fullWidth
                   required
+                  inputRef={nameInputRef}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -342,7 +350,16 @@ export default function ServiceTypesPage() {
                   value={form.currency}
                   onChange={(_evt, value) => setForm((prev) => ({ ...prev, currency: value ?? prev.currency }))}
                   onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, currency: value }))}
-                  renderInput={(params) => <TextField {...params} label="Moneda" required fullWidth />}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Moneda"
+                      required
+                      fullWidth
+                      helperText="Código ISO ej. USD, EUR, COP"
+                      inputProps={{ ...params.inputProps, inputMode: 'text' }}
+                    />
+                  )}
                 />
               </Grid>
               <Grid item xs={12}>

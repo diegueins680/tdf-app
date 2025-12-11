@@ -14,6 +14,7 @@ import {
   Grid,
   MenuItem,
   Tooltip,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -194,6 +195,7 @@ export default function PublicBookingPage() {
   const [availabilityStatus, setAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable' | 'unknown'>('idle');
   const [availabilityNote, setAvailabilityNote] = useState<string | null>(null);
   const [assignEngineerLater, setAssignEngineerLater] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({ open: false, message: '' });
 
   useEffect(() => {
     if (!services.length) return;
@@ -575,10 +577,9 @@ export default function PublicBookingPage() {
       try {
         const summary = buildSummary(booking);
         await navigator.clipboard.writeText(summary);
-        setAvailabilityNote('Resumen copiado.');
-        setTimeout(() => setAvailabilityNote(null), 1800);
+        setSnackbar({ open: true, message: 'Resumen copiado' });
       } catch {
-        setAvailabilityNote('No pudimos copiar el resumen.');
+        setSnackbar({ open: true, message: 'No pudimos copiar el resumen.' });
       }
     },
     [buildSummary],
@@ -1455,6 +1456,13 @@ export default function PublicBookingPage() {
           </Stack>
         </CardContent>
       </Card>
+      <Snackbar
+        open={snackbar.open}
+        message={snackbar.message}
+        autoHideDuration={2200}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        onClose={() => setSnackbar({ open: false, message: '' })}
+      />
     </Box>
   );
 }

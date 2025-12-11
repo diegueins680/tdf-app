@@ -212,6 +212,12 @@ export default function CalendarSyncPage() {
     queryFn: () => CalendarApi.getConfig(),
     staleTime: 5 * 60 * 1000,
   });
+  const configErrorMessage =
+    configQuery.error instanceof Error
+      ? configQuery.error.message
+      : configQuery.isError
+        ? 'No se pudo cargar la configuración de calendario.'
+        : null;
 
   const testConnection = useCallback(async () => {
     const res = await configQuery.refetch();
@@ -364,8 +370,8 @@ export default function CalendarSyncPage() {
               Desconectar y limpiar
             </Button>
           </Stack>
-          {configQuery.isError && (
-            <Alert severity="warning">No pudimos leer la configuración guardada. Intenta recargar o revisar permisos.</Alert>
+          {configErrorMessage && (
+            <Alert severity="warning">{configErrorMessage}</Alert>
           )}
           <Typography variant="subtitle1" fontWeight={700}>
             Pasos guiados

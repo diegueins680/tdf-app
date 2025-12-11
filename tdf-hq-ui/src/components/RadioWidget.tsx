@@ -218,6 +218,10 @@ export default function RadioWidget() {
   const [showHidden, setShowHidden] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [miniBarDismissed, setMiniBarDismissed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('radio-mini-dismissed') === '1';
+  });
   const [importing, setImporting] = useState(false);
   const [editName, setEditName] = useState('');
   const [editCountry, setEditCountry] = useState('');
@@ -1505,6 +1509,14 @@ export default function RadioWidget() {
       // ignore persistence issues
     }
   }, [miniBarVisible]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('radio-mini-dismissed', miniBarDismissed ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [miniBarDismissed]);
 
   useEffect(() => {
     // We now keep the player docked globally; skip inline mounting on login.
@@ -1532,7 +1544,10 @@ export default function RadioWidget() {
         px: 0,
         pb: shouldInlineMiniBar ? 0 : 'env(safe-area-inset-bottom, 0px)',
         pointerEvents: shouldInlineMiniBar ? 'auto' : 'none',
+        outline: 'none',
       }}
+      tabIndex={0}
+      aria-label="Control de radio"
     >
       <Box
         sx={{
@@ -1553,6 +1568,11 @@ export default function RadioWidget() {
           mx: 0,
           cursor: 'pointer',
           userSelect: 'none',
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: 4,
+          },
         }}
         ref={miniContainerRef}
         onClick={(e) => {
@@ -1563,13 +1583,36 @@ export default function RadioWidget() {
         }}
       >
         <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
-          <IconButton size="small" onClick={togglePlay} data-no-drag>
+          <IconButton size="small" onClick={togglePlay} data-no-drag aria-label={isPlaying ? 'Pausar radio' : 'Reproducir radio'}>
             {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
         <Tooltip title="Saltar al siguiente">
-          <IconButton size="small" onClick={jumpToNextStation} data-no-drag>
+          <IconButton size="small" onClick={jumpToNextStation} data-no-drag aria-label="Saltar a la siguiente estación">
             <SkipNextIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
+          <IconButton
+            size="small"
+            onClick={() => setMuted((m) => !m)}
+            data-no-drag
+            aria-label={muted ? 'Quitar silencio' : 'Silenciar radio'}
+          >
+            {muted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Ocultar la barra">
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMiniBarDismissed(true);
+            }}
+            data-no-drag
+            aria-label="Ocultar barra de radio"
+          >
+            <VisibilityOffIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title="Mostrar radio">
@@ -1580,6 +1623,7 @@ export default function RadioWidget() {
               setExpanded(true);
             }}
             data-no-drag
+            aria-label="Expandir radio"
           >
             <OpenInFullIcon fontSize="small" />
           </IconButton>
@@ -1600,7 +1644,41 @@ export default function RadioWidget() {
 
   return (
     <>
-      {!miniBarVisible && (
+      {miniBarDismissed && (
+        <Box
+          sx={{
+            position: 'fixed',
+            right: 16,
+            bottom: 16,
+            zIndex: 1400,
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 999,
+            boxShadow: 6,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 1.5,
+            py: 0.75,
+          }}
+        >
+          <Typography variant="caption" color="text.secondary">
+            Radio oculta
+          </Typography>
+          <Button
+            size="small"
+            onClick={() => {
+              setMiniBarDismissed(false);
+              setMiniBarVisible(true);
+            }}
+            startIcon={<RadioIcon fontSize="small" />}
+          >
+            Mostrar
+          </Button>
+        </Box>
+      )}
+      {!miniBarDismissed && !miniBarVisible && (
         <Box
           sx={{
             position: 'fixed',
@@ -2644,7 +2722,7 @@ export default function RadioWidget() {
       {/* Audio is programmatically controlled; captions are not available for live streams. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} preload="none" aria-hidden="true" />
-      {miniBarVisible && miniBarContent}
+      {!miniBarDismissed && miniBarVisible && miniBarContent}
     </>
   );
 }

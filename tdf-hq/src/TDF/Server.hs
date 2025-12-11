@@ -581,7 +581,9 @@ calendarServer user =
             _ -> fmap T.strip (T.pack <$> mRedirectEnv)
       case (cid, secret, redirect) of
         (Just cid', Just sec', Just redir') -> pure (cid', sec', redir')
-        _ -> throwError err500 { errBody = "Faltan variables GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REDIRECT_URI" }
+        _ ->
+          throwError err503
+            { errBody = "Google Calendar no configurado (faltan GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REDIRECT_URI)." }
 
     calendarAuthUrlH :: AppM CalAPI.AuthUrlResponse
     calendarAuthUrlH = do
@@ -987,6 +989,9 @@ courseMetadataFor cfg mWaContact slugVal =
             , "Grupo de WhatsApp"
             , "Acceso a la plataforma de TDF Records"
             ]
+        , instructorName = Just "Esteban Muñoz"
+        , instructorBio = Just "Productor e ingeniero residente en TDF Records, mentor del programa de producción."
+        , instructorAvatarUrl = Just "https://tdf-app.pages.dev/assets/esteban-munoz.jpg"
         , sessions = sessions
         , syllabus = syllabus
         , whatsappCtaUrl = whatsappUrl
@@ -1072,6 +1077,9 @@ toCourseMetadata cfg waEnv course sessions syllabus =
           (cleanOptional (Trials.courseWhatsappCtaUrl course))
       dawsList = filter (not . T.null) (maybe [] (map T.strip) (Trials.courseDaws course))
       includesList = filter (not . T.null) (maybe [] (map T.strip) (Trials.courseIncludes course))
+      instructorNameVal = cleanOptional (Trials.courseInstructorName course)
+      instructorBioVal = cleanOptional (Trials.courseInstructorBio course)
+      instructorAvatarVal = cleanOptional (Trials.courseInstructorAvatarUrl course)
       toSession (Entity _ s) =
         CourseSession
           { label = Trials.courseSessionModelLabel s
@@ -1098,6 +1106,9 @@ toCourseMetadata cfg waEnv course sessions syllabus =
       , locationMapUrl = fromMaybe "" (Trials.courseLocationMapUrl course)
       , daws = dawsList
       , includes = includesList
+      , instructorName = instructorNameVal
+      , instructorBio = instructorBioVal
+      , instructorAvatarUrl = instructorAvatarVal
       , sessions = map toSession sessions
       , syllabus = map toSyllabus syllabus
       , whatsappCtaUrl = whatsappUrl
@@ -1151,6 +1162,9 @@ saveCourse Courses.CourseUpsert{..} = do
       whatsappResolved = fromMaybe (buildWhatsappCtaFor (waContactNumber waEnv) titleClean landingResolved) whatsappClean
       dawsClean = normalizeList daws
       includesClean = normalizeList includes
+      instructorNameClean = cleanOptional instructorName
+      instructorBioClean = cleanOptional instructorBio
+      instructorAvatarClean = cleanOptional instructorAvatarUrl
       normalizeList xs =
         case filter (not . T.null) (map T.strip xs) of
           [] -> Nothing
@@ -1177,6 +1191,9 @@ saveCourse Courses.CourseUpsert{..} = do
         , Trials.courseLandingUrl = Just landingResolved
         , Trials.courseDaws = dawsClean
         , Trials.courseIncludes = includesClean
+        , Trials.courseInstructorName = instructorNameClean
+        , Trials.courseInstructorBio = instructorBioClean
+        , Trials.courseInstructorAvatarUrl = instructorAvatarClean
         , Trials.courseCreatedAt = now
         , Trials.courseUpdatedAt = now
         }
@@ -1198,6 +1215,9 @@ saveCourse Courses.CourseUpsert{..} = do
           , Trials.CourseLandingUrl =. Just landingResolved
           , Trials.CourseDaws =. dawsClean
           , Trials.CourseIncludes =. includesClean
+          , Trials.CourseInstructorName =. instructorNameClean
+          , Trials.CourseInstructorBio =. instructorBioClean
+          , Trials.CourseInstructorAvatarUrl =. instructorAvatarClean
           , Trials.CourseUpdatedAt =. now
           ]
         pure cid
