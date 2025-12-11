@@ -14,6 +14,32 @@ export default function LiveSessionPublicPage() {
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const canUseForm = codeStatus === 'valid';
 
+  const validateAccessCode = useCallback(async () => {
+    const code = accessCode.trim();
+    if (!code) {
+      setValidationMessage('Ingresa un código válido.');
+      setCodeStatus('invalid');
+      return;
+    }
+    setCodeStatus('validating');
+    setValidationMessage(null);
+    try {
+      const base = import.meta.env.VITE_API_BASE ?? '';
+      if (base) {
+        const res = await fetch(`${base}/live-sessions/intake/ping`, {
+          headers: { Authorization: `Bearer ${code}` },
+        });
+        if (!res.ok) {
+          throw new Error('invalid');
+        }
+      }
+      setCodeStatus('valid');
+    } catch {
+      setCodeStatus('invalid');
+      setValidationMessage('Código inválido o expirado. Solicita uno nuevo.');
+    }
+  }, [accessCode]);
+
   useEffect(() => {
     if (tokenFromQuery) {
       setAccessCode(tokenFromQuery);
@@ -44,32 +70,6 @@ export default function LiveSessionPublicPage() {
       setApiToken(code);
     }
   }, [accessCode, codeStatus, session, login, setApiToken]);
-
-  const validateAccessCode = useCallback(async () => {
-    const code = accessCode.trim();
-    if (!code) {
-      setValidationMessage('Ingresa un código válido.');
-      setCodeStatus('invalid');
-      return;
-    }
-    setCodeStatus('validating');
-    setValidationMessage(null);
-    try {
-      const base = import.meta.env.VITE_API_BASE ?? '';
-      if (base) {
-        const res = await fetch(`${base}/live-sessions/intake/ping`, {
-          headers: { Authorization: `Bearer ${code}` },
-        });
-        if (!res.ok) {
-          throw new Error('invalid');
-        }
-      }
-      setCodeStatus('valid');
-    } catch {
-      setCodeStatus('invalid');
-      setValidationMessage('Código inválido o expirado. Solicita uno nuevo.');
-    }
-  }, [accessCode]);
 
   return (
     <Box
