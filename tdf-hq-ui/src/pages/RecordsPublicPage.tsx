@@ -478,8 +478,18 @@ const GradientCard = ({
 );
 
 type RecordingItem = typeof defaultRecordings[number];
-type ReleaseItem = typeof defaultReleases[number];
-type SessionItem = typeof defaultSessions[number];
+type ReleaseItem = (typeof defaultReleases)[number] & { primaryUrl?: string };
+type SessionItem = (typeof defaultSessions)[number] & { url?: string };
+
+const defaultReleaseItems: ReleaseItem[] = defaultReleases.map((release) => ({
+  ...release,
+  primaryUrl: release.links?.[0]?.url,
+}));
+
+const defaultSessionItems: SessionItem[] = defaultSessions.map((session) => ({
+  ...session,
+  url: `https://www.youtube.com/watch?v=${session.youtubeId}`,
+}));
 
 const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
   <Grid container spacing={3}>
@@ -530,125 +540,151 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
 
 const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
   <Grid container spacing={3}>
-    {items.map((release) => (
-      <Grid item xs={12} md={6} key={release.title}>
-        <Card
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 2,
-            bgcolor: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 3,
-            overflow: 'hidden',
-          }}
-        >
-          <Box
+    {items.map((release) => {
+      const releaseHref = release.primaryUrl ?? release.links?.[0]?.url;
+      return (
+        <Grid item xs={12} md={6} key={release.title}>
+          <Card
             sx={{
-              width: { xs: '100%', sm: 200 },
-              minHeight: 200,
-              backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35)), url(${release.cover})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              borderRight: { sm: '1px solid rgba(255,255,255,0.06)' },
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 2,
+              bgcolor: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 3,
+              overflow: 'hidden',
             }}
-          />
-          <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip label="Release" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {release.releasedOn}
+          >
+            <Box
+              sx={{
+                width: { xs: '100%', sm: 200 },
+                minHeight: 200,
+                backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35)), url(${release.cover})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                borderRight: { sm: '1px solid rgba(255,255,255,0.06)' },
+              }}
+            />
+            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Chip label="Release" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {release.releasedOn}
+                </Typography>
+              </Stack>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                {releaseHref ? (
+                  <MuiLink
+                    href={releaseHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    underline="hover"
+                    color="inherit"
+                  >
+                    {release.title}
+                  </MuiLink>
+                ) : (
+                  release.title
+                )}
               </Typography>
-            </Stack>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              {release.title}
-            </Typography>
-            <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-              {release.artist}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {release.blurb}
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap">
-              {release.links.map((link) => (
-                <Button
-                  key={link.platform}
-                  component={MuiLink}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    textTransform: 'none',
-                    bgcolor: link.accent,
-                    color: '#0b0d12',
-                    fontWeight: 700,
-                    '&:hover': { opacity: 0.9, bgcolor: link.accent },
-                  }}
-                >
-                  {link.platform}
-                </Button>
-              ))}
-            </Stack>
-          </CardContent>
-        </Card>
-      </Grid>
-    ))}
+              <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                {release.artist}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {release.blurb}
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                {release.links.map((link) => (
+                  <Button
+                    key={link.platform}
+                    component={MuiLink}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      textTransform: 'none',
+                      bgcolor: link.accent,
+                      color: '#0b0d12',
+                      fontWeight: 700,
+                      '&:hover': { opacity: 0.9, bgcolor: link.accent },
+                    }}
+                  >
+                    {link.platform}
+                  </Button>
+                ))}
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+      );
+    })}
   </Grid>
 );
 
 const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
   <Grid container spacing={3}>
-    {items.map((video) => (
-      <Grid item xs={12} md={4} key={video.youtubeId}>
-        <Card
-          sx={{
-            height: '100%',
-            bgcolor: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 3,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <Box sx={{ position: 'relative', pt: '56.25%', backgroundColor: '#0f1117' }}>
-            <Box
-              component="iframe"
-              src={`https://www.youtube.com/embed/${video.youtubeId}`}
-              title={video.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                border: 0,
-              }}
-            />
-          </Box>
-          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip label="TDF Session" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {video.duration}
+    {items.map((video) => {
+      const sessionHref = video.url ?? `https://www.youtube.com/watch?v=${video.youtubeId}`;
+      return (
+        <Grid item xs={12} md={4} key={video.youtubeId}>
+          <Card
+            sx={{
+              height: '100%',
+              bgcolor: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 3,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <Box sx={{ position: 'relative', pt: '56.25%', backgroundColor: '#0f1117' }}>
+              <Box
+                component="iframe"
+                src={`https://www.youtube.com/embed/${video.youtubeId}`}
+                title={video.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 0,
+                }}
+              />
+            </Box>
+            <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Chip label="TDF Session" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {video.duration}
+                </Typography>
+              </Stack>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                <MuiLink
+                  href={sessionHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="hover"
+                  color="inherit"
+                >
+                  {video.title}
+                </MuiLink>
               </Typography>
-            </Stack>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              {video.title}
-            </Typography>
-            <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-              {video.guests}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {video.description}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-    ))}
+              <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                {video.guests}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {video.description}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      );
+    })}
   </Grid>
 );
 
@@ -699,22 +735,25 @@ export default function RecordsPublicPage() {
             duration: string;
             guests: string;
             description: string;
+            url: string;
           }>;
           const youtubeId = p.youtubeId ?? p.youtubeID ?? p.id;
           if (!youtubeId) return null;
+          const url = p.url ?? `https://www.youtube.com/watch?v=${youtubeId}`;
           return {
             youtubeId,
             title: p.title ?? entry.ccdTitle ?? 'TDF Session',
             duration: p.duration ?? '',
             guests: p.guests ?? '',
             description: p.description ?? '',
+            url,
           };
         })
         .filter(Boolean) ?? [];
-    return (mapped as SessionItem[]).length ? (mapped as SessionItem[]) : defaultSessions;
+    return (mapped as SessionItem[]).length ? (mapped as SessionItem[]) : defaultSessionItems;
   }, [sessionsQuery.data]);
 
-  const [firstDefaultRelease] = defaultReleases;
+  const [firstDefaultRelease] = defaultReleaseItems;
   const defaultReleaseCover = firstDefaultRelease?.cover ?? '';
 
   const releases: ReleaseItem[] = useMemo(() => {
@@ -733,6 +772,7 @@ export default function RecordsPublicPage() {
             blurb: string;
             cover: string;
             image: string;
+            url: string;
           }>;
           const linksRaw = Array.isArray(p.links) ? p.links : [];
           const links =
@@ -747,6 +787,7 @@ export default function RecordsPublicPage() {
                   : null,
               )
               .filter(Boolean) ?? [];
+          const primaryUrl = typeof p.url === 'string' ? p.url : links[0]?.url;
           if (!p.title && !entry.ccdTitle) return null;
           return {
             title: p.title ?? entry.ccdTitle ?? 'Release',
@@ -755,10 +796,11 @@ export default function RecordsPublicPage() {
             blurb: p.description ?? p.blurb ?? '',
             cover: p.cover ?? p.image ?? defaultReleaseCover,
             links,
+            primaryUrl,
           };
         })
         .filter(Boolean) ?? [];
-    return (mapped as ReleaseItem[]).length ? (mapped as ReleaseItem[]) : defaultReleases;
+    return (mapped as ReleaseItem[]).length ? (mapped as ReleaseItem[]) : defaultReleaseItems;
   }, [releasesQuery.data, defaultReleaseCover]);
 
   const recordings: RecordingItem[] = useMemo(() => {
@@ -962,14 +1004,25 @@ export default function RecordsPublicPage() {
               }
             >
               <Stack spacing={1}>
-                {sessions.slice(0, 2).map((video) => (
-                  <Stack key={video.youtubeId} direction="row" spacing={1} alignItems="center">
-                    <Chip label="Video" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                      {video.title}
-                    </Typography>
-                  </Stack>
-                ))}
+                {sessions.slice(0, 2).map((video) => {
+                  const sessionHref = video.url ?? `https://www.youtube.com/watch?v=${video.youtubeId}`;
+                  return (
+                    <Stack key={video.youtubeId} direction="row" spacing={1} alignItems="center">
+                      <Chip label="Video" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                        <MuiLink
+                          href={sessionHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          underline="hover"
+                          color="inherit"
+                        >
+                          {video.title}
+                        </MuiLink>
+                      </Typography>
+                    </Stack>
+                  );
+                })}
               </Stack>
             </GradientCard>
             <GradientCard
@@ -1002,11 +1055,27 @@ export default function RecordsPublicPage() {
               }
             >
               <Stack spacing={1}>
-                {releases.map((release) => (
-                  <Typography key={release.title} variant="body2" sx={{ fontWeight: 700 }}>
-                    {release.title} · {release.artist}
-                  </Typography>
-                ))}
+                {releases.map((release) => {
+                  const releaseHref = release.primaryUrl ?? release.links?.[0]?.url;
+                  return (
+                    <Typography key={release.title} variant="body2" sx={{ fontWeight: 700 }}>
+                      {releaseHref ? (
+                        <MuiLink
+                          href={releaseHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          underline="hover"
+                          color="inherit"
+                        >
+                          {release.title}
+                        </MuiLink>
+                      ) : (
+                        release.title
+                      )}{' '}
+                      · {release.artist}
+                    </Typography>
+                  );
+                })}
               </Stack>
             </GradientCard>
           </Stack>
