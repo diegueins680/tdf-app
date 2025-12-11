@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Box,
@@ -45,7 +46,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Countries } from '../api/countries';
 
 interface Prompt {
@@ -192,6 +193,8 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 
 export default function RadioWidget() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isLoginPage = location.pathname.startsWith('/login');
   const LAST_AUDIO_INPUT_KEY = 'radio-last-audio-input';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
@@ -203,29 +206,6 @@ export default function RadioWidget() {
   });
   const dragMovedRef = useRef(false);
   const miniContainerRef = useRef<HTMLDivElement | null>(null);
-  const [miniPosition, setMiniPosition] = useState<{ x: number; y: number }>(() => {
-    if (typeof window === 'undefined') return { x: 12, y: 12 };
-    const fromStorage = window.localStorage.getItem('radio-mini-position');
-    if (fromStorage) {
-      try {
-        const parsed = JSON.parse(fromStorage) as { x?: number; y?: number };
-        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
-          return { x: parsed.x, y: parsed.y };
-        }
-      } catch {
-        // ignore parsing errors
-      }
-    }
-    const initialY = Math.max(12, window.innerHeight - 96);
-    return { x: 12, y: initialY };
-  });
-  const [miniDragging, setMiniDragging] = useState(false);
-  const miniDragState = useRef<{ offsetX: number; offsetY: number; active: boolean }>({
-    offsetX: 0,
-    offsetY: 0,
-    active: false,
-  });
-  const miniDragMovedRef = useRef(false);
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
   const [newStationCountry, setNewStationCountry] = useState('');
@@ -252,6 +232,7 @@ export default function RadioWidget() {
     if (saved === '1') return true;
     return true; // default minimized to reduce initial noise
   });
+  const [loginMiniBarHost, setLoginMiniBarHost] = useState<HTMLElement | null>(null);
   const [pinned, setPinned] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem('radio-pinned') === '1';
@@ -346,7 +327,7 @@ export default function RadioWidget() {
   const [activeId, setActiveId] = useState<string>(() => {
     if (typeof window === 'undefined') return defaultStation.id;
     const stored = window.localStorage.getItem('radio-active-id');
-    return stored || defaultStation.id;
+    return stored ?? defaultStation.id;
   });
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -693,22 +674,6 @@ export default function RadioWidget() {
     },
     [],
   );
-  const clampMiniPosition = useCallback(
-    (x: number, y: number) => {
-      if (typeof window === 'undefined') return { x, y };
-      const rect = miniContainerRef.current?.getBoundingClientRect();
-      const margin = 12;
-      const width = rect?.width ?? 240;
-      const height = rect?.height ?? 72;
-      const maxX = Math.max(margin, window.innerWidth - width - margin);
-      const maxY = Math.max(margin, window.innerHeight - height - margin);
-      return {
-        x: Math.min(Math.max(margin, x), maxX),
-        y: Math.min(Math.max(margin, y), maxY),
-      };
-    },
-    [],
-  );
 
   // Hydrate initial position
   useEffect(() => {
@@ -746,15 +711,10 @@ export default function RadioWidget() {
     if (typeof window === 'undefined') return;
     const onResize = () => {
       setPosition((p) => clampPosition(p.x, p.y));
-      setMiniPosition((p) => clampMiniPosition(p.x, p.y));
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [clampMiniPosition, clampPosition]);
-
-  useEffect(() => {
-    setMiniPosition((p) => clampMiniPosition(p.x, p.y));
-  }, [clampMiniPosition]);
+  }, [clampPosition]);
 
   // Drag handlers
   const isInteractiveTarget = useCallback((target?: HTMLElement | null) => {
@@ -786,18 +746,6 @@ export default function RadioWidget() {
     },
     [isInteractiveTarget, position.x, position.y],
   );
-  const onMiniPointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (isInteractiveTarget(target)) return;
-      e.preventDefault();
-      miniDragMovedRef.current = false;
-      miniDragState.current = { offsetX: e.clientX - miniPosition.x, offsetY: e.clientY - miniPosition.y, active: true };
-      setMiniDragging(true);
-      target?.setPointerCapture?.(e.pointerId);
-    },
-    [isInteractiveTarget, miniPosition.x, miniPosition.y],
-  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -824,31 +772,6 @@ export default function RadioWidget() {
       window.removeEventListener('pointerup', up);
     };
   }, [clampPosition, dragging]);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!miniDragging || !miniDragState.current.active) return;
-    const move = (e: PointerEvent) => {
-      if (!miniDragState.current.active) return;
-      miniDragMovedRef.current = true;
-      const next = clampMiniPosition(e.clientX - miniDragState.current.offsetX, e.clientY - miniDragState.current.offsetY);
-      setMiniPosition(next);
-      try {
-        window.localStorage.setItem('radio-mini-position', JSON.stringify(next));
-      } catch {
-        // ignore storage errors
-      }
-    };
-    const up = () => {
-      miniDragState.current.active = false;
-      setMiniDragging(false);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-    return () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-  }, [clampMiniPosition, miniDragging]);
 
   // Hydrate prompts and radio settings from localStorage to keep user submissions/settings across reloads.
   useEffect(() => {
@@ -1220,7 +1143,7 @@ export default function RadioWidget() {
         audio: { deviceId: selectedAudioInput || undefined },
       });
       inputTestStreamRef.current = stream;
-      const AudioCtor = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioCtor = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioCtor) {
         setInputTestLevel(null);
         return;
@@ -1234,9 +1157,9 @@ export default function RadioWidget() {
       const tick = () => {
         analyser.getByteTimeDomainData(data);
         let sum = 0;
-        for (let i = 0; i < data.length; i += 1) {
-          const sample = data[i] ?? 128;
-          const v = sample - 128;
+        for (const sample of data) {
+          const safeSample = sample ?? 128;
+          const v = safeSample - 128;
           sum += v * v;
         }
         const rms = Math.min(1, Math.sqrt(sum / data.length) / 128);
@@ -1290,9 +1213,9 @@ export default function RadioWidget() {
       const tick = () => {
         analyser.getByteTimeDomainData(data);
         let sum = 0;
-        for (let i = 0; i < data.length; i += 1) {
-          const sample = data[i] ?? 128;
-          const v = sample - 128;
+        for (const sample of data) {
+          const safeSample = sample ?? 128;
+          const v = safeSample - 128;
           sum += v * v;
         }
         const rms = Math.min(1, Math.sqrt(sum / data.length) / 128);
@@ -1377,6 +1300,8 @@ export default function RadioWidget() {
     selectedAudioInput,
     startLevelMonitor,
     stopBrowserBroadcast,
+    stopInputTest,
+    liveStartedAt,
     waitForIceGathering,
   ]);
 
@@ -1581,12 +1506,108 @@ export default function RadioWidget() {
     }
   }, [miniBarVisible]);
 
+  useEffect(() => {
+    if (!isLoginPage || typeof document === 'undefined') {
+      setLoginMiniBarHost(null);
+      return;
+    }
+    const slot = document.getElementById('login-radio-mini-slot');
+    if (slot) {
+      setLoginMiniBarHost(slot);
+      return;
+    }
+    const retry = window.setTimeout(() => {
+      setLoginMiniBarHost(document.getElementById('login-radio-mini-slot'));
+    }, 50);
+    return () => window.clearTimeout(retry);
+  }, [isLoginPage, location.pathname]);
+
   useEffect(
     () => () => {
       stopBrowserBroadcast();
     },
     [stopBrowserBroadcast],
   );
+
+  const shouldInlineMiniBar = isLoginPage;
+  const miniBarNode = (
+    <Box
+      sx={{
+        position: shouldInlineMiniBar ? 'relative' : 'fixed',
+        left: 0,
+        right: 0,
+        bottom: shouldInlineMiniBar ? 'auto' : 0,
+        zIndex: shouldInlineMiniBar ? 'auto' : 1400,
+        display: 'flex',
+        justifyContent: 'center',
+        px: 0,
+        pb: shouldInlineMiniBar ? 0 : 'env(safe-area-inset-bottom, 0px)',
+        pointerEvents: shouldInlineMiniBar ? 'auto' : 'none',
+      }}
+    >
+      <Box
+        sx={{
+          pointerEvents: 'auto',
+          bgcolor: 'background.paper',
+          boxShadow: shouldInlineMiniBar ? 2 : 10,
+          borderRadius: shouldInlineMiniBar ? 2.5 : 0,
+          px: shouldInlineMiniBar ? 1.5 : { xs: 1.5, sm: 2 },
+          py: shouldInlineMiniBar ? 1 : { xs: 0.75, sm: 1 },
+          display: 'flex',
+          alignItems: 'center',
+          gap: shouldInlineMiniBar ? 1 : 1.25,
+          border: '1px solid',
+          borderColor: 'divider',
+          minWidth: shouldInlineMiniBar ? '100%' : undefined,
+          width: '100%',
+          maxWidth: shouldInlineMiniBar ? 520 : '100%',
+          mx: 0,
+          cursor: 'pointer',
+          userSelect: 'none',
+        }}
+        ref={miniContainerRef}
+        onClick={(e) => {
+          const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+          if (tag === 'button' || tag === 'svg' || tag === 'path') return;
+          setMiniBarVisible(false);
+          setExpanded(true);
+        }}
+      >
+        <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
+          <IconButton size="small" onClick={togglePlay} data-no-drag>
+            {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Saltar al siguiente">
+          <IconButton size="small" onClick={jumpToNextStation} data-no-drag>
+            <SkipNextIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Mostrar radio">
+          <IconButton
+            size="small"
+            onClick={() => {
+              setMiniBarVisible(false);
+              setExpanded(true);
+            }}
+            data-no-drag
+          >
+            <OpenInFullIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Box sx={{ minWidth: 0, maxWidth: shouldInlineMiniBar ? '100%' : 220 }}>
+          <Typography variant="caption" fontWeight={700} noWrap>
+            {activeStation.name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" noWrap>
+            {activeStation.genre ?? activeStation.mood}
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+  );
+  const miniBarContent =
+    shouldInlineMiniBar && loginMiniBarHost ? createPortal(miniBarNode, loginMiniBarHost) : miniBarNode;
 
   return (
     <>
@@ -2634,74 +2655,7 @@ export default function RadioWidget() {
       {/* Audio is programmatically controlled; captions are not available for live streams. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} preload="none" aria-hidden="true" />
-      {miniBarVisible && (
-        <Box
-          sx={{
-            position: 'fixed',
-            left: miniPosition.x,
-            top: miniPosition.y,
-            zIndex: 1400,
-            bgcolor: 'background.paper',
-            boxShadow: 6,
-            borderRadius: 2,
-            px: 1,
-            py: 0.5,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.75,
-            border: '1px solid',
-            borderColor: 'divider',
-            cursor: miniDragging ? 'grabbing' : 'grab',
-            touchAction: 'none',
-            userSelect: 'none',
-            minWidth: 220,
-          }}
-          ref={miniContainerRef}
-          onPointerDown={onMiniPointerDown}
-          onClick={(e) => {
-            if (miniDragging || miniDragMovedRef.current) {
-              miniDragMovedRef.current = false;
-              return;
-            }
-            const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
-            if (tag === 'button' || tag === 'svg' || tag === 'path') return;
-            setMiniBarVisible(false);
-            setExpanded(true);
-          }}
-        >
-          <DragIndicatorIcon fontSize="small" color="action" />
-          <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
-            <IconButton size="small" onClick={togglePlay} data-no-drag>
-              {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Saltar al siguiente">
-            <IconButton size="small" onClick={jumpToNextStation} data-no-drag>
-              <SkipNextIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Mostrar radio">
-            <IconButton
-              size="small"
-              onClick={() => {
-                setMiniBarVisible(false);
-                setExpanded(true);
-              }}
-              data-no-drag
-            >
-              <OpenInFullIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Box sx={{ minWidth: 0, maxWidth: 220 }}>
-            <Typography variant="caption" fontWeight={700} noWrap>
-              {activeStation.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {activeStation.genre ?? activeStation.mood}
-            </Typography>
-          </Box>
-        </Box>
-      )}
+      {miniBarVisible && miniBarContent}
     </>
   );
 }
