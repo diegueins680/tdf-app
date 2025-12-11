@@ -515,6 +515,13 @@ export default function PublicBookingPage() {
   }, [form.durationMinutes, form.serviceType, services]);
   const selectedPrice = servicePriceLookup.get(form.serviceType);
 
+  const priceBanner = useMemo(() => {
+    if (!form.serviceType) return null;
+    const estimate = estimatePriceLabel ?? selectedPrice;
+    if (!estimate) return null;
+    return `Estimado para ${form.serviceType}: ${estimate}`;
+  }, [estimatePriceLabel, form.serviceType, selectedPrice]);
+
   const minStartDate = useMemo(() => {
     const nowStudio = DateTime.now().setZone(studioTimeZone);
     const openToday = nowStudio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
@@ -957,6 +964,11 @@ export default function PublicBookingPage() {
               <Typography variant="body2" color="text.secondary">
                 Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.
               </Typography>
+              {priceBanner && (
+                <Alert severity="info" variant="outlined">
+                  {priceBanner}
+                </Alert>
+              )}
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                 <Chip label="1. Agenda sin crear cuenta" size="small" variant="outlined" />
                 <Chip label="2. Confirmamos por email" size="small" variant="outlined" />
@@ -1291,6 +1303,11 @@ export default function PublicBookingPage() {
                         {durationNotice && (
                           <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                             {durationNotice}
+                          </Typography>
+                        )}
+                        {priceBanner && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                            {priceBanner}
                           </Typography>
                         )}
                       </Stack>

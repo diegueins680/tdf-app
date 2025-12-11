@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
   Alert,
@@ -14,6 +14,8 @@ import {
 } from '@mui/material';
 import { Courses, type CourseUpsert, type CourseMetadata } from '../api/courses';
 import { COURSE_DEFAULTS, COURSE_PATH_BASE } from '../config/appConfig';
+
+const COURSE_DRAFT_STORAGE_KEY = 'tdf-course-builder-draft';
 
 interface SessionInput { label: string; date: string }
 interface SyllabusInput { title: string; topics: string }
@@ -97,6 +99,7 @@ export default function CourseBuilderPage() {
   const [syllabus, setSyllabus] = useState<SyllabusInput[]>(DEFAULT_SYLLABUS);
   const [loadSlug, setLoadSlug] = useState('');
   const [loadError, setLoadError] = useState<string | null>(null);
+  const draftLoadedRef = useRef(false);
   const sections = [
     { key: 'detalles', label: 'Detalles' },
     { key: 'sesiones', label: 'Sesiones' },
@@ -245,6 +248,77 @@ export default function CourseBuilderPage() {
   const payloadPreview = JSON.stringify(buildPayload(), null, 2);
   const canResetLanding = landingUrlTouched && landingUrl !== landingFor(slug);
 
+  useEffect(() => {
+    if (draftLoadedRef.current) return;
+    try {
+      const raw = window.localStorage.getItem(COURSE_DRAFT_STORAGE_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as Partial<CourseUpsert>;
+      if (!draft.title && !draft.slug) return;
+      setTitle(draft.title ?? title);
+      setSubtitle(draft.subtitle ?? subtitle);
+      setFormat(draft.format ?? format);
+      setDuration(draft.duration ?? duration);
+      setPrice(draft.priceCents ? String(Math.round(draft.priceCents / 100)) : price);
+      setCurrency(draft.currency ?? currency);
+      setCapacity(draft.capacity != null ? String(draft.capacity) : capacity);
+      setSessionStartHour(draft.sessionStartHour != null ? String(draft.sessionStartHour) : sessionStartHour);
+      setSessionDurationHours(draft.sessionDurationHours != null ? String(draft.sessionDurationHours) : sessionDurationHours);
+      setLocationLabel(draft.locationLabel ?? locationLabel);
+      setLocationMapUrl(draft.locationMapUrl ?? locationMapUrl);
+      setWhatsappCtaUrl(draft.whatsappCtaUrl ?? whatsappCtaUrl);
+      setLandingUrl(draft.landingUrl ?? landingUrl);
+      setDaws((draft.daws ?? []).join('\n') || daws);
+      setIncludes((draft.includes ?? []).join('\n') || includes);
+      setInstructorName(draft.instructorName ?? instructorName);
+      setInstructorBio(draft.instructorBio ?? instructorBio);
+      setInstructorAvatarUrl(draft.instructorAvatarUrl ?? instructorAvatarUrl);
+      setSessions(
+        draft.sessions
+          ? draft.sessions.map((s) => ({ label: s.label ?? '', date: s.date ?? '' }))
+          : sessions,
+      );
+      setSyllabus(
+        draft.syllabus
+          ? draft.syllabus.map((s) => ({ title: s.title ?? '', topics: (s.topics ?? []).join('; ') }))
+          : syllabus,
+      );
+      draftLoadedRef.current = true;
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  useEffect(() => {
+    const payload = buildPayload();
+    try {
+      window.localStorage.setItem(COURSE_DRAFT_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore
+    }
+  }, [
+    title,
+    subtitle,
+    format,
+    duration,
+    price,
+    currency,
+    capacity,
+    sessionStartHour,
+    sessionDurationHours,
+    locationLabel,
+    locationMapUrl,
+    whatsappCtaUrl,
+    landingUrl,
+    daws,
+    includes,
+    instructorName,
+    instructorBio,
+    instructorAvatarUrl,
+    sessions,
+    syllabus,
+  ]);
+
   const applyMetadata = (meta: CourseMetadata) => {
     const sanitizedSessions =
       (meta.sessions ?? []).map((s) => ({
@@ -323,6 +397,15 @@ export default function CourseBuilderPage() {
             onClick={() => scrollToSection(section.key)}
           />
         ))}
+        <Button
+          size="small"
+          variant="contained"
+          href={landingUrl || `${COURSE_PATH_BASE}/${slug}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Vista previa landing
+        </Button>
       </Stack>
       <Card variant="outlined" id="detalles">
         <CardContent>

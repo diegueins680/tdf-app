@@ -148,6 +148,9 @@ export default function LoginPage() {
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [tokenPasteFeedback, setTokenPasteFeedback] = useState<string | null>(null);
+  const params = new URLSearchParams(location.search);
+  const tokenFromUrl = params.get('token');
+  const lastSession = session;
   const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
   const googleClientId = import.meta.env['VITE_GOOGLE_CLIENT_ID'] ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
@@ -202,6 +205,14 @@ export default function LoginPage() {
     if (raw?.startsWith('/')) return raw;
     return null;
   }, [location.search]);
+  useEffect(() => {
+    if (tokenFromUrl && tokenFromUrl.trim()) {
+      setShowApiToken(true);
+      setTab('token');
+      setTokenValue(tokenFromUrl.trim());
+      setTokenPasteFeedback('Token precargado desde el enlace.');
+    }
+  }, [tokenFromUrl]);
 
   const {
     data: health,
@@ -383,6 +394,28 @@ export default function LoginPage() {
     },
     [googleLoginMutation, login, navigate, redirectPath, signupDialogOpen],
   );
+
+  const loginWithToken = useCallback(() => {
+    if (!tokenValue.trim()) {
+      setFormError('Ingresa tu token API.');
+      return;
+    }
+    const roles = ['token'];
+    const landingPath = pickLandingPath(roles, []);
+    const targetPath = redirectPath ?? landingPath;
+    login(
+      {
+        username: 'token-user',
+        displayName: 'API Token',
+        roles,
+        apiToken: tokenValue.trim(),
+        modules: [],
+        partyId: undefined,
+      },
+      { remember: rememberDevice },
+    );
+    navigate(targetPath, { replace: true });
+  }, [login, navigate, redirectPath, rememberDevice, tokenValue]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -679,81 +712,40 @@ export default function LoginPage() {
               <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
                 Usa tus credenciales o un token emitido por TDF Records.
               </Typography>
+              {lastSession && (
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip
+                    label={`Continuar como ${lastSession.displayName}`}
+                    color="primary"
+                    onClick={() => {
+                      const landing = redirectPath ?? pickLandingPath(lastSession.roles ?? [], lastSession.modules);
+                      navigate(landing, { replace: true });
+                    }}
+                  />
+                  {lastSession.apiToken && (
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => {
+                        setShowApiToken(true);
+                        setTab('token');
+                        setTokenValue(lastSession.apiToken ?? '');
+                      }}
+                    >
+                      Usar token guardado
+                    </Button>
+                  )}
+                </Stack>
+              )}
             </Stack>
 
-            {showApiToken ? (
-              <Stack spacing={2}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Typography variant="subtitle2">Opciones avanzadas</Typography>
-                  <Button
-                    variant="text"
-                    size="small"
-                    onClick={() => {
-                      setShowApiToken(false);
-                      setTab('password');
-                    }}
-                  >
-                    Ocultar
-                  </Button>
-                </Stack>
-                <Tabs value={tab} onChange={(_, value) => setTab(value as LoginTab)} variant="fullWidth">
-                  <Tab value="password" label="CONTRASEÑA" />
-                  <Tab value="token" label="TOKEN API" />
-                </Tabs>
-                {tab === 'password' ? (
-                  <Stack spacing={2}>
-                    <TextField
-                      label="Usuario o correo *"
-                      type="text"
-                      value={identifier}
-                      onChange={(event) => setIdentifier(event.target.value)}
-                      fullWidth
-                      autoComplete="username"
-                      inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                      helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
-                      sx={textFieldSx}
-                    />
 
-                    <TextField
-                      label="Contraseña *"
-                      type="password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      fullWidth
-                      autoComplete="current-password"
-                      inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                      sx={textFieldSx}
-                    />
-                  </Stack>
-                ) : (
-                  <Stack spacing={2}>
-                    <TextField
-                      label="Token API *"
-                    value={tokenValue}
-                    onChange={(event) => setTokenValue(event.target.value)}
-                    fullWidth
-                    placeholder="tdf_xxxx-xxxx"
-                    inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                    sx={textFieldSx}
-                  />
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1 }}>
-                        Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
-                      </Typography>
-                      <Button variant="outlined" size="small" onClick={handlePasteToken}>
-                        Pegar desde portapapeles
-                      </Button>
-                    </Stack>
-                    {tokenPasteFeedback && (
-                      <Alert severity="info" onClose={() => setTokenPasteFeedback(null)}>
-                        {tokenPasteFeedback}
-                      </Alert>
-                    )}
-                  </Stack>
-                )}
-              </Stack>
-            ) : (
-              <>
+            <Stack spacing={2.25}>
+              <Tabs value={tab} onChange={(_, value) => setTab(value as LoginTab)} variant="fullWidth">
+                <Tab value="password" label="CONTRASEÑA" />
+                <Tab value="token" label="TOKEN API" />
+              </Tabs>
+              {tab === 'password' ? (
                 <Stack spacing={2}>
                   <TextField
                     label="Usuario o correo *"
@@ -778,21 +770,41 @@ export default function LoginPage() {
                     sx={textFieldSx}
                   />
                 </Stack>
-                <Stack spacing={0.5}>
-                  <Button
-                    variant="text"
-                    size="small"
-                  onClick={() => {
-                    setShowApiToken(true);
-                    setTab('token');
-                  }}
-                  sx={{ alignSelf: 'flex-start', px: 0, color: 'rgba(138,180,255,0.95)' }}
-                >
-                  Opciones avanzadas: usar token API
+              ) : (
+                <Stack spacing={2}>
+                  <TextField
+                    label="Token API *"
+                    value={tokenValue}
+                    onChange={(event) => setTokenValue(event.target.value)}
+                    fullWidth
+                    placeholder="tdf_xxxx-xxxx"
+                    inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
+                    sx={textFieldSx}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
+                  </Typography>
+                </Stack>
+              )}
+            </Stack>
+
+            <Stack spacing={1} sx={{ mt: 1 }}>
+              <Typography variant="subtitle2">Acceso rápido con token API</Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <TextField
+                  label="Token API"
+                  fullWidth
+                  value={tokenValue}
+                  onChange={(e) => setTokenValue(e.target.value)}
+                  placeholder="tdf_xxxx-xxxx"
+                  inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
+                  sx={{ flex: 1 }}
+                />
+                <Button variant="outlined" onClick={loginWithToken} size="medium">
+                  Ingresar con token
                 </Button>
               </Stack>
-            </>
-            )}
+            </Stack>
 
             {googleClientId && (
               <Stack spacing={1} alignItems="center">

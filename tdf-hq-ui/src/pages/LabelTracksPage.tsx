@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   Alert,
   Box,
@@ -144,7 +144,8 @@ export default function LabelTracksPage() {
     );
   }, [tracks, statusFilter, query, timeFilter]);
 
-  const handleAdd = () => {
+  const handleAdd = (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
     if (!input.trim()) return;
     if (!hasOwnerScope) {
       setToast('Asocia tu perfil de artista para crear operaciones.');
@@ -222,7 +223,7 @@ export default function LabelTracksPage() {
 
         <Card>
           <CardContent>
-            <Stack spacing={2}>
+            <Stack spacing={2} component="form" onSubmit={handleAdd}>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                 <TextField
                   id="track-title-input"
@@ -243,7 +244,7 @@ export default function LabelTracksPage() {
                 />
                 <Button
                   variant="contained"
-                  onClick={handleAdd}
+                  type="submit"
                   sx={{ minWidth: 140 }}
                   disabled={createMutation.isPending || !input.trim() || !hasOwnerScope}
                 >

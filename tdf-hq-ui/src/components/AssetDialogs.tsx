@@ -59,6 +59,19 @@ export function CheckoutDialog({
     if (Number.isNaN(d.getTime())) return null;
     return d.toLocaleString();
   };
+  const copySummary = async () => {
+    const lines = [
+      `Equipo: ${asset.name}`,
+      `Destino: ${form.coTargetKind ?? 'party'} ${form.coTargetParty ?? form.coTargetRoom ?? ''}`.trim(),
+      form.coDueAt ? `Vence: ${formatDue(form.coDueAt) ?? form.coDueAt}` : null,
+      form.coNotes ? `Notas: ${form.coNotes}` : null,
+    ].filter(Boolean);
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+    } catch {
+      // ignore
+    }
+  };
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Check-out · {asset.name}</DialogTitle>
@@ -162,6 +175,30 @@ export function CheckoutDialog({
             onChange={(e) => onFormChange({ ...form, coDueAt: e.target.value })}
             InputLabelProps={{ shrink: true }}
           />
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            {[
+              { label: '+24h', hours: 24 },
+              { label: '+72h', hours: 72 },
+              { label: 'Fin de día', hours: null },
+            ].map((opt) => (
+              <Button
+                key={opt.label}
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  const base = new Date();
+                  if (opt.hours !== null) {
+                    base.setHours(base.getHours() + opt.hours);
+                  } else {
+                    base.setHours(23, 30, 0, 0);
+                  }
+                  onFormChange({ ...form, coDueAt: base.toISOString().slice(0, 16) });
+                }}
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </Stack>
           <TextField
             label="Condición al salir"
             value={form.coConditionOut ?? ''}
@@ -177,6 +214,7 @@ export function CheckoutDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
+        <Button onClick={copySummary}>Copiar resumen</Button>
         <Button onClick={onClose}>Cancelar</Button>
         <Button variant="contained" onClick={onSubmit} disabled={loading || Boolean(activeCheckout)}>
           {activeCheckout ? 'Pendiente de check-in' : loading ? 'Guardando…' : 'Confirmar'}

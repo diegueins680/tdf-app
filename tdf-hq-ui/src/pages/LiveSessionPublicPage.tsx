@@ -27,6 +27,7 @@ export default function LiveSessionPublicPage() {
   const [accessCode, setAccessCode] = useState(() => tokenFromQuery);
   const [codeStatus, setCodeStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [lastValidatedCode, setLastValidatedCode] = useState('');
   const canUseForm = codeStatus === 'valid';
   const [showCode, setShowCode] = useState(false);
 
@@ -50,8 +51,10 @@ export default function LiveSessionPublicPage() {
         }
       }
       setCodeStatus('valid');
+      setLastValidatedCode(code);
     } catch {
       setCodeStatus('invalid');
+      setLastValidatedCode('');
       setValidationMessage('Código inválido o expirado. Solicita uno nuevo.');
     }
   }, [accessCode]);
@@ -86,6 +89,23 @@ export default function LiveSessionPublicPage() {
       setApiToken(code);
     }
   }, [accessCode, codeStatus, session, login, setApiToken]);
+
+  useEffect(() => {
+    const code = accessCode.trim();
+    if (!code) {
+      setLastValidatedCode('');
+      if (codeStatus !== 'idle') {
+        setCodeStatus('idle');
+      }
+      return;
+    }
+    if (codeStatus === 'validating') return;
+    if (codeStatus === 'valid' && code === lastValidatedCode) return;
+    const handle = setTimeout(() => {
+      void validateAccessCode();
+    }, 450);
+    return () => clearTimeout(handle);
+  }, [accessCode, codeStatus, lastValidatedCode, validateAccessCode]);
 
   return (
     <Box
