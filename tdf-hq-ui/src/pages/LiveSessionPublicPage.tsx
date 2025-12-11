@@ -1,6 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
-import { Alert, Box, Button, Chip, Container, Paper, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Container,
+  IconButton,
+  InputAdornment,
+  Paper,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { LiveSessionIntakeForm } from './LiveSessionIntakePage';
 import { useSession } from '../session/SessionContext';
@@ -13,9 +28,10 @@ export default function LiveSessionPublicPage() {
   const [codeStatus, setCodeStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const canUseForm = codeStatus === 'valid';
+  const [showCode, setShowCode] = useState(false);
 
-  const validateAccessCode = useCallback(async () => {
-    const code = accessCode.trim();
+  const validateAccessCode = useCallback(async (codeOverride?: string) => {
+    const code = (codeOverride ?? accessCode).trim();
     if (!code) {
       setValidationMessage('Ingresa un código válido.');
       setCodeStatus('invalid');
@@ -128,9 +144,39 @@ export default function LiveSessionPublicPage() {
                       setCodeStatus('idle');
                       setValidationMessage(null);
                     }}
+                    onBlur={() => {
+                      void validateAccessCode();
+                    }}
+                    onPaste={(e) => {
+                      const pasted = e.clipboardData.getData('text');
+                      setAccessCode(pasted);
+                      setCodeStatus('idle');
+                      setValidationMessage(null);
+                      setTimeout(() => {
+                        void validateAccessCode(pasted);
+                      }, 0);
+                    }}
                     placeholder="Pega el código recibido"
                     fullWidth
                     InputLabelProps={{ sx: { color: '#cbd5f5' } }}
+                    type={showCode ? 'text' : 'password'}
+                    error={codeStatus === 'invalid'}
+                    helperText={codeStatus === 'invalid' ? validationMessage ?? 'No pudimos validar el código.' : ' '}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Tooltip title={showCode ? 'Ocultar código' : 'Mostrar código'}>
+                            <IconButton
+                              edge="end"
+                              onClick={() => setShowCode((prev) => !prev)}
+                              aria-label={showCode ? 'Ocultar código' : 'Mostrar código'}
+                            >
+                              {showCode ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      ),
+                    }}
                     onFocus={() => {
                       if (codeStatus === 'invalid') setCodeStatus('idle');
                       setValidationMessage(null);

@@ -1566,7 +1566,7 @@ export default function RadioWidget() {
           width: '100%',
           maxWidth: shouldInlineMiniBar ? 520 : '100%',
           mx: 0,
-          cursor: 'pointer',
+          cursor: 'default',
           userSelect: 'none',
           '&:focus-visible': {
             outline: '2px solid',
@@ -1575,12 +1575,6 @@ export default function RadioWidget() {
           },
         }}
         ref={miniContainerRef}
-        onClick={(e) => {
-          const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
-          if (tag === 'button' || tag === 'svg' || tag === 'path') return;
-          setMiniBarVisible(false);
-          setExpanded(true);
-        }}
       >
         <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
           <IconButton size="small" onClick={togglePlay} data-no-drag aria-label={isPlaying ? 'Pausar radio' : 'Reproducir radio'}>

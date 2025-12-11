@@ -22,6 +22,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link as RouterLink } from 'react-router-dom';
 import { Label } from '../api/label';
 import type { LabelTrackDTO } from '../api/types';
 import { SessionGate } from '../components/SessionGate';
@@ -51,6 +52,7 @@ export default function LabelTracksPage() {
   const canUseTracks = isAdmin || isArtist;
   const hasOwnerScope = isAdmin || Boolean(ownerIdForApi);
   const scopeLabel = isAdmin ? 'TDF Records' : 'Mi artista';
+  const inputsDisabled = !hasOwnerScope;
 
   const tracksQuery = useQuery({
     queryKey: ['label-tracks', ownerKey],
@@ -200,8 +202,21 @@ export default function LabelTracksPage() {
         </Stack>
 
         {missingOwner && (
-          <Alert severity="warning">
-            No encontramos un artista asociado a tu cuenta. Crea o reclama tu perfil para usar estas operaciones.
+          <Alert
+            severity="warning"
+            action={
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                component={RouterLink}
+                to="/mi-artista"
+              >
+                Vincular perfil
+              </Button>
+            }
+          >
+            No encontramos un artista asociado a tu cuenta. Vincula tu perfil para usar estas operaciones.
           </Alert>
         )}
 
@@ -216,6 +231,7 @@ export default function LabelTracksPage() {
                   onChange={(e) => setInput(e.target.value)}
                   fullWidth
                   size="small"
+                  disabled={inputsDisabled}
                 />
                 <TextField
                   label="Nota (opcional)"
@@ -223,6 +239,7 @@ export default function LabelTracksPage() {
                   onChange={(e) => setNote(e.target.value)}
                   fullWidth
                   size="small"
+                  disabled={inputsDisabled}
                 />
                 <Button
                   variant="contained"
@@ -262,6 +279,7 @@ export default function LabelTracksPage() {
               variant={statusFilter === key ? 'filled' : 'outlined'}
               color={key === 'done' ? 'success' : 'default'}
               size="small"
+              disabled={inputsDisabled}
               onClick={() => setStatusFilter(key)}
             />
           ))}
@@ -276,6 +294,7 @@ export default function LabelTracksPage() {
               label={key === 'any' ? 'Todas' : key === 'today' ? 'Hoy' : 'Últimos 7 días'}
               variant={timeFilter === key ? 'filled' : 'outlined'}
               size="small"
+              disabled={inputsDisabled}
               onClick={() => setTimeFilter(key)}
             />
           ))}
@@ -287,6 +306,7 @@ export default function LabelTracksPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           sx={{ minWidth: { xs: '100%', sm: 260 } }}
+          disabled={inputsDisabled}
         />
         <Chip
           icon={<KeyboardIcon />}
@@ -294,6 +314,7 @@ export default function LabelTracksPage() {
           variant={showShortcuts ? 'filled' : 'outlined'}
           onClick={() => setShowShortcuts((prev) => !prev)}
           size="small"
+          disabled={inputsDisabled}
         />
       </Stack>
 
