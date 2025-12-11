@@ -156,6 +156,28 @@ export default function LoginPage() {
   const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
   const [googleStatus, setGoogleStatus] = useState<string | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
+  const textFieldSx = useMemo(
+    () => ({
+      '& .MuiInputLabel-root': {
+        color: 'rgba(248,250,252,0.75)',
+        '&.Mui-focused': { color: '#f8fafc' },
+      },
+      '& .MuiOutlinedInput-root': {
+        bgcolor: 'rgba(255,255,255,0.05)',
+        borderRadius: 2,
+        color: '#f8fafc',
+        '& fieldset': { borderColor: 'rgba(255,255,255,0.18)' },
+        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+        '&.Mui-focused fieldset': {
+          borderColor: '#8ab4ff',
+          boxShadow: '0 0 0 1px rgba(138,180,255,0.4)',
+        },
+      },
+      '& .MuiFormHelperText-root': { color: 'rgba(248,250,252,0.78)' },
+      '& .MuiInputBase-input::placeholder': { color: 'rgba(248,250,252,0.6)' },
+    }),
+    [],
+  );
 
   const { session, login } = useSession();
   const navigate = useNavigate();
@@ -592,10 +614,11 @@ export default function LoginPage() {
             maxWidth: 440,
             p: { xs: 2.5, sm: 4 },
             borderRadius: { xs: 3, sm: 4 },
-            boxShadow: '0 24px 80px rgba(15,23,42,0.28)',
-            background: 'linear-gradient(145deg, rgba(17,24,39,0.92), rgba(26,31,44,0.9))',
-            border: '1px solid rgba(255,255,255,0.06)',
-            backdropFilter: 'blur(8px)',
+            boxShadow: '0 30px 90px rgba(0,0,0,0.55)',
+            background: 'linear-gradient(145deg, rgba(15,23,42,0.95), rgba(18,24,38,0.9))',
+            border: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(12px)',
+            color: '#f8fafc',
           }}
         >
           <Stack spacing={isMobile ? 2.5 : 3}>
@@ -638,7 +661,7 @@ export default function LoginPage() {
               <Typography variant="h5" fontWeight={600}>
                 Iniciar sesión
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
                 Usa tus credenciales o un token emitido por TDF Records.
               </Typography>
             </Stack>
@@ -673,6 +696,7 @@ export default function LoginPage() {
                       autoComplete="username"
                       inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                       helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
+                      sx={textFieldSx}
                     />
 
                     <TextField
@@ -683,18 +707,20 @@ export default function LoginPage() {
                       fullWidth
                       autoComplete="current-password"
                       inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
+                      sx={textFieldSx}
                     />
                   </Stack>
                 ) : (
                   <Stack spacing={2}>
                     <TextField
                       label="Token API *"
-                      value={tokenValue}
-                      onChange={(event) => setTokenValue(event.target.value)}
-                      fullWidth
-                      placeholder="tdf_xxxx-xxxx"
-                      inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                    />
+                    value={tokenValue}
+                    onChange={(event) => setTokenValue(event.target.value)}
+                    fullWidth
+                    placeholder="tdf_xxxx-xxxx"
+                    inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
+                    sx={textFieldSx}
+                  />
                     <Typography variant="caption" color="text.secondary">
                       Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
                     </Typography>
@@ -713,6 +739,7 @@ export default function LoginPage() {
                     autoComplete="username"
                     inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                     helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
+                    sx={textFieldSx}
                   />
 
                   <TextField
@@ -723,27 +750,28 @@ export default function LoginPage() {
                     fullWidth
                     autoComplete="current-password"
                     inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
+                    sx={textFieldSx}
                   />
                 </Stack>
                 <Stack spacing={0.5}>
                   <Button
                     variant="text"
                     size="small"
-                    onClick={() => {
-                      setShowApiToken(true);
-                      setTab('token');
-                    }}
-                    sx={{ alignSelf: 'flex-start', px: 0 }}
-                  >
-                    Opciones avanzadas: usar token API
-                  </Button>
-                </Stack>
-              </>
+                  onClick={() => {
+                    setShowApiToken(true);
+                    setTab('token');
+                  }}
+                  sx={{ alignSelf: 'flex-start', px: 0, color: 'rgba(138,180,255,0.95)' }}
+                >
+                  Opciones avanzadas: usar token API
+                </Button>
+              </Stack>
+            </>
             )}
 
             {googleClientId && (
               <Stack spacing={1} alignItems="center">
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
                   O continúa con Google
                 </Typography>
                 <Box
@@ -772,7 +800,7 @@ export default function LoginPage() {
               }
               label="Recordarme en este dispositivo"
             />
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.7)' }}>
               Si lo activas, mantendremos tu sesión iniciada en este navegador.
             </Typography>
 
@@ -842,6 +870,7 @@ export default function LoginPage() {
               onChange={(event) => setResetEmail(event.target.value)}
               fullWidth
               placeholder="tu.correo@tdf.com"
+              sx={textFieldSx}
             />
             {resetFeedback && (
               <Alert severity={resetFeedback.type === 'success' ? 'success' : 'error'}>
@@ -891,12 +920,14 @@ export default function LoginPage() {
                 value={signupForm.firstName}
                 onChange={(event) => setSignupForm((prev) => ({ ...prev, firstName: event.target.value }))}
                 fullWidth
+                sx={textFieldSx}
               />
               <TextField
                 label="Apellido"
                 value={signupForm.lastName}
                 onChange={(event) => setSignupForm((prev) => ({ ...prev, lastName: event.target.value }))}
                 fullWidth
+                sx={textFieldSx}
               />
             </Stack>
             <TextField
@@ -906,12 +937,14 @@ export default function LoginPage() {
               onChange={(event) => setSignupForm((prev) => ({ ...prev, email: event.target.value }))}
               fullWidth
               placeholder="tu.correo@tdf.com"
+              sx={textFieldSx}
             />
             <TextField
               label="Celular (opcional)"
               value={signupForm.phone}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, phone: event.target.value }))}
               fullWidth
+              sx={textFieldSx}
             />
             <FormControl fullWidth>
               <InputLabel id="signup-roles-label">Roles (opcional)</InputLabel>
@@ -960,6 +993,7 @@ export default function LoginPage() {
                       {...params}
                       label="Reclamar perfil de artista (opcional)"
                       helperText="Solo se muestran perfiles sin usuario. Al reclamarlo obtendrás acceso como Artista."
+                      sx={textFieldSx}
                       InputProps={{
                         ...params.InputProps,
                         endAdornment: (
@@ -994,6 +1028,7 @@ export default function LoginPage() {
                       {...params}
                       label="Artistas o bandas"
                       placeholder={fanArtistsQuery.isFetching ? 'Cargando artistas...' : 'Buscar y seleccionar'}
+                      sx={textFieldSx}
                       InputProps={{
                         ...params.InputProps,
                         endAdornment: (
@@ -1019,7 +1054,8 @@ export default function LoginPage() {
                 value={signupForm.password}
                 onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
                 fullWidth
-              helperText={passwordHint}
+                helperText={passwordHint}
+                sx={textFieldSx}
             />
             {signupFeedback && (
               <Alert severity={signupFeedback.type === 'success' ? 'success' : 'error'}>
