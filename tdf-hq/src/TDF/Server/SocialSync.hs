@@ -53,22 +53,23 @@ socialSyncServer _user =
         existing <- withPool $ getBy (UniqueSocialSyncPost platform (sspExternalPostId payload))
         case existing of
           Just (Entity key _) -> do
-            withPool $ update key (catMaybes
-              [ (SocialSyncPostCaption =.) <$> sspCaption payload
-              , (SocialSyncPostPermalink =.) <$> sspPermalink payload
-              , (SocialSyncPostMediaUrls =.) <$> mediaText
-              , (SocialSyncPostPostedAt =.) <$> sspPostedAt payload
-              , Just (SocialSyncPostUpdatedAt =. now)
-              , Just (SocialSyncPostFetchedAt =. now)
-              , (SocialSyncPostTags =.) <$> tagsText
-              , (SocialSyncPostSummary =.) <$> summaryTxt
-              , (SocialSyncPostArtistPartyId =.) <$> artistPartyKey
-              , (SocialSyncPostArtistProfileId =.) <$> artistProfileKey
-              , (SocialSyncPostIngestSource =.) <$> Just ingestSrc
-              , (SocialSyncPostLikeCount =.) <$> sspLikeCount payload
-              , (SocialSyncPostCommentCount =.) <$> sspCommentCount payload
-              , (SocialSyncPostShareCount =.) <$> sspShareCount payload
-              , (SocialSyncPostViewCount =.) <$> sspViewCount payload
+            withPool $ update key (concat
+              [ setIfJust SocialSyncPostCaption (sspCaption payload)
+              , setIfJust SocialSyncPostPermalink (sspPermalink payload)
+              , setIfJust SocialSyncPostMediaUrls mediaText
+              , setIfJust SocialSyncPostPostedAt (sspPostedAt payload)
+              , setIfJust SocialSyncPostTags tagsText
+              , setIfJust SocialSyncPostSummary summaryTxt
+              , setIfJust SocialSyncPostArtistPartyId artistPartyKey
+              , setIfJust SocialSyncPostArtistProfileId artistProfileKey
+              , [SocialSyncPostIngestSource =. ingestSrc]
+              , setIfJust SocialSyncPostLikeCount (sspLikeCount payload)
+              , setIfJust SocialSyncPostCommentCount (sspCommentCount payload)
+              , setIfJust SocialSyncPostShareCount (sspShareCount payload)
+              , setIfJust SocialSyncPostViewCount (sspViewCount payload)
+              , [ SocialSyncPostUpdatedAt =. now
+                , SocialSyncPostFetchedAt =. now
+                ]
               ])
             pure False
           Nothing -> do
@@ -143,15 +144,15 @@ socialSyncServer _user =
       liftIO $ runSqlPool action pool
 
 parsePartyId :: MonadError ServerError m => Text -> m (Key Party)
-parsePartyId = parseKey "partyId"
+parsePartyId raw =
+  case readMaybeInt64 raw of
+    Nothing  -> throwError err400 { errBody = "Invalid partyId" }
+    Just val -> pure (toSqlKey val)
 
 parseProfileId :: MonadError ServerError m => Text -> m (Key ArtistProfile)
-parseProfileId = parseKey "artistProfileId"
-
-parseKey :: MonadError ServerError m => Text -> Text -> m (Key record)
-parseKey _label raw =
+parseProfileId raw =
   case readMaybeInt64 raw of
-    Nothing  -> throwError err400 { errBody = "Invalid identifier" }
+    Nothing  -> throwError err400 { errBody = "Invalid artistProfileId" }
     Just val -> pure (toSqlKey val)
 
 readMaybeInt64 :: Text -> Maybe Int64
@@ -218,3 +219,7 @@ toDTO (Entity key SocialSyncPost{..}) =
     , sspdIngestSource = socialSyncPostIngestSource
     , sspdMetrics = metrics
     }
+
+setIfJust :: (a -> b) -> Maybe a -> [b]
+setIfJust _ Nothing  = []
+setIfJust f (Just v) = [f v]

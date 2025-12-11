@@ -49,7 +49,7 @@ instance FromJSON InstagramMediaList where
 -- | Fetch media for a given Instagram user id (or handle, if your token supports it).
 fetchUserMedia :: AppConfig -> Text -> Text -> IO (Either Text [InstagramMedia])
 fetchUserMedia cfg accessToken userId = do
-  manager <- newManager tlsManagerSettings
+  manager <- HC.newManager tlsManagerSettings
   let fields = "id,caption,media_url,permalink,timestamp"
       urlTxt = instagramGraphBase cfg <> "/" <> userId <> "/media?fields=" <> fields <> "&access_token=" <> accessToken
       urlStr = T.unpack urlTxt
