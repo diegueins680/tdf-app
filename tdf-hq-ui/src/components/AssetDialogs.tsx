@@ -33,6 +33,7 @@ export function CheckoutDialog({
   loadingRooms,
   loadingParties,
   currentCheckout,
+  recentHistory,
 }: {
   open: boolean;
   onClose: () => void;
@@ -46,6 +47,7 @@ export function CheckoutDialog({
   loadingRooms?: boolean;
   loadingParties?: boolean;
   currentCheckout?: AssetCheckoutDTO | null;
+  recentHistory?: AssetCheckoutDTO[];
 }) {
   if (!asset) return null;
   const targetKind = form.coTargetKind ?? 'party';
@@ -69,6 +71,18 @@ export function CheckoutDialog({
             Actualmente en uso por {activeCheckout?.targetPartyRef ?? activeCheckout?.targetRoomId ?? activeCheckout?.targetKind}.{' '}
             {activeCheckout?.dueAt ? `Vence: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
             {' '}Registra el check-in antes de asignarlo de nuevo.
+          </Alert>
+        )}
+        {recentHistory && recentHistory.length > 0 && (
+          <Alert severity="info" sx={{ mb: 1 }}>
+            Últimos movimientos:
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5} mt={0.5} useFlexGap flexWrap="wrap">
+              {recentHistory.slice(0, 2).map((h) => (
+                <Typography key={h.checkoutId} variant="caption" color="text.secondary">
+                  {formatDue(h.checkedOutAt)} → {h.returnedAt ? formatDue(h.returnedAt) : 'pendiente'}
+                </Typography>
+              ))}
+            </Stack>
           </Alert>
         )}
         <Stack spacing={2} sx={{ mt: 1 }}>

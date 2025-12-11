@@ -30,6 +30,13 @@ import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { buildInventoryScanUrl } from '../config/appConfig';
 
+const toLocalDateTime = (date: Date) => {
+  const pad = (val: number) => String(val).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(
+    date.getMinutes(),
+  )}`;
+};
+
 function normalizeAssets(payload: { items: AssetDTO[] } | AssetDTO[]): AssetDTO[] {
   if (Array.isArray(payload)) return payload;
   return payload.items ?? [];
@@ -115,6 +122,8 @@ export default function InventoryPage() {
     setCurrentCheckout(null);
     setHistory([]);
     assetHistoryMutation.mutate(asset.assetId);
+    const defaultDue = new Date();
+    defaultDue.setHours(defaultDue.getHours() + 48);
     setForm({
       coTargetKind: 'party',
       coTargetParty: '',
@@ -122,7 +131,7 @@ export default function InventoryPage() {
       coTargetSession: '',
       coConditionOut: '',
       coNotes: '',
-      coDueAt: '',
+      coDueAt: toLocalDateTime(defaultDue),
     });
     setSelected(asset);
     setDialogOpen('checkout');
@@ -232,6 +241,7 @@ export default function InventoryPage() {
         loadingRooms={roomsQuery.isLoading}
         loadingParties={partiesQuery.isLoading}
         currentCheckout={currentCheckout}
+        recentHistory={history}
       />
 
       <CheckinDialog

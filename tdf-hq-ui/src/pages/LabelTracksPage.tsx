@@ -264,7 +264,30 @@ export default function LabelTracksPage() {
       )}
 
       {!tracksQuery.isLoading && tracks.length === 0 && (
-        <Typography color="text.secondary">No hay notas aún.</Typography>
+        <Card variant="outlined" sx={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+          <CardContent>
+            <Stack spacing={1}>
+              <Typography variant="h6">Aún no hay pendientes</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Crea tus primeras operaciones internas. Si no tienes perfil de artista, créalo o reclámalo para habilitar tus herramientas.
+              </Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                <Button variant="contained" size="small" onClick={() => setShowShortcuts(false)} href="/mi-artista">
+                  Crear/editar mi perfil
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  href="/label/artistas"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Ver artistas del label
+                </Button>
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
       )}
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>

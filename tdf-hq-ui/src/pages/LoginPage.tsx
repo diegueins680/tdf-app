@@ -136,7 +136,6 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);
-  const [showApiToken, setShowApiToken] = useState(false);
   const [signupForm, setSignupForm] = useState({
     firstName: '',
     lastName: '',
@@ -148,6 +147,7 @@ export default function LoginPage() {
   const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [tokenPasteFeedback, setTokenPasteFeedback] = useState<string | null>(null);
   const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
   const googleClientId = import.meta.env['VITE_GOOGLE_CLIENT_ID'] ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
@@ -317,6 +317,22 @@ export default function LoginPage() {
     }
   };
 
+  const handlePasteToken = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const trimmed = text.trim();
+      if (!trimmed) {
+        setTokenPasteFeedback('El portapapeles está vacío.');
+        return;
+      }
+      setTokenValue(trimmed);
+      setTokenPasteFeedback('Token pegado.');
+    } catch (error) {
+      console.warn('Clipboard read failed', error);
+      setTokenPasteFeedback('No pudimos leer el portapapeles. Revisa permisos.');
+    }
+  };
+
   const handleGoogleCredential = useCallback(
     async (credentialResponse: { credential?: string }) => {
       const credential = credentialResponse?.credential;
@@ -443,7 +459,6 @@ export default function LoginPage() {
     }
     const wantsToken = params.get('token') ?? params.get('apiToken') ?? params.get('tab');
     if (wantsToken?.toLowerCase().includes('token')) {
-      setShowApiToken(true);
       setTab('token');
     }
   }, [location.search]);
@@ -721,9 +736,19 @@ export default function LoginPage() {
                     inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                     sx={textFieldSx}
                   />
-                    <Typography variant="caption" color="text.secondary">
-                      Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
-                    </Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1 }}>
+                        Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
+                      </Typography>
+                      <Button variant="outlined" size="small" onClick={handlePasteToken}>
+                        Pegar desde portapapeles
+                      </Button>
+                    </Stack>
+                    {tokenPasteFeedback && (
+                      <Alert severity="info" onClose={() => setTokenPasteFeedback(null)}>
+                        {tokenPasteFeedback}
+                      </Alert>
+                    )}
                   </Stack>
                 )}
               </Stack>
@@ -806,9 +831,19 @@ export default function LoginPage() {
 
             {formError && <Alert severity="warning">{formError}</Alert>}
 
-            <Button variant="contained" type="submit" size="large" disabled={loginMutation.isPending}>
-              {loginMutation.isPending ? 'Ingresando…' : 'Ingresar'}
-            </Button>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
+              <Button variant="contained" type="submit" size="large" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? 'Ingresando…' : 'Ingresar'}
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={openSignupDialog}
+                sx={{ minWidth: 180 }}
+              >
+                Crear cuenta
+              </Button>
+            </Stack>
 
             <Stack spacing={0.5} textAlign="center">
               <Typography variant="body2">

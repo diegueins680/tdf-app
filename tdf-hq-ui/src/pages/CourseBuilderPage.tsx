@@ -97,6 +97,12 @@ export default function CourseBuilderPage() {
   const [syllabus, setSyllabus] = useState<SyllabusInput[]>(DEFAULT_SYLLABUS);
   const [loadSlug, setLoadSlug] = useState('');
   const [loadError, setLoadError] = useState<string | null>(null);
+  const sections = [
+    { key: 'detalles', label: 'Detalles' },
+    { key: 'sesiones', label: 'Sesiones' },
+    { key: 'temario', label: 'Temario' },
+    { key: 'publicacion', label: 'Publicación' },
+  ] as const;
 
   const startDate = useMemo<string | null>(() => findEarliestSessionDate(sessions) ?? null, [sessions]);
   const slug = useMemo(() => generateSlug(title, startDate), [title, startDate]);
@@ -148,6 +154,13 @@ export default function CourseBuilderPage() {
   const handleResetLanding = () => {
     setLandingUrl(landingFor(slug));
     setLandingUrlTouched(false);
+  };
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const createMutation = useMutation({
@@ -300,7 +313,18 @@ export default function CourseBuilderPage() {
           <Chip label={`Estado: ${createMutation.isSuccess ? 'Publicado' : 'Borrador'}`} />
         </Stack>
       </Stack>
-      <Card variant="outlined">
+      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+        {sections.map((section) => (
+          <Chip
+            key={section.key}
+            label={section.label}
+            clickable
+            variant="outlined"
+            onClick={() => scrollToSection(section.key)}
+          />
+        ))}
+      </Stack>
+      <Card variant="outlined" id="detalles">
         <CardContent>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
             <TextField
@@ -338,7 +362,7 @@ export default function CourseBuilderPage() {
         <Alert severity="error">No pudimos guardar el curso. Revisa los campos obligatorios.</Alert>
       )}
 
-      <Card variant="outlined">
+      <Card variant="outlined" id="sesiones">
         <CardContent>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -449,7 +473,7 @@ export default function CourseBuilderPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined">
+      <Card variant="outlined" id="temario">
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6" fontWeight={800}>Sesiones</Typography>
@@ -498,7 +522,7 @@ export default function CourseBuilderPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined">
+      <Card variant="outlined" id="publicacion">
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6" fontWeight={800}>Temario</Typography>

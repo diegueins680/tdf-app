@@ -157,6 +157,20 @@ const buildInitialForm = (defaultService: string, roomOptions: string[]) => {
   };
 };
 
+const buildGoogleCalendarUrl = (title: string, startIso: string, durationMinutes: number, location?: string, description?: string) => {
+  const start = DateTime.fromISO(startIso);
+  const end = start.plus({ minutes: durationMinutes });
+  const fmt = (dt: DateTime) => dt.toUTC().toFormat("yyyyLLdd'T'HHmm'00'Z");
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title,
+    dates: `${fmt(start)}/${fmt(end)}`,
+    location: location ?? 'TDF Records',
+    details: description ?? '',
+  });
+  return `https://www.google.com/calendar/render?${params.toString()}`;
+};
+
 export default function PublicBookingPage() {
   const serviceCatalogQuery = useQuery<ServiceCatalogDTO[]>({
     queryKey: ['service-catalog', 'public'],
@@ -704,6 +718,23 @@ export default function PublicBookingPage() {
     return base;
   }, [availabilityNote, availabilityStatus, bookingWindow?.closeStudio, bookingWindow?.openStudio, studioTimeZone, studioZoneLabel, userZoneLabel, userTimeZone]);
 
+  const timeWarnings = useMemo(() => {
+    const warnings: string[] = [];
+    const parsedStart = DateTime.fromISO(form.startsAt || '', { zone: userTimeZone });
+    if (!parsedStart.isValid) {
+      warnings.push('Selecciona una fecha y hora válidas para verificar disponibilidad.');
+      return warnings;
+    }
+    const minutesAway = parsedStart.diff(DateTime.now().setZone(userTimeZone), 'minutes').minutes;
+    if (minutesAway < 90) warnings.push('Agenda con al menos 90 minutos de anticipación para coordinar recursos.');
+    const startStudio = parsedStart.setZone(studioTimeZone);
+    if (startStudio.hour < OPEN_HOURS.start || startStudio.hour >= OPEN_HOURS.end) {
+      warnings.push(`Horario del estudio: ${OPEN_HOURS.start}:00 - ${OPEN_HOURS.end}:00 (${studioZoneLabel}).`);
+    }
+    if (availabilityStatus === 'unavailable') warnings.push(availabilityNote ?? 'Ese horario parece ocupado.');
+    return warnings;
+  }, [availabilityNote, availabilityStatus, form.startsAt, studioTimeZone, studioZoneLabel, userTimeZone]);
+
   const computeMaxDurationForStart = useCallback(
     (startValue: string) => {
       const startLocal = DateTime.fromISO(startValue, { zone: userTimeZone });
@@ -796,6 +827,16 @@ export default function PublicBookingPage() {
     const successRooms =
       success.resources?.map((r) => r.brRoomName).filter((name): name is string => Boolean(name)) ??
       (form.resourceLabels.length ? form.resourceLabels : []);
+    const calendarUrl =
+      successStartIso && successDuration
+        ? buildGoogleCalendarUrl(
+            success.serviceType ?? form.serviceType,
+            successStartIso,
+            successDuration,
+            successRooms.join(' · ') || 'TDF Records',
+            'Reserva generada desde el portal público.',
+          )
+        : null;
 
     return (
       <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -870,6 +911,11 @@ export default function PublicBookingPage() {
                     >
                       Copiar resumen
                     </Button>
+                    {calendarUrl && (
+                      <Button variant="text" size="medium" href={calendarUrl} target="_blank" rel="noreferrer">
+                        Agregar a Google Calendar
+                      </Button>
+                    )}
                   </Stack>
                 </Grid>
               </Grid>
@@ -1179,6 +1225,15 @@ export default function PublicBookingPage() {
                       <Chip label={availabilityNote} color="default" size="small" variant="outlined" />
                     )}
                   </Stack>
+                  {timeWarnings.length > 0 && (
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                      {timeWarnings.map((msg, idx) => (
+                        <Typography key={idx} variant="caption" display="block">
+                          • {msg}
+                        </Typography>
+                      ))}
+                    </Alert>
+                  )}
                 </Grid>
                     <Grid item xs={12} sm={5}>
                       <Stack spacing={1}>
