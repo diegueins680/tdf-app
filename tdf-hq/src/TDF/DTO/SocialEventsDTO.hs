@@ -11,7 +11,7 @@ module TDF.DTO.SocialEventsDTO
   , InvitationDTO(..)
   ) where
 
-import           Data.Aeson (FromJSON, ToJSON, withObject, (.:?), (.=), object)
+import           Data.Aeson (FromJSON, ToJSON, withObject, (.:?), (.=), object, toJSON, parseJSON)
 import           Data.Text  (Text)
 import           Data.Time  (UTCTime)
 import           GHC.Generics (Generic)

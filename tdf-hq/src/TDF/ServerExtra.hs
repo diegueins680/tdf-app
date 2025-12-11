@@ -907,7 +907,12 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
       when (maybe False (< 0) taxCandidate) $
         throwError err400 { errBody = "Impuesto inválido" }
-      let nameClean = join (normalizeNameMaybe <$> scuName)
+      let nameClean :: Maybe Text
+          nameClean = case scuName of
+            Nothing   -> Nothing
+            Just nm ->
+              let trimmed = T.strip nm
+              in if T.null trimmed then Nothing else Just trimmed
       case nameClean of
         Just nm -> do
           conflict <- withPool $ selectFirst
@@ -923,14 +928,22 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
         case mExisting of
           Nothing -> pure Nothing
           Just _ -> do
-            let updates = catMaybes
+            let billingClean :: Maybe (Maybe Text)
+                billingClean = case scuBillingUnit of
+                  Nothing -> Nothing
+                  Just inner -> case inner of
+                    Nothing -> Just Nothing
+                    Just val ->
+                      let trimmed = T.strip val
+                      in Just (if T.null trimmed then Nothing else Just trimmed)
+                updates = catMaybes
                   [ (M.ServiceCatalogName =.) <$> nameClean
                   , (M.ServiceCatalogKind =.) <$> scuKind
                   , (M.ServiceCatalogPricingModel =.) <$> scuPricingModel
                   , (M.ServiceCatalogDefaultRateCents =.) <$> scuRateCents
                   , (M.ServiceCatalogTaxBps =.) <$> scuTaxBps
                   , (M.ServiceCatalogCurrency =.) . normalizeCurrency <$> scuCurrency
-                  , (M.ServiceCatalogBillingUnit =.) <$> join (normalizeTextMaybe <$> scuBillingUnit)
+                  , (M.ServiceCatalogBillingUnit =.) <$> billingClean
                   , (M.ServiceCatalogActive =.) <$> scuActive
                   ]
             unless (null updates) (update svcKey updates)
