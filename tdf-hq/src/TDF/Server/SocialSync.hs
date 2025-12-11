@@ -54,19 +54,19 @@ socialSyncServer _user =
         case existing of
           Just (Entity key _) -> do
             withPool $ update key (concat
-              [ setIfJust SocialSyncPostCaption (sspCaption payload)
-              , setIfJust SocialSyncPostPermalink (sspPermalink payload)
-              , setIfJust SocialSyncPostMediaUrls mediaText
-              , setIfJust SocialSyncPostPostedAt (sspPostedAt payload)
-              , setIfJust SocialSyncPostTags tagsText
-              , setIfJust SocialSyncPostSummary summaryTxt
-              , setIfJust SocialSyncPostArtistPartyId artistPartyKey
-              , setIfJust SocialSyncPostArtistProfileId artistProfileKey
+              [ setMaybe SocialSyncPostCaption (sspCaption payload)
+              , setMaybe SocialSyncPostPermalink (sspPermalink payload)
+              , setMaybe SocialSyncPostMediaUrls mediaText
+              , setMaybe SocialSyncPostPostedAt (sspPostedAt payload)
+              , setMaybe SocialSyncPostTags tagsText
+              , setMaybe SocialSyncPostSummary summaryTxt
+              , setMaybe SocialSyncPostArtistPartyId artistPartyKey
+              , setMaybe SocialSyncPostArtistProfileId artistProfileKey
               , [SocialSyncPostIngestSource =. ingestSrc]
-              , setIfJust SocialSyncPostLikeCount (sspLikeCount payload)
-              , setIfJust SocialSyncPostCommentCount (sspCommentCount payload)
-              , setIfJust SocialSyncPostShareCount (sspShareCount payload)
-              , setIfJust SocialSyncPostViewCount (sspViewCount payload)
+              , setMaybe SocialSyncPostLikeCount (sspLikeCount payload)
+              , setMaybe SocialSyncPostCommentCount (sspCommentCount payload)
+              , setMaybe SocialSyncPostShareCount (sspShareCount payload)
+              , setMaybe SocialSyncPostViewCount (sspViewCount payload)
               , [ SocialSyncPostUpdatedAt =. now
                 , SocialSyncPostFetchedAt =. now
                 ]
@@ -220,6 +220,6 @@ toDTO (Entity key SocialSyncPost{..}) =
     , sspdMetrics = metrics
     }
 
-setIfJust :: EntityField SocialSyncPost a -> Maybe a -> [Update SocialSyncPost]
-setIfJust _ Nothing  = []
-setIfJust field (Just v) = [field =. v]
+setMaybe :: PersistField a => EntityField SocialSyncPost (Maybe a) -> Maybe a -> [Update SocialSyncPost]
+setMaybe _ Nothing = []
+setMaybe field (Just v) = [field =. Just v]

@@ -50,3 +50,24 @@ Objetivo: en lugar de reetiquetar o eliminar funciones, crear una capa de config
   - Eventos: RSVP/check-in por `eventType`.
   - Marketplace: GMV y conversión por `orderType` y `product kind`.
   - Campañas: progreso por `pipelineType` y etapa.
+
+## Backlog accionable (por capa)
+- Config/Seeds (backend): tabla/config de `vocabularies` (tipos, labels, etapas); seeds por entorno.
+- Backend Haskell:
+  - Añadir `kind`/`eventType`/`orderType`/`inventoryType`/`pipelineType` + `metadata JSONB` en modelos y DTOs.
+  - Extender endpoints existentes para aceptar/enviar los campos opcionales sin cambiar contratos viejos.
+  - Feature flags por modulo/preset (fan-artista) en config.
+- Web UI:
+  - Hook de configuración (fetch vocab/labels); fallback a defaults actuales.
+  - Adaptar listados/detalles a mostrar etiquetas desde config y filtrar por `kind`/`type`.
+  - Fan Hub: usar filtros por `kind` para perks, eventos, marketplace.
+- Mobile:
+  - Cargar vocabularios al iniciar; cachear offline.
+  - Check-in offline para eventos con `eventType=fan-experience`; sync diferido.
+- Datos/migracion:
+  - Backfill campos con defaults; validar en staging antes de habilitar flags.
+
+## Notas de compatibilidad
+- Mantener nombres de endpoints y campos originales; solo agregar opcionales.
+- Evitar renombrar tablas/columns existentes; usar nuevos campos y enums.
+- Añadir tests de regresión para contratos antiguos y nuevos flags de configuración.
