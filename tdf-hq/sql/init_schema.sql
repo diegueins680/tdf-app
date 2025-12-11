@@ -780,6 +780,23 @@ CREATE TABLE IF NOT EXISTS input_row (
 CREATE INDEX idx_input_row_version ON input_row(version_id);
 
 -- ============================================================================
+-- LABEL OPERATIONS
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS label_track (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    note TEXT,
+    status TEXT NOT NULL DEFAULT 'open',
+    owner_party_id BIGINT REFERENCES party(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_label_track_owner ON label_track(owner_party_id);
+CREATE INDEX IF NOT EXISTS idx_label_track_status ON label_track(status);
+
+-- ============================================================================
 -- PIPELINE/KANBAN
 -- ============================================================================
 

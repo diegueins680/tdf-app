@@ -355,6 +355,8 @@ data LabelTrackDTO = LabelTrackDTO
   , ltTitle     :: Text
   , ltNote      :: Maybe Text
   , ltStatus    :: Text
+  , ltOwnerId   :: Maybe Int64
+  , ltOwnerName :: Maybe Text
   , ltCreatedAt :: UTCTime
   , ltUpdatedAt :: UTCTime
   } deriving (Show, Generic)
@@ -365,6 +367,7 @@ instance FromJSON LabelTrackDTO
 data LabelTrackCreate = LabelTrackCreate
   { ltcTitle :: Text
   , ltcNote  :: Maybe Text
+  , ltcOwnerId :: Maybe Int64
   } deriving (Show, Generic)
 
 instance ToJSON LabelTrackCreate

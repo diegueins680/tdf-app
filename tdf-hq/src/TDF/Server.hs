@@ -75,6 +75,7 @@ import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers (socialEventsServer)
 import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
+import           TDF.Server.SocialSync (socialSyncServer)
 import qualified Data.Map.Strict            as Map
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
@@ -248,7 +249,6 @@ server =
   :<|> adsInquiryPublic
   :<|> cmsPublicServer
   :<|> marketplacePublicServer
-  :<|> labelPublicServer
   :<|> contractsServer
   :<|> socialEventsServer
   :<|> radioPresencePublicServer
@@ -548,8 +548,10 @@ protectedServer user =
   :<|> paymentsServer user
   :<|> instagramServer
   :<|> socialServer user
+  :<|> socialSyncServer user
   :<|> adsAdminServer user
   :<|> coursesAdminServer user
+  :<|> labelServer user
   :<|> calendarServer user
   :<|> cmsAdminServer user
   :<|> driveServer user
@@ -937,7 +939,7 @@ calendarServer user =
 productionCourseSlug :: Text
 productionCourseSlug = "produccion-musical-dic-2025"
 productionCoursePrice :: Double
-productionCoursePrice = 349
+productionCoursePrice = 150
 productionCourseCapacity :: Int
 productionCourseCapacity = 16
 
@@ -3932,8 +3934,12 @@ marketplaceAdminServer user =
        listMarketplaceOrders user
   :<|> updateMarketplaceOrder user
 
-labelPublicServer :: ServerT LabelAPI AppM
-labelPublicServer = listLabelTracks :<|> createLabelTrack :<|> updateLabelTrack :<|> deleteLabelTrack
+labelServer :: AuthedUser -> ServerT LabelAPI AppM
+labelServer user =
+       listLabelTracks user
+  :<|> createLabelTrack user
+  :<|> updateLabelTrack user
+  :<|> deleteLabelTrack user
 
 contractsServer :: ServerT ContractsAPI AppM
 contractsServer = hoistServer contractsProxy lift Contracts.server
@@ -4856,75 +4862,116 @@ assetConditionLabel cond =
     ME.Fair -> "Regular"
     ME.Poor -> "Usado"
 
-listLabelTracks :: AppM [LabelTrackDTO]
-listLabelTracks = do
-  Env{..} <- ask
-  rows <- liftIO $ flip runSqlPool envPool $ selectList [] [Desc ME.LabelTrackCreatedAt]
-  pure (map toLabelTrackDTO rows)
+data TrackScope = TrackScope
+  { tsOwner    :: Maybe PartyId
+  , tsAllowAny :: Bool
+  }
 
-createLabelTrack :: LabelTrackCreate -> AppM LabelTrackDTO
-createLabelTrack LabelTrackCreate{..} = do
+resolveTrackScope :: AuthedUser -> Maybe Int64 -> AppM TrackScope
+resolveTrackScope user mOwnerId = do
+  let isAdmin  = hasRole Admin user
+      isArtist = hasRole Artist user || hasRole Artista user
+  unless (isAdmin || isArtist) $
+    throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Solo artistas o admins pueden gestionar operaciones.") }
+  let owner = if isAdmin then fmap toSqlKey mOwnerId else Just (auPartyId user)
+  pure TrackScope { tsOwner = owner, tsAllowAny = isAdmin }
+
+ownerFilter :: TrackScope -> [Filter ME.LabelTrack]
+ownerFilter TrackScope{..} =
+  case tsOwner of
+    Nothing    -> [ME.LabelTrackOwnerPartyId ==. Nothing]
+    Just owner -> [ME.LabelTrackOwnerPartyId ==. Just owner]
+
+canManageTrack :: TrackScope -> ME.LabelTrack -> Bool
+canManageTrack TrackScope{..} track =
+  tsAllowAny || ME.labelTrackOwnerPartyId track == tsOwner
+
+ensureTrackAccess :: TrackScope -> ME.LabelTrack -> AppM ()
+ensureTrackAccess scope track =
+  unless (canManageTrack scope track) $
+    throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "No puedes modificar operaciones de otro artista.") }
+
+loadTrackOwnerNames :: [Entity ME.LabelTrack] -> AppM (Map.Map PartyId Text)
+loadTrackOwnerNames rows = do
+  let owners = mapMaybe (ME.labelTrackOwnerPartyId . entityVal) rows
+  if null owners
+    then pure Map.empty
+    else runDB (fetchPartyNameMap owners)
+
+listLabelTracks :: AuthedUser -> Maybe Int64 -> AppM [LabelTrackDTO]
+listLabelTracks user mOwnerId = do
+  scope <- resolveTrackScope user mOwnerId
+  rows <- runDB $ selectList (ownerFilter scope) [Desc ME.LabelTrackCreatedAt]
+  nameMap <- loadTrackOwnerNames rows
+  pure (map (toLabelTrackDTO nameMap) rows)
+
+createLabelTrack :: AuthedUser -> LabelTrackCreate -> AppM LabelTrackDTO
+createLabelTrack user LabelTrackCreate{..} = do
+  scope <- resolveTrackScope user ltcOwnerId
   when (T.null (T.strip ltcTitle)) $ throwBadRequest "Título requerido"
   now <- liftIO getCurrentTime
-  Env{..} <- ask
   let record = ME.LabelTrack
-        { ME.labelTrackTitle     = T.strip ltcTitle
-        , ME.labelTrackNote      = T.strip <$> ltcNote
-        , ME.labelTrackStatus    = "open"
-        , ME.labelTrackCreatedAt = now
-        , ME.labelTrackUpdatedAt = now
+        { ME.labelTrackTitle      = T.strip ltcTitle
+        , ME.labelTrackNote       = T.strip <$> ltcNote
+        , ME.labelTrackStatus     = "open"
+        , ME.labelTrackOwnerPartyId = tsOwner scope
+        , ME.labelTrackCreatedAt  = now
+        , ME.labelTrackUpdatedAt  = now
         }
-  dto <- liftIO $ flip runSqlPool envPool $ do
+  entity <- runDB $ do
     key <- insert record
-    pure (toLabelTrackDTO (Entity key record))
-  pure dto
+    pure (Entity key record)
+  nameMap <- loadTrackOwnerNames [entity]
+  pure (toLabelTrackDTO nameMap entity)
 
-updateLabelTrack :: Text -> LabelTrackUpdate -> AppM LabelTrackDTO
-updateLabelTrack rawId LabelTrackUpdate{..} = do
+updateLabelTrack :: AuthedUser -> Text -> LabelTrackUpdate -> AppM LabelTrackDTO
+updateLabelTrack user rawId LabelTrackUpdate{..} = do
   key <- case (fromPathPiece rawId :: Maybe (Key ME.LabelTrack)) of
     Nothing -> throwBadRequest "Invalid track id"
     Just k  -> pure k
+  scope <- resolveTrackScope user Nothing
   now <- liftIO getCurrentTime
-  Env{..} <- ask
-  mDto <- liftIO $ flip runSqlPool envPool $ do
-    mTrack <- get key
-    case mTrack of
-      Nothing -> pure Nothing
-      Just _ -> do
-        let updates = catMaybes
-              [ (ME.LabelTrackTitle =.) . T.strip <$> ltuTitle
-              , case ltuNote of
-                  Nothing -> Nothing
-                  Just n  -> Just (ME.LabelTrackNote =. if T.null (T.strip n) then Nothing else Just (T.strip n))
-              , (ME.LabelTrackStatus =.) <$> ltuStatus
-              , Just (ME.LabelTrackUpdatedAt =. now)
-              ]
-        unless (null updates) (update key updates)
-        track' <- getJustEntity key
-        pure (Just (toLabelTrackDTO track'))
-  maybe (throwError err404) pure mDto
+  mTrack <- runDB $ getEntity key
+  case mTrack of
+    Nothing -> throwError err404
+    Just (Entity _ track) -> do
+      ensureTrackAccess scope track
+      let updates = catMaybes
+            [ (ME.LabelTrackTitle =.) . T.strip <$> ltuTitle
+            , case ltuNote of
+                Nothing -> Nothing
+                Just n  -> Just (ME.LabelTrackNote =. if T.null (T.strip n) then Nothing else Just (T.strip n))
+            , (ME.LabelTrackStatus =.) <$> ltuStatus
+            , Just (ME.LabelTrackUpdatedAt =. now)
+            ]
+      unless (null updates) (runDB $ update key updates)
+      updated <- runDB $ getJustEntity key
+      nameMap <- loadTrackOwnerNames [updated]
+      pure (toLabelTrackDTO nameMap updated)
 
-deleteLabelTrack :: Text -> AppM NoContent
-deleteLabelTrack rawId = do
+deleteLabelTrack :: AuthedUser -> Text -> AppM NoContent
+deleteLabelTrack user rawId = do
   key <- case (fromPathPiece rawId :: Maybe (Key ME.LabelTrack)) of
     Nothing -> throwBadRequest "Invalid track id"
     Just k  -> pure k
-  Env{..} <- ask
-  deleted <- liftIO $ flip runSqlPool envPool $ do
-    mTrack <- get key
-    case mTrack of
-      Nothing -> pure False
-      Just _  -> delete key >> pure True
-  unless deleted (throwError err404)
-  pure NoContent
+  scope <- resolveTrackScope user Nothing
+  mTrack <- runDB $ getEntity key
+  case mTrack of
+    Nothing -> throwError err404
+    Just (Entity _ track) -> do
+      ensureTrackAccess scope track
+      runDB $ delete key
+      pure NoContent
 
-toLabelTrackDTO :: Entity ME.LabelTrack -> LabelTrackDTO
-toLabelTrackDTO (Entity key t) =
+toLabelTrackDTO :: Map.Map PartyId Text -> Entity ME.LabelTrack -> LabelTrackDTO
+toLabelTrackDTO nameMap (Entity key t) =
   LabelTrackDTO
     { ltId        = toPathPiece key
     , ltTitle     = ME.labelTrackTitle t
     , ltNote      = ME.labelTrackNote t
     , ltStatus    = ME.labelTrackStatus t
+    , ltOwnerId   = fromSqlKey <$> ME.labelTrackOwnerPartyId t
+    , ltOwnerName = ME.labelTrackOwnerPartyId t >>= (`Map.lookup` nameMap)
     , ltCreatedAt = ME.labelTrackCreatedAt t
     , ltUpdatedAt = ME.labelTrackUpdatedAt t
     }

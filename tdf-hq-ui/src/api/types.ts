@@ -207,6 +207,8 @@ export interface LabelTrackDTO {
   ltTitle: string;
   ltNote?: string | null;
   ltStatus: string;
+  ltOwnerId?: number | null;
+  ltOwnerName?: string | null;
   ltCreatedAt: string;
   ltUpdatedAt: string;
 }

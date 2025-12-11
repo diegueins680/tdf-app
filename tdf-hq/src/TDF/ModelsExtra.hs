@@ -469,6 +469,7 @@ LabelTrack
     title       Text
     note        Text Maybe
     status      Text default='open'
+    ownerPartyId PartyId Maybe
     createdAt   UTCTime default=now()
     updatedAt   UTCTime default=now()
     deriving Show Generic

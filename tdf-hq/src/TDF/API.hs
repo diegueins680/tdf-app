@@ -42,6 +42,7 @@ import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
+import           TDF.API.SocialSyncAPI (SocialSyncAPI)
 import           TDF.Contracts.API (ContractsAPI)
 import           TDF.DTO (CountryDTO)
 
@@ -199,8 +200,10 @@ type ProtectedAPI =
   :<|> "payments" :> PaymentsAPI
   :<|> "instagram" :> InstagramAPI
   :<|> "social" :> SocialAPI
+  :<|> "social-sync" :> SocialSyncAPI
   :<|> AdsAdminAPI
   :<|> "admin" :> CoursesAdminAPI
+  :<|> "label" :> LabelAPI
   :<|> "calendar" :> CalendarAPI
   :<|> CmsAdminAPI
   :<|> DriveAPI
@@ -226,7 +229,6 @@ type API =
   :<|> AdsPublicAPI
   :<|> CmsPublicAPI
   :<|> "marketplace" :> MarketplaceAPI
-  :<|> "label" :> LabelAPI
   :<|> "contracts" :> ContractsAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> RadioPublicAPI
