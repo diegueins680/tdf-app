@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Divider, Stack, TextField, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
-
-const CARDANO_ADDRESS =
-  'addr1qx2mdr6n8d0v2y5s99tmdluzvcq6lvpvez0mx55vvpfy6ee4fzjjxl454z8d2f5gd2yualhds75ycvsl3wuar908v0csqksrwy';
+import { CARDANO_ADDRESS } from '../config/appConfig';
 
 export default function DonationPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);

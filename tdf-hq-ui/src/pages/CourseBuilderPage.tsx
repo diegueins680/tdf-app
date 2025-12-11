@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Courses, type CourseUpsert, type CourseMetadata } from '../api/courses';
+import { COURSE_DEFAULTS, COURSE_PATH_BASE } from '../config/appConfig';
 
 interface SessionInput { label: string; date: string }
 interface SyllabusInput { title: string; topics: string }
@@ -68,17 +69,8 @@ const generateSlug = (title: string, startDate: string | null) => {
   return [titleSlug, monthSlug, year].filter(Boolean).join('-');
 };
 
-const PUBLIC_BASE =
-  (import.meta.env['VITE_PUBLIC_BASE'] as string | undefined)?.replace(/\/+$/, '') ??
-  (typeof window !== 'undefined' && window.location.origin
-    ? window.location.origin.replace(/\/+$/, '')
-    : 'https://tdf-app.pages.dev');
-const COURSE_PATH_BASE =
-  (import.meta.env['VITE_PUBLIC_COURSE_BASE'] as string | undefined)?.replace(/\/+$/, '') ??
-  `${PUBLIC_BASE}/curso`;
-
 const DEFAULT_TITLE = 'Curso de Producción Musical';
-const DEFAULT_SLUG = generateSlug(DEFAULT_TITLE, DEFAULT_SESSIONS[0]?.date ?? null);
+const DEFAULT_SLUG = COURSE_DEFAULTS.slug || generateSlug(DEFAULT_TITLE, DEFAULT_SESSIONS[0]?.date ?? null);
 
 export default function CourseBuilderPage() {
   const [title, setTitle] = useState(DEFAULT_TITLE);
@@ -91,8 +83,8 @@ export default function CourseBuilderPage() {
   const [sessionStartHour, setSessionStartHour] = useState('15');
   const [sessionDurationHours, setSessionDurationHours] = useState('4');
   const [locationLabel, setLocationLabel] = useState('TDF Records – Quito');
-  const [locationMapUrl, setLocationMapUrl] = useState('https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6');
-  const [whatsappCtaUrl, setWhatsappCtaUrl] = useState('https://wa.me/593995413168?text=Quiero%20inscribirme%20al%20curso');
+  const [locationMapUrl, setLocationMapUrl] = useState(COURSE_DEFAULTS.mapUrl);
+  const [whatsappCtaUrl, setWhatsappCtaUrl] = useState(COURSE_DEFAULTS.whatsappUrl);
   const landingFor = useCallback((s: string) => `${COURSE_PATH_BASE}/${s}`, []);
   const [landingUrl, setLandingUrl] = useState(landingFor(DEFAULT_SLUG));
   const [landingUrlTouched, setLandingUrlTouched] = useState(false);
@@ -100,7 +92,7 @@ export default function CourseBuilderPage() {
   const [daws, setDaws] = useState('Logic\nLuna');
   const [instructorName, setInstructorName] = useState('Esteban Muñoz');
   const [instructorBio, setInstructorBio] = useState('Productor en TDF Records. 10+ años grabando bandas, rap y electrónica.');
-  const [instructorAvatarUrl, setInstructorAvatarUrl] = useState('https://tdf-app.pages.dev/assets/esteban-munoz.jpg');
+  const [instructorAvatarUrl, setInstructorAvatarUrl] = useState(COURSE_DEFAULTS.instructorAvatarUrl);
   const [sessions, setSessions] = useState<SessionInput[]>(DEFAULT_SESSIONS);
   const [syllabus, setSyllabus] = useState<SyllabusInput[]>(DEFAULT_SYLLABUS);
   const [loadSlug, setLoadSlug] = useState('');

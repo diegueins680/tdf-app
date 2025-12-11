@@ -37,6 +37,7 @@ import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest, type As
 import { Rooms } from '../api/rooms';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import { buildInventoryScanUrl } from '../config/appConfig';
 
 interface AssetFormState {
   name: string;
@@ -233,7 +234,7 @@ export default function LabelAssetsPage() {
   const openQr = (asset: AssetDTO) => {
     setSelected(asset);
     if (asset.qrToken) {
-      const url = `https://tdf-app.pages.dev/inventario/scan/${asset.qrToken}`;
+      const url = buildInventoryScanUrl(asset.qrToken);
       const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}`;
       setQrDataUrl(qrImg);
       setDialogOpen('qr');

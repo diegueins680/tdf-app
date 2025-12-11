@@ -23,6 +23,7 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import type { TrialSubject } from '../api/trials';
 import { Trials } from '../api/trials';
 import PublicBrandBar from '../components/PublicBrandBar';
+import { TRIALS_WHATSAPP_URL } from '../config/appConfig';
 
 interface SlotInput {
   start: string;
@@ -335,7 +336,7 @@ export default function TrialsPage() {
                         Escríbenos y comparte tus horarios:
                       </Typography>
                       <Link
-                        href="https://wa.me/593999001122?text=Hola%20quiero%20una%20clase%20de%20prueba%20en%20TDF%20Records"
+                        href={TRIALS_WHATSAPP_URL}
                         target="_blank"
                         rel="noreferrer"
                         underline="hover"

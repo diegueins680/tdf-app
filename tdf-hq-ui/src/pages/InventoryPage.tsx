@@ -28,6 +28,7 @@ import { Inventory, type AssetCheckoutRequest, type AssetCheckinRequest, type As
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
 import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
+import { buildInventoryScanUrl } from '../config/appConfig';
 
 function normalizeAssets(payload: { items: AssetDTO[] } | AssetDTO[]): AssetDTO[] {
   if (Array.isArray(payload)) return payload;
@@ -135,7 +136,7 @@ export default function InventoryPage() {
   const openQr = (asset: AssetDTO) => {
     setSelected(asset);
     if (asset.qrToken) {
-      const url = `https://tdf-app.pages.dev/inventario/scan/${asset.qrToken}`;
+      const url = buildInventoryScanUrl(asset.qrToken);
       const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}`;
       setQrDataUrl(qrImg);
       setDialogOpen('qr');

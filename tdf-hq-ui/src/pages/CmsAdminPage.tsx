@@ -24,6 +24,7 @@ import {
 import { Cms, type CmsContentDTO, type CmsContentIn } from '../api/cms';
 import ApiErrorNotice from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
+import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 
 const defaultSlugs = [
   'records-public',
@@ -61,11 +62,6 @@ const samplePayloads: Record<string, SamplePayload> = {
     locale: 'es',
   },
 };
-const PUBLIC_BASE =
-  typeof window !== 'undefined' && window.location.origin
-    ? window.location.origin.replace(/\/+$/, '')
-    : 'https://tdf-app.pages.dev';
-
 const livePathForSlug = (slug: string) => {
   switch (slug) {
     case 'records-public':
@@ -73,7 +69,7 @@ const livePathForSlug = (slug: string) => {
     case 'fan-hub':
       return '/fans';
     case 'course-production':
-      return '/curso/produccion-musical-dic-2025';
+      return `/curso/${COURSE_DEFAULTS.slug}`;
     default:
       return `/${slug}`;
   }

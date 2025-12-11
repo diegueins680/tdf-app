@@ -471,6 +471,52 @@ InstagramMessage
     createdAt        UTCTime
     UniqueInstagramMessage externalId
     deriving Show Generic
+SocialSyncAccount
+    partyId          PartyId Maybe
+    artistProfileId  ArtistProfileId Maybe
+    platform         Text
+    externalUserId   Text
+    handle           Text Maybe
+    accessToken      Text Maybe
+    tokenExpiresAt   UTCTime Maybe
+    status           Text
+    lastSyncedAt     UTCTime Maybe
+    createdAt        UTCTime
+    updatedAt        UTCTime Maybe
+    UniqueSocialSyncAccount platform externalUserId
+    deriving Show Generic
+SocialSyncPost
+    accountId        SocialSyncAccountId Maybe
+    platform         Text
+    externalPostId   Text
+    artistPartyId    PartyId Maybe
+    artistProfileId  ArtistProfileId Maybe
+    caption          Text Maybe
+    permalink        Text Maybe
+    mediaUrls        Text Maybe
+    postedAt         UTCTime Maybe
+    fetchedAt        UTCTime
+    tags             Text Maybe
+    summary          Text Maybe
+    ingestSource     Text
+    likeCount        Int Maybe
+    commentCount     Int Maybe
+    shareCount       Int Maybe
+    viewCount        Int Maybe
+    createdAt        UTCTime
+    updatedAt        UTCTime
+    UniqueSocialSyncPost platform externalPostId
+    deriving Show Generic
+SocialSyncRun
+    platform         Text
+    ingestSource     Text
+    startedAt        UTCTime
+    endedAt          UTCTime Maybe
+    status           Text
+    newPosts         Int
+    updatedPosts     Int
+    errorMessage     Text Maybe
+    deriving Show Generic
 ExternalCalendarMapping
     resourceId       ResourceId
     googleCalendarId Text

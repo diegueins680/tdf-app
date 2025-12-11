@@ -19,12 +19,14 @@ import           Data.Time              (NominalDiffTime, UTCTime(..), addUTCTim
                                          secondsToDiffTime)
 import qualified Data.Map.Strict       as Map
 import           System.Directory       (doesFileExist)
+import           System.Environment     (lookupEnv)
 import           GHC.Generics           (Generic)
 import           TDF.Models
 import           TDF.ModelsExtra        (DropdownOption(..))
 import qualified TDF.ModelsExtra       as ME
 import qualified TDF.Trials.Models     as Trials
 import           TDF.Pipelines          (canonicalStage, defaultStage)
+import           TDF.Config             (resolveAppBase)
 
 -- Seed data from Diego's YAML (normalized)
 seedAll :: SqlPersistT IO ()
@@ -213,7 +215,16 @@ slugify = T.toLower . T.replace " " "-"
 
 seedProductionCourse :: UTCTime -> SqlPersistT IO ()
 seedProductionCourse now = do
-  let slugVal = "produccion-musical-dic-2025"
+  slugEnv <- liftIO (lookupEnv "COURSE_DEFAULT_SLUG")
+  mapEnv <- liftIO (lookupEnv "COURSE_DEFAULT_MAP_URL")
+  whatsappEnv <- liftIO (lookupEnv "COURSE_DEFAULT_WHATSAPP_URL")
+  baseEnv <- liftIO (lookupEnv "HQ_APP_URL")
+  instructorAvatarEnv <- liftIO (lookupEnv "COURSE_DEFAULT_INSTRUCTOR_AVATAR")
+  let nonEmptyText raw =
+        let txt = T.strip (T.pack raw)
+        in if T.null txt then Nothing else Just txt
+      baseUrl = resolveAppBase (fmap T.pack baseEnv)
+      slugVal = fromMaybe "produccion-musical-dic-2025" (slugEnv >>= nonEmptyText)
       courseTitle = "Curso de Producción Musical"
       subtitleTxt = Just "Presencial · 4 sábados · 16 horas"
       formatTxt = Just "Presencial"
@@ -224,9 +235,9 @@ seedProductionCourse now = do
       sessionStart = Just 15
       sessionDuration = Just 4
       locationLabel = Just "TDF Records – Quito"
-      locationMap = Just "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6"
-      whatsappCta = Just "https://wa.me/593995413168?text=Quiero%20inscribirme%20al%20curso"
-      landingUrl = Just "https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
+      locationMap = Just (fromMaybe "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6" (mapEnv >>= nonEmptyText))
+      whatsappCta = Just (fromMaybe "https://wa.me/593995413168?text=Quiero%20inscribirme%20al%20curso" (whatsappEnv >>= nonEmptyText))
+      landingUrl = Just (baseUrl <> "/curso/" <> slugVal)
       dawsList = Just ["Logic", "Luna"]
       includesList = Just
         [ "Acceso a grabaciones"
@@ -237,7 +248,7 @@ seedProductionCourse now = do
         ]
       instructorName = Just "Esteban Muñoz"
       instructorBio = Just "Productor en TDF Records. 10+ años grabando bandas, rap y electrónica."
-      instructorAvatar = Just "https://tdf-app.pages.dev/assets/esteban-munoz.jpg"
+      instructorAvatar = Just (fromMaybe (baseUrl <> "/assets/esteban-munoz.jpg") (instructorAvatarEnv >>= nonEmptyText))
       sessions =
         [ ("Sábado 1 · Introducción", fromGregorian 2025 12 13)
         , ("Sábado 2 · Grabación", fromGregorian 2025 12 20)

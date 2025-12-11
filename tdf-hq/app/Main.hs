@@ -25,7 +25,7 @@ import           Text.Read                (readMaybe)
 import           TDF.Cors                 (corsPolicy)
 
 import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
-import           TDF.Cron       (startCoursePaymentReminderJob)
+import           TDF.Cron       (startCoursePaymentReminderJob, startInstagramSyncJob)
 import           TDF.DB         (Env(..), ConnectionPool, makePool)
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
@@ -88,6 +88,7 @@ main = do
              next req (\res -> send (applyHeaders res))
 
   startCoursePaymentReminderJob env
+  startInstagramSyncJob env
   Warp.runSettings warpSettings (addCorsFallback (appCors app))
 
 resetSchema :: SqlPersistT IO ()

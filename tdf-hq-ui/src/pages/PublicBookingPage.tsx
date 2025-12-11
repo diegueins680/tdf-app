@@ -505,13 +505,17 @@ export default function PublicBookingPage() {
     const nowStudio = DateTime.now().setZone(studioTimeZone);
     const openToday = nowStudio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
     const closeToday = nowStudio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
-    let candidate = nowStudio.plus({ minutes: 15 });
+    let candidate = nowStudio.plus({ minutes: START_STEP_MINUTES });
     if (candidate < openToday) candidate = openToday;
     if (candidate > closeToday) candidate = openToday.plus({ days: 1 });
     return alignToStepMinutes(candidate.setZone(userTimeZone));
   }, [studioTimeZone, userTimeZone]);
 
   const minStartValue = useMemo(() => toLocalInputValue(minStartDate.toJSDate()), [minStartDate]);
+  const minStartValueForInput = useMemo(
+    () => toLocalInputValue(alignToStepMinutes(minStartDate.startOf('day')).toJSDate()),
+    [minStartDate],
+  );
 
   useEffect(() => {
     const current = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
@@ -1128,7 +1132,7 @@ export default function PublicBookingPage() {
                         }}
                         fullWidth
                         InputLabelProps={{ shrink: true }}
-                        inputProps={{ min: minStartValue, max: maxStartIso, step: START_STEP_MINUTES * 60 }}
+                        inputProps={{ min: minStartValueForInput, max: maxStartIso, step: START_STEP_MINUTES * 60 }}
                         required
                         helperText={availabilityHelperText}
                         disabled={formDisabled}

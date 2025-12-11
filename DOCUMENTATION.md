@@ -160,6 +160,7 @@ curl -X PUT http://localhost:8080/api/users/1/roles \
 ### Agent Guidelines
 - **[.github/copilot-instructions.md](.github/copilot-instructions.md)** - AI agent guidelines for development
 - **[.github/agents/my-agent.md](.github/agents/my-agent.md)** - Musician Developer agent configuration
+- **[.github/agents/artist-social-sync-agent.md](.github/agents/artist-social-sync-agent.md)** - Agent for syncing artist social posts into TDF
 
 ### Agent Capabilities
 The Musician Developer agent specializes in:

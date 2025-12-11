@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { inferDemoToken } from '../config/appConfig';
 
 export interface SessionUser {
   username: string;
@@ -24,14 +25,10 @@ export interface SessionContextValue {
 }
 
 export const SESSION_STORAGE_KEY = 'tdf-hq-ui/session';
+
 const inferredDemoToken = (() => {
-  const envToken = import.meta.env.VITE_API_DEMO_TOKEN;
-  if (envToken && envToken.length > 0) return envToken;
-  if (typeof window === 'undefined') return '';
-  const host = window.location.hostname;
-  const isLocalhost = host === 'localhost' || host === '127.0.0.1';
-  if (host === 'tdf-app.pages.dev' || isLocalhost) return 'admin-token';
-  return '';
+  const host = typeof window === 'undefined' ? undefined : window.location.hostname;
+  return inferDemoToken(host);
 })();
 export const DEFAULT_DEMO_TOKEN = inferredDemoToken;
 

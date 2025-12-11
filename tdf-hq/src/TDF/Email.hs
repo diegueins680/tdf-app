@@ -32,7 +32,7 @@ import           System.Entropy           (getEntropy)
 import           System.IO                (stderr)
 import           Text.Printf              (printf)
 
-import           TDF.Config               (EmailConfig(..))
+import           TDF.Config               (EmailConfig(..), defaultAppBase, resolveAppBase)
 
 generateTempPassword :: IO Text
 generateTempPassword = do
@@ -91,7 +91,7 @@ sendPasswordResetEmail Nothing name email token mAppUrl = do
 sendPasswordResetEmail (Just cfg) name email token mAppUrl = do
   let subject   = "Restablecer tu contraseña de TDF Records"
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
-      baseUrl   = fromMaybe "https://tdf-app.pages.dev" mAppUrl
+      baseUrl   = resolveAppBase mAppUrl
       sanitizedBase =
         let trimmed = T.dropWhileEnd (== '/') baseUrl
         in if T.null trimmed then baseUrl else trimmed
@@ -187,7 +187,7 @@ sendMarketplaceOrderEmail (Just cfg) mBase name email orderId totalDisplay items
   let subject   = "Confirmamos tu pedido en TDF Marketplace"
       preheader = "Recibimos tu pedido. Te contactaremos para coordinar pago y entrega."
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
-      baseUrl   = fromMaybe "https://tdf-app.pages.dev" mBase
+      baseUrl   = resolveAppBase mBase
       sanitized =
         let trimmed = T.dropWhileEnd (== '/') baseUrl
         in if T.null trimmed then baseUrl else trimmed
@@ -221,7 +221,7 @@ sendEngineerBookingEmail (Just cfg) mBase name email serviceLabel startsAtLabel 
   let subject   = "Nueva reserva asignada - " <> serviceLabel
       preheader = "Tienes una sesión asignada. Revisa detalles y confirma disponibilidad."
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
-      baseUrl   = fromMaybe "https://tdf-app.pages.dev" mBase
+      baseUrl   = resolveAppBase mBase
       sanitized =
         let trimmed = T.dropWhileEnd (== '/') baseUrl
         in if T.null trimmed then baseUrl else trimmed
@@ -352,8 +352,8 @@ renderHtml preheader greeting bodyLines mCtaUrl =
 
 logoDataUri :: Text
 logoDataUri =
-  -- Hosted asset (Gmail bloquea data URIs); fallback is the Cloudflare Pages frontend.
-  "https://tdf-app.pages.dev/tdf-logo-wordmark.svg"
+  -- Hosted asset (Gmail bloquea data URIs); fallback is the configured frontend base.
+  defaultAppBase <> "/tdf-logo-wordmark.svg"
 
 escapeHtml :: Text -> Text
 escapeHtml = T.concatMap replaceChar

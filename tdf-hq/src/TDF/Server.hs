@@ -62,7 +62,7 @@ import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
-import           TDF.Config (AppConfig(..))
+import           TDF.Config (AppConfig(..), courseInstructorAvatarFallback, courseMapFallback, courseSlugFallback, resolveConfiguredAppBase)
 import           TDF.DB
 import           TDF.Models
 import qualified TDF.Models as M
@@ -475,6 +475,7 @@ whatsappWebhookServer =
 
     handleMessages payload = do
       cfg <- liftIO loadWhatsAppEnv
+      Env{envConfig} <- ask
       let incomingMessages = extractTextMessages payload
       for_ incomingMessages $ \(fromNumber, bodyTxt) -> do
         let lowerBody = T.toLower (T.strip bodyTxt)
@@ -482,7 +483,7 @@ whatsappWebhookServer =
           case normalizePhone fromNumber of
             Nothing -> pure ()
             Just phone -> do
-              _ <- createOrUpdateRegistration productionCourseSlug CourseRegistrationRequest
+              _ <- createOrUpdateRegistration (productionCourseSlug envConfig) CourseRegistrationRequest
                 { fullName = Nothing
                 , email = Nothing
                 , phoneE164 = Just phone
@@ -938,8 +939,8 @@ calendarServer user =
     formatTime' :: UTCTime -> ByteString
     formatTime' t = TE.encodeUtf8 (T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" t))
 
-productionCourseSlug :: Text
-productionCourseSlug = "produccion-musical-dic-2025"
+productionCourseSlug :: AppConfig -> Text
+productionCourseSlug = courseSlugFallback
 productionCoursePrice :: Double
 productionCoursePrice = 150
 productionCourseCapacity :: Int
@@ -947,11 +948,12 @@ productionCourseCapacity = 16
 
 -- Backward-compatible helpers used by cron jobs
 buildLandingUrl :: AppConfig -> Text
-buildLandingUrl cfg = buildLandingUrlFor cfg productionCourseSlug
+buildLandingUrl cfg = buildLandingUrlFor cfg (productionCourseSlug cfg)
 
 courseMetadataFor :: AppConfig -> Maybe Text -> Text -> Maybe CourseMetadata
 courseMetadataFor cfg mWaContact slugVal =
-  if normalizeSlug slugVal /= productionCourseSlug
+  let fallbackSlug = productionCourseSlug cfg
+  in if normalizeSlug slugVal /= fallbackSlug
     then Nothing
     else
       let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
@@ -968,7 +970,7 @@ courseMetadataFor cfg mWaContact slugVal =
             , SyllabusItem "Masterización y publicación" ["Mastering", "Distribución digital"]
             ]
       in Just CourseMetadata
-        { slug = productionCourseSlug
+        { slug = fallbackSlug
         , title = "Curso de Producción Musical"
         , subtitle = "Presencial · 4 sábados · 16 horas"
         , format = "Presencial"
@@ -980,7 +982,7 @@ courseMetadataFor cfg mWaContact slugVal =
         , sessionStartHour = 15
         , sessionDurationHours = 4
         , locationLabel = "TDF Records – Quito"
-        , locationMapUrl = "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6"
+        , locationMapUrl = courseMapFallback cfg
         , daws = ["Logic", "Luna"]
         , includes =
             [ "Acceso a grabaciones"
@@ -991,7 +993,7 @@ courseMetadataFor cfg mWaContact slugVal =
             ]
         , instructorName = Just "Esteban Muñoz"
         , instructorBio = Just "Productor e ingeniero residente en TDF Records, mentor del programa de producción."
-        , instructorAvatarUrl = Just "https://tdf-app.pages.dev/assets/esteban-munoz.jpg"
+        , instructorAvatarUrl = Just (courseInstructorAvatarFallback cfg)
         , sessions = sessions
         , syllabus = syllabus
         , whatsappCtaUrl = whatsappUrl
@@ -1003,6 +1005,7 @@ data WhatsAppEnv = WhatsAppEnv
   , waPhoneId      :: Maybe Text
   , waVerifyToken  :: Maybe Text
   , waContactNumber :: Maybe Text
+  , waApiVersion   :: Maybe Text
   }
 
 loadWhatsAppEnv :: IO WhatsAppEnv
@@ -1011,11 +1014,13 @@ loadWhatsAppEnv = do
   phoneId <- firstNonEmptyText ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
   verify  <- firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
   contact <- firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
+  apiVersion <- firstNonEmptyText ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
   pure WhatsAppEnv
     { waToken = token
     , waPhoneId = phoneId
     , waVerifyToken = verify
     , waContactNumber = contact
+    , waApiVersion = apiVersion
     }
 
 firstNonEmptyText :: [String] -> IO (Maybe Text)
@@ -1117,8 +1122,7 @@ toCourseMetadata cfg waEnv course sessions syllabus =
 
 buildLandingUrlFor :: AppConfig -> Text -> Text
 buildLandingUrlFor cfg slugVal =
-  let rawBase = fromMaybe "https://tdf-app.pages.dev" (appBaseUrl cfg)
-      base = T.dropWhileEnd (== '/') rawBase
+  let base = resolveConfiguredAppBase cfg
   in base <> "/curso/" <> slugVal
 
 buildWhatsappCtaFor :: Maybe Text -> Text -> Text -> Text
@@ -1429,8 +1433,10 @@ extractTextMessages WAMetaWebhook{entry} =
   ]
 
 sendWhatsappReply :: WhatsAppEnv -> Text -> AppM ()
-sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid} phone = do
-  metaRaw <- loadCourseMetadata productionCourseSlug
+sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVersion = mVersion} phone = do
+  Env{envConfig} <- ask
+  let slugVal = productionCourseSlug envConfig
+  metaRaw <- loadCourseMetadata slugVal
   let Courses.CourseMetadata{ Courses.title = metaTitle
                             , Courses.capacity = metaCapacity
                             , Courses.landingUrl = metaLanding
@@ -1438,7 +1444,8 @@ sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid} phone = 
   manager <- liftIO $ newManager tlsManagerSettings
   let msg = "¡Gracias por tu interés en " <> metaTitle <> "! Aquí tienes el link de inscripción: "
             <> metaLanding <> ". Cupos limitados (" <> T.pack (show metaCapacity) <> ")."
-  _ <- liftIO $ sendText manager tok pid phone msg
+      version = fromMaybe "v20.0" mVersion
+  _ <- liftIO $ sendText manager version tok pid phone msg
   pure ()
 sendWhatsappReply _ _ = pure ()
 
@@ -3854,21 +3861,22 @@ sendAutoReplies :: AppConfig -> AdsInquiry -> Maybe Text -> IO [Text]
 sendAutoReplies cfg AdsInquiry{..} mCourse = do
   mgr <- newManager tlsManagerSettings
   wa <- loadWhatsAppEnv
-  let ctaBase = fromMaybe "https://tdf-app.pages.dev" (appBaseUrl cfg)
+  let ctaBase = resolveConfiguredAppBase cfg
       cta = ctaBase <> "/trials"
+      courseLanding = buildLandingUrl cfg
       courseLabel = fromMaybe "las clases 1:1" mCourse
       body = T.intercalate "\n"
         [ "Hola " <> fromMaybe "" aiName <> " 🙌"
         , "Gracias por tu interés en " <> courseLabel <> "."
         , "Paquete 1:1 (16 horas): $480."
-        , "Grupo pequeño: más info y fechas en https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
+        , "Grupo pequeño: más info y fechas en " <> courseLanding
         , "¿Te agendo una clase de prueba gratis para ver horarios y profesor ideal?"
         , "Confírmame tu disponibilidad y ciudad. Agendamos aquí: " <> cta
         ]
   channels <- fmap catMaybes . sequence $
     [ case (waToken wa, waPhoneId wa, aiPhone >>= normalizePhone) of
         (Just tok, Just pid, Just ph) ->
-          do res <- sendText mgr tok pid ph body
+          do res <- sendText mgr (fromMaybe "v20.0" (waApiVersion wa)) tok pid ph body
              pure (either (const Nothing) (const (Just "whatsapp")) res)
         _ -> pure Nothing
     , case aiEmail of
@@ -3876,7 +3884,7 @@ sendAutoReplies cfg AdsInquiry{..} mCourse = do
           let svc = EmailSvc.mkEmailService cfg
           EmailSvc.sendTestEmail svc (fromMaybe "Amigo TDF" aiName) e "Gracias por tu interés en TDF"
             [ "Paquete 1:1 (16 horas): $480."
-            , "Grupo pequeño: detalles y fechas en https://tdf-app.pages.dev/curso/produccion-musical-dic-2025"
+            , "Grupo pequeño: detalles y fechas en " <> courseLanding
             , "Agenda tu clase de prueba gratis aquí: " <> cta <> "/trials"
             ] (Just (cta <> "/trials"))
           pure (Just "email")

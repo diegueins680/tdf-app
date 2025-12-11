@@ -15,16 +15,18 @@ corsPolicy = do
             <|> lookupEnv "ALLOW_ORIGIN"
             <|> lookupEnv "CORS_ALLOW_ORIGINS"
             <|> lookupEnv "CORS_ALLOW_ORIGIN"
+  hqBaseEnv <- lookupEnv "HQ_APP_URL"
   allowAllEnv <- lookupEnv "ALLOW_ALL_ORIGINS"
              <|> lookupEnv "CORS_ALLOW_ALL_ORIGINS"
   disableDefaultsEnv <- lookupEnv "CORS_DISABLE_DEFAULTS"
-                    <|> lookupEnv "DISABLE_DEFAULT_CORS"
-  let defaults =
+                      <|> lookupEnv "DISABLE_DEFAULT_CORS"
+  let defaultsCore =
         [ "http://localhost:5173"
         , "http://127.0.0.1:5173"
         , "https://tdfui.pages.dev"
-        , "https://tdf-app.pages.dev"
         ]
+      defaults =
+        defaultsCore ++ maybe [] (\raw -> [normalizeOrigin raw]) hqBaseEnv
       parsed = maybe [] splitComma originsEnv
       normalized = map normalizeOrigin parsed
       filtered = filter (not . null) normalized

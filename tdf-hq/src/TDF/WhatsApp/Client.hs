@@ -10,9 +10,12 @@ import Network.HTTP.Types.Header (hAuthorization)
 import Control.Exception (try, SomeException)
 import qualified Data.ByteString.Lazy as LBS
 
-sendText :: Manager -> Text -> Text -> Text -> Text -> IO (Either String Value)
-sendText mgr token phoneId to body = do
-  initReq <- parseRequest $ "https://graph.facebook.com/v20.0/" <> T.unpack phoneId <> "/messages"
+sendText :: Manager -> Text -> Text -> Text -> Text -> Text -> IO (Either String Value)
+sendText mgr apiVersion token phoneId to body = do
+  let version =
+        let trimmed = T.strip apiVersion
+        in if T.null trimmed then "v20.0" else trimmed
+  initReq <- parseRequest $ "https://graph.facebook.com/" <> T.unpack version <> "/" <> T.unpack phoneId <> "/messages"
   let payload = object
         [ "messaging_product" .= ("whatsapp" :: Text)
         , "to"   .= to

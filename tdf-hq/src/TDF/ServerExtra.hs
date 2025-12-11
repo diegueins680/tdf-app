@@ -42,6 +42,7 @@ import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), h
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
+import           TDF.Config                 (resolveConfiguredAppBase)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
 import           TDF.ModelsExtra
@@ -229,7 +230,9 @@ inventoryServer user =
       ensureModule ModuleAdmin user
       assetKey <- parseKey @Asset rawId
       token <- liftIO (fmap (T.pack . show) nextRandom)
-      let qrUrl tokenVal = "https://tdf-app.pages.dev/inventario/scan/" <> tokenVal
+      Env{envConfig} <- ask
+      let qrBase = resolveConfiguredAppBase envConfig <> "/inventario/scan/"
+          qrUrl tokenVal = qrBase <> tokenVal
       withPool $ update assetKey [AssetQrCode =. Just token]
       pure AssetQrDTO { qrToken = token, qrUrl = qrUrl token }
 

@@ -31,9 +31,10 @@ import { Courses } from '../api/courses';
 import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
+import { COURSE_DEFAULTS } from '../config/appConfig';
 
-const COURSE_SLUG = 'produccion-musical-dic-2025';
-const INSTRUCTOR_IMAGE_URL = instructorImage;
+const COURSE_SLUG = COURSE_DEFAULTS.slug;
+const INSTRUCTOR_IMAGE_URL = COURSE_DEFAULTS.instructorAvatarUrl || instructorImage;
 const INSTRUCTOR_IMAGE_FALLBACK = 'https://via.placeholder.com/1400x900.png?text=Esteban+Mu%C3%B1oz';
 
 const badgeStyle = {
@@ -124,7 +125,7 @@ export default function CourseProductionLandingPage() {
   const meta: CourseMetadata | undefined = metaQuery.data;
   const remaining = meta?.remaining ?? undefined;
   const isFull = remaining !== undefined && remaining <= 0;
-  const whatsappHref = meta?.whatsappCtaUrl ?? 'https://wa.me/?text=INSCRIBIRME%20Curso%20Produccion%20Musical';
+  const whatsappHref = meta?.whatsappCtaUrl ?? COURSE_DEFAULTS.whatsappUrl;
   const seatsLabel = isFull ? 'Cupos agotados' : 'Cupos limitados';
   const patchedSessions = useMemo(() => {
     const targetDates = ['2025-12-13', '2025-12-20', '2025-12-27', '2026-01-03'];
