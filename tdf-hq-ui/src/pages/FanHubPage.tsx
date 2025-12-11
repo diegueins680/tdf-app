@@ -48,6 +48,8 @@ import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
 import { ensureAccessToken, uploadToDrive, makeFilePublic, buildPublicContentUrl, driveConfigError } from '../services/googleDrive';
 
+const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
+
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
     <Box
@@ -530,8 +532,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const handleAvatarFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const maxBytes = 10 * 1024 * 1024; // 10 MB
-    if (file.size > maxBytes) {
+    if (file.size > FAN_AVATAR_MAX_BYTES) {
       alert('El archivo supera 10 MB. Usa una imagen más liviana.'); // small UX guard; avoid bigger error plumbing here
       return;
     }
