@@ -532,13 +532,25 @@ export default function LoginPage() {
       component="main"
       sx={{
         minHeight: '100vh',
-        bgcolor: (theme) => theme.palette.background.default,
+        bgcolor: 'linear-gradient(135deg, #0b1224 0%, #0f172a 35%, #0d1a2b 100%)',
+        position: 'relative',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         p: { xs: 2, sm: 4 },
       }}
     >
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          background:
+            'radial-gradient(40% 40% at 18% 20%, rgba(56,189,248,0.14), transparent 60%), radial-gradient(32% 36% at 82% 10%, rgba(167,139,250,0.16), transparent 55%), radial-gradient(26% 30% at 48% 78%, rgba(52,211,153,0.12), transparent 60%)',
+          filter: 'blur(0px)',
+        }}
+      />
       <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center' }}>
         <Paper
           component="form"
@@ -551,13 +563,16 @@ export default function LoginPage() {
             maxWidth: 420,
             p: { xs: 3, sm: 4 },
             borderRadius: 4,
+            boxShadow: '0 24px 80px rgba(15,23,42,0.28)',
+            background: 'linear-gradient(145deg, rgba(17,24,39,0.92), rgba(26,31,44,0.9))',
+            border: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           <Stack spacing={3}>
             <Stack spacing={1} alignItems="center">
-              <BrandLogo size={64} aria-label="TDF Records" />
-              <Typography variant="caption" color="text.secondary">
-                RECORDS & STUDIO
+              <BrandLogo variant="wordmark" size={82} aria-label="TDF Records" sx={{ filter: 'drop-shadow(0 10px 32px rgba(0,0,0,0.35))' }} />
+              <Typography variant="caption" sx={{ letterSpacing: 3, color: 'rgba(226,232,240,0.72)' }}>
+                RECORDS · STUDIO · HQ
               </Typography>
             </Stack>
 
@@ -750,6 +765,9 @@ export default function LoginPage() {
           </Stack>
         </Paper>
       </Container>
+      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+        <Box id="login-radio-mini-slot" sx={{ width: '100%', maxWidth: 420 }} />
+      </Box>
       <Dialog open={resetDialogOpen} onClose={closeResetDialog} fullWidth maxWidth="xs">
         <DialogTitle>Recuperar acceso</DialogTitle>
         <DialogContent>
