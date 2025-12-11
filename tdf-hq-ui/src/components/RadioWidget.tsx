@@ -1507,19 +1507,8 @@ export default function RadioWidget() {
   }, [miniBarVisible]);
 
   useEffect(() => {
-    if (!isLoginPage || typeof document === 'undefined') {
-      setLoginMiniBarHost(null);
-      return;
-    }
-    const slot = document.getElementById('login-radio-mini-slot');
-    if (slot) {
-      setLoginMiniBarHost(slot);
-      return;
-    }
-    const retry = window.setTimeout(() => {
-      setLoginMiniBarHost(document.getElementById('login-radio-mini-slot'));
-    }, 50);
-    return () => window.clearTimeout(retry);
+    // We now keep the player docked globally; skip inline mounting on login.
+    setLoginMiniBarHost(null);
   }, [isLoginPage, location.pathname]);
 
   useEffect(
@@ -1529,7 +1518,7 @@ export default function RadioWidget() {
     [stopBrowserBroadcast],
   );
 
-  const shouldInlineMiniBar = isLoginPage;
+  const shouldInlineMiniBar = false; // always docked at bottom, even on login
   const miniBarNode = (
     <Box
       sx={{
