@@ -7,6 +7,7 @@ module TDF.Cron
 
 import           Control.Concurrent      (forkIO, threadDelay)
 import           Control.Exception       (SomeException, catch, try)
+import           Control.Applicative    ((<|>))
 import           Control.Monad           (forever, void, when, foldM)
 import           Control.Monad.IO.Class  (liftIO)
 import           Data.Foldable           (for_)
@@ -38,7 +39,7 @@ import           Database.Persist        ( (!=.)
                                          , update
                                          , (=.)
                                           )
-import           Database.Persist.Sql    (runSqlPool)
+import           Database.Persist.Sql    (SqlPersistT, runSqlPool)
 import           System.Random           (randomRIO)
 import           System.IO               (hPutStrLn, stderr)
 
@@ -55,8 +56,11 @@ import           TDF.Server              ( buildLandingUrl
                                          , toCourseMetadata
                                          , normalizeSlug
                                          , productionCourseSlug
+                                         , productionCoursePrice
+                                         , productionCourseCapacity
                                          )
 import qualified TDF.Trials.Models       as Trials
+import           TDF.Config              (instagramAppToken)
 
 -- | Launch a background thread that sends payment reminders every day at 09:00 (server local time).
 startCoursePaymentReminderJob :: Env -> IO ()
@@ -97,7 +101,7 @@ waitUntil targetUtc = do
 
 sendCoursePaymentReminders :: Env -> IO ()
 sendCoursePaymentReminders Env{..} = do
-  let slugVal = normalizeSlug productionCourseSlug
+  let slugVal = normalizeSlug (productionCourseSlug envConfig)
       emailSvc = EmailSvc.mkEmailService envConfig
       landingUrl = buildLandingUrl envConfig
   waEnv <- loadWhatsAppEnv
@@ -296,29 +300,30 @@ upsertMedia
   -> SqlPersistT IO (Int, Int)
 upsertMedia now accId acc medias = foldM go (0, 0) medias
   where
+    go :: (Int, Int) -> InstagramMedia -> SqlPersistT IO (Int, Int)
     go (ins, upd) media = do
       mExisting <- getBy (UniqueSocialSyncPost "instagram" (imId media))
       let mediaTxt = nonEmptyText (imMediaUrl media)
-          tagsTxt = nonEmptyText (T.intercalate "," (classifyTags (imCaption media)))
+          tagsTxt = nonEmptyText (Just (T.intercalate "," (classifyTags (imCaption media))))
           summaryTxt = buildSummary (imCaption media)
-          baseFields =
-            [ (SocialSyncPostCaption =.) <$> imCaption media
-            , (SocialSyncPostPermalink =.) <$> imPermalink media
-            , (SocialSyncPostMediaUrls =.) <$> mediaTxt
-            , (SocialSyncPostPostedAt =.) <$> imTimestamp media
+          baseFields = catMaybes
+            [ (\v -> SocialSyncPostCaption =. Just v) <$> imCaption media
+            , (\v -> SocialSyncPostPermalink =. Just v) <$> imPermalink media
+            , (\v -> SocialSyncPostMediaUrls =. Just v) <$> mediaTxt
+            , (\v -> SocialSyncPostPostedAt =. Just v) <$> imTimestamp media
             , Just (SocialSyncPostFetchedAt =. now)
             , Just (SocialSyncPostUpdatedAt =. now)
-            , (SocialSyncPostTags =.) <$> tagsTxt
-            , (SocialSyncPostSummary =.) <$> summaryTxt
             , Just (SocialSyncPostIngestSource =. "cron")
+            , (\v -> SocialSyncPostTags =. Just v) <$> tagsTxt
+            , (\v -> SocialSyncPostSummary =. Just v) <$> summaryTxt
             ]
-          artistFields =
-            [ (SocialSyncPostArtistPartyId =.) <$> socialSyncAccountPartyId acc
-            , (SocialSyncPostArtistProfileId =.) <$> socialSyncAccountArtistProfileId acc
+          artistFields = catMaybes
+            [ (\v -> SocialSyncPostArtistPartyId =. Just v) <$> socialSyncAccountPartyId acc
+            , (\v -> SocialSyncPostArtistProfileId =. Just v) <$> socialSyncAccountArtistProfileId acc
             ]
       case mExisting of
         Just (Entity key _) -> do
-          update key (catMaybes (baseFields <> artistFields))
+          update key (baseFields <> artistFields)
           pure (ins, upd + 1)
         Nothing -> do
           insert_ SocialSyncPost

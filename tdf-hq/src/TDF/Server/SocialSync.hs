@@ -38,7 +38,13 @@ socialSyncServer _user =
        ingestHandler
   :<|> listHandler
   where
-    ingestHandler :: SocialSyncIngestRequest -> m SocialSyncIngestResponse
+    ingestHandler
+      :: ( MonadReader Env m
+         , MonadIO m
+         , MonadError ServerError m
+         )
+      => SocialSyncIngestRequest
+      -> m SocialSyncIngestResponse
     ingestHandler SocialSyncIngestRequest{..} = do
       now <- liftIO getCurrentTime
       results <- forM ssirPosts $ \payload -> do
@@ -118,7 +124,11 @@ socialSyncServer _user =
         }
 
     listHandler
-      :: Maybe Text
+      :: ( MonadReader Env m
+         , MonadIO m
+         , MonadError ServerError m
+         )
+      => Maybe Text
       -> Maybe Text
       -> Maybe Text
       -> Maybe Text
