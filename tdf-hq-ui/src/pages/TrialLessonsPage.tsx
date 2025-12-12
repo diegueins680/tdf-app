@@ -180,6 +180,14 @@ export default function TrialLessonsPage() {
 
   const filterFrom = useMemo(() => toIsoOrUndefined(fromInput), [fromInput]);
   const filterTo = useMemo(() => toIsoOrUndefined(toInput), [toInput]);
+  const fromDate = useMemo(() => (filterFrom ? new Date(filterFrom) : null), [filterFrom]);
+  const toDate = useMemo(() => (filterTo ? new Date(filterTo) : null), [filterTo]);
+  const rangeError = useMemo(() => {
+    if (fromInput && !filterFrom) return 'Fecha "Desde" inválida. Usa el selector.';
+    if (toInput && !filterTo) return 'Fecha "Hasta" inválida. Usa el selector.';
+    if (fromDate && toDate && fromDate > toDate) return 'El rango es inválido: "Desde" es mayor que "Hasta".';
+    return null;
+  }, [filterFrom, filterTo, fromDate, fromInput, toDate, toInput]);
 
   const classesQuery = useQuery({
     queryKey: ['trial-class-sessions', subjectFilter, teacherFilter, statusFilter, filterFrom, filterTo],
@@ -191,6 +199,7 @@ export default function TrialLessonsPage() {
         to: filterTo,
         status: statusFilter === 'all' ? undefined : statusFilter,
       }),
+    enabled: !rangeError,
   });
 
   const createMutation = useMutation({
@@ -258,6 +267,13 @@ export default function TrialLessonsPage() {
     to.setHours(23, 59, 0, 0);
     setFromInput(toLocalInput(from.toISOString()));
     setToInput(toLocalInput(to.toISOString()));
+  };
+
+  const resetFilters = () => {
+    setSubjectFilter('all');
+    setTeacherFilter('all');
+    setStatusFilter('all');
+    applyRangePreset(7, 30);
   };
 
   const openCreateDialog = () => {
@@ -412,8 +428,14 @@ export default function TrialLessonsPage() {
     },
   });
 
-  const data = classesQuery.data ?? [];
-  const loading = classesQuery.isLoading || subjectsQuery.isLoading || teachersQuery.isLoading || roomsQuery.isLoading || studentsQuery.isLoading;
+  const data = rangeError ? [] : classesQuery.data ?? [];
+  const loading =
+    subjectsQuery.isLoading ||
+    teachersQuery.isLoading ||
+    roomsQuery.isLoading ||
+    studentsQuery.isLoading ||
+    (!rangeError && classesQuery.isLoading);
+  const queryError = rangeError ? null : classesQuery.error;
 
   const normalizedStatus = (status: string): StatusKey =>
     (['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'].includes(status) ? status : 'programada') as StatusKey;
@@ -586,13 +608,28 @@ export default function TrialLessonsPage() {
               <Button variant="outlined" size="small" onClick={() => applyRangePreset(0, 90)}>
                 Próximas 12 semanas
               </Button>
+              <Button variant="text" size="small" onClick={resetFilters}>
+                Restablecer filtros
+              </Button>
             </Stack>
           </Stack>
+          {rangeError && (
+            <Alert
+              severity="warning"
+              action={
+                <Button color="inherit" size="small" onClick={resetFilters}>
+                  Corregir rango
+                </Button>
+              }
+            >
+              {rangeError} Ajusta las fechas o restablece los filtros.
+            </Alert>
+          )}
           {chipFilters}
           {loading && <LinearProgress />}
-          {classesQuery.error && (
+          {queryError && (
             <Alert severity="error">
-              {classesQuery.error instanceof Error ? classesQuery.error.message : 'Error al cargar clases.'}
+              {queryError instanceof Error ? queryError.message : 'Error al cargar clases.'}
             </Alert>
           )}
           {listError && (
@@ -600,7 +637,7 @@ export default function TrialLessonsPage() {
               {listError}
             </Alert>
           )}
-          {data.length === 0 && !loading && (
+          {data.length === 0 && !loading && !rangeError && (
             <Typography color="text.secondary">No hay clases de prueba para este filtro.</Typography>
           )}
           <Stack spacing={1.25}>
