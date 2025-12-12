@@ -763,14 +763,6 @@ export default function PublicBookingPage() {
     [computeMaxDurationForStart],
   );
 
-  const maxStartIso = useMemo(() => {
-    if (!bookingWindow) return undefined;
-    const duration = Math.max(30, Number(form.durationMinutes) || 60);
-    const latestStudio = bookingWindow.closeStudio.minus({ minutes: duration });
-    const latestUser = latestStudio.setZone(userTimeZone);
-    return toLocalInputValue(latestUser.toJSDate());
-  }, [bookingWindow, form.durationMinutes, userTimeZone]);
-
   const suggestedSlots = useMemo(() => {
     const slots: { value: string; label: string; helper: string }[] = [];
     const duration = Math.max(30, Number(form.durationMinutes) || 60);
@@ -1190,7 +1182,7 @@ export default function PublicBookingPage() {
                         }}
                         fullWidth
                         InputLabelProps={{ shrink: true }}
-                        inputProps={{ min: minStartValueForInput, max: maxStartIso, step: START_STEP_MINUTES * 60 }}
+                        inputProps={{ min: minStartValueForInput, step: START_STEP_MINUTES * 60 }}
                         required
                         helperText={availabilityHelperText}
                         disabled={formDisabled}
