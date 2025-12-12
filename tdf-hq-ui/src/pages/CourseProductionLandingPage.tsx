@@ -31,11 +31,16 @@ import { Courses } from '../api/courses';
 import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
-import { COURSE_DEFAULTS } from '../config/appConfig';
+import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 
 const COURSE_SLUG = COURSE_DEFAULTS.slug;
-const INSTRUCTOR_IMAGE_URL = COURSE_DEFAULTS.instructorAvatarUrl || instructorImage;
-const INSTRUCTOR_IMAGE_FALLBACK = 'https://via.placeholder.com/1400x900.png?text=Esteban+Mu%C3%B1oz';
+const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url) || /^data:image\//i.test(url);
+const INSTRUCTOR_IMAGE_URL = (() => {
+  const envUrl = COURSE_DEFAULTS.instructorAvatarUrl;
+  if (envUrl && isAbsoluteUrl(envUrl)) return envUrl;
+  return instructorImage;
+})();
+const INSTRUCTOR_IMAGE_FALLBACK = `${PUBLIC_BASE}/assets/esteban-munoz.jpg`;
 
 const badgeStyle = {
   bgcolor: 'rgba(255,255,255,0.1)',
@@ -214,7 +219,14 @@ function InstructorCard({ meta }: { meta?: CourseMetadata }) {
   const bio =
     meta?.instructorBio ??
     'Productor e ingeniero residente en TDF Records, con experiencia en grabación, mezcla y masterización en Logic y Luna. Te acompañará en sesiones prácticas dentro del control room del estudio.';
-  const avatar = meta?.instructorAvatarUrl ?? INSTRUCTOR_IMAGE_URL;
+  const resolveAvatar = (url?: string | null): string => {
+    if (!url) return INSTRUCTOR_IMAGE_URL;
+    const trimmed = url.trim();
+    if (!trimmed) return INSTRUCTOR_IMAGE_URL;
+    if (isAbsoluteUrl(trimmed)) return trimmed;
+    return `${PUBLIC_BASE}/${trimmed.replace(/^\/+/, '')}`;
+  };
+  const avatar = resolveAvatar(meta?.instructorAvatarUrl);
 
   return (
     <Card
