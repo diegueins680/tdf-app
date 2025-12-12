@@ -557,10 +557,6 @@ export default function PublicBookingPage() {
     () => defaultRoomsForService(form.serviceType, roomOptions),
     [form.serviceType, roomOptions],
   );
-  const hasCustomRooms = useMemo(
-    () => !sameRooms(form.resourceLabels, suggestedRooms),
-    [form.resourceLabels, suggestedRooms],
-  );
 
   const requiresEngineer = (service: string) => {
     const lowered = service.toLowerCase();
@@ -652,13 +648,9 @@ export default function PublicBookingPage() {
   useEffect(() => {
     setForm((prev) => {
       if (sameRooms(prev.resourceLabels, suggestedRooms)) return prev;
-      const matchesFallback = sameRooms(prev.resourceLabels, Array.from(ROOM_FALLBACKS));
-      if (prev.resourceLabels.length === 0 || matchesFallback) {
-        return { ...prev, resourceLabels: suggestedRooms };
-      }
-      return prev;
+      return { ...prev, resourceLabels: suggestedRooms };
     });
-  }, [form.serviceType, suggestedRooms]);
+  }, [suggestedRooms]);
 
   const maxDurationUntilClose = useMemo(() => {
     if (!bookingWindow) return null;
@@ -1108,61 +1100,6 @@ export default function PublicBookingPage() {
                         ))}
                         {services.length === 0 && <MenuItem value={defaultService}>{defaultService}</MenuItem>}
                       </TextField>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Autocomplete
-                        multiple
-                        options={roomOptions}
-                        value={form.resourceLabels}
-                        onChange={(_, value) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            resourceLabels: value,
-                          }))
-                        }
-                        disabled={formDisabled}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => <Chip {...getTagProps({ index })} key={option} label={option} />)
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Salas asignadas"
-                            placeholder="Elegimos automáticamente según el servicio"
-                            helperText="Sugerimos salas según el servicio; ajusta si necesitas otra combinación o déjanos elegir."
-                          />
-                        )}
-                        disableCloseOnSelect
-                      />
-                      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mt: 1 }}>
-                        <Chip
-                          label="Usar salas sugeridas"
-                          color={hasCustomRooms ? 'default' : 'primary'}
-                          onClick={() =>
-                            setForm((prev) => ({
-                              ...prev,
-                              resourceLabels: suggestedRooms,
-                            }))
-                          }
-                          disabled={formDisabled}
-                        />
-                        <Chip
-                          label="No estoy seguro, elijan por mí"
-                          onClick={() =>
-                            setForm((prev) => ({
-                              ...prev,
-                              resourceLabels: [],
-                            }))
-                          }
-                          variant="outlined"
-                          disabled={formDisabled}
-                        />
-                        {suggestedRooms.length > 0 && (
-                          <Typography variant="caption" color="text.secondary">
-                            Recomendado para {form.serviceType}: {suggestedRooms.join(' + ')}
-                          </Typography>
-                        )}
-                      </Stack>
                     </Grid>
                     <Grid item xs={12} sm={7}>
                       <TextField
