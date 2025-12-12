@@ -278,8 +278,8 @@ seedProductionCourse now = do
       , Trials.courseLocationMapUrl = locationMap
       , Trials.courseWhatsappCtaUrl = whatsappCta
       , Trials.courseLandingUrl = landingUrl
-      , Trials.courseDaws = dawsList
-      , Trials.courseIncludes = includesList
+      , Trials.courseDaws = Nothing
+      , Trials.courseIncludes = Nothing
       , Trials.courseInstructorName = instructorName
       , Trials.courseInstructorBio = instructorBio
       , Trials.courseInstructorAvatarUrl = instructorAvatar
@@ -301,8 +301,8 @@ seedProductionCourse now = do
         , Trials.courseLocationMapUrl = locationMap
         , Trials.courseWhatsappCtaUrl = whatsappCta
         , Trials.courseLandingUrl = landingUrl
-        , Trials.courseDaws = dawsList
-        , Trials.courseIncludes = includesList
+        , Trials.courseDaws = Nothing
+        , Trials.courseIncludes = Nothing
         , Trials.courseInstructorName = instructorName
         , Trials.courseInstructorBio = instructorBio
         , Trials.courseInstructorAvatarUrl = instructorAvatar
@@ -310,6 +310,11 @@ seedProductionCourse now = do
         , Trials.courseUpdatedAt = now
         }
       pure cid
+
+  -- Fuerza arrays como text[] para evitar literales heredados en formato JSON
+  rawExecute
+    "UPDATE course SET daws = ARRAY['Logic','Luna']::text[], includes = ARRAY['Acceso a grabaciones','Certificado de participación','Mentorías','Grupo de WhatsApp','Acceso a la plataforma de TDF Records']::text[] WHERE slug = ?"
+    [PersistText slugVal]
 
   deleteWhere [Trials.CourseSessionModelCourseId ==. courseId]
   forM_ (zip [1 :: Int ..] sessions) $ \(idx, (labelTxt, dayVal)) ->
