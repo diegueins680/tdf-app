@@ -126,7 +126,7 @@ loadConfig = do
         }
 
 defaultAppBase :: Text
-defaultAppBase = "http://localhost:5173"
+defaultAppBase = "https://tdf-app.pages.dev"
 
 sanitizeBaseUrl :: Text -> Text
 sanitizeBaseUrl base =
