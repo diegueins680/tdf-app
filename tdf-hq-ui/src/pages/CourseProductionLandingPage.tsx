@@ -40,7 +40,7 @@ const INSTRUCTOR_IMAGE_URL = (() => {
   if (envUrl && isAbsoluteUrl(envUrl)) return envUrl;
   return instructorImage;
 })();
-const INSTRUCTOR_IMAGE_FALLBACK = `${PUBLIC_BASE}/assets/esteban-munoz.jpg`;
+const INSTRUCTOR_IMAGE_FALLBACK = instructorImage;
 
 const badgeStyle = {
   bgcolor: 'rgba(255,255,255,0.1)',
