@@ -9,7 +9,7 @@
     "preview": "vite preview --port 5173",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "generate:api": "openapi-typescript ../tdf-hq/docs/openapi/api.yaml --output src/api/generated/types.ts"
   },
   "dependencies": {

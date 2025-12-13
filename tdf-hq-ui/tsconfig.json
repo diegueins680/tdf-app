@@ -15,7 +15,8 @@
     "jsx": "react-jsx",
     "types": [
       "vite/client",
-      "jest"
+      "jest",
+      "node"
     ],
     "strict": true,
     "noImplicitReturns": true,

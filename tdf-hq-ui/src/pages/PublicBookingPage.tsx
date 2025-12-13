@@ -30,7 +30,9 @@ import type { BookingDTO, RoomDTO, ServiceCatalogDTO } from '../api/types';
 import { Engineers, type PublicEngineer } from '../api/engineers';
 import { Services } from '../api/services';
 import { Rooms } from '../api/rooms';
+import { defaultRoomsForService, sameRooms } from '../utils/publicBookingRooms';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
+import { env } from '../utils/env';
 import { useSession } from '../session/SessionContext';
 
 interface FormState {
@@ -77,56 +79,7 @@ const zoneLabel = (zone: string) => {
   }
 };
 
-const normalizeService = (service: string) => service.trim().toLowerCase();
-const stripDiacritics = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 const START_STEP_MINUTES = 15;
-
-const defaultRoomsForService = (service: string, roomOptions: string[]) => {
-  const norm = normalizeService(service);
-  const plain = stripDiacritics(norm);
-  const hasAny = (...needles: string[]) => needles.some((needle) => plain.includes(needle));
-  const pick = (needle: string) =>
-    roomOptions.find((room) => room.toLowerCase().includes(needle.toLowerCase()));
-  const picks = (...needles: string[]) => needles.map(pick).filter(Boolean) as string[];
-
-  if (hasAny('grabacion de banda', 'grabacion banda', 'band recording', 'banda')) {
-    const candidates = picks('live', 'control');
-    if (candidates.length) return candidates;
-  }
-  if (hasAny('grabacion de voz', 'grabacion voz', 'grabacion vocal', 'vocal recording', 'voz')) {
-    const candidates = picks('live', 'vocal');
-    if (candidates.length) return candidates;
-  }
-  if (hasAny('mezcla', 'mix')) {
-    const candidates = picks('control');
-    if (candidates.length) return candidates;
-  }
-  if (hasAny('master')) {
-    const candidates = picks('control');
-    if (candidates.length) return candidates;
-  }
-  if (hasAny('podcast')) {
-    const candidates = picks('control', 'vocal');
-    if (candidates.length) return candidates;
-  }
-  if (hasAny('ensayo', 'rehearsal')) {
-    const candidates = picks('live');
-    if (candidates.length) return candidates;
-  }
-  if (hasAny('dj')) {
-    const candidates = picks('dj');
-    if (candidates.length) return candidates;
-  }
-  const fallback = roomOptions.slice(0, 2).filter(Boolean);
-  return fallback;
-};
-
-const sameRooms = (a: string[], b: string[]) => {
-  if (a.length !== b.length) return false;
-  const sort = (list: string[]) => [...list].map(normalizeService).sort();
-  const [as, bs] = [sort(a), sort(b)];
-  return as.every((val, idx) => val === bs[idx]);
-};
 
 const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
   return list;
@@ -198,7 +151,7 @@ export default function PublicBookingPage() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
   }, []);
   const studioTimeZone = useMemo(
-    () => ((import.meta.env['VITE_TZ'] as string | undefined) ?? 'America/Guayaquil'),
+    () => env.read('VITE_TZ') ?? 'America/Guayaquil',
     [],
   );
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
@@ -228,18 +181,6 @@ export default function PublicBookingPage() {
       return { ...prev, serviceType: nextService, resourceLabels: defaultRoomsForService(nextService, roomOptions) };
     });
   }, [services, roomOptions]);
-
-  useEffect(() => {
-    setForm((prev) => {
-      const suggested = defaultRoomsForService(prev.serviceType, roomOptions);
-      if (sameRooms(prev.resourceLabels, suggested)) return prev;
-      const matchesFallback = sameRooms(prev.resourceLabels, Array.from(ROOM_FALLBACKS));
-      if (prev.resourceLabels.length === 0 || matchesFallback) {
-        return { ...prev, resourceLabels: suggested };
-      }
-      return prev;
-    });
-  }, [roomOptions, form.serviceType]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -441,18 +382,11 @@ export default function PublicBookingPage() {
     }
 
     setSubmitting(true);
-    const uniqueRooms = Array.from(new Set(form.resourceLabels));
     const autoRooms = defaultRoomsForService(form.serviceType, roomOptions);
     const roomsToSend =
-      uniqueRooms.length > 0
-        ? uniqueRooms
-        : autoRooms.length > 0
-          ? autoRooms
-          : roomOptions.length > 0
-            ? roomOptions.slice(0, 1)
-            : [];
-    if (uniqueRooms.length === 0 && roomsToSend.length > 0) {
-      setForm((prev) => ({ ...prev, resourceLabels: roomsToSend }));
+      autoRooms.length > 0 ? autoRooms : roomOptions.length > 0 ? roomOptions.slice(0, 1) : [];
+    if (roomsToSend.length > 0) {
+      setForm((prev) => (sameRooms(prev.resourceLabels, roomsToSend) ? prev : { ...prev, resourceLabels: roomsToSend }));
     }
     const engineerPartyId = assignEngineerLater ? null : form.engineerId;
     const engineerName = assignEngineerLater ? null : form.engineerName.trim() || null;
@@ -1078,7 +1012,14 @@ export default function PublicBookingPage() {
                         label="Servicio"
                         select
                         value={form.serviceType}
-                        onChange={(e) => setForm((prev) => ({ ...prev, serviceType: e.target.value }))}
+                        onChange={(e) => {
+                          const nextService = e.target.value;
+                          setForm((prev) => ({
+                            ...prev,
+                            serviceType: nextService,
+                            resourceLabels: defaultRoomsForService(nextService, roomOptions),
+                          }));
+                        }}
                         fullWidth
                         required
                         disabled={formDisabled}

@@ -1,5 +1,5 @@
 const readEnvValue = (key: string): string | undefined => {
-  const baked = import.meta.env[key];
+  const baked = (import.meta as unknown as { env?: Record<string, unknown> }).env?.[key];
   if (typeof baked === 'string' && baked.trim()) return baked.trim();
   if (typeof window !== 'undefined') {
     const win = window as typeof window & { __ENV__?: Record<string, string | undefined> };
