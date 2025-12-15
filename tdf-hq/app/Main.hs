@@ -71,7 +71,8 @@ main = do
         in mapResponseHeaders (const merged) base
       warpSettings =
         Warp.setPort (appPort cfg) $
-          Warp.setOnExceptionResponse addCorsToExceptionResponse Warp.defaultSettings
+          Warp.setHost "0.0.0.0" $
+            Warp.setOnExceptionResponse addCorsToExceptionResponse Warp.defaultSettings
       addCorsFallback :: Middleware
       addCorsFallback next req send =
         let originHeader = lookup "origin" (requestHeaders req :: RequestHeaders)
