@@ -254,7 +254,7 @@ cd tdf-hq
 - Verify API is running and accessible
 
 **API generation fails:**
-- Ensure OpenAPI spec is valid: `npx @stoplight/spectral-cli lint docs/openapi/*.yaml`
+- Ensure OpenAPI spec is valid: `npx @stoplight/spectral-cli lint tdf-hq/docs/openapi/*.yaml`
 - Check path to spec in package.json scripts
 - Verify openapi-typescript is installed
 

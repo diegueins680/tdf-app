@@ -133,7 +133,7 @@ Brief description of changes
 1. Define route in `src/TDF/API.hs`
 2. Implement handler in `src/TDF/Server*.hs`
 3. Add database model if needed in `src/TDF/Models*.hs`
-4. Update OpenAPI spec in `docs/openapi/`
+4. Update OpenAPI spec in `tdf-hq/docs/openapi/`
 5. Add to route composition in `src/TDF/Server.hs`
 
 **Database changes:**

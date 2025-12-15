@@ -90,4 +90,11 @@ ArtistGenre
     genre Text
     Primary artistId genre
     deriving Show Generic
+
+ArtistFollow
+    artistId ArtistProfileId
+    followerPartyId Text
+    createdAt UTCTime default=now()
+    Primary artistId followerPartyId
+    deriving Show Generic
 |]

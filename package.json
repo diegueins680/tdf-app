@@ -8,13 +8,18 @@
     "tdf-mobile"
   ],
   "scripts": {
+    "dev": "npm run dev:ui",
     "dev:ui": "npm run dev --workspace=tdf-hq-ui",
     "dev:mobile": "npm run start --workspace=tdf-mobile",
+    "build": "npm run build:ui",
     "build:ui": "npm run build --workspace=tdf-hq-ui",
+    "test": "npm run test:ui",
     "ci:ui": "npm run build:ui && npm run test:ui",
     "build:ui:ci": "./scripts/build-ui-with-install.sh",
     "test:ui": "npm run test --workspace=tdf-hq-ui",
+    "lint": "npm run lint:ui",
     "lint:ui": "npm run lint --workspace=tdf-hq-ui",
+    "typecheck": "npm run typecheck:ui",
     "typecheck:ui": "npm run typecheck --workspace=tdf-hq-ui",
     "quality": "./scripts/quality-check.sh",
     "generate:api:ui": "npm run generate:api --workspace=tdf-hq-ui",

@@ -1,5 +1,7 @@
 # Multi-Role User Management - Quick Reference
 
+> Scope: This quick reference covers the multi-role user management feature. For overall project setup, see [QUICKSTART.md](QUICKSTART.md) and [QUICK_START_REFERENCE.md](QUICK_START_REFERENCE.md).
+
 ## API Quick Reference
 
 ### Endpoints

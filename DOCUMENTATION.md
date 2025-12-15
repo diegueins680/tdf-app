@@ -49,8 +49,8 @@ Welcome to the comprehensive documentation for the TDF Records Platform. This in
 
 ### API Development
 - **[DEVELOPMENT.md](DEVELOPMENT.md#making-api-changes)** - API development workflow
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - API endpoints and examples
-- **[docs/openapi/](docs/openapi/)** - OpenAPI specifications
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - User roles endpoints and examples
+- **[tdf-hq/docs/openapi/](tdf-hq/docs/openapi/)** - OpenAPI specifications
 
 ## 🧪 Testing & Quality
 
@@ -68,11 +68,10 @@ Welcome to the comprehensive documentation for the TDF Records Platform. This in
 ## 🔌 API Documentation
 
 ### API Reference
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick API reference with cURL examples
-- **[docs/api.md](docs/api.md)** - API documentation (if exists)
-- **[docs/openapi/lessons-and-receipts.yaml](docs/openapi/lessons-and-receipts.yaml)** - OpenAPI spec
-- **[docs/CalendarAPI.md](docs/CalendarAPI.md)** - Calendar API documentation (if exists)
-- **[docs/CONTRACTS_API.md](docs/CONTRACTS_API.md)** - API contracts (if exists)
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - User roles API reference with cURL examples
+- **[tdf-hq/docs/openapi/api.yaml](tdf-hq/docs/openapi/api.yaml)** - Core API spec (drives TypeScript client generation)
+- **[tdf-hq/docs/openapi/lessons-and-receipts.yaml](tdf-hq/docs/openapi/lessons-and-receipts.yaml)** - Lessons, packages, and receipts API
+- **[tdf-hq/docs/openapi/user-roles.yaml](tdf-hq/docs/openapi/user-roles.yaml)** - Multi-role user management API
 
 ### API Usage Examples
 ```bash

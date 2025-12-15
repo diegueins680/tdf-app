@@ -7,15 +7,18 @@ Fast reference for common commands, workflows, and configurations.
 ```bash
 # Clone with submodules
 git clone --recursive https://github.com/diegueins680/tdf-app
+cd tdf-app
 
-# Backend setup
-cd tdf-app/tdf-hq
+# Install JS deps (UI + mobile)
+npm install
+
+# Backend setup (terminal 1)
+cd tdf-hq
 cp config/default.env .env
 stack build && stack run
 
-# Frontend setup (new terminal)
-cd tdf-hq-ui
-npm install && npm run dev
+# Frontend setup (terminal 2, from repo root)
+npm run dev
 
 # Access
 # Backend: http://localhost:8080
@@ -105,15 +108,20 @@ npm run generate:api:mobile   # Mobile
 
 # Quality checks
 npm run quality               # Lint + typecheck + test
+npm run lint                  # Lint web UI (alias for lint:ui)
 npm run lint:ui              # Lint web UI
+npm run typecheck             # TypeScript check web UI (alias for typecheck:ui)
 npm run typecheck:ui         # TypeScript check web UI
+npm run test                  # Test web UI (alias for test:ui)
 npm run test:ui              # Test web UI
 
 # Development servers
+npm run dev                  # Start web UI (alias for dev:ui)
 npm run dev:ui               # Start web UI
 npm run dev:mobile           # Start mobile
 
 # Build
+npm run build                # Build web UI (alias for build:ui)
 npm run build:ui             # Build web UI
 ```
 
@@ -429,8 +437,8 @@ eas submit --platform android --latest
 git checkout -b feature/my-feature
 
 # 2. Backend: Add API endpoint
-cd tdf-hq/src/TDF
-# Edit API.hs, Server.hs, Models.hs
+cd tdf-hq
+# Edit src/TDF/API.hs, src/TDF/Server.hs, src/TDF/Models.hs
 
 # 3. Build and test
 stack build && stack run
@@ -438,7 +446,8 @@ stack build && stack run
 # 4. Update OpenAPI spec
 # Edit docs/openapi/*.yaml
 
-# 5. Regenerate frontend clients
+# 5. Regenerate frontend clients (from repo root)
+cd ..  # back to repo root
 npm run generate:api:ui
 npm run generate:api:mobile
 

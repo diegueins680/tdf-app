@@ -78,13 +78,13 @@ stack run
 # Set GOOGLE_CLIENT_ID in tdf-hq/.env and VITE_GOOGLE_CLIENT_ID in tdf-hq-ui/.env
 # Use a Web OAuth client from Google Cloud; both values should match
 
-# 4. Web UI setup (new terminal)
+# 4. Web UI setup (new terminal, from repo root)
 cd tdf-hq-ui
 cp .env.example .env
 # Set VITE_API_BASE=http://localhost:8080
 npm run dev
 
-# 5. Mobile setup (new terminal)
+# 5. Mobile setup (new terminal, from repo root)
 cd tdf-mobile
 # Set EXPO_PUBLIC_API_BASE=http://localhost:8080
 # Set EXPO_PUBLIC_UPLOAD_URL=http://localhost:8080/drive/upload (for inventory photos)
@@ -318,7 +318,7 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 - **[Backend (Haskell)](tdf-hq/README.md)** - API architecture and patterns
 - **[Frontend (React)](tdf-hq-ui/README.md)** - Web UI structure and components
 - **[Mobile App (React Native)](MOBILE_APP.md)** - Mobile development guide
-- **[API Reference](QUICK_REFERENCE.md)** - Quick API reference with examples
+- **[User Roles API Reference](QUICK_REFERENCE.md)** - Multi-role user management endpoints and examples
 
 ### Specialized Documentation
 - **[UI_VISUAL_GUIDE.md](UI_VISUAL_GUIDE.md)** - UI components and design specs
@@ -328,7 +328,7 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 - **[SECURITY_NOTICE.md](SECURITY_NOTICE.md)** - Security guidelines
 
 ### OpenAPI & Contracts
-- **[OpenAPI Specs](docs/openapi/)** - API specifications
+- **[OpenAPI Specs](tdf-hq/docs/openapi/)** - API specifications
 - **[Business Requirements](specs.yaml)** - Business logic and rules
 
 ## 🤝 Contributing

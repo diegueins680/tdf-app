@@ -2,6 +2,8 @@
 
 **Complete implementation of multi-role user management for TDF Records Platform**
 
+> Looking for overall platform docs? Start at [README.md](README.md) or the full index in [DOCUMENTATION.md](DOCUMENTATION.md).
+
 ---
 
 ## 🚀 Quick Start
@@ -107,7 +109,7 @@
 - `app/Main.hs` - Application entry point
 
 **Documentation & Config:**
-- `docs/openapi/user-roles.yaml` - OpenAPI 3.0 specification
+- `tdf-hq/docs/openapi/user-roles.yaml` - OpenAPI 3.0 specification
 - `sql/001_multi_role_migration.sql` - Database migration
 - `package.yaml` - Haskell package configuration
 - `stack.yaml` - Stack build configuration

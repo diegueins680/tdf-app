@@ -1,212 +1,82 @@
-# Quick Start Guide - User Role Management System
+# Quick Start - TDF Records Platform
 
-This guide will help you get the TDF Records User Role Management system up and running.
+Spin up the backend API + web UI for local development.
 
 ## Prerequisites
 
-### Backend
-- Stack (Haskell build tool) - Install: `curl -sSL https://get.haskellstack.org/ | sh`
-- PostgreSQL 13+ database server
+- Node.js 20.19+ and npm 10+
+- Backend (pick one):
+  - Docker + Docker Compose (recommended for first run), or
+  - Stack + PostgreSQL 16+
 
-### Frontend
-- Node.js 20.19+ (LTS)
-- npm (comes with Node.js)
-
-## Setup Steps
-
-### 1. Set up PostgreSQL Database
+## 1) Clone with submodules
 
 ```bash
-# Create database and user
-sudo -u postgres psql
-CREATE DATABASE tdfhq;
-CREATE USER tdf WITH PASSWORD 'tdf';
-GRANT ALL PRIVILEGES ON DATABASE tdfhq TO tdf;
-\q
+git clone --recursive <repository-url>
+cd tdf-app
 ```
 
-### 2. Configure Environment Variables
+If you already cloned without submodules:
 
-**Backend (`tdf-hq/.env`):**
 ```bash
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_NAME=tdfhq
-DB_USER=tdf
-DB_PASSWORD=tdf
+git submodule update --init --recursive
 ```
 
-**Frontend (`tdf-hq-ui/.env`):**
+## 2) Install JS dependencies (UI + mobile)
+
 ```bash
-VITE_API_BASE=http://localhost:8080
+npm install
 ```
 
-### 3. Start the Backend
+## 3) Configure environment files
+
+```bash
+cp tdf-hq/config/default.env tdf-hq/.env
+cp tdf-hq-ui/.env.example tdf-hq-ui/.env
+```
+
+## 4) Start the backend
+
+### Option A: Docker Compose (recommended)
 
 ```bash
 cd tdf-hq
+make up
+```
 
-# First time setup (may take several minutes)
+### Option B: Stack (runs backend locally)
+
+Make sure PostgreSQL is running and matches `tdf-hq/.env` (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME=tdf_hq`), then:
+
+```bash
+cd tdf-hq
 stack setup
 stack build
-
-# Run the server
 stack run
 ```
 
-Expected output:
-```
-========================================
-  TDF Records API - User Management
-========================================
+Backend: http://localhost:8080
 
-Database: host=127.0.0.1 port=5432 user=tdf password=tdf dbname=tdfhq
+## 5) Start the web UI
 
-[1/3] Running database migrations...
-      ✓ Migrations completed
-
-[2/3] Generating OpenAPI specification...
-      ✓ OpenAPI spec saved to: openapi.json
-
-[3/3] Starting API server...
-      ✓ Server running on http://localhost:8080
-
-API Endpoints:
-  GET  /api/users          - List all users
-  PUT  /api/users/:id/role - Update user role
-
-========================================
-```
-
-### 4. Start the Frontend
-
-In a new terminal:
+In a new terminal from the repo root:
 
 ```bash
-cd tdf-hq-ui
-
-# Install dependencies
-npm install
-
-# Start development server
 npm run dev
 ```
 
-The UI will be available at: **http://localhost:3000**
+Web UI: http://localhost:5173
 
-### 5. Test the System
+## 6) (Optional) Start the mobile app
 
-#### Option 1: Using the UI
-1. Open http://localhost:3000 in your browser
-2. You'll see the User Role Management interface
-3. Initially, there will be no users (empty table)
-
-#### Option 2: Using curl
-
-**List users:**
 ```bash
-curl http://localhost:8080/api/users
+npm run dev:mobile
 ```
 
-**Create sample data** (if you implement the seed endpoint):
-```bash
-# Add seed endpoint to backend first
-curl -X POST http://localhost:8080/admin/seed
-```
+See `MOBILE_APP.md` for required `EXPO_PUBLIC_*` environment variables.
 
-**Update a user's role:**
-```bash
-curl -X PUT http://localhost:8080/api/users/1/role \
-  -H "Content-Type: application/json" \
-  -d '{"urrRole": "AdminRole"}'
-```
+## Next steps
 
-## Adding Sample Users
-
-Since the initial database is empty, you can add users directly via PostgreSQL:
-
-```sql
--- Connect to database
-psql -U tdf -d tdfhq
-
--- Insert sample party
-INSERT INTO party (name, email, phone, role, created_at, updated_at)
-VALUES ('John Doe', 'john@example.com', '+593-99-123-4567', 'AdminRole', NOW(), NOW());
-
--- Get the party ID (adjust based on actual ID returned)
--- Then insert corresponding user
-INSERT INTO "user" (party_id, password_hash, is_active, created_at, updated_at)
-VALUES (1, '$2b$10$dummyhash', true, NOW(), NOW());
-```
-
-Or use the seed data module if implemented.
-
-## Development Workflow
-
-### Making Backend Changes
-
-1. Edit files in `tdf-hq/src/TDF/`
-2. Rebuild: `stack build`
-3. Restart: `stack run`
-4. Regenerate OpenAPI: Automatically done on startup
-
-### Making Frontend Changes
-
-1. Edit files in `tdf-hq-ui/src/`
-2. Changes hot-reload automatically
-3. Regenerate API client if backend changed:
-   ```bash
-   npm run generate:api
-   ```
-
-### Building for Production
-
-**Backend:**
-```bash
-cd tdf-hq
-stack build --copy-bins
-```
-
-**Frontend:**
-```bash
-cd tdf-hq-ui
-npm run build
-# Output in dist/ folder
-```
-
-## Troubleshooting
-
-### Backend won't start
-- Check PostgreSQL is running: `systemctl status postgresql`
-- Verify database credentials in `.env`
-- Check port 8080 is available: `lsof -i :8080`
-
-### Frontend can't connect to backend
-- Verify backend is running on port 8080
-- Check `VITE_API_BASE` in `.env`
-- Open browser console for detailed error messages
-
-### Build errors
-- Backend: Try `stack clean && stack build`
-- Frontend: Try `rm -rf node_modules && npm install`
-
-## Next Steps
-
-1. **Add Authentication**: Implement JWT-based auth
-2. **Add Seed Data**: Create sample users for testing
-3. **Role Restrictions**: Ensure only Admins can change roles
-4. **Audit Logging**: Track role changes
-5. **Enhanced UI**: Add search, filters, pagination
-
-## API Documentation
-
-Full API documentation is available in:
-- `tdf-hq/openapi.json` - OpenAPI 3 specification
-- Interactive docs: Use Swagger UI or similar tool
-
-## Support
-
-For issues or questions:
-- Check README.md files in each directory
-- Review IMPLEMENTATION_SUMMARY.md for architecture details
-- Check the specs.yaml for business requirements
+- Docs index: `DOCUMENTATION.md`
+- Development workflows: `DEVELOPMENT.md`
+- Deployment: `DEPLOYMENT_GUIDE.md`
