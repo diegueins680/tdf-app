@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'tdf-hq/**'
+      - '.dockerignore'
+      - '.github/workflows/deploy-koyeb.yml'
   workflow_dispatch:
 
 env:
@@ -77,6 +81,25 @@ jobs:
           slugify() {
             echo "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g; s/-{2,}/-/g'
           }
+          retry() {
+            local max="$1"
+            shift
+            local attempt=1
+            local delay=10
+            while true; do
+              if "$@"; then
+                return 0
+              fi
+              if [ "$attempt" -ge "$max" ]; then
+                echo "Command failed after $attempt attempts: $*" >&2
+                return 1
+              fi
+              echo "Retrying ($attempt/$max) in ${delay}s: $*" >&2
+              sleep "$delay"
+              attempt=$((attempt + 1))
+              delay=$((delay * 2))
+            done
+          }
           if [ -z "${KOYEB_TOKEN:-}" ] || [ -z "${KOYEB_SERVICE:-}" ] || [ -z "${KOYEB_APP:-}" ]; then
             echo "KOYEB_API_TOKEN, KOYEB_SERVICE_NAME, and KOYEB_APP_NAME secrets are required" >&2
             exit 1
@@ -86,6 +109,10 @@ jobs:
           if [ -z "$APP_NAME" ] || [ -z "$SERVICE_NAME" ]; then
             echo "Koyeb app/service names resolved to empty after slugify; please set KOYEB_APP_NAME / KOYEB_SERVICE_NAME to alphanumeric or dash." >&2
             exit 1
+          fi
+          DOCKER_SECRET_ARGS=()
+          if [ -n "${KOYEB_DOCKER_REGISTRY_SECRET:-}" ]; then
+            DOCKER_SECRET_ARGS=(--docker-private-registry-secret "$KOYEB_DOCKER_REGISTRY_SECRET")
           fi
           # Ensure app exists
           APP_ID=$(koyeb --token "$KOYEB_TOKEN" apps list --output json | jq -r '.apps[] | select(.name=="'"$APP_NAME"'") | .id' | head -n1)
@@ -103,15 +130,17 @@ jobs:
           EXISTING_ID=$(koyeb --token "$KOYEB_TOKEN" services list --app "$APP_ID" --output json | jq -r '.services[] | select(.name=="'"$SERVICE_NAME"'") | .id')
           if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
             echo "Updating existing service $SERVICE_NAME ($EXISTING_ID) with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
-            koyeb --token "$KOYEB_TOKEN" services update "$EXISTING_ID" \
+            retry 6 koyeb --token "$KOYEB_TOKEN" services update "$EXISTING_ID" \
               --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
               --ports 8080:http \
-              --strategy rolling
+              --strategy rolling \
+              "${DOCKER_SECRET_ARGS[@]}"
           else
             echo "Creating service $SERVICE_NAME in app $APP_NAME with image ${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
-            koyeb --token "$KOYEB_TOKEN" services create "$SERVICE_NAME" \
+            retry 6 koyeb --token "$KOYEB_TOKEN" services create "$SERVICE_NAME" \
               --app "$APP_ID" \
               --docker "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
               --ports 8080:http \
-              --strategy rolling
+              --strategy rolling \
+              "${DOCKER_SECRET_ARGS[@]}"
           fi
