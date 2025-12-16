@@ -3,11 +3,12 @@
 module Main where
 
 import qualified Network.Wai.Handler.Warp as Warp
-import           Control.Concurrent      (threadDelay)
+import           Control.Concurrent      (forkFinally, myThreadId, throwTo, threadDelay)
 import           Control.Exception       (SomeException, handle, try)
 import           Control.Monad            (forM_, when)
 import qualified Data.ByteString.Char8    as BS
 import           Data.Int                (Int64)
+import           Data.IORef              (newIORef, readIORef, writeIORef)
 import           Data.Maybe               (mapMaybe)
 import           Data.Text                (Text)
 import qualified Data.Text               as T
@@ -15,8 +16,8 @@ import           Database.Persist         ( (=.), upsert )
 import           Database.Persist.Sql     (SqlPersistT, Single(..), rawExecute, rawSql, runMigration,
                                            runSqlPool, toSqlKey)
 import           Database.Persist.Types   (PersistValue (PersistText))
-import           Network.HTTP.Types       (RequestHeaders, status500)
-import           Network.Wai              (Middleware, mapResponseHeaders, requestHeaders, responseHeaders,
+import           Network.HTTP.Types       (RequestHeaders, status200, status500, status503)
+import           Network.Wai              (Application, Middleware, mapResponseHeaders, pathInfo, requestHeaders, responseHeaders,
                                            responseLBS)
 import           System.IO                (hSetEncoding, stdout, stderr)
 import           GHC.IO.Encoding          (utf8, setLocaleEncoding)
@@ -37,29 +38,10 @@ main = do
   setLocaleEncoding utf8
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  cfg  <- loadConfig
-  pool <- makePoolWithRetry 5 (BS.pack (dbConnString cfg))
-  if resetDb cfg
-    then do
-      putStrLn "Resetting DB schema..."
-      runSqlPool resetSchema pool
-    else
-      putStrLn "RESET_DB disabled, preserving existing schema."
-  if runMigrations cfg
-    then do
-      putStrLn "Running DB migrations..."
-      runSqlPool runAllMigrations pool
-    else
-      putStrLn "RUN_MIGRATIONS disabled (using pre-initialized schema)."
-  when (seedDatabase cfg) $ do
-    putStrLn "Seeding initial data..."
-    runSqlPool seedAll pool
-  putStrLn ("Starting server on port " <> show (appPort cfg))
-
-  let env = Env{ envPool = pool, envConfig = cfg }
+  cfg <- loadConfig
   appCors <- corsPolicy
-  let app = mkApp env
-      -- Ensure Warp-generated exception responses still carry CORS headers so browsers don't block them.
+
+  let -- Ensure Warp-generated exception responses still carry CORS headers so browsers don't block them.
       addCorsToExceptionResponse ex =
         let base = Warp.defaultOnExceptionResponse ex
             hs = responseHeaders base
@@ -87,10 +69,59 @@ main = do
               in mapResponseHeaders (const merged) res
         in handle (\(_ :: SomeException) -> send (responseLBS status500 extra "Internal server error")) $
              next req (\res -> send (applyHeaders res))
+      rootOk :: Middleware
+      rootOk next req send =
+        if null (pathInfo req)
+          then send (responseLBS status200 [("Content-Type", "text/plain")] "ok")
+          else next req send
+      wrapApp :: Application -> Application
+      wrapApp = addCorsFallback . appCors . rootOk
+      bootApp :: Application
+      bootApp req send =
+        case pathInfo req of
+          ["health"] ->
+            send
+              (responseLBS status200 [("Content-Type", "application/json")] "{\"status\":\"starting\",\"db\":\"starting\"}")
+          _ ->
+            send (responseLBS status503 [("Content-Type", "application/json")] "{\"error\":\"starting\"}")
 
-  startCoursePaymentReminderJob env
-  startInstagramSyncJob env
-  Warp.runSettings warpSettings (addCorsFallback (appCors app))
+  appRef <- newIORef (wrapApp bootApp)
+
+  mainThread <- myThreadId
+  let setupApp = do
+        pool <- makePoolWithRetry 5 (BS.pack (dbConnString cfg))
+        if resetDb cfg
+          then do
+            putStrLn "Resetting DB schema..."
+            runSqlPool resetSchema pool
+          else
+            putStrLn "RESET_DB disabled, preserving existing schema."
+        if runMigrations cfg
+          then do
+            putStrLn "Running DB migrations..."
+            runSqlPool runAllMigrations pool
+          else
+            putStrLn "RUN_MIGRATIONS disabled (using pre-initialized schema)."
+        when (seedDatabase cfg) $ do
+          putStrLn "Seeding initial data..."
+          runSqlPool seedAll pool
+        putStrLn ("Starting server on port " <> show (appPort cfg))
+        let env = Env{ envPool = pool, envConfig = cfg }
+        writeIORef appRef (wrapApp (mkApp env))
+        startCoursePaymentReminderJob env
+        startInstagramSyncJob env
+
+  _ <-
+    forkFinally
+      setupApp
+      (\res -> case res of
+        Left err -> throwTo mainThread err
+        Right _ -> pure ()
+      )
+
+  Warp.runSettings warpSettings $ \req send -> do
+    app <- readIORef appRef
+    app req send
 
 resetSchema :: SqlPersistT IO ()
 resetSchema = do
