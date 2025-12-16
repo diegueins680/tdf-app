@@ -76,6 +76,7 @@ jobs:
         env:
           KOYEB_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
           KOYEB_SERVICE: ${{ secrets.KOYEB_SERVICE_NAME }}
+          KOYEB_DOCKER_REGISTRY_SECRET: ${{ secrets.KOYEB_DOCKER_REGISTRY_SECRET }}
         run: |
           set -euo pipefail
           slugify() {
