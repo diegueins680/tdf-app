@@ -54,7 +54,9 @@ import { deriveModulesFromRoles } from '../components/SidebarNav';
 import { useSession } from '../session/SessionContext';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? '';
+const API_BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
+  ? import.meta.env.VITE_API_BASE
+  : 'https://tdf-hq.fly.dev');
 const normalizePhotoUrl = (url?: string | null) => {
   if (!url) return undefined;
   if (/^https?:\/\//i.test(url)) return url;
