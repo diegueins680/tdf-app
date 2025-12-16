@@ -37,6 +37,7 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ShareIcon from '@mui/icons-material/Share';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import CloseIcon from '@mui/icons-material/Close';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   MarketplaceCartDTO,
@@ -214,6 +215,7 @@ export default function MarketplacePage() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<MarketplaceItemDTO | null>(null);
+  const [imagePreview, setImagePreview] = useState<{ src: string; alt: string } | null>(null);
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
   const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
   const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
@@ -805,6 +807,14 @@ export default function MarketplacePage() {
     setSelectedListing(null);
   };
 
+  const openImagePreview = (src: string, alt: string) => {
+    setImagePreview({ src, alt });
+  };
+
+  const closeImagePreview = () => {
+    setImagePreview(null);
+  };
+
   const openPhotoDialog = (listing: MarketplaceItemDTO) => {
     if (!canManagePhotos) return;
     setPhotoDialogListing(listing);
@@ -1336,8 +1346,13 @@ export default function MarketplacePage() {
                             component="img"
                             src={normalizePhotoUrl(item.miPhotoUrl)}
                             alt={item.miTitle}
-                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            sx={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }}
                             loading="lazy"
+                            onClick={() => {
+                              const src = normalizePhotoUrl(item.miPhotoUrl);
+                              if (!src) return;
+                              openImagePreview(src, item.miTitle);
+                            }}
                           />
                         ) : (
                           <Stack spacing={0.75} alignItems="center" py={2.5} px={1.5} textAlign="center">
@@ -1868,8 +1883,21 @@ export default function MarketplacePage() {
               <Box
                 component="img"
                 src={normalizePhotoUrl(photoDialogListing?.miPhotoUrl)}
-                alt={photoDialogListing.miTitle}
-                sx={{ width: '100%', borderRadius: 1.5, maxHeight: 220, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }}
+                alt={photoDialogListing?.miTitle ?? 'Foto'}
+                sx={{
+                  width: '100%',
+                  borderRadius: 1.5,
+                  maxHeight: 220,
+                  objectFit: 'cover',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  cursor: 'zoom-in',
+                }}
+                onClick={() => {
+                  const src = normalizePhotoUrl(photoDialogListing?.miPhotoUrl);
+                  if (!src) return;
+                  openImagePreview(src, photoDialogListing?.miTitle ?? 'Foto');
+                }}
               />
             )}
             <GoogleDriveUploadWidget
@@ -2092,7 +2120,12 @@ export default function MarketplacePage() {
                   component="img"
                   src={normalizePhotoUrl(selectedListing.miPhotoUrl)}
                   alt={selectedListing.miTitle}
-                  sx={{ width: '100%', borderRadius: 2, objectFit: 'cover', maxHeight: 260 }}
+                  sx={{ width: '100%', borderRadius: 2, objectFit: 'cover', maxHeight: 260, cursor: 'zoom-in' }}
+                  onClick={() => {
+                    const src = normalizePhotoUrl(selectedListing.miPhotoUrl);
+                    if (!src) return;
+                    openImagePreview(src, selectedListing.miTitle);
+                  }}
                 />
               )}
               <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -2142,6 +2175,37 @@ export default function MarketplacePage() {
             Cerrar
           </Button>
         </DialogActions>
+      </Dialog>
+      <Dialog
+        open={Boolean(imagePreview)}
+        onClose={closeImagePreview}
+        maxWidth={false}
+        PaperProps={{ sx: { bgcolor: 'transparent', boxShadow: 'none', m: 0 } }}
+        BackdropProps={{ sx: { bgcolor: 'rgba(0,0,0,0.85)' } }}
+      >
+        {imagePreview && (
+          <Box sx={{ position: 'relative', p: { xs: 1, sm: 2 } }}>
+            <IconButton
+              aria-label="Cerrar"
+              onClick={closeImagePreview}
+              sx={{ position: 'absolute', top: 8, right: 8, color: 'common.white', bgcolor: 'rgba(0,0,0,0.35)' }}
+            >
+              <CloseIcon />
+            </IconButton>
+            <Box
+              component="img"
+              src={imagePreview.src}
+              alt={imagePreview.alt}
+              sx={{
+                maxWidth: '92vw',
+                maxHeight: '92vh',
+                objectFit: 'contain',
+                borderRadius: 2,
+                display: 'block',
+              }}
+            />
+          </Box>
+        )}
       </Dialog>
     </Stack>
   </Box>
