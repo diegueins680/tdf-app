@@ -54,6 +54,16 @@ import { deriveModulesFromRoles } from '../components/SidebarNav';
 import { useSession } from '../session/SessionContext';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 
+const API_BASE = import.meta.env.VITE_API_BASE ?? '';
+const normalizePhotoUrl = (url?: string | null) => {
+  if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) return url;
+  const base = API_BASE.replace(/\/$/, '');
+  const path = url.replace(/^\/+/, '');
+  if (!base) return `/${path}`;
+  return `${base}/${path}`;
+};
+
 interface PaypalButtonOptions {
   createOrder?: () => string;
   onApprove?: (data: PaypalApproveData) => void | Promise<void>;
@@ -1319,10 +1329,10 @@ export default function MarketplacePage() {
                             sx={{ position: 'absolute', top: 8, left: 8, bgcolor: 'warning.light', fontWeight: 600 }}
                           />
                         )}
-                        {item.miPhotoUrl ? (
+                        {normalizePhotoUrl(item.miPhotoUrl) ? (
                           <Box
                             component="img"
-                            src={item.miPhotoUrl}
+                            src={normalizePhotoUrl(item.miPhotoUrl)}
                             alt={item.miTitle}
                             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             loading="lazy"
@@ -1852,10 +1862,10 @@ export default function MarketplacePage() {
                 Sube una imagen y guardaremos el enlace público de Google Drive en el inventario y marketplace.
               </Typography>
             </Stack>
-            {photoDialogListing?.miPhotoUrl && (
+            {normalizePhotoUrl(photoDialogListing?.miPhotoUrl) && (
               <Box
                 component="img"
-                src={photoDialogListing.miPhotoUrl}
+                src={normalizePhotoUrl(photoDialogListing?.miPhotoUrl)}
                 alt={photoDialogListing.miTitle}
                 sx={{ width: '100%', borderRadius: 1.5, maxHeight: 220, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }}
               />
@@ -2075,10 +2085,10 @@ export default function MarketplacePage() {
               <Typography variant="body2" color="text.secondary">
                 {selectedListing.miBrand ?? 'Sin marca'} {selectedListing.miModel ?? ''}
               </Typography>
-              {selectedListing.miPhotoUrl && (
+              {normalizePhotoUrl(selectedListing.miPhotoUrl) && (
                 <Box
                   component="img"
-                  src={selectedListing.miPhotoUrl}
+                  src={normalizePhotoUrl(selectedListing.miPhotoUrl)}
                   alt={selectedListing.miTitle}
                   sx={{ width: '100%', borderRadius: 2, objectFit: 'cover', maxHeight: 260 }}
                 />

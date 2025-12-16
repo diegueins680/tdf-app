@@ -70,6 +70,7 @@ COPY tdf-hq/app app
 COPY tdf-hq/src src
 COPY tdf-hq/config/default.env.example config/default.env
 COPY tdf-hq/docs docs
+COPY tdf-hq/assets assets
 
 # Capture commit and build time inside the image for the /version endpoint.
 # Prefer the actual repo metadata when it's available; otherwise, fall back to
@@ -112,6 +113,7 @@ COPY --from=builder /out/tdf-hq-exe /app/tdf-hq-exe
 COPY --from=builder /app/docs /app/docs
 COPY --from=builder /app/COMMIT /app/COMMIT
 COPY --from=builder /app/BUILD_TIME /app/BUILD_TIME
+COPY --from=builder /app/assets /app/assets
 
 # Render provides PORT; map it to the app's APP_PORT
 ENV APP_PORT=8080

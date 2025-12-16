@@ -50,6 +50,7 @@ type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
 
 type VersionAPI = "version" :> Get '[JSON] VersionInfo
+type AssetsAPI  = "inventory" :> Raw
 
 type InputListPublicAPI =
        "inventory"
@@ -236,6 +237,7 @@ type API =
   :<|> ServiceCatalogPublicAPI
   :<|> "engineers" :> Get '[JSON] [PublicEngineerDTO]
   :<|> BookingPublicAPI
+  :<|> AssetsAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
 data HealthStatus = HealthStatus { status :: String, db :: String }

@@ -47,6 +47,7 @@ import qualified Network.Wai as Wai (Request)
 import           Servant
 import           Servant.Multipart (FileData(..), Tmp)
 import           Servant.Server.Experimental.Auth (AuthHandler)
+import           Servant.Utils.StaticFiles (serveDirectoryFileServer)
 import           Text.Printf (printf)
 import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
@@ -77,6 +78,7 @@ import           TDF.Server.SocialEventsHandlers (socialEventsServer)
 import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
 import           TDF.Server.SocialSync (socialSyncServer)
 import qualified Data.Map.Strict            as Map
+import           Data.Tagged                (Tagged(..), unTagged)
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
@@ -256,6 +258,7 @@ server =
   :<|> serviceCatalogPublicServer
   :<|> listEngineersPublic
   :<|> bookingPublicServer
+  :<|> inventoryStaticServer
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -2763,6 +2766,10 @@ addRole user pidI (RolePayload roleTxt) = do
 -- Bookings
 bookingPublicServer :: ServerT Api.BookingPublicAPI AppM
 bookingPublicServer = createPublicBooking
+
+inventoryStaticServer :: ServerT Api.AssetsAPI AppM
+inventoryStaticServer =
+  Tagged (unTagged (serveDirectoryFileServer "assets/inventory"))
 
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
 bookingServer user =
