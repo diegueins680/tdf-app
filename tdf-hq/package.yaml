@@ -65,6 +65,8 @@ library:
     - -Wincomplete-uni-patterns
     - -Wincomplete-record-updates
     - -Wredundant-constraints
+    - -Wmissing-signatures
+    - -Wmissing-export-lists
   exposed-modules:
     - TDF.Models
     - TDF.API

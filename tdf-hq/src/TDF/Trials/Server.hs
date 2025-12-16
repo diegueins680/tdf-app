@@ -885,7 +885,9 @@ privateTrialsServer user@AuthedUser{..} =
             update cid updates
           ent <- getJustEntity cid
           dtos <- buildClassSessionDTOs [ent]
-          pure (head dtos)
+          case listToMaybe dtos of
+            Just dto -> pure dto
+            Nothing -> liftIO $ throwIO err500
 
     attendH :: Int -> AttendIn -> AppM ClassSessionOut
     attendH classId AttendIn{..} = do

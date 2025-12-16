@@ -133,7 +133,7 @@ export default function CourseProductionLandingPage() {
   const whatsappHref = meta?.whatsappCtaUrl ?? COURSE_DEFAULTS.whatsappUrl;
   const seatsLabel = isFull ? 'Cupos agotados' : 'Cupos limitados';
   const patchedSessions = useMemo(() => {
-    const targetDates = ['2025-12-13', '2025-12-20', '2025-12-27', '2026-01-03'];
+    const targetDates = ['2025-12-20', '2025-12-27', '2026-01-03', '2026-01-10'];
     if (!meta?.sessions?.length) return undefined;
     return meta.sessions.map((s, idx) => ({
       ...s,
