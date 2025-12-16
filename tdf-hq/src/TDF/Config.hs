@@ -30,6 +30,7 @@ data AppConfig = AppConfig
   , runMigrations   :: Bool
   , seedTriggerToken :: Maybe Text
   , appBaseUrl      :: Maybe Text
+  , assetsBaseUrl   :: Maybe Text
   , courseDefaultSlug :: Text
   , courseDefaultMapUrl :: Maybe Text
   , courseDefaultInstructorAvatar :: Maybe Text
@@ -60,6 +61,7 @@ loadConfig = do
   mig        <- get "RUN_MIGRATIONS" "true"
   seedEnv    <- lookupEnv "SEED_TRIGGER_TOKEN"
   baseUrlEnv <- lookupEnv "HQ_APP_URL"
+  assetsBaseEnv <- lookupEnv "HQ_ASSETS_BASE_URL"
   googleClientIdEnv <- lookupEnv "GOOGLE_CLIENT_ID"
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
@@ -85,6 +87,7 @@ loadConfig = do
     , runMigrations = asBool mig
     , seedTriggerToken = mkSeedToken seedEnv
     , appBaseUrl = fmap (T.strip . T.pack) baseUrlEnv
+    , assetsBaseUrl = fmap (T.strip . T.pack) assetsBaseEnv
     , courseDefaultSlug = maybe "produccion-musical-dic-2025" (T.strip . T.pack) courseSlugEnv
     , courseDefaultMapUrl = fmap (T.strip . T.pack) courseMapEnv
     , courseDefaultInstructorAvatar = fmap (T.strip . T.pack) courseInstructorAvatarEnv
@@ -127,6 +130,8 @@ loadConfig = do
 
 defaultAppBase :: Text
 defaultAppBase = "https://tdf-app.pages.dev"
+defaultAssetsBase :: Text
+defaultAssetsBase = "https://tdf-hq.fly.dev"
 
 sanitizeBaseUrl :: Text -> Text
 sanitizeBaseUrl base =
@@ -138,6 +143,8 @@ resolveAppBase = sanitizeBaseUrl . fromMaybe defaultAppBase
 
 resolveConfiguredAppBase :: AppConfig -> Text
 resolveConfiguredAppBase cfg = resolveAppBase (appBaseUrl cfg)
+resolveConfiguredAssetsBase :: AppConfig -> Text
+resolveConfiguredAssetsBase cfg = sanitizeBaseUrl (fromMaybe defaultAssetsBase (assetsBaseUrl cfg))
 
 courseSlugFallback :: AppConfig -> Text
 courseSlugFallback cfg =

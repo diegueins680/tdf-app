@@ -63,7 +63,7 @@ import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
-import           TDF.Config (AppConfig(..), courseInstructorAvatarFallback, courseMapFallback, courseSlugFallback, resolveConfiguredAppBase)
+import           TDF.Config (AppConfig(..), courseInstructorAvatarFallback, courseMapFallback, courseSlugFallback, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
 import           TDF.DB
 import           TDF.Models
 import qualified TDF.Models as M
@@ -3984,6 +3984,7 @@ contractsServer = hoistServer contractsProxy lift Contracts.server
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do
   Env{..} <- ask
+  let assetsBase = resolveConfiguredAssetsBase envConfig
   let loadListings = do
         listings <- selectList [ME.MarketplaceListingActive ==. True] [Asc ME.MarketplaceListingTitle]
         forM listings $ \(Entity lid listing) -> do
@@ -3991,14 +3992,14 @@ listMarketplace = do
           pure (lid, listing, mAsset)
   rows <- liftIO $ flip runSqlPool envPool loadListings
   if not (null rows)
-    then pure (mapMaybe toMarketplaceDTO rows)
+    then pure (mapMaybe (toMarketplaceDTO assetsBase) rows)
     else do
       -- Auto-publish demo inventory so the public marketplace is never empty.
       liftIO $ flip runSqlPool envPool $ do
         seedInventoryAssets
         seedMarketplaceListings
       seeded <- liftIO $ flip runSqlPool envPool loadListings
-      pure (mapMaybe toMarketplaceDTO seeded)
+      pure (mapMaybe (toMarketplaceDTO assetsBase) seeded)
 
 getMarketplaceItem :: Text -> AppM MarketplaceItemDTO
 getMarketplaceItem rawId = do
@@ -4006,20 +4007,22 @@ getMarketplaceItem rawId = do
     Nothing -> throwBadRequest "Invalid listing id"
     Just k  -> pure k
   Env{..} <- ask
+  let assetsBase = resolveConfiguredAssetsBase envConfig
   mDto <- liftIO $ flip runSqlPool envPool $ do
     mListing <- get listingKey
     case mListing of
       Nothing -> pure Nothing
       Just listing -> do
         mAsset <- get (ME.marketplaceListingAssetId listing)
-        pure (toMarketplaceDTO (listingKey, listing, mAsset))
+        pure (toMarketplaceDTO assetsBase (listingKey, listing, mAsset))
   maybe (throwError err404) pure mDto
 
 toMarketplaceDTO
-  :: (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
+  :: Text
+  -> (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
   -> Maybe MarketplaceItemDTO
-toMarketplaceDTO (_, _, Nothing) = Nothing
-toMarketplaceDTO (lid, listing, Just asset) =
+toMarketplaceDTO _ (_, _, Nothing) = Nothing
+toMarketplaceDTO assetsBase (lid, listing, Just asset) =
   Just MarketplaceItemDTO
     { miListingId      = toPathPiece lid
     , miAssetId        = toPathPiece (ME.marketplaceListingAssetId listing)
@@ -4028,7 +4031,7 @@ toMarketplaceDTO (lid, listing, Just asset) =
     , miCategory       = ME.assetCategory asset
     , miBrand          = ME.assetBrand asset
     , miModel          = ME.assetModel asset
-    , miPhotoUrl       = ME.assetPhotoUrl asset
+    , miPhotoUrl       = fmap (normalizePhoto assetsBase) (ME.assetPhotoUrl asset)
     , miStatus         = Just (assetStatusLabel (ME.assetStatus asset))
     , miCondition      = Just (assetConditionLabel (ME.assetCondition asset))
     , miPriceUsdCents  = ME.marketplaceListingPriceUsdCents listing
@@ -4036,6 +4039,16 @@ toMarketplaceDTO (lid, listing, Just asset) =
     , miMarkupPct      = ME.marketplaceListingMarkupPct listing
     , miCurrency       = ME.marketplaceListingCurrency listing
     }
+
+normalizePhoto :: Text -> Text -> Text
+normalizePhoto assetsBase raw =
+  let trimmed = T.strip raw
+      base    = T.dropWhileEnd (== '/') assetsBase
+  in if "http://" `T.isPrefixOf` trimmed || "https://" `T.isPrefixOf` trimmed
+        then trimmed
+        else
+          let path = T.dropWhile (== '/') trimmed
+          in base <> "/" <> path
 
 createCart :: AppM MarketplaceCartDTO
 createCart = do
