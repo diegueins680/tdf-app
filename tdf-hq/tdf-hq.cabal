@@ -134,6 +134,7 @@ executable tdf-hq-exe
     , template-haskell
     , file-embed
     , smtp-mail
+    , tagged
 
 test-suite tdf-hq-test
   type:              exitcode-stdio-1.0
@@ -249,6 +250,7 @@ test-suite tdf-hq-test
     , transformers
     , mtl
     , mime-mail
+    , tagged
     , unordered-containers
     , uuid-types
     , scientific
