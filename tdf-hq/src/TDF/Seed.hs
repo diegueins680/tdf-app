@@ -926,8 +926,10 @@ seedMarketplaceListings = do
     seedFromStatic now = do
       assets <- selectList [] [Asc ME.AssetName]
       forM_ assets $ \(Entity assetId asset) -> do
-        case Map.lookup (ME.assetName asset) marketplacePriceCents of
-          Nothing -> pure ()
+        let basePrice = Map.lookup (ME.assetName asset) marketplacePriceCents
+                         <|> ME.assetPurchasePriceUsdCents asset
+        case basePrice of
+          Nothing         -> pure ()
           Just baseCents -> do
             let listingPrice = applyMarketplaceMarkup baseCents
                 titleTxt = ME.assetName asset
