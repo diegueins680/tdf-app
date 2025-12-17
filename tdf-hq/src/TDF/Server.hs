@@ -12,7 +12,7 @@
 module TDF.Server where
 
 import           Control.Applicative ((<|>))
-import           Control.Exception (SomeException, try)
+import           Control.Exception (SomeException, displayException, try)
 import           Control.Concurrent (forkIO)
 import           Control.Monad (forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.IO.Class (liftIO)
@@ -42,6 +42,7 @@ import           GHC.Generics (Generic)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
+import           System.Directory (doesFileExist)
 import           System.IO (hPutStrLn, stderr)
 import qualified Network.Wai as Wai (Request)
 import           Servant
@@ -522,8 +523,17 @@ driveServer _ mAccessToken DriveUploadForm{..} = do
         let raw = T.strip (fdFileName duFile)
         in if T.null raw then Nothing else Just raw
       nameOverride = duName <|> fallbackName
-  dto <- liftIO $ uploadToDrive manager accessToken duFile nameOverride folder
-  pure dto
+  dtoOrErr <-
+    liftIO
+      (try (uploadToDrive manager accessToken duFile nameOverride folder) ::
+        IO (Either SomeException DriveUploadDTO))
+  case dtoOrErr of
+    Right dto -> pure dto
+    Left err ->
+      throwError err502
+        { errBody =
+            BL8.pack ("Google Drive upload falló: " <> displayException err)
+        }
   where
     resolveDriveAccessToken :: Manager -> Maybe Text -> AppM Text
     resolveDriveAccessToken manager mProvided =
@@ -576,10 +586,24 @@ driveServer _ mAccessToken DriveUploadForm{..} = do
             , requestBody = RequestBodyLBS (BL.fromStrict form)
             , requestHeaders = [("Content-Type", "application/x-www-form-urlencoded")]
             }
-      resp <- liftIO $ httpLbs req manager
+      respOrErr <-
+        liftIO
+          (try (httpLbs req manager) ::
+            IO (Either SomeException (Response BL.ByteString)))
+      resp <- case respOrErr of
+        Left err ->
+          throwError err502
+            { errBody = BL8.pack ("No se pudo contactar Google OAuth: " <> displayException err) }
+        Right ok -> pure ok
       let codeStatus = statusCode (responseStatus resp)
-      when (codeStatus >= 400) $
-        throwError err502 { errBody = "Refresh token falló con Google Drive." }
+      when (codeStatus >= 400) $ do
+        let bodySnippet = take 2000 (BL8.unpack (responseBody resp))
+            suffix = if null bodySnippet then "" else " " <> bodySnippet
+        throwError err502
+          { errBody =
+              BL8.pack
+                ("Refresh token falló con Google OAuth (" <> show codeStatus <> ")." <> suffix)
+          }
       token <- case eitherDecode (responseBody resp) of
         Left err ->
           throwError err502 { errBody = BL8.pack ("No se pudo parsear refresh token: " <> err) }
@@ -4054,20 +4078,26 @@ listMarketplace = do
   Env{..} <- ask
   let assetsBase = resolveConfiguredAssetsBase envConfig
   let loadListings = do
-        listings <- selectList [ME.MarketplaceListingActive ==. True] [Asc ME.MarketplaceListingTitle]
+        listings <-
+          selectList
+            [ME.MarketplaceListingActive ==. True]
+            [Asc ME.MarketplaceListingTitle]
         forM listings $ \(Entity lid listing) -> do
           mAsset <- get (ME.marketplaceListingAssetId listing)
           pure (lid, listing, mAsset)
   rows <- liftIO $ flip runSqlPool envPool loadListings
   if not (null rows)
-    then pure (mapMaybe (toMarketplaceDTO assetsBase) rows)
+    then do
+      dtos <- forM rows (toMarketplaceDTO assetsBase)
+      pure (catMaybes dtos)
     else do
       -- Auto-publish demo inventory so the public marketplace is never empty.
       liftIO $ flip runSqlPool envPool $ do
         seedInventoryAssets
         seedMarketplaceListings
       seeded <- liftIO $ flip runSqlPool envPool loadListings
-      pure (mapMaybe (toMarketplaceDTO assetsBase) seeded)
+      dtos <- forM seeded (toMarketplaceDTO assetsBase)
+      pure (catMaybes dtos)
 
 getMarketplaceItem :: Text -> AppM MarketplaceItemDTO
 getMarketplaceItem rawId = do
@@ -4076,22 +4106,27 @@ getMarketplaceItem rawId = do
     Just k  -> pure k
   Env{..} <- ask
   let assetsBase = resolveConfiguredAssetsBase envConfig
-  mDto <- liftIO $ flip runSqlPool envPool $ do
+  mRow <- liftIO $ flip runSqlPool envPool $ do
     mListing <- get listingKey
     case mListing of
       Nothing -> pure Nothing
       Just listing -> do
         mAsset <- get (ME.marketplaceListingAssetId listing)
-        pure (toMarketplaceDTO assetsBase (listingKey, listing, mAsset))
-  maybe (throwError err404) pure mDto
+        pure (Just (listingKey, listing, mAsset))
+  case mRow of
+    Nothing -> throwError err404
+    Just row -> do
+      mDto <- toMarketplaceDTO assetsBase row
+      maybe (throwError err404) pure mDto
 
 toMarketplaceDTO
   :: Text
   -> (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
-  -> Maybe MarketplaceItemDTO
-toMarketplaceDTO _ (_, _, Nothing) = Nothing
-toMarketplaceDTO assetsBase (lid, listing, Just asset) =
-  Just MarketplaceItemDTO
+  -> AppM (Maybe MarketplaceItemDTO)
+toMarketplaceDTO _ (_, _, Nothing) = pure Nothing
+toMarketplaceDTO assetsBase (lid, listing, Just asset) = do
+  mPhoto <- liftIO $ resolveMarketplacePhotoUrl assetsBase (ME.assetPhotoUrl asset)
+  pure $ Just MarketplaceItemDTO
     { miListingId      = toPathPiece lid
     , miAssetId        = toPathPiece (ME.marketplaceListingAssetId listing)
     , miTitle          = ME.marketplaceListingTitle listing
@@ -4099,14 +4134,28 @@ toMarketplaceDTO assetsBase (lid, listing, Just asset) =
     , miCategory       = ME.assetCategory asset
     , miBrand          = ME.assetBrand asset
     , miModel          = ME.assetModel asset
-    , miPhotoUrl       = fmap (normalizePhoto assetsBase) (ME.assetPhotoUrl asset)
+    , miPhotoUrl       = mPhoto
     , miStatus         = Just (assetStatusLabel (ME.assetStatus asset))
     , miCondition      = Just (assetConditionLabel (ME.assetCondition asset))
     , miPriceUsdCents  = ME.marketplaceListingPriceUsdCents listing
-    , miPriceDisplay   = formatUsd (ME.marketplaceListingPriceUsdCents listing) (ME.marketplaceListingCurrency listing)
+    , miPriceDisplay   =
+        formatUsd
+          (ME.marketplaceListingPriceUsdCents listing)
+          (ME.marketplaceListingCurrency listing)
     , miMarkupPct      = ME.marketplaceListingMarkupPct listing
     , miCurrency       = ME.marketplaceListingCurrency listing
     }
+
+resolveMarketplacePhotoUrl :: Text -> Maybe Text -> IO (Maybe Text)
+resolveMarketplacePhotoUrl _ Nothing = pure Nothing
+resolveMarketplacePhotoUrl assetsBase (Just raw0) = do
+  let trimmed = T.strip raw0
+      path = T.dropWhile (== '/') trimmed
+  if "inventory/" `T.isPrefixOf` path
+    then do
+      fileExists <- doesFileExist ("assets/" <> T.unpack path)
+      pure (if fileExists then Just (normalizePhoto assetsBase path) else Nothing)
+    else pure (Just (normalizePhoto assetsBase trimmed))
 
 normalizePhoto :: Text -> Text -> Text
 normalizePhoto assetsBase raw =
