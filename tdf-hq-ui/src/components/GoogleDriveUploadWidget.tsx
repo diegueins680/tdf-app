@@ -1,9 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   IconButton,
   LinearProgress,
   Stack,
@@ -12,8 +11,8 @@ import {
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { uploadToDrive, type DriveFileInfo } from '../services/googleDrive';
-import { useGoogleDriveAuth } from '../hooks/useGoogleDriveAuth';
+import type { DriveFileInfo } from '../services/googleDrive';
+import { uploadToDrive } from '../api/drive';
 
 interface UploadItem {
   id: string;
@@ -42,7 +41,6 @@ export default function GoogleDriveUploadWidget({
   dense = false,
 }: GoogleDriveUploadWidgetProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { status, startAuth, ensureToken, resetAuth } = useGoogleDriveAuth();
   const [items, setItems] = useState<UploadItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -51,12 +49,6 @@ export default function GoogleDriveUploadWidget({
     async (files: FileList | File[]) => {
       const fileArr = Array.from(files);
       setError(null);
-      try {
-        await ensureToken();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Necesitas iniciar sesión con Google Drive.');
-        return;
-      }
       const uploads = fileArr.map<UploadItem>((file) => ({
         id: crypto.randomUUID(),
         file,
@@ -70,11 +62,12 @@ export default function GoogleDriveUploadWidget({
         );
         void (async () => {
           try {
-            const driveFile = await uploadToDrive(item.file, (pct) =>
-              setItems((prev) =>
-                prev.map((it) => (it.id === item.id ? { ...it, progress: Math.max(pct, it.progress) } : it)),
-              ),
-            );
+            const driveFile = await uploadToDrive(item.file, {
+              onProgress: (pct) =>
+                setItems((prev) =>
+                  prev.map((it) => (it.id === item.id ? { ...it, progress: Math.max(pct, it.progress) } : it)),
+                ),
+            });
             setItems((prev) =>
               prev.map((it) =>
                 it.id === item.id ? { ...it, status: 'done', progress: 100, driveFile } : it,
@@ -99,7 +92,7 @@ export default function GoogleDriveUploadWidget({
         })();
       });
     },
-    [ensureToken, onComplete],
+    [onComplete],
   );
 
   const handleDrop = (evt: React.DragEvent<HTMLDivElement>) => {
@@ -113,26 +106,13 @@ export default function GoogleDriveUploadWidget({
 
   const handleBrowse = () => inputRef.current?.click();
 
-  const uploaderState = useMemo(() => {
-    if (status === 'authenticating') return 'Conectando con Google Drive...';
-    if (status === 'idle') return 'Conecta con Google Drive para subir archivos.';
-    return null;
-  }, [status]);
-
   return (
     <Stack spacing={1}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <Button
           variant="outlined"
           startIcon={<UploadFileIcon />}
-          onClick={() => {
-            if (status === 'idle') {
-              void startAuth(encodeURIComponent(window.location.pathname + window.location.search));
-            } else {
-              handleBrowse();
-            }
-          }}
-          disabled={status === 'authenticating'}
+          onClick={handleBrowse}
           size={dense ? 'small' : 'medium'}
         >
           {label}
@@ -141,22 +121,6 @@ export default function GoogleDriveUploadWidget({
           <Typography variant="body2" color="text.secondary">
             {helperText}
           </Typography>
-        )}
-        {status === 'authenticating' && <CircularProgress size={18} />}
-        {status === 'ready' && (
-          <Typography variant="caption" color="success.main">
-            Conectado a Drive
-          </Typography>
-        )}
-        {status === 'idle' && (
-          <Button variant="text" size="small" onClick={() => void startAuth()}>
-            Conectar
-          </Button>
-        )}
-        {status === 'ready' && (
-          <Button variant="text" size="small" onClick={resetAuth}>
-            Desconectar
-          </Button>
         )}
       </Stack>
 
@@ -170,25 +134,19 @@ export default function GoogleDriveUploadWidget({
           setIsDragging(false);
         }}
         onDrop={handleDrop}
-        onClick={() => {
-          if (status === 'ready') {
-            handleBrowse();
-          }
-        }}
+        onClick={handleBrowse}
         sx={{
           border: '1px dashed',
           borderColor: isDragging ? 'primary.main' : 'divider',
           borderRadius: 2,
           p: dense ? 2 : 3,
           bgcolor: isDragging ? 'action.hover' : 'background.paper',
-          cursor: status === 'ready' ? 'pointer' : 'default',
+          cursor: 'pointer',
           transition: 'all 0.15s ease',
         }}
       >
         <Typography variant="body2" color="text.secondary">
-          {status === 'ready'
-            ? 'Arrastra imágenes aquí o haz clic para seleccionarlas'
-            : uploaderState ?? 'Conecta con Google Drive para comenzar.'}
+          Arrastra archivos aquí o haz clic para seleccionarlos
         </Typography>
         <input
           ref={inputRef}
@@ -257,9 +215,9 @@ export default function GoogleDriveUploadWidget({
                 value={item.status === 'error' ? 0 : item.progress}
                 color={item.status === 'error' ? 'error' : 'primary'}
               />
-              {item.status === 'done' && item.driveFile?.webViewLink && (
+              {item.status === 'done' && (item.driveFile?.publicUrl || item.driveFile?.webContentLink || item.driveFile?.webViewLink) && (
                 <Typography variant="caption" color="text.secondary">
-                  {item.driveFile.webViewLink}
+                  {item.driveFile.publicUrl ?? item.driveFile.webContentLink ?? item.driveFile.webViewLink}
                 </Typography>
               )}
               {item.status === 'error' && (

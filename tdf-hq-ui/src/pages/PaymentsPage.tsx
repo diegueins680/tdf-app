@@ -344,14 +344,14 @@ function PaymentForm({
                 accept="application/pdf,image/*"
                 multiple={false}
                 dense
-                onComplete={(files: DriveFileInfo[]) => {
-                  const file = files[0];
-                  if (!file) return;
-                  setAttachmentUrl(file.webViewLink ?? file.webContentLink ?? '');
-                  setAttachmentName(file.name);
-                  setError(null);
-                }}
-              />
+	                onComplete={(files: DriveFileInfo[]) => {
+	                  const file = files[0];
+	                  if (!file) return;
+	                  setAttachmentUrl(file.publicUrl ?? file.webContentLink ?? file.webViewLink ?? '');
+	                  setAttachmentName(file.name);
+	                  setError(null);
+	                }}
+	              />
               <TextField
                 label="URL de respaldo (opcional)"
                 fullWidth

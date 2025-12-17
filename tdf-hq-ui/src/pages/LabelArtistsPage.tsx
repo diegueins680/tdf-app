@@ -557,7 +557,7 @@ export default function LabelArtistsPage() {
               label="Subir portada a Drive"
               helperText="Sube la imagen principal a Google Drive; guardaremos el enlace."
               onComplete={(files) => {
-                const link = files[0]?.webViewLink ?? files[0]?.webContentLink;
+                const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
                 if (link) {
                   setForm((prev) => ({ ...prev, heroImageUrl: link }));
                   setHeroImageFileName('Imagen en Drive');

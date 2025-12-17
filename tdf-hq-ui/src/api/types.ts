@@ -202,6 +202,13 @@ export interface PaypalCaptureRequest {
   pcCapturePaypalId: string;
 }
 
+export interface DriveUploadDTO {
+  duFileId: string;
+  duWebViewLink?: string | null;
+  duWebContentLink?: string | null;
+  duPublicUrl?: string | null;
+}
+
 export interface LabelTrackDTO {
   ltId: string;
   ltTitle: string;

@@ -58,11 +58,35 @@ import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDri
 const API_BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
   ? import.meta.env.VITE_API_BASE
   : 'https://tdf-hq.fly.dev');
+const normalizeGoogleDriveUrl = (url: string): string | null => {
+  const trimmed = url.trim();
+  if (trimmed === '') return null;
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+    const isDriveHost = host === 'drive.google.com' || host === 'www.drive.google.com';
+    if (!isDriveHost) return null;
+    const fileMatch = parsed.pathname.match(/^\/file\/d\/([^/]+)/);
+    const fileId =
+      fileMatch?.[1] ??
+      (parsed.pathname === '/open' || parsed.pathname === '/uc' || parsed.pathname === '/thumbnail'
+        ? parsed.searchParams.get('id')
+        : null);
+    if (!fileId) return null;
+    return buildPublicContentUrl(fileId);
+  } catch {
+    return null;
+  }
+};
 const normalizePhotoUrl = (url?: string | null) => {
   if (!url) return undefined;
-  if (/^https?:\/\//i.test(url)) return url;
+  const trimmed = url.trim();
+  if (!trimmed) return undefined;
+  const driveUrl = normalizeGoogleDriveUrl(trimmed);
+  if (driveUrl) return driveUrl;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
   const base = API_BASE.replace(/\/$/, '');
-  const path = url.replace(/^\/+/, '');
+  const path = trimmed.replace(/^\/+/, '');
   if (!base) return `/${path}`;
   return `${base}/${path}`;
 };
@@ -216,6 +240,7 @@ export default function MarketplacePage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<MarketplaceItemDTO | null>(null);
   const [imagePreview, setImagePreview] = useState<{ src: string; alt: string } | null>(null);
+  const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(() => new Set());
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
   const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
   const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
@@ -815,6 +840,15 @@ export default function MarketplacePage() {
     setImagePreview(null);
   };
 
+  const markPhotoUrlBroken = useCallback((url: string) => {
+    setBrokenPhotoUrls((prev) => {
+      if (prev.has(url)) return prev;
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  }, []);
+
   const openPhotoDialog = (listing: MarketplaceItemDTO) => {
     if (!canManagePhotos) return;
     setPhotoDialogListing(listing);
@@ -828,15 +862,19 @@ export default function MarketplacePage() {
     setPendingPhotoUrl(null);
   };
 
-  const handlePhotoUploadComplete = (files: DriveFileInfo[]) => {
-    const listing = photoDialogListing;
-    if (!listing) return;
-    const file = files[0];
-    const link = file?.webViewLink ?? file?.webContentLink ?? (file?.id ? buildPublicContentUrl(file.id) : null);
-    if (!link) {
-      setPhotoError('No pudimos obtener el enlace público de Drive.');
-      return;
-    }
+	  const handlePhotoUploadComplete = (files: DriveFileInfo[]) => {
+	    const listing = photoDialogListing;
+	    if (!listing) return;
+	    const file = files[0];
+	    const link =
+	      file?.publicUrl ??
+	      file?.webContentLink ??
+	      file?.webViewLink ??
+	      (file?.id ? buildPublicContentUrl(file.id) : null);
+	    if (!link) {
+	      setPhotoError('No pudimos obtener el enlace público de Drive.');
+	      return;
+	    }
     setPendingPhotoUrl(link);
     updatePhotoMutation.mutate({ assetId: listing.miAssetId, photoUrl: link });
   };
@@ -1333,52 +1371,55 @@ export default function MarketplacePage() {
                           position: 'relative',
                         }}
                       >
-                        {!isListingAvailable(item.miStatus) && (
-                          <Chip
-                            size="small"
-                            color="warning"
-                            label={item.miStatus ?? 'No disponible'}
-                            sx={{ position: 'absolute', top: 8, left: 8, bgcolor: 'warning.light', fontWeight: 600 }}
-                          />
-                        )}
-                        {normalizePhotoUrl(item.miPhotoUrl) ? (
-                          <Box
-                            component="img"
-                            src={normalizePhotoUrl(item.miPhotoUrl)}
-                            alt={item.miTitle}
-                            sx={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }}
-                            loading="lazy"
-                            onClick={() => {
-                              const src = normalizePhotoUrl(item.miPhotoUrl);
-                              if (!src) return;
-                              openImagePreview(src, item.miTitle);
-                            }}
-                          />
-                        ) : (
-                          <Stack spacing={0.75} alignItems="center" py={2.5} px={1.5} textAlign="center">
-                            <InventoryIcon sx={{ color: 'text.secondary' }} />
-                            <Typography variant="caption" color="text.secondary">
-                              Sin foto
-                            </Typography>
-                            {!canManagePhotos && (
-                              <Typography variant="caption" color="text.secondary">
-                                Las fotos las gestiona Operación.
-                              </Typography>
-                            )}
-                            {canManagePhotos && (
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                startIcon={<AddPhotoAlternateIcon />}
-                                onClick={() => openPhotoDialog(item)}
-                                disabled={updatePhotoMutation.isPending}
-                              >
-                                Agregar foto
-                              </Button>
-                            )}
-                          </Stack>
-                        )}
-                      </Box>
+	                        {!isListingAvailable(item.miStatus) && (
+	                          <Chip
+	                            size="small"
+	                            color="warning"
+	                            label={item.miStatus ?? 'No disponible'}
+	                            sx={{ position: 'absolute', top: 8, left: 8, bgcolor: 'warning.light', fontWeight: 600 }}
+	                          />
+	                        )}
+	                        {(() => {
+	                          const src = normalizePhotoUrl(item.miPhotoUrl);
+	                          if (src && !brokenPhotoUrls.has(src)) {
+	                            return (
+	                              <Box
+	                                component="img"
+	                                src={src}
+	                                alt={item.miTitle}
+	                                sx={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }}
+	                                loading="lazy"
+	                                onError={() => markPhotoUrlBroken(src)}
+	                                onClick={() => openImagePreview(src, item.miTitle)}
+	                              />
+	                            );
+	                          }
+	                          return (
+	                            <Stack spacing={0.75} alignItems="center" py={2.5} px={1.5} textAlign="center">
+	                              <InventoryIcon sx={{ color: 'text.secondary' }} />
+	                              <Typography variant="caption" color="text.secondary">
+	                                Sin foto
+	                              </Typography>
+	                              {!canManagePhotos && (
+	                                <Typography variant="caption" color="text.secondary">
+	                                  Las fotos las gestiona Operación.
+	                                </Typography>
+	                              )}
+	                              {canManagePhotos && (
+	                                <Button
+	                                  size="small"
+	                                  variant="outlined"
+	                                  startIcon={<AddPhotoAlternateIcon />}
+	                                  onClick={() => openPhotoDialog(item)}
+	                                  disabled={updatePhotoMutation.isPending}
+	                                >
+	                                  Agregar foto
+	                                </Button>
+	                              )}
+	                            </Stack>
+	                          );
+	                        })()}
+	                      </Box>
                       <Stack spacing={0.25}>
                         <Typography variant="h5" fontWeight={800}>
                           {item.miPriceDisplay}
@@ -1879,27 +1920,28 @@ export default function MarketplacePage() {
                 Sube una imagen y guardaremos el enlace público de Google Drive en el inventario y marketplace.
               </Typography>
             </Stack>
-            {normalizePhotoUrl(photoDialogListing?.miPhotoUrl) && (
-              <Box
-                component="img"
-                src={normalizePhotoUrl(photoDialogListing?.miPhotoUrl)}
-                alt={photoDialogListing?.miTitle ?? 'Foto'}
-                sx={{
-                  width: '100%',
-                  borderRadius: 1.5,
-                  maxHeight: 220,
-                  objectFit: 'cover',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  cursor: 'zoom-in',
-                }}
-                onClick={() => {
-                  const src = normalizePhotoUrl(photoDialogListing?.miPhotoUrl);
-                  if (!src) return;
-                  openImagePreview(src, photoDialogListing?.miTitle ?? 'Foto');
-                }}
-              />
-            )}
+	            {(() => {
+	              const src = normalizePhotoUrl(photoDialogListing?.miPhotoUrl);
+	              if (!src || brokenPhotoUrls.has(src)) return null;
+	              return (
+	                <Box
+	                  component="img"
+	                  src={src}
+	                  alt={photoDialogListing?.miTitle ?? 'Foto'}
+	                  sx={{
+	                    width: '100%',
+	                    borderRadius: 1.5,
+	                    maxHeight: 220,
+	                    objectFit: 'cover',
+	                    border: '1px solid',
+	                    borderColor: 'divider',
+	                    cursor: 'zoom-in',
+	                  }}
+	                  onError={() => markPhotoUrlBroken(src)}
+	                  onClick={() => openImagePreview(src, photoDialogListing?.miTitle ?? 'Foto')}
+	                />
+	              );
+	            })()}
             <GoogleDriveUploadWidget
               label="Subir imagen (Drive)"
               helperText="JPG o PNG. El enlace quedará visible solo si el archivo es público."
@@ -2112,27 +2154,37 @@ export default function MarketplacePage() {
                 </Typography>
                 <Chip size="small" label={selectedListing.miCategory} />
               </Stack>
-              <Typography variant="body2" color="text.secondary">
-                {selectedListing.miBrand ?? 'Sin marca'} {selectedListing.miModel ?? ''}
-              </Typography>
-              {normalizePhotoUrl(selectedListing.miPhotoUrl) && (
-                <Box
-                  component="img"
-                  src={normalizePhotoUrl(selectedListing.miPhotoUrl)}
-                  alt={selectedListing.miTitle}
-                  sx={{ width: '100%', borderRadius: 2, objectFit: 'cover', maxHeight: 260, cursor: 'zoom-in' }}
-                  onClick={() => {
-                    const src = normalizePhotoUrl(selectedListing.miPhotoUrl);
-                    if (!src) return;
-                    openImagePreview(src, selectedListing.miTitle);
-                  }}
-                />
-              )}
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Chip size="small" label={selectedListing.miPurpose === 'rent' ? 'Renta' : 'Venta'} />
-                {selectedListing.miCondition && <Chip size="small" label={`Condición: ${selectedListing.miCondition}`} />}
-                {selectedListing.miStatus && <Chip size="small" label={selectedListing.miStatus} />}
-              </Stack>
+	              <Typography variant="body2" color="text.secondary">
+	                {selectedListing.miBrand ?? 'Sin marca'} {selectedListing.miModel ?? ''}
+	              </Typography>
+	              {(() => {
+	                const src = normalizePhotoUrl(selectedListing.miPhotoUrl);
+	                if (!src || brokenPhotoUrls.has(src)) {
+	                  return (
+	                    <Stack spacing={0.75} alignItems="center" py={3} px={2} textAlign="center">
+	                      <InventoryIcon sx={{ color: 'text.secondary' }} />
+	                      <Typography variant="caption" color="text.secondary">
+	                        Sin foto
+	                      </Typography>
+	                    </Stack>
+	                  );
+	                }
+	                return (
+	                  <Box
+	                    component="img"
+	                    src={src}
+	                    alt={selectedListing.miTitle}
+	                    sx={{ width: '100%', borderRadius: 2, objectFit: 'cover', maxHeight: 260, cursor: 'zoom-in' }}
+	                    onError={() => markPhotoUrlBroken(src)}
+	                    onClick={() => openImagePreview(src, selectedListing.miTitle)}
+	                  />
+	                );
+	              })()}
+	              <Stack direction="row" spacing={1} flexWrap="wrap">
+	                <Chip size="small" label={selectedListing.miPurpose === 'rent' ? 'Renta' : 'Venta'} />
+	                {selectedListing.miCondition && <Chip size="small" label={`Condición: ${selectedListing.miCondition}`} />}
+	                {selectedListing.miStatus && <Chip size="small" label={selectedListing.miStatus} />}
+	              </Stack>
               <Stack spacing={0.25}>
                 <Typography variant="h5" fontWeight={800}>
                   {selectedListing.miPriceDisplay}

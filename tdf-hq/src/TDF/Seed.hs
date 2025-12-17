@@ -796,6 +796,14 @@ seedInventoryAssets = mapM_ ensureInventoryAsset inventorySeeds
 
 ensureInventoryAsset :: (Text, Maybe Text, Maybe Text, Text, Maybe Text, Maybe Int, Maybe Text) -> SqlPersistT IO ()
 ensureInventoryAsset (nameTxt, brandTxt, modelTxt, categoryTxt, mDesc, mPriceCents, mPhotoUrl) = do
+  resolvedPhoto <- case mPhotoUrl of
+    Nothing -> pure Nothing
+    Just raw ->
+      if "inventory/" `T.isPrefixOf` raw
+        then do
+          fileExists <- liftIO $ doesFileExist ("assets/" <> T.unpack raw)
+          pure (if fileExists then Just raw else Nothing)
+        else pure (Just raw)
   existing <- selectFirst [ME.AssetName ==. nameTxt] []
   case existing of
     Just (Entity assetId asset) -> do
@@ -809,6 +817,9 @@ ensureInventoryAsset (nameTxt, brandTxt, modelTxt, categoryTxt, mDesc, mPriceCen
             , case (ME.assetModel asset, modelTxt) of
                 (Nothing, Just modelVal) -> Just (ME.AssetModel =. Just modelVal)
                 _                        -> Nothing
+            , case (ME.assetPhotoUrl asset, mPhotoUrl, resolvedPhoto) of
+                (Just current, Just seeded, Nothing) | current == seeded -> Just (ME.AssetPhotoUrl =. Nothing)
+                _ -> Nothing
             ]
       unless (null updates) (update assetId updates)
     Nothing -> do
@@ -825,7 +836,7 @@ ensureInventoryAsset (nameTxt, brandTxt, modelTxt, categoryTxt, mDesc, mPriceCen
         , ME.assetLocationId            = Nothing
         , ME.assetOwner                 = "TDF"
         , ME.assetQrCode                = Nothing
-        , ME.assetPhotoUrl              = mPhotoUrl
+        , ME.assetPhotoUrl              = resolvedPhoto
         , ME.assetNotes                 = mDesc
         , ME.assetWarrantyExpires       = Nothing
         , ME.assetMaintenancePolicy     = ME.None
@@ -846,8 +857,8 @@ instance FromJSON RentSaleRow
 
 loadRentSaleRows :: IO (Maybe [RentSaleRow])
 loadRentSaleRows = do
-  exists <- doesFileExist "data/inventory_rent_sale.json"
-  if not exists
+  fileExists <- doesFileExist "data/inventory_rent_sale.json"
+  if not fileExists
     then pure Nothing
     else do
       raw <- BL.readFile "data/inventory_rent_sale.json"

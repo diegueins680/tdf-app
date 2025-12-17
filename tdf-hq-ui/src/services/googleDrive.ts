@@ -15,6 +15,7 @@ export interface DriveFileInfo {
   name: string;
   webViewLink?: string;
   webContentLink?: string;
+  publicUrl?: string;
 }
 
 const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
