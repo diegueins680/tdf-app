@@ -16,7 +16,7 @@ export const defaultServiceTypes: ServiceType[] = [
   {
     id: 'band-rec',
     name: 'Grabación de Banda',
-    priceCents: 50 * 100,
+    priceCents: 25 * 100,
     currency: 'USD',
     billingUnit: 'hora',
     kind: 'Recording',

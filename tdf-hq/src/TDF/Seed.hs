@@ -59,7 +59,7 @@ seedAll = do
 
   -- Service Catalog
   let svcSeeds =
-        [ ("Grabación de Banda", Recording, Hourly, Just (50 * 100), Just 1200, "USD", Just "hora")
+        [ ("Grabación de Banda", Recording, Hourly, Just (25 * 100), Just 1200, "USD", Just "hora")
         , ("Grabación de Voz", Recording, Hourly, Just (35 * 100), Just 1200, "USD", Just "hora")
         , ("Mezcla", Mixing, PerSong, Just (120 * 100), Just 1200, "USD", Just "canción")
         , ("Mastering", Mastering, PerSong, Just (70 * 100), Just 1200, "USD", Just "canción")
