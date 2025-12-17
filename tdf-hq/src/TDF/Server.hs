@@ -514,16 +514,84 @@ socialServer user =
 
 driveServer :: AuthedUser -> ServerT DriveAPI AppM
 driveServer _ mAccessToken DriveUploadForm{..} = do
-  mEnvToken <- liftIO $ lookupEnv "DRIVE_ACCESS_TOKEN"
-  let tokenTxt = fmap T.strip mAccessToken <|> duAccessToken <|> fmap (T.strip . T.pack) mEnvToken
-  accessToken <- maybe (throwError err400 { errBody = "X-Goog-Access-Token requerido" }) pure tokenTxt
-  mFolderEnv <- liftIO $ lookupEnv "DRIVE_UPLOAD_FOLDER_ID"
-  let folder = duFolderId <|> fmap (T.strip . T.pack) mFolderEnv
-      fallbackName = let raw = T.strip (fdFileName duFile) in if T.null raw then Nothing else Just raw
-      nameOverride = duName <|> fallbackName
   manager <- liftIO $ newManager tlsManagerSettings
+  accessToken <- resolveDriveAccessToken manager (fmap T.strip mAccessToken <|> duAccessToken)
+  mFolderEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
+  let folder = duFolderId <|> mFolderEnv
+      fallbackName =
+        let raw = T.strip (fdFileName duFile)
+        in if T.null raw then Nothing else Just raw
+      nameOverride = duName <|> fallbackName
   dto <- liftIO $ uploadToDrive manager accessToken duFile nameOverride folder
   pure dto
+  where
+    resolveDriveAccessToken :: Manager -> Maybe Text -> AppM Text
+    resolveDriveAccessToken manager mProvided =
+      case mProvided of
+        Just tok | not (T.null (T.strip tok)) -> pure (T.strip tok)
+        _ -> do
+          mRefreshToken <- liftIO $ lookupEnvTextNonEmpty "DRIVE_REFRESH_TOKEN"
+          case mRefreshToken of
+            Just rt -> do
+              (cid, secret) <- loadDriveClientCreds
+              refreshDriveAccessToken manager cid secret rt
+            Nothing -> do
+              mAccessTokenEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_ACCESS_TOKEN"
+              maybe
+                (throwError err503
+                  { errBody =
+                      "Google Drive no configurado (faltan DRIVE_REFRESH_TOKEN o " <>
+                      "DRIVE_ACCESS_TOKEN)."
+                  })
+                pure
+                mAccessTokenEnv
+
+    loadDriveClientCreds :: AppM (Text, Text)
+    loadDriveClientCreds = do
+      mCid <- liftIO $ lookupEnvTextNonEmpty "DRIVE_CLIENT_ID"
+      mSecret <- liftIO $ lookupEnvTextNonEmpty "DRIVE_CLIENT_SECRET"
+      mCidFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_ID"
+      mSecretFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_SECRET"
+      case (mCid <|> mCidFallback, mSecret <|> mSecretFallback) of
+        (Just cid, Just secret) -> pure (cid, secret)
+        _ ->
+          throwError err503
+            { errBody =
+                "Google Drive no configurado (faltan DRIVE_CLIENT_ID/DRIVE_CLIENT_SECRET o " <>
+                "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)."
+            }
+
+    refreshDriveAccessToken :: Manager -> Text -> Text -> Text -> AppM Text
+    refreshDriveAccessToken manager cid secret rt = do
+      req0 <- liftIO $ parseRequest "https://oauth2.googleapis.com/token"
+      let form =
+            renderSimpleQuery False
+              [ ("client_id", TE.encodeUtf8 cid)
+              , ("client_secret", TE.encodeUtf8 secret)
+              , ("refresh_token", TE.encodeUtf8 rt)
+              , ("grant_type", "refresh_token")
+              ]
+          req = req0
+            { method = "POST"
+            , requestBody = RequestBodyLBS (BL.fromStrict form)
+            , requestHeaders = [("Content-Type", "application/x-www-form-urlencoded")]
+            }
+      resp <- liftIO $ httpLbs req manager
+      let codeStatus = statusCode (responseStatus resp)
+      when (codeStatus >= 400) $
+        throwError err502 { errBody = "Refresh token falló con Google Drive." }
+      token <- case eitherDecode (responseBody resp) of
+        Left err ->
+          throwError err502 { errBody = BL8.pack ("No se pudo parsear refresh token: " <> err) }
+        Right tok -> pure (tok :: GoogleToken)
+      pure (access_token token)
+
+lookupEnvTextNonEmpty :: String -> IO (Maybe Text)
+lookupEnvTextNonEmpty key = do
+  mVal <- lookupEnv key
+  pure $ case fmap (T.strip . T.pack) mVal of
+    Just val | not (T.null val) -> Just val
+    _ -> Nothing
 
 countriesServer :: AppM [CountryDTO]
 countriesServer = do
