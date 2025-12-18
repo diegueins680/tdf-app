@@ -46,7 +46,7 @@ export default function GoogleDriveUploadWidget({
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFiles = useCallback(
-    async (files: FileList | File[]) => {
+    (files: FileList | File[]) => {
       const fileArr = Array.from(files);
       setError(null);
       const uploads = fileArr.map<UploadItem>((file) => ({
@@ -211,15 +211,20 @@ export default function GoogleDriveUploadWidget({
                 {(item.file.size / 1024 / 1024).toFixed(2)} MB
               </Typography>
               <LinearProgress
-                variant={item.status === 'done' ? 'determinate' : 'determinate'}
+                variant="determinate"
                 value={item.status === 'error' ? 0 : item.progress}
                 color={item.status === 'error' ? 'error' : 'primary'}
               />
-              {item.status === 'done' && (item.driveFile?.publicUrl || item.driveFile?.webContentLink || item.driveFile?.webViewLink) && (
-                <Typography variant="caption" color="text.secondary">
-                  {item.driveFile.publicUrl ?? item.driveFile.webContentLink ?? item.driveFile.webViewLink}
-                </Typography>
-              )}
+              {item.status === 'done' &&
+                (item.driveFile?.publicUrl ??
+                  item.driveFile?.webContentLink ??
+                  item.driveFile?.webViewLink) && (
+                  <Typography variant="caption" color="text.secondary">
+                    {item.driveFile?.publicUrl ??
+                      item.driveFile?.webContentLink ??
+                      item.driveFile?.webViewLink}
+                  </Typography>
+                )}
               {item.status === 'error' && (
                 <Typography variant="caption" color="error">
                   {item.error ?? 'Error al subir'}

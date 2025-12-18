@@ -343,15 +343,15 @@ function PaymentForm({
                 helperText="Se almacenará en Drive y guardaremos el enlace público."
                 accept="application/pdf,image/*"
                 multiple={false}
+                onComplete={(files: DriveFileInfo[]) => {
+                  const file = files[0];
+                  if (!file) return;
+                  setAttachmentUrl(file.publicUrl ?? file.webContentLink ?? file.webViewLink ?? '');
+                  setAttachmentName(file.name);
+                  setError(null);
+                }}
                 dense
-	                onComplete={(files: DriveFileInfo[]) => {
-	                  const file = files[0];
-	                  if (!file) return;
-	                  setAttachmentUrl(file.publicUrl ?? file.webContentLink ?? file.webViewLink ?? '');
-	                  setAttachmentName(file.name);
-	                  setError(null);
-	                }}
-	              />
+                />
               <TextField
                 label="URL de respaldo (opcional)"
                 fullWidth

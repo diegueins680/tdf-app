@@ -15,7 +15,7 @@ const parseList = (raw?: string): string[] =>
         .filter(Boolean)
     : [];
 
-const envPublicBase = (import.meta.env['VITE_PUBLIC_BASE'] as string | undefined) ?? undefined;
+const envPublicBase = import.meta.env['VITE_PUBLIC_BASE'] as string | undefined;
 const inferredOrigin =
   typeof window !== 'undefined' && window.location.origin ? window.location.origin : undefined;
 
@@ -34,7 +34,7 @@ export const CARDANO_ADDRESS =
   ((import.meta.env['VITE_CARDANO_ADDRESS'] as string | undefined) ??
     'addr1qx2mdr6n8d0v2y5s99tmdluzvcq6lvpvez0mx55vvpfy6ee4fzjjxl454z8d2f5gd2yualhds75ycvsl3wuar908v0csqksrwy').trim();
 
-const demoTokenEnv = (import.meta.env['VITE_API_DEMO_TOKEN'] as string | undefined)?.trim() ?? '';
+const demoTokenEnv = import.meta.env.VITE_API_DEMO_TOKEN?.trim() ?? '';
 const demoTokenHostsEnv = parseList(import.meta.env['VITE_DEMO_TOKEN_HOSTS'] as string | undefined);
 const demoTokenHosts = demoTokenHostsEnv.length
   ? demoTokenHostsEnv
@@ -50,16 +50,22 @@ export const inferDemoToken = (host?: string): string => {
   return demoTokenHosts.map(normalizeHost).includes(normalized) ? demoTokenValue : '';
 };
 
+const envTrimmedOrUndefined = (raw?: string): string | undefined => {
+  const trimmed = raw?.trim();
+  if (!trimmed) return undefined;
+  return trimmed;
+};
+
 const defaultCourseSlug =
-  (import.meta.env['VITE_COURSE_SLUG'] as string | undefined)?.trim() || 'produccion-musical-dic-2025';
+  envTrimmedOrUndefined(import.meta.env['VITE_COURSE_SLUG'] as string | undefined) ?? 'produccion-musical-dic-2025';
 const defaultMapUrl =
-  (import.meta.env['VITE_COURSE_MAP_URL'] as string | undefined)?.trim() ||
+  envTrimmedOrUndefined(import.meta.env['VITE_COURSE_MAP_URL'] as string | undefined) ??
   'https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6';
 const defaultWhatsappUrl =
-  (import.meta.env['VITE_COURSE_WHATSAPP_URL'] as string | undefined)?.trim() ||
+  envTrimmedOrUndefined(import.meta.env['VITE_COURSE_WHATSAPP_URL'] as string | undefined) ??
   'https://wa.me/?text=INSCRIBIRME%20Curso%20Produccion%20Musical';
 const defaultInstructorAvatar =
-  (import.meta.env['VITE_COURSE_INSTRUCTOR_AVATAR'] as string | undefined)?.trim() ||
+  envTrimmedOrUndefined(import.meta.env['VITE_COURSE_INSTRUCTOR_AVATAR'] as string | undefined) ??
   `${PUBLIC_BASE}/assets/esteban-munoz.jpg`;
 
 export const COURSE_DEFAULTS = {
@@ -70,5 +76,5 @@ export const COURSE_DEFAULTS = {
 };
 
 export const TRIALS_WHATSAPP_URL =
-  (import.meta.env['VITE_TRIALS_WHATSAPP_URL'] as string | undefined)?.trim() ||
+  envTrimmedOrUndefined(import.meta.env['VITE_TRIALS_WHATSAPP_URL'] as string | undefined) ??
   'https://wa.me/593999001122?text=Hola%20quiero%20una%20clase%20de%20prueba%20en%20TDF%20Records';

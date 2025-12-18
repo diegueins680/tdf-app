@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
   Alert,
@@ -19,6 +19,18 @@ const COURSE_DRAFT_STORAGE_KEY = 'tdf-course-builder-draft';
 
 interface SessionInput { label: string; date: string }
 interface SyllabusInput { title: string; topics: string }
+
+const splitLines = (input: string) =>
+  input
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+const splitTopics = (input: string) =>
+  input
+    .split(/;|,/)
+    .map((t) => t.trim())
+    .filter(Boolean);
 
 const DEFAULT_SESSIONS: SessionInput[] = [
   { label: 'Sábado 1 · Introducción', date: '2025-12-13' },
@@ -166,14 +178,7 @@ export default function CourseBuilderPage() {
     }
   };
 
-  const createMutation = useMutation({
-    mutationFn: async () => {
-      const payload = buildPayload();
-      await Courses.upsert(payload);
-    },
-  });
-
-  const buildPayload = (): CourseUpsert => {
+  const buildPayload = useCallback((): CourseUpsert => {
     const toOptionalNumber = (value: string) => {
       const trimmed = value.trim();
       if (!trimmed) return null;
@@ -215,19 +220,36 @@ export default function CourseBuilderPage() {
       whatsappCtaUrl: whatsappCtaUrl.trim() || null,
       landingUrl: landing || null,
     };
-  };
+  }, [
+    capacity,
+    currency,
+    daws,
+    duration,
+    format,
+    includes,
+    instructorAvatarUrl,
+    instructorBio,
+    instructorName,
+    landingUrl,
+    locationLabel,
+    locationMapUrl,
+    price,
+    sessionDurationHours,
+    sessionStartHour,
+    sessions,
+    slug,
+    subtitle,
+    syllabus,
+    title,
+    whatsappCtaUrl,
+  ]);
 
-  const splitLines = (input: string) =>
-    input
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean);
-
-  const splitTopics = (input: string) =>
-    input
-      .split(/;|,/)
-      .map((t) => t.trim())
-      .filter(Boolean);
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const payload = buildPayload();
+      await Courses.upsert(payload);
+    },
+  });
 
   const handleSessionChange = (idx: number, field: keyof SessionInput, value: string) => {
     setSessions((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
@@ -248,40 +270,44 @@ export default function CourseBuilderPage() {
   const payloadPreview = JSON.stringify(buildPayload(), null, 2);
   const canResetLanding = landingUrlTouched && landingUrl !== landingFor(slug);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (draftLoadedRef.current) return;
     try {
       const raw = window.localStorage.getItem(COURSE_DRAFT_STORAGE_KEY);
       if (!raw) return;
       const draft = JSON.parse(raw) as Partial<CourseUpsert>;
       if (!draft.title && !draft.slug) return;
-      setTitle(draft.title ?? title);
-      setSubtitle(draft.subtitle ?? subtitle);
-      setFormat(draft.format ?? format);
-      setDuration(draft.duration ?? duration);
-      setPrice(draft.priceCents ? String(Math.round(draft.priceCents / 100)) : price);
-      setCurrency(draft.currency ?? currency);
-      setCapacity(draft.capacity != null ? String(draft.capacity) : capacity);
-      setSessionStartHour(draft.sessionStartHour != null ? String(draft.sessionStartHour) : sessionStartHour);
-      setSessionDurationHours(draft.sessionDurationHours != null ? String(draft.sessionDurationHours) : sessionDurationHours);
-      setLocationLabel(draft.locationLabel ?? locationLabel);
-      setLocationMapUrl(draft.locationMapUrl ?? locationMapUrl);
-      setWhatsappCtaUrl(draft.whatsappCtaUrl ?? whatsappCtaUrl);
-      setLandingUrl(draft.landingUrl ?? landingUrl);
-      setDaws((draft.daws ?? []).join('\n') || daws);
-      setIncludes((draft.includes ?? []).join('\n') || includes);
-      setInstructorName(draft.instructorName ?? instructorName);
-      setInstructorBio(draft.instructorBio ?? instructorBio);
-      setInstructorAvatarUrl(draft.instructorAvatarUrl ?? instructorAvatarUrl);
-      setSessions(
+      setTitle((prev) => draft.title ?? prev);
+      setSubtitle((prev) => draft.subtitle ?? prev);
+      setFormat((prev) => draft.format ?? prev);
+      setDuration((prev) => draft.duration ?? prev);
+      setPrice((prev) =>
+        draft.priceCents != null ? String(Math.round(draft.priceCents / 100)) : prev,
+      );
+      setCurrency((prev) => draft.currency ?? prev);
+      setCapacity((prev) => (draft.capacity != null ? String(draft.capacity) : prev));
+      setSessionStartHour((prev) => (draft.sessionStartHour != null ? String(draft.sessionStartHour) : prev));
+      setSessionDurationHours((prev) =>
+        draft.sessionDurationHours != null ? String(draft.sessionDurationHours) : prev,
+      );
+      setLocationLabel((prev) => draft.locationLabel ?? prev);
+      setLocationMapUrl((prev) => draft.locationMapUrl ?? prev);
+      setWhatsappCtaUrl((prev) => draft.whatsappCtaUrl ?? prev);
+      setLandingUrl((prev) => draft.landingUrl ?? prev);
+      setDaws((prev) => (draft.daws?.length ? draft.daws.join('\n') : prev));
+      setIncludes((prev) => (draft.includes?.length ? draft.includes.join('\n') : prev));
+      setInstructorName((prev) => draft.instructorName ?? prev);
+      setInstructorBio((prev) => draft.instructorBio ?? prev);
+      setInstructorAvatarUrl((prev) => draft.instructorAvatarUrl ?? prev);
+      setSessions((prev) =>
         draft.sessions
           ? draft.sessions.map((s) => ({ label: s.label ?? '', date: s.date ?? '' }))
-          : sessions,
+          : prev,
       );
-      setSyllabus(
+      setSyllabus((prev) =>
         draft.syllabus
           ? draft.syllabus.map((s) => ({ title: s.title ?? '', topics: (s.topics ?? []).join('; ') }))
-          : syllabus,
+          : prev,
       );
       draftLoadedRef.current = true;
     } catch {
@@ -296,28 +322,7 @@ export default function CourseBuilderPage() {
     } catch {
       // ignore
     }
-  }, [
-    title,
-    subtitle,
-    format,
-    duration,
-    price,
-    currency,
-    capacity,
-    sessionStartHour,
-    sessionDurationHours,
-    locationLabel,
-    locationMapUrl,
-    whatsappCtaUrl,
-    landingUrl,
-    daws,
-    includes,
-    instructorName,
-    instructorBio,
-    instructorAvatarUrl,
-    sessions,
-    syllabus,
-  ]);
+  }, [buildPayload]);
 
   const applyMetadata = (meta: CourseMetadata) => {
     const sanitizedSessions =

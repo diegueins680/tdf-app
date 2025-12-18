@@ -21,10 +21,13 @@ import ClearIcon from '@mui/icons-material/Clear';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DateTime } from 'luxon';
-import { SocialEventsAPI, type SocialInvitationDTO } from '../api/socialEvents';
+import { SocialEventsAPI, type SocialInvitationDTO, type SocialRsvpStatus } from '../api/socialEvents';
 import { useSession } from '../session/SessionContext';
 
-type InvitationState = { partyId: string; message: string };
+interface InvitationState {
+  partyId: string;
+  message: string;
+}
 
 const formatDate = (iso: string) =>
   DateTime.fromISO(iso).setLocale('es').toFormat("EEE d LLL, HH:mm");
@@ -57,7 +60,7 @@ export default function SocialEventsPage() {
   }, [venuesQuery.data]);
 
   const rsvpMutation = useMutation({
-    mutationFn: ({ eventId, status }: { eventId: string; status: 'Accepted' | 'Maybe' | 'Declined' }) => {
+    mutationFn: ({ eventId, status }: { eventId: string; status: SocialRsvpStatus }) => {
       if (!session?.partyId) throw new Error('Inicia sesión para confirmar asistencia.');
       return SocialEventsAPI.rsvp(eventId, String(session.partyId), status);
     },
@@ -309,7 +312,7 @@ export default function SocialEventsPage() {
               ev.eventTitle,
               ev.eventStart,
               ev.eventEnd,
-              (ev.eventVenueId && venueById.get(ev.eventVenueId)) || null,
+              ev.eventVenueId ? (venueById.get(ev.eventVenueId) ?? null) : null,
               ev.eventArtists?.map((a) => a.artistName) ?? [],
               ev.eventPriceCents,
               ev.eventCapacity ?? null,

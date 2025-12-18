@@ -214,7 +214,7 @@ export function CheckoutDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={copySummary}>Copiar resumen</Button>
+        <Button onClick={() => void copySummary()}>Copiar resumen</Button>
         <Button onClick={onClose}>Cancelar</Button>
         <Button variant="contained" onClick={onSubmit} disabled={loading || Boolean(activeCheckout)}>
           {activeCheckout ? 'Pendiente de check-in' : loading ? 'Guardando…' : 'Confirmar'}

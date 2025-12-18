@@ -2,8 +2,10 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
+import { DateTime } from 'luxon';
 
-const createPublicMock = jest.fn(async (_payload: unknown) => ({ bookingId: 123 }));
+const createPublicMock = jest.fn(() => Promise.resolve({ bookingId: 123 }));
+const logoutMock = jest.fn();
 
 jest.unstable_mockModule('../api/bookings', () => ({
   Bookings: {
@@ -13,28 +15,30 @@ jest.unstable_mockModule('../api/bookings', () => ({
 
 jest.unstable_mockModule('../api/services', () => ({
   Services: {
-    listPublic: async () => [],
+    listPublic: () => Promise.resolve([]),
   },
 }));
 
 jest.unstable_mockModule('../api/rooms', () => ({
   Rooms: {
-    listPublic: async () => [],
+    listPublic: () => Promise.resolve([]),
   },
 }));
 
 jest.unstable_mockModule('../api/engineers', () => ({
   Engineers: {
-    listPublic: async () => [],
+    listPublic: () => Promise.resolve([]),
   },
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: null, logout: () => {} }),
+  useSession: () => ({ session: null, logout: logoutMock }),
   getStoredSessionToken: () => null,
 }));
 
 const { default: PublicBookingPage } = await import('../pages/PublicBookingPage');
+
+const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 const renderPage = async (container: HTMLElement) => {
   const qc = new QueryClient({
@@ -47,6 +51,7 @@ const renderPage = async (container: HTMLElement) => {
         <PublicBookingPage />
       </QueryClientProvider>,
     );
+    await flushPromises();
   });
   return {
     qc,
@@ -54,6 +59,7 @@ const renderPage = async (container: HTMLElement) => {
       if (!root) return;
       await act(async () => {
         root?.unmount();
+        await flushPromises();
       });
       root = null;
     },
@@ -78,11 +84,11 @@ const getInputByLabel = (container: HTMLElement, labelText: string) => {
 };
 
 const setInputValue = (input: HTMLInputElement, value: string) => {
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-  if (!setter) {
-    input.value = value;
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  if (descriptor?.set) {
+    descriptor.set.call(input, value);
   } else {
-    setter.call(input, value);
+    input.value = value;
   }
   input.dispatchEvent(new Event('input', { bubbles: true }));
   input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -96,10 +102,10 @@ const clickCheckboxNearText = (container: HTMLElement, text: string) => {
   if (!textEl) throw new Error(`Text not found: ${text}`);
   let current: HTMLElement | null = textEl;
   while (current && current !== container) {
-    const checkbox = current.querySelector<HTMLInputElement>('input[type="checkbox"]');
-    if (checkbox) {
-      checkbox.click();
-      return;
+    const checkboxes = current.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    if (checkboxes.length === 1) {
+      checkboxes[0].click();
+      return checkboxes[0];
     }
     current = current.parentElement;
   }
@@ -113,10 +119,12 @@ describe('PublicBookingPage', () => {
 
   beforeEach(() => {
     createPublicMock.mockClear();
-    globalThis.fetch = jest.fn(async () => ({
-      ok: true,
-      json: async () => ({ available: true }),
-    })) as unknown as typeof fetch;
+    globalThis.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ available: true }),
+      }),
+    ) as unknown as typeof fetch;
   });
 
   it('hides the rooms field from the public form', async () => {
@@ -141,17 +149,28 @@ describe('PublicBookingPage', () => {
     await act(async () => {
       setInputValue(getInputByLabel(container, 'Nombre completo'), 'Test User');
       setInputValue(getInputByLabel(container, 'Correo'), 'test@example.com');
-      setInputValue(getInputByLabel(container, 'Fecha y hora'), '2030-01-01T18:00');
+      const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+      const desiredStudio = DateTime.fromObject(
+        { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
+        { zone: 'America/Guayaquil' },
+      );
+      const desiredUser = desiredStudio.setZone(userZone);
+      const dateInput = getInputByLabel(container, 'Fecha y hora');
+      setInputValue(dateInput, desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
+      await flushPromises();
     });
 
     await act(async () => {
-      clickCheckboxNearText(container, 'Asignar ingeniero después');
+      const checkbox = clickCheckboxNearText(container, 'Asignar ingeniero después');
+      expect(checkbox?.checked).toBe(true);
+      await flushPromises();
     });
 
     await act(async () => {
       const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
       if (!submitButton) throw new Error('Submit button not found');
       submitButton.click();
+      await flushPromises();
     });
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);

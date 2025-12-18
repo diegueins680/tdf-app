@@ -283,8 +283,8 @@ export default function SocialPage() {
           >
             Refrescar
           </Button>
-      </Stack>
-        {(addMutation.error || feedback) && (
+        </Stack>
+        {(addMutation.error ?? feedback) && (
           <Alert severity={feedback?.kind === 'error' || addMutation.error ? 'error' : 'success'}>
             {addMutation.error?.message ?? feedback?.message}
           </Alert>

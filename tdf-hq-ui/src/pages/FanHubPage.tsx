@@ -1342,26 +1342,26 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   fullWidth
                 />
                 <Stack spacing={1}>
-	                  <Typography variant="body2" fontWeight={700}>
-	                    Portada principal (hosteada)
-	                  </Typography>
-	                  <GoogleDriveUploadWidget
-	                    label="Subir portada a Drive"
-	                    helperText="Sube la portada; guardaremos el link servido para evitar imágenes pesadas embebidas."
-	                    onComplete={(files) => {
-	                      const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
-	                      if (link) {
-	                        setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
-	                        setHeroImageFileName(files[0]?.name ?? 'Imagen en Drive');
-	                      }
-	                    }}
-	                    accept="image/*"
-	                    dense
-	                  />
-	                  <TextField
-	                    label="URL de portada (opcional)"
-	                    placeholder="https://"
-	                    value={artistDraft.apuHeroImageUrl ?? ''}
+                  <Typography variant="body2" fontWeight={700}>
+                    Portada principal (hosteada)
+                  </Typography>
+                  <GoogleDriveUploadWidget
+                    label="Subir portada a Drive"
+                    helperText="Sube la portada; guardaremos el link servido para evitar imágenes pesadas embebidas."
+                    onComplete={(files) => {
+                      const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
+                      if (link) {
+                        setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
+                        setHeroImageFileName(files[0]?.name ?? 'Imagen en Drive');
+                      }
+                    }}
+                    accept="image/*"
+                    dense
+                  />
+                  <TextField
+                    label="URL de portada (opcional)"
+                    placeholder="https://"
+                    value={artistDraft.apuHeroImageUrl ?? ''}
                     onChange={(event) => {
                       const val = event.target.value.trim();
                       if (val.startsWith('data:')) {

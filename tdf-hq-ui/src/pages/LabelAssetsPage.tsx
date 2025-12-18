@@ -598,13 +598,13 @@ export default function LabelAssetsPage() {
             </TextField>
             <GoogleDriveUploadWidget
               label="Subir foto a Drive"
-	              helperText="Adjunta una foto y guardaremos el link en notas."
-	              onComplete={(files) => {
-	                const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
-	                if (link) {
-	                  setAssetForm((prev) => ({ ...prev, notes: link, photoUrl: link }));
-	                }
-	              }}
+              helperText="Adjunta una foto y guardaremos el link en notas."
+              onComplete={(files) => {
+                const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
+                if (link) {
+                  setAssetForm((prev) => ({ ...prev, notes: link, photoUrl: link }));
+                }
+              }}
               accept="image/*"
               dense
             />

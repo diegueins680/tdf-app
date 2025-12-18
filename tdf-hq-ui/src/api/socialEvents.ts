@@ -38,11 +38,13 @@ export interface SocialInvitationDTO {
   invitationCreatedAt?: string | null;
 }
 
+export type SocialRsvpStatus = 'Accepted' | 'Declined' | 'Maybe';
+
 export interface SocialRsvpDTO {
   rsvpId?: string | null;
   rsvpEventId: string;
   rsvpPartyId: string;
-  rsvpStatus: 'Accepted' | 'Declined' | 'Maybe' | string;
+  rsvpStatus: SocialRsvpStatus;
   rsvpCreatedAt?: string | null;
 }
 

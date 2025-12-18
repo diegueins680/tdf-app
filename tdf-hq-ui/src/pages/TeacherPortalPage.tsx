@@ -520,7 +520,7 @@ export default function TeacherPortalPage() {
               </Button>
             </Stack>
 
-            {(classesQuery.error || createClassMutation.error || updateClassMutation.error || attendClassMutation.error) && (
+            {agendaError && (
               <Alert severity="warning" sx={{ mt: 2 }}>
                 {getErrorMessage(agendaError, 'No pudimos cargar o guardar las clases.')}
               </Alert>

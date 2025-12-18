@@ -147,13 +147,9 @@ export default function LoginPage() {
   const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [tokenPasteFeedback, setTokenPasteFeedback] = useState<string | null>(null);
-  const [showApiToken, setShowApiToken] = useState(false);
   const { session, login } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const tokenFromUrl = params.get('token');
   const lastSession = session;
   const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
   const googleClientId = import.meta.env['VITE_GOOGLE_CLIENT_ID'] ?? '';
@@ -206,14 +202,6 @@ export default function LoginPage() {
     if (raw?.startsWith('/')) return raw;
     return null;
   }, [location.search]);
-  useEffect(() => {
-    if (tokenFromUrl && tokenFromUrl.trim()) {
-      setShowApiToken(true);
-      setTab('token');
-      setTokenValue(tokenFromUrl.trim());
-      setTokenPasteFeedback('Token precargado desde el enlace.');
-    }
-  }, [tokenFromUrl]);
 
   const {
     data: health,
@@ -326,22 +314,6 @@ export default function LoginPage() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
       setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
-    }
-  };
-
-  const handlePasteToken = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      const trimmed = text.trim();
-      if (!trimmed) {
-        setTokenPasteFeedback('El portapapeles está vacío.');
-        return;
-      }
-      setTokenValue(trimmed);
-      setTokenPasteFeedback('Token pegado.');
-    } catch (error) {
-      console.warn('Clipboard read failed', error);
-      setTokenPasteFeedback('No pudimos leer el portapapeles. Revisa permisos.');
     }
   };
 
@@ -491,8 +463,14 @@ export default function LoginPage() {
     if (shouldOpenSignup) {
       setSignupDialogOpen(true);
     }
-    const wantsToken = params.get('token') ?? params.get('apiToken') ?? params.get('tab');
-    if (wantsToken?.toLowerCase().includes('token')) {
+    const tokenFromUrl = params.get('token') ?? params.get('apiToken');
+    if (tokenFromUrl?.trim()) {
+      setTab('token');
+      setTokenValue(tokenFromUrl.trim());
+    }
+
+    const tabParam = params.get('tab');
+    if (tabParam?.toLowerCase().includes('token')) {
       setTab('token');
     }
   }, [location.search]);
