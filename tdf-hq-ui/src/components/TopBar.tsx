@@ -24,6 +24,7 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   marketplace: 'Marketplace',
   fans: 'Fan Hub',
   records: 'Records',
+  'mi-profesor': 'Portal del profesor',
   crm: 'CRM',
   contactos: 'Contactos',
   empresas: 'Empresas',

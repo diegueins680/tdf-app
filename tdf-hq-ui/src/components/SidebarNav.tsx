@@ -56,6 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: 'ESCUELA',
     items: [
+      { label: 'Portal del profesor', path: '/mi-profesor' },
       { label: 'Profesores', path: '/escuela/profesores' },
       { label: 'Clases', path: '/escuela/clases' },
       { label: 'Trial lessons', path: '/escuela/trial-lessons' },
@@ -128,6 +129,7 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
       moduleSet.add('admin');
       moduleSet.add('crm');
       moduleSet.add('scheduling');
+      moduleSet.add('school');
       moduleSet.add('invoicing');
       moduleSet.add('packages');
       moduleSet.add('ops');
@@ -135,16 +137,21 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
     } else if (role.includes('manager')) {
       moduleSet.add('crm');
       moduleSet.add('scheduling');
+      moduleSet.add('school');
       moduleSet.add('invoicing');
       moduleSet.add('packages');
       moduleSet.add('ops');
     } else if (role.includes('reception')) {
       moduleSet.add('crm');
       moduleSet.add('scheduling');
+      moduleSet.add('school');
     } else if (role.includes('accounting')) {
       moduleSet.add('invoicing');
     } else if (role.includes('engineer') || role.includes('scheduling')) {
       moduleSet.add('scheduling');
+    } else if (role.includes('teacher')) {
+      moduleSet.add('scheduling');
+      moduleSet.add('school');
     } else if (role.includes('packages') || role.includes('package')) {
       moduleSet.add('packages');
     } else if (role.includes('maintenance')) {
@@ -170,7 +177,8 @@ export const pathRequiresModule = (path: string): string | null => {
   if (path.startsWith('/configuracion')) return 'admin';
   if (path.startsWith('/operacion')) return 'ops';
   if (path.startsWith('/label')) return 'label';
-  if (path.startsWith('/escuela')) return 'scheduling';
+  if (path.startsWith('/escuela')) return 'school';
+  if (path.startsWith('/mi-profesor')) return 'school';
   if (path.startsWith('/eventos')) return 'scheduling';
   return null;
 };

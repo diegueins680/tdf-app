@@ -54,6 +54,7 @@ const pickLandingPath = (roles: string[], modules?: string[]) => {
 
   if (hasRole('admin') || hasModule('admin')) return '/configuracion/roles-permisos';
   if (hasRole('artist', 'artista')) return '/mi-artista';
+  if (hasRole('teacher')) return '/mi-profesor';
   if (hasRole('fan', 'customer') && !hasModule('crm') && !hasModule('scheduling')) return '/fans';
   if (hasModule('scheduling')) return '/estudio/calendario';
   if (hasModule('crm')) return '/crm/contactos';

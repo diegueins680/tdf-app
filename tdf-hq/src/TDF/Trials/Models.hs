@@ -36,6 +36,13 @@ TeacherSubject
     levelMax             Int Maybe
     UniqueTeacherSubject teacherId subjectId
     deriving Show Eq
+TeacherStudent
+    teacherId            PartyId
+    studentId            PartyId
+    active               Bool             default=True
+    createdAt            UTCTime          default=CURRENT_TIMESTAMP
+    UniqueTeacherStudent teacherId studentId
+    deriving Show Eq
 SubjectRoomPreference
     subjectId            SubjectId
     roomId               ResourceId

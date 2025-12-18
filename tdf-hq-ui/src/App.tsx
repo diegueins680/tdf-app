@@ -33,6 +33,7 @@ import ClassesPage from './pages/ClassesPage';
 import ReportsPage from './pages/ReportsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import PublicProfilePage from './pages/PublicProfilePage';
+import TeacherPortalPage from './pages/TeacherPortalPage';
 import SocialPageView from './pages/SocialPage';
 import SocialEventsPage from './pages/SocialEventsPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
@@ -212,11 +213,12 @@ export default function App() {
           <Route path="/system" element={<Navigate to="/configuracion/preferencias" replace />} />
           <Route path="/admin/roles" element={<Navigate to="/configuracion/roles-permisos" replace />} />
 
-          <Route path="/inicio" element={<FanHubPage />} />
-          <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
-          <Route path="/social" element={<SocialPageView />} />
-          <Route path="/social/eventos" element={<SocialEventsPage />} />
-          <Route path="/docs" element={<DocsPage />} />
+	          <Route path="/inicio" element={<FanHubPage />} />
+	          <Route path="/mi-profesor" element={<TeacherPortalPage />} />
+	          <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
+	          <Route path="/social" element={<SocialPageView />} />
+	          <Route path="/social/eventos" element={<SocialEventsPage />} />
+	          <Route path="/docs" element={<DocsPage />} />
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/acerca" element={<AboutPage />} />
           <Route path="/seguridad" element={<SecurityPage />} />

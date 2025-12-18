@@ -156,3 +156,18 @@ data StudentDTO = StudentDTO
   } deriving (Show, Generic)
 instance ToJSON StudentDTO
 instance FromJSON StudentDTO
+
+data StudentUpdate = StudentUpdate
+  { displayName :: Maybe Text
+  , email       :: Maybe Text
+  , phone       :: Maybe Text
+  , notes       :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON StudentUpdate
+instance FromJSON StudentUpdate
+
+data TeacherStudentLinkIn = TeacherStudentLinkIn
+  { studentId :: Int
+  } deriving (Show, Generic)
+instance ToJSON TeacherStudentLinkIn
+instance FromJSON TeacherStudentLinkIn

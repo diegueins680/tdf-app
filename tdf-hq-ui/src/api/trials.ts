@@ -1,4 +1,4 @@
-import { get, post, patch, put } from './client';
+import { get, post, patch, put, del } from './client';
 
 export interface TrialSubject {
   subjectId: number;
@@ -114,6 +114,40 @@ export interface StudentDTO {
   phone?: string | null;
 }
 
+export interface StudentUpdate {
+  displayName?: string;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+export interface TeacherStudentLinkIn {
+  studentId: number;
+}
+
+export interface TrialAvailabilitySlotDTO {
+  availabilityId: number;
+  subjectId: number;
+  subjectName?: string | null;
+  teacherId: number;
+  teacherName?: string | null;
+  roomId: string;
+  roomName?: string | null;
+  startAt: string;
+  endAt: string;
+  notes?: string | null;
+}
+
+export interface TrialAvailabilityUpsert {
+  availabilityId?: number | null;
+  subjectId: number;
+  roomId: string;
+  startAt: string;
+  endAt: string;
+  notes?: string | null;
+  teacherId?: number | null;
+}
+
 const base = '/trials/v1';
 
 export const Trials = {
@@ -154,4 +188,21 @@ export const Trials = {
     post<ClassSessionOut>(`${base}/class-sessions/${classId}/attend`, payload),
   listStudents: () => get<StudentDTO[]>(`${base}/students`),
   createStudent: (payload: StudentCreate) => post<StudentDTO>(`${base}/students`, payload),
+  updateStudent: (studentId: number, payload: StudentUpdate) => patch<StudentDTO>(`${base}/students/${studentId}`, payload),
+  listTeacherStudents: (teacherId: number) => get<StudentDTO[]>(`${base}/teachers/${teacherId}/students`),
+  addTeacherStudent: (teacherId: number, payload: TeacherStudentLinkIn) =>
+    post<void>(`${base}/teachers/${teacherId}/students`, payload),
+  removeTeacherStudent: (teacherId: number, studentId: number) =>
+    del<void>(`${base}/teachers/${teacherId}/students/${studentId}`),
+  listAvailabilitySlots: (params?: { subjectId?: number; from?: string; to?: string }) => {
+    const search = new URLSearchParams();
+    if (params?.subjectId) search.set('subjectId', String(params.subjectId));
+    if (params?.from) search.set('from', params.from);
+    if (params?.to) search.set('to', params.to);
+    const qs = search.toString();
+    return get<TrialAvailabilitySlotDTO[]>(`${base}/trial-availability/slots${qs ? `?${qs}` : ''}`);
+  },
+  upsertAvailabilitySlot: (payload: TrialAvailabilityUpsert) =>
+    post<TrialAvailabilitySlotDTO>(`${base}/trial-availability`, payload),
+  deleteAvailabilitySlot: (availabilityId: number) => del<void>(`${base}/trial-availability/${availabilityId}`),
 };

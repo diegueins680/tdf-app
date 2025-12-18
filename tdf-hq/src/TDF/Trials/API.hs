@@ -48,8 +48,12 @@ type PrivateTrialsAPI =
         :> QueryParam "to" UTCTime
         :> Get '[JSON] [ClassSessionDTO]
   :<|> "teachers" :> Capture "id" Int :> "subjects" :> ReqBody '[JSON] TeacherSubjectsUpdate :> Put '[JSON] TeacherDTO
+  :<|> "teachers" :> Capture "id" Int :> "students" :> Get '[JSON] [StudentDTO]
+  :<|> "teachers" :> Capture "id" Int :> "students" :> ReqBody '[JSON] TeacherStudentLinkIn :> Post '[JSON] NoContent
+  :<|> "teachers" :> Capture "id" Int :> "students" :> Capture "studentId" Int :> Delete '[JSON] NoContent
   :<|> "students" :> Get '[JSON] [StudentDTO]
   :<|> "students" :> ReqBody '[JSON] StudentCreate :> PostCreated '[JSON] StudentDTO
+  :<|> "students" :> Capture "id" Int :> ReqBody '[JSON] StudentUpdate :> Patch '[JSON] StudentDTO
 
 -- Minimal DTOs for the above (you likely have them elsewhere; these are placeholders)
 data SignupIn = SignupIn { firstName :: Text, lastName :: Text, email :: Text, phone :: Maybe Text, password :: Maybe Text, googleIdToken :: Maybe Text, marketingOptIn :: Bool } deriving (Generic)
