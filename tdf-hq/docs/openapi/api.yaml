@@ -660,6 +660,119 @@ paths:
                 $ref: '#/components/schemas/UserAccount'
         '404':
           description: Not found
+  /chat/threads:
+    get:
+      tags: [Chat]
+      summary: List chat threads
+      description: Returns 1:1 chat threads for the authenticated party.
+      operationId: listChatThreads
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Threads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatThread'
+  /chat/threads/dm/{otherPartyId}:
+    parameters:
+      - name: otherPartyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    post:
+      tags: [Chat]
+      summary: Get or create a DM thread
+      description: Creates (or returns) a 1:1 chat thread with the specified party id.
+      operationId: getOrCreateChatDmThread
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Thread
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatThread'
+        '403':
+          description: Not allowed
+        '404':
+          description: Party not found
+  /chat/threads/{threadId}/messages:
+    parameters:
+      - name: threadId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags: [Chat]
+      summary: List chat messages
+      description: Returns messages for a thread. Use `beforeId` or `afterId` for pagination.
+      operationId: listChatMessages
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+        - name: beforeId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: afterId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatMessage'
+        '404':
+          description: Not found
+    post:
+      tags: [Chat]
+      summary: Send a chat message
+      description: Sends a message to the thread as the authenticated party.
+      operationId: sendChatMessage
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatSendMessageRequest'
+      responses:
+        '200':
+          description: Message created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessage'
+        '403':
+          description: Not allowed
+        '404':
+          description: Not found
 security:
   - bearerAuth: [ ]
 
@@ -783,6 +896,7 @@ components:
         - Teacher
         - Reception
         - Accounting
+        - Webmaster
         - Artist
         - Artista
         - Promotor
@@ -878,6 +992,50 @@ components:
           type: object
           nullable: true
           description: Present when the party is linked to a band/project.
+    ChatThread:
+      type: object
+      properties:
+        ctThreadId:
+          type: integer
+          format: int64
+        ctOtherPartyId:
+          type: integer
+          format: int64
+        ctOtherDisplayName:
+          type: string
+        ctLastMessage:
+          type: string
+          nullable: true
+        ctLastMessageAt:
+          type: string
+          format: date-time
+          nullable: true
+        ctUpdatedAt:
+          type: string
+          format: date-time
+    ChatMessage:
+      type: object
+      properties:
+        cmId:
+          type: integer
+          format: int64
+        cmThreadId:
+          type: integer
+          format: int64
+        cmSenderPartyId:
+          type: integer
+          format: int64
+        cmBody:
+          type: string
+        cmCreatedAt:
+          type: string
+          format: date-time
+    ChatSendMessageRequest:
+      type: object
+      required: [csmBody]
+      properties:
+        csmBody:
+          type: string
     CreatePartyRequest:
       type: object
       required: [cDisplayName, cIsOrg]

@@ -156,6 +156,30 @@ data SuggestedFriendDTO = SuggestedFriendDTO
   } deriving (Show, Generic)
 instance ToJSON SuggestedFriendDTO
 
+data ChatThreadDTO = ChatThreadDTO
+  { ctThreadId         :: Int64
+  , ctOtherPartyId     :: Int64
+  , ctOtherDisplayName :: Text
+  , ctLastMessage      :: Maybe Text
+  , ctLastMessageAt    :: Maybe UTCTime
+  , ctUpdatedAt        :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON ChatThreadDTO
+
+data ChatMessageDTO = ChatMessageDTO
+  { cmId            :: Int64
+  , cmThreadId      :: Int64
+  , cmSenderPartyId :: Int64
+  , cmBody          :: Text
+  , cmCreatedAt     :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON ChatMessageDTO
+
+data ChatSendMessageRequest = ChatSendMessageRequest
+  { csmBody :: Text
+  } deriving (Show, Generic)
+instance FromJSON ChatSendMessageRequest
+
 data RadioPresenceDTO = RadioPresenceDTO
   { rpPartyId     :: Int64
   , rpStreamUrl   :: Text

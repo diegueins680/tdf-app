@@ -513,6 +513,13 @@ socialServer user =
   :<|> socialRemoveFriend user
   :<|> socialListSuggestedFriends user
 
+chatServer :: AuthedUser -> ServerT ChatAPI AppM
+chatServer user =
+       chatListThreads user
+  :<|> chatGetOrCreateDM user
+  :<|> chatListMessages user
+  :<|> chatSendMessage user
+
 driveServer :: AuthedUser -> ServerT DriveAPI AppM
 driveServer _ mAccessToken DriveUploadForm{..} = do
   manager <- liftIO $ newManager tlsManagerSettings
@@ -644,6 +651,7 @@ protectedServer user =
   :<|> paymentsServer user
   :<|> instagramServer
   :<|> socialServer user
+  :<|> chatServer user
   :<|> socialSyncServer user
   :<|> adsAdminServer user
   :<|> coursesAdminServer user
@@ -2267,6 +2275,178 @@ fanUnfollowArtist user artistId = do
   liftIO $ flip runSqlPool pool $
     deleteBy (UniqueFanFollow (auPartyId user) artistKey)
   pure NoContent
+
+-- Chat (1:1 DM between parties)
+
+normalizeDmPair :: PartyId -> PartyId -> (PartyId, PartyId)
+normalizeDmPair a b =
+  if fromSqlKey a <= fromSqlKey b
+    then (a, b)
+    else (b, a)
+
+ensureCanChatWith :: AuthedUser -> PartyId -> AppM ()
+ensureCanChatWith user otherPartyId = do
+  if hasRole Admin user
+    then pure ()
+    else do
+      let me = auPartyId user
+      isMutual <- runDB $ do
+        mAB <- getBy (UniquePartyFollow me otherPartyId)
+        mBA <- getBy (UniquePartyFollow otherPartyId me)
+        pure (isJust mAB && isJust mBA)
+      unless isMutual $
+        throwError err403
+          { errBody = BL.fromStrict (TE.encodeUtf8 ("Solo puedes chatear con amigos mutuos." :: Text)) }
+
+requireChatThreadParticipant :: AuthedUser -> ChatThread -> AppM ()
+requireChatThreadParticipant user ChatThread{chatThreadDmPartyA, chatThreadDmPartyB} = do
+  let me = auPartyId user
+  unless (me == chatThreadDmPartyA || me == chatThreadDmPartyB) $
+    throwError err404
+
+chatThreadToDTO
+  :: PartyId
+  -> ChatThreadId
+  -> ChatThread
+  -> Maybe Party
+  -> Maybe (Entity ChatMessage)
+  -> ChatThreadDTO
+chatThreadToDTO otherKey threadId ChatThread{chatThreadUpdatedAt} mOtherParty mLastMessage =
+  let otherName = maybe "Unknown" M.partyDisplayName mOtherParty
+      (lastBody, lastAt) =
+        case mLastMessage of
+          Nothing -> (Nothing, Nothing)
+          Just (Entity _ msg) -> (Just (chatMessageBody msg), Just (chatMessageCreatedAt msg))
+  in ChatThreadDTO
+      { ctThreadId = fromSqlKey threadId
+      , ctOtherPartyId = fromSqlKey otherKey
+      , ctOtherDisplayName = otherName
+      , ctLastMessage = lastBody
+      , ctLastMessageAt = lastAt
+      , ctUpdatedAt = chatThreadUpdatedAt
+      }
+
+chatMessageToDTO :: Entity ChatMessage -> ChatMessageDTO
+chatMessageToDTO (Entity mid ChatMessage{..}) =
+  ChatMessageDTO
+    { cmId = fromSqlKey mid
+    , cmThreadId = fromSqlKey chatMessageThreadId
+    , cmSenderPartyId = fromSqlKey chatMessageSenderPartyId
+    , cmBody = chatMessageBody
+    , cmCreatedAt = chatMessageCreatedAt
+    }
+
+chatListThreads :: AuthedUser -> AppM [ChatThreadDTO]
+chatListThreads user = do
+  let me = auPartyId user
+  threads <-
+    runDB $
+      selectList
+        ([ChatThreadDmPartyA ==. me] ||. [ChatThreadDmPartyB ==. me])
+        [Desc ChatThreadUpdatedAt, Desc ChatThreadId]
+  forM threads $ \(Entity tid thread) -> do
+    let otherKey =
+          if chatThreadDmPartyA thread == me
+            then chatThreadDmPartyB thread
+            else chatThreadDmPartyA thread
+    mOther <- runDB $ get otherKey
+    mLast <- runDB $ selectFirst [ChatMessageThreadId ==. tid] [Desc ChatMessageId]
+    pure (chatThreadToDTO otherKey tid thread mOther mLast)
+
+chatGetOrCreateDM :: AuthedUser -> Int64 -> AppM ChatThreadDTO
+chatGetOrCreateDM user otherPartyId = do
+  when (otherPartyId <= 0) $ throwBadRequest "Invalid party id"
+  let me = auPartyId user
+      otherKey = toSqlKey otherPartyId :: PartyId
+  when (me == otherKey) $
+    throwBadRequest "No puedes chatear contigo mismo"
+  mOther <- runDB $ get otherKey
+  when (isNothing mOther) $ throwError err404
+  ensureCanChatWith user otherKey
+  let (a, b) = normalizeDmPair me otherKey
+  now <- liftIO getCurrentTime
+  existing <- runDB $ getBy (UniqueChatThread a b)
+  case existing of
+    Just (Entity tid thread) -> do
+      mLast <- runDB $ selectFirst [ChatMessageThreadId ==. tid] [Desc ChatMessageId]
+      pure (chatThreadToDTO otherKey tid thread mOther mLast)
+    Nothing -> do
+      let thread = ChatThread
+            { chatThreadDmPartyA = a
+            , chatThreadDmPartyB = b
+            , chatThreadCreatedAt = now
+            , chatThreadUpdatedAt = now
+            }
+      tid <- runDB $ insert thread
+      pure (chatThreadToDTO otherKey tid thread mOther Nothing)
+
+chatListMessages :: AuthedUser -> Int64 -> Maybe Int -> Maybe Int64 -> Maybe Int64 -> AppM [ChatMessageDTO]
+chatListMessages user threadId mLimit mBeforeId mAfterId = do
+  let limit = fromMaybe 50 mLimit
+  when (limit < 1 || limit > 200) $
+    throwBadRequest "limit must be between 1 and 200"
+  when (isJust mBeforeId && isJust mAfterId) $
+    throwBadRequest "Use either beforeId or afterId"
+  let tid = toSqlKey threadId :: ChatThreadId
+  mThread <- runDB $ get tid
+  thread <-
+    case mThread of
+      Nothing -> throwError err404
+      Just t  -> pure t
+  requireChatThreadParticipant user thread
+  let baseFilters = [ChatMessageThreadId ==. tid]
+  messages <- runDB $
+    case (mBeforeId, mAfterId) of
+      (Just beforeId, Nothing) -> do
+        let beforeKey = toSqlKey beforeId :: ChatMessageId
+        rows <- selectList (baseFilters ++ [ChatMessageId <. beforeKey]) [Desc ChatMessageId, LimitTo limit]
+        pure (reverse rows)
+      (Nothing, Just afterId) -> do
+        let afterKey = toSqlKey afterId :: ChatMessageId
+        selectList (baseFilters ++ [ChatMessageId >. afterKey]) [Asc ChatMessageId, LimitTo limit]
+      _ -> do
+        rows <- selectList baseFilters [Desc ChatMessageId, LimitTo limit]
+        pure (reverse rows)
+  pure (map chatMessageToDTO messages)
+
+chatSendMessage :: AuthedUser -> Int64 -> ChatSendMessageRequest -> AppM ChatMessageDTO
+chatSendMessage user threadId ChatSendMessageRequest{..} = do
+  let bodyClean = T.strip csmBody
+  when (T.null bodyClean) $
+    throwBadRequest "Mensaje vacío"
+  when (T.length bodyClean > 5000) $
+    throwBadRequest "Mensaje demasiado largo (max 5000 caracteres)"
+  let tid = toSqlKey threadId :: ChatThreadId
+      me  = auPartyId user
+  mThread <- runDB $ get tid
+  thread <-
+    case mThread of
+      Nothing -> throwError err404
+      Just t  -> pure t
+  requireChatThreadParticipant user thread
+  let otherKey =
+        if chatThreadDmPartyA thread == me
+          then chatThreadDmPartyB thread
+          else chatThreadDmPartyA thread
+  ensureCanChatWith user otherKey
+  now <- liftIO getCurrentTime
+  mid <- runDB $ do
+    mid' <- insert ChatMessage
+      { chatMessageThreadId = tid
+      , chatMessageSenderPartyId = me
+      , chatMessageBody = bodyClean
+      , chatMessageCreatedAt = now
+      }
+    update tid [ChatThreadUpdatedAt =. now]
+    pure mid'
+  pure
+    ChatMessageDTO
+      { cmId = fromSqlKey mid
+      , cmThreadId = fromSqlKey tid
+      , cmSenderPartyId = fromSqlKey me
+      , cmBody = bodyClean
+      , cmCreatedAt = now
+      }
 
 -- Social graph (party <-> party follows)
 socialListFollowers :: AuthedUser -> AppM [PartyFollowDTO]

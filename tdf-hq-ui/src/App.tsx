@@ -36,6 +36,7 @@ import PublicProfilePage from './pages/PublicProfilePage';
 import TeacherPortalPage from './pages/TeacherPortalPage';
 import SocialPageView from './pages/SocialPage';
 import SocialEventsPage from './pages/SocialEventsPage';
+import ChatPage from './pages/ChatPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
 import LabelProjectsPage from './pages/LabelProjectsPage';
 import LabelReleasesPage from './pages/LabelReleasesPage';
@@ -218,6 +219,7 @@ export default function App() {
           <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
           <Route path="/social" element={<SocialPageView />} />
           <Route path="/social/eventos" element={<SocialEventsPage />} />
+          <Route path="/chat" element={<ChatPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/acerca" element={<AboutPage />} />

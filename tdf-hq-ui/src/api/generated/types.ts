@@ -64,6 +64,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/login/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Login with Google
+         * @description Validates a Google ID token and issues a session. Creates a Customer/Fan account when the email is new.
+         */
+        post: operations["loginWithGoogle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/signup": {
         parameters: {
             query?: never;
@@ -494,6 +514,74 @@ export interface paths {
         patch: operations["adminUpdateUser"];
         trace?: never;
     };
+    "/chat/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List chat threads
+         * @description Returns 1:1 chat threads for the authenticated party.
+         */
+        get: operations["listChatThreads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/threads/dm/{otherPartyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                otherPartyId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get or create a DM thread
+         * @description Creates (or returns) a 1:1 chat thread with the specified party id.
+         */
+        post: operations["getOrCreateChatDmThread"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/threads/{threadId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * List chat messages
+         * @description Returns messages for a thread. Use `beforeId` or `afterId` for pagination.
+         */
+        get: operations["listChatMessages"];
+        put?: never;
+        /**
+         * Send a chat message
+         * @description Sends a message to the thread as the authenticated party.
+         */
+        post: operations["sendChatMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -529,6 +617,10 @@ export interface components {
              */
             password: string;
         };
+        GoogleLoginRequest: {
+            /** @description Google ID token returned by Google Identity Services */
+            idToken: string;
+        };
         SignupRequest: {
             /** @example Diego */
             firstName: string;
@@ -550,7 +642,10 @@ export interface components {
             roles?: components["schemas"]["Role"][];
             /** @description Artist or band ids the fan wants to follow immediately after signup. */
             fanArtistIds?: number[];
-            /** @description Optional existing artist profile to claim when it is not already assigned to a user. */
+            /**
+             * Format: int64
+             * @description Optional existing artist profile to claim when it is not already assigned to a user.
+             */
             claimArtistId?: number | null;
         };
         LoginResponse: {
@@ -565,7 +660,7 @@ export interface components {
          * @description Assigned platform role.
          * @enum {string}
          */
-        Role: "Admin" | "Manager" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Artist" | "Artista" | "Webmaster" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
+        Role: "Admin" | "Manager" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
         UserRoleSummary: {
             /** Format: int64 */
             id?: number;
@@ -601,6 +696,32 @@ export interface components {
             hasUserAccount?: boolean;
             /** @description Present when the party is linked to a band/project. */
             band?: Record<string, never> | null;
+        };
+        ChatThread: {
+            /** Format: int64 */
+            ctThreadId?: number;
+            /** Format: int64 */
+            ctOtherPartyId?: number;
+            ctOtherDisplayName?: string;
+            ctLastMessage?: string | null;
+            /** Format: date-time */
+            ctLastMessageAt?: string | null;
+            /** Format: date-time */
+            ctUpdatedAt?: string;
+        };
+        ChatMessage: {
+            /** Format: int64 */
+            cmId?: number;
+            /** Format: int64 */
+            cmThreadId?: number;
+            /** Format: int64 */
+            cmSenderPartyId?: number;
+            cmBody?: string;
+            /** Format: date-time */
+            cmCreatedAt?: string;
+        };
+        ChatSendMessageRequest: {
+            csmBody: string;
         };
         CreatePartyRequest: {
             /** @description Display name shown in listings. */
@@ -899,6 +1020,37 @@ export interface operations {
                 };
             };
             /** @description Invalid credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    loginWithGoogle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Authenticated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid or expired Google token */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -1629,6 +1781,135 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["UserAccount"];
                 };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listChatThreads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Threads */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatThread"][];
+                };
+            };
+        };
+    };
+    getOrCreateChatDmThread: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                otherPartyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thread */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatThread"];
+                };
+            };
+            /** @description Not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Party not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listChatMessages: {
+        parameters: {
+            query?: {
+                limit?: number;
+                beforeId?: number;
+                afterId?: number;
+            };
+            header?: never;
+            path: {
+                threadId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Messages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessage"][];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sendChatMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatSendMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Message created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessage"];
+                };
+            };
+            /** @description Not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not found */
             404: {

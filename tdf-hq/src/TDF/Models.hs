@@ -292,6 +292,20 @@ PartyFollow
     createdAt        UTCTime
     UniquePartyFollow followerPartyId followingPartyId
     deriving Show Generic
+ChatThread
+    dmPartyA         PartyId
+    dmPartyB         PartyId
+    createdAt        UTCTime
+    updatedAt        UTCTime
+    UniqueChatThread dmPartyA dmPartyB
+    deriving Show Generic
+ChatMessage
+    threadId         ChatThreadId
+    senderPartyId    PartyId
+    body             Text
+    createdAt        UTCTime
+    deriving Show Generic
+    IndexChatMessageThread threadId
 PartyRadioPresence
     partyId          PartyId
     streamUrl        Text

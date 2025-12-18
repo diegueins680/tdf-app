@@ -4,7 +4,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
 import { DateTime } from 'luxon';
 
-const createPublicMock = jest.fn((_: unknown) => Promise.resolve({ bookingId: 123 }));
+type CreatePublicPayload = { pbResourceIds?: string[] | null };
+const createPublicMock = jest.fn<(payload: CreatePublicPayload) => Promise<{ bookingId: number }>>(
+  (_payload) => Promise.resolve({ bookingId: 123 }),
+);
 const logoutMock = jest.fn();
 
 jest.unstable_mockModule('../api/bookings', () => ({
@@ -176,7 +179,7 @@ describe('PublicBookingPage', () => {
     });
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
-    const payload = createPublicMock.mock.calls[0]?.[0] as { pbResourceIds?: string[] | null } | undefined;
+    const payload = createPublicMock.mock.calls[0]?.[0];
     expect(payload?.pbResourceIds).toEqual(['Live Room', 'Control Room']);
 
     await cleanup();

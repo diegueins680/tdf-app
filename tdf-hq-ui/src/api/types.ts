@@ -428,6 +428,23 @@ export interface SuggestedFriendDTO {
   sfMutualCount: number;
 }
 
+export interface ChatThreadDTO {
+  ctThreadId: number;
+  ctOtherPartyId: number;
+  ctOtherDisplayName: string;
+  ctLastMessage?: string | null;
+  ctLastMessageAt?: string | null;
+  ctUpdatedAt: string;
+}
+
+export interface ChatMessageDTO {
+  cmId: number;
+  cmThreadId: number;
+  cmSenderPartyId: number;
+  cmBody: string;
+  cmCreatedAt: string;
+}
+
 export interface RadioPresenceDTO {
   rpPartyId: number;
   rpStreamUrl: string;

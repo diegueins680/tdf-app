@@ -103,6 +103,18 @@ type SocialAPI =
   :<|> "friends" :> Capture "partyId" Int64 :> Delete '[JSON] NoContent
   :<|> "suggestions" :> Get '[JSON] [SuggestedFriendDTO]
 
+type ChatAPI =
+       "chat" :> "threads" :> Get '[JSON] [ChatThreadDTO]
+  :<|> "chat" :> "threads" :> "dm" :> Capture "otherPartyId" Int64 :> Post '[JSON] ChatThreadDTO
+  :<|> "chat" :> "threads" :> Capture "threadId" Int64 :> "messages"
+         :> QueryParam "limit" Int
+         :> QueryParam "beforeId" Int64
+         :> QueryParam "afterId" Int64
+         :> Get '[JSON] [ChatMessageDTO]
+  :<|> "chat" :> "threads" :> Capture "threadId" Int64 :> "messages"
+         :> ReqBody '[JSON] ChatSendMessageRequest
+         :> Post '[JSON] ChatMessageDTO
+
 type BookingAPI =
        Get '[JSON] [BookingDTO]
   :<|> ReqBody '[JSON] CreateBookingReq :> Post '[JSON] BookingDTO
@@ -201,6 +213,7 @@ type ProtectedAPI =
   :<|> "payments" :> PaymentsAPI
   :<|> "instagram" :> InstagramAPI
   :<|> "social" :> SocialAPI
+  :<|> ChatAPI
   :<|> "social-sync" :> SocialSyncAPI
   :<|> AdsAdminAPI
   :<|> "admin" :> CoursesAdminAPI
