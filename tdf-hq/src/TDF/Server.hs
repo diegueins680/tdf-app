@@ -5295,8 +5295,11 @@ uploadToDrive manager accessToken file mName mFolder = do
         , requestBody = RequestBodyLBS body
         }
   resp <- httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    fail ("Drive upload failed with status " <> show (statusCode (responseStatus resp)))
+  let uploadStatus = statusCode (responseStatus resp)
+  when (uploadStatus >= 400) $ do
+    let bodySnippet = take 2000 (BL8.unpack (responseBody resp))
+        suffix = if null bodySnippet then "" else " " <> bodySnippet
+    fail ("Drive upload failed with status " <> show uploadStatus <> "." <> suffix)
   driveResp <- case eitherDecode (responseBody resp) of
     Left err -> fail ("No pudimos interpretar la respuesta de Drive: " <> err)
     Right ok -> pure (ok :: DriveApiResp)
