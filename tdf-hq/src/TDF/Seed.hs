@@ -64,6 +64,7 @@ seedAll = do
         , ("Mezcla", Mixing, PerSong, Just (120 * 100), Just 1200, "USD", Just "canción")
         , ("Mastering", Mastering, PerSong, Just (70 * 100), Just 1200, "USD", Just "canción")
         , ("Ensayo", Rehearsal, Hourly, Just (30 * 100), Just 1200, "USD", Just "hora")
+        , ("Práctica en DJ Booth", Rehearsal, Hourly, Just (15 * 100), Just 1200, "USD", Just "hora")
         , ("Podcast", EventProduction, PerSong, Just (80 * 100), Just 1200, "USD", Just "episodio")
         , ("Clases", Classes, Package, Nothing, Just 1200, "USD", Just "paquete")
         , ("Producción de eventos", EventProduction, Quote, Nothing, Just 1200, "USD", Nothing)

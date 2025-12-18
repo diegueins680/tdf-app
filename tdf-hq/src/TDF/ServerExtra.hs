@@ -13,6 +13,7 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask, asks)
 import           Data.Foldable              (for_)
+import           Data.List                  (sortOn)
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing)
 import qualified Data.Set                   as Set
@@ -856,10 +857,48 @@ serviceCatalogPublicServer
      )
   => ServerT ServiceCatalogPublicAPI m
 serviceCatalogPublicServer = do
-  entities <- withPool $ selectList
-    [M.ServiceCatalogActive ==. True]
-    [Asc M.ServiceCatalogName]
-  pure (map serviceCatalogToDTO entities)
+  entities <- withPool $ selectList [M.ServiceCatalogActive ==. True] []
+  let sorted = sortOn serviceCatalogSortKey entities
+  pure (map serviceCatalogToDTO sorted)
+  where
+    serviceCatalogSortKey (Entity _ svc) =
+      let nameNorm = normalizeServiceName (M.serviceCatalogName svc)
+      in ( groupRank (M.serviceCatalogKind svc) nameNorm
+         , nameRank nameNorm
+         , nameNorm
+         )
+    groupRank kind nameNorm
+      | nameNorm == "podcast" = 0 :: Int
+      | otherwise =
+          case kind of
+            M.Recording       -> 0
+            M.Rehearsal       -> 1
+            M.Mixing          -> 2
+            M.Mastering       -> 3
+            M.Classes         -> 4
+            M.EventProduction -> 5
+    nameRank nameNorm =
+      case nameNorm of
+        "grabacion de banda"     -> 0 :: Int
+        "grabacion de voz"       -> 1
+        "podcast"                -> 2
+        "ensayo"                 -> 0
+        "practica en dj booth"   -> 1
+        _                        -> 999
+    normalizeServiceName =
+      stripDiacritics . T.unwords . T.words . T.toLower . T.strip
+    stripDiacritics = T.map replaceChar
+      where
+        replaceChar c =
+          case c of
+            'á' -> 'a'
+            'é' -> 'e'
+            'í' -> 'i'
+            'ó' -> 'o'
+            'ú' -> 'u'
+            'ü' -> 'u'
+            'ñ' -> 'n'
+            _   -> c
 
 serviceCatalogServer
   :: ( MonadReader Env m

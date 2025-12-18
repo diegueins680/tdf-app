@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -81,6 +81,34 @@ const zoneLabel = (zone: string) => {
 
 const START_STEP_MINUTES = 15;
 
+const normalizeServiceToken = (value: string) => {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+};
+
+const resolveServiceFromToken = (raw: string, list: ServiceType[]): ServiceType | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (/^\d+$/.test(trimmed)) {
+    const matchById = list.find((svc) => svc.id === trimmed);
+    if (matchById) return matchById;
+  }
+  const token = normalizeServiceToken(trimmed);
+  if (!token) return null;
+  const exact = list.find((svc) => normalizeServiceToken(svc.name) === token);
+  if (exact) return exact;
+  const partial = list.find((svc) => {
+    const svcToken = normalizeServiceToken(svc.name);
+    return svcToken.includes(token) || token.includes(svcToken);
+  });
+  return partial ?? null;
+};
+
 const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
   return list;
 };
@@ -146,6 +174,7 @@ export default function PublicBookingPage() {
   }, [roomsQuery.data]);
   const defaultService = services[0]?.name ?? 'Reserva';
   const { session, logout } = useSession();
+  const appliedServiceQuery = useRef(false);
   const userTimeZone = useMemo(() => {
     if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'UTC';
     return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
@@ -204,6 +233,23 @@ export default function PublicBookingPage() {
       // ignore parsing issues
     }
   }, [defaultService, services, roomOptions]);
+
+  useEffect(() => {
+    if (appliedServiceQuery.current) return;
+    if (!services.length) return;
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const rawToken = params.get('service') ?? params.get('servicio');
+    if (!rawToken) return;
+    const match = resolveServiceFromToken(rawToken, services);
+    if (!match) return;
+    appliedServiceQuery.current = true;
+    setForm((prev) => ({
+      ...prev,
+      serviceType: match.name,
+      resourceLabels: defaultRoomsForService(match.name, roomOptions),
+    }));
+  }, [roomOptions, services]);
 
   useEffect(() => {
     if (!session?.displayName) return;
