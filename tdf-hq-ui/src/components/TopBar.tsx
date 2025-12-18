@@ -10,7 +10,7 @@ import { useSession } from '../session/SessionContext';
 import ApiTokenDialog from './ApiTokenDialog';
 import BrandLogo from './BrandLogo';
 import SearchIcon from '@mui/icons-material/Search';
-import { NAV_GROUPS, deriveModulesFromRoles, pathRequiresModule } from './SidebarNav';
+import { NAV_GROUPS, deriveModulesFromRoles, isSchoolStaffRole, pathRequiresModule, pathRequiresSchoolStaff } from './SidebarNav';
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
@@ -157,18 +157,20 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   }, [session?.modules, session?.roles]);
 
   const hasAdmin = modules.has('admin');
+  const isSchoolStaff = useMemo(() => isSchoolStaffRole(session?.roles), [session?.roles]);
 
   const quickNavItems = useMemo(() => {
     return NAV_GROUPS.flatMap((group) =>
       group.items
         .filter((item) => {
+          if (pathRequiresSchoolStaff(item.path) && !isSchoolStaff) return false;
           const required = pathRequiresModule(item.path);
           if (!required) return true;
           return modules.has(required);
         })
         .map((item) => ({ ...item, group: group.title })),
     );
-  }, [modules]);
+  }, [isSchoolStaff, modules]);
 
   const filteredQuickItems = useMemo(() => {
     const query = quickQuery.trim().toLowerCase();

@@ -4,7 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
 import { DateTime } from 'luxon';
 
-const createPublicMock = jest.fn(() => Promise.resolve({ bookingId: 123 }));
+const createPublicMock = jest.fn((_: unknown) => Promise.resolve({ bookingId: 123 }));
 const logoutMock = jest.fn();
 
 jest.unstable_mockModule('../api/bookings', () => ({
@@ -104,8 +104,10 @@ const clickCheckboxNearText = (container: HTMLElement, text: string) => {
   while (current && current !== container) {
     const checkboxes = current.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     if (checkboxes.length === 1) {
-      checkboxes[0].click();
-      return checkboxes[0];
+      const checkbox = checkboxes.item(0);
+      if (!checkbox) throw new Error(`Checkbox not found near: ${text}`);
+      checkbox.click();
+      return checkbox;
     }
     current = current.parentElement;
   }

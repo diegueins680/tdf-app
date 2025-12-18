@@ -15,6 +15,7 @@ import {
   LinearProgress,
   MenuItem,
   Paper,
+  Snackbar,
   Stack,
   Tab,
   Tabs,
@@ -56,6 +57,37 @@ const toIsoOrNull = (localValue: string) => {
   return d.toISOString();
 };
 
+const parseLocalDateTime = (value: string): Date | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const d = new Date(trimmed);
+  if (Number.isNaN(d.getTime())) return null;
+  return d;
+};
+
+const computeDurationMs = (startValue: string, endValue: string, fallbackMinutes = 60): number => {
+  const start = parseLocalDateTime(startValue);
+  const end = parseLocalDateTime(endValue);
+  if (start && end && end > start) return end.getTime() - start.getTime();
+  return fallbackMinutes * 60_000;
+};
+
+const addDurationToLocalStart = (startValue: string, durationMs: number): string | null => {
+  const start = parseLocalDateTime(startValue);
+  if (!start) return null;
+  const end = new Date(start.getTime() + durationMs);
+  return toLocalInput(end.toISOString());
+};
+
+const validateLocalRange = (startValue: string, endValue: string): string | null => {
+  const start = parseLocalDateTime(startValue);
+  if (!start) return 'Inicio inválido.';
+  const end = parseLocalDateTime(endValue);
+  if (!end) return 'Fin inválido.';
+  if (end <= start) return 'El fin debe ser posterior al inicio.';
+  return null;
+};
+
 const formatDateTime = (iso: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
@@ -89,6 +121,18 @@ export default function TeacherPortalPage() {
   const getErrorMessage = (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback;
 
+  const [toast, setToast] = useState<{
+    message: string;
+    severity: 'success' | 'info' | 'warning' | 'error';
+  } | null>(null);
+  const closeToast = (_?: unknown, reason?: string) => {
+    if (reason === 'clickaway') return;
+    setToast(null);
+  };
+  const showToast = (message: string, severity: 'success' | 'info' | 'warning' | 'error' = 'success') => {
+    setToast({ message, severity });
+  };
+
   const [tab, setTab] = useState<PortalTab>('agenda');
 
   const subjectsQuery = useQuery({
@@ -111,7 +155,8 @@ export default function TeacherPortalPage() {
     [subjectsQuery.data],
   );
   const subjectById = useMemo(() => new Map(activeSubjects.map((s) => [s.subjectId, s])), [activeSubjects]);
-  const rooms = roomsQuery.data ?? [];
+  const rooms = useMemo(() => roomsQuery.data ?? [], [roomsQuery.data]);
+  const roomNameById = useMemo(() => new Map(rooms.map((r) => [r.roomId, r.rName])), [rooms]);
 
   const me = useMemo(
     () => (teachersQuery.data ?? []).find((t) => t.teacherId === teacherId) ?? null,
@@ -130,6 +175,10 @@ export default function TeacherPortalPage() {
       void qc.invalidateQueries({ queryKey: ['teacher-portal', 'teachers'] });
       void qc.invalidateQueries({ queryKey: ['teacher-availability'] });
       void qc.invalidateQueries({ queryKey: ['teacher-classes'] });
+      showToast('Materias guardadas.', 'success');
+    },
+    onError: (error) => {
+      showToast(getErrorMessage(error, 'No pudimos guardar las materias.'), 'error');
     },
   });
 
@@ -147,6 +196,8 @@ export default function TeacherPortalPage() {
   const [editingStudent, setEditingStudent] = useState<StudentDTO | null>(null);
   const [studentForm, setStudentForm] = useState({ fullName: '', email: '', phone: '' });
   const [studentEditForm, setStudentEditForm] = useState({ displayName: '', email: '', phone: '' });
+  const [studentDialogError, setStudentDialogError] = useState<string | null>(null);
+  const [studentEditDialogError, setStudentEditDialogError] = useState<string | null>(null);
 
   const studentsQuery = useQuery({
     queryKey: ['teacher-students', teacherId],
@@ -170,6 +221,7 @@ export default function TeacherPortalPage() {
 
   const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
   const [editingAvailability, setEditingAvailability] = useState<TrialAvailabilitySlotDTO | null>(null);
+  const [availabilityDialogError, setAvailabilityDialogError] = useState<string | null>(null);
   const [availabilityForm, setAvailabilityForm] = useState<{
     subjectId: number | '';
     roomId: string;
@@ -177,6 +229,10 @@ export default function TeacherPortalPage() {
     endAt: string;
     notes: string;
   }>({ subjectId: '', roomId: '', startAt: '', endAt: '', notes: '' });
+  const availabilityTimeError = useMemo(
+    () => (availabilityDialogOpen ? validateLocalRange(availabilityForm.startAt, availabilityForm.endAt) : null),
+    [availabilityDialogOpen, availabilityForm.endAt, availabilityForm.startAt],
+  );
 
   const availabilityRange = useMemo(() => {
     const now = new Date();
@@ -207,11 +263,16 @@ export default function TeacherPortalPage() {
     mutationFn: (availabilityId: number) => Trials.deleteAvailabilitySlot(availabilityId),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['teacher-availability'] });
+      showToast('Disponibilidad eliminada.', 'success');
+    },
+    onError: (error) => {
+      showToast(getErrorMessage(error, 'No pudimos eliminar la disponibilidad.'), 'error');
     },
   });
 
   const [classDialogOpen, setClassDialogOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassSessionDTO | null>(null);
+  const [classDialogError, setClassDialogError] = useState<string | null>(null);
   const [classForm, setClassForm] = useState<{
     subjectId: number | '';
     studentId: number | '';
@@ -220,6 +281,10 @@ export default function TeacherPortalPage() {
     endAt: string;
     notes: string;
   }>({ subjectId: '', studentId: '', roomId: '', startAt: '', endAt: '', notes: '' });
+  const classTimeError = useMemo(
+    () => (classDialogOpen ? validateLocalRange(classForm.startAt, classForm.endAt) : null),
+    [classDialogOpen, classForm.endAt, classForm.startAt],
+  );
 
   const classRange = useMemo(() => {
     const now = new Date();
@@ -271,6 +336,10 @@ export default function TeacherPortalPage() {
     mutationFn: (classId: number) => Trials.attendClassSession(classId, { attended: true }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['teacher-classes'] });
+      showToast('Clase marcada como realizada.', 'success');
+    },
+    onError: (error) => {
+      showToast(getErrorMessage(error, 'No pudimos marcar la clase.'), 'error');
     },
   });
 
@@ -285,7 +354,7 @@ export default function TeacherPortalPage() {
   if (!teacherId) {
     return (
       <Alert severity="warning" sx={{ borderRadius: 2 }}>
-        No encontramos tu `partyId` en la sesión. Cierra sesión e ingresa nuevamente.
+        No pudimos identificar tu sesión para el portal del profesor. Cierra sesión e ingresa nuevamente. Si el problema persiste, contacta soporte.
       </Alert>
     );
   }
@@ -297,13 +366,18 @@ export default function TeacherPortalPage() {
   const studentsError = studentsQuery.error ?? createStudentMutation.error ?? updateStudentMutation.error;
   const subjectsError = subjectsQuery.error ?? teachersQuery.error ?? updateSubjectsMutation.error;
   const availabilityError = availabilityQuery.error ?? upsertAvailabilityMutation.error ?? deleteAvailabilityMutation.error;
+  const missingStudents = myStudents.length === 0;
+  const missingSubjects = selectedSubjectIds.length === 0;
+  const canScheduleClass = !missingStudents && !missingSubjects;
 
   const openCreateStudent = () => {
+    setStudentDialogError(null);
     setStudentForm({ fullName: '', email: '', phone: '' });
     setStudentDialogOpen(true);
   };
 
   const openEditStudent = (student: StudentDTO) => {
+    setStudentEditDialogError(null);
     setEditingStudent(student);
     setStudentEditForm({
       displayName: student.displayName,
@@ -314,6 +388,7 @@ export default function TeacherPortalPage() {
   };
 
   const openCreateAvailability = () => {
+    setAvailabilityDialogError(null);
     const now = new Date();
     const startIso = now.toISOString();
     const endIso = new Date(now.getTime() + 60 * 60000).toISOString();
@@ -329,6 +404,7 @@ export default function TeacherPortalPage() {
   };
 
   const openEditAvailability = (slot: TrialAvailabilitySlotDTO) => {
+    setAvailabilityDialogError(null);
     setEditingAvailability(slot);
     setAvailabilityForm({
       subjectId: slot.subjectId,
@@ -341,6 +417,7 @@ export default function TeacherPortalPage() {
   };
 
   const openCreateClass = () => {
+    setClassDialogError(null);
     const now = new Date();
     const startIso = now.toISOString();
     const endIso = new Date(now.getTime() + 60 * 60000).toISOString();
@@ -357,6 +434,7 @@ export default function TeacherPortalPage() {
   };
 
   const openEditClass = (cls: ClassSessionDTO) => {
+    setClassDialogError(null);
     setEditingClass(cls);
     setClassForm({
       subjectId: cls.subjectId,
@@ -370,37 +448,70 @@ export default function TeacherPortalPage() {
   };
 
   const submitStudent = async () => {
+    setStudentDialogError(null);
     const fullName = studentForm.fullName.trim();
     const email = studentForm.email.trim();
     const phone = studentForm.phone.trim();
-    if (!fullName || !email) return;
-    await createStudentMutation.mutateAsync({
-      fullName,
-      email,
-      phone: phone ? phone : undefined,
-    });
-    setStudentDialogOpen(false);
+    if (!fullName || !email) {
+      setStudentDialogError('Completa nombre y correo.');
+      return;
+    }
+    try {
+      await createStudentMutation.mutateAsync({
+        fullName,
+        email,
+        phone: phone ? phone : undefined,
+      });
+      setStudentDialogOpen(false);
+      showToast('Alumno creado.', 'success');
+    } catch (error) {
+      const msg = getErrorMessage(error, 'No pudimos crear el alumno.');
+      setStudentDialogError(msg);
+      showToast(msg, 'error');
+    }
   };
 
   const submitStudentEdit = async () => {
+    setStudentEditDialogError(null);
     if (!editingStudent) return;
     const displayName = studentEditForm.displayName.trim();
-    if (!displayName) return;
+    if (!displayName) {
+      setStudentEditDialogError('El nombre es obligatorio.');
+      return;
+    }
     const patch: StudentUpdate = {
       displayName,
       ...(studentEditForm.email.trim() ? { email: studentEditForm.email.trim() } : {}),
       ...(studentEditForm.phone.trim() ? { phone: studentEditForm.phone.trim() } : {}),
     };
-    await updateStudentMutation.mutateAsync({ studentId: editingStudent.studentId, patch });
-    setStudentEditDialogOpen(false);
-    setEditingStudent(null);
+    try {
+      await updateStudentMutation.mutateAsync({ studentId: editingStudent.studentId, patch });
+      setStudentEditDialogOpen(false);
+      setEditingStudent(null);
+      showToast('Alumno actualizado.', 'success');
+    } catch (error) {
+      const msg = getErrorMessage(error, 'No pudimos actualizar el alumno.');
+      setStudentEditDialogError(msg);
+      showToast(msg, 'error');
+    }
   };
 
   const submitAvailability = async () => {
-    if (!availabilityForm.subjectId || !availabilityForm.roomId) return;
+    setAvailabilityDialogError(null);
+    if (!availabilityForm.subjectId || !availabilityForm.roomId) {
+      setAvailabilityDialogError('Completa materia y sala.');
+      return;
+    }
+    if (availabilityTimeError) {
+      setAvailabilityDialogError(availabilityTimeError);
+      return;
+    }
     const startIso = toIsoOrNull(availabilityForm.startAt);
     const endIso = toIsoOrNull(availabilityForm.endAt);
-    if (!startIso || !endIso) return;
+    if (!startIso || !endIso) {
+      setAvailabilityDialogError('Completa el horario.');
+      return;
+    }
     const payload: TrialAvailabilityUpsert = {
       availabilityId: editingAvailability?.availabilityId ?? undefined,
       subjectId: Number(availabilityForm.subjectId),
@@ -409,32 +520,58 @@ export default function TeacherPortalPage() {
       endAt: endIso,
       notes: availabilityForm.notes.trim() ? availabilityForm.notes.trim() : undefined,
     };
-    await upsertAvailabilityMutation.mutateAsync(payload);
-    setAvailabilityDialogOpen(false);
-    setEditingAvailability(null);
+    try {
+      await upsertAvailabilityMutation.mutateAsync(payload);
+      setAvailabilityDialogOpen(false);
+      setEditingAvailability(null);
+      showToast(editingAvailability ? 'Disponibilidad actualizada.' : 'Disponibilidad publicada.', 'success');
+    } catch (error) {
+      const msg = getErrorMessage(error, 'No pudimos guardar la disponibilidad.');
+      setAvailabilityDialogError(msg);
+      showToast(msg, 'error');
+    }
   };
 
   const submitClass = async () => {
-    if (!classForm.subjectId || !classForm.studentId || !classForm.roomId) return;
+    setClassDialogError(null);
+    if (!classForm.subjectId || !classForm.studentId || !classForm.roomId) {
+      setClassDialogError('Completa materia, alumno, sala y horario.');
+      return;
+    }
+    if (classTimeError) {
+      setClassDialogError(classTimeError);
+      return;
+    }
     const startIso = toIsoOrNull(classForm.startAt);
     const endIso = toIsoOrNull(classForm.endAt);
-    if (!startIso || !endIso) return;
+    if (!startIso || !endIso) {
+      setClassDialogError('Completa el horario.');
+      return;
+    }
 
     if (!editingClass) {
-      await createClassMutation.mutateAsync({
-        subjectId: Number(classForm.subjectId),
-        studentId: Number(classForm.studentId),
-        roomId: classForm.roomId,
-        startIso,
-        endIso,
-      });
-      setClassDialogOpen(false);
+      try {
+        await createClassMutation.mutateAsync({
+          subjectId: Number(classForm.subjectId),
+          studentId: Number(classForm.studentId),
+          roomId: classForm.roomId,
+          startIso,
+          endIso,
+        });
+        setClassDialogOpen(false);
+        showToast('Clase programada.', 'success');
+      } catch (error) {
+        const msg = getErrorMessage(error, 'No pudimos programar la clase.');
+        setClassDialogError(msg);
+        showToast(msg, 'error');
+      }
       return;
     }
 
     const roomIdNum = Number.parseInt(classForm.roomId, 10);
     if (!Number.isFinite(roomIdNum)) {
-      throw new Error('Sala inválida.');
+      setClassDialogError('Sala inválida.');
+      return;
     }
     const patch: ClassSessionUpdate = {
       subjectId: Number(classForm.subjectId),
@@ -444,9 +581,16 @@ export default function TeacherPortalPage() {
       endAt: endIso,
       notes: classForm.notes.trim() ? classForm.notes.trim() : undefined,
     };
-    await updateClassMutation.mutateAsync({ classId: editingClass.classSessionId, patch });
-    setClassDialogOpen(false);
-    setEditingClass(null);
+    try {
+      await updateClassMutation.mutateAsync({ classId: editingClass.classSessionId, patch });
+      setClassDialogOpen(false);
+      setEditingClass(null);
+      showToast('Clase actualizada.', 'success');
+    } catch (error) {
+      const msg = getErrorMessage(error, 'No pudimos actualizar la clase.');
+      setClassDialogError(msg);
+      showToast(msg, 'error');
+    }
   };
 
   const availableRoomsForSubjectId = (subjectId: number | ''): RoomDTO[] => {
@@ -515,7 +659,7 @@ export default function TeacherPortalPage() {
                   {formatDateTime(classRange.from)} → {formatDateTime(classRange.to)}
                 </Typography>
               </Box>
-              <Button variant="contained" onClick={openCreateClass} disabled={myStudents.length === 0 || selectedSubjectIds.length === 0}>
+              <Button variant="contained" onClick={openCreateClass} disabled={!canScheduleClass}>
                 Programar clase
               </Button>
             </Stack>
@@ -526,14 +670,35 @@ export default function TeacherPortalPage() {
               </Alert>
             )}
 
-            {myStudents.length === 0 && (
-              <Alert severity="info" sx={{ mt: 2 }}>
-                Primero agrega alumnos en la pestaña <b>Alumnos</b>.
-              </Alert>
-            )}
-            {selectedSubjectIds.length === 0 && (
-              <Alert severity="info" sx={{ mt: 2 }}>
-                Primero selecciona tus materias en la pestaña <b>Materias</b>.
+            {!canScheduleClass && (
+              <Alert
+                severity="info"
+                sx={{ mt: 2 }}
+                action={(
+                  <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="flex-end">
+                    {missingSubjects && (
+                      <Button color="inherit" size="small" onClick={() => setTab('subjects')}>
+                        Elegir materias
+                      </Button>
+                    )}
+                    {missingStudents && (
+                      <Button
+                        color="inherit"
+                        size="small"
+                        onClick={() => {
+                          setTab('students');
+                          openCreateStudent();
+                        }}
+                      >
+                        Agregar alumno
+                      </Button>
+                    )}
+                  </Stack>
+                )}
+              >
+                Para programar una clase necesitas {missingStudents ? 'alumnos' : null}
+                {missingStudents && missingSubjects ? ' y ' : null}
+                {missingSubjects ? 'materias' : null}.
               </Alert>
             )}
 
@@ -600,9 +765,9 @@ export default function TeacherPortalPage() {
 
             <Stack spacing={1.5} sx={{ mt: 2 }}>
               {myStudents.length === 0 && (
-                <Typography variant="body2" color="text.secondary">
+                <Alert severity="info" action={<Button color="inherit" size="small" onClick={openCreateStudent}>Crear alumno</Button>}>
                   Todavía no tienes alumnos.
-                </Typography>
+                </Alert>
               )}
               {myStudents.map((student) => (
                 <Paper key={student.studentId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
@@ -629,6 +794,11 @@ export default function TeacherPortalPage() {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Selecciona las materias que impartes. Esto controla qué disponibilidades y clases puedes crear.
             </Typography>
+            {selectedSubjectIds.length === 0 && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Selecciona al menos una materia para poder crear disponibilidad y programar clases.
+              </Alert>
+            )}
 
             {subjectsError && (
               <Alert severity="warning" sx={{ mb: 2 }}>
@@ -674,17 +844,17 @@ export default function TeacherPortalPage() {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                     Si una materia tiene salas configuradas, solo podrás elegir esas salas al crear disponibilidad o clases.
                   </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    {(Array.from(allowedRoomsForSubject) || []).length === 0 && (
-                      <Chip size="small" label="Sin restricciones" variant="outlined" />
-                    )}
-                    {Array.from(allowedRoomsForSubject).map((rid) => (
-                      <Chip key={rid} size="small" label={rid} variant="outlined" />
-                    ))}
-                  </Stack>
-                </Paper>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      {(Array.from(allowedRoomsForSubject) || []).length === 0 && (
+                        <Chip size="small" label="Sin restricciones" variant="outlined" />
+                      )}
+                      {Array.from(allowedRoomsForSubject).map((rid) => (
+                        <Chip key={rid} size="small" label={roomNameById.get(rid) ?? rid} variant="outlined" />
+                      ))}
+                    </Stack>
+                  </Paper>
+                </Grid>
               </Grid>
-            </Grid>
           </Box>
         )}
 
@@ -709,16 +879,23 @@ export default function TeacherPortalPage() {
             )}
 
             {selectedSubjectIds.length === 0 && (
-              <Alert severity="info" sx={{ mt: 2 }}>
+              <Alert
+                severity="info"
+                sx={{ mt: 2 }}
+                action={<Button color="inherit" size="small" onClick={() => setTab('subjects')}>Ir a materias</Button>}
+              >
                 Primero selecciona tus materias en la pestaña <b>Materias</b>.
               </Alert>
             )}
 
             <Stack spacing={1.5} sx={{ mt: 2 }}>
               {myAvailability.length === 0 && (
-                <Typography variant="body2" color="text.secondary">
+                <Alert
+                  severity="info"
+                  action={<Button color="inherit" size="small" onClick={openCreateAvailability} disabled={selectedSubjectIds.length === 0}>Agregar disponibilidad</Button>}
+                >
                   No has publicado disponibilidad todavía.
-                </Typography>
+                </Alert>
               )}
               {myAvailability.map((slot) => (
                 <Paper key={slot.availabilityId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
@@ -758,10 +935,19 @@ export default function TeacherPortalPage() {
         )}
       </Paper>
 
-      <Dialog open={studentDialogOpen} onClose={() => setStudentDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={studentDialogOpen}
+        onClose={() => {
+          setStudentDialogOpen(false);
+          setStudentDialogError(null);
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>Nuevo alumno</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            {studentDialogError && <Alert severity="warning">{studentDialogError}</Alert>}
             <TextField
               label="Nombre completo"
               value={studentForm.fullName}
@@ -793,10 +979,20 @@ export default function TeacherPortalPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={studentEditDialogOpen} onClose={() => setStudentEditDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={studentEditDialogOpen}
+        onClose={() => {
+          setStudentEditDialogOpen(false);
+          setEditingStudent(null);
+          setStudentEditDialogError(null);
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>Editar alumno</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            {studentEditDialogError && <Alert severity="warning">{studentEditDialogError}</Alert>}
             <TextField
               label="Nombre"
               value={studentEditForm.displayName}
@@ -827,10 +1023,20 @@ export default function TeacherPortalPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={availabilityDialogOpen} onClose={() => setAvailabilityDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={availabilityDialogOpen}
+        onClose={() => {
+          setAvailabilityDialogOpen(false);
+          setEditingAvailability(null);
+          setAvailabilityDialogError(null);
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>{editingAvailability ? 'Editar disponibilidad' : 'Agregar disponibilidad'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            {availabilityDialogError && <Alert severity="warning">{availabilityDialogError}</Alert>}
             <TextField
               select
               label="Materia"
@@ -868,7 +1074,18 @@ export default function TeacherPortalPage() {
               type="datetime-local"
               label="Inicio"
               value={availabilityForm.startAt}
-              onChange={(e) => setAvailabilityForm((prev) => ({ ...prev, startAt: e.target.value }))}
+              onChange={(e) => {
+                const nextStart = e.target.value;
+                setAvailabilityForm((prev) => {
+                  const durationMs = computeDurationMs(prev.startAt, prev.endAt, 60);
+                  const nextEnd = addDurationToLocalStart(nextStart, durationMs);
+                  return {
+                    ...prev,
+                    startAt: nextStart,
+                    endAt: nextEnd ?? prev.endAt,
+                  };
+                });
+              }}
               InputLabelProps={{ shrink: true }}
               required
             />
@@ -878,6 +1095,8 @@ export default function TeacherPortalPage() {
               value={availabilityForm.endAt}
               onChange={(e) => setAvailabilityForm((prev) => ({ ...prev, endAt: e.target.value }))}
               InputLabelProps={{ shrink: true }}
+              error={Boolean(availabilityTimeError)}
+              helperText={availabilityTimeError ?? ' '}
               required
             />
             <TextField
@@ -894,17 +1113,32 @@ export default function TeacherPortalPage() {
           <Button
             variant="contained"
             onClick={() => void submitAvailability()}
-            disabled={upsertAvailabilityMutation.isPending || availabilityForm.subjectId === '' || availabilityForm.roomId === ''}
+            disabled={
+              upsertAvailabilityMutation.isPending ||
+              availabilityForm.subjectId === '' ||
+              availabilityForm.roomId === '' ||
+              Boolean(availabilityTimeError)
+            }
           >
             Guardar
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={classDialogOpen} onClose={() => setClassDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={classDialogOpen}
+        onClose={() => {
+          setClassDialogOpen(false);
+          setEditingClass(null);
+          setClassDialogError(null);
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>{editingClass ? 'Editar clase' : 'Programar clase'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            {classDialogError && <Alert severity="warning">{classDialogError}</Alert>}
             <TextField
               select
               label="Materia"
@@ -957,7 +1191,18 @@ export default function TeacherPortalPage() {
               type="datetime-local"
               label="Inicio"
               value={classForm.startAt}
-              onChange={(e) => setClassForm((prev) => ({ ...prev, startAt: e.target.value }))}
+              onChange={(e) => {
+                const nextStart = e.target.value;
+                setClassForm((prev) => {
+                  const durationMs = computeDurationMs(prev.startAt, prev.endAt, 60);
+                  const nextEnd = addDurationToLocalStart(nextStart, durationMs);
+                  return {
+                    ...prev,
+                    startAt: nextStart,
+                    endAt: nextEnd ?? prev.endAt,
+                  };
+                });
+              }}
               InputLabelProps={{ shrink: true }}
               required
             />
@@ -967,6 +1212,8 @@ export default function TeacherPortalPage() {
               value={classForm.endAt}
               onChange={(e) => setClassForm((prev) => ({ ...prev, endAt: e.target.value }))}
               InputLabelProps={{ shrink: true }}
+              error={Boolean(classTimeError)}
+              helperText={classTimeError ?? ' '}
               required
             />
 
@@ -991,13 +1238,29 @@ export default function TeacherPortalPage() {
               updateClassMutation.isPending ||
               classForm.subjectId === '' ||
               classForm.studentId === '' ||
-              classForm.roomId === ''
+              classForm.roomId === '' ||
+              Boolean(classTimeError)
             }
           >
             Guardar
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={Boolean(toast)}
+        autoHideDuration={4500}
+        onClose={closeToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        {toast ? (
+          <Alert onClose={() => setToast(null)} severity={toast.severity} sx={{ width: '100%' }}>
+            {toast.message}
+          </Alert>
+        ) : (
+          <span />
+        )}
+      </Snackbar>
     </Stack>
   );
 }

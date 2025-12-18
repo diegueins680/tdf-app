@@ -35,6 +35,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: 'CRM',
     items: [
       { label: 'Conexiones', path: '/social' },
+      { label: 'Chat', path: '/chat' },
       { label: 'Eventos sociales', path: '/social/eventos' },
       { label: 'Contactos', path: '/crm/contactos' },
       { label: 'Empresas', path: '/crm/empresas' },
@@ -120,6 +121,22 @@ interface SidebarNavProps {
   onNavigate?: () => void;
 }
 
+const SCHOOL_STAFF_ROLE_KEYS = ['admin', 'manager', 'studiomanager', 'reception'] as const;
+
+export const isSchoolStaffRole = (roles: string[] | undefined): boolean => {
+  if (!roles || roles.length === 0) return false;
+  const lowerRoles = roles.map((r) => r.toLowerCase());
+  return SCHOOL_STAFF_ROLE_KEYS.some((needle) => lowerRoles.includes(needle));
+};
+
+export const pathRequiresSchoolStaff = (path: string): boolean => {
+  if (path.startsWith('/escuela/profesores')) return true;
+  if (path.startsWith('/escuela/clases')) return true;
+  if (path.startsWith('/escuela/trial-lessons')) return true;
+  if (path.startsWith('/escuela/trial-queue')) return true;
+  return false;
+};
+
 export const deriveModulesFromRoles = (roles: string[] | undefined): string[] => {
   if (!roles || roles.length === 0) return [];
   const lowerRoles = roles.map((r) => r.toLowerCase());
@@ -190,6 +207,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const [filter, setFilter] = useState('');
   const [highlightIndex, setHighlightIndex] = useState<number>(-1);
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const isSchoolStaff = useMemo(() => isSchoolStaffRole(session?.roles), [session?.roles]);
 
   const buildAccessMailto = useCallback(
     (group: NavGroupView) => {
@@ -224,22 +242,26 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
 
   const allowedNavGroups = useMemo<NavGroupView[]>(() => {
     return NAV_GROUPS.map((group) => {
-      const requiredModule = group.items
+      const roleAllowedItems = group.items.filter((item) => {
+        if (pathRequiresSchoolStaff(item.path) && !isSchoolStaff) return false;
+        return true;
+      });
+      const requiredModule = roleAllowedItems
         .map((item) => pathRequiresModule(item.path))
         .find((m) => m !== null && !modules.has(m));
-      const filteredItems = group.items.filter((item) => {
+      const filteredItems = roleAllowedItems.filter((item) => {
         const required = pathRequiresModule(item.path);
         if (!required) return true;
         return modules.has(required);
       });
-      const hadHidden = group.items.some((item) => {
+      const hadHidden = roleAllowedItems.some((item) => {
         const required = pathRequiresModule(item.path);
         return required !== null && !modules.has(required);
       });
       const restricted = filteredItems.length === 0 && hadHidden;
       return { ...group, items: filteredItems, restricted, requiredModule };
     }).filter((group) => group.items.length > 0 || group.restricted);
-  }, [modules]);
+  }, [isSchoolStaff, modules]);
 
   const filteredNavGroups = useMemo<NavGroupView[]>(() => {
     const query = filter.trim().toLowerCase();

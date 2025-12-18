@@ -684,7 +684,6 @@ export default function LoginPage() {
                       size="small"
                       variant="text"
                       onClick={() => {
-                        setShowApiToken(true);
                         setTab('token');
                         setTokenValue(lastSession.apiToken ?? '');
                       }}
