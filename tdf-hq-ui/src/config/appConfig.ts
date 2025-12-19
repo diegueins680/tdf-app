@@ -15,32 +15,38 @@ const parseList = (raw?: string): string[] =>
         .filter(Boolean)
     : [];
 
-const envPublicBase = import.meta.env['VITE_PUBLIC_BASE'] as string | undefined;
+const env: Record<string, unknown> =
+  (import.meta as unknown as { env?: Record<string, unknown> }).env ?? {};
+const envString = (key: string): string | undefined => {
+  const value = env[key];
+  return typeof value === 'string' ? value : undefined;
+};
+
+const envPublicBase = envString('VITE_PUBLIC_BASE');
 const inferredOrigin =
   typeof window !== 'undefined' && window.location.origin ? window.location.origin : undefined;
 
 export const PUBLIC_BASE = sanitizeBase(envPublicBase ?? inferredOrigin);
 export const COURSE_PATH_BASE = sanitizeBase(
-  (import.meta.env['VITE_PUBLIC_COURSE_BASE'] as string | undefined) ?? `${PUBLIC_BASE}/curso`,
+  envString('VITE_PUBLIC_COURSE_BASE') ?? `${PUBLIC_BASE}/curso`,
 );
 
 export const INVENTORY_SCAN_BASE = sanitizeBase(
-  (import.meta.env['VITE_INVENTORY_SCAN_BASE'] as string | undefined) ??
-    `${PUBLIC_BASE}/inventario/scan`,
+  envString('VITE_INVENTORY_SCAN_BASE') ?? `${PUBLIC_BASE}/inventario/scan`,
 );
 export const buildInventoryScanUrl = (token: string) => `${INVENTORY_SCAN_BASE}/${token}`;
 
 export const CARDANO_ADDRESS =
-  ((import.meta.env['VITE_CARDANO_ADDRESS'] as string | undefined) ??
+  (envString('VITE_CARDANO_ADDRESS') ??
     'addr1qx2mdr6n8d0v2y5s99tmdluzvcq6lvpvez0mx55vvpfy6ee4fzjjxl454z8d2f5gd2yualhds75ycvsl3wuar908v0csqksrwy').trim();
 
-const demoTokenEnv = import.meta.env.VITE_API_DEMO_TOKEN?.trim() ?? '';
-const demoTokenHostsEnv = parseList(import.meta.env['VITE_DEMO_TOKEN_HOSTS'] as string | undefined);
+const demoTokenEnv = envString('VITE_API_DEMO_TOKEN')?.trim() ?? '';
+const demoTokenHostsEnv = parseList(envString('VITE_DEMO_TOKEN_HOSTS'));
 const demoTokenHosts = demoTokenHostsEnv.length
   ? demoTokenHostsEnv
   : ['localhost', '127.0.0.1', 'tdf-app.pages.dev'];
 const demoTokenValue =
-  (import.meta.env['VITE_DEFAULT_DEMO_TOKEN'] as string | undefined)?.trim() ?? 'admin-token';
+  envString('VITE_DEFAULT_DEMO_TOKEN')?.trim() ?? 'admin-token';
 
 const normalizeHost = (host: string) => (host.split(':')[0] ?? host).toLowerCase();
 export const inferDemoToken = (host?: string): string => {
@@ -57,15 +63,15 @@ const envTrimmedOrUndefined = (raw?: string): string | undefined => {
 };
 
 const defaultCourseSlug =
-  envTrimmedOrUndefined(import.meta.env['VITE_COURSE_SLUG'] as string | undefined) ?? 'produccion-musical-dic-2025';
+  envTrimmedOrUndefined(envString('VITE_COURSE_SLUG')) ?? 'produccion-musical-dic-2025';
 const defaultMapUrl =
-  envTrimmedOrUndefined(import.meta.env['VITE_COURSE_MAP_URL'] as string | undefined) ??
+  envTrimmedOrUndefined(envString('VITE_COURSE_MAP_URL')) ??
   'https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6';
 const defaultWhatsappUrl =
-  envTrimmedOrUndefined(import.meta.env['VITE_COURSE_WHATSAPP_URL'] as string | undefined) ??
+  envTrimmedOrUndefined(envString('VITE_COURSE_WHATSAPP_URL')) ??
   'https://wa.me/?text=INSCRIBIRME%20Curso%20Produccion%20Musical';
 const defaultInstructorAvatar =
-  envTrimmedOrUndefined(import.meta.env['VITE_COURSE_INSTRUCTOR_AVATAR'] as string | undefined) ??
+  envTrimmedOrUndefined(envString('VITE_COURSE_INSTRUCTOR_AVATAR')) ??
   `${PUBLIC_BASE}/assets/esteban-munoz.jpg`;
 
 export const COURSE_DEFAULTS = {
@@ -76,5 +82,12 @@ export const COURSE_DEFAULTS = {
 };
 
 export const TRIALS_WHATSAPP_URL =
-  envTrimmedOrUndefined(import.meta.env['VITE_TRIALS_WHATSAPP_URL'] as string | undefined) ??
+  envTrimmedOrUndefined(envString('VITE_TRIALS_WHATSAPP_URL')) ??
   'https://wa.me/593999001122?text=Hola%20quiero%20una%20clase%20de%20prueba%20en%20TDF%20Records';
+
+export const STUDIO_MAP_URL =
+  envTrimmedOrUndefined(envString('VITE_STUDIO_MAP_URL')) ?? COURSE_DEFAULTS.mapUrl;
+
+export const STUDIO_WHATSAPP_URL =
+  envTrimmedOrUndefined(envString('VITE_STUDIO_WHATSAPP_URL')) ??
+  'https://wa.me/593999001122?text=Hola%20quiero%20reservar%20un%20servicio%20en%20TDF%20Records';

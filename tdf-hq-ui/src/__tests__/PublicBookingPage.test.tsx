@@ -4,9 +4,11 @@ import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
 import { DateTime } from 'luxon';
 
-type CreatePublicPayload = { pbResourceIds?: string[] | null };
+interface CreatePublicPayload {
+  pbResourceIds?: string[] | null;
+}
 const createPublicMock = jest.fn<(payload: CreatePublicPayload) => Promise<{ bookingId: number }>>(
-  (_payload) => Promise.resolve({ bookingId: 123 }),
+  () => Promise.resolve({ bookingId: 123 }),
 );
 const logoutMock = jest.fn();
 

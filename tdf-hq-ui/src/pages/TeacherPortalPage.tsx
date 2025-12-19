@@ -26,6 +26,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PeopleIcon from '@mui/icons-material/People';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { Link as RouterLink } from 'react-router-dom';
 import type { RoomDTO } from '../api/types';
 import { Rooms } from '../api/rooms';
 import {
@@ -134,6 +135,9 @@ export default function TeacherPortalPage() {
   };
 
   const [tab, setTab] = useState<PortalTab>('agenda');
+  type ScheduleView = 'today' | 'next24h' | 'week' | 'all';
+  const [agendaView, setAgendaView] = useState<ScheduleView>('week');
+  const [availabilityView, setAvailabilityView] = useState<ScheduleView>('week');
 
   const subjectsQuery = useQuery({
     queryKey: ['teacher-portal', 'subjects'],
@@ -351,14 +355,6 @@ export default function TeacherPortalPage() {
     availabilityQuery.isLoading ||
     classesQuery.isLoading;
 
-  if (!teacherId) {
-    return (
-      <Alert severity="warning" sx={{ borderRadius: 2 }}>
-        No pudimos identificar tu sesión para el portal del profesor. Cierra sesión e ingresa nuevamente. Si el problema persiste, contacta soporte.
-      </Alert>
-    );
-  }
-
   const myStudents = studentsQuery.data ?? [];
   const myAvailability = (availabilityQuery.data ?? []).slice().sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   const myClasses = (classesQuery.data ?? []).slice().sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
@@ -369,6 +365,106 @@ export default function TeacherPortalPage() {
   const missingStudents = myStudents.length === 0;
   const missingSubjects = selectedSubjectIds.length === 0;
   const canScheduleClass = !missingStudents && !missingSubjects;
+
+  const agendaClasses = useMemo(() => {
+    const nowMs = Date.now();
+    const startOfToday = new Date(nowMs);
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTodayMs = startOfToday.getTime();
+    const endOfTodayMs = startOfTodayMs + 24 * 60 * 60 * 1000;
+    const next24hEndMs = nowMs + 24 * 60 * 60 * 1000;
+    const weekEnd = new Date(nowMs);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    weekEnd.setHours(23, 59, 59, 999);
+    const weekEndMs = weekEnd.getTime();
+
+    return myClasses.filter((cls) => {
+      const startMs = new Date(cls.startAt).getTime();
+      if (Number.isNaN(startMs)) return false;
+      if (agendaView === 'all') return true;
+      if (agendaView === 'today') return startMs >= startOfTodayMs && startMs < endOfTodayMs;
+      if (agendaView === 'next24h') return startMs >= nowMs && startMs < next24hEndMs;
+      return startMs >= nowMs && startMs <= weekEndMs;
+    });
+  }, [agendaView, myClasses]);
+
+  const availabilitySlots = useMemo(() => {
+    const nowMs = Date.now();
+    const startOfToday = new Date(nowMs);
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTodayMs = startOfToday.getTime();
+    const endOfTodayMs = startOfTodayMs + 24 * 60 * 60 * 1000;
+    const next24hEndMs = nowMs + 24 * 60 * 60 * 1000;
+    const weekEnd = new Date(nowMs);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    weekEnd.setHours(23, 59, 59, 999);
+    const weekEndMs = weekEnd.getTime();
+
+    return myAvailability.filter((slot) => {
+      const startMs = new Date(slot.startAt).getTime();
+      if (Number.isNaN(startMs)) return false;
+      if (availabilityView === 'all') return true;
+      if (availabilityView === 'today') return startMs >= startOfTodayMs && startMs < endOfTodayMs;
+      if (availabilityView === 'next24h') return startMs >= nowMs && startMs < next24hEndMs;
+      return startMs >= nowMs && startMs <= weekEndMs;
+    });
+  }, [availabilityView, myAvailability]);
+
+  const agendaStats = useMemo(() => {
+    const nowMs = Date.now();
+    const startOfToday = new Date(nowMs);
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTodayMs = startOfToday.getTime();
+    const endOfTodayMs = startOfTodayMs + 24 * 60 * 60 * 1000;
+    const weekEnd = new Date(nowMs);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    weekEnd.setHours(23, 59, 59, 999);
+    const weekEndMs = weekEnd.getTime();
+
+    let todayCount = 0;
+    let weekCount = 0;
+    let weekMinutes = 0;
+    let overdueCount = 0;
+    let nextClass: ClassSessionDTO | null = null;
+
+    myClasses.forEach((cls) => {
+      const startMs = new Date(cls.startAt).getTime();
+      const endMs = new Date(cls.endAt).getTime();
+      if (Number.isNaN(startMs) || Number.isNaN(endMs)) return;
+      if (startMs >= startOfTodayMs && startMs < endOfTodayMs) todayCount += 1;
+      if (startMs >= nowMs && startMs <= weekEndMs) {
+        weekCount += 1;
+        weekMinutes += Math.max(0, Math.round((endMs - startMs) / 60000));
+      }
+      if (endMs < nowMs && cls.status !== 'realizada') overdueCount += 1;
+      if (!nextClass && startMs >= nowMs && cls.status !== 'realizada') nextClass = cls;
+    });
+
+    let nextMinutesAway: number | null = null;
+    if (nextClass) {
+      const startMs = new Date(String(nextClass.startAt)).getTime();
+      if (!Number.isNaN(startMs)) {
+        nextMinutesAway = Math.round((startMs - nowMs) / 60000);
+      }
+    }
+
+    return {
+      todayCount,
+      weekCount,
+      weekHours: weekMinutes / 60,
+      overdueCount,
+      nextClass,
+      nextMinutesAway,
+    };
+  }, [myClasses]);
+
+  if (!teacherId) {
+    return (
+      <Alert severity="warning" sx={{ borderRadius: 2 }}>
+        No pudimos identificar tu sesión para el portal del profesor. Cierra sesión e ingresa nuevamente. Si el problema persiste, contacta soporte.
+      </Alert>
+    );
+  }
 
   const openCreateStudent = () => {
     setStudentDialogError(null);
@@ -664,6 +760,55 @@ export default function TeacherPortalPage() {
               </Button>
             </Stack>
 
+            <Stack direction="row" spacing={1} sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+              {([
+                { key: 'today', label: 'Hoy' },
+                { key: 'next24h', label: 'Próximas 24h' },
+                { key: 'week', label: 'Próx 7 días' },
+                { key: 'all', label: 'Todo' },
+              ] as const).map((opt) => (
+                <Chip
+                  key={opt.key}
+                  label={opt.label}
+                  clickable
+                  onClick={() => setAgendaView(opt.key)}
+                  color={agendaView === opt.key ? 'primary' : 'default'}
+                  variant={agendaView === opt.key ? 'filled' : 'outlined'}
+                  size="small"
+                />
+              ))}
+            </Stack>
+
+            <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+              <Chip size="small" variant="outlined" label={`Hoy: ${agendaStats.todayCount}`} />
+              <Chip size="small" variant="outlined" label={`Próx 7 días: ${agendaStats.weekCount}`} />
+              <Chip size="small" variant="outlined" label={`Horas 7 días: ${agendaStats.weekHours.toFixed(1)}`} />
+              {agendaStats.overdueCount > 0 && (
+                <Chip size="small" color="warning" variant="outlined" label={`Pendientes: ${agendaStats.overdueCount}`} />
+              )}
+            </Stack>
+
+            {agendaStats.nextClass && agendaStats.nextMinutesAway !== null && agendaStats.nextMinutesAway >= 0 && agendaStats.nextMinutesAway <= 120 && (
+              <Alert
+                severity={agendaStats.nextMinutesAway <= 30 ? 'warning' : 'info'}
+                sx={{ mt: 2 }}
+                action={(
+                  <Stack direction="row" spacing={1}>
+                    <Button color="inherit" size="small" onClick={() => openEditClass(agendaStats.nextClass!)}>
+                      Editar
+                    </Button>
+                    <Button color="inherit" size="small" component={RouterLink} to="/estudio/calendario">
+                      Calendario
+                    </Button>
+                  </Stack>
+                )}
+              >
+                Próxima clase en {agendaStats.nextMinutesAway} min:{' '}
+                {agendaStats.nextClass.studentName ?? `Alumno #${agendaStats.nextClass.studentId}`}{' '}
+                · {formatDateTime(String(agendaStats.nextClass.startAt))}
+              </Alert>
+            )}
+
             {agendaError && (
               <Alert severity="warning" sx={{ mt: 2 }}>
                 {getErrorMessage(agendaError, 'No pudimos cargar o guardar las clases.')}
@@ -703,12 +848,12 @@ export default function TeacherPortalPage() {
             )}
 
             <Stack spacing={1.5} sx={{ mt: 2 }}>
-              {myClasses.length === 0 && (
+              {agendaClasses.length === 0 && (
                 <Typography variant="body2" color="text.secondary">
-                  No tienes clases en el rango seleccionado.
+                  No tienes clases en este filtro.
                 </Typography>
               )}
-              {myClasses.map((cls) => (
+              {agendaClasses.map((cls) => (
                 <Paper key={cls.classSessionId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
                     <Box>
@@ -872,6 +1017,30 @@ export default function TeacherPortalPage() {
               </Button>
             </Stack>
 
+            <Stack direction="row" spacing={1} sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+              {([
+                { key: 'today', label: 'Hoy' },
+                { key: 'next24h', label: 'Próximas 24h' },
+                { key: 'week', label: 'Próx 7 días' },
+                { key: 'all', label: 'Todo' },
+              ] as const).map((opt) => (
+                <Chip
+                  key={opt.key}
+                  label={opt.label}
+                  clickable
+                  onClick={() => setAvailabilityView(opt.key)}
+                  color={availabilityView === opt.key ? 'primary' : 'default'}
+                  variant={availabilityView === opt.key ? 'filled' : 'outlined'}
+                  size="small"
+                />
+              ))}
+            </Stack>
+
+            <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+              <Chip size="small" variant="outlined" label={`Mostrando: ${availabilitySlots.length}`} />
+              <Chip size="small" variant="outlined" label={`Total: ${myAvailability.length}`} />
+            </Stack>
+
             {availabilityError && (
               <Alert severity="warning" sx={{ mt: 2 }}>
                 {getErrorMessage(availabilityError, 'No pudimos cargar o guardar la disponibilidad.')}
@@ -897,7 +1066,12 @@ export default function TeacherPortalPage() {
                   No has publicado disponibilidad todavía.
                 </Alert>
               )}
-              {myAvailability.map((slot) => (
+              {myAvailability.length > 0 && availabilitySlots.length === 0 && (
+                <Alert severity="info">
+                  No hay disponibilidad en este filtro.
+                </Alert>
+              )}
+              {availabilitySlots.map((slot) => (
                 <Paper key={slot.availabilityId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
                     <Box>

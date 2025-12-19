@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   Alert,
   Box,
@@ -36,7 +36,10 @@ export default function LabelTracksPage() {
     const parsed = raw ? Number(raw) : NaN;
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   }, [searchParams]);
-  const trackIdOverride = useMemo(() => searchParams.get('trackId')?.trim() || null, [searchParams]);
+  const trackIdOverride = useMemo(() => {
+    const trimmed = searchParams.get('trackId')?.trim() ?? '';
+    return trimmed.length ? trimmed : null;
+  }, [searchParams]);
   const autoOpenTrackHandled = useRef(false);
 
   const qc = useQueryClient();
@@ -174,11 +177,11 @@ export default function LabelTracksPage() {
     updateMutation.mutate({ id: track.ltId, status: next });
   };
 
-  const openEdit = (track: LabelTrackDTO) => {
+  const openEdit = useCallback((track: LabelTrackDTO) => {
     setEditing(track);
     setEditTitle(track.ltTitle);
     setEditNote(track.ltNote ?? '');
-  };
+  }, []);
 
   useEffect(() => {
     if (autoOpenTrackHandled.current) return;

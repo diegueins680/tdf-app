@@ -14,15 +14,18 @@ import {
   Tab,
   Tabs,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import LinkIcon from '@mui/icons-material/Link';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { Link as RouterLink } from 'react-router-dom';
 import { Parties } from '../api/parties';
 import { SocialAPI } from '../api/social';
 import type { PartyDTO, PartyFollowDTO } from '../api/types';
@@ -545,6 +548,7 @@ export default function SocialPage() {
                     const label = formatParty(byId, targetId);
                     const since = new Date(row.pfStartedAt).toLocaleString();
                     const isFriend = friendsQuery.data?.some((f) => f.pfFollowingId === targetId) ?? false;
+                    const chatHref = `/chat?partyId=${targetId}`;
                     return (
                       <Stack key={`${activeTab}-${row.pfFollowerId}-${row.pfFollowingId}`} direction="row" justifyContent="space-between" alignItems="center">
                         <Box>
@@ -557,6 +561,20 @@ export default function SocialPage() {
                           )}
                         </Box>
                         <Stack direction="row" spacing={1}>
+                          <Tooltip title={isFriend ? 'Abrir chat' : 'Disponible solo para amigos mutuos'} disableInteractive>
+                            <span>
+                              <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<ChatBubbleOutlineIcon />}
+                                component={RouterLink}
+                                to={chatHref}
+                                disabled={!isFriend}
+                              >
+                                Chatear
+                              </Button>
+                            </span>
+                          </Tooltip>
                           {activeTab !== 'followers' && (
                             <Button
                               variant="outlined"

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Box, Button, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography, TextField, InputAdornment } from '@mui/material';
+import { Badge, Box, Button, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography, TextField, InputAdornment } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
@@ -8,6 +8,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
+import { useChatUnreadCount } from '../hooks/useChatUnreadCount';
 
 export interface NavItem {
   label: string;
@@ -208,6 +209,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const [highlightIndex, setHighlightIndex] = useState<number>(-1);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const isSchoolStaff = useMemo(() => isSchoolStaffRole(session?.roles), [session?.roles]);
+  const { unreadCount: chatUnreadCount } = useChatUnreadCount({ enabled: open });
 
   const buildAccessMailto = useCallback(
     (group: NavGroupView) => {
@@ -453,6 +455,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                     const flatIndex = flatFilteredItems.findIndex((flat) => flat.path === item.path);
                     const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
                     const hot = flatIndex === highlightIndex;
+                    const unreadBadge = item.path === '/chat' ? chatUnreadCount : 0;
                     const renderLabel = () => {
                       const q = filter.trim();
                       if (!q) return item.label;
@@ -493,7 +496,29 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                         <ListItemText
                           primaryTypographyProps={{ fontSize: 14 }}
                           secondaryTypographyProps={{ fontSize: 11, color: 'rgba(226,232,240,0.75)' }}
-                          primary={renderLabel()}
+                          primary={(
+                            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                              <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {unreadBadge > 0 ? (
+                                  <Badge
+                                    color="error"
+                                    badgeContent={unreadBadge > 99 ? '99+' : unreadBadge}
+                                    sx={{
+                                      '& .MuiBadge-badge': {
+                                        fontSize: 11,
+                                        height: 18,
+                                        minWidth: 18,
+                                      },
+                                    }}
+                                  >
+                                    <span>{renderLabel()}</span>
+                                  </Badge>
+                                ) : (
+                                  renderLabel()
+                                )}
+                              </Box>
+                            </Stack>
+                          )}
                           secondary={filter.trim() ? group.title : undefined}
                         />
                       </ListItemButton>

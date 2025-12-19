@@ -26,10 +26,12 @@ import PersonIcon from '@mui/icons-material/Person';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import { API_BASE_URL } from '../api/client';
+import { Meta } from '../api/meta';
 import type { BookingDTO, RoomDTO, ServiceCatalogDTO } from '../api/types';
 import { Engineers, type PublicEngineer } from '../api/engineers';
 import { Services } from '../api/services';
 import { Rooms } from '../api/rooms';
+import { STUDIO_MAP_URL, STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { defaultRoomsForService, sameRooms } from '../utils/publicBookingRooms';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { env } from '../utils/env';
@@ -152,7 +154,47 @@ const buildGoogleCalendarUrl = (title: string, startIso: string, durationMinutes
   return `https://www.google.com/calendar/render?${params.toString()}`;
 };
 
+const escapeIcsValue = (value: string) => {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/\r?\n/g, '\\n')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;');
+};
+
+const buildIcsDataUrl = (title: string, startIso: string, durationMinutes: number, location?: string, description?: string, uid?: string) => {
+  const startUtc = DateTime.fromISO(startIso).toUTC();
+  const endUtc = startUtc.plus({ minutes: durationMinutes });
+  const stamp = DateTime.utc();
+  const fmt = (dt: DateTime) => dt.toFormat("yyyyLLdd'T'HHmmss'Z'");
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//TDF//Booking//ES',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${escapeIcsValue(uid ?? `tdf-${Date.now()}@tdf`)}`,
+    `DTSTAMP:${fmt(stamp)}`,
+    `DTSTART:${fmt(startUtc)}`,
+    `DTEND:${fmt(endUtc)}`,
+    `SUMMARY:${escapeIcsValue(title)}`,
+    `LOCATION:${escapeIcsValue(location ?? 'TDF Records')}`,
+    `DESCRIPTION:${escapeIcsValue(description ?? '')}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ];
+  const ics = lines.join('\r\n');
+  return `data:text/calendar;charset=utf8,${encodeURIComponent(ics)}`;
+};
+
 export default function PublicBookingPage() {
+  const healthQuery = useQuery({
+    queryKey: ['health'],
+    queryFn: Meta.health,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
   const serviceCatalogQuery = useQuery<ServiceCatalogDTO[]>({
     queryKey: ['service-catalog', 'public'],
     queryFn: () => Services.listPublic(),
@@ -186,6 +228,13 @@ export default function PublicBookingPage() {
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
   const studioCurrency = useMemo(() => services[0]?.currency ?? 'USD', [services]);
+  const healthChip = useMemo(() => {
+    if (healthQuery.isLoading) return <Chip label="API…" size="small" variant="outlined" />;
+    if (healthQuery.isError) return <Chip label="API offline" size="small" color="error" variant="outlined" />;
+    const status = healthQuery.data?.status ?? 'unknown';
+    if (status === 'ok') return <Chip label="API online" size="small" color="success" variant="outlined" />;
+    return <Chip label="API degradada" size="small" color="warning" variant="outlined" />;
+  }, [healthQuery.data?.status, healthQuery.isError, healthQuery.isLoading]);
   const [form, setForm] = useState<FormState>(() => buildInitialForm(defaultService, roomOptions));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -195,6 +244,7 @@ export default function PublicBookingPage() {
   const [engineersLoading, setEngineersLoading] = useState(false);
   const [engineersError, setEngineersError] = useState<string | null>(null);
   const [durationNotice, setDurationNotice] = useState<string | null>(null);
+  const [availabilityNonce, setAvailabilityNonce] = useState(0);
   const [availabilityStatus, setAvailabilityStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable' | 'unknown'>('idle');
   const [availabilityNote, setAvailabilityNote] = useState<string | null>(null);
   const [assignEngineerLater, setAssignEngineerLater] = useState(false);
@@ -340,8 +390,13 @@ export default function PublicBookingPage() {
       return;
     }
     const controller = new AbortController();
+    let didTimeout = false;
+    const timeoutId = window.setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+    }, 8000);
     const startsAtUtc = parsed.toUTC().toISO();
-    if (!startsAtUtc) return;
+    if (!startsAtUtc) return () => window.clearTimeout(timeoutId);
     setAvailabilityStatus('checking');
     setAvailabilityNote(null);
     const url = `${API_BASE_URL}/bookings/public/availability?startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
@@ -358,17 +413,25 @@ export default function PublicBookingPage() {
           setAvailabilityNote(null);
         } else {
           setAvailabilityStatus('unknown');
-          setAvailabilityNote('No pudimos verificar disponibilidad, confirmaremos contigo.');
+          setAvailabilityNote('No pudimos verificar disponibilidad ahora. Reintenta o confirmaremos contigo.');
         }
       })
       .catch((err) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          if (!didTimeout) return;
+          setAvailabilityStatus('unknown');
+          setAvailabilityNote('La verificación tardó demasiado. Reintenta o coordinamos contigo por WhatsApp.');
+          return;
+        }
         console.warn('No se pudo verificar disponibilidad', err);
         setAvailabilityStatus('unknown');
-        setAvailabilityNote('No pudimos verificar disponibilidad, confirmaremos contigo.');
+        setAvailabilityNote('No pudimos verificar disponibilidad ahora. Reintenta o confirmaremos contigo.');
       });
-    return () => controller.abort();
-  }, [form.durationMinutes, form.startsAt, userTimeZone]);
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [availabilityNonce, form.durationMinutes, form.startsAt, userTimeZone]);
 
   const handleSubmit = async (evt: React.FormEvent) => {
     evt.preventDefault();
@@ -808,6 +871,17 @@ export default function PublicBookingPage() {
             'Reserva generada desde el portal público.',
           )
         : null;
+    const icsUrl =
+      successStartIso && successDuration
+        ? buildIcsDataUrl(
+            success.serviceType ?? form.serviceType,
+            successStartIso,
+            successDuration,
+            successRooms.join(' · ') || 'TDF Records',
+            'Reserva generada desde el portal público.',
+            `tdf-booking-${success.bookingId}@tdf`,
+          )
+        : null;
 
     return (
       <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -831,8 +905,7 @@ export default function PublicBookingPage() {
                   Reserva enviada
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Revisa tu correo para la confirmación. Si necesitas ajustes de horario o salas, responde al correo y lo
-                  coordinamos contigo.
+                  Revisa tu correo para la confirmación. Si necesitas ajustar horario o salas, responde al correo o escríbenos por WhatsApp y lo coordinamos contigo.
                 </Typography>
               </Stack>
 
@@ -866,6 +939,22 @@ export default function PublicBookingPage() {
                   </Card>
                 </Grid>
                 <Grid item xs={12}>
+                  <Alert severity="info" variant="outlined">
+                    <Typography variant="subtitle2" fontWeight={800} gutterBottom>
+                      Qué sigue
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      • Te confirmamos por correo (y te contactamos si necesitamos ajustar recursos).
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      • Llega 10 minutos antes para hacer check-in y preparar la sala.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      • Si vas tarde o necesitas mover el horario, escríbenos por WhatsApp.
+                    </Typography>
+                  </Alert>
+                </Grid>
+                <Grid item xs={12}>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                     <Button variant="outlined" href="/login?redirect=/estudio/calendario" size="medium">
                       Ver mi reserva
@@ -882,9 +971,25 @@ export default function PublicBookingPage() {
                     >
                       Copiar resumen
                     </Button>
+                    <Button variant="text" size="medium" href={STUDIO_MAP_URL} target="_blank" rel="noreferrer">
+                      Cómo llegar
+                    </Button>
+                    <Button variant="text" size="medium" href={STUDIO_WHATSAPP_URL} target="_blank" rel="noreferrer">
+                      WhatsApp
+                    </Button>
                     {calendarUrl && (
                       <Button variant="text" size="medium" href={calendarUrl} target="_blank" rel="noreferrer">
                         Agregar a Google Calendar
+                      </Button>
+                    )}
+                    {icsUrl && (
+                      <Button
+                        variant="text"
+                        size="medium"
+                        href={icsUrl}
+                        download={`tdf-reserva-${success.bookingId}.ics`}
+                      >
+                        Descargar .ics
                       </Button>
                     )}
                   </Stack>
@@ -915,9 +1020,12 @@ export default function PublicBookingPage() {
               <Typography variant="overline" color="text.secondary">
                 Agenda pública
               </Typography>
-              <Typography variant="h4" fontWeight={800}>
-                Reserva un servicio con TDF
-              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="h4" fontWeight={800}>
+                  Reserva un servicio con TDF
+                </Typography>
+                {healthChip}
+              </Stack>
               <Typography variant="body1" color="text.secondary">
                 Completa tus datos y agenda el horario que prefieras. Confirmaremos la reserva por correo y, si aún no
                 tienes cuenta, crearemos tu acceso automáticamente.
@@ -1111,11 +1219,11 @@ export default function PublicBookingPage() {
                         helperText={availabilityHelperText}
                         disabled={formDisabled}
                       />
-                  <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={formDisabled}
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          disabled={formDisabled}
                           onClick={() =>
                             setForm((prev) => ({
                               ...prev,
@@ -1135,24 +1243,49 @@ export default function PublicBookingPage() {
                               startsAt: toLocalInputValue(firstAvailable(1)),
                             }))
                           }
-                    >
-                      Mañana
-                    </Button>
-                    {availabilityStatus === 'unavailable' && (
-                      <Chip
-                        label={availabilityNote ?? 'Horario ocupado'}
-                        color="warning"
-                        size="small"
-                        variant="outlined"
-                      />
-                    )}
-                    {availabilityStatus === 'available' && (
-                      <Chip label="Disponible" color="success" size="small" variant="outlined" />
-                    )}
-                    {availabilityStatus === 'unknown' && availabilityNote && (
-                      <Chip label={availabilityNote} color="default" size="small" variant="outlined" />
-                    )}
-                  </Stack>
+                        >
+                          Mañana
+                        </Button>
+                        {availabilityStatus === 'checking' && (
+                          <Chip label="Verificando…" color="default" size="small" variant="outlined" />
+                        )}
+                        {(availabilityStatus === 'unknown' || availabilityStatus === 'unavailable') && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            disabled={formDisabled}
+                            onClick={() => setAvailabilityNonce((v) => v + 1)}
+                          >
+                            Reintentar
+                          </Button>
+                        )}
+                        {availabilityStatus !== 'available' && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            disabled={formDisabled}
+                            href={STUDIO_WHATSAPP_URL}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            WhatsApp
+                          </Button>
+                        )}
+                        {availabilityStatus === 'unavailable' && (
+                          <Chip
+                            label={availabilityNote ?? 'Horario ocupado'}
+                            color="warning"
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                        {availabilityStatus === 'available' && (
+                          <Chip label="Disponible" color="success" size="small" variant="outlined" />
+                        )}
+                        {availabilityStatus === 'unknown' && availabilityNote && (
+                          <Chip label={availabilityNote} color="default" size="small" variant="outlined" />
+                        )}
+                      </Stack>
                   {timeWarnings.length > 0 && (
                     <Alert severity="info" sx={{ mt: 1 }}>
                       {timeWarnings.map((msg, idx) => (

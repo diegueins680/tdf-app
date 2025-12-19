@@ -9,12 +9,14 @@ import {
   Chip,
   CircularProgress,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { Parties } from '../api/parties';
 import { SocialAPI } from '../api/social';
 import { RadioAPI } from '../api/radio';
@@ -152,14 +154,29 @@ export default function PublicProfilePage() {
               )}
             </Box>
               {!isSelf && session?.partyId && (
-                <Button
-                  variant={isFriend ? 'outlined' : 'contained'}
-                  startIcon={isFriend ? <PersonOffIcon /> : <PersonAddAltIcon />}
-                  onClick={() => friendMutation.mutate()}
-                  disabled={friendMutation.status === 'pending'}
-                >
-                  {isFriend ? 'Eliminar amigo' : 'Agregar amigo'}
-                </Button>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Button
+                    variant={isFriend ? 'outlined' : 'contained'}
+                    startIcon={isFriend ? <PersonOffIcon /> : <PersonAddAltIcon />}
+                    onClick={() => friendMutation.mutate()}
+                    disabled={friendMutation.status === 'pending'}
+                  >
+                    {isFriend ? 'Eliminar amigo' : 'Agregar amigo'}
+                  </Button>
+                  <Tooltip title={isFriend ? 'Abrir chat' : 'Disponible solo para amigos mutuos'} disableInteractive>
+                    <span>
+                      <Button
+                        variant="outlined"
+                        startIcon={<ChatBubbleOutlineIcon />}
+                        component={RouterLink}
+                        to={`/chat?partyId=${parsedId}`}
+                        disabled={!isFriend}
+                      >
+                        Chatear
+                      </Button>
+                    </span>
+                  </Tooltip>
+                </Stack>
               )}
             </Stack>
             {presence && (
