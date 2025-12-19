@@ -427,10 +427,10 @@ export default function TeacherPortalPage() {
     let overdueCount = 0;
     let nextClass: ClassSessionDTO | null = null;
 
-    myClasses.forEach((cls) => {
+    for (const cls of myClasses) {
       const startMs = new Date(cls.startAt).getTime();
       const endMs = new Date(cls.endAt).getTime();
-      if (Number.isNaN(startMs) || Number.isNaN(endMs)) return;
+      if (Number.isNaN(startMs) || Number.isNaN(endMs)) continue;
       if (startMs >= startOfTodayMs && startMs < endOfTodayMs) todayCount += 1;
       if (startMs >= nowMs && startMs <= weekEndMs) {
         weekCount += 1;
@@ -438,7 +438,7 @@ export default function TeacherPortalPage() {
       }
       if (endMs < nowMs && cls.status !== 'realizada') overdueCount += 1;
       if (!nextClass && startMs >= nowMs && cls.status !== 'realizada') nextClass = cls;
-    });
+    }
 
     let nextMinutesAway: number | null = null;
     if (nextClass) {
