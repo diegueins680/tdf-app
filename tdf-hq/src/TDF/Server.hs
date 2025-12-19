@@ -2603,7 +2603,7 @@ requireFanAccess AuthedUser{..} =
 
 requireArtistAccess :: AuthedUser -> AppM ()
 requireArtistAccess AuthedUser{..} =
-  unless (Artist `elem` auRoles || Admin `elem` auRoles) $
+  unless (Artist `elem` auRoles || Artista `elem` auRoles || Admin `elem` auRoles) $
     throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Artist access required") }
 
 artistGetOwnProfile :: AuthedUser -> AppM ArtistProfileDTO

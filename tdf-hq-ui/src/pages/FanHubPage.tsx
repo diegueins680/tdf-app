@@ -35,6 +35,8 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import RadioIcon from '@mui/icons-material/Radio';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import LaunchIcon from '@mui/icons-material/Launch';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
@@ -46,6 +48,7 @@ import { useCmsContent } from '../hooks/useCmsContent';
 import { SessionGate } from '../components/SessionGate';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
+import { slugify } from '../utils/slug';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
@@ -105,6 +108,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return payload ?? {};
   }, [cmsQuery.data]);
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
+  const artistSlugTouchedRef = useRef(false);
   const hasAuthToken = Boolean(session?.apiToken);
   const isAuthenticated = Boolean(hasAuthToken && viewerId);
   const GENRE_FILTER_KEY = 'fan-hub:genre-filter';
@@ -201,6 +205,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [heroImageFileName, setHeroImageFileName] = useState<string>('');
   const [expandedFeatured, setExpandedFeatured] = useState<Set<number>>(() => new Set());
   const [fanRoleToast, setFanRoleToast] = useState<string | null>(null);
+  const [artistToast, setArtistToast] = useState<string | null>(null);
   const [releaseLinkDraft, setReleaseLinkDraft] = useState<string>('');
   const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
@@ -223,6 +228,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
       const dto = artistProfileQuery.data;
+      artistSlugTouchedRef.current = Boolean((dto.apSlug ?? '').trim());
       setArtistDraft({
         apuArtistId: session.partyId,
         apuDisplayName: dto.apDisplayName ?? '',
@@ -271,6 +277,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     mutationFn: Fans.updateMyArtistProfile,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['artist-profile', viewerId] });
+      setArtistToast('Perfil de artista actualizado.');
+    },
+    onError: (error) => {
+      setArtistToast(error instanceof Error ? error.message : 'No pudimos guardar tu perfil de artista.');
     },
   });
   const enableFanRoleMutation = useMutation({
@@ -543,10 +553,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const handleSaveArtistProfile = () => {
     if (!session?.partyId) return;
+    const slugClean = slugify(artistDraft.apuSlug ?? '');
     const payload: ArtistProfileUpsert = {
       apuArtistId: session.partyId,
       apuDisplayName: normalizeField(artistDraft.apuDisplayName),
-      apuSlug: normalizeField(artistDraft.apuSlug),
+      apuSlug: normalizeField(slugClean),
       apuBio: normalizeField(artistDraft.apuBio),
       apuCity: normalizeField(artistDraft.apuCity),
       apuHeroImageUrl: normalizeField(artistDraft.apuHeroImageUrl),
@@ -560,6 +571,29 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       apuHighlights: normalizeField(artistDraft.apuHighlights),
     };
     updateArtistProfileMutation.mutate(payload);
+  };
+
+  const artistPublicPath = useMemo(() => {
+    if (!session?.partyId) return null;
+    const slug = slugify(artistDraft.apuSlug ?? '');
+    return slug ? `/artista/${slug}` : `/artista/${session.partyId}`;
+  }, [artistDraft.apuSlug, session?.partyId]);
+
+  const artistPublicUrl = useMemo(() => {
+    if (!artistPublicPath) return null;
+    if (typeof window === 'undefined') return artistPublicPath;
+    return `${window.location.origin}${artistPublicPath}`;
+  }, [artistPublicPath]);
+
+  const copyArtistPublicUrl = async () => {
+    if (!artistPublicUrl) return;
+    try {
+      await navigator.clipboard.writeText(artistPublicUrl);
+      setArtistToast('Link copiado.');
+    } catch (error) {
+      console.warn('Failed to copy artist link', error);
+      setArtistToast(artistPublicUrl);
+    }
   };
 
   const suggestedArtists = useMemo(() => {
@@ -1298,6 +1332,31 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   {artistProfileQuery.data && (
                     <Chip label={`${artistProfileQuery.data.apFollowerCount} fans`} color="secondary" />
                   )}
+                  {artistPublicPath && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      component="a"
+                      href={artistPublicPath}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      startIcon={<LaunchIcon />}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Ver público
+                    </Button>
+                  )}
+                  {artistPublicUrl && (
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => void copyArtistPublicUrl()}
+                      startIcon={<ContentCopyIcon />}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Copiar link
+                    </Button>
+                  )}
                   <Button
                     variant="contained"
                     onClick={handleSaveArtistProfile}
@@ -1317,13 +1376,32 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <TextField
                     label="Nombre artístico"
                     value={artistDraft.apuDisplayName ?? ''}
-                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuDisplayName: event.target.value }))}
+                    onChange={(event) => {
+                      const nextName = event.target.value;
+                      setArtistDraft((prev) => {
+                        const nextSlug = slugify(nextName);
+                        return {
+                          ...prev,
+                          apuDisplayName: nextName,
+                          apuSlug: !artistSlugTouchedRef.current && nextSlug ? nextSlug : prev.apuSlug,
+                        };
+                      });
+                    }}
                     fullWidth
                   />
                   <TextField
                     label="Slug público"
                     value={artistDraft.apuSlug ?? ''}
-                    onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSlug: event.target.value }))}
+                    onChange={(event) => {
+                      artistSlugTouchedRef.current = true;
+                      setArtistDraft((prev) => ({ ...prev, apuSlug: event.target.value }));
+                    }}
+                    onBlur={(event) => {
+                      const cleaned = slugify(event.target.value);
+                      setArtistDraft((prev) => ({ ...prev, apuSlug: cleaned }));
+                    }}
+                    placeholder="mi-proyecto"
+                    helperText={artistPublicPath ? `URL pública: ${artistPublicPath}` : ' '}
                     fullWidth
                   />
                 </Stack>
@@ -1765,6 +1843,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         autoHideDuration={3000}
         onClose={() => setFanRoleToast(null)}
         message={fanRoleToast ?? ''}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+      <Snackbar
+        open={Boolean(artistToast)}
+        autoHideDuration={3200}
+        onClose={() => setArtistToast(null)}
+        message={artistToast ?? ''}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
       <Snackbar

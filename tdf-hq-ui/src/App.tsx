@@ -34,6 +34,8 @@ import ReportsPage from './pages/ReportsPage';
 import RecordsPublicPage from './pages/RecordsPublicPage';
 import PublicProfilePage from './pages/PublicProfilePage';
 import TeacherPortalPage from './pages/TeacherPortalPage';
+import ArtistOnboardingPage from './pages/ArtistOnboardingPage';
+import ArtistPublicPage from './pages/ArtistPublicPage';
 import SocialPageView from './pages/SocialPage';
 import SocialEventsPage from './pages/SocialEventsPage';
 import ChatPage from './pages/ChatPage';
@@ -187,6 +189,8 @@ export default function App() {
       <Routes>
         <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
         <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />
+        <Route path="/artista/crear" element={<PublicBranding><ArtistOnboardingPage /></PublicBranding>} />
+        <Route path="/artista/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
         <Route path="/marketplace" element={<PublicBranding><MarketplacePage /></PublicBranding>} />
         <Route path="/marketplace/orden/:orderId" element={<PublicBranding><MarketplaceOrderTrackingPage /></PublicBranding>} />
         <Route path="/marketplace/pago-datafast" element={<PublicBranding><DatafastReturnPage /></PublicBranding>} />

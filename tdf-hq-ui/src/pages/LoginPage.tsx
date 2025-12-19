@@ -203,6 +203,55 @@ export default function LoginPage() {
     return null;
   }, [location.search]);
 
+  const signupPreset = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const intent = (params.get('intent') ?? '').trim().toLowerCase();
+    const openSignup = params.get('signup') === '1' || intent === 'artist' || intent === 'artista';
+    const rolesRaw = params.getAll('roles');
+    const parsedRoles = rolesRaw.length > 0 ? normalizeSignupRoles(rolesRaw) : normalizeSignupRoles(params.get('roles') ?? '');
+    const claimRaw = params.get('claimArtistId') ?? params.get('claim');
+    const claimArtistId = claimRaw && /^\d+$/.test(claimRaw) ? Number.parseInt(claimRaw, 10) : null;
+
+    const baseRoles: SignupRole[] =
+      parsedRoles.length > 0
+        ? parsedRoles
+        : intent === 'artist' || intent === 'artista'
+          ? ['Artista']
+          : [];
+    const ensureArtistRole: SignupRole[] =
+      claimArtistId
+        ? baseRoles.some((r) => r.toLowerCase().includes('artist'))
+          ? baseRoles
+          : [...baseRoles, 'Artista']
+        : baseRoles;
+
+    return {
+      openSignup,
+      roles: ensureArtistRole,
+      claimArtistId,
+    };
+  }, [location.search]);
+
+  const appliedSignupPresetRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!signupPreset.openSignup) return;
+    if (appliedSignupPresetRef.current === location.search) return;
+    appliedSignupPresetRef.current = location.search;
+    setSignupDialogOpen(true);
+    setSignupFeedback(null);
+    setSignupForm({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      password: '',
+    });
+    setSignupRoles(signupPreset.roles);
+    setFavoriteArtistIds([]);
+    setClaimArtistId(signupPreset.claimArtistId);
+    signupMutation.reset();
+  }, [location.search, signupPreset.claimArtistId, signupPreset.openSignup, signupPreset.roles, signupMutation]);
+
   const {
     data: health,
     isFetching: healthLoading,
