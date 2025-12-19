@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   Alert,
   Box,
@@ -22,13 +22,23 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Label } from '../api/label';
 import type { LabelTrackDTO } from '../api/types';
 import { SessionGate } from '../components/SessionGate';
 import { useSession } from '../session/SessionContext';
 
 export default function LabelTracksPage() {
+  const location = useLocation();
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const ownerIdOverride = useMemo(() => {
+    const raw = searchParams.get('ownerId');
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [searchParams]);
+  const trackIdOverride = useMemo(() => searchParams.get('trackId')?.trim() || null, [searchParams]);
+  const autoOpenTrackHandled = useRef(false);
+
   const qc = useQueryClient();
   const [input, setInput] = useState('');
   const [note, setNote] = useState('');
@@ -47,11 +57,15 @@ export default function LabelTracksPage() {
   const roles = useMemo(() => (session?.roles ?? []).map((r) => r.toLowerCase()), [session?.roles]);
   const isAdmin = roles.some((r) => r.includes('admin'));
   const isArtist = roles.some((r) => r.includes('artist'));
-  const ownerIdForApi = isAdmin ? undefined : session?.partyId && session.partyId > 0 ? session.partyId : undefined;
-  const ownerKey = isAdmin ? 'tdf' : ownerIdForApi ?? 'missing-owner';
+  const ownerIdForApi = isAdmin
+    ? ownerIdOverride ?? undefined
+    : session?.partyId && session.partyId > 0
+      ? session.partyId
+      : undefined;
+  const ownerKey = isAdmin ? (ownerIdForApi ? `owner-${ownerIdForApi}` : 'tdf') : ownerIdForApi ?? 'missing-owner';
   const canUseTracks = isAdmin || isArtist;
   const hasOwnerScope = isAdmin || Boolean(ownerIdForApi);
-  const scopeLabel = isAdmin ? 'TDF Records' : 'Mi artista';
+  const scopeLabel = isAdmin ? (ownerIdForApi ? `Party #${ownerIdForApi}` : 'TDF Records') : 'Mi artista';
   const inputsDisabled = !hasOwnerScope;
 
   const tracksQuery = useQuery({
@@ -165,6 +179,16 @@ export default function LabelTracksPage() {
     setEditTitle(track.ltTitle);
     setEditNote(track.ltNote ?? '');
   };
+
+  useEffect(() => {
+    if (autoOpenTrackHandled.current) return;
+    if (!trackIdOverride) return;
+    if (!tracks.length) return;
+    const match = tracks.find((t) => t.ltId === trackIdOverride);
+    if (!match) return;
+    autoOpenTrackHandled.current = true;
+    openEdit(match);
+  }, [openEdit, trackIdOverride, tracks]);
 
   const submitEdit = () => {
     if (!editing) return;

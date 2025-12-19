@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings } from '../api/bookings';
 import type { BookingDTO, PartyCreate, PartyDTO, ServiceCatalogDTO } from '../api/types';
@@ -31,14 +31,40 @@ import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
 import { Parties } from '../api/parties';
 import { Services } from '../api/services';
+import { useLocation } from 'react-router-dom';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
 
 export default function BookingsPage() {
+  const location = useLocation();
+  const calendarRef = useRef<FullCalendar | null>(null);
+  const autoOpenHandled = useRef(false);
+  const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const bookingIdFilter = useMemo(() => {
+    const raw = query.get('bookingId');
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [query]);
+  const partyIdFilter = useMemo(() => {
+    const raw = query.get('partyId');
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [query]);
+  const engineerPartyIdFilter = useMemo(() => {
+    const raw = query.get('engineerPartyId');
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [query]);
+
   const bookingsQuery: UseQueryResult<BookingDTO[], Error> = useQuery<BookingDTO[], Error>({
-    queryKey: ['bookings'],
-    queryFn: Bookings.list,
+    queryKey: ['bookings', bookingIdFilter, partyIdFilter, engineerPartyIdFilter],
+    queryFn: () =>
+      Bookings.list({
+        bookingId: bookingIdFilter ?? undefined,
+        partyId: partyIdFilter ?? undefined,
+        engineerPartyId: engineerPartyIdFilter ?? undefined,
+      }),
   });
   const roomsQuery = useQuery<RoomDTO[]>({
     queryKey: ['rooms'],
@@ -583,6 +609,58 @@ const openDialogForRange = (start: Date, end: Date) => {
     }
   };
 
+  const openBooking = useCallback(
+    (booking: BookingDTO) => {
+      setMode('edit');
+      setEditingId(booking.bookingId);
+      setTitle(booking.title ?? 'Sesión');
+      const parsedNotes = extractEngineerFromNotes(booking.notes);
+      const engineerFromBooking = booking.engineerName ?? parsedNotes.engineer;
+      const engineerIdFromBooking = booking.engineerPartyId ?? parsedNotes.engineerId;
+      setNotes(parsedNotes.notesBody);
+      setEngineerName(engineerFromBooking);
+      const matchedEngineerId =
+        engineerIdFromBooking ??
+        (engineerFromBooking
+          ? parties.find((p) => p.displayName.toLowerCase() === engineerFromBooking.toLowerCase())?.partyId ?? null
+          : null);
+      setEngineerPartyId(matchedEngineerId);
+      setCustomerPartyId(booking.partyId ?? null);
+      const customerLabel =
+        booking.partyId && parties.find((p) => p.partyId === booking.partyId)?.displayName
+          ? parties.find((p) => p.partyId === booking.partyId)?.displayName ?? ''
+          : booking.customerName ?? booking.partyDisplayName ?? '';
+      setCustomerName(customerLabel);
+      setServiceType(booking.serviceType ?? '');
+      setServiceLocked(Boolean(booking.courseSlug));
+      setStatus(booking.status ?? 'Confirmed');
+      setStartInput(formatForInput(new Date(booking.startsAt)));
+      setEndInput(formatForInput(new Date(booking.endsAt)));
+      setAssignedRoomIds((booking.resources ?? []).map((r) => r.brRoomId));
+      const baseStart = DateTime.fromISO(booking.startsAt).setZone(zone);
+      const suggestedDuplicate = baseStart.isValid ? baseStart.plus({ days: 7 }) : DateTime.now().setZone(zone);
+      setDuplicateStartInput(suggestedDuplicate.toFormat("yyyy-LL-dd'T'HH:mm"));
+      setDialogOpen(true);
+    },
+    [formatForInput, parties, zone],
+  );
+
+  useEffect(() => {
+    if (autoOpenHandled.current) return;
+    if (!bookingIdFilter) return;
+    if (bookings.length === 0) return;
+    const booking = bookings.find((b) => b.bookingId === bookingIdFilter);
+    if (!booking) return;
+    autoOpenHandled.current = true;
+    const start = new Date(booking.startsAt);
+    if (!Number.isNaN(start.getTime())) {
+      (calendarRef.current as unknown as { getApi?: () => { gotoDate?: (date: Date) => void } } | null)
+        ?.getApi?.()
+        ?.gotoDate?.(start);
+    }
+    openBooking(booking);
+  }, [bookingIdFilter, bookings, openBooking]);
+
   const handleEventClick = (info: {
     event: {
       id: string;
@@ -613,36 +691,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     const bookingId = Number.parseInt(info.event.id, 10);
     const booking = bookings.find((b) => b.bookingId === bookingId);
     if (!booking) return;
-    setMode('edit');
-    setEditingId(booking.bookingId);
-    setTitle(booking.title ?? 'Sesión');
-    const parsedNotes = extractEngineerFromNotes(booking.notes);
-    const engineerFromBooking = booking.engineerName ?? parsedNotes.engineer;
-    const engineerIdFromBooking = booking.engineerPartyId ?? parsedNotes.engineerId;
-    setNotes(parsedNotes.notesBody);
-    setEngineerName(engineerFromBooking);
-    const matchedEngineerId =
-      engineerIdFromBooking ??
-      (engineerFromBooking
-        ? parties.find((p) => p.displayName.toLowerCase() === engineerFromBooking.toLowerCase())?.partyId ?? null
-        : null);
-    setEngineerPartyId(matchedEngineerId);
-    setCustomerPartyId(booking.partyId ?? null);
-    const customerLabel =
-      booking.partyId && parties.find((p) => p.partyId === booking.partyId)?.displayName
-        ? parties.find((p) => p.partyId === booking.partyId)?.displayName ?? ''
-        : booking.customerName ?? booking.partyDisplayName ?? '';
-    setCustomerName(customerLabel);
-    setServiceType(booking.serviceType ?? '');
-    setServiceLocked(Boolean(booking.courseSlug));
-    setStatus(booking.status ?? 'Confirmed');
-    setStartInput(formatForInput(new Date(booking.startsAt)));
-    setEndInput(formatForInput(new Date(booking.endsAt)));
-    setAssignedRoomIds((booking.resources ?? []).map((r) => r.brRoomId));
-    const baseStart = DateTime.fromISO(booking.startsAt).setZone(zone);
-    const suggestedDuplicate = baseStart.isValid ? baseStart.plus({ days: 7 }) : DateTime.now().setZone(zone);
-    setDuplicateStartInput(suggestedDuplicate.toFormat("yyyy-LL-dd'T'HH:mm"));
-    setDialogOpen(true);
+    openBooking(booking);
   };
 
   const handleEventDropOrResize = (arg: { event: { id: string; start: Date | null; end: Date | null; extendedProps?: { isCourse?: boolean } }; revert?: () => void }) => {
@@ -688,6 +737,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       {bookingsQuery.error && <div>Error: {bookingsQuery.error.message}</div>}
       <Paper sx={{ p: 1 }}>
         <FullCalendar
+          ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           height="auto"

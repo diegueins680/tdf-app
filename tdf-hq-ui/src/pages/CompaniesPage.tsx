@@ -24,6 +24,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
+import PartyRelatedPopover from '../components/PartyRelatedPopover';
 
 interface CreateCompanyDialogProps {
   open: boolean;
@@ -197,6 +198,8 @@ export default function CompaniesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selected, setSelected] = useState<PartyDTO | null>(null);
+  const [relatedParty, setRelatedParty] = useState<PartyDTO | null>(null);
+  const [relatedAnchor, setRelatedAnchor] = useState<HTMLElement | null>(null);
 
   const { data, isLoading, isError, error } = useQuery<PartyDTO[], Error>({
     queryKey: ['parties'],
@@ -273,7 +276,18 @@ export default function CompaniesPage() {
                 <TableRow key={c.partyId} hover>
                   <TableCell>
                     <Stack spacing={0.5}>
-                      <Typography fontWeight={700}>{c.displayName}</Typography>
+                      <Button
+                        variant="text"
+                        onClick={(event) => {
+                          setRelatedParty(c);
+                          setRelatedAnchor(event.currentTarget);
+                        }}
+                        sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
+                      >
+                        <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                          {c.displayName}
+                        </Typography>
+                      </Button>
                       {c.legalName && <Typography variant="body2" color="text.secondary">{c.legalName}</Typography>}
                       {c.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
                     </Stack>
@@ -303,6 +317,14 @@ export default function CompaniesPage() {
 
       <CreateCompanyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       <EditCompanyDialog company={selected} open={editOpen} onClose={() => setEditOpen(false)} />
+      <PartyRelatedPopover
+        party={relatedParty}
+        anchorEl={relatedAnchor}
+        onClose={() => {
+          setRelatedParty(null);
+          setRelatedAnchor(null);
+        }}
+      />
     </Stack>
   );
 }

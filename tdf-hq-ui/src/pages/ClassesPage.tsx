@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -33,6 +33,7 @@ import type {
 } from '../api/trials';
 import { Trials } from '../api/trials';
 import { Rooms } from '../api/rooms';
+import { useLocation } from 'react-router-dom';
 
 type StatusKey = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
 
@@ -96,6 +97,27 @@ const formatDateTime = (iso: string) => {
 };
 
 export default function ClassesPage() {
+  const location = useLocation();
+  const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const queryTeacherId = useMemo(() => {
+    const raw = query.get('teacherId');
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [query]);
+  const queryStudentId = useMemo(() => {
+    const raw = query.get('studentId');
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [query]);
+  const queryClassSessionId = useMemo(() => {
+    const raw = query.get('classSessionId');
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [query]);
+  const queryFocusAt = useMemo(() => query.get('at'), [query]);
+  const applyQueryHandled = useRef(false);
+  const autoOpenHandled = useRef(false);
+
   const qc = useQueryClient();
   const subjectsQuery = useQuery({
     queryKey: ['class-subjects'],
@@ -116,23 +138,26 @@ export default function ClassesPage() {
 
   const [subjectFilter, setSubjectFilter] = useState<number | 'all'>('all');
   const [teacherFilter, setTeacherFilter] = useState<number | 'all'>('all');
+  const [studentFilter, setStudentFilter] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<StatusKey | 'all'>('all');
 
   const dateWindow = useMemo(() => {
-    const now = new Date();
+    const focus = queryFocusAt ? new Date(queryFocusAt) : null;
+    const now = focus && !Number.isNaN(focus.getTime()) ? focus : new Date();
     const from = new Date(now);
     from.setDate(now.getDate() - 14);
     const to = new Date(now);
     to.setDate(now.getDate() + 60);
     return { from: from.toISOString(), to: to.toISOString() };
-  }, []);
+  }, [queryFocusAt]);
 
   const classesQuery = useQuery({
-    queryKey: ['class-sessions', subjectFilter, teacherFilter, statusFilter, dateWindow.from, dateWindow.to],
+    queryKey: ['class-sessions', subjectFilter, teacherFilter, studentFilter, statusFilter, dateWindow.from, dateWindow.to],
     queryFn: () =>
       Trials.listClassSessions({
         subjectId: subjectFilter === 'all' ? undefined : subjectFilter,
         teacherId: teacherFilter === 'all' ? undefined : teacherFilter,
+        studentId: studentFilter === 'all' ? undefined : studentFilter,
         from: dateWindow.from,
         to: dateWindow.to,
         status: statusFilter === 'all' ? undefined : statusFilter,
@@ -177,6 +202,13 @@ export default function ClassesPage() {
   const teachers = teachersQuery.data ?? [];
   const rooms = roomsQuery.data ?? [];
   const students = studentsQuery.data ?? [];
+
+  useEffect(() => {
+    if (applyQueryHandled.current) return;
+    if (queryTeacherId != null) setTeacherFilter(queryTeacherId);
+    if (queryStudentId != null) setStudentFilter(queryStudentId);
+    applyQueryHandled.current = true;
+  }, [queryStudentId, queryTeacherId]);
 
   const [formError, setFormError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -231,6 +263,15 @@ export default function ClassesPage() {
     });
     setDialogOpen(true);
   };
+
+  useEffect(() => {
+    if (autoOpenHandled.current) return;
+    if (!queryClassSessionId) return;
+    const match = (classesQuery.data ?? []).find((cls) => cls.classSessionId === queryClassSessionId);
+    if (!match) return;
+    autoOpenHandled.current = true;
+    openEditDialog(match);
+  }, [classesQuery.data, queryClassSessionId]);
 
   const closeDialog = () => {
     setFormError(null);
@@ -387,6 +428,29 @@ export default function ClassesPage() {
 
       <Paper sx={{ p: 2.5 }} variant="outlined">
         <Stack spacing={2}>
+          <TextField
+            select
+            size="small"
+            label="Alumno"
+            value={studentFilter === 'all' ? 'all' : String(studentFilter)}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === 'all') {
+                setStudentFilter('all');
+              } else {
+                const parsed = Number(val);
+                setStudentFilter(Number.isFinite(parsed) ? parsed : 'all');
+              }
+            }}
+            sx={{ maxWidth: 420 }}
+          >
+            <MenuItem value="all">Todos los alumnos</MenuItem>
+            {students.map((p) => (
+              <MenuItem key={p.studentId} value={p.studentId}>
+                {p.displayName} {p.email ? `· ${p.email}` : ''}
+              </MenuItem>
+            ))}
+          </TextField>
           {chipFilters}
           {loading && <LinearProgress />}
           {classesQuery.error && (

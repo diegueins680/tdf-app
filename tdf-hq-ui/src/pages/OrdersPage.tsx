@@ -93,7 +93,7 @@ export default function OrdersPage() {
 
   const bookingsQuery: UseQueryResult<BookingDTO[], Error> = useQuery<BookingDTO[], Error>({
     queryKey: ['bookings'],
-    queryFn: Bookings.list,
+    queryFn: () => Bookings.list(),
   });
   const partiesQuery: UseQueryResult<PartyDTO[], Error> = useQuery<PartyDTO[], Error>({
     queryKey: ['parties'],

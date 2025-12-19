@@ -28,6 +28,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
+import PartyRelatedPopover from '../components/PartyRelatedPopover';
 
 const STATUS_OPTIONS = ['Nuevo', 'Contactado', 'En progreso', 'Ganado', 'Perdido'] as const;
 type LeadStatus = (typeof STATUS_OPTIONS)[number];
@@ -204,6 +205,8 @@ export default function LeadsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selected, setSelected] = useState<PartyDTO | null>(null);
+  const [relatedParty, setRelatedParty] = useState<PartyDTO | null>(null);
+  const [relatedAnchor, setRelatedAnchor] = useState<HTMLElement | null>(null);
 
   const { data, isLoading, isError, error } = useQuery<PartyDTO[], Error>({
     queryKey: ['parties'],
@@ -277,7 +280,18 @@ export default function LeadsPage() {
                 <TableRow key={l.partyId} hover>
                   <TableCell>
                     <Stack spacing={0.5}>
-                      <Typography fontWeight={700}>{l.displayName}</Typography>
+                      <Button
+                        variant="text"
+                        onClick={(event) => {
+                          setRelatedParty(l);
+                          setRelatedAnchor(event.currentTarget);
+                        }}
+                        sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
+                      >
+                        <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                          {l.displayName}
+                        </Typography>
+                      </Button>
                       {l.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
                     </Stack>
                   </TableCell>
@@ -305,6 +319,14 @@ export default function LeadsPage() {
 
       <LeadCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       <LeadEditDialog lead={selected} open={editOpen} onClose={() => setEditOpen(false)} />
+      <PartyRelatedPopover
+        party={relatedParty}
+        anchorEl={relatedAnchor}
+        onClose={() => {
+          setRelatedParty(null);
+          setRelatedAnchor(null);
+        }}
+      />
     </Stack>
   );
 }

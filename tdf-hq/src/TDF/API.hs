@@ -26,7 +26,7 @@ import           TDF.API.Pipelines (PipelinesAPI)
 import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions  (SessionsAPI)
 import           TDF.API.Drive     (DriveAPI)
-import           TDF.API.Types     (LooseJSON, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
+import           TDF.API.Types     (LooseJSON, PartyRelatedDTO, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
 import           TDF.API.Radio     (RadioAPI)
 import           TDF.Models        (RoleEnum)
 import           TDF.DTO
@@ -92,6 +92,7 @@ type PartyAPI =
            Get '[JSON] PartyDTO
       :<|> ReqBody '[JSON] PartyUpdate :> Put '[JSON] PartyDTO
       :<|> "roles" :> ReqBody '[LooseJSON, PlainText, OctetStream] RolePayload :> Post '[JSON] NoContent
+      :<|> "related" :> Get '[JSON] PartyRelatedDTO
       )
 
 type SocialAPI =
@@ -116,7 +117,10 @@ type ChatAPI =
          :> Post '[JSON] ChatMessageDTO
 
 type BookingAPI =
-       Get '[JSON] [BookingDTO]
+       QueryParam "bookingId" Int64
+         :> QueryParam "partyId" Int64
+         :> QueryParam "engineerPartyId" Int64
+         :> Get '[JSON] [BookingDTO]
   :<|> ReqBody '[JSON] CreateBookingReq :> Post '[JSON] BookingDTO
   :<|> Capture "bookingId" Int64 :> ReqBody '[JSON] UpdateBookingReq :> Put '[JSON] BookingDTO
 

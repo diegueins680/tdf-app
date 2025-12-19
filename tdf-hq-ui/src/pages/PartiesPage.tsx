@@ -42,6 +42,7 @@ import type { Role } from '../api/generated/client';
 import { Admin } from '../api/admin';
 import { ALL_ROLES } from '../constants/roles';
 import { normalizeRolesInput } from '../utils/roles';
+import PartyRelatedPopover from '../components/PartyRelatedPopover';
 
 type RoleValue = Role | (string & Record<never, never>);
 
@@ -312,6 +313,8 @@ export default function PartiesPage() {
   const [createDialogIsOrg, setCreateDialogIsOrg] = useState(false);
   const [search, setSearch] = useState('');
   const [userDialogParty, setUserDialogParty] = useState<PartyDTO | null>(null);
+  const [relatedParty, setRelatedParty] = useState<PartyDTO | null>(null);
+  const [relatedAnchor, setRelatedAnchor] = useState<HTMLElement | null>(null);
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
@@ -394,7 +397,18 @@ export default function PartiesPage() {
               <TableRow key={party.partyId} hover>
                 <TableCell>
                   <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography fontWeight={600}>{party.displayName}</Typography>
+                    <Button
+                      variant="text"
+                      onClick={(event) => {
+                        setRelatedParty(party);
+                        setRelatedAnchor(event.currentTarget);
+                      }}
+                      sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
+                    >
+                      <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                        {party.displayName}
+                      </Typography>
+                    </Button>
                     {party.isOrg && <Chip label="ORG" size="small" />}
                   </Stack>
                 </TableCell>
@@ -443,6 +457,14 @@ export default function PartiesPage() {
         party={userDialogParty}
         open={Boolean(userDialogParty)}
         onClose={() => setUserDialogParty(null)}
+      />
+      <PartyRelatedPopover
+        party={relatedParty}
+        anchorEl={relatedAnchor}
+        onClose={() => {
+          setRelatedParty(null);
+          setRelatedAnchor(null);
+        }}
       />
     </Stack>
   );

@@ -15,7 +15,14 @@ export interface BookingUpdatePayload {
 }
 
 export const Bookings = {
-  list: () => get<BookingDTO[]>('/bookings'),
+  list: (params?: { bookingId?: number; partyId?: number; engineerPartyId?: number }) => {
+    const search = new URLSearchParams();
+    if (params?.bookingId != null) search.set('bookingId', String(params.bookingId));
+    if (params?.partyId != null) search.set('partyId', String(params.partyId));
+    if (params?.engineerPartyId != null) search.set('engineerPartyId', String(params.engineerPartyId));
+    const qs = search.toString();
+    return get<BookingDTO[]>(`/bookings${qs ? `?${qs}` : ''}`);
+  },
   create: (body: {
     cbTitle: string;
     cbStartsAt: string;

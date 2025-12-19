@@ -40,6 +40,46 @@ export interface PartyUpdate {
   uNotes?: string | null;
 }
 
+export interface PartyRelatedBookingDTO {
+  prbBookingId: number;
+  prbRole: string;
+  prbTitle: string;
+  prbServiceType?: string | null;
+  prbStartsAt: string;
+  prbEndsAt: string;
+  prbStatus: string;
+}
+
+export interface PartyRelatedClassSessionDTO {
+  prcClassSessionId: number;
+  prcRole: string;
+  prcSubjectId: number;
+  prcSubjectName?: string | null;
+  prcTeacherId: number;
+  prcTeacherName?: string | null;
+  prcStudentId: number;
+  prcStudentName?: string | null;
+  prcStartAt: string;
+  prcEndAt: string;
+  prcStatus: string;
+  prcBookingId?: number | null;
+}
+
+export interface PartyRelatedLabelTrackDTO {
+  prtId: string;
+  prtTitle: string;
+  prtStatus: string;
+  prtCreatedAt: string;
+  prtUpdatedAt: string;
+}
+
+export interface PartyRelatedDTO {
+  prPartyId: number;
+  prBookings: PartyRelatedBookingDTO[];
+  prClassSessions: PartyRelatedClassSessionDTO[];
+  prLabelTracks: PartyRelatedLabelTrackDTO[];
+}
+
 export interface DropdownOptionDTO {
   optionId: string;
   category: string;

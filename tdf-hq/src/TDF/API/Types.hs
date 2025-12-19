@@ -634,6 +634,58 @@ data SessionUpdate = SessionUpdate
 instance ToJSON SessionUpdate
 instance FromJSON SessionUpdate
 
+data PartyRelatedBooking = PartyRelatedBooking
+  { prbBookingId  :: Int64
+  , prbRole       :: Text
+  , prbTitle      :: Text
+  , prbServiceType :: Maybe Text
+  , prbStartsAt   :: UTCTime
+  , prbEndsAt     :: UTCTime
+  , prbStatus     :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON PartyRelatedBooking
+instance FromJSON PartyRelatedBooking
+
+data PartyRelatedClassSession = PartyRelatedClassSession
+  { prcClassSessionId :: Int64
+  , prcRole           :: Text
+  , prcSubjectId      :: Int64
+  , prcSubjectName    :: Maybe Text
+  , prcTeacherId      :: Int64
+  , prcTeacherName    :: Maybe Text
+  , prcStudentId      :: Int64
+  , prcStudentName    :: Maybe Text
+  , prcStartAt        :: UTCTime
+  , prcEndAt          :: UTCTime
+  , prcStatus         :: Text
+  , prcBookingId      :: Maybe Int64
+  } deriving (Show, Generic)
+
+instance ToJSON PartyRelatedClassSession
+instance FromJSON PartyRelatedClassSession
+
+data PartyRelatedLabelTrack = PartyRelatedLabelTrack
+  { prtId        :: Text
+  , prtTitle     :: Text
+  , prtStatus    :: Text
+  , prtCreatedAt :: UTCTime
+  , prtUpdatedAt :: UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON PartyRelatedLabelTrack
+instance FromJSON PartyRelatedLabelTrack
+
+data PartyRelatedDTO = PartyRelatedDTO
+  { prPartyId       :: Int64
+  , prBookings      :: [PartyRelatedBooking]
+  , prClassSessions :: [PartyRelatedClassSession]
+  , prLabelTracks   :: [PartyRelatedLabelTrack]
+  } deriving (Show, Generic)
+
+instance ToJSON PartyRelatedDTO
+instance FromJSON PartyRelatedDTO
+
 newtype RolePayload = RolePayload { rolePayloadValue :: Text }
   deriving (Show, Eq, Generic)
 

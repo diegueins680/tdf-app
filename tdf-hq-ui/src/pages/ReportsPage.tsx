@@ -41,7 +41,7 @@ const inputToDate = (val: string) => {
 export default function ReportsPage() {
   const bookingsQuery = useQuery({
     queryKey: ['reports-bookings'],
-    queryFn: Bookings.list,
+    queryFn: () => Bookings.list(),
   });
   const paymentsQuery = useQuery({
     queryKey: ['reports-payments'],

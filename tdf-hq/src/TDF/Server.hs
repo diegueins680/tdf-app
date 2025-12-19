@@ -58,7 +58,7 @@ import           Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawS
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
-import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..))
+import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..))
 import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
@@ -87,6 +87,7 @@ import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.Trials.API (TrialsAPI)
 import           TDF.Trials.Server (trialsServer)
+import qualified TDF.Trials.Models as Trials
 import qualified TDF.Meta as Meta
 import           TDF.Version      (getVersionInfo)
 import qualified TDF.Handlers.InputList as InputList
@@ -2943,7 +2944,7 @@ seedTrigger rawToken = do
 partyServer :: AuthedUser -> ServerT PartyAPI AppM
 partyServer user = listParties user :<|> createParty user :<|> partyById
   where
-    partyById pid = getParty user pid :<|> updateParty user pid :<|> addRole user pid
+    partyById pid = getParty user pid :<|> updateParty user pid :<|> addRole user pid :<|> partyRelated user pid
 
 listParties :: AuthedUser -> AppM [PartyDTO]
 listParties user = do
@@ -3035,6 +3036,115 @@ addRole user pidI (RolePayload roleTxt) = do
         Just r  -> r
         Nothing -> ReadOnly
 
+partyRelated :: AuthedUser -> Int64 -> AppM PartyRelatedDTO
+partyRelated user pidI = do
+  requireModule user ModuleCRM
+  now <- liftIO getCurrentTime
+  let partyKey = toSqlKey pidI :: Key Party
+
+  (asCustomer, asEngineer) <- runDB $ do
+    customerRows <- selectList [BookingPartyId ==. Just partyKey] [Desc BookingStartsAt, LimitTo 50]
+    engineerRows <- selectList [BookingEngineerPartyId ==. Just partyKey] [Desc BookingStartsAt, LimitTo 50]
+    pure (customerRows, engineerRows)
+
+  (studentSessions, teacherSessions, subjectMap, partyNameMap, bookingMap) <- runDB $ do
+    studentRows <- selectList [Trials.ClassSessionStudentId ==. partyKey] [Desc Trials.ClassSessionStartAt, LimitTo 50]
+    teacherRows <- selectList [Trials.ClassSessionTeacherId ==. partyKey] [Desc Trials.ClassSessionStartAt, LimitTo 50]
+    let sessions = studentRows ++ teacherRows
+        subjectIds = Set.toList $ Set.fromList $ map (Trials.classSessionSubjectId . entityVal) sessions
+        teacherIds = Set.toList $ Set.fromList $ map (Trials.classSessionTeacherId . entityVal) sessions
+        studentIds = Set.toList $ Set.fromList $ map (Trials.classSessionStudentId . entityVal) sessions
+        bookingIds = catMaybes $ map (Trials.classSessionBookingId . entityVal) sessions
+
+    subjects <- if null subjectIds
+      then pure []
+      else selectList [Trials.SubjectId <-. subjectIds] []
+    let subjectsById = Map.fromList [ (entityKey e, entityVal e) | e <- subjects ]
+
+    let partyIds = Set.toList (Set.fromList (teacherIds ++ studentIds))
+    parties <- if null partyIds
+      then pure []
+      else selectList [PartyId <-. partyIds] []
+    let partyNamesById = Map.fromList [ (entityKey e, M.partyDisplayName (entityVal e)) | e <- parties ]
+
+    bookings <- if null bookingIds
+      then pure []
+      else selectList [BookingId <-. bookingIds] []
+    let bookingsById = Map.fromList [ (entityKey e, entityVal e) | e <- bookings ]
+
+    pure (studentRows, teacherRows, subjectsById, partyNamesById, bookingsById)
+
+  tracks <- runDB $
+    selectList [ME.LabelTrackOwnerPartyId ==. Just partyKey] [Desc ME.LabelTrackUpdatedAt, LimitTo 100]
+
+  let toRelatedBooking role (Entity bookingId booking) =
+        PartyRelatedBooking
+          { prbBookingId  = fromSqlKey bookingId
+          , prbRole       = role
+          , prbTitle      = bookingTitle booking
+          , prbServiceType = bookingServiceType booking
+          , prbStartsAt   = bookingStartsAt booking
+          , prbEndsAt     = bookingEndsAt booking
+          , prbStatus     = T.pack (show (bookingStatus booking))
+          }
+
+      classStatusLabel attended startAt mBooking =
+        case bookingStatus <$> mBooking of
+          Just Cancelled  -> "cancelada"
+          Just NoShow     -> "cancelada"
+          Just Completed  -> "realizada"
+          Just Tentative  -> "por-confirmar"
+          Just InProgress -> "programada"
+          Just Confirmed  -> "programada"
+          _ ->
+            if attended
+              then "realizada"
+              else if startAt > now then "programada" else "por-confirmar"
+
+      toRelatedClass role (Entity classSessionId cs) =
+        let teacherId = Trials.classSessionTeacherId cs
+            studentId = Trials.classSessionStudentId cs
+            subjectId = Trials.classSessionSubjectId cs
+            mBooking = Trials.classSessionBookingId cs >>= (`Map.lookup` bookingMap)
+        in PartyRelatedClassSession
+          { prcClassSessionId = fromSqlKey classSessionId
+          , prcRole           = role
+          , prcSubjectId      = fromSqlKey subjectId
+          , prcSubjectName    = Trials.subjectName <$> Map.lookup subjectId subjectMap
+          , prcTeacherId      = fromSqlKey teacherId
+          , prcTeacherName    = Map.lookup teacherId partyNameMap
+          , prcStudentId      = fromSqlKey studentId
+          , prcStudentName    = Map.lookup studentId partyNameMap
+          , prcStartAt        = Trials.classSessionStartAt cs
+          , prcEndAt          = Trials.classSessionEndAt cs
+          , prcStatus         = classStatusLabel (Trials.classSessionAttended cs) (Trials.classSessionStartAt cs) mBooking
+          , prcBookingId      = fromSqlKey <$> Trials.classSessionBookingId cs
+          }
+
+      toRelatedTrack (Entity key t) =
+        PartyRelatedLabelTrack
+          { prtId        = toPathPiece key
+          , prtTitle     = ME.labelTrackTitle t
+          , prtStatus    = ME.labelTrackStatus t
+          , prtCreatedAt = ME.labelTrackCreatedAt t
+          , prtUpdatedAt = ME.labelTrackUpdatedAt t
+          }
+
+      bookingsOut =
+        map (toRelatedBooking "cliente") asCustomer
+          ++ map (toRelatedBooking "ingeniero") asEngineer
+
+      classSessionsOut =
+        map (toRelatedClass "estudiante") studentSessions
+          ++ map (toRelatedClass "profesor") teacherSessions
+
+  pure PartyRelatedDTO
+    { prPartyId = pidI
+    , prBookings = bookingsOut
+    , prClassSessions = classSessionsOut
+    , prLabelTracks = map toRelatedTrack tracks
+    }
+
 -- Bookings
 bookingPublicServer :: ServerT Api.BookingPublicAPI AppM
 bookingPublicServer = createPublicBooking
@@ -3049,16 +3159,50 @@ bookingServer user =
   :<|> createBooking user
   :<|> updateBooking user
 
-listBookings :: AuthedUser -> AppM [BookingDTO]
-listBookings user = do
+listBookings :: AuthedUser -> Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> AppM [BookingDTO]
+listBookings user mBookingId mPartyId mEngineerPartyId = do
   requireModule user ModuleScheduling
   Env pool _ <- ask
   liftIO $ do
     dbBookings <- flip runSqlPool pool $ do
-      bookings <- selectList [] [Desc BookingId]
-      buildBookingDTOs bookings
-    courseSessions <- flip runSqlPool pool courseCalendarBookings
-    pure (dbBookings ++ courseSessions)
+      case mBookingId of
+        Just bid | bid > 0 -> do
+          let bookingKey = toSqlKey bid :: Key Booking
+          mBooking <- getEntity bookingKey
+          case mBooking of
+            Nothing -> pure []
+            Just ent -> buildBookingDTOs [ent]
+        _ -> do
+          let loadByParty pid = do
+                let pidKey = toSqlKey pid :: Key Party
+                selectList [BookingPartyId ==. Just pidKey] [Desc BookingStartsAt, LimitTo 500]
+              loadByEngineer pid = do
+                let pidKey = toSqlKey pid :: Key Party
+                selectList [BookingEngineerPartyId ==. Just pidKey] [Desc BookingStartsAt, LimitTo 500]
+          case (mPartyId, mEngineerPartyId) of
+            (Nothing, Nothing) -> do
+              bookings <- selectList [] [Desc BookingId]
+              buildBookingDTOs bookings
+            _ -> do
+              byParty <- maybe (pure []) loadByParty mPartyId
+              byEngineer <- maybe (pure []) loadByEngineer mEngineerPartyId
+              let merged = dedupeByKey (byParty ++ byEngineer)
+              buildBookingDTOs merged
+    if isJust mBookingId || isJust mPartyId || isJust mEngineerPartyId
+      then pure dbBookings
+      else do
+        courseSessions <- flip runSqlPool pool courseCalendarBookings
+        pure (dbBookings ++ courseSessions)
+  where
+    dedupeByKey :: [Entity Booking] -> [Entity Booking]
+    dedupeByKey = go Set.empty []
+      where
+        go _ acc [] = reverse acc
+        go seen acc (e:es) =
+          let key = entityKey e
+          in if Set.member key seen
+               then go seen acc es
+               else go (Set.insert key seen) (e:acc) es
 
 courseCalendarBookings :: SqlPersistT IO [BookingDTO]
 courseCalendarBookings = do

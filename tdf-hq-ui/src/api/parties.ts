@@ -1,5 +1,5 @@
 import { get, post, put } from './client';
-import type { PartyDTO, PartyCreate, PartyUpdate } from './types';
+import type { PartyDTO, PartyCreate, PartyRelatedDTO, PartyUpdate } from './types';
 
 export const Parties = {
   list: () => get<PartyDTO[]>('/parties'),
@@ -8,4 +8,5 @@ export const Parties = {
   update: (id: number, body: PartyUpdate) => put<PartyDTO>(`/parties/${id}`, body),
   addRole: (id: number, role: string) =>
     post<void>(`/parties/${id}/roles`, role),
+  related: (id: number) => get<PartyRelatedDTO>(`/parties/${id}/related`),
 };
