@@ -8,7 +8,6 @@ import {
   Card,
   CardContent,
   CardMedia,
-  CardActionArea,
   Chip,
   CircularProgress,
   Dialog,
@@ -1635,6 +1634,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               artist.apFeaturedVideoUrl ??
               artist.apYoutubeUrl ??
               (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
+            const artistProfilePath = artist.apSlug ? `/artista/${artist.apSlug}` : `/artista/${artist.apArtistId}`;
             const isFollowing = follows.some((follow) => follow.ffArtistId === artist.apArtistId);
             const spotifyButtonProps = spotifyUrl
               ? { component: 'a', href: spotifyUrl, target: '_blank', rel: 'noopener noreferrer' }
@@ -1658,20 +1658,38 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             const latestLink = latestRelease?.arSpotifyUrl ?? latestRelease?.arYoutubeUrl ?? null;
             return (
               <Grid item xs={12} md={6} key={artist.apArtistId} id={`artist-${artist.apArtistId}`}>
-                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                  <CardActionArea
-                    onClick={() => {
-                      if (artist.apSlug) {
-                        window.open(`/artista/${artist.apSlug}`, '_blank');
-                      } else {
-                        window.open(`/artista/${artist.apArtistId}`, '_blank');
-                      }
-                    }}
-                  >
-                    {artist.apHeroImageUrl && (
-                      <CardMedia component="img" height="220" image={artist.apHeroImageUrl} alt={artist.apDisplayName} />
-                    )}
-                  </CardActionArea>
+                <Card
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: 3,
+                      borderColor: 'rgba(148,163,184,0.35)',
+                    },
+                    '&:focus-visible': {
+                      outline: '2px solid rgba(59,130,246,0.7)',
+                      outlineOffset: 2,
+                    },
+                  }}
+                  tabIndex={0}
+                  role="link"
+                  aria-label={`Ver perfil de ${artist.apDisplayName}`}
+                  onClick={() => navigate(artistProfilePath)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      navigate(artistProfilePath);
+                    }
+                  }}
+                >
+                  {artist.apHeroImageUrl && (
+                    <CardMedia component="img" height="220" image={artist.apHeroImageUrl} alt={artist.apDisplayName} />
+                  )}
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Stack
                       direction={{ xs: 'column', md: 'row' }}
@@ -1709,6 +1727,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             size="small"
                             startIcon={<PlayArrowIcon />}
                             disabled={!spotifyUrl}
+                            onClick={(e) => e.stopPropagation()}
                           >
                             Spotify
                           </Button>
@@ -1718,6 +1737,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             size="small"
                             startIcon={<YouTubeIcon />}
                             disabled={!youtubeUrl}
+                            onClick={(e) => e.stopPropagation()}
                           >
                             YouTube
                           </Button>
@@ -1725,7 +1745,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             variant={isFollowing ? 'outlined' : 'contained'}
                             color={isFollowing ? 'inherit' : 'secondary'}
                             size="small"
-                            onClick={() => handleFollowToggle(artist.apArtistId, isFollowing)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFollowToggle(artist.apArtistId, isFollowing);
+                            }}
                             disabled={followMutation.isPending || unfollowMutation.isPending}
                           >
                             {isFollowing ? 'Siguiendo' : 'Seguir'}
@@ -1738,6 +1761,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               href={latestLink}
                               target="_blank"
                               rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               Último release
                             </Button>
@@ -1758,14 +1782,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             <Button
                               size="small"
                               variant={isFeaturedOpen ? 'outlined' : 'contained'}
-                              onClick={() =>
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setExpandedFeatured((prev) => {
                                   const next = new Set(prev);
                                   if (next.has(artist.apArtistId)) next.delete(artist.apArtistId);
                                   else next.add(artist.apArtistId);
                                   return next;
-                                })
-                              }
+                                });
+                              }}
                             >
                               {isFeaturedOpen ? 'Ocultar video' : 'Ver video destacado'}
                             </Button>
@@ -1776,9 +1801,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                                 color="secondary"
                                 size="small"
                                 clickable
-                                onClick={() =>
-                                  setExpandedFeatured((prev) => new Set(prev).add(artist.apArtistId))
-                                }
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedFeatured((prev) => new Set(prev).add(artist.apArtistId));
+                                }}
                               />
                             )}
                           </Stack>
@@ -1798,13 +1824,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             />
                           )}
                           {isFeaturedOpen && (
-                            <StreamingPlayer
-                              title={`${artist.apDisplayName} — Destacado`}
-                              artist={artist.apDisplayName}
-                              posterUrl={artist.apHeroImageUrl}
-                              sources={featuredSources}
-                              variant="compact"
-                            />
+                            <Box onClick={(e) => e.stopPropagation()}>
+                              <StreamingPlayer
+                                title={`${artist.apDisplayName} — Destacado`}
+                                artist={artist.apDisplayName}
+                                posterUrl={artist.apHeroImageUrl}
+                                sources={featuredSources}
+                                variant="compact"
+                              />
+                            </Box>
                           )}
                         </Stack>
                       </Box>
