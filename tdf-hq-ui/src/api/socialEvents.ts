@@ -1,4 +1,4 @@
-import { get, post } from './client';
+import { get, post, put } from './client';
 
 export interface SocialArtistDTO {
   artistId?: string | null;
@@ -77,7 +77,7 @@ export const SocialEventsAPI = {
       invitationStatus: 'Pending',
     }),
   respondInvitation: (eventId: string, invitationId: string, status: string, message?: string | null) =>
-    post<SocialInvitationDTO>(`/social-events/events/${encodeURIComponent(eventId)}/invitations/${encodeURIComponent(invitationId)}`, {
+    put<SocialInvitationDTO>(`/social-events/events/${encodeURIComponent(eventId)}/invitations/${encodeURIComponent(invitationId)}`, {
       invitationStatus: status,
       invitationMessage: message ?? null,
     }),

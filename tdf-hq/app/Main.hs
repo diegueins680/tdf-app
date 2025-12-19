@@ -31,6 +31,7 @@ import           TDF.DB         (Env(..), ConnectionPool, makePool)
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
 import           TDF.Trials.Models (migrateTrials)
+import           TDF.Models.SocialEventsModels (migrateSocialEvents)
 import           TDF.Server     (mkApp)
 import           TDF.Seed       (seedAll)
 main :: IO ()
@@ -139,6 +140,7 @@ runAllMigrations = do
   dropLegacyPartyColumns
   runMigration migrateAll
   runMigration migrateExtra
+  runMigration migrateSocialEvents
   runMigration migrateTrials
   restoreLegacyPartyRoles legacyRoles
 

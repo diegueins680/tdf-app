@@ -21,7 +21,7 @@ import           GHC.Generics       (Generic)
 import           Database.Persist.TH
 
 share [mkPersist sqlSettings, mkMigrate "migrateSocialEvents"] [persistLowerCase|
-ArtistProfile
+ArtistProfile sql=social_artist_profile
     partyId Text Maybe
     name Text
     bio Text Maybe

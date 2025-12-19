@@ -5,13 +5,15 @@
 module TDF.DTO.SocialEventsDTO
   ( ArtistDTO(..)
   , ArtistSocialLinksDTO(..)
+  , ArtistFollowerDTO(..)
+  , ArtistFollowRequest(..)
   , VenueDTO(..)
   , EventDTO(..)
   , RsvpDTO(..)
   , InvitationDTO(..)
   ) where
 
-import           Data.Aeson (FromJSON, ToJSON, withObject, (.:?), (.=), object, toJSON, parseJSON)
+import           Data.Aeson (FromJSON, ToJSON, withObject, (.:), (.:?), (.=), object, toJSON, parseJSON)
 import           Data.Text  (Text)
 import           Data.Time  (UTCTime)
 import           GHC.Generics (Generic)
@@ -52,6 +54,43 @@ data ArtistDTO = ArtistDTO
   } deriving (Show, Eq, Generic)
 instance ToJSON ArtistDTO
 instance FromJSON ArtistDTO
+
+data ArtistFollowerDTO = ArtistFollowerDTO
+  { afFollowId         :: Maybe Text
+  , afArtistId         :: Maybe Text
+  , afFollowerPartyId  :: Text
+  , afCreatedAt        :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON ArtistFollowerDTO where
+  toJSON ArtistFollowerDTO{..} = object
+    [ "followId" .= afFollowId
+    , "artistId" .= afArtistId
+    , "followerPartyId" .= afFollowerPartyId
+    , "createdAt" .= afCreatedAt
+    ]
+
+instance FromJSON ArtistFollowerDTO where
+  parseJSON = withObject "ArtistFollowerDTO" $ \o ->
+    ArtistFollowerDTO
+      <$> o .:? "followId"
+      <*> o .:? "artistId"
+      <*> o .:  "followerPartyId"
+      <*> o .:? "createdAt"
+
+data ArtistFollowRequest = ArtistFollowRequest
+  { afrFollowerPartyId :: Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON ArtistFollowRequest where
+  toJSON ArtistFollowRequest{..} = object
+    [ "followerPartyId" .= afrFollowerPartyId
+    ]
+
+instance FromJSON ArtistFollowRequest where
+  parseJSON = withObject "ArtistFollowRequest" $ \o ->
+    ArtistFollowRequest
+      <$> o .: "followerPartyId"
 
 data VenueDTO = VenueDTO
   { venueId       :: Maybe Text

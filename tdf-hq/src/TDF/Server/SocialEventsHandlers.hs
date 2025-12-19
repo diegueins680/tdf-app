@@ -19,7 +19,7 @@ import           Text.Read (readMaybe)
 import           Data.Int (Int64)
 import           Data.Time (getCurrentTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
-import           Data.Maybe (isNothing)
+import           Data.Maybe (isNothing, catMaybes)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as Aeson
 import           Control.Monad (forM, forM_, when)
@@ -32,7 +32,7 @@ import           Database.Persist
 import           Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
 
 import           TDF.API.SocialEventsAPI
-import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..), ArtistSocialLinksDTO(..), RsvpDTO(..), InvitationDTO(..))
+import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..), ArtistSocialLinksDTO(..), ArtistFollowerDTO(..), ArtistFollowRequest(..), RsvpDTO(..), InvitationDTO(..))
 import           TDF.DB (Env(..))
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueName)
 import qualified TDF.Models.SocialEventsModels as SM
@@ -325,26 +325,65 @@ socialEventsServer = eventsServer
 
     -- Artists
     artistsServer :: ServerT ArtistsRoutes AppM
-    artistsServer = listArtists :<|> createArtist :<|> getArtist :<|> updateArtist
+    artistsServer = listArtists
+               :<|> createArtist
+               :<|> getArtist
+               :<|> updateArtist
+               :<|> listArtistFollowers
+               :<|> followArtist
+               :<|> unfollowArtist
 
     listArtists :: Maybe T.Text -> Maybe T.Text -> AppM [ArtistDTO]
-    listArtists mNameFilter _mGenreFilter = do
+    listArtists mNameFilter mGenreFilter = do
       Env{..} <- ask
+      let nameFilter = normalizeFilter mNameFilter
+          genreFilter = normalizeFilter mGenreFilter
       rows <- liftIO $ runSqlPool (selectList [] [Desc ArtistProfileCreatedAt, LimitTo 500]) envPool
-      let filtered = case mNameFilter of
-            Nothing -> rows
-            Just name -> filter (\(Entity _ a) -> T.isInfixOf name (artistProfileName a)) rows
-      forM filtered $ \(Entity aid a) -> do
+      artists <- forM rows $ \(Entity aid a) -> do
         genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. aid] []) envPool
-        pure ArtistDTO
-          { artistId = Just (T.pack (show (fromSqlKey aid)))
-          , artistName = artistProfileName a
-          , artistGenres = map (artistGenreGenre . entityVal) genres
-          , artistBio = artistProfileBio a
-          , artistAvatarUrl = artistProfileAvatarUrl a
-          , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
-          }
+        let genreList = map (artistGenreGenre . entityVal) genres
+        let nameMatches = case nameFilter of
+              Nothing -> True
+              Just name -> T.isInfixOf name (T.toCaseFold (artistProfileName a))
+        let genreMatches = case genreFilter of
+              Nothing -> True
+              Just genre -> any ((== genre) . T.toCaseFold) genreList
+        pure $ if nameMatches && genreMatches
+          then Just ArtistDTO
+            { artistId = Just (T.pack (show (fromSqlKey aid)))
+            , artistName = artistProfileName a
+            , artistGenres = genreList
+            , artistBio = artistProfileBio a
+            , artistAvatarUrl = artistProfileAvatarUrl a
+            , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
+            }
+          else Nothing
+      pure (catMaybes artists)
 
+    normalizeFilter :: Maybe T.Text -> Maybe T.Text
+    normalizeFilter mVal =
+      case fmap (T.toCaseFold . T.strip) mVal of
+        Nothing -> Nothing
+        Just t | T.null t -> Nothing
+        Just t -> Just t
+
+    listArtistFollowers :: T.Text -> AppM [ArtistFollowerDTO]
+    listArtistFollowers artistIdStr = do
+      Env{..} <- ask
+      artistKey <- parseArtistId artistIdStr
+      mArtist <- liftIO $ runSqlPool (get artistKey) envPool
+      when (isNothing mArtist) $ throwError err404 { errBody = "Artist not found" }
+      rows <- liftIO $ runSqlPool
+        (selectList [ArtistFollowArtistId ==. artistKey] [Desc ArtistFollowCreatedAt])
+        envPool
+      let artistIdTxt = T.pack (show (fromSqlKey artistKey))
+      pure $ map (\(Entity _ follow) ->
+        ArtistFollowerDTO
+          { afFollowId = Nothing
+          , afArtistId = Just artistIdTxt
+          , afFollowerPartyId = artistFollowFollowerPartyId follow
+          , afCreatedAt = Just (artistFollowCreatedAt follow)
+          }) rows
     createArtist :: ArtistDTO -> AppM ArtistDTO
     createArtist dto = do
       Env{..} <- ask
@@ -424,6 +463,40 @@ socialEventsServer = eventsServer
             )
             envPool
           pure dto { artistId = Just (T.strip idStr) }
+
+    followArtist :: T.Text -> ArtistFollowRequest -> AppM ArtistFollowerDTO
+    followArtist artistIdStr ArtistFollowRequest{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      artistKey <- parseArtistId artistIdStr
+      mArtist <- liftIO $ runSqlPool (get artistKey) envPool
+      when (isNothing mArtist) $ throwError err404 { errBody = "Artist not found" }
+      let followerParty = T.strip afrFollowerPartyId
+      when (T.null followerParty) $ throwError err400 { errBody = "followerPartyId is required" }
+      _ <- liftIO $ runSqlPool
+        (upsert (ArtistFollow artistKey followerParty now) [ArtistFollowCreatedAt =. now])
+        envPool
+      pure ArtistFollowerDTO
+        { afFollowId = Nothing
+        , afArtistId = Just (T.pack (show (fromSqlKey artistKey)))
+        , afFollowerPartyId = followerParty
+        , afCreatedAt = Just now
+        }
+
+    unfollowArtist :: T.Text -> Maybe T.Text -> AppM NoContent
+    unfollowArtist artistIdStr mFollower = do
+      Env{..} <- ask
+      artistKey <- parseArtistId artistIdStr
+      mArtist <- liftIO $ runSqlPool (get artistKey) envPool
+      when (isNothing mArtist) $ throwError err404 { errBody = "Artist not found" }
+      followerParty <- case fmap T.strip mFollower of
+        Nothing -> throwError err400 { errBody = "follower query param is required" }
+        Just t | T.null t -> throwError err400 { errBody = "follower query param is required" }
+        Just t -> pure t
+      liftIO $ runSqlPool
+        (deleteWhere [ArtistFollowArtistId ==. artistKey, ArtistFollowFollowerPartyId ==. followerParty])
+        envPool
+      pure NoContent
 
     -- RSVPs
     rsvpsServer :: ServerT RsvpRoutes AppM
@@ -585,6 +658,12 @@ socialEventsServer = eventsServer
       case parseInvitationIdsEither eventIdStr invitationIdStr of
         Right ids -> pure ids
         Left e -> throwError e
+
+    parseArtistId :: T.Text -> AppM ArtistProfileId
+    parseArtistId artistIdStr =
+      case readMaybe (T.unpack (T.strip artistIdStr)) :: Maybe Int64 of
+        Nothing -> throwError err400 { errBody = "Invalid artist id" }
+        Just num -> pure (toSqlKey num)
 
 -- | Normalize invitation status to a lowercase, non-empty value.
 normalizeInvitationStatus :: Maybe T.Text -> T.Text
