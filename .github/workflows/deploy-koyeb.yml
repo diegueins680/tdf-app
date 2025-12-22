@@ -34,6 +34,11 @@ jobs:
           context: .
           file: ./tdf-hq/Dockerfile
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            SOURCE_COMMIT=${{ github.sha }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp || github.run_started_at }}
           tags: |
             ${{ env.DOCKER_IMAGE_REPO }}:${{ env.DOCKER_IMAGE_TAG }}
             ${{ env.DOCKER_IMAGE_REPO }}:latest

@@ -50,6 +50,16 @@ secrets/
 *.DS_Store
 Thumbs.db
 
+# Ignore large repo directories not needed for backend image builds
+/archives/
+/data/
+/docs/
+/streaming/
+/tdf-hq-ui/
+/tdf-hq-ui.backup.*/
+/tdf-mobile/
+/tidal-agent/
+
 # Ignore SQL and DB init scripts (mounted as volumes, no need to include in build context)
 sql/
 db/
