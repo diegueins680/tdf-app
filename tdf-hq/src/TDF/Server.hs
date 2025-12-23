@@ -15,11 +15,12 @@ import           Control.Applicative ((<|>))
 import           Control.Exception (SomeException, displayException, try)
 import           Control.Concurrent (forkIO)
 import           Control.Monad (forM, forM_, void, when, unless, (>=>), join)
+import           Control.Monad.Except (catchError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Data.Int (Int64)
-import           Data.List (find, foldl', nub, isPrefixOf, sortOn)
+import           Data.List (find, foldl', nub, isInfixOf, isPrefixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
 import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
@@ -549,12 +550,13 @@ driveServer _ mAccessToken DriveUploadForm{..} = do
         Just tok | not (T.null (T.strip tok)) -> pure (T.strip tok)
         _ -> do
           mRefreshToken <- liftIO $ lookupEnvTextNonEmpty "DRIVE_REFRESH_TOKEN"
+          mAccessTokenEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_ACCESS_TOKEN"
           case mRefreshToken of
             Just rt -> do
               (cid, secret) <- loadDriveClientCreds
-              refreshDriveAccessToken manager cid secret rt
+              refreshDriveAccessToken manager cid secret rt `catchError` \err ->
+                handleRefreshError err mAccessTokenEnv
             Nothing -> do
-              mAccessTokenEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_ACCESS_TOKEN"
               maybe
                 (throwError err503
                   { errBody =
@@ -563,6 +565,21 @@ driveServer _ mAccessToken DriveUploadForm{..} = do
                   })
                 pure
                 mAccessTokenEnv
+
+    handleRefreshError :: ServerError -> Maybe Text -> AppM Text
+    handleRefreshError err mAccessTokenEnv
+      | isInvalidGrant err =
+          case mAccessTokenEnv of
+            Just tok -> pure tok
+            Nothing ->
+              throwError err401
+                { errBody = "Refresh token expirado o revocado. Reautoriza Google Drive." }
+      | otherwise = throwError err
+
+    isInvalidGrant :: ServerError -> Bool
+    isInvalidGrant err =
+      let body = map toLower (BL8.unpack (errBody err))
+      in "invalid_grant" `isInfixOf` body
 
     loadDriveClientCreds :: AppM (Text, Text)
     loadDriveClientCreds = do

@@ -12,6 +12,7 @@ export interface DriveUploadOptions {
   folderId?: string;
   name?: string;
   onProgress?: (pct: number) => void;
+  accessToken?: string;
 }
 
 export async function uploadToDrive(file: File, options: DriveUploadOptions = {}): Promise<DriveFileInfo> {
@@ -22,6 +23,7 @@ export async function uploadToDrive(file: File, options: DriveUploadOptions = {}
   form.append('file', file);
   if (options.folderId) form.append('folderId', options.folderId);
   if (options.name) form.append('name', options.name);
+  if (options.accessToken) form.append('accessToken', options.accessToken);
 
   const dto = await new Promise<DriveUploadDTO>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -61,4 +63,3 @@ export async function uploadToDrive(file: File, options: DriveUploadOptions = {}
     publicUrl,
   };
 }
-

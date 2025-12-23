@@ -13,6 +13,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { uploadToDrive } from '../api/drive';
+import { useGoogleDriveAuth } from '../hooks/useGoogleDriveAuth';
 
 interface UploadItem {
   id: string;
@@ -44,6 +45,20 @@ export default function GoogleDriveUploadWidget({
   const [items, setItems] = useState<UploadItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const { status: driveStatus, error: driveError, startAuth, ensureToken } = useGoogleDriveAuth();
+
+  const handleDriveAuth = useCallback(() => {
+    void startAuth().catch(() => undefined);
+  }, [startAuth]);
+
+  const resolveAccessToken = useCallback(async () => {
+    try {
+      const token = await ensureToken();
+      return token.accessToken;
+    } catch {
+      return undefined;
+    }
+  }, [ensureToken]);
 
   const handleFiles = useCallback(
     (files: FileList | File[]) => {
@@ -56,43 +71,47 @@ export default function GoogleDriveUploadWidget({
         status: 'pending',
       }));
       setItems((prev) => [...prev, ...uploads]);
-      uploads.forEach((item) => {
-        setItems((prev) =>
-          prev.map((it) => (it.id === item.id ? { ...it, status: 'uploading', progress: 5 } : it)),
-        );
-        void (async () => {
-          try {
-            const driveFile = await uploadToDrive(item.file, {
-              onProgress: (pct) =>
-                setItems((prev) =>
-                  prev.map((it) => (it.id === item.id ? { ...it, progress: Math.max(pct, it.progress) } : it)),
+      void (async () => {
+        const accessToken = await resolveAccessToken();
+        uploads.forEach((item) => {
+          setItems((prev) =>
+            prev.map((it) => (it.id === item.id ? { ...it, status: 'uploading', progress: 5 } : it)),
+          );
+          void (async () => {
+            try {
+              const driveFile = await uploadToDrive(item.file, {
+                accessToken,
+                onProgress: (pct) =>
+                  setItems((prev) =>
+                    prev.map((it) => (it.id === item.id ? { ...it, progress: Math.max(pct, it.progress) } : it)),
+                  ),
+              });
+              setItems((prev) =>
+                prev.map((it) =>
+                  it.id === item.id ? { ...it, status: 'done', progress: 100, driveFile } : it,
                 ),
-            });
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === item.id ? { ...it, status: 'done', progress: 100, driveFile } : it,
-              ),
-            );
-            if (onComplete) {
-              onComplete([driveFile]);
+              );
+              if (onComplete) {
+                onComplete([driveFile]);
+              }
+            } catch (err) {
+              setItems((prev) =>
+                prev.map((it) =>
+                  it.id === item.id
+                    ? {
+                        ...it,
+                        status: 'error',
+                        error: err instanceof Error ? err.message : 'No se pudo subir el archivo.',
+                      }
+                    : it,
+                ),
+              );
             }
-          } catch (err) {
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === item.id
-                  ? {
-                      ...it,
-                      status: 'error',
-                      error: err instanceof Error ? err.message : 'No se pudo subir el archivo.',
-                    }
-                  : it,
-              ),
-            );
-          }
-        })();
-      });
+          })();
+        });
+      })();
     },
-    [onComplete],
+    [onComplete, resolveAccessToken],
   );
 
   const handleDrop = (evt: React.DragEvent<HTMLDivElement>) => {
@@ -108,7 +127,7 @@ export default function GoogleDriveUploadWidget({
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ flexWrap: 'wrap' }}>
         <Button
           variant="outlined"
           startIcon={<UploadFileIcon />}
@@ -116,6 +135,14 @@ export default function GoogleDriveUploadWidget({
           size={dense ? 'small' : 'medium'}
         >
           {label}
+        </Button>
+        <Button
+          variant="text"
+          onClick={handleDriveAuth}
+          size={dense ? 'small' : 'medium'}
+          disabled={driveStatus === 'authenticating'}
+        >
+          {driveStatus === 'ready' ? 'Reautorizar Drive' : 'Conectar Drive'}
         </Button>
         {!dense && (
           <Typography variant="body2" color="text.secondary">
@@ -164,6 +191,7 @@ export default function GoogleDriveUploadWidget({
       </Box>
 
       {error && <Alert severity="error">{error}</Alert>}
+      {driveError && <Alert severity="warning">{driveError}</Alert>}
 
       <Stack spacing={1}>
         {items.map((item) => (
