@@ -28,7 +28,6 @@ import           TDF.API.Feedback
 import           TDF.Auth                   (AuthedUser(..))
 import           TDF.DB                     (Env(..))
 import           TDF.ModelsExtra            (Feedback(..))
-import qualified TDF.Services               as Services
 import qualified TDF.Email.Service          as EmailSvc
 
 feedbackServer
@@ -54,8 +53,7 @@ feedbackServer user = submitFeedback
       attachmentPath <- liftIO $ traverse storeAttachment fpAttachment
 
       Env{..} <- ask
-      let services = Services.buildServices envConfig
-          emailSvc = Services.emailService services
+      let emailSvc = EmailSvc.mkEmailService envConfig
 
       _ <- liftIO $ runSqlPool
         (insert Feedback

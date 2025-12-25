@@ -4,7 +4,7 @@ module Main where
 
 import qualified Network.Wai.Handler.Warp as Warp
 import           Control.Concurrent      (forkFinally, myThreadId, throwTo, threadDelay)
-import           Control.Exception       (SomeException, handle, try)
+import           Control.Exception       (SomeException, handle, throwIO, try)
 import           Control.Monad            (forM_, when)
 import qualified Data.ByteString.Char8    as BS
 import           Data.Int                (Int64)
@@ -201,7 +201,7 @@ makePoolWithRetry retries connStr = do
       if retries <= 0
         then do
           putStrLn "Failed to connect to database after retries. Crashing."
-          error (show err)
+          throwIO err
         else do
           putStrLn $ "DB connection failed, retrying... attempts left: " <> show retries
           threadDelay (5 * 1000 * 1000)

@@ -67,7 +67,6 @@ import qualified TDF.ModelsExtra as ME
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
 import qualified TDF.Email.Service      as EmailSvc
-import qualified TDF.Services           as Services
 import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         , upsertArtistProfileRecord
                                         )
@@ -124,7 +123,7 @@ adminServer user =
     emailTestHandler EmailTestRequest{..} = do
       ensureModule ModuleAdmin user
       cfg <- asks envConfig
-      let emailSvc = Services.emailService (Services.buildServices cfg)
+      let emailSvc = EmailSvc.mkEmailService cfg
           subj = fromMaybe "Correo de prueba TDF" etrSubject
           body = maybe ["Correo de prueba desde TDF HQ."] (\txt -> [txt]) etrBody
           targetName = fromMaybe "" etrName
@@ -317,7 +316,7 @@ adminServer user =
       config <- asks envConfig
       let partyKey = toSqlKey uacPartyId :: PartyId
           activeValue = fromMaybe True uacActive
-          emailSvc = Services.emailService (Services.buildServices config)
+          emailSvc = EmailSvc.mkEmailService config
       partyEnt <- do
         mParty <- withPool $ getEntity partyKey
         maybe (throwError err404 { errBody = "Party not found" }) pure mParty

@@ -63,15 +63,15 @@ socialEventsServer = eventsServer
                :<|> updateEvent
                :<|> deleteEvent
 
-    listEvents :: Maybe T.Text -> Maybe T.Text -> AppM [EventDTO]
-    listEvents mCity mStartAfter = do
+    listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> AppM [EventDTO]
+    listEvents mCity mStartAfter mArtistId mVenueId = do
       Env{..} <- ask
       let startFilter = case mStartAfter of
             Nothing -> []
             Just raw -> case iso8601ParseM (T.unpack raw) of
               Just t  -> [SocialEventStartTime >=. t]
               Nothing -> []
-      venueFilter <- case fmap T.strip mCity of
+      cityFilter <- case fmap T.strip mCity of
         Nothing -> pure []
         Just "" -> pure []
         Just cityTxt -> do
@@ -80,7 +80,24 @@ socialEventsServer = eventsServer
           if null ids
             then pure [SocialEventId ==. toSqlKey 0] -- force empty result set
             else pure [SocialEventVenueId <-. map Just ids]
-      rows <- liftIO $ runSqlPool (selectList (startFilter ++ venueFilter) [Desc SocialEventStartTime, LimitTo 200]) envPool
+      venueFilter <- case fmap T.strip mVenueId of
+        Nothing -> pure []
+        Just "" -> pure []
+        Just raw -> case readMaybe (T.unpack raw) :: Maybe Int64 of
+          Nothing -> throwError err400 { errBody = "Invalid venue id" }
+          Just vnum -> pure [SocialEventVenueId ==. Just (toSqlKey vnum)]
+      artistFilter <- case fmap T.strip mArtistId of
+        Nothing -> pure []
+        Just "" -> pure []
+        Just raw -> do
+          artistKey <- parseArtistId raw
+          artistLinks <- liftIO $ runSqlPool (selectList [EventArtistArtistId ==. artistKey] []) envPool
+          let eventIds = map (eventArtistEventId . entityVal) artistLinks
+          if null eventIds
+            then pure [SocialEventId ==. toSqlKey 0]
+            else pure [SocialEventId <-. eventIds]
+      let filters = startFilter ++ cityFilter ++ venueFilter ++ artistFilter
+      rows <- liftIO $ runSqlPool (selectList filters [Desc SocialEventStartTime, LimitTo 200]) envPool
       forM rows $ \(Entity eid e) -> do
         artistLinks <- liftIO $ runSqlPool (selectList [EventArtistEventId ==. eid] []) envPool
         artists <- forM artistLinks $ \(Entity _ link) -> do
@@ -535,8 +552,8 @@ socialEventsServer = eventsServer
             (selectList [EventRsvpEventId ==. eventKey, EventRsvpPartyId ==. rsvpPartyId dto] [])
             envPool
           
-          key <- if null existingRsvps
-            then do
+          key <- case existingRsvps of
+            [] -> do
               -- Create new RSVP
               liftIO $ runSqlPool (insert EventRsvp
                 { eventRsvpEventId = eventKey
@@ -546,10 +563,9 @@ socialEventsServer = eventsServer
                 , eventRsvpCreatedAt = now
                 , eventRsvpUpdatedAt = now
                 }) envPool
-            else do
+            (Entity existingKey _ : _) -> do
               -- Update existing RSVP
-              let (Entity existingKey _) = head existingRsvps
-              liftIO $ runSqlPool (update existingKey 
+              liftIO $ runSqlPool (update existingKey
                 [EventRsvpStatus =. rsvpStatus dto
                 , EventRsvpUpdatedAt =. now
                 ]) envPool

@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Leads.Model where
 
+import Control.Exception (throwIO)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Database.PostgreSQL.Simple
@@ -26,7 +27,7 @@ ensureLead conn phone ceId = do
             (phone, ceId, tok)
       case result of
         [Only lid] -> pure (lid, tok)
-        _ -> error "Failed to insert lead"
+        _ -> throwIO (userError "Failed to insert lead")
 
 lookupCourseIdBySlug :: Connection -> Text -> IO (Maybe Int)
 lookupCourseIdBySlug conn slug = do

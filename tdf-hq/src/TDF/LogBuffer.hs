@@ -35,6 +35,7 @@ maxLogEntries = 1000
 
 logBufferRef :: IORef [LogEntry]
 logBufferRef = unsafePerformIO $ newIORef []
+{-# NOINLINE logBufferRef #-}
 
 -- Add a log entry
 addLog :: LogLevel -> Text -> IO ()
@@ -56,4 +57,3 @@ getRecentLogs limit = do
 -- Clear all logs
 clearLogs :: IO ()
 clearLogs = writeIORef logBufferRef []
-

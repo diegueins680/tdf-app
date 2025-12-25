@@ -24,10 +24,10 @@ import           Data.List (find, foldl', nub, isInfixOf, isPrefixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
 import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
-import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
+import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
-import           Data.Aeson (Value(..), object, (.=), eitherDecode, FromJSON(..), encode, fromJSON, Result(..))
-import           Data.Aeson.Types (parseMaybe, withObject, (.:), (.:?), (.!=))
+import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), encode, genericParseJSON, genericToJSON)
+import           Data.Aeson.Types (camelTo2, fieldLabelModifier, parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -49,7 +49,6 @@ import qualified Network.Wai as Wai (Request)
 import           Servant
 import           Servant.Multipart (FileData(..), Tmp)
 import           Servant.Server.Experimental.Auth (AuthHandler)
-import           Servant.Utils.StaticFiles (serveDirectoryFileServer)
 import           Text.Printf (printf)
 import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
@@ -80,7 +79,6 @@ import           TDF.Server.SocialEventsHandlers (socialEventsServer)
 import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
 import           TDF.Server.SocialSync (socialSyncServer)
 import qualified Data.Map.Strict            as Map
-import           Data.Tagged                (Tagged(..), unTagged)
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
@@ -94,7 +92,6 @@ import           TDF.Version      (getVersionInfo)
 import qualified TDF.Handlers.InputList as InputList
 import qualified TDF.Email as Email
 import qualified TDF.Email.Service as EmailSvc
-import qualified TDF.Services as Services
 import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , fetchPartyNameMap
                                      , loadAllArtistProfilesDTO
@@ -137,7 +134,6 @@ import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
 import           Network.HTTP.Types.Status (statusCode)
 import           System.Environment (lookupEnv)
-import qualified TDF.Trials.Models as Trials
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.API.Calendar as CalAPI
@@ -251,7 +247,7 @@ server =
   :<|> academyServer
   :<|> seedTrigger
   :<|> inputListServer
-  :<|> adsInquiryPublic
+  :<|> adsPublicServer
   :<|> cmsPublicServer
   :<|> marketplacePublicServer
   :<|> contractsServer
@@ -1361,12 +1357,12 @@ saveCourse Courses.CourseUpsert{..} = do
         }
 
     let syllabusPayload = zip [1..] syllabus
-    for_ syllabusPayload $ \(idx, CourseSyllabusIn{..}) -> do
-      let ordVal = withOrder idx order
+    for_ syllabusPayload $ \(idx, CourseSyllabusIn{title = syllabusTitle, topics = syllabusTopics, order = syllabusOrder}) -> do
+      let ordVal = withOrder idx syllabusOrder
       insert_ Trials.CourseSyllabusItem
         { Trials.courseSyllabusItemCourseId = courseId
-        , Trials.courseSyllabusItemTitle = T.strip title
-        , Trials.courseSyllabusItemTopics = sanitizeTopics topics
+        , Trials.courseSyllabusItemTitle = T.strip syllabusTitle
+        , Trials.courseSyllabusItemTopics = sanitizeTopics syllabusTopics
         , Trials.courseSyllabusItemOrder = Just ordVal
         }
   loadCourseMetadata slugVal
@@ -1921,8 +1917,7 @@ signup SignupRequest
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
-  let services = Services.buildServices cfg
-      emailSvc = Services.emailService services
+  let emailSvc = EmailSvc.mkEmailService cfg
       allowedRoles = maybe [] (filter (`elem` signupAllowedRoles)) requestedRoles
       sanitizedRoles = nub (Customer : Fan : allowedRoles)
       sanitizedFanArtists = maybe [] (filter (> 0)) requestedFanArtistIds
@@ -2127,8 +2122,7 @@ passwordReset PasswordResetRequest{..} = do
   let emailClean = T.strip email
   when (T.null emailClean) $ throwBadRequest "Email is required"
   Env pool cfg <- ask
-  let services = Services.buildServices cfg
-      emailSvc = Services.emailService services
+  let emailSvc = EmailSvc.mkEmailService cfg
   mPayload <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
   for_ mPayload $ \(token, displayName) -> liftIO $
     EmailSvc.sendPasswordReset emailSvc displayName emailClean token
@@ -3168,7 +3162,7 @@ bookingPublicServer = createPublicBooking
 
 inventoryStaticServer :: ServerT Api.AssetsAPI AppM
 inventoryStaticServer =
-  Tagged (unTagged (serveDirectoryFileServer "assets/inventory"))
+  serveDirectoryFileServer "assets/inventory"
 
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
 bookingServer user =
@@ -3237,6 +3231,7 @@ courseCalendarBookings = do
         startHour = fromMaybe 0 (Trials.courseSessionStartHour course)
         durationHours = fromMaybe 0 (Trials.courseSessionDurationHours course)
         coursePriceD = fromIntegral (Trials.coursePriceCents course) / 100
+        mkBooking :: Int -> Entity Trials.CourseSessionModel -> BookingDTO
         mkBooking idx (Entity _ s) =
           let dateVal = Trials.courseSessionModelDate s
               startUtc = UTCTime dateVal (secondsToDiffTime (fromIntegral startHour * 60 * 60))
@@ -3263,7 +3258,7 @@ courseCalendarBookings = do
                , courseRemaining    = Just remainingVal
                , courseLocation     = Trials.courseLocationLabel course
                }
-    pure (zipWith mkBooking [1..] sessions)
+    pure (zipWith mkBooking [1 :: Int ..] sessions)
 
 createPublicBooking :: PublicBookingReq -> AppM BookingDTO
 createPublicBooking PublicBookingReq{..} = do
@@ -3456,9 +3451,6 @@ updateBooking user bookingIdI req = do
               , bookingEngineerPartyId = maybe (bookingEngineerPartyId current) (Just . toSqlKey . fromIntegral) (ubEngineerPartyId req)
               , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
               }
-            missingEngineer = requiresEngineer (bookingServiceType updated)
-              && isNothing (bookingEngineerPartyId updated)
-              && isNothing (bookingEngineerName updated)
         case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
           Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
           Right () -> do
@@ -3634,7 +3626,6 @@ defaultResourcesForService (Just service) start end = do
   let findByName name = find (\(Entity _ room) -> T.toLower (resourceName room) == T.toLower name) rooms
       boothPredicate (Entity _ room) = "booth" `T.isInfixOf` T.toLower (resourceName room)
       controlRoom = findByName "Control Room"
-      liveRoom    = findByName "Live Room"
       vocalBooth  =
         findByName "Vocal Booth"
           <|> find (\(Entity _ room) ->
@@ -4186,7 +4177,10 @@ applyRoles partyKey rolesList = do
     when (partyRoleActive record && Set.notMember (partyRoleRole record) desired) $
       update roleId [PartyRoleActive =. False]
 
-adsInquiryPublic :: ServerT AdsPublicAPI AppM
+adsPublicServer :: ServerT AdsPublicAPI AppM
+adsPublicServer = adsInquiryPublic :<|> adsAssistPublic
+
+adsInquiryPublic :: AdsInquiry -> AppM AdsInquiryOut
 adsInquiryPublic inquiry = do
   env <- ask
   now <- liftIO getCurrentTime
@@ -4212,8 +4206,41 @@ adsInquiryPublic inquiry = do
     , aioRepliedVia = channels
     }
 
+adsAssistPublic :: AdsAssistRequest -> AppM AdsAssistResponse
+adsAssistPublic AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel} = do
+  let body = T.strip aarMessage
+  when (T.null body) $ throwBadRequest "Mensaje vacío"
+  env <- ask
+  let adKey = fmap toSqlKey aarAdId :: Maybe ME.AdCreativeId
+      campaignKey = fmap toSqlKey aarCampaignId :: Maybe ME.CampaignId
+  candidateAds <- runDB $
+    case campaignKey of
+      Nothing -> pure (maybeToList adKey)
+      Just ck -> do
+        ads <- selectKeysList [ME.AdCreativeCampaignId ==. Just ck] []
+        pure (maybe ads (:ads) adKey)
+  examples <- runDB $ loadAdExamples candidateAds
+  kb <- runDB loadKnowledgeBaseSnippets
+  reply <- liftIO $ runRagChat (envConfig env) kb examples body aarChannel
+  pure AdsAssistResponse
+    { aasReply = reply
+    , aasUsedExamples = map adExampleToDTO examples
+    , aasKnowledgeUsed = take 10 kb
+    }
+
 adsAdminServer :: AuthedUser -> ServerT AdsAdminAPI AppM
-adsAdminServer user = do
+adsAdminServer user =
+       adsListInquiries user
+  :<|> adsListCampaigns user
+  :<|> adsUpsertCampaign user
+  :<|> adsGetCampaign user
+  :<|> adsUpsertAd user
+  :<|> adsListAdsForCampaign user
+  :<|> adsListExamples user
+  :<|> adsCreateExample user
+
+adsListInquiries :: AuthedUser -> AppM [AdsInquiryDTO]
+adsListInquiries user = do
   requireModule user ModuleAdmin
   rows <- runDB $ selectList [Trials.LeadInterestInterestType ==. "ad_inquiry"] [Desc Trials.LeadInterestCreatedAt, LimitTo 200]
   let partyIds = map (Trials.leadInterestPartyId . entityVal) rows
@@ -4236,6 +4263,310 @@ adsAdminServer user = do
         }
     | Entity iid li <- rows
     ]
+
+adsListCampaigns :: AuthedUser -> AppM [CampaignDTO]
+adsListCampaigns user = do
+  requireModule user ModuleAdmin
+  rows <- runDB $ selectList [] [Desc ME.CampaignUpdatedAt, LimitTo 200]
+  pure (map campaignToDTO rows)
+
+adsGetCampaign :: AuthedUser -> Int64 -> AppM CampaignDTO
+adsGetCampaign user cid = do
+  requireModule user ModuleAdmin
+  let key = toSqlKey cid :: ME.CampaignId
+  mRow <- runDB $ get key
+  case mRow of
+    Nothing -> throwError err404
+    Just row -> pure (campaignToDTO (Entity key row))
+
+adsUpsertCampaign :: AuthedUser -> CampaignUpsert -> AppM CampaignDTO
+adsUpsertCampaign user CampaignUpsert{..} = do
+  requireModule user ModuleAdmin
+  let nameClean = T.strip cuName
+  when (T.null nameClean) $ throwBadRequest "Nombre requerido"
+  now <- liftIO getCurrentTime
+  cid <- case cuId of
+    Nothing -> runDB $ insert ME.Campaign
+      { ME.campaignName = nameClean
+      , ME.campaignObjective = T.strip <$> cuObjective
+      , ME.campaignPlatform = T.strip <$> cuPlatform
+      , ME.campaignStatus = fromMaybe "active" (T.strip <$> cuStatus)
+      , ME.campaignBudgetCents = cuBudgetCents
+      , ME.campaignStartDate = cuStartDate
+      , ME.campaignEndDate = cuEndDate
+      , ME.campaignCreatedAt = now
+      , ME.campaignUpdatedAt = now
+      }
+    Just rawId -> do
+      let key = toSqlKey rawId :: ME.CampaignId
+      mCampaign <- runDB $ get key
+      when (isNothing mCampaign) $ throwError err404
+      runDB $ update key
+        [ ME.CampaignName =. nameClean
+        , ME.CampaignObjective =. (T.strip <$> cuObjective)
+        , ME.CampaignPlatform =. (T.strip <$> cuPlatform)
+        , ME.CampaignStatus =. fromMaybe "active" (T.strip <$> cuStatus)
+        , ME.CampaignBudgetCents =. cuBudgetCents
+        , ME.CampaignStartDate =. cuStartDate
+        , ME.CampaignEndDate =. cuEndDate
+        , ME.CampaignUpdatedAt =. now
+        ]
+      pure key
+  row <- runDB $ getJust cid
+  pure (campaignToDTO (Entity cid row))
+
+adsUpsertAd :: AuthedUser -> AdCreativeUpsert -> AppM AdCreativeDTO
+adsUpsertAd user AdCreativeUpsert{..} = do
+  requireModule user ModuleAdmin
+  let nameClean = T.strip acuName
+      mCampaign = fmap toSqlKey acuCampaignId :: Maybe ME.CampaignId
+  when (T.null nameClean) $ throwBadRequest "Nombre del anuncio requerido"
+  now <- liftIO getCurrentTime
+  adId <- case acuId of
+    Nothing -> runDB $ insert ME.AdCreative
+      { ME.adCreativeCampaignId = mCampaign
+      , ME.adCreativeName = nameClean
+      , ME.adCreativeChannel = T.strip <$> acuChannel
+      , ME.adCreativeAudience = T.strip <$> acuAudience
+      , ME.adCreativeLandingUrl = T.strip <$> acuLandingUrl
+      , ME.adCreativeCta = T.strip <$> acuCta
+      , ME.adCreativeStatus = fromMaybe "active" (T.strip <$> acuStatus)
+      , ME.adCreativeNotes = T.strip <$> acuNotes
+      , ME.adCreativeCreatedAt = now
+      , ME.adCreativeUpdatedAt = now
+      }
+    Just rawId -> do
+      let key = toSqlKey rawId :: ME.AdCreativeId
+      mAd <- runDB $ get key
+      when (isNothing mAd) $ throwError err404
+      runDB $ update key
+        [ ME.AdCreativeCampaignId =. mCampaign
+        , ME.AdCreativeName =. nameClean
+        , ME.AdCreativeChannel =. (T.strip <$> acuChannel)
+        , ME.AdCreativeAudience =. (T.strip <$> acuAudience)
+        , ME.AdCreativeLandingUrl =. (T.strip <$> acuLandingUrl)
+        , ME.AdCreativeCta =. (T.strip <$> acuCta)
+        , ME.AdCreativeStatus =. fromMaybe "active" (T.strip <$> acuStatus)
+        , ME.AdCreativeNotes =. (T.strip <$> acuNotes)
+        , ME.AdCreativeUpdatedAt =. now
+        ]
+      pure key
+  row <- runDB $ getJust adId
+  pure (adToDTO (Entity adId row))
+
+adsListAdsForCampaign :: AuthedUser -> Int64 -> AppM [AdCreativeDTO]
+adsListAdsForCampaign user cid = do
+  requireModule user ModuleAdmin
+  let key = toSqlKey cid :: ME.CampaignId
+  rows <- runDB $ selectList [ME.AdCreativeCampaignId ==. Just key] [Desc ME.AdCreativeUpdatedAt, LimitTo 200]
+  pure (map adToDTO rows)
+
+adsListExamples :: AuthedUser -> Int64 -> AppM [AdConversationExampleDTO]
+adsListExamples user adId = do
+  requireModule user ModuleAdmin
+  let key = toSqlKey adId :: ME.AdCreativeId
+  rows <- runDB $ selectList [ME.AdConversationExampleAdId ==. key] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 200]
+  pure (map adExampleToDTO rows)
+
+adsCreateExample :: AuthedUser -> Int64 -> AdConversationExampleCreate -> AppM AdConversationExampleDTO
+adsCreateExample user adId AdConversationExampleCreate{..} = do
+  requireModule user ModuleAdmin
+  let userMsg = T.strip aecUserMessage
+      assistantMsg = T.strip aecAssistantMessage
+      key = toSqlKey adId :: ME.AdCreativeId
+  when (T.null userMsg) $ throwBadRequest "Ejemplo sin pregunta"
+  when (T.null assistantMsg) $ throwBadRequest "Ejemplo sin respuesta"
+  mAd <- runDB $ get key
+  when (isNothing mAd) $ throwError err404
+  now <- liftIO getCurrentTime
+  exId <- runDB $ insert ME.AdConversationExample
+    { ME.adConversationExampleAdId = key
+    , ME.adConversationExampleUserMessage = userMsg
+    , ME.adConversationExampleAssistantMessage = assistantMsg
+    , ME.adConversationExampleTags = aecTags
+    , ME.adConversationExampleCreatedAt = now
+    , ME.adConversationExampleUpdatedAt = now
+    }
+  row <- runDB $ getJust exId
+  pure (adExampleToDTO (Entity exId row))
+
+loadAdExamples :: [ME.AdCreativeId] -> SqlPersistT IO [Entity ME.AdConversationExample]
+loadAdExamples [] =
+  selectList [] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
+loadAdExamples adIds =
+  selectList [ME.AdConversationExampleAdId <-. adIds] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
+
+loadKnowledgeBaseSnippets :: SqlPersistT IO [Text]
+loadKnowledgeBaseSnippets = do
+  courses <- selectList [] [Desc Trials.CourseCreatedAt, LimitTo 5]
+  services <- selectList [M.ServiceCatalogActive ==. True] [LimitTo 5]
+  campaigns <- selectList [] [Desc ME.CampaignUpdatedAt, LimitTo 5]
+  ads <- selectList [] [Desc ME.AdCreativeUpdatedAt, LimitTo 5]
+  let courseTxt = map renderCourse courses
+      serviceTxt = map renderService services
+      campaignTxt = map renderCampaign campaigns
+      adTxt = map renderAd ads
+  pure (take 16 (courseTxt ++ serviceTxt ++ campaignTxt ++ adTxt))
+
+renderCourse :: Entity Trials.Course -> Text
+renderCourse (Entity _ c) =
+  T.intercalate " · "
+    ( ["Curso: " <> Trials.courseTitle c]
+      ++ maybe [] (\fmt -> ["Formato: " <> fmt]) (Trials.courseFormat c)
+      ++ maybe [] (\dur -> ["Duración: " <> dur]) (Trials.courseDuration c)
+      ++ maybe [] (\landing -> ["Landing: " <> landing]) (Trials.courseLandingUrl c)
+    )
+
+renderService :: Entity M.ServiceCatalog -> Text
+renderService (Entity _ s) =
+  T.intercalate " · "
+    [ "Servicio: " <> serviceName
+    , "Modelo: " <> T.pack (show (M.serviceCatalogPricingModel s))
+    , "Activo: " <> boolLabel (M.serviceCatalogActive s)
+    ]
+  where
+    serviceName = M.serviceCatalogName s
+    boolLabel True = "sí"
+    boolLabel False = "no"
+
+renderCampaign :: Entity ME.Campaign -> Text
+renderCampaign (Entity _ c) =
+  T.intercalate " · "
+    [ "Campaña: " <> ME.campaignName c
+    , "Plataforma: " <> fromMaybe "n/d" (ME.campaignPlatform c)
+    , "Estado: " <> ME.campaignStatus c
+    ]
+
+renderAd :: Entity ME.AdCreative -> Text
+renderAd (Entity _ a) =
+  T.intercalate " · "
+    [ "Anuncio: " <> ME.adCreativeName a
+    , "Canal: " <> fromMaybe "n/d" (ME.adCreativeChannel a)
+    , "CTA: " <> fromMaybe "n/d" (ME.adCreativeCta a)
+    ]
+
+adExampleToDTO :: Entity ME.AdConversationExample -> AdConversationExampleDTO
+adExampleToDTO (Entity eid ex) =
+  AdConversationExampleDTO
+    { aceId = fromSqlKey eid
+    , aceAdId = fromSqlKey (ME.adConversationExampleAdId ex)
+    , aceUserMessage = ME.adConversationExampleUserMessage ex
+    , aceAssistantMessage = ME.adConversationExampleAssistantMessage ex
+    , aceTags = ME.adConversationExampleTags ex
+    }
+
+campaignToDTO :: Entity ME.Campaign -> CampaignDTO
+campaignToDTO (Entity cid c) =
+  CampaignDTO
+    { campId = fromSqlKey cid
+    , campName = ME.campaignName c
+    , campObjective = ME.campaignObjective c
+    , campPlatform = ME.campaignPlatform c
+    , campStatus = ME.campaignStatus c
+    , campBudgetCents = ME.campaignBudgetCents c
+    , campStartDate = ME.campaignStartDate c
+    , campEndDate = ME.campaignEndDate c
+    }
+
+adToDTO :: Entity ME.AdCreative -> AdCreativeDTO
+adToDTO (Entity aid a) =
+  AdCreativeDTO
+    { adId = fromSqlKey aid
+    , adCampaignId = fmap fromSqlKey (ME.adCreativeCampaignId a)
+    , adName = ME.adCreativeName a
+    , adChannel = ME.adCreativeChannel a
+    , adAudience = ME.adCreativeAudience a
+    , adLandingUrl = ME.adCreativeLandingUrl a
+    , adCta = ME.adCreativeCta a
+    , adStatus = ME.adCreativeStatus a
+    , adNotes = ME.adCreativeNotes a
+    }
+
+data OpenAIChatMessage = OpenAIChatMessage
+  { role :: Text
+  , content :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON OpenAIChatMessage where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
+instance FromJSON OpenAIChatMessage where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
+
+data ChatCompletionReq = ChatCompletionReq
+  { model :: Text
+  , messages :: [OpenAIChatMessage]
+  , temperature :: Double
+  } deriving (Show, Generic)
+
+instance ToJSON ChatCompletionReq where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
+
+data ChatChoice = ChatChoice
+  { message :: OpenAIChatMessage
+  } deriving (Show, Generic)
+instance FromJSON ChatChoice where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
+
+data ChatCompletionResp = ChatCompletionResp
+  { choices :: [ChatChoice]
+  } deriving (Show, Generic)
+instance FromJSON ChatCompletionResp where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
+
+runRagChat :: AppConfig -> [Text] -> [Entity ME.AdConversationExample] -> Text -> Maybe Text -> IO Text
+runRagChat cfg kb examples userMsg mChannel = do
+  let contextBlock = if null kb then "No hay contexto" else T.intercalate "\n\n" kb
+      exampleMsgs = concatMap exampleToMessages examples
+      channelNote = maybe "" (\ch -> "[Canal: " <> T.strip ch <> "] ") mChannel
+      systemIntro = T.intercalate " "
+        [ "Eres un asistente de marketing de TDF Records."
+        , "Responde en español, tono cálido y conciso,"
+        , "incluye CTA cuando ayude a convertir."
+        ]
+      messages =
+        [ mkMsg "system" systemIntro
+        , mkMsg "system" ("Contexto de negocio:\n" <> contextBlock)
+        ] ++ exampleMsgs ++ [mkMsg "user" (channelNote <> userMsg)]
+  res <- callOpenAIChat cfg messages
+  pure $
+    case res of
+      Right txt | not (T.null (T.strip txt)) -> T.strip txt
+      _ -> "No pude generar una respuesta automática en este momento."
+  where
+    mkMsg r c = OpenAIChatMessage { role = r, content = c }
+    exampleToMessages (Entity _ ex) =
+      [ mkMsg "user" (ME.adConversationExampleUserMessage ex)
+      , mkMsg "assistant" (ME.adConversationExampleAssistantMessage ex)
+      ]
+
+callOpenAIChat :: AppConfig -> [OpenAIChatMessage] -> IO (Either Text Text)
+callOpenAIChat cfg messages =
+  case openAiApiKey cfg of
+    Nothing -> pure (Left "OPENAI_API_KEY no configurada")
+    Just key -> do
+      manager <- newManager tlsManagerSettings
+      reqBase <- parseRequest "https://api.openai.com/v1/chat/completions"
+      let body = encode ChatCompletionReq
+            { model = openAiModel cfg
+            , messages = messages
+            , temperature = 0.3
+            }
+          req =
+            reqBase
+              { method = "POST"
+              , requestHeaders =
+                  [ ("Content-Type", "application/json")
+                  , ("Authorization", "Bearer " <> TE.encodeUtf8 key)
+                  ]
+              , requestBody = RequestBodyLBS body
+              }
+      resp <- httpLbs req manager
+      let raw = responseBody resp
+      case eitherDecode raw of
+        Left err -> pure (Left (T.pack err))
+        Right ChatCompletionResp{choices = (ChatChoice OpenAIChatMessage{content = reply} : _)} ->
+          pure (Right reply)
+        Right _ -> pure (Left "Sin respuesta de modelo")
 
 ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO PartyId
 ensurePartyForInquiry AdsInquiry{..} now = do
