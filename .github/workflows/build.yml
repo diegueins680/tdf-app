@@ -1,13 +1,34 @@
-name: ci
+name: Build Image
 
 on:
   push:
     branches:
-      - "main"
+      - main
+    paths:
+      - 'tdf-hq/**'
+      - '.dockerignore'
+      - 'fly.toml'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      image_repo:
+        description: Docker image repository override
+        required: false
+        type: string
+      image_tag:
+        description: Docker image tag override
+        required: false
+        type: string
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
 
 env:
-  DOCKER_IMAGE_REPO: diegueins680/tdf-hq
-  DOCKER_IMAGE_TAG: ${{ github.sha }}
+  DOCKER_IMAGE_REPO: ${{ github.event.inputs.image_repo || 'diegueins680/tdf-hq' }}
+  DOCKER_IMAGE_TAG: ${{ github.event.inputs.image_tag || github.sha }}
 
 jobs:
   docker:
@@ -35,4 +56,3 @@ jobs:
             BUILD_TIME=${{ github.event.head_commit.timestamp || github.run_started_at }}
           tags: |
             ${{ env.DOCKER_IMAGE_REPO }}:${{ env.DOCKER_IMAGE_TAG }}
-            ${{ env.DOCKER_IMAGE_REPO }}:latest

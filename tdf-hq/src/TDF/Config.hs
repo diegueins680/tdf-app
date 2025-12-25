@@ -34,6 +34,8 @@ data AppConfig = AppConfig
   , courseDefaultSlug :: Text
   , courseDefaultMapUrl :: Maybe Text
   , courseDefaultInstructorAvatar :: Maybe Text
+  , openAiApiKey    :: Maybe Text
+  , openAiModel     :: Text
   , emailConfig     :: Maybe EmailConfig
   , googleClientId  :: Maybe Text
   , instagramAppToken :: Maybe Text
@@ -66,6 +68,8 @@ loadConfig = do
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
   courseInstructorAvatarEnv <- lookupEnv "COURSE_DEFAULT_INSTRUCTOR_AVATAR"
+  openAiKeyEnv <- lookupEnv "OPENAI_API_KEY"
+  openAiModelEnv <- lookupEnv "OPENAI_MODEL"
   smtpHostEnv <- lookupEnv "SMTP_HOST"
   smtpPortEnv <- lookupEnv "SMTP_PORT"
   smtpUserEnv <- lookupEnv "SMTP_USERNAME" <|> lookupEnv "SMTP_USER"
@@ -91,6 +95,8 @@ loadConfig = do
     , courseDefaultSlug = maybe "produccion-musical-dic-2025" (T.strip . T.pack) courseSlugEnv
     , courseDefaultMapUrl = fmap (T.strip . T.pack) courseMapEnv
     , courseDefaultInstructorAvatar = fmap (T.strip . T.pack) courseInstructorAvatarEnv
+    , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
+    , openAiModel = fromMaybe "gpt-4o-mini" (openAiModelEnv >>= nonEmpty . T.pack)
     , emailConfig = mkEmailConfig smtpHostEnv smtpUserEnv smtpPassEnv smtpFromEnv smtpFromNameEnv smtpPortEnv smtpTlsEnv
     , googleClientId = fmap (T.strip . T.pack) googleClientIdEnv
     , instagramAppToken = fmap (T.strip . T.pack) igTokenEnv

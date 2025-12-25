@@ -44,7 +44,6 @@ import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
 import           TDF.API.SocialSyncAPI (SocialSyncAPI)
 import           TDF.Contracts.API (ContractsAPI)
-import           TDF.DTO (CountryDTO)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -69,9 +68,17 @@ type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
 type AdsPublicAPI =
        "ads" :> "inquiry" :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] AdsInquiryOut
+  :<|> "ads" :> "assist" :> ReqBody '[JSON] AdsAssistRequest :> Post '[JSON] AdsAssistResponse
 
 type AdsAdminAPI =
        "ads" :> "inquiries" :> Get '[JSON] [AdsInquiryDTO]
+  :<|> "ads" :> "campaigns" :> Get '[JSON] [CampaignDTO]
+  :<|> "ads" :> "campaigns" :> ReqBody '[JSON] CampaignUpsert :> Post '[JSON] CampaignDTO
+  :<|> "ads" :> "campaigns" :> Capture "campaignId" Int64 :> Get '[JSON] CampaignDTO
+  :<|> "ads" :> "ads" :> ReqBody '[JSON] AdCreativeUpsert :> Post '[JSON] AdCreativeDTO
+  :<|> "ads" :> "campaigns" :> Capture "campaignId" Int64 :> "ads" :> Get '[JSON] [AdCreativeDTO]
+  :<|> "ads" :> Capture "adId" Int64 :> "examples" :> Get '[JSON] [AdConversationExampleDTO]
+  :<|> "ads" :> Capture "adId" Int64 :> "examples" :> ReqBody '[JSON] AdConversationExampleCreate :> Post '[JSON] AdConversationExampleDTO
 
 type CmsPublicAPI =
        "cms" :> "content" :> QueryParam "slug" Text :> QueryParam "locale" Text :> Get '[JSON] CmsContentDTO

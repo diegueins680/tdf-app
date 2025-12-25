@@ -1,5 +1,4 @@
 app = "tdf-hq"
-image = "diegueins680/tdf-hq:latest"
 
 [env]
   APP_PORT = "8080"

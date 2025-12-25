@@ -6,7 +6,7 @@ module TDF.Cron
   ) where
 
 import           Control.Concurrent      (forkIO, threadDelay)
-import           Control.Exception       (SomeException, catch, try)
+import           Control.Exception       (SomeException, try)
 import           Control.Applicative    ((<|>))
 import           Control.Monad           (forever, void, when, foldM)
 import           Control.Monad.IO.Class  (liftIO)

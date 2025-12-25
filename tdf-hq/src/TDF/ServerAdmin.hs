@@ -195,7 +195,6 @@ adminServer user =
 
     updateArtistReleaseAdmin releaseId ArtistReleaseUpsert{..} = do
       ensureModule ModuleAdmin user
-      now <- liftIO getCurrentTime
       let releaseKey = toSqlKey releaseId
           artistKey  = toSqlKey aruArtistId
       mRelease <- withPool $ get releaseKey
@@ -442,9 +441,6 @@ parseKey raw =
 
 normaliseCategory :: Text -> Text
 normaliseCategory = T.toLower . T.strip
-
-normalizeStatusText :: Text -> Text
-normalizeStatusText = T.toLower . T.strip
 
 normaliseText :: Maybe Text -> Maybe Text
 normaliseText Nothing = Nothing

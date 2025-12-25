@@ -1,49 +1,30 @@
 name: Deploy to Fly
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'tdf-hq/**'
-      - '.dockerignore'
-      - '.github/workflows/deploy-fly.yml'
+  workflow_run:
+    workflows:
+      - Build Image
+    types:
+      - completed
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Docker image tag to deploy (defaults to the triggering commit)
+        required: false
+        type: string
 
 env:
   DOCKER_IMAGE_REPO: diegueins680/tdf-hq
-  DOCKER_IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   deploy:
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./tdf-hq/Dockerfile
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            SOURCE_COMMIT=${{ github.sha }}
-            BUILD_TIME=${{ github.event.head_commit.timestamp || github.run_started_at }}
-          tags: |
-            ${{ env.DOCKER_IMAGE_REPO }}:${{ env.DOCKER_IMAGE_TAG }}
-            ${{ env.DOCKER_IMAGE_REPO }}:latest
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Install flyctl
         run: |
@@ -56,13 +37,24 @@ jobs:
       - name: Deploy to Fly
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
+          FALLBACK_SHA: ${{ github.sha }}
+          INPUT_IMAGE_TAG: ${{ github.event.inputs.image_tag }}
         run: |
-          APP_NAME="tdf-hq"
-          if [ -f fly.toml ] && grep -q '^app *= *"[^"]*"' fly.toml; then
-            APP_NAME=$(grep '^app *= *"' fly.toml | head -n1 | sed -E 's/app *= *"([^"]+)"/\1/')
+          IMAGE_TAG="$INPUT_IMAGE_TAG"
+          if [ -z "$IMAGE_TAG" ]; then
+            if [ "$EVENT_NAME" = "workflow_run" ]; then
+              IMAGE_TAG="$WORKFLOW_SHA"
+            else
+              IMAGE_TAG="$FALLBACK_SHA"
+            fi
+          fi
+          if [ -z "$IMAGE_TAG" ]; then
+            echo "Image tag could not be resolved." >&2
+            exit 1
           fi
           flyctl deploy \
             --config ./fly.toml \
-            --image "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}" \
-            --strategy rolling \
-            --app "$APP_NAME"
+            --image "${DOCKER_IMAGE_REPO}:${IMAGE_TAG}" \
+            --strategy rolling

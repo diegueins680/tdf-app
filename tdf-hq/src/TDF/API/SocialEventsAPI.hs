@@ -20,7 +20,12 @@ import TDF.DTO.SocialEventsDTO (EventDTO, VenueDTO, ArtistDTO, ArtistFollowerDTO
 type IdParam = Capture "id" Text
 
 type EventsRoutes =
-       "events" :> QueryParam "city" Text :> QueryParam "start_after" Text :> Get '[JSON] [EventDTO]
+       "events"
+         :> QueryParam "city" Text
+         :> QueryParam "start_after" Text
+         :> QueryParam "artistId" Text
+         :> QueryParam "venueId" Text
+         :> Get '[JSON] [EventDTO]
   :<|> "events" :> ReqBody '[JSON] EventDTO :> Post '[JSON] EventDTO
   :<|> "events" :> IdParam :> Get '[JSON] EventDTO
   :<|> "events" :> IdParam :> ReqBody '[JSON] EventDTO :> Put '[JSON] EventDTO

@@ -62,6 +62,40 @@ derivePersistField "DeliverableKind"
 
 share [mkPersist sqlSettings, mkMigrate "migrateExtra"] [persistLowerCase|
 
+Campaign
+    name        Text
+    objective   Text Maybe
+    platform    Text Maybe
+    status      Text default='active'
+    budgetCents Int Maybe
+    startDate   Day Maybe
+    endDate     Day Maybe
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    deriving Show Generic
+
+AdCreative
+    campaignId  CampaignId Maybe
+    name        Text
+    channel     Text Maybe
+    audience    Text Maybe
+    landingUrl  Text Maybe
+    cta         Text Maybe
+    status      Text default='active'
+    notes       Text Maybe
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    deriving Show Generic
+
+AdConversationExample
+    adId             AdCreativeId
+    userMessage      Text
+    assistantMessage Text
+    tags             [Text] Maybe sqltype=text[]
+    createdAt        UTCTime default=now()
+    updatedAt        UTCTime default=now()
+    deriving Show Generic
+
 CourseRegistration
     courseSlug   Text
     fullName     Text Maybe

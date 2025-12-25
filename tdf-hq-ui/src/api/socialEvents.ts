@@ -56,10 +56,12 @@ const buildQuery = (params: Record<string, string | null | undefined>) => {
 };
 
 export const SocialEventsAPI = {
-  listEvents: (opts?: { city?: string; startAfter?: string }) => {
+  listEvents: (opts?: { city?: string; startAfter?: string; artistId?: string; venueId?: string }) => {
     const qs = buildQuery({
       city: opts?.city,
       start_after: opts?.startAfter,
+      artistId: opts?.artistId,
+      venueId: opts?.venueId,
     });
     return get<SocialEventDTO[]>(`/social-events/events${qs}`);
   },

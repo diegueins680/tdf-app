@@ -4213,13 +4213,14 @@ adsAssistPublic AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel}
   env <- ask
   let adKey = fmap toSqlKey aarAdId :: Maybe ME.AdCreativeId
       campaignKey = fmap toSqlKey aarCampaignId :: Maybe ME.CampaignId
+      hasScope = isJust adKey || isJust campaignKey
   candidateAds <- runDB $
     case campaignKey of
       Nothing -> pure (maybeToList adKey)
       Just ck -> do
         ads <- selectKeysList [ME.AdCreativeCampaignId ==. Just ck] []
         pure (maybe ads (:ads) adKey)
-  examples <- runDB $ loadAdExamples candidateAds
+  examples <- runDB $ loadAdExamples hasScope candidateAds
   kb <- runDB loadKnowledgeBaseSnippets
   reply <- liftIO $ runRagChat (envConfig env) kb examples body aarChannel
   pure AdsAssistResponse
@@ -4283,6 +4284,12 @@ adsUpsertCampaign :: AuthedUser -> CampaignUpsert -> AppM CampaignDTO
 adsUpsertCampaign user CampaignUpsert{..} = do
   requireModule user ModuleAdmin
   let nameClean = T.strip cuName
+      statusVal =
+        case cuStatus of
+          Nothing -> "active"
+          Just raw ->
+            let trimmed = T.strip raw
+            in if T.null trimmed then "active" else trimmed
   when (T.null nameClean) $ throwBadRequest "Nombre requerido"
   now <- liftIO getCurrentTime
   cid <- case cuId of
@@ -4290,7 +4297,7 @@ adsUpsertCampaign user CampaignUpsert{..} = do
       { ME.campaignName = nameClean
       , ME.campaignObjective = T.strip <$> cuObjective
       , ME.campaignPlatform = T.strip <$> cuPlatform
-      , ME.campaignStatus = fromMaybe "active" (T.strip <$> cuStatus)
+      , ME.campaignStatus = statusVal
       , ME.campaignBudgetCents = cuBudgetCents
       , ME.campaignStartDate = cuStartDate
       , ME.campaignEndDate = cuEndDate
@@ -4305,7 +4312,7 @@ adsUpsertCampaign user CampaignUpsert{..} = do
         [ ME.CampaignName =. nameClean
         , ME.CampaignObjective =. (T.strip <$> cuObjective)
         , ME.CampaignPlatform =. (T.strip <$> cuPlatform)
-        , ME.CampaignStatus =. fromMaybe "active" (T.strip <$> cuStatus)
+        , ME.CampaignStatus =. statusVal
         , ME.CampaignBudgetCents =. cuBudgetCents
         , ME.CampaignStartDate =. cuStartDate
         , ME.CampaignEndDate =. cuEndDate
@@ -4320,7 +4327,18 @@ adsUpsertAd user AdCreativeUpsert{..} = do
   requireModule user ModuleAdmin
   let nameClean = T.strip acuName
       mCampaign = fmap toSqlKey acuCampaignId :: Maybe ME.CampaignId
+      statusVal =
+        case acuStatus of
+          Nothing -> "active"
+          Just raw ->
+            let trimmed = T.strip raw
+            in if T.null trimmed then "active" else trimmed
   when (T.null nameClean) $ throwBadRequest "Nombre del anuncio requerido"
+  case mCampaign of
+    Nothing -> pure ()
+    Just key -> do
+      mExisting <- runDB $ get key
+      when (isNothing mExisting) $ throwError err404 { errBody = "Campaign not found" }
   now <- liftIO getCurrentTime
   adId <- case acuId of
     Nothing -> runDB $ insert ME.AdCreative
@@ -4330,7 +4348,7 @@ adsUpsertAd user AdCreativeUpsert{..} = do
       , ME.adCreativeAudience = T.strip <$> acuAudience
       , ME.adCreativeLandingUrl = T.strip <$> acuLandingUrl
       , ME.adCreativeCta = T.strip <$> acuCta
-      , ME.adCreativeStatus = fromMaybe "active" (T.strip <$> acuStatus)
+      , ME.adCreativeStatus = statusVal
       , ME.adCreativeNotes = T.strip <$> acuNotes
       , ME.adCreativeCreatedAt = now
       , ME.adCreativeUpdatedAt = now
@@ -4346,7 +4364,7 @@ adsUpsertAd user AdCreativeUpsert{..} = do
         , ME.AdCreativeAudience =. (T.strip <$> acuAudience)
         , ME.AdCreativeLandingUrl =. (T.strip <$> acuLandingUrl)
         , ME.AdCreativeCta =. (T.strip <$> acuCta)
-        , ME.AdCreativeStatus =. fromMaybe "active" (T.strip <$> acuStatus)
+        , ME.AdCreativeStatus =. statusVal
         , ME.AdCreativeNotes =. (T.strip <$> acuNotes)
         , ME.AdCreativeUpdatedAt =. now
         ]
@@ -4390,11 +4408,11 @@ adsCreateExample user adId AdConversationExampleCreate{..} = do
   row <- runDB $ getJust exId
   pure (adExampleToDTO (Entity exId row))
 
-loadAdExamples :: [ME.AdCreativeId] -> SqlPersistT IO [Entity ME.AdConversationExample]
-loadAdExamples [] =
-  selectList [] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
-loadAdExamples adIds =
-  selectList [ME.AdConversationExampleAdId <-. adIds] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
+loadAdExamples :: Bool -> [ME.AdCreativeId] -> SqlPersistT IO [Entity ME.AdConversationExample]
+loadAdExamples hasScope adIds
+  | hasScope && null adIds = pure []
+  | null adIds = selectList [] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
+  | otherwise = selectList [ME.AdConversationExampleAdId <-. adIds] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
 
 loadKnowledgeBaseSnippets :: SqlPersistT IO [Text]
 loadKnowledgeBaseSnippets = do
