@@ -226,6 +226,7 @@ type ProtectedAPI =
   :<|> "social" :> SocialAPI
   :<|> ChatAPI
   :<|> "social-sync" :> SocialSyncAPI
+  :<|> "social-events" :> SocialEventsAPI
   :<|> AdsAdminAPI
   :<|> "admin" :> CoursesAdminAPI
   :<|> "label" :> LabelAPI
@@ -255,7 +256,6 @@ type API =
   :<|> CmsPublicAPI
   :<|> "marketplace" :> MarketplaceAPI
   :<|> "contracts" :> ContractsAPI
-  :<|> "social-events" :> SocialEventsAPI
   :<|> RadioPublicAPI
   :<|> RoomsPublicAPI
   :<|> ServiceCatalogPublicAPI

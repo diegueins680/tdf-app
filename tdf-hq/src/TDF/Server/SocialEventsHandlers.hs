@@ -32,6 +32,7 @@ import           Database.Persist
 import           Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
 
 import           TDF.API.SocialEventsAPI
+import           TDF.Auth (AuthedUser)
 import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..), ArtistSocialLinksDTO(..), ArtistFollowerDTO(..), ArtistFollowRequest(..), RsvpDTO(..), InvitationDTO(..))
 import           TDF.DB (Env(..))
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueName)
@@ -48,8 +49,8 @@ encodeSocialLinks :: Maybe ArtistSocialLinksDTO -> Maybe T.Text
 encodeSocialLinks mLinks =
   fmap (TE.decodeUtf8 . BL.toStrict . Aeson.encode) mLinks
 
-socialEventsServer :: ServerT SocialEventsAPI AppM
-socialEventsServer = eventsServer
+socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
+socialEventsServer _user = eventsServer
                :<|> venuesServer
                :<|> artistsServer
                :<|> rsvpsServer
@@ -135,6 +136,8 @@ socialEventsServer = eventsServer
     createEvent dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
+      when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
+      when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
         Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
@@ -236,6 +239,17 @@ socialEventsServer = eventsServer
             , SocialEventCapacity =. eventCapacity dto
             , SocialEventUpdatedAt =. now
             ]) envPool
+          liftIO $ runSqlPool (deleteWhere [EventArtistEventId ==. key]) envPool
+          let artists = eventArtists dto
+          liftIO $ runSqlPool
+            (forM_ artists $ \a ->
+               case artistId a of
+                 Nothing -> pure ()
+                 Just atxt -> case readMaybe (T.unpack atxt) :: Maybe Int64 of
+                   Nothing -> pure ()
+                   Just anum -> insert_ (EventArtist key (toSqlKey anum) Nothing)
+            )
+            envPool
           pure (dto { eventId = Just rawId })
 
     deleteEvent :: T.Text -> AppM NoContent
@@ -247,7 +261,14 @@ socialEventsServer = eventsServer
           let key = toSqlKey num :: SocialEventId
           mExisting <- liftIO $ runSqlPool (get key) envPool
           when (isNothing mExisting) $ throwError err404 { errBody = "Event not found" }
-          liftIO $ runSqlPool (delete key) envPool
+          liftIO $ runSqlPool
+            (do
+              deleteWhere [EventArtistEventId ==. key]
+              deleteWhere [EventRsvpEventId ==. key]
+              deleteWhere [EventInvitationEventId ==. key]
+              delete key
+            )
+            envPool
           pure NoContent
 
     -- Venues

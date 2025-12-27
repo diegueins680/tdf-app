@@ -251,7 +251,6 @@ server =
   :<|> cmsPublicServer
   :<|> marketplacePublicServer
   :<|> contractsServer
-  :<|> socialEventsServer
   :<|> radioPresencePublicServer
   :<|> roomsPublicServer
   :<|> serviceCatalogPublicServer
@@ -667,6 +666,7 @@ protectedServer user =
   :<|> socialServer user
   :<|> chatServer user
   :<|> socialSyncServer user
+  :<|> socialEventsServer user
   :<|> adsAdminServer user
   :<|> coursesAdminServer user
   :<|> labelServer user
