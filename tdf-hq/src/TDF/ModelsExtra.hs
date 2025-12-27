@@ -76,6 +76,7 @@ Campaign
 
 AdCreative
     campaignId  CampaignId Maybe
+    externalId  Text Maybe
     name        Text
     channel     Text Maybe
     audience    Text Maybe
@@ -94,6 +95,24 @@ AdConversationExample
     tags             [Text] Maybe sqltype=text[]
     createdAt        UTCTime default=now()
     updatedAt        UTCTime default=now()
+    deriving Show Generic
+
+WhatsAppMessage
+    externalId       Text
+    senderId         Text
+    senderName       Text Maybe
+    text             Text Maybe
+    direction        Text
+    adExternalId     Text Maybe
+    adName           Text Maybe
+    campaignExternalId Text Maybe
+    campaignName     Text Maybe
+    metadata         Text Maybe
+    repliedAt        UTCTime Maybe
+    replyText        Text Maybe
+    replyError       Text Maybe
+    createdAt        UTCTime
+    UniqueWhatsAppMessage externalId
     deriving Show Generic
 
 CourseRegistration

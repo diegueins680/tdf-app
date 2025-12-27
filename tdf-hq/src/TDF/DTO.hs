@@ -207,6 +207,7 @@ instance FromJSON CampaignUpsert
 data AdCreativeDTO = AdCreativeDTO
   { adId        :: Int64
   , adCampaignId :: Maybe Int64
+  , adExternalId :: Maybe Text
   , adName      :: Text
   , adChannel   :: Maybe Text
   , adAudience  :: Maybe Text
@@ -220,6 +221,7 @@ instance ToJSON AdCreativeDTO
 data AdCreativeUpsert = AdCreativeUpsert
   { acuId         :: Maybe Int64
   , acuCampaignId :: Maybe Int64
+  , acuExternalId :: Maybe Text
   , acuName       :: Text
   , acuChannel    :: Maybe Text
   , acuAudience   :: Maybe Text

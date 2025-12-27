@@ -56,6 +56,7 @@ executable tdf-hq-exe
     TDF.Email.Service
     TDF.Services
     TDF.Services.InstagramSync
+    TDF.Services.InstagramMessaging
     TDF.Pipelines
     TDF.Routes.Academy
     TDF.Seed

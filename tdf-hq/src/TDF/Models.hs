@@ -482,6 +482,14 @@ InstagramMessage
     senderName       Text Maybe
     text             Text Maybe
     direction        Text
+    adExternalId     Text Maybe
+    adName           Text Maybe
+    campaignExternalId Text Maybe
+    campaignName     Text Maybe
+    metadata         Text Maybe
+    repliedAt        UTCTime Maybe
+    replyText        Text Maybe
+    replyError       Text Maybe
     createdAt        UTCTime
     UniqueInstagramMessage externalId
     deriving Show Generic

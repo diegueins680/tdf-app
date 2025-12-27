@@ -26,7 +26,7 @@ import           Text.Read                (readMaybe)
 import           TDF.Cors                 (corsPolicy)
 
 import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
-import           TDF.Cron       (startCoursePaymentReminderJob, startInstagramSyncJob)
+import           TDF.Cron       (startCoursePaymentReminderJob, startInstagramSyncJob, startSocialAutoReplyJob)
 import           TDF.DB         (Env(..), ConnectionPool, makePool)
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
 import           TDF.ModelsExtra (migrateExtra)
@@ -111,6 +111,7 @@ main = do
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
         startInstagramSyncJob env
+        startSocialAutoReplyJob env
 
   _ <-
     forkFinally

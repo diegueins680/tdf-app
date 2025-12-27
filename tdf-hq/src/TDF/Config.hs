@@ -40,6 +40,9 @@ data AppConfig = AppConfig
   , googleClientId  :: Maybe Text
   , instagramAppToken :: Maybe Text
   , instagramGraphBase :: Text
+  , instagramMessagingToken :: Maybe Text
+  , instagramMessagingAccountId :: Maybe Text
+  , instagramMessagingApiBase :: Text
   } deriving (Show)
 
 dbConnString :: AppConfig -> String
@@ -79,6 +82,9 @@ loadConfig = do
   smtpTlsEnv  <- lookupEnv "SMTP_TLS"
   igTokenEnv <- lookupEnv "INSTAGRAM_APP_TOKEN"
   igBaseEnv <- lookupEnv "INSTAGRAM_GRAPH_BASE"
+  igMsgTokenEnv <- lookupEnv "INSTAGRAM_MESSAGING_TOKEN"
+  igMsgAccountEnv <- lookupEnv "INSTAGRAM_MESSAGING_ACCOUNT_ID"
+  igMsgBaseEnv <- lookupEnv "INSTAGRAM_MESSAGING_API_BASE"
   pure AppConfig
     { dbHost = h
     , dbPort = p
@@ -101,6 +107,12 @@ loadConfig = do
     , googleClientId = fmap (T.strip . T.pack) googleClientIdEnv
     , instagramAppToken = fmap (T.strip . T.pack) igTokenEnv
     , instagramGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
+    , instagramMessagingToken =
+        case fmap (T.strip . T.pack) igMsgTokenEnv of
+          Just val | not (T.null val) -> Just val
+          _ -> fmap (T.strip . T.pack) igTokenEnv
+    , instagramMessagingAccountId = fmap (T.strip . T.pack) igMsgAccountEnv
+    , instagramMessagingApiBase = maybe "https://graph.facebook.com/v20.0" (T.strip . T.pack) igMsgBaseEnv
     }
   where
     get k def = fmap (fromMaybe def) (lookupEnv k)

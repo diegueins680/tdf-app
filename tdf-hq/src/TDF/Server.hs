@@ -125,6 +125,8 @@ import           TDF.WhatsApp.Types ( WAMetaWebhook(..)
                                     , WAEntry(..)
                                     , WAChange(..)
                                     , WAMessage(..)
+                                    , WAContext(..)
+                                    , WAReferral(..)
                                     , WAValue(..)
                                     )
 import qualified TDF.WhatsApp.Types as WA
@@ -476,12 +478,41 @@ whatsappWebhookServer =
 
     handleMessages payload = do
       cfg <- liftIO loadWhatsAppEnv
-      Env{envConfig} <- ask
-      let incomingMessages = extractTextMessages payload
-      for_ incomingMessages $ \(fromNumber, bodyTxt) -> do
-        let lowerBody = T.toLower (T.strip bodyTxt)
+      Env{envConfig, envPool} <- ask
+      now <- liftIO getCurrentTime
+      let inbound = extractWhatsAppInbound payload
+      for_ inbound $ \WAInbound{..} -> do
+        let externalId =
+              if T.null waInboundExternalId
+                then waInboundSenderId <> "-" <> T.pack (show now)
+                else waInboundExternalId
+        liftIO $ flip runSqlPool envPool $ do
+          _ <- upsert (ME.WhatsAppMessage externalId
+                         waInboundSenderId
+                         Nothing
+                         (Just waInboundText)
+                         "incoming"
+                         waInboundAdExternalId
+                         waInboundAdName
+                         waInboundCampaignExternalId
+                         waInboundCampaignName
+                         waInboundMetadata
+                         Nothing
+                         Nothing
+                         Nothing
+                         now)
+               [ ME.WhatsAppMessageText =. Just waInboundText
+               , ME.WhatsAppMessageDirection =. "incoming"
+               , ME.WhatsAppMessageAdExternalId =. waInboundAdExternalId
+               , ME.WhatsAppMessageAdName =. waInboundAdName
+               , ME.WhatsAppMessageCampaignExternalId =. waInboundCampaignExternalId
+               , ME.WhatsAppMessageCampaignName =. waInboundCampaignName
+               , ME.WhatsAppMessageMetadata =. waInboundMetadata
+               ]
+          pure ()
+        let lowerBody = T.toLower (T.strip waInboundText)
         when ("inscribirme" `T.isInfixOf` lowerBody) $ do
-          case normalizePhone fromNumber of
+          case normalizePhone waInboundSenderId of
             Nothing -> pure ()
             Just phone -> do
               _ <- createOrUpdateRegistration (productionCourseSlug envConfig) CourseRegistrationRequest
@@ -492,7 +523,34 @@ whatsappWebhookServer =
                 , howHeard = Just "whatsapp"
                 , utm = Nothing
                 }
-              sendWhatsappReply cfg phone
+              replyRes <- sendWhatsappReply cfg phone
+              case replyRes of
+                Left err -> liftIO $ flip runSqlPool envPool $
+                  updateWhere
+                    [ ME.WhatsAppMessageExternalId ==. externalId ]
+                    [ ME.WhatsAppMessageReplyError =. Just err ]
+                Right replyTxt -> liftIO $ flip runSqlPool envPool $ do
+                  updateWhere
+                    [ ME.WhatsAppMessageExternalId ==. externalId ]
+                    [ ME.WhatsAppMessageRepliedAt =. Just now
+                    , ME.WhatsAppMessageReplyText =. Just replyTxt
+                    , ME.WhatsAppMessageReplyError =. Nothing
+                    ]
+                  _ <- insert_ (ME.WhatsAppMessage (externalId <> "-out-" <> T.pack (show now))
+                                  waInboundSenderId
+                                  Nothing
+                                  (Just replyTxt)
+                                  "outgoing"
+                                  waInboundAdExternalId
+                                  waInboundAdName
+                                  waInboundCampaignExternalId
+                                  waInboundCampaignName
+                                  Nothing
+                                  Nothing
+                                  Nothing
+                                  Nothing
+                                  now)
+                  pure ()
       pure NoContent
 fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =
@@ -1540,16 +1598,57 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
 
 -- | Returns messages that include text bodies, paired with the sender phone.
 extractTextMessages :: WAMetaWebhook -> [(Text, Text)]
-extractTextMessages WAMetaWebhook{entry} =
-  [ (WA.from msg, body)
+extractTextMessages payload =
+  [ (waInboundSenderId, waInboundText)
+  | WAInbound{waInboundSenderId, waInboundText} <- extractWhatsAppInbound payload
+  ]
+
+data WAInbound = WAInbound
+  { waInboundExternalId :: Text
+  , waInboundSenderId   :: Text
+  , waInboundText       :: Text
+  , waInboundAdExternalId :: Maybe Text
+  , waInboundAdName     :: Maybe Text
+  , waInboundCampaignExternalId :: Maybe Text
+  , waInboundCampaignName :: Maybe Text
+  , waInboundMetadata   :: Maybe Text
+  } deriving (Show)
+
+extractWhatsAppInbound :: WAMetaWebhook -> [WAInbound]
+extractWhatsAppInbound WAMetaWebhook{entry} =
+  [ WAInbound
+      { waInboundExternalId = fromMaybe (WA.from msg <> "-" <> fromMaybe "0" (waTimestamp msg)) (waId msg)
+      , waInboundSenderId = WA.from msg
+      , waInboundText = body
+      , waInboundAdExternalId = adExt
+      , waInboundAdName = adName
+      , waInboundCampaignExternalId = Nothing
+      , waInboundCampaignName = Nothing
+      , waInboundMetadata = metaTxt
+      }
   | WAEntry{changes} <- entry
   , WAChange{value=WAValue{messages=Just msgs}} <- changes
   , msg@WAMessage{waType, text=Just txtBody} <- msgs
   , waType == "text"
   , let body = WA.body txtBody
+        referral = waReferral msg <|> (waContext msg >>= waContextReferral)
+        (adExt, adName, metaTxt) = waReferralMeta referral
   ]
+  where
+    waReferralMeta Nothing = (Nothing, Nothing, Nothing)
+    waReferralMeta (Just WAReferral{sourceId, headline, waBody, sourceType, sourceUrl}) =
+      let adName = headline <|> waBody
+          metaObj = object
+            [ "source_id" .= sourceId
+            , "source_type" .= sourceType
+            , "source_url" .= sourceUrl
+            , "headline" .= headline
+            , "body" .= waBody
+            ]
+          metaTxt = Just (TE.decodeUtf8 (BL.toStrict (encode metaObj)))
+      in (sourceId, adName, metaTxt)
 
-sendWhatsappReply :: WhatsAppEnv -> Text -> AppM ()
+sendWhatsappReply :: WhatsAppEnv -> Text -> AppM (Either Text Text)
 sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVersion = mVersion} phone = do
   Env{envConfig} <- ask
   let slugVal = productionCourseSlug envConfig
@@ -1562,9 +1661,11 @@ sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVer
   let msg = "¡Gracias por tu interés en " <> metaTitle <> "! Aquí tienes el link de inscripción: "
             <> metaLanding <> ". Cupos limitados (" <> T.pack (show metaCapacity) <> ")."
       version = fromMaybe "v20.0" mVersion
-  _ <- liftIO $ sendText manager version tok pid phone msg
-  pure ()
-sendWhatsappReply _ _ = pure ()
+  res <- liftIO $ sendText manager version tok pid phone msg
+  pure $ case res of
+    Left err -> Left (T.pack err)
+    Right _ -> Right msg
+sendWhatsappReply _ _ = pure (Left "WhatsApp config not available")
 
 normalizePhone :: Text -> Maybe Text
 normalizePhone raw =
@@ -4343,6 +4444,7 @@ adsUpsertAd user AdCreativeUpsert{..} = do
   adId <- case acuId of
     Nothing -> runDB $ insert ME.AdCreative
       { ME.adCreativeCampaignId = mCampaign
+      , ME.adCreativeExternalId = fmap T.strip acuExternalId
       , ME.adCreativeName = nameClean
       , ME.adCreativeChannel = T.strip <$> acuChannel
       , ME.adCreativeAudience = T.strip <$> acuAudience
@@ -4359,6 +4461,7 @@ adsUpsertAd user AdCreativeUpsert{..} = do
       when (isNothing mAd) $ throwError err404
       runDB $ update key
         [ ME.AdCreativeCampaignId =. mCampaign
+        , ME.AdCreativeExternalId =. (T.strip <$> acuExternalId)
         , ME.AdCreativeName =. nameClean
         , ME.AdCreativeChannel =. (T.strip <$> acuChannel)
         , ME.AdCreativeAudience =. (T.strip <$> acuAudience)
@@ -4491,6 +4594,7 @@ adToDTO (Entity aid a) =
   AdCreativeDTO
     { adId = fromSqlKey aid
     , adCampaignId = fmap fromSqlKey (ME.adCreativeCampaignId a)
+    , adExternalId = ME.adCreativeExternalId a
     , adName = ME.adCreativeName a
     , adChannel = ME.adCreativeChannel a
     , adAudience = ME.adCreativeAudience a
@@ -4533,6 +4637,29 @@ instance FromJSON ChatCompletionResp where
 
 runRagChat :: AppConfig -> [Text] -> [Entity ME.AdConversationExample] -> Text -> Maybe Text -> IO Text
 runRagChat cfg kb examples userMsg mChannel = do
+  res <- runRagChatWithStatus cfg kb examples userMsg mChannel
+  pure $
+    case res of
+      Right txt | not (T.null (T.strip txt)) -> T.strip txt
+      _ -> "No pude generar una respuesta automática en este momento."
+
+runRagChatWithStatus
+  :: AppConfig
+  -> [Text]
+  -> [Entity ME.AdConversationExample]
+  -> Text
+  -> Maybe Text
+  -> IO (Either Text Text)
+runRagChatWithStatus cfg kb examples userMsg mChannel =
+  callOpenAIChat cfg (buildRagMessages kb examples userMsg mChannel)
+
+buildRagMessages
+  :: [Text]
+  -> [Entity ME.AdConversationExample]
+  -> Text
+  -> Maybe Text
+  -> [OpenAIChatMessage]
+buildRagMessages kb examples userMsg mChannel =
   let contextBlock = if null kb then "No hay contexto" else T.intercalate "\n\n" kb
       exampleMsgs = concatMap exampleToMessages examples
       channelNote = maybe "" (\ch -> "[Canal: " <> T.strip ch <> "] ") mChannel
@@ -4541,15 +4668,9 @@ runRagChat cfg kb examples userMsg mChannel = do
         , "Responde en español, tono cálido y conciso,"
         , "incluye CTA cuando ayude a convertir."
         ]
-      messages =
-        [ mkMsg "system" systemIntro
-        , mkMsg "system" ("Contexto de negocio:\n" <> contextBlock)
-        ] ++ exampleMsgs ++ [mkMsg "user" (channelNote <> userMsg)]
-  res <- callOpenAIChat cfg messages
-  pure $
-    case res of
-      Right txt | not (T.null (T.strip txt)) -> T.strip txt
-      _ -> "No pude generar una respuesta automática en este momento."
+  in [ mkMsg "system" systemIntro
+     , mkMsg "system" ("Contexto de negocio:\n" <> contextBlock)
+     ] ++ exampleMsgs ++ [mkMsg "user" (channelNote <> userMsg)]
   where
     mkMsg r c = OpenAIChatMessage { role = r, content = c }
     exampleToMessages (Entity _ ex) =
