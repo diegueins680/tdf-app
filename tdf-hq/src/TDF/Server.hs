@@ -132,6 +132,7 @@ import           TDF.WhatsApp.Types ( WAMetaWebhook(..)
                                     )
 import qualified TDF.WhatsApp.Types as WA
 import           TDF.WhatsApp.Client (sendText)
+import           TDF.RagStore        (retrieveRagContext)
 import           Network.HTTP.Client (Manager, RequestBody(..), Response, newManager, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
@@ -553,6 +554,32 @@ whatsappWebhookServer =
                                   now)
                   pure ()
       pure NoContent
+
+whatsappMessagesServer :: AuthedUser -> ServerT Api.WhatsAppMessagesAPI AppM
+whatsappMessagesServer _ mLimit mRepliedOnly = do
+  let limit = normalizeLimit mLimit
+      filters =
+        case mRepliedOnly of
+          Just True -> [ME.WhatsAppMessageRepliedAt !=. Nothing]
+          _ -> []
+  rows <- runDB $
+    selectList filters [Desc ME.WhatsAppMessageCreatedAt, LimitTo limit]
+  let toObj (Entity _ m) = object
+        [ "externalId" .= ME.whatsAppMessageExternalId m
+        , "senderId"   .= ME.whatsAppMessageSenderId m
+        , "senderName" .= ME.whatsAppMessageSenderName m
+        , "text"       .= ME.whatsAppMessageText m
+        , "direction"  .= ME.whatsAppMessageDirection m
+        , "repliedAt"  .= ME.whatsAppMessageRepliedAt m
+        , "replyText"  .= ME.whatsAppMessageReplyText m
+        , "replyError" .= ME.whatsAppMessageReplyError m
+        , "createdAt"  .= ME.whatsAppMessageCreatedAt m
+        ]
+  pure (toJSON (map toObj rows))
+
+normalizeLimit :: Maybe Int -> Int
+normalizeLimit = max 1 . min 200 . fromMaybe 100
+
 fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
@@ -722,6 +749,7 @@ protectedServer user =
   :<|> marketplaceAdminServer user
   :<|> paymentsServer user
   :<|> instagramServer
+  :<|> whatsappMessagesServer user
   :<|> socialServer user
   :<|> chatServer user
   :<|> socialSyncServer user
@@ -4376,12 +4404,12 @@ adsAssistPublic AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel}
         ads <- selectKeysList [ME.AdCreativeCampaignId ==. Just ck] []
         pure (maybe ads (:ads) adKey)
   examples <- runDB $ loadAdExamples hasScope candidateAds
-  kb <- runDB loadKnowledgeBaseSnippets
+  kb <- liftIO $ retrieveRagContext (envConfig env) (envPool env) body
   reply <- liftIO $ runRagChat (envConfig env) kb examples body aarChannel
   pure AdsAssistResponse
     { aasReply = reply
     , aasUsedExamples = map adExampleToDTO examples
-    , aasKnowledgeUsed = take 10 kb
+    , aasKnowledgeUsed = kb
     }
 
 adsAdminServer :: AuthedUser -> ServerT AdsAdminAPI AppM
@@ -4570,55 +4598,6 @@ loadAdExamples hasScope adIds
   | hasScope && null adIds = pure []
   | null adIds = selectList [] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
   | otherwise = selectList [ME.AdConversationExampleAdId <-. adIds] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
-
-loadKnowledgeBaseSnippets :: SqlPersistT IO [Text]
-loadKnowledgeBaseSnippets = do
-  courses <- selectList [] [Desc Trials.CourseCreatedAt, LimitTo 5]
-  services <- selectList [M.ServiceCatalogActive ==. True] [LimitTo 5]
-  campaigns <- selectList [] [Desc ME.CampaignUpdatedAt, LimitTo 5]
-  ads <- selectList [] [Desc ME.AdCreativeUpdatedAt, LimitTo 5]
-  let courseTxt = map renderCourse courses
-      serviceTxt = map renderService services
-      campaignTxt = map renderCampaign campaigns
-      adTxt = map renderAd ads
-  pure (take 16 (courseTxt ++ serviceTxt ++ campaignTxt ++ adTxt))
-
-renderCourse :: Entity Trials.Course -> Text
-renderCourse (Entity _ c) =
-  T.intercalate " · "
-    ( ["Curso: " <> Trials.courseTitle c]
-      ++ maybe [] (\fmt -> ["Formato: " <> fmt]) (Trials.courseFormat c)
-      ++ maybe [] (\dur -> ["Duración: " <> dur]) (Trials.courseDuration c)
-      ++ maybe [] (\landing -> ["Landing: " <> landing]) (Trials.courseLandingUrl c)
-    )
-
-renderService :: Entity M.ServiceCatalog -> Text
-renderService (Entity _ s) =
-  T.intercalate " · "
-    [ "Servicio: " <> serviceName
-    , "Modelo: " <> T.pack (show (M.serviceCatalogPricingModel s))
-    , "Activo: " <> boolLabel (M.serviceCatalogActive s)
-    ]
-  where
-    serviceName = M.serviceCatalogName s
-    boolLabel True = "sí"
-    boolLabel False = "no"
-
-renderCampaign :: Entity ME.Campaign -> Text
-renderCampaign (Entity _ c) =
-  T.intercalate " · "
-    [ "Campaña: " <> ME.campaignName c
-    , "Plataforma: " <> fromMaybe "n/d" (ME.campaignPlatform c)
-    , "Estado: " <> ME.campaignStatus c
-    ]
-
-renderAd :: Entity ME.AdCreative -> Text
-renderAd (Entity _ a) =
-  T.intercalate " · "
-    [ "Anuncio: " <> ME.adCreativeName a
-    , "Canal: " <> fromMaybe "n/d" (ME.adCreativeChannel a)
-    , "CTA: " <> fromMaybe "n/d" (ME.adCreativeCta a)
-    ]
 
 adExampleToDTO :: Entity ME.AdConversationExample -> AdConversationExampleDTO
 adExampleToDTO (Entity eid ex) =

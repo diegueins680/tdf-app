@@ -124,6 +124,12 @@ type ChatAPI =
          :> ReqBody '[JSON] ChatSendMessageRequest
          :> Post '[JSON] ChatMessageDTO
 
+type WhatsAppMessagesAPI =
+       "whatsapp" :> "messages"
+         :> QueryParam "limit" Int
+         :> QueryParam "repliedOnly" Bool
+         :> Get '[JSON] Value
+
 type BookingAPI =
        QueryParam "bookingId" Int64
          :> QueryParam "partyId" Int64
@@ -224,6 +230,7 @@ type ProtectedAPI =
   :<|> "marketplace" :> MarketplaceAdminAPI
   :<|> "payments" :> PaymentsAPI
   :<|> "instagram" :> InstagramAPI
+  :<|> WhatsAppMessagesAPI
   :<|> "social" :> SocialAPI
   :<|> ChatAPI
   :<|> "social-sync" :> SocialSyncAPI

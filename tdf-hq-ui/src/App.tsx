@@ -37,6 +37,7 @@ import TeacherPortalPage from './pages/TeacherPortalPage';
 import ArtistOnboardingPage from './pages/ArtistOnboardingPage';
 import ArtistPublicPage from './pages/ArtistPublicPage';
 import SocialPageView from './pages/SocialPage';
+import SocialInboxPage from './pages/SocialInboxPage';
 import SocialEventsPage from './pages/SocialEventsPage';
 import ChatPage from './pages/ChatPage';
 import LabelArtistsPage from './pages/LabelArtistsPage';
@@ -223,6 +224,7 @@ export default function App() {
           <Route path="/mi-profesor" element={<TeacherPortalPage />} />
           <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
           <Route path="/social" element={<SocialPageView />} />
+          <Route path="/social/inbox" element={<SocialInboxPage />} />
           <Route path="/social/eventos" element={<SocialEventsPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/docs" element={<DocsPage />} />

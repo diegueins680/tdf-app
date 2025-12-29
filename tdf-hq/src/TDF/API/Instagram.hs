@@ -20,4 +20,7 @@ instance ToJSON InstagramReplyReq
 type InstagramAPI =
        "instagram" :> "webhook" :> ReqBody '[JSON] Value :> Post '[JSON] NoContent
   :<|> "instagram" :> "reply"   :> ReqBody '[JSON] InstagramReplyReq :> Post '[JSON] Value
-  :<|> "instagram" :> "messages" :> Get '[JSON] Value
+  :<|> "instagram" :> "messages"
+         :> QueryParam "limit" Int
+         :> QueryParam "repliedOnly" Bool
+         :> Get '[JSON] Value

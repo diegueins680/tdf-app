@@ -1378,18 +1378,30 @@ instagramServer =
             ]
       pure (object ["status" .= ("ok" :: Text), "message" .= msg, "echoRecipient" .= IG.irSenderId req])
 
-    listMessages = do
+    listMessages mLimit mRepliedOnly = do
       Env{..} <- ask
-      rows <- liftIO $ flip runSqlPool envPool $ selectList [] [Desc M.InstagramMessageCreatedAt, LimitTo 100]
+      let limit = normalizeLimit mLimit
+          filters =
+            case mRepliedOnly of
+              Just True -> [M.InstagramMessageRepliedAt !=. Nothing]
+              _ -> []
+      rows <- liftIO $
+        flip runSqlPool envPool $
+          selectList filters [Desc M.InstagramMessageCreatedAt, LimitTo limit]
       let toObj (Entity _ m) = object
             [ "externalId" .= M.instagramMessageExternalId m
             , "senderId"   .= M.instagramMessageSenderId m
             , "senderName" .= M.instagramMessageSenderName m
             , "text"       .= M.instagramMessageText m
             , "direction"  .= M.instagramMessageDirection m
+            , "repliedAt"  .= M.instagramMessageRepliedAt m
+            , "replyText"  .= M.instagramMessageReplyText m
+            , "replyError" .= M.instagramMessageReplyError m
             , "createdAt"  .= M.instagramMessageCreatedAt m
             ]
       pure (A.toJSON (map toObj rows))
+
+    normalizeLimit = max 1 . min 200 . fromMaybe 100
 
 -- Shared helpers ----------------------------------------------------------
 
