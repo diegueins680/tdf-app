@@ -66,6 +66,12 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: 'PRÁCTICAS',
+    items: [
+      { label: 'Panel de pasantes', path: '/practicas' },
+    ],
+  },
+  {
     title: 'LABEL',
     items: [
       { label: 'Artistas', path: '/label/artistas' },
@@ -152,6 +158,7 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
       moduleSet.add('packages');
       moduleSet.add('ops');
       moduleSet.add('label');
+      moduleSet.add('internships');
     } else if (role.includes('manager')) {
       moduleSet.add('crm');
       moduleSet.add('scheduling');
@@ -159,6 +166,7 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
       moduleSet.add('invoicing');
       moduleSet.add('packages');
       moduleSet.add('ops');
+      moduleSet.add('internships');
     } else if (role.includes('reception')) {
       moduleSet.add('crm');
       moduleSet.add('scheduling');
@@ -170,6 +178,8 @@ export const deriveModulesFromRoles = (roles: string[] | undefined): string[] =>
     } else if (role.includes('teacher')) {
       moduleSet.add('scheduling');
       moduleSet.add('school');
+    } else if (role.includes('intern')) {
+      moduleSet.add('internships');
     } else if (role.includes('packages') || role.includes('package')) {
       moduleSet.add('packages');
     } else if (role.includes('maintenance')) {
@@ -197,6 +207,7 @@ export const pathRequiresModule = (path: string): string | null => {
   if (path.startsWith('/label')) return 'label';
   if (path.startsWith('/escuela')) return 'school';
   if (path.startsWith('/mi-profesor')) return 'school';
+  if (path.startsWith('/practicas')) return 'internships';
   if (path.startsWith('/eventos')) return 'scheduling';
   return null;
 };

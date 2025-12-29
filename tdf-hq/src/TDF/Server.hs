@@ -77,6 +77,7 @@ import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers (socialEventsServer)
 import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
+import           TDF.ServerInternships (internshipsServer)
 import           TDF.Server.SocialSync (socialSyncServer)
 import qualified Data.Map.Strict            as Map
 import           TDF.ServerFuture (futureServer)
@@ -725,6 +726,7 @@ protectedServer user =
   :<|> chatServer user
   :<|> socialSyncServer user
   :<|> socialEventsServer user
+  :<|> internshipsServer user
   :<|> adsAdminServer user
   :<|> coursesAdminServer user
   :<|> labelServer user
@@ -1986,6 +1988,7 @@ signupAllowedRoles =
   , RoadCrew
   , Photographer
   , AandR
+  , Intern
   , Student
   , Vendor
   , ReadOnly
@@ -2001,6 +2004,11 @@ signup SignupRequest
   , roles = requestedRoles
   , fanArtistIds = requestedFanArtistIds
   , claimArtistId = rawClaimArtistId
+  , internshipStartAt = rawInternshipStartAt
+  , internshipEndAt = rawInternshipEndAt
+  , internshipRequiredHours = rawInternshipRequiredHours
+  , internshipSkills = rawInternshipSkills
+  , internshipAreas = rawInternshipAreas
   } = do
   let emailClean    = T.strip rawEmail
       passwordClean = T.strip rawPassword
@@ -2008,6 +2016,8 @@ signup SignupRequest
       lastClean     = T.strip rawLast
       phoneClean    = fmap T.strip rawPhone
       claimArtistIdClean = rawClaimArtistId >>= (\val -> if val > 0 then Just val else Nothing)
+      internshipSkillsClean = cleanOptional rawInternshipSkills
+      internshipAreasClean  = cleanOptional rawInternshipAreas
       displayNameText =
         case filter (not . T.null) [firstClean, lastClean] of
           [] -> emailClean
@@ -2016,6 +2026,8 @@ signup SignupRequest
   when (T.null passwordClean) $ throwBadRequest "Password is required"
   when (T.length passwordClean < 8) $ throwBadRequest "Password must be at least 8 characters"
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
+  when (maybe False (< 0) rawInternshipRequiredHours) $
+    throwBadRequest "Internship required hours must be non-negative"
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
   let emailSvc = EmailSvc.mkEmailService cfg
@@ -2023,7 +2035,7 @@ signup SignupRequest
       sanitizedRoles = nub (Customer : Fan : allowedRoles)
       sanitizedFanArtists = maybe [] (filter (> 0)) requestedFanArtistIds
   result <- liftIO $ flip runSqlPool pool $
-    runSignupDb emailClean passwordClean displayNameText phoneClean sanitizedRoles sanitizedFanArtists claimArtistIdClean now
+    runSignupDb emailClean passwordClean displayNameText phoneClean sanitizedRoles sanitizedFanArtists claimArtistIdClean rawInternshipStartAt rawInternshipEndAt rawInternshipRequiredHours internshipSkillsClean internshipAreasClean now
   case result of
     Left SignupEmailExists ->
       throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 "Account already exists for this email") }
@@ -2043,9 +2055,14 @@ signup SignupRequest
       -> [RoleEnum]
       -> [Int64]
       -> Maybe Int64
+      -> Maybe Day
+      -> Maybe Day
+      -> Maybe Int
+      -> Maybe Text
+      -> Maybe Text
       -> UTCTime
       -> SqlPersistT IO (Either SignupDbError LoginResponse)
-    runSignupDb emailVal passwordVal displayNameText phoneVal rolesVal fanArtistIdsVal mClaimArtistId nowVal = do
+    runSignupDb emailVal passwordVal displayNameText phoneVal rolesVal fanArtistIdsVal mClaimArtistId internStartAt internEndAt internRequiredHours internSkills internAreas nowVal = do
       existing <- getBy (UniqueCredentialUsername emailVal)
       case existing of
         Just _  -> pure (Left SignupEmailExists)
@@ -2060,6 +2077,8 @@ signup SignupRequest
                       else rolesVal
                   rolesToApply = nub (rolesWithArtist ++ existingRoles)
               applyRoles pid rolesToApply
+              when (Intern `elem` rolesToApply) $
+                upsertInternProfile pid internStartAt internEndAt internRequiredHours internSkills internAreas nowVal
               for_ fanArtistIdsVal $ \artistId -> do
                 let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
                 when (artistKey /= pid) $
@@ -2077,6 +2096,41 @@ signup SignupRequest
               case mUser of
                 Nothing   -> pure (Left SignupProfileError)
                 Just user -> pure (Right (toLoginResponse token user))
+      where
+        upsertInternProfile
+          :: PartyId
+          -> Maybe Day
+          -> Maybe Day
+          -> Maybe Int
+          -> Maybe Text
+          -> Maybe Text
+          -> UTCTime
+          -> SqlPersistT IO ()
+        upsertInternProfile pid startAt endAt requiredHours skills areas nowVal = do
+          mProfile <- getBy (ME.UniqueInternProfile pid)
+          let updates = catMaybes
+                [ fmap (ME.InternProfileStartAt =.) (fmap Just startAt)
+                , fmap (ME.InternProfileEndAt =.) (fmap Just endAt)
+                , fmap (ME.InternProfileRequiredHours =.) (fmap Just requiredHours)
+                , fmap (ME.InternProfileSkills =.) (fmap Just skills)
+                , fmap (ME.InternProfileAreas =.) (fmap Just areas)
+                ]
+          case mProfile of
+            Just (Entity key _) ->
+              unless (null updates) $
+                update key (updates ++ [ME.InternProfileUpdatedAt =. nowVal])
+            Nothing -> do
+              _ <- insert ME.InternProfile
+                { ME.internProfilePartyId   = pid
+                , ME.internProfileStartAt   = startAt
+                , ME.internProfileEndAt     = endAt
+                , ME.internProfileRequiredHours = requiredHours
+                , ME.internProfileSkills    = skills
+                , ME.internProfileAreas     = areas
+                , ME.internProfileCreatedAt = nowVal
+                , ME.internProfileUpdatedAt = nowVal
+                }
+              pure ()
 
     resolveParty
       :: Text

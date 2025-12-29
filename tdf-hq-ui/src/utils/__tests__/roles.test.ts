@@ -23,6 +23,11 @@ describe('signup payload builder', () => {
     email: 'ana@tdf.com ',
     phone: '  ',
     password: 'changeme123',
+    internshipStartAt: '',
+    internshipEndAt: '',
+    internshipRequiredHours: '',
+    internshipSkills: '',
+    internshipAreas: '',
   };
 
   it('includes fanArtistIds only when Fan is selected', () => {
@@ -47,6 +52,12 @@ describe('signup payload builder', () => {
 
     const ignored = buildSignupPayload(baseForm, ['Artista'], [], 0);
     expect(ignored.claimArtistId).toBeUndefined();
+  });
+
+  it('includes internship required hours when Intern is selected', () => {
+    const form = { ...baseForm, internshipRequiredHours: '120' };
+    const payload = buildSignupPayload(form, ['Intern'], []);
+    expect(payload.internshipRequiredHours).toBe(120);
   });
 });
 

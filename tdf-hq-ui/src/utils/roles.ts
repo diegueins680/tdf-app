@@ -31,7 +31,20 @@ export interface SignupFormState {
   email: string;
   phone: string;
   password: string;
+  internshipStartAt: string;
+  internshipEndAt: string;
+  internshipRequiredHours: string;
+  internshipSkills: string;
+  internshipAreas: string;
 }
+
+const parseOptionalInt = (value: string): number | undefined => {
+  const trimmed = value.trim();
+  if (trimmed === '') return undefined;
+  if (!/^-?\d+$/.test(trimmed)) return undefined;
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isNaN(parsed) ? undefined : parsed;
+};
 
 export function buildSignupPayload(
   form: SignupFormState,
@@ -41,7 +54,9 @@ export function buildSignupPayload(
 ): SignupPayload {
   const roles = normalizeSignupRoles(signupRoles);
   const wantsFanRole = roles.includes('Fan');
+  const wantsInternRole = roles.includes('Intern');
   const normalizedClaimId = claimArtistId && claimArtistId > 0 ? claimArtistId : undefined;
+  const requiredHours = wantsInternRole ? parseOptionalInt(form.internshipRequiredHours) : undefined;
 
   return {
     firstName: form.firstName.trim(),
@@ -49,6 +64,11 @@ export function buildSignupPayload(
     email: form.email.trim(),
     phone: form.phone.trim() || undefined,
     password: form.password,
+    internshipStartAt: wantsInternRole && form.internshipStartAt.trim() ? form.internshipStartAt.trim() : undefined,
+    internshipEndAt: wantsInternRole && form.internshipEndAt.trim() ? form.internshipEndAt.trim() : undefined,
+    internshipRequiredHours: requiredHours,
+    internshipSkills: wantsInternRole && form.internshipSkills.trim() ? form.internshipSkills.trim() : undefined,
+    internshipAreas: wantsInternRole && form.internshipAreas.trim() ? form.internshipAreas.trim() : undefined,
     roles: roles.length ? roles : undefined,
     fanArtistIds: wantsFanRole && favoriteArtistIds.length ? favoriteArtistIds : undefined,
     claimArtistId: normalizedClaimId,

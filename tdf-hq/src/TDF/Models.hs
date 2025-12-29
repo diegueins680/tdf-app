@@ -42,6 +42,7 @@ data RoleEnum
   | Reception
   | Accounting
   | LiveSessionsProducer
+  | Intern
   | Artist
   | Artista
   | Webmaster
@@ -139,6 +140,7 @@ roleToText Teacher       = "Teacher"
 roleToText Reception     = "Reception"
 roleToText Accounting    = "Accounting"
 roleToText LiveSessionsProducer = "Live Sessions Producer"
+roleToText Intern        = "Intern"
 roleToText Artist        = "Artist"
 roleToText Artista       = "Artista"
 roleToText Webmaster     = "Webmaster"
@@ -179,6 +181,9 @@ roleFromText raw =
     "live-session-producer" -> Just LiveSessionsProducer
     "live sessions producer" -> Just LiveSessionsProducer
     "live session producer" -> Just LiveSessionsProducer
+    "intern"       -> Just Intern
+    "pasante"      -> Just Intern
+    "practicante"  -> Just Intern
     "artist"       -> Just Artist
     "artista"      -> Just Artista
     "webmaster"    -> Just Webmaster

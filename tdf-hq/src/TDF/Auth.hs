@@ -40,6 +40,7 @@ data ModuleAccess
   | ModulePackages
   | ModuleInvoicing
   | ModuleAdmin
+  | ModuleInternships
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 moduleName :: ModuleAccess -> Text
@@ -48,6 +49,7 @@ moduleName ModuleScheduling = "Scheduling"
 moduleName ModulePackages   = "Packages"
 moduleName ModuleInvoicing  = "Invoicing"
 moduleName ModuleAdmin      = "Admin"
+moduleName ModuleInternships = "Internships"
 
 -- | Authenticated user with associated module access.
 data AuthedUser = AuthedUser
@@ -117,14 +119,15 @@ modulesForRoles :: [RoleEnum] -> Set ModuleAccess
 modulesForRoles = foldl' (flip (Set.union . modulesForRole)) Set.empty
 
 modulesForRole :: RoleEnum -> Set ModuleAccess
-modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin]
-modulesForRole Manager    = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing]
-modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin]
+modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships]
+modulesForRole Manager    = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleInternships]
+modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships]
 modulesForRole Reception  = Set.fromList [ModuleCRM, ModuleScheduling]
 modulesForRole Accounting = Set.singleton ModuleInvoicing
 modulesForRole Engineer   = Set.singleton ModuleScheduling
 modulesForRole Teacher    = Set.singleton ModuleScheduling
 modulesForRole LiveSessionsProducer = Set.fromList [ModuleCRM, ModuleScheduling]
+modulesForRole Intern     = Set.singleton ModuleInternships
 modulesForRole Artist     = Set.fromList [ModuleScheduling, ModulePackages]
 modulesForRole Artista    = Set.fromList [ModuleScheduling, ModulePackages]
 modulesForRole Webmaster  = Set.fromList [ModuleAdmin, ModuleCRM]

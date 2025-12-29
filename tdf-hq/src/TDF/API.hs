@@ -22,6 +22,7 @@ import           TDF.API.Bands     (BandsAPI)
 import           TDF.API.Inventory (InventoryAPI)
 import           TDF.API.Payments (PaymentsAPI)
 import           TDF.API.Instagram (InstagramAPI)
+import           TDF.API.Internships (InternshipsAPI)
 import           TDF.API.Pipelines (PipelinesAPI)
 import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions  (SessionsAPI)
@@ -227,6 +228,7 @@ type ProtectedAPI =
   :<|> ChatAPI
   :<|> "social-sync" :> SocialSyncAPI
   :<|> "social-events" :> SocialEventsAPI
+  :<|> InternshipsAPI
   :<|> AdsAdminAPI
   :<|> "admin" :> CoursesAdminAPI
   :<|> "label" :> LabelAPI

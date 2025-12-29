@@ -142,6 +142,11 @@ export default function LoginPage() {
     email: '',
     phone: '',
     password: '',
+    internshipStartAt: '',
+    internshipEndAt: '',
+    internshipRequiredHours: '',
+    internshipSkills: '',
+    internshipAreas: '',
   });
   const [signupRoles, setSignupRoles] = useState<SignupRole[]>([]);
   const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
@@ -206,7 +211,12 @@ export default function LoginPage() {
   const signupPreset = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const intent = (params.get('intent') ?? '').trim().toLowerCase();
-    const openSignup = params.get('signup') === '1' || intent === 'artist' || intent === 'artista';
+    const openSignup = params.get('signup') === '1'
+      || intent === 'artist'
+      || intent === 'artista'
+      || intent === 'intern'
+      || intent === 'practicante'
+      || intent === 'pasante';
     const rolesRaw = params.getAll('roles');
     const parsedRoles = rolesRaw.length > 0 ? normalizeSignupRoles(rolesRaw) : normalizeSignupRoles(params.get('roles') ?? '');
     const claimRaw = params.get('claimArtistId') ?? params.get('claim');
@@ -217,7 +227,9 @@ export default function LoginPage() {
         ? parsedRoles
         : intent === 'artist' || intent === 'artista'
           ? ['Artista']
-          : [];
+          : intent === 'intern' || intent === 'practicante' || intent === 'pasante'
+            ? ['Intern']
+            : [];
     const ensureArtistRole: SignupRole[] =
       claimArtistId
         ? baseRoles.some((r) => r.toLowerCase().includes('artist'))
@@ -245,6 +257,11 @@ export default function LoginPage() {
       email: '',
       phone: '',
       password: '',
+      internshipStartAt: '',
+      internshipEndAt: '',
+      internshipRequiredHours: '',
+      internshipSkills: '',
+      internshipAreas: '',
     });
     setSignupRoles(signupPreset.roles);
     setFavoriteArtistIds([]);
@@ -292,6 +309,10 @@ export default function LoginPage() {
   const selectedClaim = useMemo(
     () => claimableArtists.find((artist) => artist.apArtistId === claimArtistId) ?? null,
     [claimArtistId, claimableArtists],
+  );
+  const wantsInternRole = useMemo(
+    () => signupRoles.some((role) => role.toLowerCase() === 'intern'),
+    [signupRoles],
   );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -565,6 +586,11 @@ export default function LoginPage() {
       email: '',
       phone: '',
       password: '',
+      internshipStartAt: '',
+      internshipEndAt: '',
+      internshipRequiredHours: '',
+      internshipSkills: '',
+      internshipAreas: '',
     });
     setSignupRoles([]);
     setFavoriteArtistIds([]);
@@ -1025,6 +1051,58 @@ export default function LoginPage() {
                 Elige los roles que necesitas (Fan, Artista, Promotor, Manager, A&R, Producer, etc.). Roles administrativos o financieros (como Admin o Accounting) no se pueden autoseleccionar.
                 </FormHelperText>
               </FormControl>
+            {wantsInternRole && (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">Detalles de prácticas</Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                  <TextField
+                    label="Inicio de prácticas"
+                    type="date"
+                    value={signupForm.internshipStartAt}
+                    onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipStartAt: event.target.value }))}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    sx={textFieldSx}
+                  />
+                  <TextField
+                    label="Fin de prácticas"
+                    type="date"
+                    value={signupForm.internshipEndAt}
+                    onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipEndAt: event.target.value }))}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    sx={textFieldSx}
+                  />
+                  <TextField
+                    label="Horas requeridas"
+                    type="number"
+                    value={signupForm.internshipRequiredHours}
+                    onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipRequiredHours: event.target.value }))}
+                    fullWidth
+                    inputProps={{ min: 0, step: 1 }}
+                    sx={textFieldSx}
+                  />
+                </Stack>
+                <TextField
+                  label="Habilidades / skills"
+                  value={signupForm.internshipSkills}
+                  onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipSkills: event.target.value }))}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  sx={textFieldSx}
+                />
+                <TextField
+                  label="Áreas de práctica de interés"
+                  value={signupForm.internshipAreas}
+                  onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipAreas: event.target.value }))}
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  sx={textFieldSx}
+                />
+              </Stack>
+            )}
             {(claimableArtists.length > 0 || claimArtistId) && (
               <Stack spacing={1}>
                 <Typography variant="subtitle2">¿Tu perfil de artista ya existe en TDF?</Typography>

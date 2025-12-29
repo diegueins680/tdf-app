@@ -56,6 +56,11 @@ export interface SignupPayload {
   email: string;
   phone?: string;
   password: string;
+  internshipStartAt?: string;
+  internshipEndAt?: string;
+  internshipRequiredHours?: number;
+  internshipSkills?: string;
+  internshipAreas?: string;
   roles?: SignupRole[];
   fanArtistIds?: number[];
   claimArtistId?: number;

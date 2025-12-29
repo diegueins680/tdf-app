@@ -519,6 +519,11 @@ data SignupRequest = SignupRequest
   , password        :: Text
   , googleIdToken   :: Maybe Text
   , marketingOptIn  :: Maybe Bool
+  , internshipStartAt :: Maybe Day
+  , internshipEndAt   :: Maybe Day
+  , internshipRequiredHours :: Maybe Int
+  , internshipSkills  :: Maybe Text
+  , internshipAreas   :: Maybe Text
   , roles           :: Maybe [RoleEnum]
   , fanArtistIds    :: Maybe [Int64]
   , claimArtistId   :: Maybe Int64

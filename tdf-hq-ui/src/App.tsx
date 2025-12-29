@@ -70,6 +70,7 @@ import AdminDiagnosticsPage from './pages/AdminDiagnosticsPage';
 import PublicBookingPage from './pages/PublicBookingPage';
 import CourseBuilderPage from './pages/CourseBuilderPage';
 import UxOptionsPage from './pages/UxOptionsPage';
+import InternshipsPage from './pages/InternshipsPage';
 
 function Shell() {
   const { session } = useSession();
@@ -228,6 +229,7 @@ export default function App() {
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/acerca" element={<AboutPage />} />
           <Route path="/seguridad" element={<SecurityPage />} />
+          <Route path="/practicas" element={<InternshipsPage />} />
           <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
           <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
           <Route path="/crm" element={<Outlet />}>

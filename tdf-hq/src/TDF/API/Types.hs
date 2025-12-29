@@ -12,7 +12,7 @@ import           Data.Int     (Int64)
 import           Data.Text    (Text)
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
-import           Data.Time    (UTCTime)
+import           Data.Time    (UTCTime, Day)
 import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
 import           Network.HTTP.Media ((//))
@@ -874,3 +874,188 @@ data RadioPresenceUpsert = RadioPresenceUpsert
   } deriving (Show, Generic)
 instance ToJSON RadioPresenceUpsert
 instance FromJSON RadioPresenceUpsert
+
+data InternProfileDTO = InternProfileDTO
+  { ipPartyId  :: Int64
+  , ipStartAt  :: Maybe Day
+  , ipEndAt    :: Maybe Day
+  , ipRequiredHours :: Maybe Int
+  , ipSkills   :: Maybe Text
+  , ipAreas    :: Maybe Text
+  , ipCreatedAt :: UTCTime
+  , ipUpdatedAt :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON InternProfileDTO
+instance FromJSON InternProfileDTO
+
+data InternProfileUpdate = InternProfileUpdate
+  { ipuStartAt :: Maybe (Maybe Day)
+  , ipuEndAt   :: Maybe (Maybe Day)
+  , ipuRequiredHours :: Maybe (Maybe Int)
+  , ipuSkills  :: Maybe (Maybe Text)
+  , ipuAreas   :: Maybe (Maybe Text)
+  } deriving (Show, Generic)
+instance ToJSON InternProfileUpdate
+instance FromJSON InternProfileUpdate
+
+data InternSummaryDTO = InternSummaryDTO
+  { isPartyId :: Int64
+  , isName    :: Text
+  , isEmail   :: Maybe Text
+  , isRoles   :: [RoleEnum]
+  } deriving (Show, Generic)
+instance ToJSON InternSummaryDTO
+instance FromJSON InternSummaryDTO
+
+data InternProjectDTO = InternProjectDTO
+  { ipId        :: Text
+  , ipTitle     :: Text
+  , ipDescription :: Maybe Text
+  , ipStatus    :: Text
+  , ipStartAt   :: Maybe Day
+  , ipDueAt     :: Maybe Day
+  , ipCreatedAt :: UTCTime
+  , ipUpdatedAt :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON InternProjectDTO
+instance FromJSON InternProjectDTO
+
+data InternProjectCreate = InternProjectCreate
+  { ipcTitle       :: Text
+  , ipcDescription :: Maybe Text
+  , ipcStatus      :: Maybe Text
+  , ipcStartAt     :: Maybe Day
+  , ipcDueAt       :: Maybe Day
+  } deriving (Show, Generic)
+instance ToJSON InternProjectCreate
+instance FromJSON InternProjectCreate
+
+data InternProjectUpdate = InternProjectUpdate
+  { ipuTitle       :: Maybe Text
+  , ipuDescription :: Maybe (Maybe Text)
+  , ipuStatus      :: Maybe Text
+  , ipuStartAt     :: Maybe (Maybe Day)
+  , ipuDueAt       :: Maybe (Maybe Day)
+  } deriving (Show, Generic)
+instance ToJSON InternProjectUpdate
+instance FromJSON InternProjectUpdate
+
+data InternTaskDTO = InternTaskDTO
+  { itId          :: Text
+  , itProjectId   :: Text
+  , itProjectName :: Text
+  , itTitle       :: Text
+  , itDescription :: Maybe Text
+  , itStatus      :: Text
+  , itProgress    :: Int
+  , itAssignedTo  :: Maybe Int64
+  , itAssignedName :: Maybe Text
+  , itDueAt       :: Maybe Day
+  , itCreatedAt   :: UTCTime
+  , itUpdatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON InternTaskDTO
+instance FromJSON InternTaskDTO
+
+data InternTaskCreate = InternTaskCreate
+  { itcProjectId  :: Text
+  , itcTitle      :: Text
+  , itcDescription :: Maybe Text
+  , itcAssignedTo :: Maybe Int64
+  , itcDueAt      :: Maybe Day
+  } deriving (Show, Generic)
+instance ToJSON InternTaskCreate
+instance FromJSON InternTaskCreate
+
+data InternTaskUpdate = InternTaskUpdate
+  { ituTitle       :: Maybe Text
+  , ituDescription :: Maybe (Maybe Text)
+  , ituStatus      :: Maybe Text
+  , ituProgress    :: Maybe Int
+  , ituAssignedTo  :: Maybe (Maybe Int64)
+  , ituDueAt       :: Maybe (Maybe Day)
+  } deriving (Show, Generic)
+instance ToJSON InternTaskUpdate
+instance FromJSON InternTaskUpdate
+
+data InternTodoDTO = InternTodoDTO
+  { itdId        :: Text
+  , itdText      :: Text
+  , itdDone      :: Bool
+  , itdCreatedAt :: UTCTime
+  , itdUpdatedAt :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON InternTodoDTO
+instance FromJSON InternTodoDTO
+
+data InternTodoCreate = InternTodoCreate
+  { itdcText :: Text
+  } deriving (Show, Generic)
+instance ToJSON InternTodoCreate
+instance FromJSON InternTodoCreate
+
+data InternTodoUpdate = InternTodoUpdate
+  { itduText :: Maybe Text
+  , itduDone :: Maybe Bool
+  } deriving (Show, Generic)
+instance ToJSON InternTodoUpdate
+instance FromJSON InternTodoUpdate
+
+data ClockInRequest = ClockInRequest
+  { cirNotes :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON ClockInRequest
+instance FromJSON ClockInRequest
+
+data ClockOutRequest = ClockOutRequest
+  { corNotes :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON ClockOutRequest
+instance FromJSON ClockOutRequest
+
+data InternTimeEntryDTO = InternTimeEntryDTO
+  { iteId       :: Text
+  , itePartyId  :: Int64
+  , itePartyName :: Text
+  , iteClockIn  :: UTCTime
+  , iteClockOut :: Maybe UTCTime
+  , iteDurationMinutes :: Maybe Int
+  , iteNotes    :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON InternTimeEntryDTO
+instance FromJSON InternTimeEntryDTO
+
+data InternPermissionDTO = InternPermissionDTO
+  { iprId          :: Text
+  , iprPartyId     :: Int64
+  , iprPartyName   :: Text
+  , iprCategory    :: Text
+  , iprReason      :: Maybe Text
+  , iprStartAt     :: Day
+  , iprEndAt       :: Maybe Day
+  , iprStatus      :: Text
+  , iprReviewedBy  :: Maybe Int64
+  , iprReviewedByName :: Maybe Text
+  , iprReviewedAt  :: Maybe UTCTime
+  , iprDecisionNotes :: Maybe Text
+  , iprCreatedAt   :: UTCTime
+  , iprUpdatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON InternPermissionDTO
+instance FromJSON InternPermissionDTO
+
+data InternPermissionCreate = InternPermissionCreate
+  { ipcCategory :: Text
+  , ipcReason   :: Maybe Text
+  , ipcStartAt  :: Day
+  , ipcEndAt    :: Maybe Day
+  } deriving (Show, Generic)
+instance ToJSON InternPermissionCreate
+instance FromJSON InternPermissionCreate
+
+data InternPermissionUpdate = InternPermissionUpdate
+  { ipuStatus        :: Maybe Text
+  , ipuDecisionNotes :: Maybe (Maybe Text)
+  } deriving (Show, Generic)
+instance ToJSON InternPermissionUpdate
+instance FromJSON InternPermissionUpdate

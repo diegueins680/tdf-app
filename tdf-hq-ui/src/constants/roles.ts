@@ -24,6 +24,7 @@ export type SignupRole = Role | ExtendedMusicRole;
 export const CORE_ROLES: Role[] = [
   'Admin',
   'Manager',
+  'Intern',
   'Engineer',
   'Teacher',
   'Reception',

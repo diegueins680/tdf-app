@@ -544,3 +544,152 @@ export interface PaymentCreate {
   pcPeriod?: string | null;
   pcAttachmentUrl?: string | null;
 }
+
+export interface InternProfileDTO {
+  ipPartyId: number;
+  ipStartAt?: string | null;
+  ipEndAt?: string | null;
+  ipRequiredHours?: number | null;
+  ipSkills?: string | null;
+  ipAreas?: string | null;
+  ipCreatedAt: string;
+  ipUpdatedAt: string;
+}
+
+export interface InternProfileUpdate {
+  ipuStartAt?: string | null;
+  ipuEndAt?: string | null;
+  ipuRequiredHours?: number | null;
+  ipuSkills?: string | null;
+  ipuAreas?: string | null;
+}
+
+export interface InternSummaryDTO {
+  isPartyId: number;
+  isName: string;
+  isEmail?: string | null;
+  isRoles: string[];
+}
+
+export interface InternProjectDTO {
+  ipId: string;
+  ipTitle: string;
+  ipDescription?: string | null;
+  ipStatus: string;
+  ipStartAt?: string | null;
+  ipDueAt?: string | null;
+  ipCreatedAt: string;
+  ipUpdatedAt: string;
+}
+
+export interface InternProjectCreate {
+  ipcTitle: string;
+  ipcDescription?: string | null;
+  ipcStatus?: string | null;
+  ipcStartAt?: string | null;
+  ipcDueAt?: string | null;
+}
+
+export interface InternProjectUpdate {
+  ipuTitle?: string | null;
+  ipuDescription?: string | null;
+  ipuStatus?: string | null;
+  ipuStartAt?: string | null;
+  ipuDueAt?: string | null;
+}
+
+export interface InternTaskDTO {
+  itId: string;
+  itProjectId: string;
+  itProjectName: string;
+  itTitle: string;
+  itDescription?: string | null;
+  itStatus: string;
+  itProgress: number;
+  itAssignedTo?: number | null;
+  itAssignedName?: string | null;
+  itDueAt?: string | null;
+  itCreatedAt: string;
+  itUpdatedAt: string;
+}
+
+export interface InternTaskCreate {
+  itcProjectId: string;
+  itcTitle: string;
+  itcDescription?: string | null;
+  itcAssignedTo?: number | null;
+  itcDueAt?: string | null;
+}
+
+export interface InternTaskUpdate {
+  ituTitle?: string | null;
+  ituDescription?: string | null;
+  ituStatus?: string | null;
+  ituProgress?: number | null;
+  ituAssignedTo?: number | null;
+  ituDueAt?: string | null;
+}
+
+export interface InternTodoDTO {
+  itdId: string;
+  itdText: string;
+  itdDone: boolean;
+  itdCreatedAt: string;
+  itdUpdatedAt: string;
+}
+
+export interface InternTodoCreate {
+  itdcText: string;
+}
+
+export interface InternTodoUpdate {
+  itduText?: string | null;
+  itduDone?: boolean | null;
+}
+
+export interface ClockInRequest {
+  cirNotes?: string | null;
+}
+
+export interface ClockOutRequest {
+  corNotes?: string | null;
+}
+
+export interface InternTimeEntryDTO {
+  iteId: string;
+  itePartyId: number;
+  itePartyName: string;
+  iteClockIn: string;
+  iteClockOut?: string | null;
+  iteDurationMinutes?: number | null;
+  iteNotes?: string | null;
+}
+
+export interface InternPermissionDTO {
+  iprId: string;
+  iprPartyId: number;
+  iprPartyName: string;
+  iprCategory: string;
+  iprReason?: string | null;
+  iprStartAt: string;
+  iprEndAt?: string | null;
+  iprStatus: string;
+  iprReviewedBy?: number | null;
+  iprReviewedByName?: string | null;
+  iprReviewedAt?: string | null;
+  iprDecisionNotes?: string | null;
+  iprCreatedAt: string;
+  iprUpdatedAt: string;
+}
+
+export interface InternPermissionCreate {
+  ipcCategory: string;
+  ipcReason?: string | null;
+  ipcStartAt: string;
+  ipcEndAt?: string | null;
+}
+
+export interface InternPermissionUpdate {
+  ipuStatus?: string | null;
+  ipuDecisionNotes?: string | null;
+}

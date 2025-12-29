@@ -527,6 +527,79 @@ LabelTrack
     updatedAt   UTCTime default=now()
     deriving Show Generic
 
+InternProfile
+    Id          UUID default=gen_random_uuid()
+    partyId     PartyId
+    startAt     Day Maybe
+    endAt       Day Maybe
+    requiredHours Int Maybe
+    skills      Text Maybe
+    areas       Text Maybe
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    UniqueInternProfile partyId
+    deriving Show Generic
+
+InternProject
+    Id          UUID default=gen_random_uuid()
+    title       Text
+    description Text Maybe
+    status      Text default='active'
+    startAt     Day Maybe
+    dueAt       Day Maybe
+    createdBy   PartyId
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    deriving Show Generic
+
+InternTask
+    Id          UUID default=gen_random_uuid()
+    projectId   InternProjectId
+    title       Text
+    description Text Maybe
+    status      Text default='todo'
+    progress    Int default=0
+    assignedTo  PartyId Maybe
+    dueAt       Day Maybe
+    createdBy   PartyId
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    deriving Show Generic
+
+InternTodo
+    Id           UUID default=gen_random_uuid()
+    ownerPartyId PartyId
+    text         Text
+    done         Bool default=False
+    createdAt    UTCTime default=now()
+    updatedAt    UTCTime default=now()
+    deriving Show Generic
+
+InternTimeEntry
+    Id         UUID default=gen_random_uuid()
+    partyId    PartyId
+    clockIn    UTCTime
+    clockOut   UTCTime Maybe
+    notes      Text Maybe
+    createdAt  UTCTime default=now()
+    updatedAt  UTCTime default=now()
+    deriving Show Generic
+
+InternPermissionRequest
+    Id            UUID default=gen_random_uuid()
+    partyId       PartyId
+    category      Text
+    reason        Text Maybe
+    startAt       Day
+    endAt         Day Maybe
+    status        Text default='pending'
+    reviewedBy    PartyId Maybe
+    reviewedAt    UTCTime Maybe
+    decisionNotes Text Maybe
+    createdAt     UTCTime default=now()
+    updatedAt     UTCTime default=now()
+    deriving Show Generic
+
 |]
 
 instance ToJSON (Entity Asset) where

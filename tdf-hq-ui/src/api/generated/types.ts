@@ -638,6 +638,22 @@ export interface components {
              * @example changeme123
              */
             password: string;
+            /**
+             * Format: date
+             * @description Internship start date (YYYY-MM-DD).
+             */
+            internshipStartAt?: string | null;
+            /**
+             * Format: date
+             * @description Internship end date (YYYY-MM-DD).
+             */
+            internshipEndAt?: string | null;
+            /** @description Required internship hours. */
+            internshipRequiredHours?: number | null;
+            /** @description Skills or strengths for the internship. */
+            internshipSkills?: string | null;
+            /** @description Practice areas of interest. */
+            internshipAreas?: string | null;
             /** @description Optional roles (non-admin) to assign during signup. */
             roles?: components["schemas"]["Role"][];
             /** @description Artist or band ids the fan wants to follow immediately after signup. */
@@ -660,7 +676,7 @@ export interface components {
          * @description Assigned platform role.
          * @enum {string}
          */
-        Role: "Admin" | "Manager" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
+        Role: "Admin" | "Manager" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Webmaster" | "Intern" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
         UserRoleSummary: {
             /** Format: int64 */
             id?: number;
