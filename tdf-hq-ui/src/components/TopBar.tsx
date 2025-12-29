@@ -1,5 +1,4 @@
 import MenuIcon from '@mui/icons-material/Menu';
-import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { AppBar, Box, Button, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider, Tooltip, Dialog, DialogTitle, DialogContent, TextField, InputAdornment, List, ListItemButton, ListItemText } from '@mui/material';
 import Menu from '@mui/material/Menu';
@@ -7,7 +6,6 @@ import MenuItem from '@mui/material/MenuItem';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
-import ApiTokenDialog from './ApiTokenDialog';
 import BrandLogo from './BrandLogo';
 import SearchIcon from '@mui/icons-material/Search';
 import { NAV_GROUPS, deriveModulesFromRoles, isSchoolStaffRole, pathRequiresModule, pathRequiresSchoolStaff } from './SidebarNav';
@@ -109,7 +107,6 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const { session, logout } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
-  const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
   const [quickNavOpen, setQuickNavOpen] = useState(false);
   const [quickQuery, setQuickQuery] = useState('');
   const [quickHighlight, setQuickHighlight] = useState(0);
@@ -362,16 +359,6 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               ADMIN
             </Button>
           )}
-          <Button
-            variant="outlined"
-            color="inherit"
-            startIcon={<VpnKeyIcon fontSize="small" />}
-            onClick={() => setTokenDialogOpen(true)}
-            sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.4)' }}
-          >
-            Token API
-          </Button>
-
           {session ? (
             <>
               {hasAdmin && (
@@ -551,7 +538,6 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           Seguridad
         </MenuItem>
       </Menu>
-      <ApiTokenDialog open={tokenDialogOpen} onClose={() => setTokenDialogOpen(false)} />
     </AppBar>
   );
 }

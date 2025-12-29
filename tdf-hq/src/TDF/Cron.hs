@@ -59,7 +59,6 @@ import           TDF.Services.InstagramSync (InstagramMedia(..), fetchUserMedia)
 import           TDF.Routes.Courses      (CourseMetadata(..))
 import           TDF.Server              ( buildLandingUrl
                                          , loadAdExamples
-                                         , loadKnowledgeBaseSnippets
                                          , runRagChatWithStatus
                                          , courseMetadataFor
                                          , loadWhatsAppEnv
@@ -70,6 +69,7 @@ import           TDF.Server              ( buildLandingUrl
                                          , productionCoursePrice
                                          , productionCourseCapacity
                                          )
+import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials
 import           TDF.Config              (AppConfig, instagramAppToken)
 import           TDF.WhatsApp.Client     (sendText)
@@ -230,10 +230,19 @@ socialReplyLoop env = forever $ do
       LogBuf.addLog LogBuf.LogInfo "[Cron][SocialAutoReply] Reply job finished."
 
 sendSocialAutoReplies :: Env -> IO ()
-sendSocialAutoReplies env@Env{envPool} = do
-  kb <- runSqlPool loadKnowledgeBaseSnippets envPool
-  igCount <- processInstagramReplies env kb
-  waCount <- processWhatsAppReplies env kb
+sendSocialAutoReplies env@Env{envPool, envConfig} = do
+  refreshAttempt <- try (ensureRagIndex envConfig envPool) :: IO (Either SomeException (Either Text Bool))
+  case refreshAttempt of
+    Left err ->
+      LogBuf.addLog LogBuf.LogWarning ("[Cron][SocialAutoReply] RAG refresh crashed: " <> T.pack (show err))
+    Right (Left err) ->
+      LogBuf.addLog LogBuf.LogWarning ("[Cron][SocialAutoReply] RAG refresh failed: " <> err)
+    Right (Right True) ->
+      LogBuf.addLog LogBuf.LogInfo "[Cron][SocialAutoReply] RAG index refreshed."
+    Right (Right False) ->
+      pure ()
+  igCount <- processInstagramReplies env
+  waCount <- processWhatsAppReplies env
   LogBuf.addLog LogBuf.LogInfo
     ("[Cron][SocialAutoReply] Instagram replies: " <> T.pack (show igCount)
       <> " | WhatsApp replies: " <> T.pack (show waCount))
@@ -278,8 +287,8 @@ buildChannelNote channel mAd mCampaign =
     , ("campaña=" <>) <$> mCampaign
     ])
 
-processInstagramReplies :: Env -> [Text] -> IO Int
-processInstagramReplies Env{envPool, envConfig} kb = do
+processInstagramReplies :: Env -> IO Int
+processInstagramReplies Env{envPool, envConfig} = do
   pending <- runSqlPool
     (selectList
       [ InstagramMessageDirection ==. "incoming"
@@ -287,10 +296,10 @@ processInstagramReplies Env{envPool, envConfig} kb = do
       ]
       [Asc InstagramMessageCreatedAt, LimitTo 200])
     envPool
-  foldM (replyInstagramOne envConfig envPool kb) 0 pending
+  foldM (replyInstagramOne envConfig envPool) 0 pending
 
-replyInstagramOne :: AppConfig -> ConnectionPool -> [Text] -> Int -> Entity InstagramMessage -> IO Int
-replyInstagramOne cfg pool kb acc (Entity key msg) = do
+replyInstagramOne :: AppConfig -> ConnectionPool -> Int -> Entity InstagramMessage -> IO Int
+replyInstagramOne cfg pool acc (Entity key msg) = do
   now <- getCurrentTime
   let body = fromMaybe "" (instagramMessageText msg)
   if T.null (T.strip body)
@@ -303,6 +312,7 @@ replyInstagramOne cfg pool kb acc (Entity key msg) = do
       examples <- runSqlPool
         (loadAdExamples (isJust (acAdId adContext)) (maybe [] pure (acAdId adContext)))
         pool
+      kb <- retrieveRagContext cfg pool body
       replyRes <- runRagChatWithStatus cfg kb examples body (Just channelNote)
       case replyRes of
         Left err -> do
@@ -366,8 +376,8 @@ replyInstagramOne cfg pool kb acc (Entity key msg) = do
                     pool
                   pure (acc + 1)
 
-processWhatsAppReplies :: Env -> [Text] -> IO Int
-processWhatsAppReplies Env{envPool, envConfig} kb = do
+processWhatsAppReplies :: Env -> IO Int
+processWhatsAppReplies Env{envPool, envConfig} = do
   waEnv <- loadWhatsAppEnv
   pending <- runSqlPool
     (selectList
@@ -376,10 +386,10 @@ processWhatsAppReplies Env{envPool, envConfig} kb = do
       ]
       [Asc ME.WhatsAppMessageCreatedAt, LimitTo 200])
     envPool
-  foldM (replyWhatsAppOne envConfig envPool waEnv kb) 0 pending
+  foldM (replyWhatsAppOne envConfig envPool waEnv) 0 pending
 
-replyWhatsAppOne :: AppConfig -> ConnectionPool -> WhatsAppEnv -> [Text] -> Int -> Entity ME.WhatsAppMessage -> IO Int
-replyWhatsAppOne cfg pool waEnv kb acc (Entity key msg) = do
+replyWhatsAppOne :: AppConfig -> ConnectionPool -> WhatsAppEnv -> Int -> Entity ME.WhatsAppMessage -> IO Int
+replyWhatsAppOne cfg pool waEnv acc (Entity key msg) = do
   now <- getCurrentTime
   let body = fromMaybe "" (ME.whatsAppMessageText msg)
   if T.null (T.strip body)
@@ -392,6 +402,7 @@ replyWhatsAppOne cfg pool waEnv kb acc (Entity key msg) = do
       examples <- runSqlPool
         (loadAdExamples (isJust (acAdId adContext)) (maybe [] pure (acAdId adContext)))
         pool
+      kb <- retrieveRagContext cfg pool body
       replyRes <- runRagChatWithStatus cfg kb examples body (Just channelNote)
       case replyRes of
         Left err -> do

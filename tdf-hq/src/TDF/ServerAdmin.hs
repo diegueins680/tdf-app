@@ -21,7 +21,8 @@ import qualified Data.Set               as Set
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
-import           Data.Time              (getCurrentTime)
+import qualified Data.ByteString.Lazy   as BL
+import           Data.Time              (diffUTCTime, getCurrentTime)
 import           Database.Persist       ( (==.), (!=.)
                                         , (=.)
                                         , Entity(..)
@@ -41,7 +42,7 @@ import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, to
 import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
-import           TDF.API.Admin          (AdminAPI, EmailTestRequest(..), EmailTestResponse(..))
+import           TDF.API.Admin          (AdminAPI, EmailTestRequest(..), EmailTestResponse(..), RagIndexStatus(..), RagRefreshResponse(..))
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
                                         , DropdownOptionUpdate(..)
@@ -61,6 +62,7 @@ import           TDF.Auth               ( AuthedUser
                                         , modulesForRoles
                                         )
 import           TDF.DB                 (Env(..))
+import           TDF.Config             (ragRefreshHours)
 import           TDF.Models
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
@@ -72,6 +74,7 @@ import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         )
 import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), addLog, getRecentLogs, clearLogs )
 import           TDF.DTO                ( LogEntryDTO(..) )
+import           TDF.RagStore           (getRagIndexStats, refreshRagIndex)
 import           System.IO              (hPutStrLn, stderr)
 
 adminServer
@@ -89,6 +92,7 @@ adminServer user =
   :<|> artistsRouter
   :<|> logsRouter
   :<|> emailTestHandler
+  :<|> ragRouter
   where
     seedHandler = do
       ensureModule ModuleAdmin user
@@ -148,6 +152,40 @@ adminServer user =
           liftIO $ addLog LogInfo msg
           liftIO $ hPutStrLn stderr (T.unpack msg)
           pure EmailTestResponse { status = "sent", message = Nothing }
+
+    ragRouter =
+      ragStatusHandler :<|> ragRefreshHandler
+
+    ragStatusHandler = do
+      ensureModule ModuleAdmin user
+      pool <- asks envPool
+      cfg <- asks envConfig
+      (countVal, updatedAt) <- liftIO $ getRagIndexStats pool
+      now <- liftIO getCurrentTime
+      let stale = case updatedAt of
+            Nothing -> True
+            Just ts ->
+              let hours = realToFrac (diffUTCTime now ts) / 3600 :: Double
+              in hours >= fromIntegral (ragRefreshHours cfg)
+      pure RagIndexStatus
+        { risCount = countVal
+        , risUpdatedAt = updatedAt
+        , risStale = stale
+        }
+
+    ragRefreshHandler = do
+      ensureModule ModuleAdmin user
+      pool <- asks envPool
+      cfg <- asks envConfig
+      result <- liftIO $ refreshRagIndex cfg pool
+      case result of
+        Left err ->
+          throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
+        Right chunkCount ->
+          pure RagRefreshResponse
+            { rrrStatus = "ok"
+            , rrrChunks = chunkCount
+            }
 
     roleDetail role = RoleDetailDTO
       { role    = role

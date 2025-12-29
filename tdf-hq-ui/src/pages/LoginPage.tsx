@@ -12,6 +12,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Fade,
   Fab,
   FormControl,
   FormControlLabel,
@@ -23,8 +24,6 @@ import {
   Paper,
   Select,
   Stack,
-  Tab,
-  Tabs,
   TextField,
   Typography,
   useMediaQuery,
@@ -34,6 +33,10 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import { Navigate, useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
@@ -43,8 +46,6 @@ import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
 import { Fans } from '../api/fans';
 import type { ArtistProfileDTO } from '../api/types';
 import { buildSignupPayload, deriveEffectiveRoles, normalizeSignupRoles } from '../utils/roles';
-
-type LoginTab = 'password' | 'token';
 
 const pickLandingPath = (roles: string[], modules?: string[]) => {
   const lowerRoles = roles.map((r) => r.toLowerCase());
@@ -62,6 +63,20 @@ const pickLandingPath = (roles: string[], modules?: string[]) => {
   if (hasModule('ops')) return '/operacion/inventario';
   if (hasModule('invoicing')) return '/finanzas/pagos';
   return '/inicio';
+};
+
+const LANDING_LABELS: Record<string, string> = {
+  '/configuracion/roles-permisos': 'Roles y permisos',
+  '/mi-artista': 'Mi artista',
+  '/mi-profesor': 'Mi profesor',
+  '/fans': 'Fan Hub',
+  '/estudio/calendario': 'Calendario',
+  '/crm/contactos': 'CRM',
+  '/label/artistas': 'Label - Artistas',
+  '/operacion/inventario': 'Inventario',
+  '/finanzas/pagos': 'Finanzas',
+  '/practicas': 'Practicas',
+  '/inicio': 'Inicio',
 };
 
 declare global {
@@ -128,8 +143,6 @@ const parseGoogleIdToken = (token: string): { email?: string; name?: string } | 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [tokenValue, setTokenValue] = useState('');
-  const [tab, setTab] = useState<LoginTab>('password');
   const [rememberDevice, setRememberDevice] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -335,50 +348,72 @@ export default function LoginPage() {
     () => signupRoles.some((role) => role.toLowerCase() === 'intern'),
     [signupRoles],
   );
+  const signupGuide = useMemo(() => {
+    const normalizedRoles = signupRoles.map((role) => role.toLowerCase());
+    const hasRoles = normalizedRoles.length > 0;
+    const hasArtist = normalizedRoles.some((role) => role.includes('artist') || role.includes('artista'));
+    const hasFan = normalizedRoles.includes('fan');
+    const hasIntern = normalizedRoles.includes('intern');
+
+    const steps: string[] = [];
+    let title = 'Primeros pasos sugeridos';
+    let note = '';
+
+    if (hasArtist) {
+      title = 'Ruta para artistas';
+      steps.push('Completa tu bio, generos y links principales.');
+      steps.push('Publica portada y video destacado.');
+      steps.push('Comparte tu URL publica con tu audiencia.');
+    } else if (hasIntern) {
+      title = 'Ruta para practicas';
+      steps.push('Completa fechas, horas y areas de interes.');
+      steps.push('Revisa tu plan de rotaciones con el equipo.');
+      steps.push('Comparte tus avances y objetivos.');
+    } else if (hasFan) {
+      title = 'Ruta para fans';
+      steps.push('Sigue a tus artistas favoritos.');
+      steps.push('Activa alertas de lanzamientos y eventos.');
+      steps.push('Reserva sesiones o streams cuando quieras.');
+    } else if (hasRoles) {
+      steps.push('Accede al panel principal y configura tu perfil.');
+      steps.push('Explora los modulos disponibles para tu rol.');
+    } else {
+      title = 'Elige tu ruta';
+      steps.push('Selecciona un rol para personalizar tu panel.');
+      steps.push('Puedes ajustar tus roles mas adelante.');
+      note = 'Sin roles: Fan';
+    }
+
+    const landingRoles = hasRoles ? signupRoles : (['Fan'] as SignupRole[]);
+    const landingPath = redirectPath ?? pickLandingPath(landingRoles);
+    const landingLabel = LANDING_LABELS[landingPath] ?? landingPath;
+
+    return { title, steps, landingLabel, note };
+  }, [redirectPath, signupRoles]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
 
-    const normalizedIdentifier =
-      tab === 'password'
-        ? identifier.trim()
-        : (() => {
-            const tokenSnippet = tokenValue.trim().slice(0, 8);
-            const suffix = tokenSnippet === '' ? 'usuario' : tokenSnippet;
-            return `token:${suffix}`;
-          })();
+    const normalizedIdentifier = identifier.trim();
+    const normalizedPassword = password.trim();
+    if (!normalizedIdentifier || !normalizedPassword) {
+      setFormError('Ingresa tu usuario o correo y la contraseña.');
+      return;
+    }
 
     const displayName =
       normalizedIdentifier.charAt(0).toUpperCase() + normalizedIdentifier.slice(1);
 
     try {
-      let apiToken: string | null = null;
-      let roles: string[] = [];
-      let modules: string[] | undefined;
-      let partyId: number | undefined;
-
-      if (tab === 'password') {
-        if (!identifier.trim() || !password.trim()) {
-          setFormError('Ingresa tu usuario o correo y la contraseña.');
-          return;
-        }
-        const response = await loginMutation.mutateAsync({
-          username: identifier.trim(),
-          password: password.trim(),
-        });
-        apiToken = response.token;
-        roles = response.roles?.map((role) => role.toLowerCase()) ?? [];
-        modules = response.modules;
-        partyId = response.partyId;
-      } else {
-        if (!tokenValue.trim()) {
-          setFormError('Ingresa tu token API.');
-          return;
-        }
-        apiToken = tokenValue.trim();
-        roles = ['token'];
-      }
+      const response = await loginMutation.mutateAsync({
+        username: normalizedIdentifier,
+        password: normalizedPassword,
+      });
+      const apiToken = response.token;
+      const roles = response.roles?.map((role) => role.toLowerCase()) ?? [];
+      const modules = response.modules;
+      const partyId = response.partyId;
 
       const baseRoles =
         roles.length > 0
@@ -459,28 +494,6 @@ export default function LoginPage() {
     [googleLoginMutation, login, navigate, redirectPath, signupDialogOpen],
   );
 
-  const loginWithToken = useCallback(() => {
-    if (!tokenValue.trim()) {
-      setFormError('Ingresa tu token API.');
-      return;
-    }
-    const roles = ['token'];
-    const landingPath = pickLandingPath(roles, []);
-    const targetPath = redirectPath ?? landingPath;
-    login(
-      {
-        username: 'token-user',
-        displayName: 'API Token',
-        roles,
-        apiToken: tokenValue.trim(),
-        modules: [],
-        partyId: undefined,
-      },
-      { remember: rememberDevice },
-    );
-    navigate(targetPath, { replace: true });
-  }, [login, navigate, redirectPath, rememberDevice, tokenValue]);
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const clampWidth = (value: number) => Math.max(220, Math.min(Math.round(value), 420));
@@ -554,16 +567,6 @@ export default function LoginPage() {
     if (shouldOpenSignup) {
       setSignupDialogOpen(true);
     }
-    const tokenFromUrl = params.get('token') ?? params.get('apiToken');
-    if (tokenFromUrl?.trim()) {
-      setTab('token');
-      setTokenValue(tokenFromUrl.trim());
-    }
-
-    const tabParam = params.get('tab');
-    if (tabParam?.toLowerCase().includes('token')) {
-      setTab('token');
-    }
   }, [location.search]);
 
   const openResetDialog = () => {
@@ -598,7 +601,7 @@ export default function LoginPage() {
     }
   };
 
-  const openSignupDialog = () => {
+  const openSignupDialog = (roles: SignupRole[] = []) => {
     setSignupDialogOpen(true);
     setSignupFeedback(null);
     setSignupForm({
@@ -613,7 +616,7 @@ export default function LoginPage() {
       internshipSkills: '',
       internshipAreas: '',
     });
-    setSignupRoles([]);
+    setSignupRoles(roles);
     setFavoriteArtistIds([]);
     setClaimArtistId(null);
     signupMutation.reset();
@@ -725,235 +728,378 @@ export default function LoginPage() {
           filter: 'blur(0px)',
         }}
       />
-      <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center' }}>
-        <Paper
-          component="form"
-          elevation={6}
-          onSubmit={(event) => {
-            void handleSubmit(event);
-          }}
-          sx={{
-            width: '100%',
-            maxWidth: 440,
-            p: { xs: 2.5, sm: 4 },
-            borderRadius: { xs: 3, sm: 4 },
-            boxShadow: '0 30px 90px rgba(0,0,0,0.55)',
-            background: 'linear-gradient(145deg, rgba(15,23,42,0.95), rgba(18,24,38,0.9))',
-            border: '1px solid rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(12px)',
-            color: '#f8fafc',
-          }}
+      <Container maxWidth="lg" sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={{ xs: 2.5, md: 3 }}
+          alignItems="stretch"
+          sx={{ width: '100%', maxWidth: 980 }}
         >
-          <Stack spacing={isMobile ? 2.5 : 3}>
-            <Stack spacing={1} alignItems="flex-start">
-              <Chip
-                label="TDF Records"
-                size="small"
-                sx={{
-                  bgcolor: 'rgba(148,163,184,0.16)',
-                  color: '#e2e8f0',
-                  borderColor: 'rgba(148,163,184,0.45)',
-                  letterSpacing: 0.8,
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                }}
-                variant="outlined"
-              />
-              <Typography variant="h5" fontWeight={700}>
-                Iniciar sesión
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
-                Usa tus credenciales o un token emitido por TDF Records.
-              </Typography>
-              {lastSession && (
-                <Stack direction="row" spacing={1} alignItems="center">
+          <Box sx={{ width: '100%', maxWidth: 440 }}>
+            <Paper
+              component="form"
+              elevation={6}
+              onSubmit={(event) => {
+                void handleSubmit(event);
+              }}
+              sx={{
+                width: '100%',
+                maxWidth: 440,
+                p: { xs: 2.5, sm: 4 },
+                borderRadius: { xs: 3, sm: 4 },
+                boxShadow: '0 30px 90px rgba(0,0,0,0.55)',
+                background: 'linear-gradient(145deg, rgba(15,23,42,0.95), rgba(18,24,38,0.9))',
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(12px)',
+                color: '#f8fafc',
+              }}
+            >
+              <Stack spacing={isMobile ? 2.5 : 3}>
+                <Stack spacing={1} alignItems="flex-start">
                   <Chip
-                    label={`Continuar como ${lastSession.displayName}`}
-                    color="primary"
-                    onClick={() => {
-                      const landing = redirectPath ?? pickLandingPath(lastSession.roles ?? [], lastSession.modules);
-                      navigate(landing, { replace: true });
+                    label="TDF Records"
+                    size="small"
+                    sx={{
+                      bgcolor: 'rgba(148,163,184,0.16)',
+                      color: '#e2e8f0',
+                      borderColor: 'rgba(148,163,184,0.45)',
+                      letterSpacing: 0.8,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
                     }}
+                    variant="outlined"
                   />
-                  {lastSession.apiToken && (
-                    <Button
-                      size="small"
-                      variant="text"
-                      onClick={() => {
-                        setTab('token');
-                        setTokenValue(lastSession.apiToken ?? '');
-                      }}
-                    >
-                      Usar token guardado
-                    </Button>
+                  <Typography variant="h5" fontWeight={700}>
+                    Iniciar sesión
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
+                    Usa tus credenciales para acceder al panel.
+                  </Typography>
+                  {lastSession && (
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Chip
+                        label={`Continuar como ${lastSession.displayName}`}
+                        color="primary"
+                        onClick={() => {
+                          const landing = redirectPath ?? pickLandingPath(lastSession.roles ?? [], lastSession.modules);
+                          navigate(landing, { replace: true });
+                        }}
+                      />
+                    </Stack>
                   )}
                 </Stack>
-              )}
-            </Stack>
 
+                <Stack spacing={2.25}>
+                  <Stack spacing={2}>
+                    <TextField
+                      label="Usuario o correo *"
+                      type="text"
+                      value={identifier}
+                      onChange={(event) => setIdentifier(event.target.value)}
+                      fullWidth
+                      autoComplete="username"
+                      inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
+                      helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
+                      sx={textFieldSx}
+                    />
 
-            <Stack spacing={2.25}>
-              <Tabs value={tab} onChange={(_, value) => setTab(value as LoginTab)} variant="fullWidth">
-                <Tab value="password" label="CONTRASEÑA" />
-                <Tab value="token" label="TOKEN API" />
-              </Tabs>
-              {tab === 'password' ? (
-                <Stack spacing={2}>
-                  <TextField
-                    label="Usuario o correo *"
-                    type="text"
-                    value={identifier}
-                    onChange={(event) => setIdentifier(event.target.value)}
-                    fullWidth
-                    autoComplete="username"
-                    inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                    helperText="Puedes iniciar sesión con tu usuario o con el correo principal."
-                    sx={textFieldSx}
-                  />
-
-                  <TextField
-                    label="Contraseña *"
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    fullWidth
-                    autoComplete="current-password"
-                    inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                    sx={textFieldSx}
-                  />
+                    <TextField
+                      label="Contraseña *"
+                      type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      fullWidth
+                      autoComplete="current-password"
+                      inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
+                      sx={textFieldSx}
+                    />
+                  </Stack>
                 </Stack>
-              ) : (
-                <Stack spacing={2}>
-                  <TextField
-                    label="Token API *"
-                    value={tokenValue}
-                    onChange={(event) => setTokenValue(event.target.value)}
-                    fullWidth
-                    placeholder="tdf_xxxx-xxxx"
-                    inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                    sx={textFieldSx}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Inserta el token temporal asignado por el equipo de operaciones. Caduca en 24 horas.
-                  </Typography>
-                </Stack>
-              )}
-            </Stack>
 
-            <Stack spacing={1} sx={{ mt: 1 }}>
-              <Typography variant="subtitle2">Acceso rápido con token API</Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <TextField
-                  label="Token API"
-                  fullWidth
-                  value={tokenValue}
-                  onChange={(e) => setTokenValue(e.target.value)}
-                  placeholder="tdf_xxxx-xxxx"
-                  inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                  sx={{ flex: 1 }}
+                {googleClientId && (
+                  <Stack spacing={1} alignItems="center">
+                    <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
+                      O continúa con Google
+                    </Typography>
+                    <Box
+                      ref={googleButtonRef}
+                      sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
+                    />
+                    {googleStatus && (
+                      <Typography variant="caption" color="text.secondary">
+                        {googleStatus}
+                      </Typography>
+                    )}
+                    {googleError && (
+                      <Alert severity="warning" sx={{ width: '100%' }}>
+                        {googleError}
+                      </Alert>
+                    )}
+                  </Stack>
+                )}
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={rememberDevice}
+                      onChange={(event) => setRememberDevice(event.target.checked)}
+                    />
+                  }
+                  label="Recordarme en este dispositivo"
                 />
-                <Button variant="outlined" onClick={loginWithToken} size="medium">
-                  Ingresar con token
-                </Button>
-              </Stack>
-            </Stack>
-
-            {googleClientId && (
-              <Stack spacing={1} alignItems="center">
-                <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
-                  O continúa con Google
+                <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.7)' }}>
+                  Si lo activas, mantendremos tu sesión iniciada en este navegador.
                 </Typography>
-                <Box
-                  ref={googleButtonRef}
-                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
-                />
-                {googleStatus && (
-                  <Typography variant="caption" color="text.secondary">
-                    {googleStatus}
+
+                {formError && <Alert severity="warning">{formError}</Alert>}
+
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
+                  <Button variant="contained" type="submit" size="large" disabled={loginMutation.isPending}>
+                    {loginMutation.isPending ? 'Ingresando…' : 'Ingresar'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    onClick={() => openSignupDialog()}
+                    sx={{ minWidth: 180 }}
+                  >
+                    Crear cuenta
+                  </Button>
+                </Stack>
+
+                <Stack spacing={0.5} textAlign="center">
+                  <Typography variant="body2">
+                    ¿Olvidaste tu contraseña?{' '}
+                    <Link
+                      component="button"
+                      type="button"
+                      underline="hover"
+                      onClick={openResetDialog}
+                      sx={{ cursor: 'pointer', p: 0 }}
+                    >
+                      Recuperar acceso
+                    </Link>
                   </Typography>
-                )}
-                {googleError && (
-                  <Alert severity="warning" sx={{ width: '100%' }}>
-                    {googleError}
-                  </Alert>
-                )}
+                  <Typography variant="body2">
+                    ¿No tienes cuenta?{' '}
+                    <Link
+                      component="button"
+                      type="button"
+                      underline="hover"
+                      onClick={() => openSignupDialog()}
+                      sx={{ cursor: 'pointer', p: 0 }}
+                    >
+                      Crear cuenta
+                    </Link>
+                  </Typography>
+                  <Typography variant="body2">
+                    ¿Buscas una clase de prueba?{' '}
+                    <Link component={RouterLink} to="/trials" underline="hover">
+                      Solicitar trial
+                    </Link>
+                  </Typography>
+                  <Typography variant="body2">
+                    ¿Quieres explorar la música?{' '}
+                    <Link component={RouterLink} to="/fans" underline="hover">
+                      Ir al Fan Hub
+                    </Link>
+                  </Typography>
+                  {!googleClientId && (
+                    <Typography variant="caption" color="text.secondary">
+                      Login con Google no disponible en este entorno.
+                    </Typography>
+                  )}
+                </Stack>
               </Stack>
-            )}
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rememberDevice}
-                  onChange={(event) => setRememberDevice(event.target.checked)}
-                />
-              }
-              label="Recordarme en este dispositivo"
-            />
-            <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.7)' }}>
-              Si lo activas, mantendremos tu sesión iniciada en este navegador.
-            </Typography>
-
-            {formError && <Alert severity="warning">{formError}</Alert>}
-
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-              <Button variant="contained" type="submit" size="large" disabled={loginMutation.isPending}>
-                {loginMutation.isPending ? 'Ingresando…' : 'Ingresar'}
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={openSignupDialog}
-                sx={{ minWidth: 180 }}
+            </Paper>
+          </Box>
+          <Fade in timeout={700}>
+            <Box sx={{ width: '100%', maxWidth: 440 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  width: '100%',
+                  p: { xs: 2.5, sm: 3 },
+                  borderRadius: { xs: 3, sm: 4 },
+                  background: 'linear-gradient(160deg, rgba(15,23,42,0.94), rgba(15,23,42,0.78))',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: '#e2e8f0',
+                }}
               >
-                Crear cuenta
-              </Button>
-            </Stack>
-
-            <Stack spacing={0.5} textAlign="center">
-              <Typography variant="body2">
-                ¿Olvidaste tu contraseña?{' '}
-                <Link
-                  component="button"
-                  type="button"
-                  underline="hover"
-                  onClick={openResetDialog}
-                  sx={{ cursor: 'pointer', p: 0 }}
-                >
-                  Recuperar acceso
-                </Link>
-              </Typography>
-              <Typography variant="body2">
-                ¿No tienes cuenta?{' '}
-                <Link
-                  component="button"
-                  type="button"
-                  underline="hover"
-                  onClick={openSignupDialog}
-                  sx={{ cursor: 'pointer', p: 0 }}
-                >
-                  Crear cuenta
-                </Link>
-              </Typography>
-              <Typography variant="body2">
-                ¿Buscas una clase de prueba?{' '}
-                <Link component={RouterLink} to="/trials" underline="hover">
-                  Solicitar trial
-                </Link>
-              </Typography>
-              <Typography variant="body2">
-                ¿Quieres explorar la música?{' '}
-                <Link component={RouterLink} to="/fans" underline="hover">
-                  Ir al Fan Hub
-                </Link>
-              </Typography>
-              {!googleClientId && (
-                <Typography variant="caption" color="text.secondary">
-                  Login con Google no disponible en este entorno.
-                </Typography>
-              )}
-            </Stack>
-          </Stack>
-        </Paper>
+                <Stack spacing={2}>
+                  <Stack spacing={0.75}>
+                    <Chip
+                      label="Onboarding rapido"
+                      size="small"
+                      sx={{
+                        width: 'fit-content',
+                        bgcolor: 'rgba(56,189,248,0.18)',
+                        color: '#e2e8f0',
+                        borderColor: 'rgba(56,189,248,0.35)',
+                        fontWeight: 700,
+                      }}
+                      variant="outlined"
+                    />
+                    <Typography variant="h6" fontWeight={800}>
+                      Empieza en minutos
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.78)' }}>
+                      Elige la ruta que mejor encaja contigo y te llevamos al panel ideal.
+                    </Typography>
+                  </Stack>
+                  <Stack spacing={1.5}>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 2,
+                        borderRadius: 3,
+                        borderColor: 'rgba(148,163,184,0.24)',
+                        bgcolor: 'rgba(15,23,42,0.65)',
+                      }}
+                    >
+                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                        <Box
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: 'rgba(56,189,248,0.18)',
+                            color: '#38bdf8',
+                          }}
+                        >
+                          <MusicNoteIcon />
+                        </Box>
+                        <Stack spacing={0.5} sx={{ flex: 1 }}>
+                          <Typography variant="subtitle1" fontWeight={700}>
+                            Soy artista
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+                            Crea tu perfil, comparte tu link y presenta tu musica.
+                          </Typography>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => navigate('/artist-onboarding')}
+                            sx={{
+                              alignSelf: 'flex-start',
+                              textTransform: 'none',
+                              borderColor: 'rgba(148,163,184,0.4)',
+                              color: '#e2e8f0',
+                            }}
+                          >
+                            Crear perfil
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 2,
+                        borderRadius: 3,
+                        borderColor: 'rgba(148,163,184,0.24)',
+                        bgcolor: 'rgba(15,23,42,0.65)',
+                      }}
+                    >
+                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                        <Box
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: 'rgba(244,114,182,0.18)',
+                            color: '#f472b6',
+                          }}
+                        >
+                          <FavoriteBorderIcon />
+                        </Box>
+                        <Stack spacing={0.5} sx={{ flex: 1 }}>
+                          <Typography variant="subtitle1" fontWeight={700}>
+                            Soy fan
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+                            Sigue artistas, recibe lanzamientos y reserva experiencias.
+                          </Typography>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => openSignupDialog(['Fan'])}
+                            sx={{
+                              alignSelf: 'flex-start',
+                              textTransform: 'none',
+                              borderColor: 'rgba(148,163,184,0.4)',
+                              color: '#e2e8f0',
+                            }}
+                          >
+                            Crear cuenta fan
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 2,
+                        borderRadius: 3,
+                        borderColor: 'rgba(148,163,184,0.24)',
+                        bgcolor: 'rgba(15,23,42,0.65)',
+                      }}
+                    >
+                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                        <Box
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: 'rgba(52,211,153,0.18)',
+                            color: '#34d399',
+                          }}
+                        >
+                          <SchoolOutlinedIcon />
+                        </Box>
+                        <Stack spacing={0.5} sx={{ flex: 1 }}>
+                          <Typography variant="subtitle1" fontWeight={700}>
+                            Busco practicas
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+                            Postula, define tu plan y organiza tus rotaciones.
+                          </Typography>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => openSignupDialog(['Intern'])}
+                            sx={{
+                              alignSelf: 'flex-start',
+                              textTransform: 'none',
+                              borderColor: 'rgba(148,163,184,0.4)',
+                              color: '#e2e8f0',
+                            }}
+                          >
+                            Postular practicas
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                  </Stack>
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Chip label="Menos de 3 minutos" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                    <Chip label="Roles editables" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                    <Chip label="Acceso inmediato" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                  </Stack>
+                </Stack>
+              </Paper>
+            </Box>
+          </Fade>
+        </Stack>
       </Container>
       <Box sx={{ mt: { xs: 2.5, sm: 3 }, display: 'flex', justifyContent: 'center', width: '100%' }}>
         <Box id="login-radio-mini-slot" sx={{ width: '100%', maxWidth: 440 }} />
@@ -1213,6 +1359,42 @@ export default function LoginPage() {
                 {signupFeedback.message}
               </Alert>
             )}
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                borderColor: 'rgba(37,99,235,0.28)',
+                bgcolor: 'rgba(239,246,255,0.75)',
+              }}
+            >
+              <Stack spacing={1}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <AutoAwesomeIcon color="primary" fontSize="small" />
+                  <Typography variant="subtitle2" color="text.primary">
+                    {signupGuide.title}
+                  </Typography>
+                </Stack>
+                <Stack spacing={0.5}>
+                  {signupGuide.steps.map((step) => (
+                    <Typography key={step} variant="body2" color="text.secondary">
+                      - {step}
+                    </Typography>
+                  ))}
+                </Stack>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Chip
+                    label={`Destino: ${signupGuide.landingLabel}`}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                  {signupGuide.note && (
+                    <Chip label={signupGuide.note} size="small" variant="outlined" />
+                  )}
+                </Stack>
+              </Stack>
+            </Paper>
             <Typography variant="body2" color="text.secondary">
               Al crear la cuenta aceptas los términos de servicio de TDF Records y recibes acceso inmediato al panel.
             </Typography>

@@ -136,6 +136,29 @@ resetSchema = do
 runAllMigrations :: SqlPersistT IO ()
 runAllMigrations = do
   rawExecute "CREATE EXTENSION IF NOT EXISTS pgcrypto" []
+  rawExecute "CREATE EXTENSION IF NOT EXISTS vector" []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS rag_chunk ( \
+    \  id BIGSERIAL PRIMARY KEY, \
+    \  source TEXT NOT NULL, \
+    \  source_id TEXT, \
+    \  chunk_index INT NOT NULL, \
+    \  content TEXT NOT NULL, \
+    \  metadata JSONB, \
+    \  embedding vector(1536) NOT NULL, \
+    \  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), \
+    \  updated_at TIMESTAMPTZ NOT NULL DEFAULT now() \
+    \)" []
+  rawExecute
+    "CREATE UNIQUE INDEX IF NOT EXISTS rag_chunk_source_key \
+    \ON rag_chunk (source, source_id, chunk_index)" []
+  rawExecute
+    "CREATE INDEX IF NOT EXISTS rag_chunk_embedding_idx \
+    \ON rag_chunk USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)" []
+  rawExecute
+    "CREATE INDEX IF NOT EXISTS rag_chunk_source_idx ON rag_chunk (source)" []
+  rawExecute
+    "CREATE INDEX IF NOT EXISTS rag_chunk_source_id_idx ON rag_chunk (source_id)" []
   renameLegacyPartyRoleConstraint
   legacyRoles <- captureLegacyPartyRoles
   dropLegacyPartyColumns
