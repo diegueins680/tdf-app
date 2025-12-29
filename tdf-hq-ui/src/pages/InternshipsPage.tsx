@@ -30,6 +30,7 @@ import type {
   InternTaskUpdate,
   InternTodoCreate,
   InternTodoUpdate,
+  InternTimeEntryDTO,
   InternPermissionCreate,
   InternPermissionUpdate,
 } from '../api/types';
@@ -54,6 +55,102 @@ const PERMISSION_STATUS_LABELS: Record<string, string> = {
   rejected: 'Rechazado',
   cancelled: 'Cancelado',
 };
+
+const PLAYBOOK_OVERVIEW = [
+  {
+    title: 'Plan 8–12 semanas',
+    detail: 'Objetivos claros por semana, con entregables y métricas visibles.',
+  },
+  {
+    title: 'Rotaciones guiadas',
+    detail: 'Estudio, A&R, marketing, data y operaciones para descubrir afinidad.',
+  },
+  {
+    title: 'Proyecto estrella',
+    detail: 'Un proyecto con impacto real, documentado y presentado al cierre.',
+  },
+];
+
+const PLAYBOOK_RITUALS = [
+  {
+    title: 'Daily 10 min',
+    detail: 'Prioridades del día y bloqueos.',
+  },
+  {
+    title: 'Revisión semanal',
+    detail: 'Avances, aprendizajes y siguiente meta.',
+  },
+  {
+    title: 'Retro mensual',
+    detail: 'Feedback accionable y ajuste de plan.',
+  },
+  {
+    title: 'Demo day',
+    detail: 'Presentación final con métricas e impacto.',
+  },
+];
+
+const PLAYBOOK_PROJECT_DESCRIPTION =
+  'Plan base de prácticas con rotaciones, proyecto estrella y rituales de seguimiento.';
+
+const PLAYBOOK_TASK_TEMPLATES = [
+  {
+    title: 'Kickoff + objetivos SMART',
+    description: 'Definir expectativas, entregables y métricas de éxito.',
+  },
+  {
+    title: 'Mapa de competencias + áreas de interés',
+    description: 'Priorizar habilidades y áreas donde aportar mayor valor.',
+  },
+  {
+    title: 'Onboarding de herramientas y procesos',
+    description: 'Accesos, workflow interno y normas de calidad.',
+  },
+  {
+    title: 'Rotación 1: Estudio / producción',
+    description: 'Apoyo en sesiones, documentación y preparación técnica.',
+  },
+  {
+    title: 'Rotación 2: A&R y scouting',
+    description: 'Investigación de artistas, briefs y oportunidades.',
+  },
+  {
+    title: 'Rotación 3: Marketing y growth',
+    description: 'Ejecución de contenido, campañas y análisis de resultados.',
+  },
+  {
+    title: 'Rotación 4: Operaciones y data',
+    description: 'Procesos internos, dashboards y optimizaciones.',
+  },
+  {
+    title: 'Proyecto estrella: alcance + plan',
+    description: 'Definir problema, alcance, entregables y cronograma.',
+  },
+  {
+    title: 'Proyecto estrella: ejecución',
+    description: 'Implementación y coordinación con stakeholders.',
+  },
+  {
+    title: 'Proyecto estrella: entrega + métricas',
+    description: 'Resultados, métricas y recomendaciones.',
+  },
+  {
+    title: 'Portafolio interno + documentación',
+    description: 'Registrar aprendizajes, procesos y evidencias.',
+  },
+  {
+    title: 'Demo day + retro final',
+    description: 'Presentación final y retroalimentación 360°.',
+  },
+];
+
+const PERSONAL_CHECKLIST_TODOS = [
+  '[Prácticas] Daily de 10 min: prioridades y bloqueos',
+  '[Prácticas] Revisión semanal con mentor',
+  '[Prácticas] Actualizar portafolio interno',
+  '[Prácticas] Registrar aprendizaje clave',
+  '[Prácticas] Preparar demo day',
+];
 
 const formatDate = (value?: string | null) => {
   if (!value) return '—';
@@ -101,6 +198,9 @@ export default function InternshipsPage() {
   const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
   const [progressDraft, setProgressDraft] = useState<Record<string, number>>({});
   const [signupFeedback, setSignupFeedback] = useState<string | null>(null);
+  const [playbookAssigneeId, setPlaybookAssigneeId] = useState<number | ''>('');
+  const [playbookFeedback, setPlaybookFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [checklistFeedback, setChecklistFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const [projectForm, setProjectForm] = useState<InternProjectCreate>({
     ipcTitle: '',
@@ -251,6 +351,48 @@ export default function InternshipsPage() {
       Internships.updatePermission(permissionId, payload),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['internships', 'permissions'] }),
   });
+  const seedPlaybookMutation = useMutation({
+    mutationFn: async ({ projectTitle, assigneeId }: { projectTitle: string; assigneeId: number | null }) => {
+      const project = await Internships.createProject({
+        ipcTitle: projectTitle,
+        ipcDescription: PLAYBOOK_PROJECT_DESCRIPTION,
+        ipcStatus: 'active',
+        ipcStartAt: null,
+        ipcDueAt: null,
+      });
+      for (const task of PLAYBOOK_TASK_TEMPLATES) {
+        await Internships.createTask({
+          itcProjectId: project.ipId,
+          itcTitle: task.title,
+          itcDescription: task.description,
+          itcAssignedTo: assigneeId,
+          itcDueAt: null,
+        });
+      }
+      return project;
+    },
+    onMutate: () => setPlaybookFeedback(null),
+    onSuccess: () => {
+      setPlaybookFeedback({ type: 'success', message: 'Plan base creado. Ya puedes asignar avances en tareas.' });
+      void qc.invalidateQueries({ queryKey: ['internships', 'projects'] });
+      void qc.invalidateQueries({ queryKey: ['internships', 'tasks'] });
+    },
+    onError: () => setPlaybookFeedback({ type: 'error', message: 'No se pudo crear el plan base. Intenta de nuevo.' }),
+  });
+  const seedChecklistMutation = useMutation({
+    mutationFn: async () => {
+      for (const text of PERSONAL_CHECKLIST_TODOS) {
+        await Internships.createTodo({ itdcText: text });
+      }
+      return true;
+    },
+    onMutate: () => setChecklistFeedback(null),
+    onSuccess: () => {
+      setChecklistFeedback({ type: 'success', message: 'Checklist personal creado en tus to-dos.' });
+      void qc.invalidateQueries({ queryKey: ['internships', 'todos'] });
+    },
+    onError: () => setChecklistFeedback({ type: 'error', message: 'No se pudo crear el checklist.' }),
+  });
 
   const projects = projectsQuery.data ?? [];
   const tasks = tasksQuery.data ?? [];
@@ -260,6 +402,14 @@ export default function InternshipsPage() {
   const interns = internsQuery.data ?? [];
   const sessionPartyId = session?.partyId ?? null;
   const isSelfView = !isAdmin || (selectedPartyId != null && selectedPartyId === sessionPartyId);
+  const selectedAssignee = interns.find((intern) => intern.isPartyId === playbookAssigneeId) ?? null;
+  const playbookProjectTitle = selectedAssignee
+    ? `Plan de prácticas - ${selectedAssignee.isName} (#${selectedAssignee.isPartyId})`
+    : 'Plan de prácticas';
+  const playbookProjectExists = projects.some(
+    (project) => project.ipTitle.trim().toLowerCase() === playbookProjectTitle.toLowerCase(),
+  );
+  const hasChecklist = todos.some((todo) => todo.itdText.startsWith('[Prácticas]'));
 
   const openEntry = isSelfView ? (entries.find((entry) => !entry.iteClockOut) ?? null) : null;
   const totalMinutes = entries.reduce((sum, entry) => {
@@ -330,6 +480,112 @@ export default function InternshipsPage() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardContent>
+          <Stack spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between">
+              <Typography variant="h6" fontWeight={700}>Playbook de prácticas</Typography>
+              <Chip label="Guía 8–12 semanas" variant="outlined" />
+            </Stack>
+            <Typography color="text.secondary">
+              Usa este playbook como guía estándar para onboarding, rotaciones, proyecto estrella y seguimiento.
+            </Typography>
+            <Stack spacing={1}>
+              {PLAYBOOK_OVERVIEW.map((item) => (
+                <Box
+                  key={item.title}
+                  sx={{
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    px: 2,
+                    py: 1.5,
+                  }}
+                >
+                  <Typography fontWeight={600}>{item.title}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {item.detail}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+            <Stack spacing={1}>
+              <Typography variant="subtitle2" fontWeight={700}>Formato de seguimiento</Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                {PLAYBOOK_RITUALS.map((ritual) => (
+                  <Box
+                    key={ritual.title}
+                    sx={{
+                      flex: 1,
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      px: 2,
+                      py: 1.5,
+                    }}
+                  >
+                    <Typography fontWeight={600}>{ritual.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {ritual.detail}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Stack>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+              {isAdmin && (
+                <>
+                  <FormControl size="small" sx={{ minWidth: 240 }}>
+                    <InputLabel id="playbook-assignee-label">Asignar plan a</InputLabel>
+                    <Select
+                      labelId="playbook-assignee-label"
+                      label="Asignar plan a"
+                      value={playbookAssigneeId}
+                      onChange={(event) =>
+                        setPlaybookAssigneeId(event.target.value === '' ? '' : Number(event.target.value))
+                      }
+                    >
+                      <MenuItem value="">Sin asignar</MenuItem>
+                      {interns.map((intern) => (
+                        <MenuItem key={intern.isPartyId} value={intern.isPartyId}>{intern.isName}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Button
+                    variant="contained"
+                    onClick={() =>
+                      void seedPlaybookMutation.mutateAsync({
+                        projectTitle: playbookProjectTitle,
+                        assigneeId: playbookAssigneeId === '' ? null : playbookAssigneeId,
+                      })
+                    }
+                    disabled={playbookProjectExists || seedPlaybookMutation.isPending}
+                  >
+                    {seedPlaybookMutation.isPending ? 'Creando…' : 'Generar plan base'}
+                  </Button>
+                </>
+              )}
+              {isIntern && (
+                <Button
+                  variant="outlined"
+                  onClick={() => void seedChecklistMutation.mutateAsync()}
+                  disabled={hasChecklist || seedChecklistMutation.isPending}
+                >
+                  {seedChecklistMutation.isPending ? 'Creando…' : 'Crear checklist personal'}
+                </Button>
+              )}
+              {playbookProjectExists && isAdmin && (
+                <Typography variant="body2" color="text.secondary">
+                  Ya existe un plan con el mismo nombre.
+                </Typography>
+              )}
+            </Stack>
+            {playbookFeedback && <Alert severity={playbookFeedback.type}>{playbookFeedback.message}</Alert>}
+            {checklistFeedback && <Alert severity={checklistFeedback.type}>{checklistFeedback.message}</Alert>}
+          </Stack>
+        </CardContent>
+      </Card>
 
       {isIntern && (
         <Card>
