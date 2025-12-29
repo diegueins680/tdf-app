@@ -166,6 +166,15 @@ const formatDateTime = (value?: string | null) => {
   return new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 };
 
+const resolveEntryMinutes = (entry: InternTimeEntryDTO) => {
+  if (entry.iteDurationMinutes != null) return entry.iteDurationMinutes;
+  if (!entry.iteClockOut) return null;
+  const start = new Date(entry.iteClockIn).getTime();
+  const end = new Date(entry.iteClockOut).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return null;
+  return Math.max(0, Math.floor((end - start) / 60000));
+};
+
 const minutesToHours = (minutes: number) => (minutes / 60).toFixed(2);
 const normalizeOptional = (value?: string | null) => {
   const trimmed = value?.trim() ?? '';
@@ -231,6 +240,7 @@ export default function InternshipsPage() {
     ipcEndAt: '',
   });
 
+  const entriesScope = isAdmin ? (selectedPartyId ?? 'all') : 'self';
   const internsQuery = useQuery({
     queryKey: ['internships', 'interns'],
     queryFn: Internships.listInterns,
@@ -257,7 +267,7 @@ export default function InternshipsPage() {
     enabled: canAccess,
   });
   const entriesQuery = useQuery({
-    queryKey: ['internships', 'time-entries', selectedPartyId ?? 'self'],
+    queryKey: ['internships', 'time-entries', entriesScope],
     queryFn: () => Internships.listTimeEntries(isAdmin ? selectedPartyId : null),
     enabled: canAccess,
   });
@@ -360,38 +370,69 @@ export default function InternshipsPage() {
         ipcStartAt: null,
         ipcDueAt: null,
       });
-      for (const task of PLAYBOOK_TASK_TEMPLATES) {
-        await Internships.createTask({
-          itcProjectId: project.ipId,
-          itcTitle: task.title,
-          itcDescription: task.description,
-          itcAssignedTo: assigneeId,
-          itcDueAt: null,
-        });
-      }
-      return project;
+      const results = await Promise.allSettled(
+        PLAYBOOK_TASK_TEMPLATES.map((task) =>
+          Internships.createTask({
+            itcProjectId: project.ipId,
+            itcTitle: task.title,
+            itcDescription: task.description,
+            itcAssignedTo: assigneeId,
+            itcDueAt: null,
+          }),
+        ),
+      );
+      const failed = results.filter((result) => result.status === 'rejected').length;
+      return { project, failed, total: results.length };
     },
     onMutate: () => setPlaybookFeedback(null),
-    onSuccess: () => {
-      setPlaybookFeedback({ type: 'success', message: 'Plan base creado. Ya puedes asignar avances en tareas.' });
+    onSuccess: ({ failed, total }) => {
+      if (failed === 0) {
+        setPlaybookFeedback({ type: 'success', message: 'Plan base creado. Ya puedes asignar avances en tareas.' });
+        return;
+      }
+      if (failed === total) {
+        setPlaybookFeedback({
+          type: 'error',
+          message: 'Plan base creado, pero no se pudieron generar las tareas. Intenta de nuevo.',
+        });
+        return;
+      }
+      setPlaybookFeedback({
+        type: 'error',
+        message: `Plan base creado con ${failed} tareas fallidas. Reintenta las pendientes.`,
+      });
+    },
+    onError: () => setPlaybookFeedback({ type: 'error', message: 'No se pudo crear el plan base. Intenta de nuevo.' }),
+    onSettled: () => {
       void qc.invalidateQueries({ queryKey: ['internships', 'projects'] });
       void qc.invalidateQueries({ queryKey: ['internships', 'tasks'] });
     },
-    onError: () => setPlaybookFeedback({ type: 'error', message: 'No se pudo crear el plan base. Intenta de nuevo.' }),
   });
   const seedChecklistMutation = useMutation({
     mutationFn: async () => {
-      for (const text of PERSONAL_CHECKLIST_TODOS) {
-        await Internships.createTodo({ itdcText: text });
-      }
-      return true;
+      const results = await Promise.allSettled(
+        PERSONAL_CHECKLIST_TODOS.map((text) => Internships.createTodo({ itdcText: text })),
+      );
+      const failed = results.filter((result) => result.status === 'rejected').length;
+      return { failed, total: results.length };
     },
     onMutate: () => setChecklistFeedback(null),
-    onSuccess: () => {
-      setChecklistFeedback({ type: 'success', message: 'Checklist personal creado en tus to-dos.' });
-      void qc.invalidateQueries({ queryKey: ['internships', 'todos'] });
+    onSuccess: ({ failed, total }) => {
+      if (failed === 0) {
+        setChecklistFeedback({ type: 'success', message: 'Checklist personal creado en tus to-dos.' });
+        return;
+      }
+      if (failed === total) {
+        setChecklistFeedback({ type: 'error', message: 'No se pudo crear el checklist.' });
+        return;
+      }
+      setChecklistFeedback({
+        type: 'error',
+        message: `Checklist creado con ${failed} pendientes fallidos. Reintenta los faltantes.`,
+      });
     },
     onError: () => setChecklistFeedback({ type: 'error', message: 'No se pudo crear el checklist.' }),
+    onSettled: () => void qc.invalidateQueries({ queryKey: ['internships', 'todos'] }),
   });
 
   const projects = projectsQuery.data ?? [];
@@ -412,17 +453,7 @@ export default function InternshipsPage() {
   const hasChecklist = todos.some((todo) => todo.itdText.startsWith('[Prácticas]'));
 
   const openEntry = isSelfView ? (entries.find((entry) => !entry.iteClockOut) ?? null) : null;
-  const totalMinutes = entries.reduce((sum, entry) => {
-    if (entry.iteDurationMinutes != null) return sum + entry.iteDurationMinutes;
-    if (entry.iteClockOut) {
-      const start = new Date(entry.iteClockIn).getTime();
-      const end = new Date(entry.iteClockOut).getTime();
-      if (!Number.isNaN(start) && !Number.isNaN(end)) {
-        return sum + Math.max(0, Math.floor((end - start) / 60000));
-      }
-    }
-    return sum;
-  }, 0);
+  const totalMinutes = entries.reduce((sum, entry) => sum + (resolveEntryMinutes(entry) ?? 0), 0);
 
   const signupPath = '/login?signup=1&roles=Intern&redirect=/practicas';
   const signupUrl = typeof window !== 'undefined' ? `${window.location.origin}${signupPath}` : signupPath;
@@ -733,20 +764,23 @@ export default function InternshipsPage() {
                     </TableCell>
                   </TableRow>
                 )}
-                {entries.map((entry) => (
-                  <TableRow key={entry.iteId}>
-                    <TableCell>{entry.itePartyName}</TableCell>
-                    <TableCell>{formatDateTime(entry.iteClockIn)}</TableCell>
-                    <TableCell>{formatDateTime(entry.iteClockOut)}</TableCell>
-                    <TableCell>
-                      {entry.iteDurationMinutes != null
-                        ? `${minutesToHours(entry.iteDurationMinutes)} h`
-                        : entry.iteClockOut
-                          ? '—'
-                          : 'En curso'}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {entries.map((entry) => {
+                  const entryMinutes = resolveEntryMinutes(entry);
+                  return (
+                    <TableRow key={entry.iteId}>
+                      <TableCell>{entry.itePartyName}</TableCell>
+                      <TableCell>{formatDateTime(entry.iteClockIn)}</TableCell>
+                      <TableCell>{formatDateTime(entry.iteClockOut)}</TableCell>
+                      <TableCell>
+                        {entryMinutes != null
+                          ? `${minutesToHours(entryMinutes)} h`
+                          : entry.iteClockOut
+                            ? '—'
+                            : 'En curso'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </Stack>
@@ -1021,7 +1055,12 @@ export default function InternshipsPage() {
                           onBlur={(event) => {
                             const value = Number(event.target.value);
                             if (Number.isNaN(value)) return;
-                            void updateTaskMutation.mutateAsync({ taskId: task.itId, payload: { ituProgress: value } });
+                            const clamped = Math.min(100, Math.max(0, value));
+                            setProgressDraft((prev) => ({ ...prev, [task.itId]: clamped }));
+                            void updateTaskMutation.mutateAsync({
+                              taskId: task.itId,
+                              payload: { ituProgress: clamped },
+                            });
                           }}
                           inputProps={{ min: 0, max: 100 }}
                         />
