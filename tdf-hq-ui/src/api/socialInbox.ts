@@ -30,7 +30,7 @@ const buildQuery = (params: Record<string, string | number | boolean | undefined
 export const SocialInboxAPI = {
   listInstagramMessages: (filters: SocialInboxFilters = {}) =>
     get<SocialMessage[]>(
-      `/instagram/instagram/messages${buildQuery({
+      `/instagram/messages${buildQuery({
         limit: filters.limit,
         repliedOnly: filters.repliedOnly,
       })}`,
