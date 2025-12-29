@@ -186,6 +186,27 @@ export default function LoginPage() {
     }),
     [],
   );
+  const dialogFieldSx = useMemo(
+    () => ({
+      '& .MuiInputLabel-root': {
+        color: 'rgba(15,23,42,0.72)',
+        '&.Mui-focused': { color: '#2563eb' },
+      },
+      '& .MuiOutlinedInput-root': {
+        bgcolor: '#ffffff',
+        color: '#0f172a',
+        '& fieldset': { borderColor: 'rgba(15,23,42,0.25)' },
+        '&:hover fieldset': { borderColor: 'rgba(15,23,42,0.45)' },
+        '&.Mui-focused fieldset': {
+          borderColor: '#2563eb',
+          boxShadow: '0 0 0 1px rgba(37,99,235,0.35)',
+        },
+      },
+      '& .MuiFormHelperText-root': { color: 'rgba(15,23,42,0.6)' },
+      '& .MuiInputBase-input::placeholder': { color: 'rgba(15,23,42,0.45)', opacity: 1 },
+    }),
+    [],
+  );
 
   const { mode, toggleMode } = useThemeMode();
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -948,7 +969,7 @@ export default function LoginPage() {
               onChange={(event) => setResetEmail(event.target.value)}
               fullWidth
               placeholder="tu.correo@tdf.com"
-              sx={textFieldSx}
+              sx={dialogFieldSx}
             />
             {resetFeedback && (
               <Alert severity={resetFeedback.type === 'success' ? 'success' : 'error'}>
@@ -998,14 +1019,14 @@ export default function LoginPage() {
                 value={signupForm.firstName}
                 onChange={(event) => setSignupForm((prev) => ({ ...prev, firstName: event.target.value }))}
                 fullWidth
-                sx={textFieldSx}
+                sx={dialogFieldSx}
               />
               <TextField
                 label="Apellido"
                 value={signupForm.lastName}
                 onChange={(event) => setSignupForm((prev) => ({ ...prev, lastName: event.target.value }))}
                 fullWidth
-                sx={textFieldSx}
+                sx={dialogFieldSx}
               />
             </Stack>
             <TextField
@@ -1015,16 +1036,16 @@ export default function LoginPage() {
               onChange={(event) => setSignupForm((prev) => ({ ...prev, email: event.target.value }))}
               fullWidth
               placeholder="tu.correo@tdf.com"
-              sx={textFieldSx}
+              sx={dialogFieldSx}
             />
             <TextField
               label="Celular (opcional)"
               value={signupForm.phone}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, phone: event.target.value }))}
               fullWidth
-              sx={textFieldSx}
+              sx={dialogFieldSx}
             />
-            <FormControl fullWidth>
+            <FormControl fullWidth sx={dialogFieldSx}>
               <InputLabel id="signup-roles-label">Roles (opcional)</InputLabel>
               <Select<SignupRole[]>
                 labelId="signup-roles-label"
@@ -1062,7 +1083,7 @@ export default function LoginPage() {
                     onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipStartAt: event.target.value }))}
                     fullWidth
                     InputLabelProps={{ shrink: true }}
-                    sx={textFieldSx}
+                    sx={dialogFieldSx}
                   />
                   <TextField
                     label="Fin de prácticas"
@@ -1071,7 +1092,7 @@ export default function LoginPage() {
                     onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipEndAt: event.target.value }))}
                     fullWidth
                     InputLabelProps={{ shrink: true }}
-                    sx={textFieldSx}
+                    sx={dialogFieldSx}
                   />
                   <TextField
                     label="Horas requeridas"
@@ -1080,7 +1101,7 @@ export default function LoginPage() {
                     onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipRequiredHours: event.target.value }))}
                     fullWidth
                     inputProps={{ min: 0, step: 1 }}
-                    sx={textFieldSx}
+                    sx={dialogFieldSx}
                   />
                 </Stack>
                 <TextField
@@ -1090,7 +1111,7 @@ export default function LoginPage() {
                   fullWidth
                   multiline
                   minRows={2}
-                  sx={textFieldSx}
+                  sx={dialogFieldSx}
                 />
                 <TextField
                   label="Áreas de práctica de interés"
@@ -1099,7 +1120,7 @@ export default function LoginPage() {
                   fullWidth
                   multiline
                   minRows={2}
-                  sx={textFieldSx}
+                  sx={dialogFieldSx}
                 />
               </Stack>
             )}
@@ -1123,7 +1144,7 @@ export default function LoginPage() {
                       {...params}
                       label="Reclamar perfil de artista (opcional)"
                       helperText="Solo se muestran perfiles sin usuario. Al reclamarlo obtendrás acceso como Artista."
-                      sx={textFieldSx}
+                      sx={dialogFieldSx}
                       InputProps={{
                         ...params.InputProps,
                         endAdornment: (
@@ -1158,7 +1179,7 @@ export default function LoginPage() {
                       {...params}
                       label="Artistas o bandas"
                       placeholder={fanArtistsQuery.isFetching ? 'Cargando artistas...' : 'Buscar y seleccionar'}
-                      sx={textFieldSx}
+                      sx={dialogFieldSx}
                       InputProps={{
                         ...params.InputProps,
                         endAdornment: (
@@ -1178,14 +1199,14 @@ export default function LoginPage() {
                 )}
               </Stack>
             )}
-              <TextField
-                label="Contraseña *"
-                type="password"
-                value={signupForm.password}
-                onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
-                fullWidth
-                helperText={passwordHint}
-                sx={textFieldSx}
+            <TextField
+              label="Contraseña *"
+              type="password"
+              value={signupForm.password}
+              onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
+              fullWidth
+              helperText={passwordHint}
+              sx={dialogFieldSx}
             />
             {signupFeedback && (
               <Alert severity={signupFeedback.type === 'success' ? 'success' : 'error'}>
