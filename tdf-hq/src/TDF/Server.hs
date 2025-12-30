@@ -58,7 +58,7 @@ import           Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawS
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
-import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..))
+import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..))
 import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
@@ -604,7 +604,13 @@ chatServer user =
   :<|> chatSendMessage user
 
 driveServer :: AuthedUser -> ServerT DriveAPI AppM
-driveServer _ mAccessToken DriveUploadForm{..} = do
+driveServer user =
+  driveUploadServer user
+  :<|> driveTokenExchangeServer user
+  :<|> driveTokenRefreshServer user
+
+driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
+driveUploadServer _ mAccessToken DriveUploadForm{..} = do
   manager <- liftIO $ newManager tlsManagerSettings
   accessToken <- resolveDriveAccessToken manager (fmap T.strip mAccessToken <|> duAccessToken)
   mFolderEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
@@ -662,59 +668,108 @@ driveServer _ mAccessToken DriveUploadForm{..} = do
       let body = map toLower (BL8.unpack (errBody err))
       in "invalid_grant" `isInfixOf` body
 
-    loadDriveClientCreds :: AppM (Text, Text)
-    loadDriveClientCreds = do
-      mCid <- liftIO $ lookupEnvTextNonEmpty "DRIVE_CLIENT_ID"
-      mSecret <- liftIO $ lookupEnvTextNonEmpty "DRIVE_CLIENT_SECRET"
-      mCidFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_ID"
-      mSecretFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_SECRET"
-      case (mCid <|> mCidFallback, mSecret <|> mSecretFallback) of
-        (Just cid, Just secret) -> pure (cid, secret)
-        _ ->
-          throwError err503
-            { errBody =
-                "Google Drive no configurado (faltan DRIVE_CLIENT_ID/DRIVE_CLIENT_SECRET o " <>
-                "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)."
-            }
+driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse
+driveTokenExchangeServer _ DriveTokenExchangeRequest{..} = do
+  Env{envConfig} <- ask
+  manager <- liftIO $ newManager tlsManagerSettings
+  (cid, secret) <- loadDriveClientCreds
+  let redirectResolved = resolveDriveRedirectUri envConfig redirectUri
+  token <- requestGoogleToken manager
+    [ ("client_id", TE.encodeUtf8 cid)
+    , ("client_secret", TE.encodeUtf8 secret)
+    , ("code", TE.encodeUtf8 code)
+    , ("code_verifier", TE.encodeUtf8 codeVerifier)
+    , ("redirect_uri", TE.encodeUtf8 redirectResolved)
+    , ("grant_type", "authorization_code")
+    ]
+  pure (driveTokenResponseFrom token Nothing)
 
-    refreshDriveAccessToken :: Manager -> Text -> Text -> Text -> AppM Text
-    refreshDriveAccessToken manager cid secret rt = do
-      req0 <- liftIO $ parseRequest "https://oauth2.googleapis.com/token"
-      let form =
-            renderSimpleQuery False
-              [ ("client_id", TE.encodeUtf8 cid)
-              , ("client_secret", TE.encodeUtf8 secret)
-              , ("refresh_token", TE.encodeUtf8 rt)
-              , ("grant_type", "refresh_token")
-              ]
-          req = req0
-            { method = "POST"
-            , requestBody = RequestBodyLBS (BL.fromStrict form)
-            , requestHeaders = [("Content-Type", "application/x-www-form-urlencoded")]
-            }
-      respOrErr <-
-        liftIO
-          (try (httpLbs req manager) ::
-            IO (Either SomeException (Response BL.ByteString)))
-      resp <- case respOrErr of
-        Left err ->
-          throwError err502
-            { errBody = BL8.pack ("No se pudo contactar Google OAuth: " <> displayException err) }
-        Right ok -> pure ok
-      let codeStatus = statusCode (responseStatus resp)
-      when (codeStatus >= 400) $ do
-        let bodySnippet = take 2000 (BL8.unpack (responseBody resp))
-            suffix = if null bodySnippet then "" else " " <> bodySnippet
-        throwError err502
-          { errBody =
-              BL8.pack
-                ("Refresh token falló con Google OAuth (" <> show codeStatus <> ")." <> suffix)
-          }
-      token <- case eitherDecode (responseBody resp) of
-        Left err ->
-          throwError err502 { errBody = BL8.pack ("No se pudo parsear refresh token: " <> err) }
-        Right tok -> pure (tok :: GoogleToken)
-      pure (access_token token)
+driveTokenRefreshServer :: AuthedUser -> DriveTokenRefreshRequest -> AppM DriveTokenResponse
+driveTokenRefreshServer _ DriveTokenRefreshRequest{..} = do
+  manager <- liftIO $ newManager tlsManagerSettings
+  (cid, secret) <- loadDriveClientCreds
+  token <- requestGoogleToken manager
+    [ ("client_id", TE.encodeUtf8 cid)
+    , ("client_secret", TE.encodeUtf8 secret)
+    , ("refresh_token", TE.encodeUtf8 refreshToken)
+    , ("grant_type", "refresh_token")
+    ]
+  pure (driveTokenResponseFrom token (Just refreshToken))
+
+resolveDriveRedirectUri :: AppConfig -> Maybe Text -> Text
+resolveDriveRedirectUri cfg mProvided =
+  fromMaybe (resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback") (mProvided >>= nonEmptyText)
+  where
+    nonEmptyText txt =
+      let trimmed = T.strip txt
+      in if T.null trimmed then Nothing else Just trimmed
+
+driveTokenResponseFrom :: GoogleToken -> Maybe Text -> DriveTokenResponse
+driveTokenResponseFrom GoogleToken{..} fallbackRefresh =
+  DriveTokenResponse
+    { accessToken = access_token
+    , refreshToken = refresh_token <|> fallbackRefresh
+    , expiresIn = fromMaybe 3600 expires_in
+    , tokenType = token_type
+    }
+
+requestGoogleToken :: Manager -> [(ByteString, ByteString)] -> AppM GoogleToken
+requestGoogleToken manager form = do
+  req0 <- liftIO $ parseRequest "https://oauth2.googleapis.com/token"
+  let payload = renderSimpleQuery False form
+      req = req0
+        { method = "POST"
+        , requestBody = RequestBodyLBS (BL.fromStrict payload)
+        , requestHeaders = [("Content-Type", "application/x-www-form-urlencoded")]
+        }
+  respOrErr <-
+    liftIO
+      (try (httpLbs req manager) ::
+        IO (Either SomeException (Response BL.ByteString)))
+  resp <- case respOrErr of
+    Left err ->
+      throwError err502
+        { errBody = BL8.pack ("No se pudo contactar Google OAuth: " <> displayException err) }
+    Right ok -> pure ok
+  let codeStatus = statusCode (responseStatus resp)
+  when (codeStatus >= 400) $ do
+    let bodySnippet = take 2000 (BL8.unpack (responseBody resp))
+        suffix = if null bodySnippet then "" else " " <> bodySnippet
+    throwError err502
+      { errBody =
+          BL8.pack
+            ("Solicitud OAuth falló (" <> show codeStatus <> ")." <> suffix)
+      }
+  token <- case eitherDecode (responseBody resp) of
+    Left err ->
+      throwError err502 { errBody = BL8.pack ("No se pudo parsear token: " <> err) }
+    Right tok -> pure (tok :: GoogleToken)
+  pure token
+
+loadDriveClientCreds :: AppM (Text, Text)
+loadDriveClientCreds = do
+  mCid <- liftIO $ lookupEnvTextNonEmpty "DRIVE_CLIENT_ID"
+  mSecret <- liftIO $ lookupEnvTextNonEmpty "DRIVE_CLIENT_SECRET"
+  mCidFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_ID"
+  mSecretFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_SECRET"
+  case (mCid <|> mCidFallback, mSecret <|> mSecretFallback) of
+    (Just cid, Just secret) -> pure (cid, secret)
+    _ ->
+      throwError err503
+        { errBody =
+            "Google Drive no configurado (faltan DRIVE_CLIENT_ID/DRIVE_CLIENT_SECRET o " <>
+            "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)."
+        }
+
+refreshDriveAccessToken :: Manager -> Text -> Text -> Text -> AppM Text
+refreshDriveAccessToken manager cid secret rt = do
+  token <- requestGoogleToken manager
+    [ ("client_id", TE.encodeUtf8 cid)
+    , ("client_secret", TE.encodeUtf8 secret)
+    , ("refresh_token", TE.encodeUtf8 rt)
+    , ("grant_type", "refresh_token")
+    ]
+  pure (access_token token)
 
 lookupEnvTextNonEmpty :: String -> IO (Maybe Text)
 lookupEnvTextNonEmpty key = do

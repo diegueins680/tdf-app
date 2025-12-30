@@ -773,6 +773,52 @@ paths:
           description: Not allowed
         '404':
           description: Not found
+  /drive/token:
+    post:
+      tags: [Drive]
+      summary: Exchange Google Drive OAuth code
+      description: Exchanges a Google OAuth code (PKCE) for Drive tokens.
+      operationId: exchangeDriveToken
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriveTokenExchangeRequest'
+      responses:
+        '200':
+          description: Drive token response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriveTokenResponse'
+        '502':
+          description: Google OAuth error
+  /drive/token/refresh:
+    post:
+      tags: [Drive]
+      summary: Refresh Google Drive access token
+      description: Refreshes a Google Drive access token using a refresh token.
+      operationId: refreshDriveToken
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriveTokenRefreshRequest'
+      responses:
+        '200':
+          description: Drive token response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriveTokenResponse'
+        '502':
+          description: Google OAuth error
 security:
   - bearerAuth: [ ]
 
@@ -1500,3 +1546,34 @@ components:
       type: object
       description: Meta WhatsApp Cloud API webhook payload (pass-through, not strictly validated).
       additionalProperties: true
+    DriveTokenExchangeRequest:
+      type: object
+      required: [code, codeVerifier]
+      properties:
+        code:
+          type: string
+        codeVerifier:
+          type: string
+        redirectUri:
+          type: string
+          nullable: true
+    DriveTokenRefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    DriveTokenResponse:
+      type: object
+      required: [accessToken, expiresIn]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+          nullable: true
+        expiresIn:
+          type: integer
+        tokenType:
+          type: string
+          nullable: true

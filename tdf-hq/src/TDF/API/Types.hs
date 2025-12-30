@@ -430,6 +430,29 @@ data DriveUploadDTO = DriveUploadDTO
 instance ToJSON DriveUploadDTO
 instance FromJSON DriveUploadDTO
 
+data DriveTokenExchangeRequest = DriveTokenExchangeRequest
+  { code         :: Text
+  , codeVerifier :: Text
+  , redirectUri  :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON DriveTokenExchangeRequest
+instance FromJSON DriveTokenExchangeRequest
+
+data DriveTokenRefreshRequest = DriveTokenRefreshRequest
+  { refreshToken :: Text
+  } deriving (Show, Generic)
+instance ToJSON DriveTokenRefreshRequest
+instance FromJSON DriveTokenRefreshRequest
+
+data DriveTokenResponse = DriveTokenResponse
+  { accessToken  :: Text
+  , refreshToken :: Maybe Text
+  , expiresIn    :: Int
+  , tokenType    :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON DriveTokenResponse
+instance FromJSON DriveTokenResponse
+
 data AssetCheckoutRequest = AssetCheckoutRequest
   { coTargetKind    :: Maybe Text
   , coTargetSession :: Maybe Text

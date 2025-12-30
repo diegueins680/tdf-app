@@ -110,6 +110,7 @@ npm run start
 ### Google Drive uploads (web UI)
 - Needed for the Drive picker flow in the admin UI (uploads via OAuth PKCE).
 - Create an OAuth 2.0 Client ID of type **Web application** in Google Cloud Console. Add `http://localhost:5173/oauth/google-drive/callback` for local dev and your deployed domain (e.g. `https://tdf-app.pages.dev/oauth/google-drive/callback`) as authorized redirect URIs.
+- Backend exchanges OAuth codes, so set `GOOGLE_CLIENT_SECRET` (or `DRIVE_CLIENT_SECRET`) alongside `GOOGLE_CLIENT_ID`.
 - Set in `tdf-hq-ui/.env`:
   ```
   VITE_GOOGLE_DRIVE_CLIENT_ID=<the client ID you created>

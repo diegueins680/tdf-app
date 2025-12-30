@@ -12,7 +12,7 @@ import           Servant
 import           Servant.Multipart  (MultipartForm, Tmp, FromMultipart(..), lookupFile, lookupInput, FileData)
 import qualified Data.Text         as T
 
-import           TDF.API.Types      (DriveUploadDTO)
+import           TDF.API.Types      (DriveUploadDTO, DriveTokenExchangeRequest, DriveTokenRefreshRequest, DriveTokenResponse)
 
 data DriveUploadForm = DriveUploadForm
   { duFile        :: FileData Tmp
@@ -45,3 +45,9 @@ type DriveAPI =
     :> Header "X-Goog-Access-Token" Text
     :> MultipartForm Tmp DriveUploadForm
     :> Post '[JSON] DriveUploadDTO
+  :<|> "drive" :> "token"
+    :> ReqBody '[JSON] DriveTokenExchangeRequest
+    :> Post '[JSON] DriveTokenResponse
+  :<|> "drive" :> "token" :> "refresh"
+    :> ReqBody '[JSON] DriveTokenRefreshRequest
+    :> Post '[JSON] DriveTokenResponse

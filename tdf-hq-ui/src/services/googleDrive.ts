@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid';
+import { post } from '../api/client';
 
 const TOKEN_KEY = 'tdf-google-drive-token';
 const CODE_VERIFIER_KEY = 'tdf-google-drive-code-verifier';
@@ -10,6 +11,13 @@ interface StoredToken {
   expiresAt: number; // epoch ms
 }
 
+interface DriveTokenResponse {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn: number;
+  tokenType?: string;
+}
+
 export interface DriveFileInfo {
   id: string;
   name: string;
@@ -19,7 +27,6 @@ export interface DriveFileInfo {
 }
 
 const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
-const GOOGLE_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const GOOGLE_FILES_ENDPOINT = 'https://www.googleapis.com/drive/v3/files';
 const GOOGLE_UPLOAD_ENDPOINT = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
@@ -114,30 +121,15 @@ export const exchangeCodeForToken = async (code: string) => {
   if (!verifier) throw new Error('No hay code_verifier para intercambio OAuth');
   localStorage.removeItem(CODE_VERIFIER_KEY);
 
-  const body = new URLSearchParams({
-    client_id: clientId,
-    grant_type: 'authorization_code',
+  const data = await post<DriveTokenResponse>('/drive/token', {
     code,
-    redirect_uri: redirectUri,
-    code_verifier: verifier,
+    codeVerifier: verifier,
+    redirectUri,
   });
-
-  const res = await fetch(GOOGLE_TOKEN_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
-  if (!res.ok) throw new Error('No se pudo obtener token de Google Drive');
-  const data = (await res.json()) as {
-    access_token: string;
-    expires_in: number;
-    refresh_token?: string;
-    token_type: string;
-  };
-  const expiresAt = Date.now() + data.expires_in * 1000 - 60_000;
+  const expiresAt = Date.now() + data.expiresIn * 1000 - 60_000;
   const stored: StoredToken = {
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token,
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
     expiresAt,
   };
   storeToken(stored);
@@ -145,25 +137,13 @@ export const exchangeCodeForToken = async (code: string) => {
 };
 
 export const refreshAccessToken = async (refreshToken: string) => {
-  const clientId = getClientId();
-  if (!clientId) throw new Error('Falta VITE_GOOGLE_DRIVE_CLIENT_ID');
-  const body = new URLSearchParams({
-    client_id: clientId,
-    grant_type: 'refresh_token',
-    refresh_token: refreshToken,
-  });
-  const res = await fetch(GOOGLE_TOKEN_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
-  if (!res.ok) throw new Error('No se pudo refrescar token de Google Drive');
-  const data = (await res.json()) as {
-    access_token: string;
-    expires_in: number;
+  const data = await post<DriveTokenResponse>('/drive/token/refresh', { refreshToken });
+  const expiresAt = Date.now() + data.expiresIn * 1000 - 60_000;
+  const stored: StoredToken = {
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken ?? refreshToken,
+    expiresAt,
   };
-  const expiresAt = Date.now() + data.expires_in * 1000 - 60_000;
-  const stored: StoredToken = { accessToken: data.access_token, refreshToken, expiresAt };
   storeToken(stored);
   return stored;
 };
