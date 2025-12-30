@@ -195,6 +195,84 @@ paths:
       responses:
         '204':
           description: Processed
+  /instagram/messages:
+    get:
+      tags: [Instagram]
+      summary: List Instagram inbox messages
+      description: Returns stored Instagram messages for auto-reply tracking.
+      operationId: listInstagramMessages
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+        - name: direction
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [incoming, outgoing, all]
+            default: all
+        - name: repliedOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Messages list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SocialInboxMessage'
+  /whatsapp/messages:
+    get:
+      tags: [WhatsApp]
+      summary: List WhatsApp inbox messages
+      description: Returns stored WhatsApp messages for auto-reply tracking.
+      operationId: listWhatsAppMessages
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+        - name: direction
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [incoming, outgoing, all]
+            default: all
+        - name: repliedOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Messages list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SocialInboxMessage'
   /admin/courses/{slug}/registrations/{registrationId}/status:
     parameters:
       - name: slug
@@ -1074,6 +1152,34 @@ components:
         cmBody:
           type: string
         cmCreatedAt:
+          type: string
+          format: date-time
+    SocialInboxMessage:
+      type: object
+      properties:
+        externalId:
+          type: string
+        senderId:
+          type: string
+        senderName:
+          type: string
+          nullable: true
+        text:
+          type: string
+          nullable: true
+        direction:
+          type: string
+        repliedAt:
+          type: string
+          format: date-time
+          nullable: true
+        replyText:
+          type: string
+          nullable: true
+        replyError:
+          type: string
+          nullable: true
+        createdAt:
           type: string
           format: date-time
     ChatSendMessageRequest:
