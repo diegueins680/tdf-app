@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Container } from '@mui/material';
+import { Box, Button, Container, Stack } from '@mui/material';
 import { Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import TopBar from './components/TopBar';
 import PartiesPage from './pages/PartiesPage';
@@ -17,6 +17,7 @@ import CourseRegistrationsAdminPage from './pages/CourseRegistrationsAdminPage';
 import { useSession } from './session/SessionContext';
 import SidebarNav from './components/SidebarNav';
 import ApiStatusChip from './components/ApiStatusChip';
+import ChatKitLauncher from './components/ChatKitLauncher';
 import RadioWidget from './components/RadioWidget';
 import PublicBranding from './components/PublicBranding';
 import InscripcionPage from './pages/inscripcion/InscripcionPage';
@@ -179,7 +180,10 @@ function Shell() {
               zIndex: theme.zIndex.tooltip,
             })}
           >
-            <ApiStatusChip />
+            <Stack spacing={1.5} alignItems="flex-end">
+              <ApiStatusChip />
+              <ChatKitLauncher />
+            </Stack>
           </Box>
         </Box>
       </Box>
