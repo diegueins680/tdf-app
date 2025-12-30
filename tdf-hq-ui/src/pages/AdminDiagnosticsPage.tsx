@@ -55,11 +55,11 @@ export default function AdminDiagnosticsPage() {
   const lastSyncAt = typeof window !== 'undefined' ? window.localStorage.getItem('calendar-sync.lastSyncAt') ?? '—' : '—';
   const instagramQuery = useQuery({
     queryKey: ['social-inbox', 'instagram'],
-    queryFn: () => SocialInboxAPI.listInstagramMessages(),
+    queryFn: () => SocialInboxAPI.listInstagramMessages({ direction: 'incoming' }),
   });
   const whatsappQuery = useQuery({
     queryKey: ['social-inbox', 'whatsapp'],
-    queryFn: () => SocialInboxAPI.listWhatsAppMessages(),
+    queryFn: () => SocialInboxAPI.listWhatsAppMessages({ direction: 'incoming' }),
   });
   const instagramStats = useMemo(() => buildStats(instagramQuery.data), [instagramQuery.data]);
   const whatsappStats = useMemo(() => buildStats(whatsappQuery.data), [whatsappQuery.data]);

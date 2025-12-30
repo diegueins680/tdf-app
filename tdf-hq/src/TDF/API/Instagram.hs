@@ -22,5 +22,6 @@ type InstagramAPI =
   :<|> "instagram" :> "reply"   :> ReqBody '[JSON] InstagramReplyReq :> Post '[JSON] Value
   :<|> "instagram" :> "messages"
          :> QueryParam "limit" Int
-         :> QueryParam "repliedOnly" Bool
+         :> QueryParam "direction" Text
+         :> QueryParam "repliedOnly" Text
          :> Get '[JSON] Value

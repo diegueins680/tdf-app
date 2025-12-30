@@ -548,10 +548,10 @@ describe('UserRoleManagement', () => {
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-  "http://localhost:8080/instagram/messages?limit=20&repliedOnly=true"
+  "http://localhost:8080/instagram/messages?limit=20&direction=incoming&repliedOnly=true"
 
 curl -H "Authorization: Bearer $TOKEN" \
-  "http://localhost:8080/whatsapp/messages?limit=20&repliedOnly=true"
+  "http://localhost:8080/whatsapp/messages?limit=20&direction=incoming&repliedOnly=true"
 ```
 
 Expected fields per item: `externalId`, `senderId`, `senderName`, `text`, `direction`, `repliedAt`, `replyText`, `replyError`, `createdAt`.

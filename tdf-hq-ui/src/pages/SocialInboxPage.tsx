@@ -163,14 +163,15 @@ const ChannelPanel = ({ label, stats, messages, loading }: ChannelPanelProps) =>
 export default function SocialInboxPage() {
   const [filter, setFilter] = useState<FilterKey>('pending');
   const [limit, setLimit] = useState(100);
+  const direction = 'incoming' as const;
   const repliedOnly = filter === 'replied';
   const instagramQuery = useQuery({
-    queryKey: ['social-inbox', 'instagram', limit, repliedOnly],
-    queryFn: () => SocialInboxAPI.listInstagramMessages({ limit, repliedOnly }),
+    queryKey: ['social-inbox', 'instagram', limit, direction, repliedOnly],
+    queryFn: () => SocialInboxAPI.listInstagramMessages({ limit, direction, repliedOnly }),
   });
   const whatsappQuery = useQuery({
-    queryKey: ['social-inbox', 'whatsapp', limit, repliedOnly],
-    queryFn: () => SocialInboxAPI.listWhatsAppMessages({ limit, repliedOnly }),
+    queryKey: ['social-inbox', 'whatsapp', limit, direction, repliedOnly],
+    queryFn: () => SocialInboxAPI.listWhatsAppMessages({ limit, direction, repliedOnly }),
   });
   const instagramStats = useMemo(() => buildStats(instagramQuery.data), [instagramQuery.data]);
   const whatsappStats = useMemo(() => buildStats(whatsappQuery.data), [whatsappQuery.data]);

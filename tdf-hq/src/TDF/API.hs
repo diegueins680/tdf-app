@@ -127,7 +127,8 @@ type ChatAPI =
 type WhatsAppMessagesAPI =
        "whatsapp" :> "messages"
          :> QueryParam "limit" Int
-         :> QueryParam "repliedOnly" Bool
+         :> QueryParam "direction" Text
+         :> QueryParam "repliedOnly" Text
          :> Get '[JSON] Value
 
 type BookingAPI =
@@ -229,7 +230,7 @@ type ProtectedAPI =
   :<|> FeedbackAPI
   :<|> "marketplace" :> MarketplaceAdminAPI
   :<|> "payments" :> PaymentsAPI
-  :<|> "instagram" :> InstagramAPI
+  :<|> InstagramAPI
   :<|> WhatsAppMessagesAPI
   :<|> "social" :> SocialAPI
   :<|> ChatAPI

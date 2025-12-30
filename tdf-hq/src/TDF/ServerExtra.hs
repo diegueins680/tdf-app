@@ -1307,6 +1307,7 @@ extractInstagramInbound payload =
 instagramServer
   :: ( MonadIO m
      , MonadReader Env m
+     , MonadError ServerError m
      )
   => ServerT IG.InstagramAPI m
 instagramServer =
@@ -1378,13 +1379,16 @@ instagramServer =
             ]
       pure (object ["status" .= ("ok" :: Text), "message" .= msg, "echoRecipient" .= IG.irSenderId req])
 
-    listMessages mLimit mRepliedOnly = do
+    listMessages mLimit mDirection mRepliedOnly = do
       Env{..} <- ask
       let limit = normalizeLimit mLimit
-          filters =
-            case mRepliedOnly of
-              Just True -> [M.InstagramMessageRepliedAt !=. Nothing]
-              _ -> []
+      direction <- parseDirectionParam mDirection
+      repliedOnly <- parseBoolParam mRepliedOnly
+      let filters =
+            concat
+              [ maybe [] (\dir -> [M.InstagramMessageDirection ==. dir]) direction
+              , if repliedOnly then [M.InstagramMessageRepliedAt !=. Nothing] else []
+              ]
       rows <- liftIO $
         flip runSqlPool envPool $
           selectList filters [Desc M.InstagramMessageCreatedAt, LimitTo limit]
@@ -1402,6 +1406,27 @@ instagramServer =
       pure (A.toJSON (map toObj rows))
 
     normalizeLimit = max 1 . min 200 . fromMaybe 100
+
+    parseBoolParam Nothing = pure False
+    parseBoolParam (Just raw) =
+      case T.toCaseFold (T.strip raw) of
+        "true" -> pure True
+        "1" -> pure True
+        "yes" -> pure True
+        "false" -> pure False
+        "0" -> pure False
+        "no" -> pure False
+        "" -> pure False
+        _ -> throwError err400 { errBody = "Invalid repliedOnly value" }
+
+    parseDirectionParam Nothing = pure Nothing
+    parseDirectionParam (Just raw) =
+      case T.toCaseFold (T.strip raw) of
+        "" -> pure Nothing
+        "all" -> pure Nothing
+        "incoming" -> pure (Just "incoming")
+        "outgoing" -> pure (Just "outgoing")
+        _ -> throwError err400 { errBody = "Invalid direction value" }
 
 -- Shared helpers ----------------------------------------------------------
 

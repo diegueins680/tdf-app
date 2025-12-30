@@ -556,12 +556,15 @@ whatsappWebhookServer =
       pure NoContent
 
 whatsappMessagesServer :: AuthedUser -> ServerT Api.WhatsAppMessagesAPI AppM
-whatsappMessagesServer _ mLimit mRepliedOnly = do
+whatsappMessagesServer _ mLimit mDirection mRepliedOnly = do
   let limit = normalizeLimit mLimit
-      filters =
-        case mRepliedOnly of
-          Just True -> [ME.WhatsAppMessageRepliedAt !=. Nothing]
-          _ -> []
+  direction <- parseDirectionParam mDirection
+  repliedOnly <- parseBoolParam mRepliedOnly
+  let filters =
+        concat
+          [ maybe [] (\dir -> [ME.WhatsAppMessageDirection ==. dir]) direction
+          , if repliedOnly then [ME.WhatsAppMessageRepliedAt !=. Nothing] else []
+          ]
   rows <- runDB $
     selectList filters [Desc ME.WhatsAppMessageCreatedAt, LimitTo limit]
   let toObj (Entity _ m) = object
@@ -579,6 +582,29 @@ whatsappMessagesServer _ mLimit mRepliedOnly = do
 
 normalizeLimit :: Maybe Int -> Int
 normalizeLimit = max 1 . min 200 . fromMaybe 100
+
+parseBoolParam :: Maybe Text -> AppM Bool
+parseBoolParam Nothing = pure False
+parseBoolParam (Just raw) =
+  case T.toCaseFold (T.strip raw) of
+    "true" -> pure True
+    "1" -> pure True
+    "yes" -> pure True
+    "false" -> pure False
+    "0" -> pure False
+    "no" -> pure False
+    "" -> pure False
+    _ -> throwBadRequest "Invalid repliedOnly value"
+
+parseDirectionParam :: Maybe Text -> AppM (Maybe Text)
+parseDirectionParam Nothing = pure Nothing
+parseDirectionParam (Just raw) =
+  case T.toCaseFold (T.strip raw) of
+    "" -> pure Nothing
+    "all" -> pure Nothing
+    "incoming" -> pure (Just "incoming")
+    "outgoing" -> pure (Just "outgoing")
+    _ -> throwBadRequest "Invalid direction value"
 
 fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =

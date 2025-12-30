@@ -14,6 +14,7 @@ export interface SocialMessage {
 
 type SocialInboxFilters = {
   limit?: number;
+  direction?: 'incoming' | 'outgoing' | 'all';
   repliedOnly?: boolean;
 };
 
@@ -32,6 +33,7 @@ export const SocialInboxAPI = {
     get<SocialMessage[]>(
       `/instagram/messages${buildQuery({
         limit: filters.limit,
+        direction: filters.direction,
         repliedOnly: filters.repliedOnly,
       })}`,
     ),
@@ -39,6 +41,7 @@ export const SocialInboxAPI = {
     get<SocialMessage[]>(
       `/whatsapp/messages${buildQuery({
         limit: filters.limit,
+        direction: filters.direction,
         repliedOnly: filters.repliedOnly,
       })}`,
     ),
