@@ -59,6 +59,7 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   estado: 'Estado sistema',
   'usuarios-admin': 'Usuarios admin',
   'roles-permisos': 'Roles y permisos',
+  diagnosticos: 'Diagnósticos',
   'impuestos-series': 'Impuestos y series',
   'unidades-negocio': 'Unidades de negocio',
   sedes: 'Sedes',
@@ -527,6 +528,12 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         </MenuItem>
         <MenuItem component={RouterLink} to="/donar" onClick={() => setResourcesAnchor(null)}>
           Donar
+        </MenuItem>
+        <MenuItem component={RouterLink} to="/feedback" onClick={() => setResourcesAnchor(null)}>
+          Sugerencias
+        </MenuItem>
+        <MenuItem component={RouterLink} to="/herramientas/chatkit" onClick={() => setResourcesAnchor(null)}>
+          ChatKit
         </MenuItem>
         <MenuItem component={RouterLink} to="/herramientas/tidal-agent" onClick={() => setResourcesAnchor(null)}>
           Tidal Agent

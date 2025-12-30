@@ -97,6 +97,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Cursos', path: '/configuracion/cursos' },
       { label: 'Logs', path: '/configuracion/logs' },
       { label: 'Estado sistema', path: '/configuracion/estado' },
+      { label: 'Diagnósticos', path: '/admin/diagnosticos' },
       { label: 'Brain y RAG', path: '/configuracion/brain' },
       { label: 'Usuarios admin', path: '/configuracion/usuarios-admin' },
       { label: 'Roles y permisos', path: '/configuracion/roles-permisos' },
@@ -116,7 +117,9 @@ export const NAV_GROUPS: NavGroup[] = [
     title: 'RECURSOS',
     items: [
       { label: 'Manual', path: '/manual' },
+      { label: 'Docs', path: '/docs' },
       { label: 'Acerca de', path: '/acerca' },
+      { label: 'Donar', path: '/donar' },
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Sugerencias', path: '/feedback' },
       { label: 'ChatKit', path: '/herramientas/chatkit' },
@@ -206,6 +209,7 @@ export const pathRequiresModule = (path: string): string | null => {
   if (path.startsWith('/estudio')) return 'scheduling';
   if (path.startsWith('/finanzas')) return 'invoicing';
   if (path.startsWith('/configuracion')) return 'admin';
+  if (path.startsWith('/admin')) return 'admin';
   if (path.startsWith('/operacion')) return 'ops';
   if (path.startsWith('/label')) return 'label';
   if (path.startsWith('/escuela')) return 'school';
