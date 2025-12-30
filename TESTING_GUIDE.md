@@ -554,6 +554,8 @@ curl -H "Authorization: Bearer $TOKEN" \
   "http://localhost:8080/whatsapp/messages?limit=20&repliedOnly=true"
 ```
 
+Expected fields per item: `externalId`, `senderId`, `senderName`, `text`, `direction`, `repliedAt`, `replyText`, `replyError`, `createdAt`.
+
 ## Test Coverage Goals
 
 - Backend API: 80%+
