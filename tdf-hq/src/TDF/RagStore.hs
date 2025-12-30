@@ -512,18 +512,28 @@ availabilityOverlaps windowStart windowEnd eventStart eventEnd =
 
 mkAvailabilityEvent :: M.ResourceId -> UTCTime -> UTCTime -> Text -> Text -> AvailabilityEvent
 mkAvailabilityEvent rid start end kind content =
+  let sourceId =
+        T.intercalate
+          "|"
+          [ T.pack (show (fromSqlKey rid))
+          , kind
+          , formatUtcKey start
+          , formatUtcKey end
+          ]
+  in
   AvailabilityEvent
     { aeResourceId = rid
     , aeStart = start
     , aeEnd = end
     , aeDoc = RagDocument
         { rdSource = "availability"
-        , rdSourceId = Just (T.pack (show (fromSqlKey rid)))
+        , rdSourceId = Just sourceId
         , rdContent = content
         , rdMetadata = object
             [ "kind" .= kind
             , "resourceId" .= fromSqlKey rid
             , "startsAt" .= formatUtc start
+            , "endsAt" .= formatUtc end
             ]
         }
     }
@@ -745,6 +755,9 @@ callOpenAIEmbeddings cfg inputs =
 
 formatUtc :: UTCTime -> Text
 formatUtc ts = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" ts)
+
+formatUtcKey :: UTCTime -> Text
+formatUtcKey ts = T.pack (formatTime defaultTimeLocale "%Y%m%dT%H%M%S" ts)
 
 formatMoney :: Int -> Text -> Text
 formatMoney cents currency =
