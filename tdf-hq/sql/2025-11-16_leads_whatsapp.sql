@@ -36,13 +36,13 @@ CREATE TABLE IF NOT EXISTS whatsapp_message_log (
   created_at        TIMESTAMPTZ DEFAULT now()
 );
 
--- Seed (edición de diciembre 2025/enero 2026)
+-- Seed (edición de enero 2026/febrero 2026)
 INSERT INTO course_edition (slug, name, registration_url, starts_on, ends_on)
 VALUES (
   'produccion-musical-dic-2025',
-  'Curso de Producción Musical (Dic 2025 / Ene 2026)',
+  'Curso de Producción Musical (Ene 2026 / Feb 2026)',
   NULL,
-  '2025-12-13',
-  '2026-01-03'
+  '2026-01-17',
+  '2026-02-07'
 )
 ON CONFLICT (slug) DO NOTHING;

@@ -162,7 +162,7 @@ export default function CourseProductionLandingPage() {
             </Alert>
           )}
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <PublicBrandBar tagline="Producción Musical · Enero 2026" />
+          <PublicBrandBar tagline="Producción Musical · 17 de enero 2026" />
           </Box>
           <Hero
             meta={meta}
@@ -313,7 +313,7 @@ function Hero({
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
           <Chip icon={<VerifiedIcon />} label={heroOverride?.badge1 ?? 'Plazas limitadas'} color="default" sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
           <Chip icon={<HeadsetIcon />} label={heroOverride?.badge2 ?? 'Mentorías incluidas'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
-          <Chip icon={<CalendarTodayIcon />} label={heroOverride?.badge3 ?? 'Ene 2026 / Feb 2026'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
+          <Chip icon={<CalendarTodayIcon />} label={heroOverride?.badge3 ?? '17 Ene 2026 / 7 Feb 2026'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
         </Stack>
         <Typography variant="h3" fontWeight={700} sx={{ color: '#f8fafc' }}>
           {title}

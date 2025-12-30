@@ -1,6 +1,6 @@
 # Curso de Producción Musical — Inscripciones
 
-End-to-end flow for the in-person course **“Curso de Producción Musical – Dic 2025 / Ene 2026”**. Includes public landing, backend endpoints, WhatsApp webhook, and admin status update.
+End-to-end flow for the in-person course **“Curso de Producción Musical – Ene 2026 / Feb 2026”**. Includes public landing, backend endpoints, WhatsApp webhook, and admin status update.
 
 ## Slug
 - `produccion-musical-dic-2025`

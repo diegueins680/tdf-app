@@ -251,10 +251,10 @@ seedProductionCourse now = do
       instructorBio = Just "Productor en TDF Records. 10+ años grabando bandas, rap y electrónica."
       instructorAvatar = Just (fromMaybe (baseUrl <> "/assets/esteban-munoz.jpg") (instructorAvatarEnv >>= nonEmptyText))
       sessions =
-        [ ("Sábado 1 · Introducción", fromGregorian 2025 12 13)
-        , ("Sábado 2 · Grabación", fromGregorian 2025 12 20)
-        , ("Sábado 3 · Mezcla", fromGregorian 2025 12 27)
-        , ("Sábado 4 · Masterización", fromGregorian 2026 1 3)
+        [ ("Sábado 1 · Introducción", fromGregorian 2026 1 17)
+        , ("Sábado 2 · Grabación", fromGregorian 2026 1 24)
+        , ("Sábado 3 · Mezcla", fromGregorian 2026 1 31)
+        , ("Sábado 4 · Masterización", fromGregorian 2026 2 7)
         ]
       syllabus =
         [ ("Introducción a la producción musical", ["Conceptos básicos", "Herramientas esenciales"])
