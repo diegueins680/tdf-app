@@ -133,7 +133,7 @@ export default function CourseProductionLandingPage() {
   const whatsappHref = meta?.whatsappCtaUrl ?? COURSE_DEFAULTS.whatsappUrl;
   const seatsLabel = isFull ? 'Cupos agotados' : 'Cupos limitados';
   const patchedSessions = useMemo(() => {
-    const targetDates = ['2025-12-20', '2025-12-27', '2026-01-03', '2026-01-10'];
+    const targetDates = ['2026-01-17', '2026-01-24', '2026-01-31', '2026-02-07'];
     if (!meta?.sessions?.length) return undefined;
     return meta.sessions.map((s, idx) => ({
       ...s,
@@ -162,7 +162,7 @@ export default function CourseProductionLandingPage() {
             </Alert>
           )}
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <PublicBrandBar tagline="Producción Musical · Diciembre 2025" />
+          <PublicBrandBar tagline="Producción Musical · Enero 2026" />
           </Box>
           <Hero
             meta={meta}
@@ -313,7 +313,7 @@ function Hero({
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
           <Chip icon={<VerifiedIcon />} label={heroOverride?.badge1 ?? 'Plazas limitadas'} color="default" sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
           <Chip icon={<HeadsetIcon />} label={heroOverride?.badge2 ?? 'Mentorías incluidas'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
-          <Chip icon={<CalendarTodayIcon />} label={heroOverride?.badge3 ?? 'Dic 2025 / Ene 2026'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
+          <Chip icon={<CalendarTodayIcon />} label={heroOverride?.badge3 ?? 'Ene 2026 / Feb 2026'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
         </Stack>
         <Typography variant="h3" fontWeight={700} sx={{ color: '#f8fafc' }}>
           {title}
