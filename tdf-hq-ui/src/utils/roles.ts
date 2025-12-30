@@ -41,8 +41,9 @@ export interface SignupFormState {
 const parseOptionalInt = (value: string): number | undefined => {
   const trimmed = value.trim();
   if (trimmed === '') return undefined;
-  if (!/^-?\d+$/.test(trimmed)) return undefined;
+  if (!/^\d+$/.test(trimmed)) return undefined;
   const parsed = Number.parseInt(trimmed, 10);
+  if (parsed < 0) return undefined;
   return Number.isNaN(parsed) ? undefined : parsed;
 };
 

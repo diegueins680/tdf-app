@@ -175,6 +175,8 @@ const resolveEntryMinutes = (entry: InternTimeEntryDTO) => {
   return Math.max(0, Math.floor((end - start) / 60000));
 };
 
+const normalizeTitle = (value: string) => value.trim().toLowerCase();
+
 const minutesToHours = (minutes: number) => (minutes / 60).toFixed(2);
 const normalizeOptional = (value?: string | null) => {
   const trimmed = value?.trim() ?? '';
@@ -184,8 +186,9 @@ const normalizeOptional = (value?: string | null) => {
 const normalizeOptionalInt = (value?: string | null) => {
   const trimmed = value?.trim() ?? '';
   if (trimmed === '') return null;
-  if (!/^-?\d+$/.test(trimmed)) return undefined;
+  if (!/^\d+$/.test(trimmed)) return undefined;
   const parsed = Number.parseInt(trimmed, 10);
+  if (parsed < 0) return undefined;
   return Number.isNaN(parsed) ? undefined : parsed;
 };
 
@@ -210,6 +213,7 @@ export default function InternshipsPage() {
   const [playbookAssigneeId, setPlaybookAssigneeId] = useState<number | ''>('');
   const [playbookFeedback, setPlaybookFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [checklistFeedback, setChecklistFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [profileFeedback, setProfileFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const [projectForm, setProjectForm] = useState<InternProjectCreate>({
     ipcTitle: '',
@@ -297,6 +301,12 @@ export default function InternshipsPage() {
     setProgressDraft(next);
   }, [tasksQuery.data]);
 
+  const profileRequiredHoursError = useMemo(() => {
+    const trimmed = profileForm.requiredHours.trim();
+    if (trimmed === '') return null;
+    return /^\d+$/.test(trimmed) ? null : 'Ingresa un número entero positivo.';
+  }, [profileForm.requiredHours]);
+
   const createProjectMutation = useMutation({
     mutationFn: (payload: InternProjectCreate) => Internships.createProject(payload),
     onSuccess: () => {
@@ -306,7 +316,12 @@ export default function InternshipsPage() {
   });
   const updateProfileMutation = useMutation({
     mutationFn: (payload: InternProfileUpdate) => Internships.updateProfile(payload),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ['internships', 'profile'] }),
+    onMutate: () => setProfileFeedback(null),
+    onSuccess: () => {
+      setProfileFeedback({ type: 'success', message: 'Perfil actualizado.' });
+      void qc.invalidateQueries({ queryKey: ['internships', 'profile'] });
+    },
+    onError: () => setProfileFeedback({ type: 'error', message: 'No se pudo guardar el perfil.' }),
   });
   const updateProjectMutation = useMutation({
     mutationFn: ({ projectId, payload }: { projectId: string; payload: InternProjectUpdate }) =>
@@ -362,18 +377,37 @@ export default function InternshipsPage() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['internships', 'permissions'] }),
   });
   const seedPlaybookMutation = useMutation({
-    mutationFn: async ({ projectTitle, assigneeId }: { projectTitle: string; assigneeId: number | null }) => {
-      const project = await Internships.createProject({
-        ipcTitle: projectTitle,
-        ipcDescription: PLAYBOOK_PROJECT_DESCRIPTION,
-        ipcStatus: 'active',
-        ipcStartAt: null,
-        ipcDueAt: null,
-      });
+    mutationFn: async ({
+      projectId,
+      projectTitle,
+      assigneeId,
+      tasksToCreate,
+    }: {
+      projectId: string | null;
+      projectTitle: string;
+      assigneeId: number | null;
+      tasksToCreate: typeof PLAYBOOK_TASK_TEMPLATES;
+    }) => {
+      let finalProjectId = projectId;
+      let projectCreated = false;
+      if (!finalProjectId) {
+        const project = await Internships.createProject({
+          ipcTitle: projectTitle,
+          ipcDescription: PLAYBOOK_PROJECT_DESCRIPTION,
+          ipcStatus: 'active',
+          ipcStartAt: null,
+          ipcDueAt: null,
+        });
+        finalProjectId = project.ipId;
+        projectCreated = true;
+      }
+      if (tasksToCreate.length === 0) {
+        return { projectCreated, created: 0, failed: 0, total: 0 };
+      }
       const results = await Promise.allSettled(
-        PLAYBOOK_TASK_TEMPLATES.map((task) =>
+        tasksToCreate.map((task) =>
           Internships.createTask({
-            itcProjectId: project.ipId,
+            itcProjectId: finalProjectId,
             itcTitle: task.title,
             itcDescription: task.description,
             itcAssignedTo: assigneeId,
@@ -382,24 +416,36 @@ export default function InternshipsPage() {
         ),
       );
       const failed = results.filter((result) => result.status === 'rejected').length;
-      return { project, failed, total: results.length };
+      const created = results.length - failed;
+      return { projectCreated, created, failed, total: results.length };
     },
     onMutate: () => setPlaybookFeedback(null),
-    onSuccess: ({ failed, total }) => {
+    onSuccess: ({ projectCreated, created, failed, total }) => {
+      if (total === 0) {
+        setPlaybookFeedback({ type: 'success', message: 'El plan ya estaba completo.' });
+        return;
+      }
       if (failed === 0) {
-        setPlaybookFeedback({ type: 'success', message: 'Plan base creado. Ya puedes asignar avances en tareas.' });
+        setPlaybookFeedback({
+          type: 'success',
+          message: projectCreated
+            ? 'Plan base creado. Ya puedes asignar avances en tareas.'
+            : 'Se completaron las tareas faltantes del plan.',
+        });
         return;
       }
       if (failed === total) {
         setPlaybookFeedback({
           type: 'error',
-          message: 'Plan base creado, pero no se pudieron generar las tareas. Intenta de nuevo.',
+          message: projectCreated
+            ? 'Plan base creado, pero no se pudieron generar las tareas. Intenta de nuevo.'
+            : 'No se pudieron crear las tareas faltantes del plan.',
         });
         return;
       }
       setPlaybookFeedback({
         type: 'error',
-        message: `Plan base creado con ${failed} tareas fallidas. Reintenta las pendientes.`,
+        message: `Se crearon ${created} tareas y fallaron ${failed}. Reintenta las pendientes.`,
       });
     },
     onError: () => setPlaybookFeedback({ type: 'error', message: 'No se pudo crear el plan base. Intenta de nuevo.' }),
@@ -409,15 +455,23 @@ export default function InternshipsPage() {
     },
   });
   const seedChecklistMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ todosToCreate }: { todosToCreate: string[] }) => {
+      if (todosToCreate.length === 0) {
+        return { created: 0, failed: 0, total: 0 };
+      }
       const results = await Promise.allSettled(
-        PERSONAL_CHECKLIST_TODOS.map((text) => Internships.createTodo({ itdcText: text })),
+        todosToCreate.map((text) => Internships.createTodo({ itdcText: text })),
       );
       const failed = results.filter((result) => result.status === 'rejected').length;
-      return { failed, total: results.length };
+      const created = results.length - failed;
+      return { created, failed, total: results.length };
     },
     onMutate: () => setChecklistFeedback(null),
-    onSuccess: ({ failed, total }) => {
+    onSuccess: ({ created, failed, total }) => {
+      if (total === 0) {
+        setChecklistFeedback({ type: 'success', message: 'El checklist ya estaba completo.' });
+        return;
+      }
       if (failed === 0) {
         setChecklistFeedback({ type: 'success', message: 'Checklist personal creado en tus to-dos.' });
         return;
@@ -428,7 +482,7 @@ export default function InternshipsPage() {
       }
       setChecklistFeedback({
         type: 'error',
-        message: `Checklist creado con ${failed} pendientes fallidos. Reintenta los faltantes.`,
+        message: `Se crearon ${created} items y fallaron ${failed}. Reintenta los faltantes.`,
       });
     },
     onError: () => setChecklistFeedback({ type: 'error', message: 'No se pudo crear el checklist.' }),
@@ -447,10 +501,25 @@ export default function InternshipsPage() {
   const playbookProjectTitle = selectedAssignee
     ? `Plan de prácticas - ${selectedAssignee.isName} (#${selectedAssignee.isPartyId})`
     : 'Plan de prácticas';
-  const playbookProjectExists = projects.some(
-    (project) => project.ipTitle.trim().toLowerCase() === playbookProjectTitle.toLowerCase(),
+  const playbookProjectKey = normalizeTitle(playbookProjectTitle);
+  const playbookProject = projects.find((project) => normalizeTitle(project.ipTitle) === playbookProjectKey) ?? null;
+  const playbookProjectExists = playbookProject != null;
+  const playbookTaskTitles = new Set(
+    tasks
+      .filter((task) => (playbookProject ? task.itProjectId === playbookProject.ipId : false))
+      .map((task) => normalizeTitle(task.itTitle)),
   );
-  const hasChecklist = todos.some((todo) => todo.itdText.startsWith('[Prácticas]'));
+  const missingPlaybookTasks = playbookProjectExists
+    ? PLAYBOOK_TASK_TEMPLATES.filter((task) => !playbookTaskTitles.has(normalizeTitle(task.title)))
+    : PLAYBOOK_TASK_TEMPLATES;
+  const checklistTitles = new Set(todos.map((todo) => normalizeTitle(todo.itdText)));
+  const missingChecklist = PERSONAL_CHECKLIST_TODOS.filter(
+    (text) => !checklistTitles.has(normalizeTitle(text)),
+  );
+  const playbookDataReady = projectsQuery.isSuccess && tasksQuery.isSuccess;
+  const checklistDataReady = todosQuery.isSuccess;
+  const canSeedPlaybook = isAdmin && playbookDataReady && missingPlaybookTasks.length > 0 && !seedPlaybookMutation.isPending;
+  const canSeedChecklist = isIntern && checklistDataReady && missingChecklist.length > 0 && !seedChecklistMutation.isPending;
 
   const openEntry = isSelfView ? (entries.find((entry) => !entry.iteClockOut) ?? null) : null;
   const totalMinutes = entries.reduce((sum, entry) => sum + (resolveEntryMinutes(entry) ?? 0), 0);
@@ -587,28 +656,36 @@ export default function InternshipsPage() {
                     variant="contained"
                     onClick={() =>
                       void seedPlaybookMutation.mutateAsync({
+                        projectId: playbookProject?.ipId ?? null,
                         projectTitle: playbookProjectTitle,
                         assigneeId: playbookAssigneeId === '' ? null : playbookAssigneeId,
+                        tasksToCreate: missingPlaybookTasks,
                       })
                     }
-                    disabled={playbookProjectExists || seedPlaybookMutation.isPending}
+                    disabled={!canSeedPlaybook}
                   >
-                    {seedPlaybookMutation.isPending ? 'Creando…' : 'Generar plan base'}
+                    {seedPlaybookMutation.isPending
+                      ? 'Creando…'
+                      : playbookProjectExists
+                        ? 'Completar plan base'
+                        : 'Generar plan base'}
                   </Button>
                 </>
               )}
               {isIntern && (
                 <Button
                   variant="outlined"
-                  onClick={() => void seedChecklistMutation.mutateAsync()}
-                  disabled={hasChecklist || seedChecklistMutation.isPending}
+                  onClick={() => void seedChecklistMutation.mutateAsync({ todosToCreate: missingChecklist })}
+                  disabled={!canSeedChecklist}
                 >
                   {seedChecklistMutation.isPending ? 'Creando…' : 'Crear checklist personal'}
                 </Button>
               )}
               {playbookProjectExists && isAdmin && (
                 <Typography variant="body2" color="text.secondary">
-                  Ya existe un plan con el mismo nombre.
+                  {missingPlaybookTasks.length === 0
+                    ? 'El plan base ya está completo.'
+                    : 'Plan existente: se crearán solo las tareas faltantes.'}
                 </Typography>
               )}
             </Stack>
@@ -650,6 +727,8 @@ export default function InternshipsPage() {
                   onChange={(event) => setProfileForm((prev) => ({ ...prev, requiredHours: event.target.value }))}
                   inputProps={{ min: 0, step: 1 }}
                   fullWidth
+                  error={Boolean(profileRequiredHoursError)}
+                  helperText={profileRequiredHoursError ?? undefined}
                 />
               </Stack>
               <TextField
@@ -672,6 +751,10 @@ export default function InternshipsPage() {
                 <Button
                   variant="contained"
                   onClick={() => {
+                    if (profileRequiredHoursError) {
+                      setProfileFeedback({ type: 'error', message: profileRequiredHoursError });
+                      return;
+                    }
                     const requiredHours = normalizeOptionalInt(profileForm.requiredHours);
                     const payload: InternProfileUpdate = {
                       ipuStartAt: normalizeOptional(profileForm.startAt),
@@ -686,8 +769,10 @@ export default function InternshipsPage() {
                 >
                   {updateProfileMutation.isPending ? 'Guardando…' : 'Guardar perfil'}
                 </Button>
-                {updateProfileMutation.isSuccess && (
-                  <Typography variant="body2" color="text.secondary">Perfil actualizado.</Typography>
+                {profileFeedback && (
+                  <Typography variant="body2" color={profileFeedback.type === 'error' ? 'error' : 'text.secondary'}>
+                    {profileFeedback.message}
+                  </Typography>
                 )}
               </Stack>
             </Stack>

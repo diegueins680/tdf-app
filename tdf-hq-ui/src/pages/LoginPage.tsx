@@ -348,6 +348,12 @@ export default function LoginPage() {
     () => signupRoles.some((role) => role.toLowerCase() === 'intern'),
     [signupRoles],
   );
+  const requiredHoursError = useMemo(() => {
+    if (!wantsInternRole) return null;
+    const trimmed = signupForm.internshipRequiredHours.trim();
+    if (trimmed === '') return null;
+    return /^\d+$/.test(trimmed) ? null : 'Ingresa un número entero positivo.';
+  }, [signupForm.internshipRequiredHours, wantsInternRole]);
   const signupGuide = useMemo(() => {
     const normalizedRoles = signupRoles.map((role) => role.toLowerCase());
     const hasRoles = normalizedRoles.length > 0;
@@ -643,6 +649,11 @@ export default function LoginPage() {
     const claimIsValid = claimArtistId ? claimableArtists.some((artist) => artist.apArtistId === claimArtistId) : true;
     if (!claimIsValid) {
       setSignupFeedback({ type: 'error', message: 'El perfil seleccionado ya no está disponible para reclamar.' });
+      return;
+    }
+
+    if (requiredHoursError) {
+      setSignupFeedback({ type: 'error', message: requiredHoursError });
       return;
     }
 
@@ -1247,6 +1258,8 @@ export default function LoginPage() {
                     onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipRequiredHours: event.target.value }))}
                     fullWidth
                     inputProps={{ min: 0, step: 1 }}
+                    error={Boolean(requiredHoursError)}
+                    helperText={requiredHoursError ?? undefined}
                     sx={dialogFieldSx}
                   />
                 </Stack>

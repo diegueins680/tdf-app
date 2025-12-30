@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { DateTime } from 'luxon';
 import { useMutation } from '@tanstack/react-query';
 import {
   Alert,
@@ -12,6 +13,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import { Courses, type CourseUpsert, type CourseMetadata } from '../api/courses';
 import { COURSE_DEFAULTS, COURSE_PATH_BASE } from '../config/appConfig';
 
@@ -68,6 +72,14 @@ const findEarliestSessionDate = (sessions: SessionInput[]) => {
   return validDates.sort()[0];
 };
 
+const parseDateValue = (value: string) => {
+  if (!value) return null;
+  const parsed = DateTime.fromISO(value);
+  return parsed.isValid ? parsed : null;
+};
+
+const formatDateValue = (value: DateTime | null) => (value ? value.toISODate() ?? '' : '');
+
 const generateSlug = (title: string, startDate: string | null) => {
   const cleanedTitle = stripCoursePrefix(title) || title;
   const titleSlug = slugifyValue(cleanedTitle) || 'curso';
@@ -109,9 +121,15 @@ export default function CourseBuilderPage() {
   const [instructorAvatarUrl, setInstructorAvatarUrl] = useState(COURSE_DEFAULTS.instructorAvatarUrl);
   const [sessions, setSessions] = useState<SessionInput[]>(DEFAULT_SESSIONS);
   const [syllabus, setSyllabus] = useState<SyllabusInput[]>(DEFAULT_SYLLABUS);
-  const [loadSlug, setLoadSlug] = useState('');
+  const [loadSlug, setLoadSlug] = useState(COURSE_DEFAULTS.slug);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
   const draftLoadedRef = useRef(false);
+  const autoLoadedRef = useRef(false);
+  const hasLocalEditsRef = useRef(false);
+  const markDirty = useCallback(() => {
+    hasLocalEditsRef.current = true;
+  }, []);
   const sections = [
     { key: 'detalles', label: 'Detalles' },
     { key: 'sesiones', label: 'Sesiones' },
@@ -165,10 +183,12 @@ export default function CourseBuilderPage() {
   const handleLandingUrlChange = (value: string) => {
     setLandingUrl(value);
     setLandingUrlTouched(true);
+    markDirty();
   };
   const handleResetLanding = () => {
     setLandingUrl(landingFor(slug));
     setLandingUrlTouched(false);
+    markDirty();
   };
 
   const scrollToSection = (id: string) => {
@@ -252,19 +272,37 @@ export default function CourseBuilderPage() {
   });
 
   const handleSessionChange = (idx: number, field: keyof SessionInput, value: string) => {
+    markDirty();
     setSessions((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
   };
 
   const handleSyllabusChange = (idx: number, field: keyof SyllabusInput, value: string) => {
+    markDirty();
     setSyllabus((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
   };
 
   const handleDuplicateSession = (idx: number) => {
+    markDirty();
     setSessions((prev) => {
       const copy = prev[idx];
       if (!copy) return prev;
       return [...prev.slice(0, idx + 1), { ...copy }, ...prev.slice(idx + 1)];
     });
+  };
+
+  const handleAddSession = () => {
+    markDirty();
+    setSessions((prev) => [...prev, { label: '', date: '' }]);
+  };
+
+  const handleRemoveSession = (idx: number) => {
+    markDirty();
+    setSessions((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleAddSyllabus = () => {
+    markDirty();
+    setSyllabus((prev) => [...prev, { title: '', topics: '' }]);
   };
 
   const payloadPreview = JSON.stringify(buildPayload(), null, 2);
@@ -310,6 +348,8 @@ export default function CourseBuilderPage() {
           : prev,
       );
       draftLoadedRef.current = true;
+      hasLocalEditsRef.current = true;
+      setHasDraft(true);
     } catch {
       // ignore parse errors
     }
@@ -365,20 +405,57 @@ export default function CourseBuilderPage() {
   };
 
   const loadCourseMutation = useMutation({
-    mutationFn: async () => {
-      const target = loadSlug.trim() || slug.trim();
+    mutationFn: async ({ slug: targetSlug }: { slug: string; source: 'auto' | 'manual' }) => {
+      const target = targetSlug.trim();
       if (!target) throw new Error('Ingresa un slug.');
-      const meta = await Courses.getMetadata(target);
+      return Courses.getMetadata(target);
+    },
+    onSuccess: (meta, variables) => {
+      if (variables.source === 'auto' && hasLocalEditsRef.current) return;
       applyMetadata(meta);
       setLoadError(null);
+      hasLocalEditsRef.current = false;
+      if (variables.source === 'manual') {
+        draftLoadedRef.current = false;
+        setHasDraft(false);
+      }
     },
-    onError: () => {
-      setLoadError('No pudimos cargar ese curso.');
+    onError: (error) => {
+      setLoadError(error instanceof Error ? error.message : 'No pudimos cargar ese curso.');
     },
   });
 
+  useEffect(() => {
+    if (autoLoadedRef.current || draftLoadedRef.current || !COURSE_DEFAULTS.slug) return;
+    autoLoadedRef.current = true;
+    loadCourseMutation.mutate({ slug: COURSE_DEFAULTS.slug, source: 'auto' });
+  }, [loadCourseMutation]);
+
+  const handleReloadFromServer = () => {
+    const target = (loadSlug.trim() || slug.trim() || COURSE_DEFAULTS.slug || '').trim();
+    if (!target) {
+      setLoadError('Ingresa un slug.');
+      return;
+    }
+    hasLocalEditsRef.current = false;
+    draftLoadedRef.current = false;
+    setHasDraft(false);
+    loadCourseMutation.mutate({ slug: target, source: 'manual' });
+  };
+
+  const handleClearDraft = () => {
+    try {
+      window.localStorage.removeItem(COURSE_DRAFT_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+    draftLoadedRef.current = false;
+    setHasDraft(false);
+  };
+
   return (
-    <Stack spacing={3}>
+    <LocalizationProvider dateAdapter={AdapterLuxon}>
+      <Stack spacing={3}>
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="flex-start" spacing={2}>
         <Box>
           <Typography variant="overline" color="text.secondary">Cursos</Typography>
@@ -418,7 +495,10 @@ export default function CourseBuilderPage() {
             <TextField
               label="Cargar curso existente (slug)"
               value={loadSlug}
-              onChange={(e) => setLoadSlug(e.target.value)}
+              onChange={(e) => {
+                setLoadSlug(e.target.value);
+                markDirty();
+              }}
               size="small"
               sx={{ minWidth: { md: 260 } }}
             />
@@ -426,7 +506,7 @@ export default function CourseBuilderPage() {
               <Button
                 variant="outlined"
                 size="small"
-                onClick={() => loadCourseMutation.mutate()}
+                onClick={handleReloadFromServer}
                 disabled={loadCourseMutation.isPending}
               >
                 {loadCourseMutation.isPending ? 'Cargando…' : 'Cargar curso'}
@@ -440,6 +520,24 @@ export default function CourseBuilderPage() {
           </Stack>
         </CardContent>
       </Card>
+
+      {hasDraft && (
+        <Alert
+          severity="info"
+          action={
+            <Stack direction="row" spacing={1}>
+              <Button size="small" onClick={handleReloadFromServer} disabled={loadCourseMutation.isPending}>
+                Recargar servidor
+              </Button>
+              <Button size="small" onClick={handleClearDraft}>
+                Descartar borrador
+              </Button>
+            </Stack>
+          }
+        >
+          Hay un borrador local guardado. Puedes recargar los datos del servidor o descartarlo.
+        </Alert>
+      )}
 
       {createMutation.isSuccess && (
         <Alert severity="success">
@@ -479,32 +577,91 @@ export default function CourseBuilderPage() {
               )}
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField label="Título" fullWidth value={title} onChange={(e) => setTitle(e.target.value)} />
+              <TextField
+                label="Título"
+                fullWidth
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField label="Subtítulo" fullWidth value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+              <TextField
+                label="Subtítulo"
+                fullWidth
+                value={subtitle}
+                onChange={(e) => {
+                  setSubtitle(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField label="Formato" fullWidth value={format} onChange={(e) => setFormat(e.target.value)} />
+              <TextField
+                label="Formato"
+                fullWidth
+                value={format}
+                onChange={(e) => {
+                  setFormat(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField label="Duración" fullWidth value={duration} onChange={(e) => setDuration(e.target.value)} />
+              <TextField
+                label="Duración"
+                fullWidth
+                value={duration}
+                onChange={(e) => {
+                  setDuration(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField label="Precio" fullWidth value={price} onChange={(e) => setPrice(e.target.value)} />
+              <TextField
+                label="Precio"
+                fullWidth
+                value={price}
+                onChange={(e) => {
+                  setPrice(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField label="Moneda" fullWidth value={currency} onChange={(e) => setCurrency(e.target.value)} />
+              <TextField
+                label="Moneda"
+                fullWidth
+                value={currency}
+                onChange={(e) => {
+                  setCurrency(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField label="Cupos" fullWidth value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+              <TextField
+                label="Cupos"
+                fullWidth
+                value={capacity}
+                onChange={(e) => {
+                  setCapacity(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={3}>
               <TextField
                 label="Hora de inicio (24h)"
                 fullWidth
                 value={sessionStartHour}
-                onChange={(e) => setSessionStartHour(e.target.value)}
+                onChange={(e) => {
+                  setSessionStartHour(e.target.value);
+                  markDirty();
+                }}
               />
             </Grid>
             <Grid item xs={12} md={3}>
@@ -512,21 +669,47 @@ export default function CourseBuilderPage() {
                 label="Duración por sesión (h)"
                 fullWidth
                 value={sessionDurationHours}
-                onChange={(e) => setSessionDurationHours(e.target.value)}
+                onChange={(e) => {
+                  setSessionDurationHours(e.target.value);
+                  markDirty();
+                }}
               />
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField label="DAWs" fullWidth multiline minRows={3} value={daws} onChange={(e) => setDaws(e.target.value)} />
+              <TextField
+                label="DAWs"
+                fullWidth
+                multiline
+                minRows={3}
+                value={daws}
+                onChange={(e) => {
+                  setDaws(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField label="Incluye" fullWidth multiline minRows={3} value={includes} onChange={(e) => setIncludes(e.target.value)} />
+              <TextField
+                label="Incluye"
+                fullWidth
+                multiline
+                minRows={3}
+                value={includes}
+                onChange={(e) => {
+                  setIncludes(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 label="Instructor principal"
                 fullWidth
                 value={instructorName}
-                onChange={(e) => setInstructorName(e.target.value)}
+                onChange={(e) => {
+                  setInstructorName(e.target.value);
+                  markDirty();
+                }}
                 helperText="Nombre visible en la landing."
               />
             </Grid>
@@ -535,7 +718,10 @@ export default function CourseBuilderPage() {
                 label="Foto/Avatar del instructor (URL)"
                 fullWidth
                 value={instructorAvatarUrl}
-                onChange={(e) => setInstructorAvatarUrl(e.target.value)}
+                onChange={(e) => {
+                  setInstructorAvatarUrl(e.target.value);
+                  markDirty();
+                }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -545,17 +731,44 @@ export default function CourseBuilderPage() {
                 multiline
                 minRows={3}
                 value={instructorBio}
-                onChange={(e) => setInstructorBio(e.target.value)}
+                onChange={(e) => {
+                  setInstructorBio(e.target.value);
+                  markDirty();
+                }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField label="WhatsApp CTA" fullWidth value={whatsappCtaUrl} onChange={(e) => setWhatsappCtaUrl(e.target.value)} />
+              <TextField
+                label="WhatsApp CTA"
+                fullWidth
+                value={whatsappCtaUrl}
+                onChange={(e) => {
+                  setWhatsappCtaUrl(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField label="Lugar" fullWidth value={locationLabel} onChange={(e) => setLocationLabel(e.target.value)} />
+              <TextField
+                label="Lugar"
+                fullWidth
+                value={locationLabel}
+                onChange={(e) => {
+                  setLocationLabel(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField label="Mapa" fullWidth value={locationMapUrl} onChange={(e) => setLocationMapUrl(e.target.value)} />
+              <TextField
+                label="Mapa"
+                fullWidth
+                value={locationMapUrl}
+                onChange={(e) => {
+                  setLocationMapUrl(e.target.value);
+                  markDirty();
+                }}
+              />
             </Grid>
           </Grid>
         </CardContent>
@@ -565,45 +778,57 @@ export default function CourseBuilderPage() {
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6" fontWeight={800}>Sesiones</Typography>
-            {sessions.map((s, idx) => (
-              <Grid container spacing={2} key={idx} alignItems="center">
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Título"
-                    fullWidth
-                    value={s.label}
-                    onChange={(e) => handleSessionChange(idx, 'label', e.target.value)}
-                  />
+            {sessions.map((s, idx) => {
+              const minDate = idx > 0 ? parseDateValue(sessions[idx - 1]?.date ?? '') : null;
+              return (
+                <Grid container spacing={2} key={idx} alignItems="center">
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Título"
+                      fullWidth
+                      value={s.label}
+                      onChange={(e) => handleSessionChange(idx, 'label', e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <DatePicker
+                      label="Fecha"
+                      format="yyyy-LL-dd"
+                      value={parseDateValue(s.date)}
+                      onChange={(value: DateTime | null) =>
+                        handleSessionChange(idx, 'date', formatDateValue(value))
+                      }
+                      disablePast
+                      minDate={minDate ?? undefined}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          error: Boolean(sessionDateErrors[idx]),
+                          helperText: sessionDateErrors[idx] ?? undefined,
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <Stack direction="row" spacing={1}>
+                      <Button variant="text" size="small" onClick={() => handleDuplicateSession(idx)}>
+                        Duplicar
+                      </Button>
+                      <Button
+                        variant="text"
+                        size="small"
+                        color="error"
+                        onClick={() => handleRemoveSession(idx)}
+                        disabled={sessions.length <= 1}
+                      >
+                        Borrar
+                      </Button>
+                    </Stack>
+                  </Grid>
                 </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField
-                    label="Fecha (YYYY-MM-DD)"
-                    fullWidth
-                    value={s.date}
-                    onChange={(e) => handleSessionChange(idx, 'date', e.target.value)}
-                    error={Boolean(sessionDateErrors[idx])}
-                    helperText={sessionDateErrors[idx] ?? undefined}
-                  />
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Stack direction="row" spacing={1}>
-                    <Button variant="text" size="small" onClick={() => handleDuplicateSession(idx)}>
-                      Duplicar
-                    </Button>
-                    <Button
-                      variant="text"
-                      size="small"
-                      color="error"
-                      onClick={() => setSessions((prev) => prev.filter((_, i) => i !== idx))}
-                      disabled={sessions.length <= 1}
-                    >
-                      Borrar
-                    </Button>
-                  </Stack>
-                </Grid>
-              </Grid>
-            ))}
-            <Button variant="outlined" onClick={() => setSessions((prev) => [...prev, { label: '', date: '' }])}>
+              );
+            })}
+            <Button variant="outlined" onClick={handleAddSession}>
               Añadir sesión
             </Button>
           </Stack>
@@ -637,7 +862,7 @@ export default function CourseBuilderPage() {
                 </Grid>
               </Grid>
             ))}
-            <Button variant="outlined" onClick={() => setSyllabus((prev) => [...prev, { title: '', topics: '' }])}>
+            <Button variant="outlined" onClick={handleAddSyllabus}>
               Añadir sección
             </Button>
           </Stack>
@@ -678,6 +903,7 @@ export default function CourseBuilderPage() {
           </Stack>
         </CardContent>
       </Card>
-    </Stack>
+      </Stack>
+    </LocalizationProvider>
   );
 }
