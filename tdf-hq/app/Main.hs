@@ -6,6 +6,7 @@ import qualified Network.Wai.Handler.Warp as Warp
 import           Control.Concurrent      (forkFinally, myThreadId, throwTo, threadDelay)
 import           Control.Exception       (SomeException, handle, throwIO, try)
 import           Control.Monad            (forM_, when)
+import           Control.Monad.IO.Class   (liftIO)
 import qualified Data.ByteString.Char8    as BS
 import           Data.Int                (Int64)
 import           Data.IORef              (newIORef, readIORef, writeIORef)
@@ -136,29 +137,33 @@ resetSchema = do
 runAllMigrations :: SqlPersistT IO ()
 runAllMigrations = do
   rawExecute "CREATE EXTENSION IF NOT EXISTS pgcrypto" []
-  rawExecute "CREATE EXTENSION IF NOT EXISTS vector" []
-  rawExecute
-    "CREATE TABLE IF NOT EXISTS rag_chunk ( \
-    \  id BIGSERIAL PRIMARY KEY, \
-    \  source TEXT NOT NULL, \
-    \  source_id TEXT, \
-    \  chunk_index INT NOT NULL, \
-    \  content TEXT NOT NULL, \
-    \  metadata JSONB, \
-    \  embedding vector(1536) NOT NULL, \
-    \  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), \
-    \  updated_at TIMESTAMPTZ NOT NULL DEFAULT now() \
-    \)" []
-  rawExecute
-    "CREATE UNIQUE INDEX IF NOT EXISTS rag_chunk_source_key \
-    \ON rag_chunk (source, source_id, chunk_index)" []
-  rawExecute
-    "CREATE INDEX IF NOT EXISTS rag_chunk_embedding_idx \
-    \ON rag_chunk USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)" []
-  rawExecute
-    "CREATE INDEX IF NOT EXISTS rag_chunk_source_idx ON rag_chunk (source)" []
-  rawExecute
-    "CREATE INDEX IF NOT EXISTS rag_chunk_source_id_idx ON rag_chunk (source_id)" []
+  vectorAvailable <- hasVectorExtension
+  if vectorAvailable
+    then do
+      rawExecute "CREATE EXTENSION IF NOT EXISTS vector" []
+      rawExecute
+        "CREATE TABLE IF NOT EXISTS rag_chunk ( \
+        \  id BIGSERIAL PRIMARY KEY, \
+        \  source TEXT NOT NULL, \
+        \  source_id TEXT, \
+        \  chunk_index INT NOT NULL, \
+        \  content TEXT NOT NULL, \
+        \  metadata JSONB, \
+        \  embedding vector(1536) NOT NULL, \
+        \  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), \
+        \  updated_at TIMESTAMPTZ NOT NULL DEFAULT now() \
+        \)" []
+      rawExecute
+        "CREATE UNIQUE INDEX IF NOT EXISTS rag_chunk_source_key \
+        \ON rag_chunk (source, source_id, chunk_index)" []
+      rawExecute
+        "CREATE INDEX IF NOT EXISTS rag_chunk_embedding_idx \
+        \ON rag_chunk USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)" []
+      rawExecute
+        "CREATE INDEX IF NOT EXISTS rag_chunk_source_idx ON rag_chunk (source)" []
+      rawExecute
+        "CREATE INDEX IF NOT EXISTS rag_chunk_source_id_idx ON rag_chunk (source_id)" []
+    else liftIO $ putStrLn "Vector extension not available; skipping rag_chunk setup."
   renameLegacyPartyRoleConstraint
   legacyRoles <- captureLegacyPartyRoles
   dropLegacyPartyColumns
@@ -167,6 +172,13 @@ runAllMigrations = do
   runMigration migrateSocialEvents
   runMigration migrateTrials
   restoreLegacyPartyRoles legacyRoles
+
+hasVectorExtension :: SqlPersistT IO Bool
+hasVectorExtension = do
+  rows <- rawSql
+    "SELECT 1 FROM pg_available_extensions WHERE name = 'vector'"
+    [] :: SqlPersistT IO [Single Int]
+  pure (not (null rows))
 
 captureLegacyPartyRoles :: SqlPersistT IO [(PartyId, RoleEnum)]
 captureLegacyPartyRoles = do
