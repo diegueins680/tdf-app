@@ -544,6 +544,16 @@ describe('UserRoleManagement', () => {
 - Change Limite (50, 100, 200) and confirm the row count adjusts.
 - Click **Actualizar** and confirm data refreshes without errors.
 
+### Backend Quick Check: Social Inbox
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8080/instagram/messages?limit=20&repliedOnly=true"
+
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8080/whatsapp/messages?limit=20&repliedOnly=true"
+```
+
 ## Test Coverage Goals
 
 - Backend API: 80%+
