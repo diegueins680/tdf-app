@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { execSync } from 'node:child_process';
+import { createRequire } from 'node:module';
+import path from 'node:path';
 import packageJson from './package.json';
 
 function resolveGitSha() {
@@ -29,12 +31,19 @@ function resolveGitSha() {
 
 const uiCommit = resolveGitSha();
 const uiVersion = packageJson.version ?? '0.0.0';
+const require = createRequire(import.meta.url);
+const muiMaterialRoot = path.dirname(require.resolve('@mui/material/package.json'));
+const muiUseMediaQueryPath = path.resolve(muiMaterialRoot, 'useMediaQuery/index.js');
 
 export default defineConfig({
   plugins: [react()],
   server: { port: 5173, host: true },
   resolve: {
     dedupe: ['react', 'react-dom'],
+    alias: {
+      // Ensure Vite can resolve the ESM entry for this deep import.
+      '@mui/material/useMediaQuery': muiUseMediaQueryPath,
+    },
   },
   build: {
     chunkSizeWarningLimit: 900,
