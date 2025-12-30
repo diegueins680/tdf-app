@@ -16,7 +16,7 @@ import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
 import           Data.Char              (isAlphaNum)
-import           Data.Maybe             (fromMaybe, isJust)
+import           Data.Maybe             (catMaybes, fromMaybe, isJust)
 import qualified Data.Set               as Set
 import           Data.Text              (Text)
 import qualified Data.Text              as T
@@ -32,6 +32,7 @@ import           Database.Persist       ( (==.), (!=.)
                                         , selectList
                                         , get
                                         , getBy
+                                        , getJust
                                         , update
                                         , getEntity
                                         , getJustEntity
@@ -42,7 +43,15 @@ import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, to
 import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
-import           TDF.API.Admin          (AdminAPI, EmailTestRequest(..), EmailTestResponse(..), RagIndexStatus(..), RagRefreshResponse(..))
+import           TDF.API.Admin          ( AdminAPI
+                                        , BrainEntryCreate(..)
+                                        , BrainEntryDTO(..)
+                                        , BrainEntryUpdate(..)
+                                        , EmailTestRequest(..)
+                                        , EmailTestResponse(..)
+                                        , RagIndexStatus(..)
+                                        , RagRefreshResponse(..)
+                                        )
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
                                         , DropdownOptionUpdate(..)
@@ -92,6 +101,7 @@ adminServer user =
   :<|> artistsRouter
   :<|> logsRouter
   :<|> emailTestHandler
+  :<|> brainRouter
   :<|> ragRouter
   where
     seedHandler = do
@@ -153,8 +163,79 @@ adminServer user =
           liftIO $ hPutStrLn stderr (T.unpack msg)
           pure EmailTestResponse { status = "sent", message = Nothing }
 
+    brainRouter =
+      brainListHandler :<|> brainCreateHandler :<|> brainUpdateHandler
+
     ragRouter =
       ragStatusHandler :<|> ragRefreshHandler
+
+    brainListHandler mIncludeInactive = do
+      ensureModule ModuleAdmin user
+      rows <- withPool $ do
+        let filters =
+              case mIncludeInactive of
+                Just True -> []
+                _ -> [ME.StudioBrainEntryActive ==. True]
+        selectList filters [Desc ME.StudioBrainEntryUpdatedAt, LimitTo 200]
+      pure (map brainEntryToDTO rows)
+
+    brainCreateHandler BrainEntryCreate{..} = do
+      ensureModule ModuleAdmin user
+      let title = T.strip becTitle
+          body = T.strip becBody
+          category = cleanMaybe becCategory
+          tags = cleanTags becTags
+          active = fromMaybe True becActive
+      when (T.null title) $ throwError err400 { errBody = "Título requerido" }
+      when (T.null body) $ throwError err400 { errBody = "Contenido requerido" }
+      now <- liftIO getCurrentTime
+      entryId <- withPool $ insert ME.StudioBrainEntry
+        { ME.studioBrainEntryTitle = title
+        , ME.studioBrainEntryBody = body
+        , ME.studioBrainEntryCategory = category
+        , ME.studioBrainEntryTags = tags
+        , ME.studioBrainEntryActive = active
+        , ME.studioBrainEntryCreatedAt = now
+        , ME.studioBrainEntryUpdatedAt = now
+        }
+      row <- withPool $ getJust entryId
+      pure (brainEntryToDTO (Entity entryId row))
+
+    brainUpdateHandler entryId BrainEntryUpdate{..} = do
+      ensureModule ModuleAdmin user
+      let entryKey = toSqlKey entryId :: ME.StudioBrainEntryId
+          titleUpdate = T.strip <$> beuTitle
+          bodyUpdate = T.strip <$> beuBody
+      for_ titleUpdate $ \t -> when (T.null t) $
+        throwError err400 { errBody = "Título requerido" }
+      for_ bodyUpdate $ \t -> when (T.null t) $
+        throwError err400 { errBody = "Contenido requerido" }
+      now <- liftIO getCurrentTime
+      let tagsUpdate =
+            case beuTags of
+              Nothing -> Nothing
+              Just tags -> Just (ME.StudioBrainEntryTags =. cleanTags (Just tags))
+          updates = catMaybes
+            [ (ME.StudioBrainEntryTitle =.) <$> titleUpdate
+            , (ME.StudioBrainEntryBody =.) <$> bodyUpdate
+            , (ME.StudioBrainEntryCategory =.) <$> fmap cleanMaybe beuCategory
+            , tagsUpdate
+            , (ME.StudioBrainEntryActive =.) <$> beuActive
+            ]
+      let updates' = updates <> [ME.StudioBrainEntryUpdatedAt =. now]
+      result <- withPool $ do
+        mEntry <- get entryKey
+        case mEntry of
+          Nothing -> pure (Left err404)
+          Just _ -> do
+            if null updates
+              then pure (Left err400 { errBody = "Sin cambios para actualizar" })
+              else do
+                update entryKey updates'
+                Right <$> getEntity entryKey
+      case result of
+        Left err -> throwError err
+        Right maybeEntry -> maybe (throwError err404) (pure . brainEntryToDTO) maybeEntry
 
     ragStatusHandler = do
       ensureModule ModuleAdmin user
@@ -185,7 +266,27 @@ adminServer user =
           pure RagRefreshResponse
             { rrrStatus = "ok"
             , rrrChunks = chunkCount
-            }
+      }
+
+    brainEntryToDTO (Entity key entry) = BrainEntryDTO
+      { bedId = fromSqlKey key
+      , bedTitle = ME.studioBrainEntryTitle entry
+      , bedBody = ME.studioBrainEntryBody entry
+      , bedCategory = ME.studioBrainEntryCategory entry
+      , bedTags = fromMaybe [] (ME.studioBrainEntryTags entry)
+      , bedActive = ME.studioBrainEntryActive entry
+      , bedUpdatedAt = ME.studioBrainEntryUpdatedAt entry
+      }
+
+    cleanMaybe Nothing = Nothing
+    cleanMaybe (Just txt) =
+      let trimmed = T.strip txt
+      in if T.null trimmed then Nothing else Just trimmed
+
+    cleanTags Nothing = Nothing
+    cleanTags (Just tags) =
+      let cleaned = filter (not . T.null) (map T.strip tags)
+      in if null cleaned then Nothing else Just cleaned
 
     roleDetail role = RoleDetailDTO
       { role    = role

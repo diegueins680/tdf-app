@@ -6,6 +6,7 @@
 
 module TDF.API where
 
+import           Control.Applicative ((<|>))
 import           Servant
 import           Database.Persist          (Entity)
 import           Data.Int (Int64)
@@ -13,7 +14,8 @@ import           Data.Text (Text)
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Data.Char (toLower)
-import           Data.Aeson (ToJSON(..), FromJSON(..), Value, object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier)
+import           Data.Aeson (ToJSON(..), FromJSON(..), Value(..), object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier)
+import           Data.Aeson.Types (camelTo2, withObject, (.:?))
 import qualified Data.ByteString.Lazy as BL
 
 import           TDF.API.Admin     (AdminAPI)
@@ -123,6 +125,9 @@ type ChatAPI =
   :<|> "chat" :> "threads" :> Capture "threadId" Int64 :> "messages"
          :> ReqBody '[JSON] ChatSendMessageRequest
          :> Post '[JSON] ChatMessageDTO
+
+type ChatKitSessionAPI =
+       "chatkit" :> "sessions" :> ReqBody '[JSON] ChatKitSessionRequest :> Post '[JSON] ChatKitSessionResponse
 
 type WhatsAppMessagesAPI =
        "whatsapp" :> "messages"
@@ -234,6 +239,7 @@ type ProtectedAPI =
   :<|> WhatsAppMessagesAPI
   :<|> "social" :> SocialAPI
   :<|> ChatAPI
+  :<|> ChatKitSessionAPI
   :<|> "social-sync" :> SocialSyncAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> InternshipsAPI
@@ -382,6 +388,29 @@ data CmsContentDTO = CmsContentDTO
   } deriving (Show, Generic)
 instance ToJSON CmsContentDTO where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data ChatKitSessionRequest = ChatKitSessionRequest
+  { cksWorkflowId :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON ChatKitSessionRequest where
+  parseJSON = withObject "ChatKitSessionRequest" $ \o -> do
+    workflowId <- o .:? "workflowId"
+    workflow <- o .:? "workflow"
+    nestedId <- case workflow of
+      Just (Object w) -> w .:? "id"
+      _ -> pure Nothing
+    pure ChatKitSessionRequest
+      { cksWorkflowId = workflowId <|> nestedId
+      }
+
+data ChatKitSessionResponse = ChatKitSessionResponse
+  { ckrClientSecret :: Text
+  , ckrExpiresAfter :: Maybe Value
+  } deriving (Show, Generic)
+
+instance ToJSON ChatKitSessionResponse where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' . camelDrop 3 }
 
 camelDrop :: Int -> String -> String
 camelDrop n xs = case drop n xs of

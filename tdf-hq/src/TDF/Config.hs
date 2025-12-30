@@ -38,6 +38,8 @@ data AppConfig = AppConfig
   , openAiApiKey    :: Maybe Text
   , openAiModel     :: Text
   , openAiEmbedModel :: Text
+  , chatKitWorkflowId :: Maybe Text
+  , chatKitApiBase :: Text
   , ragTopK         :: Int
   , ragChunkWords   :: Int
   , ragChunkOverlap :: Int
@@ -53,6 +55,17 @@ data AppConfig = AppConfig
   , instagramMessagingAccountId :: Maybe Text
   , instagramMessagingApiBase :: Text
   } deriving (Show)
+
+openAiEmbedDimensions :: Text -> Maybe Int
+openAiEmbedDimensions model =
+  case T.toLower (T.strip model) of
+    "text-embedding-3-small" -> Just 1536
+    "text-embedding-3-large" -> Just 3072
+    "text-embedding-ada-002" -> Just 1536
+    _ -> Nothing
+
+ragEmbeddingDim :: AppConfig -> Int
+ragEmbeddingDim cfg = fromMaybe 1536 (openAiEmbedDimensions (openAiEmbedModel cfg))
 
 dbConnString :: AppConfig -> String
 dbConnString cfg =
@@ -83,6 +96,8 @@ loadConfig = do
   openAiKeyEnv <- lookupEnv "OPENAI_API_KEY"
   openAiModelEnv <- lookupEnv "OPENAI_MODEL"
   openAiEmbedModelEnv <- lookupEnv "OPENAI_EMBED_MODEL"
+  chatKitWorkflowEnv <- lookupEnv "CHATKIT_WORKFLOW_ID" <|> lookupEnv "VITE_CHATKIT_WORKFLOW_ID"
+  chatKitApiBaseEnv <- lookupEnv "CHATKIT_API_BASE"
   ragTopKEnv <- lookupEnv "RAG_TOP_K"
   ragChunkWordsEnv <- lookupEnv "RAG_CHUNK_WORDS"
   ragChunkOverlapEnv <- lookupEnv "RAG_CHUNK_OVERLAP"
@@ -121,6 +136,8 @@ loadConfig = do
     , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
     , openAiModel = fromMaybe "gpt-4o-mini" (openAiModelEnv >>= nonEmpty . T.pack)
     , openAiEmbedModel = fromMaybe "text-embedding-3-small" (openAiEmbedModelEnv >>= nonEmpty . T.pack)
+    , chatKitWorkflowId = chatKitWorkflowEnv >>= nonEmpty . T.pack
+    , chatKitApiBase = fromMaybe "https://api.openai.com" (chatKitApiBaseEnv >>= nonEmpty . T.pack)
     , ragTopK = parseInt 8 ragTopKEnv
     , ragChunkWords = parseInt 220 ragChunkWordsEnv
     , ragChunkOverlap = parseInt 40 ragChunkOverlapEnv

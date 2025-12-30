@@ -25,6 +25,7 @@ import CourseProductionLandingPage from './pages/CourseProductionLandingPage';
 import LogsPage from './pages/LogsPage';
 import SystemStatusPage from './pages/SystemStatusPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import BrainAdminPage from './pages/BrainAdminPage';
 import TrialsPage from './pages/TrialsPage';
 import LiveSessionPublicPage from './pages/LiveSessionPublicPage';
 import TeachersPage from './pages/TeachersPage';
@@ -65,6 +66,7 @@ import DatafastReturnPage from './pages/DatafastReturnPage';
 import MarketplaceOrderTrackingPage from './pages/MarketplaceOrderTrackingPage';
 import NotFoundPage from './pages/NotFoundPage';
 import TidalAgentPage from './pages/TidalAgentPage';
+import ChatKitPage from './pages/ChatKitPage';
 import LabelAssetsPage from './pages/LabelAssetsPage';
 import LabelTracksPage from './pages/LabelTracksPage';
 import AdminDiagnosticsPage from './pages/AdminDiagnosticsPage';
@@ -233,6 +235,7 @@ export default function App() {
           <Route path="/seguridad" element={<SecurityPage />} />
           <Route path="/practicas" element={<InternshipsPage />} />
           <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
+          <Route path="/herramientas/chatkit" element={<ChatKitPage />} />
           <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
           <Route path="/crm" element={<Outlet />}>
             <Route path="contactos" element={<PartiesPage />} />
@@ -287,6 +290,7 @@ export default function App() {
             <Route path="usuarios-admin" element={<AdminUsersPage />} />
             <Route path="estado" element={<SystemStatusPage />} />
             <Route path="logs" element={<LogsPage />} />
+            <Route path="brain" element={<BrainAdminPage />} />
             <Route path="roles-permisos" element={<UserRoleManagement />} />
             <Route path="integraciones/calendario" element={<CalendarSyncPage />} />
             <Route path="cms" element={<CmsAdminPage />} />

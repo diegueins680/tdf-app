@@ -36,6 +36,7 @@ const sectionsByModule: Record<string, ManualItem[]> = {
     { title: 'Configuración / Roles y permisos', path: '/configuracion/roles-permisos', description: 'Asignación granular de permisos y módulos (CRM, scheduling, invoicing, etc.).' },
     { title: 'Configuración / Logs', path: '/configuracion/logs', description: 'Registros de sistema para auditar cambios y errores.' },
     { title: 'Configuración / Estado', path: '/configuracion/estado', description: 'Salud de integraciones y servicios (API, correo, pagos).' },
+    { title: 'Configuración / Brain y RAG', path: '/configuracion/brain', description: 'Base de conocimiento del estudio y refresco del índice RAG.' },
     { title: 'Configuración / CMS', path: '/configuracion/cms', description: 'Contenido público (records, fan hub, cursos). Crea, publica y versiona bloques.' },
   ],
   packages: [

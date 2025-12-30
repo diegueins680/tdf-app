@@ -833,6 +833,7 @@ protectedServer user =
   :<|> whatsappMessagesServer user
   :<|> socialServer user
   :<|> chatServer user
+  :<|> chatkitSessionServer user
   :<|> socialSyncServer user
   :<|> socialEventsServer user
   :<|> internshipsServer user
@@ -4820,6 +4821,83 @@ callOpenAIChat cfg messages =
         Right ChatCompletionResp{choices = (ChatChoice OpenAIChatMessage{content = reply} : _)} ->
           pure (Right reply)
         Right _ -> pure (Left "Sin respuesta de modelo")
+
+chatkitSessionServer :: AuthedUser -> ChatKitSessionRequest -> AppM ChatKitSessionResponse
+chatkitSessionServer user ChatKitSessionRequest{..} = do
+  Env{..} <- ask
+  let cfg = envConfig
+  workflowId <- case resolveWorkflowId cksWorkflowId (chatKitWorkflowId cfg) of
+    Nothing -> throwBadRequest "workflowId requerido"
+    Just val -> pure val
+  apiKey <- case openAiApiKey cfg of
+    Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
+    Just key -> pure key
+  let userId = T.pack (show (fromSqlKey (auPartyId user)))
+      apiBase = normalizeChatKitBase (chatKitApiBase cfg)
+  manager <- liftIO $ newManager tlsManagerSettings
+  reqBase <- liftIO $ parseRequest (T.unpack (apiBase <> "/v1/chatkit/sessions"))
+  let body = encode $ object
+        [ "workflow" .= object ["id" .= workflowId]
+        , "user" .= userId
+        ]
+      req =
+        reqBase
+          { method = "POST"
+          , requestHeaders =
+              [ ("Content-Type", "application/json")
+              , ("Authorization", "Bearer " <> TE.encodeUtf8 apiKey)
+              , ("OpenAI-Beta", "chatkit_beta=v1")
+              ]
+          , requestBody = RequestBodyLBS body
+          }
+  resp <- liftIO $ httpLbs req manager
+  let status = statusCode (responseStatus resp)
+      raw = responseBody resp
+  case eitherDecode raw of
+    Left err ->
+      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack err)) }
+    Right payload ->
+      if status >= 200 && status < 300
+        then case extractChatKitSession payload of
+          Just (secret, expiresAfter) ->
+            pure ChatKitSessionResponse
+              { ckrClientSecret = secret
+              , ckrExpiresAfter = expiresAfter
+              }
+          Nothing ->
+            throwError err502 { errBody = "ChatKit respondió sin client_secret" }
+        else do
+          let baseMsg = "Error al crear sesión ChatKit (HTTP " <> T.pack (show status) <> ")"
+              msg = fromMaybe baseMsg (extractChatKitError payload)
+          throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+resolveWorkflowId :: Maybe Text -> Maybe Text -> Maybe Text
+resolveWorkflowId primary fallback =
+  let normalized = (primary <|> fallback) >>= nonEmptyText
+  in normalized
+  where
+    nonEmptyText txt =
+      let trimmed = T.strip txt
+      in if T.null trimmed then Nothing else Just trimmed
+
+normalizeChatKitBase :: Text -> Text
+normalizeChatKitBase base =
+  let trimmed = T.dropWhileEnd (== '/') (T.strip base)
+  in if T.null trimmed then "https://api.openai.com" else trimmed
+
+extractChatKitSession :: Value -> Maybe (Text, Maybe Value)
+extractChatKitSession = parseMaybe $ withObject "ChatKitSession" $ \o -> do
+  secret <- o .: "client_secret"
+  expiresAfter <- o .:? "expires_after"
+  pure (secret, expiresAfter)
+
+extractChatKitError :: Value -> Maybe Text
+extractChatKitError = parseMaybe $ withObject "ChatKitError" $ \o -> do
+  mErr <- o .:? "error"
+  case mErr of
+    Just (String msg) -> pure msg
+    Just (Object errObj) -> errObj .:? "message"
+    _ -> o .:? "message"
 
 ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO PartyId
 ensurePartyForInquiry AdsInquiry{..} now = do

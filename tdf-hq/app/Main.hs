@@ -26,7 +26,7 @@ import           Text.Read                (readMaybe)
 
 import           TDF.Cors                 (corsPolicy)
 
-import           TDF.Config     (appPort, dbConnString, loadConfig, resetDb, runMigrations, seedDatabase)
+import           TDF.Config     (AppConfig, appPort, dbConnString, loadConfig, ragEmbeddingDim, resetDb, runMigrations, seedDatabase)
 import           TDF.Cron       (startCoursePaymentReminderJob, startInstagramSyncJob, startSocialAutoReplyJob)
 import           TDF.DB         (Env(..), ConnectionPool, makePool)
 import           TDF.Models     (EntityField (PartyRoleActive), PartyId, PartyRole(..), RoleEnum, migrateAll)
@@ -104,7 +104,7 @@ main = do
         if runMigrations cfg
           then do
             putStrLn "Running DB migrations..."
-            runSqlPool runAllMigrations pool
+            runSqlPool (runAllMigrations cfg) pool
           else
             putStrLn "RUN_MIGRATIONS disabled (using pre-initialized schema)."
         when (seedDatabase cfg) $ do
@@ -137,25 +137,30 @@ resetSchema = do
   rawExecute "GRANT ALL ON SCHEMA public TO CURRENT_USER" []
   rawExecute "GRANT ALL ON SCHEMA public TO public" []
 
-runAllMigrations :: SqlPersistT IO ()
-runAllMigrations = do
+runAllMigrations :: AppConfig -> SqlPersistT IO ()
+runAllMigrations cfg = do
   rawExecute "CREATE EXTENSION IF NOT EXISTS pgcrypto" []
   vectorAvailable <- hasVectorExtension
   if vectorAvailable
     then do
       rawExecute "CREATE EXTENSION IF NOT EXISTS vector" []
+      let embeddingDim = ragEmbeddingDim cfg
       rawExecute
-        "CREATE TABLE IF NOT EXISTS rag_chunk ( \
-        \  id BIGSERIAL PRIMARY KEY, \
-        \  source TEXT NOT NULL, \
-        \  source_id TEXT, \
-        \  chunk_index INT NOT NULL, \
-        \  content TEXT NOT NULL, \
-        \  metadata JSONB, \
-        \  embedding vector(1536) NOT NULL, \
-        \  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), \
-        \  updated_at TIMESTAMPTZ NOT NULL DEFAULT now() \
-        \)" []
+        (T.concat
+          [ "CREATE TABLE IF NOT EXISTS rag_chunk ( "
+          , " id BIGSERIAL PRIMARY KEY, "
+          , " source TEXT NOT NULL, "
+          , " source_id TEXT, "
+          , " chunk_index INT NOT NULL, "
+          , " content TEXT NOT NULL, "
+          , " metadata JSONB, "
+          , " embedding vector("
+          , T.pack (show embeddingDim)
+          , ") NOT NULL, "
+          , " created_at TIMESTAMPTZ NOT NULL DEFAULT now(), "
+          , " updated_at TIMESTAMPTZ NOT NULL DEFAULT now() "
+          , ")"
+          ]) []
       rawExecute
         "CREATE UNIQUE INDEX IF NOT EXISTS rag_chunk_source_key \
         \ON rag_chunk (source, source_id, chunk_index)" []

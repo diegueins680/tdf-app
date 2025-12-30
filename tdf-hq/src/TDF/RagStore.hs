@@ -7,10 +7,13 @@ module TDF.RagStore
   , ensureRagIndex
   , retrieveRagContext
   , getRagIndexStats
+  , availabilityOverlaps
+  , validateEmbeddingModelDimensions
   ) where
 
 import           Control.Monad          (forM, forM_)
 import           Control.Monad.IO.Class (liftIO)
+import           Control.Exception.Safe (catchAny, throwM)
 import           Data.Aeson             (Value, ToJSON(..), FromJSON(..), object, (.=), encode, eitherDecode, withObject, (.:))
 import           Data.ByteString.Lazy   (toStrict)
 import           Data.Int               (Int64)
@@ -23,14 +26,16 @@ import qualified Data.Text.Encoding     as TE
 import           Data.Time              (UTCTime, addUTCTime, diffUTCTime, getCurrentTime)
 import           Data.Time.Format       (defaultTimeLocale, formatTime)
 import           Database.Persist       (Entity(..), SelectOpt(..), selectList, entityKey, entityVal, (==.), (!=.), (<-.), (>=.), (<=.))
-import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
+import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, transactionSave, transactionUndo)
 import           GHC.Generics           (Generic)
-import           Network.HTTP.Client    (Request(..), httpLbs, newManager, parseRequest, responseBody, RequestBody(..))
+import           Network.HTTP.Client    (Request(..), httpLbs, newManager, parseRequest, responseBody, responseStatus, RequestBody(..))
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Types.Status (statusCode)
 import           Numeric                (showFFloat)
+import           Text.Read              (readMaybe)
 import           Web.PathPieces         (toPathPiece)
 
-import           TDF.Config             (AppConfig(..))
+import           TDF.Config             (AppConfig(..), openAiEmbedDimensions)
 import           TDF.DB                 (ConnectionPool)
 import qualified TDF.Models             as M
 import qualified TDF.ModelsExtra        as ME
@@ -78,22 +83,42 @@ instance FromJSON EmbeddingResp where
   parseJSON = withObject "EmbeddingResp" $ \o ->
     EmbeddingResp <$> o .: "data"
 
+data OpenAIErrorBody = OpenAIErrorBody
+  { oeMessage :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON OpenAIErrorBody where
+  parseJSON = withObject "OpenAIErrorBody" $ \o ->
+    OpenAIErrorBody <$> o .: "message"
+
+data OpenAIErrorResp = OpenAIErrorResp
+  { oeError :: OpenAIErrorBody
+  } deriving (Show, Generic)
+
+instance FromJSON OpenAIErrorResp where
+  parseJSON = withObject "OpenAIErrorResp" $ \o ->
+    OpenAIErrorResp <$> o .: "error"
+
 refreshRagIndex :: AppConfig -> ConnectionPool -> IO (Either Text Int)
 refreshRagIndex cfg pool = do
-  docs <- runSqlPool (buildRagDocuments cfg) pool
-  let chunks = concatMap (docToChunks cfg) docs
-  if null chunks
-    then pure (Right 0)
-    else do
-      embedResult <- embedTexts cfg (map rcContent chunks)
-      case embedResult of
-        Left err -> pure (Left err)
-        Right embeddings -> do
-          if length embeddings /= length chunks
-            then pure (Left "Embedding response size mismatch")
-            else do
-              runSqlPool (replaceRagChunks chunks embeddings) pool
-              pure (Right (length chunks))
+  dimCheck <- validateRagEmbeddingDim cfg pool
+  case dimCheck of
+    Left err -> pure (Left err)
+    Right () -> do
+      docs <- runSqlPool (buildRagDocuments cfg) pool
+      let chunks = concatMap (docToChunks cfg) docs
+      if null chunks
+        then pure (Right 0)
+        else do
+          embedResult <- embedTexts cfg (map rcContent chunks)
+          case embedResult of
+            Left err -> pure (Left err)
+            Right embeddings -> do
+              if length embeddings /= length chunks
+                then pure (Left "Embedding response size mismatch")
+                else do
+                  runSqlPool (replaceRagChunks chunks embeddings) pool
+                  pure (Right (length chunks))
 
 ensureRagIndex :: AppConfig -> ConnectionPool -> IO (Either Text Bool)
 ensureRagIndex cfg pool = do
@@ -117,12 +142,16 @@ ensureRagIndex cfg pool = do
 
 retrieveRagContext :: AppConfig -> ConnectionPool -> Text -> IO [Text]
 retrieveRagContext cfg pool query = do
-  embedResult <- embedTexts cfg [query]
-  case embedResult of
+  dimCheck <- validateRagEmbeddingDim cfg pool
+  case dimCheck of
     Left _ -> pure []
-    Right [] -> pure []
-    Right (embedding:_) ->
-      runSqlPool (selectRagChunks cfg embedding) pool
+    Right () -> do
+      embedResult <- embedTexts cfg [query]
+      case embedResult of
+        Left _ -> pure []
+        Right [] -> pure []
+        Right (embedding:_) ->
+          runSqlPool (selectRagChunks cfg embedding) pool
 
 getRagIndexStats :: ConnectionPool -> IO (Int, Maybe UTCTime)
 getRagIndexStats pool = do
@@ -137,15 +166,19 @@ buildRagDocuments cfg = do
   campaigns <- selectList [] [Desc ME.CampaignUpdatedAt, LimitTo 200]
   ads <- selectList [] [Desc ME.AdCreativeUpdatedAt, LimitTo 200]
   rooms <- selectList [] [Asc ME.RoomName]
+  brainEntries <- selectList
+    [ME.StudioBrainEntryActive ==. True]
+    [Desc ME.StudioBrainEntryUpdatedAt, LimitTo 200]
   resources <- selectList [M.ResourceActive ==. True] [Asc M.ResourceName]
   let courseDocs = map courseToDoc courses
       serviceDocs = map serviceToDoc services
       campaignDocs = map campaignToDoc campaigns
       adDocs = map adToDoc ads
       roomDocs = map roomToDoc rooms
+      brainDocs = map brainEntryToDoc brainEntries
       resourceDocs = map resourceToDoc resources
   availabilityDocs <- buildAvailabilityDocs cfg now resources
-  pure (courseDocs ++ serviceDocs ++ campaignDocs ++ adDocs ++ roomDocs ++ resourceDocs ++ availabilityDocs)
+  pure (courseDocs ++ serviceDocs ++ campaignDocs ++ adDocs ++ roomDocs ++ brainDocs ++ resourceDocs ++ availabilityDocs)
 
 courseToDoc :: Entity Trials.Course -> RagDocument
 courseToDoc (Entity _ c) =
@@ -252,6 +285,24 @@ roomToDoc (Entity rid r) =
     , rdMetadata = object ["roomId" .= toPathPiece rid]
     }
 
+brainEntryToDoc :: Entity ME.StudioBrainEntry -> RagDocument
+brainEntryToDoc (Entity bid entry) =
+  RagDocument
+    { rdSource = "studio_brain"
+    , rdSourceId = Just (T.pack (show (fromSqlKey bid)))
+    , rdContent = T.intercalate " · " (catMaybes
+        [ Just ("Tema: " <> ME.studioBrainEntryTitle entry)
+        , ("Categoría: " <>) <$> nonEmpty (ME.studioBrainEntryCategory entry)
+        , ("Tags: " <>) <$> nonEmptyList (ME.studioBrainEntryTags entry)
+        , Just ("Detalle: " <> ME.studioBrainEntryBody entry)
+        ])
+    , rdMetadata = object
+        [ "brainEntryId" .= fromSqlKey bid
+        , "category" .= ME.studioBrainEntryCategory entry
+        , "tags" .= fromMaybe [] (ME.studioBrainEntryTags entry)
+        ]
+    }
+
 resourceToDoc :: Entity M.Resource -> RagDocument
 resourceToDoc (Entity rid r) =
   RagDocument
@@ -275,8 +326,8 @@ buildAvailabilityDocs cfg now resources = do
       resourceName rid = M.resourceName <$> Map.lookup rid resourceMap
       resourceType rid = M.resourceResourceType <$> Map.lookup rid resourceMap
   bookings <- selectList
-    [ M.BookingStartsAt >=. now
-    , M.BookingStartsAt <=. windowEnd
+    [ M.BookingStartsAt <=. windowEnd
+    , M.BookingEndsAt >=. now
     , M.BookingStatus !=. M.Cancelled
     ]
     [Asc M.BookingStartsAt]
@@ -287,18 +338,18 @@ buildAvailabilityDocs cfg now resources = do
     else selectList [M.BookingResourceBookingId <-. bookingIds] []
 
   classSessions <- selectList
-    [ Trials.ClassSessionStartAt >=. now
-    , Trials.ClassSessionStartAt <=. windowEnd
+    [ Trials.ClassSessionStartAt <=. windowEnd
+    , Trials.ClassSessionEndAt >=. now
     ]
     [Asc Trials.ClassSessionStartAt]
   trialAssignments <- selectList
-    [ Trials.TrialAssignmentStartAt >=. now
-    , Trials.TrialAssignmentStartAt <=. windowEnd
+    [ Trials.TrialAssignmentStartAt <=. windowEnd
+    , Trials.TrialAssignmentEndAt >=. now
     ]
     [Asc Trials.TrialAssignmentStartAt]
   teacherAvailability <- selectList
-    [ Trials.TeacherAvailabilityStartAt >=. now
-    , Trials.TeacherAvailabilityStartAt <=. windowEnd
+    [ Trials.TeacherAvailabilityStartAt <=. windowEnd
+    , Trials.TeacherAvailabilityEndAt >=. now
     ]
     [Asc Trials.TeacherAvailabilityStartAt]
 
@@ -326,11 +377,11 @@ buildAvailabilityDocs cfg now resources = do
     else selectList [M.PartyId <-. Map.keys teacherIds] []
   let subjectMap = Map.fromList [(entityKey s, entityVal s) | s <- subjects]
       teacherMap = Map.fromList [(entityKey t, entityVal t) | t <- teachers]
-
-  let bookingEvents =
+      bookingEvents =
         [ mkAvailabilityEvent
             rid
             (M.bookingStartsAt booking)
+            (M.bookingEndsAt booking)
             "booking"
             (formatBookingDoc resName resType booking)
         | Entity _ br <- bookingResources
@@ -343,6 +394,7 @@ buildAvailabilityDocs cfg now resources = do
         [ mkAvailabilityEvent
             rid
             (Trials.classSessionStartAt sess)
+            (Trials.classSessionEndAt sess)
             "class_session"
             (formatClassSessionDoc resName resType sess subjectMap teacherMap)
         | Entity _ sess <- classSessions
@@ -354,6 +406,7 @@ buildAvailabilityDocs cfg now resources = do
         [ mkAvailabilityEvent
             rid
             (Trials.trialAssignmentStartAt ta)
+            (Trials.trialAssignmentEndAt ta)
             "trial_assignment"
             (formatTrialAssignmentDoc resName resType ta)
         | Entity _ ta <- trialAssignments
@@ -365,6 +418,7 @@ buildAvailabilityDocs cfg now resources = do
         [ mkAvailabilityEvent
             rid
             (Trials.teacherAvailabilityStartAt ta)
+            (Trials.teacherAvailabilityEndAt ta)
             "availability"
             (formatTeacherAvailabilityDoc resName resType ta subjectMap teacherMap)
         | Entity _ ta <- teacherAvailability
@@ -373,8 +427,9 @@ buildAvailabilityDocs cfg now resources = do
         , let resType = resourceType rid
         ]
       allEvents = bookingEvents ++ classEvents ++ trialEvents ++ availabilityEvents
+      overlapping = filter (\ev -> availabilityOverlaps now windowEnd (aeStart ev) (aeEnd ev)) allEvents
       grouped = Map.fromListWith (++)
-        [ (aeResourceId ev, [ev]) | ev <- allEvents ]
+        [ (aeResourceId ev, [ev]) | ev <- overlapping ]
       limited = concatMap (take (ragAvailabilityPerResource cfg) . sortOn aeStart) (Map.elems grouped)
   pure (map aeDoc limited)
 
@@ -444,14 +499,20 @@ formatTeacherAvailabilityDoc resName resType ta subjectMap teacherMap =
 data AvailabilityEvent = AvailabilityEvent
   { aeResourceId :: M.ResourceId
   , aeStart      :: UTCTime
+  , aeEnd        :: UTCTime
   , aeDoc        :: RagDocument
   }
 
-mkAvailabilityEvent :: M.ResourceId -> UTCTime -> Text -> Text -> AvailabilityEvent
-mkAvailabilityEvent rid start kind content =
+availabilityOverlaps :: UTCTime -> UTCTime -> UTCTime -> UTCTime -> Bool
+availabilityOverlaps windowStart windowEnd eventStart eventEnd =
+  eventStart <= windowEnd && eventEnd >= windowStart
+
+mkAvailabilityEvent :: M.ResourceId -> UTCTime -> UTCTime -> Text -> Text -> AvailabilityEvent
+mkAvailabilityEvent rid start end kind content =
   AvailabilityEvent
     { aeResourceId = rid
     , aeStart = start
+    , aeEnd = end
     , aeDoc = RagDocument
         { rdSource = "availability"
         , rdSourceId = Just (T.pack (show (fromSqlKey rid)))
@@ -492,43 +553,106 @@ chunkWords maxWords overlap txt =
 
 replaceRagChunks :: [RagChunk] -> [[Double]] -> SqlPersistT IO ()
 replaceRagChunks chunks embeddings = do
-  rawExecute "DELETE FROM rag_chunk" []
-  forM_ (zip chunks embeddings) $ \(RagChunk{..}, emb) -> do
-    let values =
-          [ PersistText rcSource
-          , maybe PersistNull PersistText rcSourceId
-          , PersistInt64 (fromIntegral rcChunkIndex)
-          , PersistText rcContent
-          , PersistText (jsonText rcMetadata)
-          , PersistText (vectorText emb)
-          ]
-    rawExecute
-      "INSERT INTO rag_chunk (source, source_id, chunk_index, content, metadata, embedding, updated_at) \
-      \VALUES (?, ?, ?, ?, ?::jsonb, ?::vector, now())"
-      values
+  transactionSave
+  let doReplace = do
+        rawExecute "DELETE FROM rag_chunk" []
+        forM_ (zip chunks embeddings) $ \(RagChunk{..}, emb) -> do
+          let values =
+                [ PersistText rcSource
+                , maybe PersistNull PersistText rcSourceId
+                , PersistInt64 (fromIntegral rcChunkIndex)
+                , PersistText rcContent
+                , PersistText (jsonText rcMetadata)
+                , PersistText (vectorText emb)
+                ]
+          rawExecute
+            "INSERT INTO rag_chunk (source, source_id, chunk_index, content, metadata, embedding, updated_at) \
+            \VALUES (?, ?, ?, ?, ?::jsonb, ?::vector, now())"
+            values
+  doReplace `catchAny` \err -> do
+    transactionUndo
+    throwM err
+
+loadRagEmbeddingType :: SqlPersistT IO (Maybe Text)
+loadRagEmbeddingType = do
+  rows <- rawSql
+    "SELECT pg_catalog.format_type(atttypid, atttypmod) \
+    \FROM pg_attribute \
+    \WHERE attrelid = 'rag_chunk'::regclass AND attname = 'embedding'"
+    [] :: SqlPersistT IO [Single Text]
+  pure $ case rows of
+    [Single typ] -> Just typ
+    _ -> Nothing
+
+parseVectorDim :: Text -> Maybe Int
+parseVectorDim rawType =
+  let trimmed = T.toLower (T.strip rawType)
+  in do
+    rest <- T.stripPrefix "vector(" trimmed
+    numTxt <- T.stripSuffix ")" rest
+    readMaybe (T.unpack numTxt)
+
+validateEmbeddingModelDimensions :: Text -> Either Text Int
+validateEmbeddingModelDimensions model =
+  case openAiEmbedDimensions model of
+    Nothing ->
+      Left ("OPENAI_EMBED_MODEL desconocido: " <> model <> ". Configura un modelo con dimensiones conocidas.")
+    Just dim -> Right dim
+
+validateRagEmbeddingDim :: AppConfig -> ConnectionPool -> IO (Either Text ())
+validateRagEmbeddingDim cfg pool =
+  case validateEmbeddingModelDimensions (openAiEmbedModel cfg) of
+    Left err -> pure (Left err)
+    Right expected -> do
+      tableReady <- runSqlPool ragTableExists pool
+      if not tableReady
+        then pure (Left "RAG storage not available (rag_chunk missing). Ensure pgvector is installed and migrations have run.")
+        else do
+          mType <- runSqlPool loadRagEmbeddingType pool
+          case mType >>= parseVectorDim of
+            Nothing ->
+              pure (Left "No se pudo determinar la dimension de rag_chunk.embedding.")
+            Just actual ->
+              if actual == expected
+                then pure (Right ())
+                else
+                  pure (Left
+                    ("Dimensiones incompatibles. Modelo '" <> openAiEmbedModel cfg <>
+                     "' requiere " <> T.pack (show expected) <>
+                     " pero rag_chunk.embedding es vector(" <> T.pack (show actual) <>
+                     "). Ejecuta migraciones o ajusta OPENAI_EMBED_MODEL."
+                    ))
 
 loadRagIndexStats :: SqlPersistT IO RagIndexStats
 loadRagIndexStats = do
-  rows <- rawSql
-    "SELECT COUNT(*)::bigint, MAX(updated_at) FROM rag_chunk"
-    [] :: SqlPersistT IO [(Single Int64, Single (Maybe UTCTime))]
-  case rows of
-    [(Single countVal, Single updatedAt)] ->
-      pure RagIndexStats
-        { risCount = fromIntegral countVal
-        , risUpdatedAt = updatedAt
-        }
-    _ -> pure RagIndexStats { risCount = 0, risUpdatedAt = Nothing }
+  exists <- ragTableExists
+  if not exists
+    then pure RagIndexStats { risCount = 0, risUpdatedAt = Nothing }
+    else do
+      rows <- rawSql
+        "SELECT COUNT(*)::bigint, MAX(updated_at) FROM rag_chunk"
+        [] :: SqlPersistT IO [(Single Int64, Single (Maybe UTCTime))]
+      case rows of
+        [(Single countVal, Single updatedAt)] ->
+          pure RagIndexStats
+            { risCount = fromIntegral countVal
+            , risUpdatedAt = updatedAt
+            }
+        _ -> pure RagIndexStats { risCount = 0, risUpdatedAt = Nothing }
 
 selectRagChunks :: AppConfig -> [Double] -> SqlPersistT IO [Text]
 selectRagChunks cfg embedding =
   let vector = vectorText embedding
       limitVal = fromIntegral (ragTopK cfg) :: Int64
   in do
-    rows <- rawSql
-      "SELECT content FROM rag_chunk ORDER BY embedding <=> ?::vector LIMIT ?"
-      [PersistText vector, PersistInt64 limitVal] :: SqlPersistT IO [Single Text]
-    pure [val | Single val <- rows]
+    exists <- ragTableExists
+    if not exists
+      then pure []
+      else do
+        rows <- rawSql
+          "SELECT content FROM rag_chunk ORDER BY embedding <=> ?::vector LIMIT ?"
+          [PersistText vector, PersistInt64 limitVal] :: SqlPersistT IO [Single Text]
+        pure [val | Single val <- rows]
 
 embedTexts :: AppConfig -> [Text] -> IO (Either Text [[Double]])
 embedTexts cfg inputs
@@ -568,12 +692,20 @@ callOpenAIEmbeddings cfg inputs =
               , requestBody = RequestBodyLBS body
               }
       resp <- httpLbs req manager
+      let status = statusCode (responseStatus resp)
       let raw = responseBody resp
-      case eitherDecode raw of
-        Left err -> pure (Left (T.pack err))
-        Right (EmbeddingResp embeddings) ->
-          let ordered = map embedding (sortOn index embeddings)
-          in pure (Right ordered)
+      if status < 200 || status >= 300
+        then case eitherDecode raw of
+          Right OpenAIErrorResp{..} ->
+            pure (Left ("OpenAI embeddings error: " <> oeMessage oeError))
+          Left _ ->
+            pure (Left ("OpenAI embeddings error (status " <> T.pack (show status) <> ")."))
+        else
+          case eitherDecode raw of
+            Left err -> pure (Left (T.pack err))
+            Right (EmbeddingResp embeddings) ->
+              let ordered = map embedding (sortOn index embeddings)
+              in pure (Right ordered)
 
 formatUtc :: UTCTime -> Text
 formatUtc ts = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" ts)
@@ -622,3 +754,12 @@ partyName party =
   in if T.null display
        then fromMaybe "Sin nombre" (M.partyLegalName party)
        else display
+
+ragTableExists :: SqlPersistT IO Bool
+ragTableExists = do
+  rows <- rawSql
+    "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'rag_chunk')"
+    [] :: SqlPersistT IO [Single Bool]
+  pure $ case rows of
+    [Single True] -> True
+    _ -> False

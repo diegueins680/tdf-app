@@ -97,6 +97,16 @@ AdConversationExample
     updatedAt        UTCTime default=now()
     deriving Show Generic
 
+StudioBrainEntry
+    title       Text
+    body        Text
+    category    Text Maybe
+    tags        [Text] Maybe sqltype=text[]
+    active      Bool default=True
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    deriving Show Generic
+
 WhatsAppMessage
     externalId       Text
     senderId         Text
