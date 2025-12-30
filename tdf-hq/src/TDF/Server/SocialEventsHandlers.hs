@@ -8,6 +8,7 @@ module TDF.Server.SocialEventsHandlers
   ( socialEventsServer
   , normalizeInvitationStatus
   , parseInvitationIdsEither
+  , followArtistDb
   ) where
 
 import           Control.Applicative ((<|>))
@@ -19,7 +20,7 @@ import           Text.Read (readMaybe)
 import           Data.Int (Int64)
 import           Data.Time (getCurrentTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
-import           Data.Maybe (isNothing, catMaybes)
+import           Data.Maybe (isNothing, catMaybes, fromMaybe)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as Aeson
 import           Control.Monad (forM, forM_, when)
@@ -29,7 +30,7 @@ import           Servant
 -- Pull in full Persistent surface so TH-generated field constructors (EventRsvpEventId, SocialEventStartTime, etc.)
 -- are available for filters/updates.
 import           Database.Persist
-import           Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
+import           Database.Persist.Sql (ConnectionPool, fromSqlKey, runSqlPool, toSqlKey)
 
 import           TDF.API.SocialEventsAPI
 import           TDF.Auth (AuthedUser)
@@ -417,7 +418,7 @@ socialEventsServer _user = eventsServer
       let artistIdTxt = T.pack (show (fromSqlKey artistKey))
       pure $ map (\(Entity _ follow) ->
         ArtistFollowerDTO
-          { afFollowId = Nothing
+          { afFollowId = Just (renderFollowId artistKey (artistFollowFollowerPartyId follow))
           , afArtistId = Just artistIdTxt
           , afFollowerPartyId = artistFollowFollowerPartyId follow
           , afCreatedAt = Just (artistFollowCreatedAt follow)
@@ -505,21 +506,12 @@ socialEventsServer _user = eventsServer
     followArtist :: T.Text -> ArtistFollowRequest -> AppM ArtistFollowerDTO
     followArtist artistIdStr ArtistFollowRequest{..} = do
       Env{..} <- ask
-      now <- liftIO getCurrentTime
       artistKey <- parseArtistId artistIdStr
       mArtist <- liftIO $ runSqlPool (get artistKey) envPool
       when (isNothing mArtist) $ throwError err404 { errBody = "Artist not found" }
       let followerParty = T.strip afrFollowerPartyId
       when (T.null followerParty) $ throwError err400 { errBody = "followerPartyId is required" }
-      _ <- liftIO $ runSqlPool
-        (upsert (ArtistFollow artistKey followerParty now) [ArtistFollowCreatedAt =. now])
-        envPool
-      pure ArtistFollowerDTO
-        { afFollowId = Nothing
-        , afArtistId = Just (T.pack (show (fromSqlKey artistKey)))
-        , afFollowerPartyId = followerParty
-        , afCreatedAt = Just now
-        }
+      liftIO $ followArtistDb envPool artistKey followerParty
 
     unfollowArtist :: T.Text -> Maybe T.Text -> AppM NoContent
     unfollowArtist artistIdStr mFollower = do
@@ -701,6 +693,31 @@ socialEventsServer _user = eventsServer
       case readMaybe (T.unpack (T.strip artistIdStr)) :: Maybe Int64 of
         Nothing -> throwError err400 { errBody = "Invalid artist id" }
         Just num -> pure (toSqlKey num)
+
+-- | Stable, human-friendly identifier for a follow (artistId + follower id).
+renderFollowId :: ArtistProfileId -> T.Text -> T.Text
+renderFollowId artistId followerPartyId =
+  T.intercalate ":" [T.pack (show (fromSqlKey artistId)), followerPartyId]
+
+-- | Insert or fetch an artist follow while keeping the created timestamp stable.
+followArtistDb :: ConnectionPool -> ArtistProfileId -> T.Text -> IO ArtistFollowerDTO
+followArtistDb pool artistId followerPartyIdRaw = do
+  now <- getCurrentTime
+  let followerPartyId = T.strip followerPartyIdRaw
+  let followKey = ArtistFollowKey artistId followerPartyId
+  existing <- runSqlPool (get followKey) pool
+  _ <- case existing of
+    Just _ -> pure followKey
+    Nothing -> do
+      mInserted <- runSqlPool (insertUnique (ArtistFollow artistId followerPartyId now)) pool
+      pure (fromMaybe followKey mInserted)
+  let createdAtVal = maybe now artistFollowCreatedAt existing
+  pure ArtistFollowerDTO
+    { afFollowId = Just (renderFollowId artistId followerPartyId)
+    , afArtistId = Just (T.pack (show (fromSqlKey artistId)))
+    , afFollowerPartyId = followerPartyId
+    , afCreatedAt = Just createdAtVal
+    }
 
 -- | Normalize invitation status to a lowercase, non-empty value.
 normalizeInvitationStatus :: Maybe T.Text -> T.Text
