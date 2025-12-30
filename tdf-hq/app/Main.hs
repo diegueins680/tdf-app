@@ -4,7 +4,7 @@ module Main where
 
 import qualified Network.Wai.Handler.Warp as Warp
 import           Control.Concurrent      (forkFinally, myThreadId, throwTo, threadDelay)
-import           Control.Exception       (SomeException, handle, throwIO, try)
+import           Control.Exception       (SomeException, displayException, handle, throwIO, try)
 import           Control.Monad            (forM_, when)
 import           Control.Monad.IO.Class   (liftIO)
 import qualified Data.ByteString.Char8    as BS
@@ -20,7 +20,7 @@ import           Database.Persist.Types   (PersistValue (PersistText))
 import           Network.HTTP.Types       (RequestHeaders, status200, status500, status503)
 import           Network.Wai              (Application, Middleware, mapResponseHeaders, pathInfo, requestHeaders, responseHeaders,
                                            responseLBS)
-import           System.IO                (hSetEncoding, stdout, stderr)
+import           System.IO                (hPutStrLn, hSetEncoding, stdout, stderr)
 import           GHC.IO.Encoding          (utf8, setLocaleEncoding)
 import           Text.Read                (readMaybe)
 
@@ -69,7 +69,10 @@ main = do
               let hs = responseHeaders res
                   merged = extra ++ filter (\(k, _) -> k /= "Access-Control-Allow-Origin" && k /= "Vary") hs
               in mapResponseHeaders (const merged) res
-        in handle (\(_ :: SomeException) -> send (responseLBS status500 extra "Internal server error")) $
+        in handle (\(ex :: SomeException) -> do
+              hPutStrLn stderr ("Unhandled exception: " <> displayException ex)
+              send (responseLBS status500 extra "Internal server error")
+           ) $
              next req (\res -> send (applyHeaders res))
       rootOk :: Middleware
       rootOk next req send =
