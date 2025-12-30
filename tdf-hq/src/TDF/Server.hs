@@ -4896,8 +4896,13 @@ extractChatKitError = parseMaybe $ withObject "ChatKitError" $ \o -> do
   mErr <- o .:? "error"
   case mErr of
     Just (String msg) -> pure msg
-    Just (Object errObj) -> errObj .:? "message"
-    _ -> o .:? "message"
+    Just (Object errObj) -> requireText =<< errObj .:? "message"
+    _ -> requireText =<< o .:? "message"
+  where
+    requireText mVal =
+      case mVal of
+        Just txt -> pure txt
+        Nothing -> fail "message missing"
 
 ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO PartyId
 ensurePartyForInquiry AdsInquiry{..} now = do
