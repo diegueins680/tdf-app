@@ -84,8 +84,15 @@ inventoryServer user =
   :<|> refreshQrH
   :<|> resolveByQrH
   where
+    ensureInventoryAccess =
+      unless (hasModuleAccess ModuleAdmin user || hasInventoryRole user) $
+        throwError err403 { errBody = "Missing required module access" }
+
+    hasInventoryRole u =
+      any (`elem` auRoles u) [M.Manager, M.Maintenance]
+
     listAssets _mq mp mps = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       let pageNum    = clampPage (fromMaybe 1 mp)
           pageSize'  = clampPageSize (fromMaybe 50 mps)
           pageOffset = (pageNum - 1) * pageSize'
@@ -95,7 +102,7 @@ inventoryServer user =
       pure (mkPage pageNum pageSize' totalCount (map toAssetDTO entities))
 
     createAssetH req = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       entity <- withPool $ do
         newAssetId <- insert Asset
           { assetName                  = cName req
@@ -120,13 +127,13 @@ inventoryServer user =
       pure (toAssetDTO entity)
 
     getAssetH rawId = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
       mEntity <- withPool $ getEntity assetKey
       maybe (throwError err404) (pure . toAssetDTO) mEntity
 
     patchAssetH rawId req = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       assetKey    <- parseKey @Asset rawId
       locationKey <- traverse (parseKey @Room) (uLocationId req)
       let statusValue = uStatus req >>= parseAssetStatus
@@ -148,7 +155,7 @@ inventoryServer user =
       maybe (throwError err404) (pure . toAssetDTO) result
 
     deleteAssetH rawId = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
       deleted <- withPool $ do
         mAsset <- get assetKey
@@ -172,7 +179,7 @@ inventoryServer user =
       }
 
     checkoutAssetH rawId req = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
       asset <- withPool $ get assetKey
       _ <- maybe (throwError err404) pure asset
@@ -206,7 +213,7 @@ inventoryServer user =
       pure (toCheckoutDTO recEnt)
 
     checkinAssetH rawId req = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
       now <- liftIO getCurrentTime
       mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
@@ -224,13 +231,13 @@ inventoryServer user =
           pure (toCheckoutDTO recEnt)
 
     checkoutHistoryH rawId = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
       recs <- withPool $ selectList [AssetCheckoutAssetId ==. assetKey] [Desc AssetCheckoutCheckedOutAt, LimitTo 50]
       pure (map toCheckoutDTO recs)
 
     refreshQrH rawId = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
       token <- liftIO (fmap (T.pack . show) nextRandom)
       Env{envConfig} <- ask
@@ -240,7 +247,7 @@ inventoryServer user =
       pure AssetQrDTO { qrToken = token, qrUrl = qrUrl token }
 
     resolveByQrH token = do
-      ensureModule ModuleAdmin user
+      ensureInventoryAccess
       mAsset <- withPool $ selectFirst [AssetQrCode ==. Just token] []
       maybe (throwError err404) (pure . toAssetDTO) mAsset
 
