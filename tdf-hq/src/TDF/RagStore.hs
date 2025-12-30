@@ -16,8 +16,10 @@ import           Control.Monad.IO.Class (liftIO)
 import           Control.Exception.Safe (catchAny, throwM)
 import           Data.Aeson             (Value, ToJSON(..), FromJSON(..), object, (.=), encode, eitherDecode, withObject, (.:))
 import           Data.ByteString.Lazy   (toStrict)
+import           Data.Char              (isAlphaNum, ord, toLower)
 import           Data.Int               (Int64)
-import           Data.List              (sortOn)
+import           Data.List              (foldl', sortOn)
+import qualified Data.IntMap.Strict     as IntMap
 import qualified Data.Map.Strict        as Map
 import           Data.Maybe             (catMaybes, fromMaybe)
 import           Data.Text              (Text)
@@ -32,10 +34,11 @@ import           Network.HTTP.Client    (Request(..), httpLbs, newManager, parse
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.Status (statusCode)
 import           Numeric                (showFFloat)
+import           System.IO              (hPutStrLn, stderr)
 import           Text.Read              (readMaybe)
 import           Web.PathPieces         (toPathPiece)
 
-import           TDF.Config             (AppConfig(..), openAiEmbedDimensions)
+import           TDF.Config             (AppConfig(..), openAiEmbedDimensions, ragEmbeddingDim)
 import           TDF.DB                 (ConnectionPool)
 import qualified TDF.Models             as M
 import qualified TDF.ModelsExtra        as ME
@@ -658,18 +661,51 @@ embedTexts :: AppConfig -> [Text] -> IO (Either Text [[Double]])
 embedTexts cfg inputs
   | null inputs = pure (Right [])
   | otherwise = do
+      let fallback = do
+            hPutStrLn stderr "[rag] Usando embeddings locales (fallback)."
+            pure (Right (localEmbeddings cfg inputs))
       case openAiApiKey cfg of
-        Nothing -> pure (Left "OPENAI_API_KEY no configurada")
+        Nothing -> fallback
         Just _ -> do
           let batches = chunkList (ragEmbedBatchSize cfg) inputs
           results <- forM batches (callOpenAIEmbeddings cfg)
-          pure (concatEmbeddings results)
+          case concatEmbeddings results of
+            Left err -> do
+              hPutStrLn stderr ("[rag] OpenAI embeddings fallo, usando fallback. " <> T.unpack err)
+              pure (Right (localEmbeddings cfg inputs))
+            Right values -> pure (Right values)
   where
     concatEmbeddings xs =
       let failures = [err | Left err <- xs]
       in case failures of
         (err:_) -> Left err
         [] -> Right (concat [vals | Right vals <- xs])
+
+localEmbeddings :: AppConfig -> [Text] -> [[Double]]
+localEmbeddings cfg inputs =
+  let dim = max 1 (ragEmbeddingDim cfg)
+  in map (localEmbedText dim) inputs
+
+localEmbedText :: Int -> Text -> [Double]
+localEmbedText dim txt =
+  let cleaned = T.map (\c -> if isAlphaNum c then toLower c else ' ') txt
+      tokens = filter (not . T.null) (T.words cleaned)
+      counts = foldl' (addToken dim) IntMap.empty tokens
+      rawVec = [fromIntegral (IntMap.findWithDefault 0 idx counts) | idx <- [0 .. dim - 1]]
+      norm = sqrt (sum (map (\v -> v * v) rawVec))
+  in if norm <= 0 then rawVec else map (/ norm) rawVec
+
+addToken :: Int -> IntMap.IntMap Int -> Text -> IntMap.IntMap Int
+addToken dim acc token =
+  let idx = hashToken dim token
+  in IntMap.insertWith (+) idx 1 acc
+
+hashToken :: Int -> Text -> Int
+hashToken dim token =
+  let seed = 5381 :: Int
+      hashed = foldl' (\h c -> h * 33 + ord c) seed (T.unpack token)
+      capped = hashed `mod` max 1 dim
+  in if capped < 0 then capped + dim else capped
 
 callOpenAIEmbeddings :: AppConfig -> [Text] -> IO (Either Text [[Double]])
 callOpenAIEmbeddings cfg inputs =
