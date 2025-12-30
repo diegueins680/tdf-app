@@ -534,6 +534,16 @@ describe('UserRoleManagement', () => {
 });
 ```
 
+## Frontend QA: Social Inbox (Auto Replies)
+
+- Navigate to `/social/inbox` (or CRM sidebar -> Inbox social) with a valid session.
+- Verify the Instagram and WhatsApp panels load and show counts for Respondidos, Pendientes, and Fallidos.
+- Set filtro to **Respondidos** and confirm every row has a Respondido timestamp.
+- Set filtro to **Pendientes** and confirm rows have no Respondido timestamp or error.
+- Set filtro to **Fallidos** and confirm rows show an error message in the response column.
+- Change Limite (50, 100, 200) and confirm the row count adjusts.
+- Click **Actualizar** and confirm data refreshes without errors.
+
 ## Test Coverage Goals
 
 - Backend API: 80%+
