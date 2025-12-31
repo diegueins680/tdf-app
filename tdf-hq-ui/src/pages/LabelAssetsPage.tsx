@@ -38,6 +38,7 @@ import { Rooms } from '../api/rooms';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { buildInventoryScanUrl } from '../config/appConfig';
+import { buildPublicContentUrl } from '../services/googleDrive';
 
 interface AssetFormState {
   name: string;
@@ -54,6 +55,50 @@ function normalizeAssets(payload: AssetsPayload): AssetDTO[] {
   if (Array.isArray(payload)) return payload;
   return payload.items ?? [];
 }
+
+const API_BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
+  ? import.meta.env.VITE_API_BASE
+  : 'https://tdf-hq.fly.dev');
+
+const normalizeGoogleDriveUrl = (url: string): string | null => {
+  const trimmed = url.trim();
+  if (trimmed === '') return null;
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+    const isDriveHost = host === 'drive.google.com' || host === 'www.drive.google.com';
+    if (!isDriveHost) return null;
+    const fileMatch = /^\/file\/d\/([^/]+)/.exec(parsed.pathname);
+    const fileId =
+      fileMatch?.[1] ??
+      (parsed.pathname === '/open' || parsed.pathname === '/uc' || parsed.pathname === '/thumbnail'
+        ? parsed.searchParams.get('id')
+        : null);
+    if (!fileId) return null;
+    const resourceKey = parsed.searchParams.get('resourcekey');
+    const exportMode = parsed.searchParams.get('export');
+    const mode = exportMode === 'view' ? 'view' : 'download';
+    return buildPublicContentUrl(fileId, resourceKey, mode);
+  } catch {
+    return null;
+  }
+};
+
+const normalizePhotoUrl = (url?: string | null) => {
+  if (!url) return undefined;
+  const trimmed = url.trim();
+  if (!trimmed) return undefined;
+  const driveUrl = normalizeGoogleDriveUrl(trimmed);
+  if (driveUrl) return driveUrl;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const base = API_BASE.replace(/\/$/, '');
+  const path = trimmed.replace(/^\/+/, '');
+  if (path.startsWith('assets/serve/') || path.startsWith('assets/inventory/')) {
+    return `${base}/${path}`;
+  }
+  const assetsBase = `${base}/assets/serve`;
+  return `${assetsBase}/${path}`;
+};
 
 function buildEmptyForm(): AssetFormState {
   return {
@@ -72,7 +117,7 @@ function formFromAsset(asset: AssetDTO): AssetFormState {
     category: asset.category,
     status: asset.status ?? 'Active',
     locationId: asset.location ?? '',
-    photoUrl: '',
+    photoUrl: asset.photoUrl ?? '',
     notes: '',
   };
 }
@@ -158,9 +203,11 @@ export default function LabelAssetsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (draft: AssetFormState) => {
+      const trimmedPhoto = draft.photoUrl.trim();
       const created = await Inventory.create({
         cName: draft.name.trim(),
         cCategory: draft.category.trim(),
+        cPhotoUrl: trimmedPhoto ? trimmedPhoto : null,
       });
       const updates: AssetUpdate = {};
       if (draft.status && draft.status !== created.status) updates.uStatus = draft.status;
@@ -189,6 +236,7 @@ export default function LabelAssetsPage() {
         uStatus: draft.status,
         uLocationId: draft.locationId ? draft.locationId : null,
         uNotes: draft.notes.trim() ? draft.notes.trim() : null,
+        uPhotoUrl: draft.photoUrl.trim() ? draft.photoUrl.trim() : null,
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['assets'] });
@@ -446,76 +494,99 @@ export default function LabelAssetsPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredAssets.map((asset) => (
-                  <TableRow key={asset.assetId} hover>
-                    <TableCell>
-                      <Stack spacing={0.25}>
-                        <Typography fontWeight={600}>{asset.name}</Typography>
-                        {(asset.brand ?? asset.model) && (
-                          <Typography variant="caption" color="text.secondary">
-                            {[asset.brand, asset.model].filter(Boolean).join(' · ')}
-                          </Typography>
-                        )}
-                        {asset.qrToken && (
-                          <Typography variant="caption" color="text.secondary">
-                            QR activo
-                          </Typography>
-                        )}
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{asset.category}</TableCell>
-                    <TableCell>{renderStatusChip(asset.status)}</TableCell>
-                    <TableCell>{displayLocation(asset)}</TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Editar">
-                        <IconButton size="small" onClick={() => handleEdit(asset)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="QR">
-                        <IconButton size="small" onClick={() => void openQr(asset)}>
-                          <QrCodeIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Check-out">
-                        <span>
-                          <IconButton
-                            size="small"
-                            onClick={() => openCheckout(asset)}
-                            disabled={asset.status.toLowerCase() === 'booked'}
-                          >
-                            <ExitToAppIcon fontSize="small" />
+                {filteredAssets.map((asset) => {
+                  const photoSrc = normalizePhotoUrl(asset.photoUrl);
+                  return (
+                    <TableRow key={asset.assetId} hover>
+                      <TableCell>
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                          {photoSrc && (
+                            <Box
+                              component="img"
+                              src={photoSrc}
+                              alt={asset.name}
+                              loading="lazy"
+                              sx={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                objectFit: 'cover',
+                                flexShrink: 0,
+                                bgcolor: 'grey.100',
+                              }}
+                            />
+                          )}
+                          <Stack spacing={0.25}>
+                            <Typography fontWeight={600}>{asset.name}</Typography>
+                            {(asset.brand ?? asset.model) && (
+                              <Typography variant="caption" color="text.secondary">
+                                {[asset.brand, asset.model].filter(Boolean).join(' · ')}
+                              </Typography>
+                            )}
+                            {asset.qrToken && (
+                              <Typography variant="caption" color="text.secondary">
+                                QR activo
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{asset.category}</TableCell>
+                      <TableCell>{renderStatusChip(asset.status)}</TableCell>
+                      <TableCell>{displayLocation(asset)}</TableCell>
+                      <TableCell align="right">
+                        <Tooltip title="Editar">
+                          <IconButton size="small" onClick={() => handleEdit(asset)}>
+                            <EditIcon fontSize="small" />
                           </IconButton>
-                        </span>
-                      </Tooltip>
-                      <Tooltip title="Check-in">
-                        <span>
-                          <IconButton
-                            size="small"
-                            onClick={() => openCheckin(asset)}
-                            disabled={asset.status.toLowerCase() !== 'booked'}
-                          >
-                            <HowToRegIcon fontSize="small" />
+                        </Tooltip>
+                        <Tooltip title="QR">
+                          <IconButton size="small" onClick={() => void openQr(asset)}>
+                            <QrCodeIcon fontSize="small" />
                           </IconButton>
-                        </span>
-                      </Tooltip>
-                      <Button size="small" onClick={() => openHistory(asset)}>
-                        Historial
-                      </Button>
-                      <Tooltip title="Eliminar">
-                        <span>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDelete(asset)}
-                            disabled={deleteMutation.isPending}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        </Tooltip>
+                        <Tooltip title="Check-out">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => openCheckout(asset)}
+                              disabled={asset.status.toLowerCase() === 'booked'}
+                            >
+                              <ExitToAppIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title="Check-in">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => openCheckin(asset)}
+                              disabled={asset.status.toLowerCase() !== 'booked'}
+                            >
+                              <HowToRegIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Button size="small" onClick={() => openHistory(asset)}>
+                          Historial
+                        </Button>
+                        <Tooltip title="Eliminar">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDelete(asset)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {filteredAssets.length === 0 && !assetsQuery.isLoading && (
                   <TableRow>
                     <TableCell colSpan={5}>
