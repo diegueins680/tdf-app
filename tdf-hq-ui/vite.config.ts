@@ -33,17 +33,33 @@ const uiCommit = resolveGitSha();
 const uiVersion = packageJson.version ?? '0.0.0';
 const require = createRequire(import.meta.url);
 const muiMaterialRoot = path.dirname(require.resolve('@mui/material/package.json'));
-const muiUseMediaQueryPath = path.resolve(muiMaterialRoot, 'useMediaQuery/index.js');
+const muiSystemRoot = (() => {
+  try {
+    return path.dirname(
+      require.resolve('@mui/system/package.json', { paths: [muiMaterialRoot] }),
+    );
+  } catch {
+    return path.dirname(require.resolve('@mui/system/package.json'));
+  }
+})();
+const muiMaterialSubpathRegex = /^@mui\/material\/(.*)$/;
+const muiMaterialSubpathReplacement = `${muiMaterialRoot}/$1/index.js`;
+const muiSystemEntry = `${muiSystemRoot}/index.js`;
+const muiSystemExactRegex = /^@mui\/system$/;
+const muiSystemSubpathRegex = /^@mui\/system\/(.*)$/;
+const muiSystemSubpathReplacement = `${muiSystemRoot}/$1/index.js`;
 
 export default defineConfig({
   plugins: [react()],
   server: { port: 5173, host: true },
   resolve: {
     dedupe: ['react', 'react-dom'],
-    alias: {
-      // Ensure Vite can resolve the ESM entry for this deep import.
-      '@mui/material/useMediaQuery': muiUseMediaQueryPath,
-    },
+    alias: [
+      // Ensure Vite resolves MUI deep imports to their ESM entry points.
+      { find: muiMaterialSubpathRegex, replacement: muiMaterialSubpathReplacement },
+      { find: muiSystemExactRegex, replacement: muiSystemEntry },
+      { find: muiSystemSubpathRegex, replacement: muiSystemSubpathReplacement },
+    ],
   },
   build: {
     chunkSizeWarningLimit: 900,
