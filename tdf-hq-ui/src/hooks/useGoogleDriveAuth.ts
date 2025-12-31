@@ -12,11 +12,19 @@ import {
 
 export type DriveAuthStatus = 'idle' | 'authenticating' | 'ready' | 'error';
 
-export function useGoogleDriveAuth() {
-  const [status, setStatus] = useState<DriveAuthStatus>(() => (getStoredToken() ? 'ready' : 'idle'));
+interface DriveAuthOptions {
+  enabled?: boolean;
+}
+
+export function useGoogleDriveAuth(options: DriveAuthOptions = {}) {
+  const enabled = options.enabled ?? true;
+  const [status, setStatus] = useState<DriveAuthStatus>(() => (enabled && getStoredToken() ? 'ready' : 'idle'));
   const [error, setError] = useState<string | null>(null);
 
   const startAuth = useCallback(async (returnTo?: string) => {
+    if (!enabled) {
+      throw new Error('La autenticación de Drive está deshabilitada.');
+    }
     setError(null);
     const configWarning = driveConfigError();
     if (configWarning) {
@@ -34,9 +42,12 @@ export function useGoogleDriveAuth() {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar la autenticación con Drive.');
       throw err;
     }
-  }, []);
+  }, [enabled]);
 
   const ensureToken = useCallback(async () => {
+    if (!enabled) {
+      throw new Error('La autenticación de Drive está deshabilitada.');
+    }
     try {
       const token = await ensureAccessToken();
       storeToken(token);
@@ -46,21 +57,26 @@ export function useGoogleDriveAuth() {
       setStatus('idle');
       throw err;
     }
-  }, []);
+  }, [enabled]);
 
   const resetAuth = useCallback(() => {
+    if (!enabled) return;
     clearToken();
     setStatus('idle');
     setError(null);
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      if (status !== 'idle') setStatus('idle');
+      return;
+    }
     if (status === 'ready') return;
     const stored = getStoredToken();
     if (stored) {
       void ensureToken();
     }
-  }, [ensureToken, status]);
+  }, [enabled, ensureToken, status]);
 
   return { status, error, startAuth, ensureToken, resetAuth };
 }

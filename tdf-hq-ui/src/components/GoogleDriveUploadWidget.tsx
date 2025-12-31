@@ -13,6 +13,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { uploadToDrive } from '../api/drive';
+import { uploadAssetPhoto } from '../api/inventory';
 import { useGoogleDriveAuth } from '../hooks/useGoogleDriveAuth';
 
 interface UploadItem {
@@ -31,7 +32,7 @@ export interface GoogleDriveUploadWidgetProps {
   accept?: string;
   multiple?: boolean;
   dense?: boolean;
-  authMode?: 'user' | 'server';
+  authMode?: 'user' | 'server' | 'assets';
 }
 
 export default function GoogleDriveUploadWidget({
@@ -47,8 +48,11 @@ export default function GoogleDriveUploadWidget({
   const [items, setItems] = useState<UploadItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { status: driveStatus, error: driveError, startAuth, ensureToken } = useGoogleDriveAuth();
+  const usesAssets = authMode === 'assets';
   const usesUserAuth = authMode === 'user';
+  const { status: driveStatus, error: driveError, startAuth, ensureToken } = useGoogleDriveAuth({
+    enabled: usesUserAuth,
+  });
 
   const handleDriveAuth = useCallback(() => {
     if (!usesUserAuth) return;
@@ -84,13 +88,13 @@ export default function GoogleDriveUploadWidget({
           );
           void (async () => {
             try {
-              const driveFile = await uploadToDrive(item.file, {
-                accessToken,
-                onProgress: (pct) =>
-                  setItems((prev) =>
-                    prev.map((it) => (it.id === item.id ? { ...it, progress: Math.max(pct, it.progress) } : it)),
-                  ),
-              });
+              const onProgress = (pct: number) =>
+                setItems((prev) =>
+                  prev.map((it) => (it.id === item.id ? { ...it, progress: Math.max(pct, it.progress) } : it)),
+                );
+              const driveFile = usesAssets
+                ? await uploadAssetPhoto(item.file, { name: item.file.name, onProgress })
+                : await uploadToDrive(item.file, { accessToken, onProgress });
               setItems((prev) =>
                 prev.map((it) =>
                   it.id === item.id ? { ...it, status: 'done', progress: 100, driveFile } : it,
@@ -116,7 +120,7 @@ export default function GoogleDriveUploadWidget({
         });
       })();
     },
-    [onComplete, resolveAccessToken],
+    [onComplete, resolveAccessToken, usesAssets],
   );
 
   const handleDrop = (evt: React.DragEvent<HTMLDivElement>) => {

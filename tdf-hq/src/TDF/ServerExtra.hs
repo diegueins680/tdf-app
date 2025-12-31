@@ -18,23 +18,28 @@ import           Data.List                  (sortOn)
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set                   as Set
+import           Data.Char                  (isAlphaNum, isAscii)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
+import           Data.UUID                  (toText)
 import           Data.UUID.V4               (nextRandom)
 import           Data.Aeson                 (object, (.:), (.:?), (.=))
 import           Data.Aeson.Types           (parseMaybe, withObject, (.!=))
 import qualified Data.Aeson                as A
+import           System.Directory           (copyFile, createDirectoryIfMissing)
+import           System.FilePath            ((</>), takeExtension, takeFileName)
 import           System.IO                  (hPutStrLn, stderr)
 import           Database.Persist        hiding (Active)
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
+import           Servant.Multipart          (FileData(..), Tmp)
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
 
-import           TDF.API.Inventory          (InventoryAPI)
+import           TDF.API.Inventory          (InventoryAPI, AssetUploadForm(..))
 import           TDF.API.Bands              (BandsAPI)
 import           TDF.API.Pipelines          (PipelinesAPI)
 import           TDF.API.Rooms              (RoomsAPI, RoomsPublicAPI)
@@ -45,7 +50,7 @@ import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), h
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
-import           TDF.Config                 (instagramAppToken, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase)
+import           TDF.Config                 (instagramAppToken, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
 import           TDF.ModelsExtra
@@ -75,6 +80,7 @@ inventoryServer
 inventoryServer user =
        listAssets
   :<|> createAssetH
+  :<|> uploadAssetPhotoH
   :<|> getAssetH
   :<|> patchAssetH
   :<|> deleteAssetH
@@ -125,6 +131,28 @@ inventoryServer user =
           }
         getJustEntity newAssetId
       pure (toAssetDTO entity)
+
+    uploadAssetPhotoH AssetUploadForm{..} = do
+      ensureInventoryAccess
+      Env{envConfig} <- ask
+      let assetsBase = resolveConfiguredAssetsBase envConfig
+          fallbackName = nonEmptyText (fdFileName aufFile)
+          requestedName = aufName >>= nonEmptyText
+          nameWithExt = applyExtension (requestedName <|> fallbackName) fallbackName
+          safeName = sanitizeAssetName nameWithExt
+      uuid <- liftIO nextRandom
+      let storedName = toText uuid <> "-" <> safeName
+          relPath = "inventory/" <> storedName
+          targetDir = "assets/inventory"
+          targetPath = targetDir </> T.unpack storedName
+      liftIO $ createDirectoryIfMissing True targetDir
+      liftIO $ copyFile (fdPayload aufFile) targetPath
+      let publicUrl = buildAssetUrl assetsBase relPath
+      pure AssetUploadDTO
+        { auFileName = storedName
+        , auPath = relPath
+        , auPublicUrl = publicUrl
+        }
 
     getAssetH rawId = do
       ensureInventoryAccess
@@ -177,6 +205,41 @@ inventoryServer user =
       , qrToken  = assetQrCode asset
       , photoUrl = assetPhotoUrl asset
       }
+
+    nonEmptyText txt =
+      let trimmed = T.strip txt
+      in if T.null trimmed then Nothing else Just trimmed
+
+    applyExtension name fallback =
+      let resolved = fromMaybe "upload" name
+          extFromFallback =
+            case fallback of
+              Nothing -> ""
+              Just raw -> T.pack (takeExtension (T.unpack raw))
+          extFromName = T.pack (takeExtension (T.unpack resolved))
+      in if T.null extFromName && not (T.null extFromFallback)
+          then resolved <> extFromFallback
+          else resolved
+
+    sanitizeAssetName raw =
+      let trimmed = T.strip raw
+          baseName = T.pack (takeFileName (T.unpack trimmed))
+          cleaned = T.map normalizeChar baseName
+          stripped = T.dropWhile (== '-') (T.dropWhileEnd (== '-') cleaned)
+      in if T.null stripped || stripped == "." || stripped == ".."
+          then "upload"
+          else stripped
+
+    normalizeChar ch
+      | isAscii ch && isAlphaNum ch = ch
+      | ch == '.' || ch == '-' || ch == '_' = ch
+      | ch == ' ' = '-'
+      | otherwise = '-'
+
+    buildAssetUrl assetsBase relPath =
+      let base = T.dropWhileEnd (== '/') assetsBase
+          path = T.dropWhile (== '/') relPath
+      in base <> "/" <> path
 
     checkoutAssetH rawId req = do
       ensureInventoryAccess

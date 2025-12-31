@@ -869,13 +869,9 @@ export default function MarketplacePage() {
     const listing = photoDialogListing;
     if (!listing) return;
     const file = files[0];
-    const link =
-      file?.publicUrl ??
-      file?.webContentLink ??
-      file?.webViewLink ??
-      (file?.id ? buildPublicContentUrl(file.id) : null);
+    const link = file?.publicUrl ?? file?.webContentLink ?? file?.webViewLink ?? null;
     if (!link) {
-      setPhotoError('No pudimos obtener el enlace público de Drive.');
+      setPhotoError('No pudimos obtener el enlace público de la imagen.');
       return;
     }
     setPendingPhotoUrl(link);
@@ -1920,7 +1916,7 @@ export default function MarketplacePage() {
                 {photoDialogListing?.miTitle ?? 'Equipo'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Sube una imagen y guardaremos el enlace público de Google Drive en el inventario y marketplace.
+                Sube una imagen y la guardaremos en el host de assets del sistema.
               </Typography>
             </Stack>
             {(() => {
@@ -1946,13 +1942,13 @@ export default function MarketplacePage() {
               );
             })()}
             <GoogleDriveUploadWidget
-              label="Subir imagen (Drive)"
-              helperText="JPG o PNG. Guardaremos la foto en el Drive del sistema."
+              label="Subir imagen"
+              helperText="JPG o PNG. Guardaremos la foto en el host de assets."
               onComplete={handlePhotoUploadComplete}
               accept="image/*"
               multiple={false}
               dense
-              authMode="server"
+              authMode="assets"
             />
             <Stack direction="row" spacing={1} alignItems="center">
               <Button

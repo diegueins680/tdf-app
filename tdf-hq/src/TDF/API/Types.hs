@@ -430,6 +430,14 @@ data DriveUploadDTO = DriveUploadDTO
 instance ToJSON DriveUploadDTO
 instance FromJSON DriveUploadDTO
 
+data AssetUploadDTO = AssetUploadDTO
+  { auFileName  :: Text
+  , auPath      :: Text
+  , auPublicUrl :: Text
+  } deriving (Show, Generic)
+instance ToJSON AssetUploadDTO
+instance FromJSON AssetUploadDTO
+
 data DriveTokenExchangeRequest = DriveTokenExchangeRequest
   { code         :: Text
   , codeVerifier :: Text

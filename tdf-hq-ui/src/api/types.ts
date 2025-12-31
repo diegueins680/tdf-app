@@ -249,6 +249,12 @@ export interface DriveUploadDTO {
   duPublicUrl?: string | null;
 }
 
+export interface AssetUploadDTO {
+  auFileName: string;
+  auPath: string;
+  auPublicUrl: string;
+}
+
 export interface LabelTrackDTO {
   ltId: string;
   ltTitle: string;
