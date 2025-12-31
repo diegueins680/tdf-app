@@ -165,6 +165,7 @@ type ReceiptAPI =
   :<|> Capture "receiptId" Int64 :> Get '[JSON] ReceiptDTO
 
 type HealthAPI = Get '[JSON] HealthStatus
+type McpAPI = ReqBody '[JSON] Value :> Post '[JSON] Value
 
 type LoginAPI = ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
 type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] LoginResponse
@@ -258,6 +259,7 @@ type ProtectedAPI =
 type API =
        VersionAPI
   :<|> "health" :> HealthAPI
+  :<|> "mcp" :> McpAPI
   :<|> "login"  :> LoginAPI
   :<|> "login"  :> "google" :> GoogleLoginAPI
   :<|> "signup" :> SignupAPI

@@ -43,7 +43,6 @@ import           GHC.Generics (Generic)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
-import           System.Directory (doesFileExist)
 import           System.IO (hPutStrLn, stderr)
 import qualified Network.Wai as Wai (Request)
 import           Servant
@@ -90,7 +89,7 @@ import           TDF.Trials.API (TrialsAPI)
 import           TDF.Trials.Server (trialsServer)
 import qualified TDF.Trials.Models as Trials
 import qualified TDF.Meta as Meta
-import           TDF.Version      (getVersionInfo)
+import           TDF.Version      (VersionInfo(..), getVersionInfo)
 import qualified TDF.Handlers.InputList as InputList
 import qualified TDF.Email as Email
 import qualified TDF.Email.Service as EmailSvc
@@ -241,6 +240,7 @@ server :: ServerT API AppM
 server =
        versionServer
   :<|> health
+  :<|> mcpServer
   :<|> login
   :<|> googleLogin
   :<|> signup
@@ -272,6 +272,133 @@ authV1Server = signup :<|> passwordReset :<|> passwordResetConfirm :<|> changePa
 
 versionServer :: ServerT Api.VersionAPI AppM
 versionServer = liftIO getVersionInfo
+
+mcpServer :: ServerT Api.McpAPI AppM
+mcpServer rawRequest =
+  case parseMcpRequest rawRequest of
+    Nothing -> pure (mcpErrorValue Nothing (-32600) "Invalid Request" Nothing)
+    Just req -> handleMcpRequest req
+
+data McpRequest = McpRequest
+  { mcpReqId :: Maybe Value
+  , mcpReqMethod :: Text
+  , mcpReqParams :: Maybe Value
+  } deriving (Show)
+
+mcpProtocolVersion :: Text
+mcpProtocolVersion = "2024-11-05"
+
+mcpTools :: [Value]
+mcpTools =
+  [ object
+      [ "name" .= ("tdf_health_check" :: Text)
+      , "description" .= ("Return service health and version metadata." :: Text)
+      , "inputSchema" .= object
+          [ "type" .= ("object" :: Text)
+          , "properties" .= object []
+          , "additionalProperties" .= False
+          ]
+      ]
+  ]
+
+parseMcpRequest :: Value -> Maybe McpRequest
+parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o ->
+  McpRequest
+    <$> o .:? "id"
+    <*> o .: "method"
+    <*> o .:? "params"
+
+parseToolCallParams :: Value -> Maybe (Text, Value)
+parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do
+  toolName <- o .: "name"
+  args <- o .:? "arguments" .!= object []
+  pure (toolName, args)
+
+handleMcpRequest :: McpRequest -> AppM Value
+handleMcpRequest req@McpRequest{ mcpReqMethod = method, mcpReqParams = params } =
+  case method of
+    "initialize" -> do
+      info <- liftIO getVersionInfo
+      let VersionInfo { name = appName, appVer } = info
+          result =
+            object
+              [ "protocolVersion" .= mcpProtocolVersion
+              , "capabilities" .= object
+                  [ "tools" .= object []
+                  , "resources" .= object []
+                  , "prompts" .= object []
+                  ]
+              , "serverInfo" .= object
+                  [ "name" .= appName
+                  , "version" .= appVer
+                  ]
+              ]
+      pure (mcpSuccess req result)
+    "tools/list" ->
+      pure (mcpSuccess req (object ["tools" .= mcpTools]))
+    "tools/call" ->
+      handleMcpToolCall req params
+    "resources/list" ->
+      pure (mcpSuccess req (object ["resources" .= ([] :: [Value])]))
+    "prompts/list" ->
+      pure (mcpSuccess req (object ["prompts" .= ([] :: [Value])]))
+    "initialized" ->
+      pure (mcpSuccess req (object []))
+    _ ->
+      pure (mcpErrorValue (mcpReqId req) (-32601) "Method not found" Nothing)
+
+handleMcpToolCall :: McpRequest -> Maybe Value -> AppM Value
+handleMcpToolCall req rawParams =
+  case rawParams >>= parseToolCallParams of
+    Nothing -> pure (mcpErrorValue (mcpReqId req) (-32602) "Invalid params" Nothing)
+    Just (toolName, _) ->
+      case toolName of
+        "tdf_health_check" -> do
+          info <- liftIO getVersionInfo
+          now <- liftIO getCurrentTime
+          let VersionInfo { appVer, commit, buildTime } = info
+              timestamp = T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" now)
+              message = T.intercalate "\n"
+                [ "status: ok"
+                , "time: " <> timestamp
+                , "version: " <> appVer
+                , "commit: " <> commit
+                , "buildTime: " <> buildTime
+                ]
+              result =
+                object
+                  [ "content" .=
+                      [ object
+                          [ "type" .= ("text" :: Text)
+                          , "text" .= message
+                          ]
+                      ]
+                  ]
+          pure (mcpSuccess req result)
+        _ ->
+          pure (mcpErrorValue (mcpReqId req) (-32602) ("Unknown tool: " <> toolName) Nothing)
+
+mcpSuccess :: McpRequest -> Value -> Value
+mcpSuccess req result =
+  object
+    [ "jsonrpc" .= ("2.0" :: Text)
+    , "id" .= fromMaybe Null (mcpReqId req)
+    , "result" .= result
+    ]
+
+mcpErrorValue :: Maybe Value -> Int -> Text -> Maybe Value -> Value
+mcpErrorValue mReqId code message mData =
+  object
+    [ "jsonrpc" .= ("2.0" :: Text)
+    , "id" .= fromMaybe Null mReqId
+    , "error" .= object (baseFields <> dataField)
+    ]
+  where
+    baseFields =
+      [ "code" .= code
+      , "message" .= message
+      ]
+    dataField = maybe [] (\datum -> ["data" .= datum]) mData
 
 inputListServer :: ServerT Api.InputListAPI AppM
 inputListServer = publicRoutes :<|> seedRoutes
@@ -5168,9 +5295,7 @@ resolveMarketplacePhotoUrl assetsBase (Just raw0) = do
   let trimmed = T.strip raw0
       path = T.dropWhile (== '/') trimmed
   if "inventory/" `T.isPrefixOf` path
-    then do
-      fileExists <- doesFileExist ("assets/" <> T.unpack path)
-      pure (if fileExists then Just (normalizePhoto assetsBase path) else Nothing)
+    then pure (Just (normalizePhoto assetsBase path))
     else pure (Just (normalizePhoto assetsBase trimmed))
 
 normalizePhoto :: Text -> Text -> Text
