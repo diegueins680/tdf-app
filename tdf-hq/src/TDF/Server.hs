@@ -76,7 +76,7 @@ import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceLi
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers (socialEventsServer)
-import           TDF.ServerExtra (bandsServer, instagramServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
+import           TDF.ServerExtra (bandsServer, instagramServer, instagramWebhookServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
 import           TDF.ServerInternships (internshipsServer)
 import           TDF.Server.SocialSync (socialSyncServer)
 import qualified Data.Map.Strict            as Map
@@ -109,6 +109,7 @@ import           TDF.Routes.Academy ( AcademyAPI
                                     , NextCohortDTO(..)
                                     )
 import           TDF.Routes.Courses ( CoursesPublicAPI
+                                    , WhatsAppHooksAPI
                                     , WhatsAppWebhookAPI
                                     , CourseMetadata(..)
                                     , CourseSession(..)
@@ -246,6 +247,8 @@ server =
   :<|> authV1Server
   :<|> fanPublicServer
   :<|> coursesPublicServer
+  :<|> instagramWebhookServer
+  :<|> whatsappHooksServer
   :<|> whatsappWebhookServer
   :<|> metaServer
   :<|> academyServer
@@ -554,6 +557,9 @@ whatsappWebhookServer =
                                   now)
                   pure ()
       pure NoContent
+
+whatsappHooksServer :: ServerT WhatsAppHooksAPI AppM
+whatsappHooksServer = whatsappWebhookServer
 
 whatsappMessagesServer :: AuthedUser -> ServerT Api.WhatsAppMessagesAPI AppM
 whatsappMessagesServer _ mLimit mDirection mRepliedOnly = do
@@ -6257,6 +6263,14 @@ instance FromJSON DriveApiResp where
                  <*> o .:? "webContentLink"
                  <*> o .:? "resourceKey"
 
+data DriveMetaResp = DriveMetaResp
+  { dmrResourceKey :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON DriveMetaResp where
+  parseJSON = withObject "DriveMetaResp" $ \o ->
+    DriveMetaResp <$> o .:? "resourceKey"
+
 uploadToDrive
   :: Manager
   -> Text            -- ^ Google access token (user or service)
@@ -6332,9 +6346,27 @@ uploadToDrive manager accessToken file mName mFolder = do
         }
   _ <- (try (httpLbs permReq manager) :: IO (Either SomeException (Response BL.ByteString)))
 
-  let fallbackPublicUrl = "https://drive.google.com/uc?export=view&id=" <> darId driveResp
+  metaReq0 <- parseRequest $
+    "https://www.googleapis.com/drive/v3/files/" <>
+    T.unpack (darId driveResp) <>
+    "?fields=resourceKey&supportsAllDrives=true"
+  let metaReq = metaReq0
+        { requestHeaders =
+            [ ("Authorization", bearer)
+            ]
+        }
+  metaResp <- (try (httpLbs metaReq manager) :: IO (Either SomeException (Response BL.ByteString)))
+  let metaResourceKey =
+        case metaResp of
+          Right respMeta ->
+            case eitherDecode (responseBody respMeta) of
+              Right (DriveMetaResp key) -> key
+              Left _ -> Nothing
+          Left _ -> Nothing
+      resolvedResourceKey = darResourceKey driveResp <|> metaResourceKey
+      fallbackPublicUrl = "https://drive.google.com/uc?export=view&id=" <> darId driveResp
       publicUrl =
-        case darResourceKey driveResp of
+        case resolvedResourceKey of
           Just key | not (T.null (T.strip key)) ->
             Just (fallbackPublicUrl <> "&resourcekey=" <> T.strip key)
           _ -> Just fallbackPublicUrl
