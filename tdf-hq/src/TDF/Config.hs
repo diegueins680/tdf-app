@@ -198,7 +198,7 @@ loadConfig = do
 defaultAppBase :: Text
 defaultAppBase = "https://tdf-app.pages.dev"
 defaultAssetsBase :: Text
-defaultAssetsBase = "https://tdf-hq.fly.dev"
+defaultAssetsBase = "https://tdf-hq.fly.dev/assets/serve"
 
 sanitizeBaseUrl :: Text -> Text
 sanitizeBaseUrl base =

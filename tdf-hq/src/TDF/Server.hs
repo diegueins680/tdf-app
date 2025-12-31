@@ -265,6 +265,7 @@ server =
   :<|> listEngineersPublic
   :<|> bookingPublicServer
   :<|> inventoryStaticServer
+  :<|> assetsServeServer
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -3563,6 +3564,10 @@ bookingPublicServer = createPublicBooking
 inventoryStaticServer :: ServerT Api.AssetsAPI AppM
 inventoryStaticServer =
   serveDirectoryFileServer "assets/inventory"
+
+assetsServeServer :: ServerT Api.AssetsServeAPI AppM
+assetsServeServer =
+  serveDirectoryFileServer "assets"
 
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
 bookingServer user =
