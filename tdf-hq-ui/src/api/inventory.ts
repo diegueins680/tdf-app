@@ -98,7 +98,7 @@ export async function uploadAssetPhoto(
   return {
     id: dto.auPath,
     name: dto.auFileName || file.name,
-    publicUrl: dto.auPath,
+    publicUrl: dto.auPublicUrl,
     webContentLink: dto.auPublicUrl,
   };
 }
