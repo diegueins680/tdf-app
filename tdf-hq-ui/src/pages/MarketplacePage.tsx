@@ -73,7 +73,8 @@ const normalizeGoogleDriveUrl = (url: string): string | null => {
         ? parsed.searchParams.get('id')
         : null);
     if (!fileId) return null;
-    return buildPublicContentUrl(fileId);
+    const resourceKey = parsed.searchParams.get('resourcekey');
+    return buildPublicContentUrl(fileId, resourceKey);
   } catch {
     return null;
   }

@@ -169,8 +169,13 @@ export const makeFilePublic = async (fileId: string): Promise<void> => {
   }).catch(() => undefined);
 };
 
-export const buildPublicContentUrl = (fileId: string) =>
-  `https://drive.google.com/uc?export=download&id=${fileId}`;
+export const buildPublicContentUrl = (fileId: string, resourceKey?: string | null) => {
+  const params = new URLSearchParams({ export: 'view', id: fileId });
+  if (resourceKey) {
+    params.set('resourcekey', resourceKey);
+  }
+  return `https://drive.google.com/uc?${params.toString()}`;
+};
 
 export const uploadToDrive = async (
   file: File,

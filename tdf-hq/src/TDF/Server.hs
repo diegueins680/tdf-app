@@ -6325,8 +6325,8 @@ uploadToDrive manager accessToken file mName mFolder = do
         }
   _ <- (try (httpLbs permReq manager) :: IO (Either SomeException (Response BL.ByteString)))
 
-  let fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> darId driveResp
-      publicUrl = darWebContentLink driveResp <|> Just fallbackPublicUrl
+  let fallbackPublicUrl = "https://drive.google.com/uc?export=view&id=" <> darId driveResp
+      publicUrl = Just fallbackPublicUrl
   pure DriveUploadDTO
     { duFileId = darId driveResp
     , duWebViewLink = darWebViewLink driveResp
