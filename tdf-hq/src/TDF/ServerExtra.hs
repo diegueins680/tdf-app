@@ -45,7 +45,7 @@ import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), h
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
-import           TDF.Config                 (resolveConfiguredAppBase)
+import           TDF.Config                 (instagramAppToken, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
 import           TDF.ModelsExtra
@@ -1311,17 +1311,29 @@ extractInstagramInbound payload =
           metaTxt = TE.decodeUtf8 (BL.toStrict (A.encode metaObj))
       in (adExt, adName, campExt, campName, Just metaTxt)
 
-instagramServer
+instagramWebhookServer
   :: ( MonadIO m
      , MonadReader Env m
      , MonadError ServerError m
      )
-  => ServerT IG.InstagramAPI m
-instagramServer =
-       handleWebhook
-  :<|> handleReply
-  :<|> listMessages
+  => ServerT IG.InstagramWebhookAPI m
+instagramWebhookServer =
+       verifyWebhook
+  :<|> handleWebhook
   where
+    verifyWebhook _ mToken mChallenge = do
+      Env{envConfig} <- ask
+      let expected =
+            instagramVerifyToken envConfig
+              <|> instagramMessagingToken envConfig
+              <|> instagramAppToken envConfig
+      case expected of
+        Nothing -> throwError err403 { errBody = "Instagram verify token not configured" }
+        Just token ->
+          case mToken of
+            Just provided | provided == token -> pure (fromMaybe "" mChallenge)
+            _ -> throwError err403 { errBody = "Instagram verify token mismatch" }
+
     handleWebhook payload = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
@@ -1356,6 +1368,16 @@ instagramServer =
             pure ()
       pure NoContent
 
+instagramServer
+  :: ( MonadIO m
+     , MonadReader Env m
+     , MonadError ServerError m
+     )
+  => ServerT IG.InstagramAPI m
+instagramServer =
+       handleReply
+  :<|> listMessages
+  where
     handleReply req = do
       now <- liftIO getCurrentTime
       -- store outgoing message (stub)

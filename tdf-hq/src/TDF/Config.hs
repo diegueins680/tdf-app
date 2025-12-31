@@ -54,6 +54,7 @@ data AppConfig = AppConfig
   , instagramMessagingToken :: Maybe Text
   , instagramMessagingAccountId :: Maybe Text
   , instagramMessagingApiBase :: Text
+  , instagramVerifyToken :: Maybe Text
   } deriving (Show)
 
 openAiEmbedDimensions :: Text -> Maybe Int
@@ -117,6 +118,7 @@ loadConfig = do
   igMsgTokenEnv <- lookupEnv "INSTAGRAM_MESSAGING_TOKEN"
   igMsgAccountEnv <- lookupEnv "INSTAGRAM_MESSAGING_ACCOUNT_ID"
   igMsgBaseEnv <- lookupEnv "INSTAGRAM_MESSAGING_API_BASE"
+  igVerifyEnv <- lookupEnv "INSTAGRAM_VERIFY_TOKEN" <|> lookupEnv "IG_VERIFY_TOKEN"
   pure AppConfig
     { dbHost = h
     , dbPort = p
@@ -155,6 +157,7 @@ loadConfig = do
           _ -> fmap (T.strip . T.pack) igTokenEnv
     , instagramMessagingAccountId = fmap (T.strip . T.pack) igMsgAccountEnv
     , instagramMessagingApiBase = maybe "https://graph.facebook.com/v20.0" (T.strip . T.pack) igMsgBaseEnv
+    , instagramVerifyToken = fmap (T.strip . T.pack) igVerifyEnv >>= nonEmpty
     }
   where
     get k def = fmap (fromMaybe def) (lookupEnv k)

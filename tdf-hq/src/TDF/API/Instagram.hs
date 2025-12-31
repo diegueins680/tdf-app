@@ -18,10 +18,17 @@ instance FromJSON InstagramReplyReq
 instance ToJSON InstagramReplyReq
 
 type InstagramAPI =
-       "instagram" :> "webhook" :> ReqBody '[JSON] Value :> Post '[JSON] NoContent
-  :<|> "instagram" :> "reply"   :> ReqBody '[JSON] InstagramReplyReq :> Post '[JSON] Value
+       "instagram" :> "reply"   :> ReqBody '[JSON] InstagramReplyReq :> Post '[JSON] Value
   :<|> "instagram" :> "messages"
          :> QueryParam "limit" Int
          :> QueryParam "direction" Text
          :> QueryParam "repliedOnly" Text
          :> Get '[JSON] Value
+
+type InstagramWebhookAPI =
+       "instagram" :> "webhook"
+         :> QueryParam "hub.mode" Text
+         :> QueryParam "hub.verify_token" Text
+         :> QueryParam "hub.challenge" Text
+         :> Get '[PlainText] Text
+  :<|> "instagram" :> "webhook" :> ReqBody '[JSON] Value :> Post '[JSON] NoContent

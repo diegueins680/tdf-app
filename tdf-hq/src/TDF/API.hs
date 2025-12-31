@@ -23,7 +23,7 @@ import           TDF.API.Future    (FutureAPI)
 import           TDF.API.Bands     (BandsAPI)
 import           TDF.API.Inventory (InventoryAPI)
 import           TDF.API.Payments (PaymentsAPI)
-import           TDF.API.Instagram (InstagramAPI)
+import           TDF.API.Instagram (InstagramAPI, InstagramWebhookAPI)
 import           TDF.API.Internships (InternshipsAPI)
 import           TDF.API.Pipelines (PipelinesAPI)
 import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
@@ -37,7 +37,7 @@ import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
 import           TDF.Routes.Academy (AcademyAPI)
-import           TDF.Routes.Courses (CoursesPublicAPI, CoursesAdminAPI, WhatsAppWebhookAPI)
+import           TDF.Routes.Courses (CoursesPublicAPI, CoursesAdminAPI, WhatsAppHooksAPI, WhatsAppWebhookAPI)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
 import           TDF.API.Feedback    (FeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
@@ -263,6 +263,8 @@ type API =
   :<|> "v1" :> AuthV1API
   :<|> "fans" :> FanPublicAPI
   :<|> CoursesPublicAPI
+  :<|> InstagramWebhookAPI
+  :<|> WhatsAppHooksAPI
   :<|> WhatsAppWebhookAPI
   :<|> MetaAPI
   :<|> AcademyAPI

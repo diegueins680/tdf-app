@@ -17,6 +17,7 @@ module TDF.Routes.Courses
   , CourseSyllabusIn(..)
   , CoursesPublicAPI
   , CoursesAdminAPI
+  , WhatsAppHooksAPI
   , WhatsAppWebhookAPI
   ) where
 
@@ -169,3 +170,7 @@ type CoursesAdminAPI =
 type WhatsAppWebhookAPI =
        "webhooks" :> "whatsapp" :> QueryParam "hub.mode" Text :> QueryParam "hub.verify_token" Text :> QueryParam "hub.challenge" Text :> Get '[PlainText] Text
   :<|> "webhooks" :> "whatsapp" :> ReqBody '[JSON] WAMetaWebhook :> Post '[JSON] NoContent
+
+type WhatsAppHooksAPI =
+       "hooks" :> "whatsapp" :> QueryParam "hub.mode" Text :> QueryParam "hub.verify_token" Text :> QueryParam "hub.challenge" Text :> Get '[PlainText] Text
+  :<|> "hooks" :> "whatsapp" :> ReqBody '[JSON] WAMetaWebhook :> Post '[JSON] NoContent
