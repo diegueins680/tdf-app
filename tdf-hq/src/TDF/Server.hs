@@ -6364,12 +6364,14 @@ uploadToDrive manager accessToken file mName mFolder = do
               Left _ -> Nothing
           Left _ -> Nothing
       resolvedResourceKey = darResourceKey driveResp <|> metaResourceKey
-      fallbackPublicUrl = "https://drive.google.com/uc?export=view&id=" <> darId driveResp
-      publicUrl =
+      fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> darId driveResp
+      appendResourceKey url =
         case resolvedResourceKey of
-          Just key | not (T.null (T.strip key)) ->
-            Just (fallbackPublicUrl <> "&resourcekey=" <> T.strip key)
-          _ -> Just fallbackPublicUrl
+          Just key
+            | not (T.null (T.strip key)) && "resourcekey=" `T.isInfixOf` url == False ->
+                url <> "&resourcekey=" <> T.strip key
+          _ -> url
+      publicUrl = Just $ appendResourceKey $ fromMaybe fallbackPublicUrl (darWebContentLink driveResp)
   pure DriveUploadDTO
     { duFileId = darId driveResp
     , duWebViewLink = darWebViewLink driveResp

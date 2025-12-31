@@ -169,8 +169,14 @@ export const makeFilePublic = async (fileId: string): Promise<void> => {
   }).catch(() => undefined);
 };
 
-export const buildPublicContentUrl = (fileId: string, resourceKey?: string | null) => {
-  const params = new URLSearchParams({ export: 'view', id: fileId });
+export type DriveExportMode = 'download' | 'view';
+
+export const buildPublicContentUrl = (
+  fileId: string,
+  resourceKey?: string | null,
+  mode: DriveExportMode = 'download',
+) => {
+  const params = new URLSearchParams({ export: mode, id: fileId });
   if (resourceKey) {
     params.set('resourcekey', resourceKey);
   }
