@@ -74,7 +74,6 @@ export default defineConfig({
             }
             return;
           }
-          if (id.includes('@mui')) return 'mui';
           if (id.includes('react-router')) return 'router';
           if (id.includes('@tanstack')) return 'tanstack';
           if (id.includes('luxon')) return 'luxon';
