@@ -6247,6 +6247,7 @@ data DriveApiResp = DriveApiResp
   { darId             :: Text
   , darWebViewLink    :: Maybe Text
   , darWebContentLink :: Maybe Text
+  , darResourceKey    :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON DriveApiResp where
@@ -6254,6 +6255,7 @@ instance FromJSON DriveApiResp where
     DriveApiResp <$> o .: "id"
                  <*> o .:? "webViewLink"
                  <*> o .:? "webContentLink"
+                 <*> o .:? "resourceKey"
 
 uploadToDrive
   :: Manager
@@ -6292,7 +6294,9 @@ uploadToDrive manager accessToken file mName mFolder = do
       closing = BL.fromStrict (TE.encodeUtf8 (dashBoundary <> "--"))
       body = BL.intercalate "\r\n" [metaPart, filePart, closing, ""]
 
-  req0 <- parseRequest "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
+  req0 <- parseRequest $
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart" <>
+    "&fields=id,webViewLink,webContentLink,resourceKey&supportsAllDrives=true"
   let bearer = "Bearer " <> TE.encodeUtf8 accessToken
       req = req0
         { method = "POST"
@@ -6314,7 +6318,10 @@ uploadToDrive manager accessToken file mName mFolder = do
 
   -- Best-effort: make the file public.
   let permBody = encode (object ["role" .= ("reader" :: Text), "type" .= ("anyone" :: Text)])
-  permReq0 <- parseRequest $ "https://www.googleapis.com/drive/v3/files/" <> T.unpack (darId driveResp) <> "/permissions"
+  permReq0 <- parseRequest $
+    "https://www.googleapis.com/drive/v3/files/" <>
+    T.unpack (darId driveResp) <>
+    "/permissions?supportsAllDrives=true"
   let permReq = permReq0
         { method = "POST"
         , requestHeaders =
@@ -6326,7 +6333,11 @@ uploadToDrive manager accessToken file mName mFolder = do
   _ <- (try (httpLbs permReq manager) :: IO (Either SomeException (Response BL.ByteString)))
 
   let fallbackPublicUrl = "https://drive.google.com/uc?export=view&id=" <> darId driveResp
-      publicUrl = Just fallbackPublicUrl
+      publicUrl =
+        case darResourceKey driveResp of
+          Just key | not (T.null (T.strip key)) ->
+            Just (fallbackPublicUrl <> "&resourcekey=" <> T.strip key)
+          _ -> Just fallbackPublicUrl
   pure DriveUploadDTO
     { duFileId = darId driveResp
     , duWebViewLink = darWebViewLink driveResp
