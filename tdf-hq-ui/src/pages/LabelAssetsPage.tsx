@@ -668,23 +668,24 @@ export default function LabelAssetsPage() {
               ))}
             </TextField>
             <GoogleDriveUploadWidget
-              label="Subir foto a Drive"
-              helperText="Adjunta una foto y guardaremos el link en notas."
+              label="Subir foto"
+              helperText="Adjunta una foto y la guardaremos en el host de assets."
               onComplete={(files) => {
                 const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
                 if (link) {
-                  setAssetForm((prev) => ({ ...prev, notes: link, photoUrl: link }));
+                  setAssetForm((prev) => ({ ...prev, photoUrl: link }));
                 }
               }}
               accept="image/*"
               dense
+              authMode="assets"
             />
             <TextField
-              label="Notas / link de Drive"
+              label="Notas"
               value={assetForm.notes}
               onChange={(e) => setAssetForm((prev) => ({ ...prev, notes: e.target.value }))}
               fullWidth
-              placeholder="Link de Drive u otras notas"
+              placeholder="Notas internas u observaciones"
             />
             <TextField
               select

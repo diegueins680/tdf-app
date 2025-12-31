@@ -50,7 +50,7 @@ import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), h
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
-import           TDF.Config                 (instagramAppToken, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
+import           TDF.Config                 (assetsRootDir, instagramAppToken, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
 import           TDF.ModelsExtra
@@ -136,6 +136,7 @@ inventoryServer user =
       ensureInventoryAccess
       Env{envConfig} <- ask
       let assetsBase = resolveConfiguredAssetsBase envConfig
+          assetsRoot = assetsRootDir envConfig
           fallbackName = nonEmptyText (fdFileName aufFile)
           requestedName = aufName >>= nonEmptyText
           nameWithExt = applyExtension (requestedName <|> fallbackName) fallbackName
@@ -143,7 +144,7 @@ inventoryServer user =
       uuid <- liftIO nextRandom
       let storedName = toText uuid <> "-" <> safeName
           relPath = "inventory/" <> storedName
-          targetDir = "assets/inventory"
+          targetDir = assetsRoot </> "inventory"
           targetPath = targetDir </> T.unpack storedName
       liftIO $ createDirectoryIfMissing True targetDir
       liftIO $ copyFile (fdPayload aufFile) targetPath

@@ -2,10 +2,12 @@
 module TDF.Config where
 
 import           Control.Applicative ((<|>))
+import           Control.Monad      (filterM)
 import           Data.Char          (toLower)
-import           Data.Maybe         (fromMaybe)
+import           Data.Maybe         (catMaybes, fromMaybe, listToMaybe)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
+import           System.Directory  (doesDirectoryExist)
 import           System.Environment (lookupEnv)
 import           Text.Read          (readMaybe)
 
@@ -32,6 +34,7 @@ data AppConfig = AppConfig
   , seedTriggerToken :: Maybe Text
   , appBaseUrl      :: Maybe Text
   , assetsBaseUrl   :: Maybe Text
+  , assetsRootDir   :: FilePath
   , courseDefaultSlug :: Text
   , courseDefaultMapUrl :: Maybe Text
   , courseDefaultInstructorAvatar :: Maybe Text
@@ -90,6 +93,7 @@ loadConfig = do
   seedEnv    <- lookupEnv "SEED_TRIGGER_TOKEN"
   baseUrlEnv <- lookupEnv "HQ_APP_URL"
   assetsBaseEnv <- lookupEnv "HQ_ASSETS_BASE_URL"
+  assetsDirEnv <- lookupEnv "HQ_ASSETS_DIR"
   googleClientIdEnv <- lookupEnv "GOOGLE_CLIENT_ID"
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
@@ -119,6 +123,7 @@ loadConfig = do
   igMsgAccountEnv <- lookupEnv "INSTAGRAM_MESSAGING_ACCOUNT_ID"
   igMsgBaseEnv <- lookupEnv "INSTAGRAM_MESSAGING_API_BASE"
   igVerifyEnv <- lookupEnv "INSTAGRAM_VERIFY_TOKEN" <|> lookupEnv "IG_VERIFY_TOKEN"
+  assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
   pure AppConfig
     { dbHost = h
     , dbPort = p
@@ -132,6 +137,7 @@ loadConfig = do
     , seedTriggerToken = mkSeedToken seedEnv
     , appBaseUrl = fmap (T.strip . T.pack) baseUrlEnv
     , assetsBaseUrl = fmap (T.strip . T.pack) assetsBaseEnv
+    , assetsRootDir = assetsRoot
     , courseDefaultSlug = maybe "produccion-musical-dic-2025" (T.strip . T.pack) courseSlugEnv
     , courseDefaultMapUrl = fmap (T.strip . T.pack) courseMapEnv
     , courseDefaultInstructorAvatar = fmap (T.strip . T.pack) courseInstructorAvatarEnv
@@ -195,6 +201,12 @@ loadConfig = do
         , smtpUseTLS = useTls
         }
 
+resolveAssetsRootDir :: Maybe FilePath -> IO FilePath
+resolveAssetsRootDir mEnv = do
+  let candidates = catMaybes [mEnv] ++ ["/app/assets", "tdf-hq/assets", "assets"]
+  existing <- filterM doesDirectoryExist candidates
+  pure $ fromMaybe (fromMaybe "assets" mEnv) (listToMaybe existing)
+
 defaultAppBase :: Text
 defaultAppBase = "https://tdf-app.pages.dev"
 defaultAssetsBase :: Text
@@ -230,3 +242,6 @@ nonEmpty :: Text -> Maybe Text
 nonEmpty txt =
   let trimmed = T.strip txt
   in if T.null trimmed then Nothing else Just trimmed
+
+nonEmptyPath :: String -> Maybe FilePath
+nonEmptyPath = fmap T.unpack . nonEmpty . T.pack

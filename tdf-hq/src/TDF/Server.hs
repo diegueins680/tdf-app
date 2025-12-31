@@ -26,6 +26,7 @@ import           Data.Foldable (for_)
 import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
+import           Data.Tagged (Tagged(..))
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), encode, genericParseJSON, genericToJSON)
 import           Data.Aeson.Types (camelTo2, fieldLabelModifier, parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
@@ -43,6 +44,7 @@ import           GHC.Generics (Generic)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
+import           System.FilePath ((</>))
 import           System.IO (hPutStrLn, stderr)
 import qualified Network.Wai as Wai (Request)
 import           Servant
@@ -3562,12 +3564,16 @@ bookingPublicServer :: ServerT Api.BookingPublicAPI AppM
 bookingPublicServer = createPublicBooking
 
 inventoryStaticServer :: ServerT Api.AssetsAPI AppM
-inventoryStaticServer =
-  serveDirectoryFileServer "assets/inventory"
+inventoryStaticServer = Tagged $ do
+  Env{envConfig} <- ask
+  let assetsRoot = assetsRootDir envConfig
+  pure $ serveDirectoryFileServer (assetsRoot </> "inventory")
 
 assetsServeServer :: ServerT Api.AssetsServeAPI AppM
-assetsServeServer =
-  serveDirectoryFileServer "assets"
+assetsServeServer = Tagged $ do
+  Env{envConfig} <- ask
+  let assetsRoot = assetsRootDir envConfig
+  pure $ serveDirectoryFileServer assetsRoot
 
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
 bookingServer user =
@@ -5310,7 +5316,11 @@ normalizePhoto assetsBase raw =
   in if "http://" `T.isPrefixOf` trimmed || "https://" `T.isPrefixOf` trimmed
         then trimmed
         else
-          let path = T.dropWhile (== '/') trimmed
+          let path0 = T.dropWhile (== '/') trimmed
+              path
+                | "assets/serve/" `T.isPrefixOf` path0 = T.drop (T.length ("assets/serve/" :: Text)) path0
+                | "assets/inventory/" `T.isPrefixOf` path0 = T.drop (T.length ("assets/" :: Text)) path0
+                | otherwise = path0
           in base <> "/" <> path
 
 createCart :: AppM MarketplaceCartDTO
