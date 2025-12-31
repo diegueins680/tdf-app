@@ -1,0 +1,269 @@
+% !TEX TS-program = xelatex
+\documentclass[11pt,a4paper]{scrartcl}
+
+% --- Encoding & fonts ---
+\usepackage{fontspec}
+% Fonts (pick widely-available options for Overleaf + local builds)
+\setmainfont{DejaVu Serif}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}
+
+% --- Layout ---
+\usepackage[a4paper,margin=24mm]{geometry}
+\usepackage{setspace}
+\setstretch{1.10}
+
+% --- Color & graphics ---
+\usepackage{xcolor}
+\definecolor{claroRed}{HTML}{DA291C}
+\definecolor{tdfBlack}{HTML}{111111}
+\definecolor{tdfGray}{HTML}{6F6F6F}
+\definecolor{softGray}{HTML}{F4F4F6}
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=claroRed,
+  urlcolor=claroRed,
+  citecolor=claroRed
+}
+
+% --- Tables & lists ---
+\usepackage{tabularx}
+\usepackage{enumitem}
+
+% --- Header / footer ---
+\usepackage{fancyhdr}
+\setlength{\headheight}{34pt} % avoid fancyhdr warning
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyfoot[C]{\small\color{tdfGray} \thepage}
+
+% --- Section styling ---
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries\color{tdfBlack}}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\color{tdfBlack}}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.25em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.0em}{0.45em}
+
+% --- Helpers ---
+\newcommand{\SafeIncludeGraphics}[2][]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \begin{tikzpicture}
+      \draw[tdfGray] (0,0) rectangle (6,3);
+      \node[align=center,tdfGray,font=\sffamily\footnotesize] at (3,1.5)
+      {Imagen no encontrada\\\texttt{#2}};
+    \end{tikzpicture}%
+  }%
+}
+
+% --- Assets (keep these names as-is in Overleaf) ---
+\newcommand{\HeroImage}{assets/hero.jpg}
+% NOTE: tdf_logo.png contains large transparent padding, which makes it appear
+% much smaller than Claro in the header even at the same height.
+% We therefore use a cropped version for headers.
+\newcommand{\LogoTDF}{assets/tdf_logo_header.png}
+\newcommand{\LogoClaro}{assets/claro_logo.png}
+\newcommand{\GlyphTDFWhite}{assets/tdf_glyph_white.png}
+
+\newcommand{\PhotoPortrait}{assets/portrait.jpg}
+\newcommand{\PhotoPortraitTwo}{assets/portrait2.jpg}
+\newcommand{\PhotoKeys}{assets/keys2.jpg}
+\newcommand{\PhotoKeysAlt}{assets/keys.jpg}
+\newcommand{\PhotoSax}{assets/sax.jpg}
+\newcommand{\PhotoPads}{assets/pads.jpg}
+\newcommand{\PhotoGuitar}{assets/guitar.jpg}
+\newcommand{\PhotoWide}{assets/wide1.jpg}
+\newcommand{\PhotoSelfie}{assets/selfie.jpg}
+
+% Uniform image helper for the reference grid
+\newcommand{\GridPhoto}[1]{\SafeIncludeGraphics[width=\linewidth,height=42mm,keepaspectratio]{#1}}
+
+% Header logos
+\fancyhead[L]{\SafeIncludeGraphics[height=10mm]{\LogoTDF}}
+\fancyhead[R]{\SafeIncludeGraphics[height=10mm]{\LogoClaro}}
+
+\begin{document}
+
+% =========================
+% Cover
+% =========================
+\begin{titlepage}
+\thispagestyle{empty}
+
+\begin{tikzpicture}[remember picture,overlay]
+  % Full-bleed hero
+  % Full-bleed cover: fill by width and let the page crop the overflow.
+  \node[anchor=center] at (current page.center)
+    {\SafeIncludeGraphics[width=\paperwidth]{\HeroImage}};
+
+  % Subtle “swap” watermark on the drum head (keeps the spirit, without hurting readability)
+  \node[opacity=0.14,rotate=-10] at ($(current page.center)+(0mm,-18mm)$)
+    {\SafeIncludeGraphics[width=95mm]{\GlyphTDFWhite}};
+
+  % Clear glyph on the darkest zone for legibility
+  \node[anchor=north west,xshift=18mm,yshift=-18mm] at (current page.north west)
+    {\SafeIncludeGraphics[width=42mm]{\GlyphTDFWhite}};
+
+  % Title block
+  \node[anchor=south east,xshift=-18mm,yshift=18mm] at (current page.south east) {
+    \begin{minipage}{0.62\paperwidth}
+      \raggedleft
+      \color{white}
+      {\Huge\bfseries Propuesta}\par
+      {\LARGE\bfseries Contenido y Producción Musical}\par
+      \vspace{5mm}
+      {\large \textbf{TDF Records} \;\textbullet\; \textbf{Claro}}\par
+      \vspace{4mm}
+      {\small \today}
+    \end{minipage}
+  };
+\end{tikzpicture}
+
+\vfill
+\end{titlepage}
+
+\pagenumbering{arabic}
+
+% =========================
+% Executive summary
+% =========================
+\section*{Resumen}
+\addcontentsline{toc}{section}{Resumen}
+
+\noindent
+Esta propuesta presenta un formato de contenido musical grabado en vivo (audio y video) con estética cinematográfica, pensado para amplificar la presencia de \textbf{Claro} dentro de una escena cultural activa, auténtica y altamente compartible.\par
+
+\vspace{2mm}
+\noindent
+\textbf{TDF Records} se encarga de la producción integral: preproducción, grabación multicámara, captura de audio profesional, edición, mezcla/master y entregables listos para publicación.
+
+% =========================
+\section{Objetivo}
+\begin{itemize}[leftmargin=*,itemsep=4pt]
+  \item Asociar a \textbf{Claro} con creatividad, cultura y talento local mediante piezas audiovisuales de alta calidad.
+  \item Crear un formato replicable (por temporadas) para generar comunidad y consistencia en redes.
+  \item Entregar contenido con estética premium, optimizado para \textbf{YouTube} y recortes para \textbf{Instagram / TikTok}. 
+\end{itemize}
+
+% =========================
+\section{Formato propuesto}
+\subsection{Sesiones en vivo}
+\begin{itemize}[leftmargin=*,itemsep=4pt]
+  \item 1 artista o banda por episodio.
+  \item 1 a 2 canciones grabadas en vivo.
+  \item Audio multipista + mezcla/master final.
+  \item Video multicámara (look cinematográfico) + edición.
+\end{itemize}
+
+\subsection{Microcontenidos}
+\begin{itemize}[leftmargin=*,itemsep=4pt]
+  \item 6 a 12 clips verticales por episodio (15--45s).
+  \item Teasers, hooks, behind-the-scenes, momentos musicales.
+  \item Entrega pensada para pauta y orgánico.
+\end{itemize}
+
+% =========================
+\section{Producción}
+\subsection{Preproducción}
+\begin{itemize}[leftmargin=*,itemsep=4pt]
+  \item Curaduría de artistas (con aprobación de Claro).
+  \item Scouting visual (locación / set / arte).
+  \item Plan de rodaje + guion técnico (cámaras, luces, audio).
+\end{itemize}
+
+\subsection{Rodaje y grabación}
+\begin{itemize}[leftmargin=*,itemsep=4pt]
+  \item 4 a 6 cámaras (según episodio y complejidad).
+  \item Captura de audio profesional (mics dedicados + multipista).
+  \item Dirección de fotografía e iluminación.
+\end{itemize}
+
+\subsection{Postproducción}
+\begin{itemize}[leftmargin=*,itemsep=4pt]
+  \item Edición de video (corte multicámara, color, gráficos).
+  \item Mezcla y master del audio final.
+  \item Entrega de masters + versiones optimizadas para redes.
+\end{itemize}
+
+% =========================
+\section{Recursos técnicos}
+\begin{tabularx}{\linewidth}{@{}X X@{}}
+\textbf{Audio} & \textbf{Video} \\
+\hline
+\vspace{1mm}
+\begin{itemize}[leftmargin=*,itemsep=3pt]
+  \item Micrófonos premium (dinámicos / condensador)
+  \item Grabación multipista (DAW)
+  \item Monitoreo y control de señal
+  \item Mezcla y master en estudio
+\end{itemize}
+&
+\vspace{1mm}
+\begin{itemize}[leftmargin=*,itemsep=3pt]
+  \item Cámaras cine / mirrorless 4K
+  \item Iluminación LED (look cinematográfico)
+  \item Dirección de fotografía
+  \item Edición + color grading
+\end{itemize}
+\\
+\end{tabularx}
+
+% =========================
+\section{Cronograma estimado (por episodio)}
+\begin{itemize}[leftmargin=*,itemsep=4pt]
+  \item \textbf{Preproducción:} 3--5 días
+  \item \textbf{Rodaje:} 1 día
+  \item \textbf{Edición video + mezcla/master:} 7--10 días
+  \item \textbf{Entrega final:} 10--15 días desde rodaje
+\end{itemize}
+
+% =========================
+\section{Entregables}
+\begin{itemize}[leftmargin=*,itemsep=4pt]
+  \item 1 video principal por episodio (YouTube, 4K / 1080p).
+  \item 6--12 microclips verticales (IG Reels / TikTok).
+  \item Audio master (WAV) + versión streaming (MP3).
+  \item Mini pack de fotos (frames seleccionados) para posts.
+\end{itemize}
+
+% =========================
+\section{Enlaces a episodios}
+\noindent
+Por limitaciones de acceso desde algunos entornos, aquí dejamos el enlace de la playlist y el primer episodio. Si deseas que dejemos \textit{todos} los links individuales (uno por video), envíanos la lista de URLs o los IDs, y los insertamos en 1 minuto.\par
+
+\vspace{2mm}
+\begin{itemize}[leftmargin=*,itemsep=4pt]
+  \item Playlist: \href{https://www.youtube.com/watch?v=9387ent0ELc\&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP}{Abrir en YouTube}
+  \item Episodio 1: \href{https://www.youtube.com/watch?v=9387ent0ELc}{Ver video}
+\end{itemize}
+
+% =========================
+\section{Visual de referencia}
+\noindent
+Algunas imágenes (estilo, energía y ejecución) para comunicar el look del proyecto:\par
+
+\vspace{2mm}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1}
+\begin{tabular}{@{}p{0.32\linewidth}p{0.32\linewidth}p{0.32\linewidth}@{}}
+\GridPhoto{\PhotoPortrait} &
+\GridPhoto{\PhotoPortraitTwo} &
+\GridPhoto{\PhotoKeys} \\[3pt]
+\GridPhoto{\PhotoSax} &
+\GridPhoto{\PhotoPads} &
+\GridPhoto{\PhotoGuitar} \\[3pt]
+\GridPhoto{\PhotoKeysAlt} &
+\GridPhoto{\PhotoWide} &
+\GridPhoto{\PhotoSelfie} \\
+\end{tabular}
+
+\vspace{6mm}
+\noindent\textbf{Contacto:} \href{mailto:diego@tdfrecords.net}{diego@tdfrecords.net}\;\textbullet\; Quito, Ecuador
+
+\end{document}

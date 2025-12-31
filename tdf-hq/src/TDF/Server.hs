@@ -85,6 +85,7 @@ import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
+import           TDF.ServerProposals (proposalsServer)
 import           TDF.Trials.API (TrialsAPI)
 import           TDF.Trials.Server (trialsServer)
 import qualified TDF.Trials.Models as Trials
@@ -819,6 +820,7 @@ protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
        partyServer user
   :<|> bookingServer user
+  :<|> proposalsServer user
   :<|> serviceCatalogServer user
   :<|> packageServer user
   :<|> invoiceServer user

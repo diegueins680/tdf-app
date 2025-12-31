@@ -26,6 +26,7 @@ import           TDF.API.Payments (PaymentsAPI)
 import           TDF.API.Instagram (InstagramAPI, InstagramWebhookAPI)
 import           TDF.API.Internships (InternshipsAPI)
 import           TDF.API.Pipelines (PipelinesAPI)
+import           TDF.API.Proposals (ProposalsAPI)
 import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions  (SessionsAPI)
 import           TDF.API.Drive     (DriveAPI)
@@ -219,6 +220,7 @@ type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
 type ProtectedAPI =
        "parties"  :> PartyAPI
   :<|> "bookings" :> BookingAPI
+  :<|> ProposalsAPI
   :<|> ServiceCatalogAPI
   :<|> "packages" :> PackageAPI
   :<|> "invoices" :> InvoiceAPI

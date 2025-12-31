@@ -222,6 +222,34 @@ PipelineCard
     updatedAt   UTCTime default=now()
     deriving Show Generic
 
+Proposal
+    Id            UUID default=gen_random_uuid()
+    title         Text
+    serviceKind   ServiceKind Maybe
+    clientPartyId PartyId Maybe
+    contactName   Text Maybe
+    contactEmail  Text Maybe
+    contactPhone  Text Maybe
+    pipelineCardId PipelineCardId Maybe
+    status        Text default='draft'
+    notes         Text Maybe
+    createdAt     UTCTime default=now()
+    updatedAt     UTCTime default=now()
+    lastGeneratedAt UTCTime Maybe
+    sentAt        UTCTime Maybe
+    deriving Show Generic
+
+ProposalVersion
+    Id           UUID default=gen_random_uuid()
+    proposalId   ProposalId
+    version      Int
+    latex        Text
+    createdAt    UTCTime default=now()
+    createdByRef Text Maybe
+    notes        Text Maybe
+    UniqueProposalVersion proposalId version
+    deriving Show Generic
+
 -- Party/Booking references use free-text refs to avoid coupling to existing tables
 StockItem
     Id           UUID default=gen_random_uuid()

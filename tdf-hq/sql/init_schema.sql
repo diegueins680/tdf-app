@@ -816,5 +816,43 @@ CREATE INDEX idx_pipeline_card_kind ON pipeline_card(service_kind);
 CREATE INDEX idx_pipeline_card_stage ON pipeline_card(service_kind, stage, sort_order);
 
 -- ============================================================================
+-- PROPOSALS
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS proposal (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title              TEXT NOT NULL,
+    service_kind       TEXT,
+    client_party_id    BIGINT REFERENCES party(id) ON DELETE SET NULL,
+    contact_name       TEXT,
+    contact_email      TEXT,
+    contact_phone      TEXT,
+    pipeline_card_id   UUID REFERENCES pipeline_card(id) ON DELETE SET NULL,
+    status             TEXT NOT NULL DEFAULT 'draft',
+    notes              TEXT,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_generated_at  TIMESTAMPTZ,
+    sent_at            TIMESTAMPTZ
+);
+
+CREATE INDEX idx_proposal_status ON proposal(status);
+CREATE INDEX idx_proposal_client ON proposal(client_party_id);
+CREATE INDEX idx_proposal_pipeline_card ON proposal(pipeline_card_id);
+
+CREATE TABLE IF NOT EXISTS proposal_version (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    proposal_id    UUID NOT NULL REFERENCES proposal(id) ON DELETE CASCADE,
+    version        INT NOT NULL,
+    latex          TEXT NOT NULL,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by_ref TEXT,
+    notes          TEXT,
+    CONSTRAINT unique_proposal_version UNIQUE (proposal_id, version)
+);
+
+CREATE INDEX idx_proposal_version_proposal ON proposal_version(proposal_id);
+
+-- ============================================================================
 -- END OF SCHEMA
 -- ============================================================================
