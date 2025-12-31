@@ -1947,11 +1947,12 @@ export default function MarketplacePage() {
             })()}
             <GoogleDriveUploadWidget
               label="Subir imagen (Drive)"
-              helperText="JPG o PNG. El enlace quedará visible solo si el archivo es público."
+              helperText="JPG o PNG. Guardaremos la foto en el Drive del sistema."
               onComplete={handlePhotoUploadComplete}
               accept="image/*"
               multiple={false}
               dense
+              authMode="server"
             />
             <Stack direction="row" spacing={1} alignItems="center">
               <Button

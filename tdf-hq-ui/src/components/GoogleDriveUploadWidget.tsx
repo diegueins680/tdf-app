@@ -31,6 +31,7 @@ export interface GoogleDriveUploadWidgetProps {
   accept?: string;
   multiple?: boolean;
   dense?: boolean;
+  authMode?: 'user' | 'server';
 }
 
 export default function GoogleDriveUploadWidget({
@@ -40,25 +41,29 @@ export default function GoogleDriveUploadWidget({
   accept = 'image/*',
   multiple = true,
   dense = false,
+  authMode = 'user',
 }: GoogleDriveUploadWidgetProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [items, setItems] = useState<UploadItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const { status: driveStatus, error: driveError, startAuth, ensureToken } = useGoogleDriveAuth();
+  const usesUserAuth = authMode === 'user';
 
   const handleDriveAuth = useCallback(() => {
+    if (!usesUserAuth) return;
     void startAuth().catch(() => undefined);
-  }, [startAuth]);
+  }, [startAuth, usesUserAuth]);
 
   const resolveAccessToken = useCallback(async () => {
+    if (!usesUserAuth) return undefined;
     try {
       const token = await ensureToken();
       return token.accessToken;
     } catch {
       return undefined;
     }
-  }, [ensureToken]);
+  }, [ensureToken, usesUserAuth]);
 
   const handleFiles = useCallback(
     (files: FileList | File[]) => {
@@ -136,14 +141,16 @@ export default function GoogleDriveUploadWidget({
         >
           {label}
         </Button>
-        <Button
-          variant="text"
-          onClick={handleDriveAuth}
-          size={dense ? 'small' : 'medium'}
-          disabled={driveStatus === 'authenticating'}
-        >
-          {driveStatus === 'ready' ? 'Reautorizar Drive' : 'Conectar Drive'}
-        </Button>
+        {usesUserAuth && (
+          <Button
+            variant="text"
+            onClick={handleDriveAuth}
+            size={dense ? 'small' : 'medium'}
+            disabled={driveStatus === 'authenticating'}
+          >
+            {driveStatus === 'ready' ? 'Reautorizar Drive' : 'Conectar Drive'}
+          </Button>
+        )}
         {!dense && (
           <Typography variant="body2" color="text.secondary">
             {helperText}
@@ -191,7 +198,7 @@ export default function GoogleDriveUploadWidget({
       </Box>
 
       {error && <Alert severity="error">{error}</Alert>}
-      {driveError && <Alert severity="warning">{driveError}</Alert>}
+      {usesUserAuth && driveError && <Alert severity="warning">{driveError}</Alert>}
 
       <Stack spacing={1}>
         {items.map((item) => (
