@@ -974,6 +974,7 @@ protectedServer user =
   :<|> socialServer user
   :<|> chatServer user
   :<|> chatkitSessionServer user
+  :<|> tidalAgentServer user
   :<|> socialSyncServer user
   :<|> socialEventsServer user
   :<|> internshipsServer user
@@ -4966,6 +4967,63 @@ callOpenAIChat cfg messages =
           pure (Right reply)
         Right _ -> pure (Left "Sin respuesta de modelo")
 
+tidalSystemPrompt :: Text
+tidalSystemPrompt = T.intercalate "\n"
+  [ "You are a TidalCycles code generator."
+  , "- Reply ONLY with TidalCycles code, no prose or markdown."
+  , "- Keep patterns short, loopable, and safe to evaluate."
+  , "- Use d1/d2/d3/d4, stack, sound, n, note, cps/bps, hush. Avoid file I/O or shell commands."
+  , "- Prefer concise percussive or melodic patterns; avoid very long sequences."
+  ]
+
+tidalAgentServer :: AuthedUser -> TidalAgentRequest -> AppM TidalAgentResponse
+tidalAgentServer _ TidalAgentRequest{..} = do
+  Env{..} <- ask
+  let prompt = T.strip taPrompt
+  when (T.null prompt) $ throwBadRequest "Prompt requerido"
+  when (T.length prompt > 2000) $ throwBadRequest "Prompt demasiado largo (max 2000 caracteres)"
+  apiKey <- case openAiApiKey envConfig of
+    Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
+    Just key -> pure key
+  let model = fromMaybe (openAiModel envConfig) (taModel >>= nonEmptyText)
+  manager <- liftIO $ newManager tlsManagerSettings
+  reqBase <- liftIO $ parseRequest "https://api.openai.com/v1/chat/completions"
+  let body = encode $ object
+        [ "model" .= model
+        , "messages" .=
+            [ object ["role" .= ("system" :: Text), "content" .= tidalSystemPrompt]
+            , object ["role" .= ("user" :: Text), "content" .= prompt]
+            ]
+        , "temperature" .= (0.6 :: Double)
+        , "max_tokens" .= (300 :: Int)
+        ]
+      req =
+        reqBase
+          { method = "POST"
+          , requestHeaders =
+              [ ("Content-Type", "application/json")
+              , ("Authorization", "Bearer " <> TE.encodeUtf8 apiKey)
+              ]
+          , requestBody = RequestBodyLBS body
+          }
+  resp <- liftIO $ httpLbs req manager
+  let status = statusCode (responseStatus resp)
+      raw = responseBody resp
+  if status >= 200 && status < 300
+    then case eitherDecode raw of
+      Left err ->
+        throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack err)) }
+      Right ChatCompletionResp{choices = (ChatChoice OpenAIChatMessage{content = reply} : _)} ->
+        pure (TidalAgentResponse reply)
+      Right _ ->
+        throwError err502 { errBody = "Sin respuesta de modelo" }
+    else do
+      let baseMsg = "Error al generar respuesta (HTTP " <> T.pack (show status) <> ")"
+          msg = case eitherDecode raw of
+            Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
+            Left _ -> baseMsg
+      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
 chatkitSessionServer :: AuthedUser -> ChatKitSessionRequest -> AppM ChatKitSessionResponse
 chatkitSessionServer user ChatKitSessionRequest{..} = do
   Env{..} <- ask
@@ -5012,22 +5070,22 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
             throwError err502 { errBody = "ChatKit respondió sin client_secret" }
         else do
           let baseMsg = "Error al crear sesión ChatKit (HTTP " <> T.pack (show status) <> ")"
-              msg = fromMaybe baseMsg (extractChatKitError payload)
+              msg = fromMaybe baseMsg (extractApiErrorMessage payload)
           throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
 resolveWorkflowId :: Maybe Text -> Maybe Text -> Maybe Text
 resolveWorkflowId primary fallback =
-  let normalized = (primary <|> fallback) >>= nonEmptyText
-  in normalized
-  where
-    nonEmptyText txt =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
+  (primary <|> fallback) >>= nonEmptyText
 
 normalizeChatKitBase :: Text -> Text
 normalizeChatKitBase base =
   let trimmed = T.dropWhileEnd (== '/') (T.strip base)
   in if T.null trimmed then "https://api.openai.com" else trimmed
+
+nonEmptyText :: Text -> Maybe Text
+nonEmptyText txt =
+  let trimmed = T.strip txt
+  in if T.null trimmed then Nothing else Just trimmed
 
 extractChatKitSession :: Value -> Maybe (Text, Maybe Value)
 extractChatKitSession = parseMaybe $ withObject "ChatKitSession" $ \o -> do
@@ -5035,8 +5093,8 @@ extractChatKitSession = parseMaybe $ withObject "ChatKitSession" $ \o -> do
   expiresAfter <- o .:? "expires_after"
   pure (secret, expiresAfter)
 
-extractChatKitError :: Value -> Maybe Text
-extractChatKitError = parseMaybe $ withObject "ChatKitError" $ \o -> do
+extractApiErrorMessage :: Value -> Maybe Text
+extractApiErrorMessage = parseMaybe $ withObject "ApiError" $ \o -> do
   mErr <- o .:? "error"
   case mErr of
     Just (String msg) -> pure msg

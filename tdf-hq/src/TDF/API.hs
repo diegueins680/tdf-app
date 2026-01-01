@@ -131,6 +131,9 @@ type ChatAPI =
 type ChatKitSessionAPI =
        "chatkit" :> "sessions" :> ReqBody '[JSON] ChatKitSessionRequest :> Post '[JSON] ChatKitSessionResponse
 
+type TidalAgentAPI =
+       "tidal-agent" :> ReqBody '[JSON] TidalAgentRequest :> Post '[JSON] TidalAgentResponse
+
 type WhatsAppMessagesAPI =
        "whatsapp" :> "messages"
          :> QueryParam "limit" Int
@@ -244,6 +247,7 @@ type ProtectedAPI =
   :<|> "social" :> SocialAPI
   :<|> ChatAPI
   :<|> ChatKitSessionAPI
+  :<|> TidalAgentAPI
   :<|> "social-sync" :> SocialSyncAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> InternshipsAPI
@@ -419,6 +423,21 @@ data ChatKitSessionResponse = ChatKitSessionResponse
 
 instance ToJSON ChatKitSessionResponse where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' . camelDrop 3 }
+
+data TidalAgentRequest = TidalAgentRequest
+  { taPrompt :: Text
+  , taModel  :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON TidalAgentRequest where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 2 }
+
+data TidalAgentResponse = TidalAgentResponse
+  { taContent :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON TidalAgentResponse where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 2 }
 
 camelDrop :: Int -> String -> String
 camelDrop n xs = case drop n xs of

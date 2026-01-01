@@ -1,10 +1,5 @@
-const systemPrompt = `
-You are a TidalCycles code generator.
-- Reply ONLY with TidalCycles code, no prose or markdown.
-- Keep patterns short, loopable, and safe to evaluate.
-- Use d1/d2/d3/d4, stack, sound, n, note, cps/bps, hush. Avoid file I/O or shell commands.
-- Prefer concise percussive or melodic patterns; avoid very long sequences.
-`.trim();
+import { post } from '../api/client';
+import { env } from './env';
 
 const safePrefixes = ['d1', 'd2', 'd3', 'd4', 'hush', 'bps', 'cps', 'setcps', 'once', 'solo', 'unsolo', 'all', 'xfade', 'xfadeIn'];
 
@@ -27,48 +22,24 @@ export const extractTidalCode = (text: string): string | null => {
 };
 
 export interface TidalAgentConfig {
-  apiUrl: string;
-  apiKey: string;
-  model: string;
+  model?: string;
 }
 
 export const buildDefaultConfig = (): { config: TidalAgentConfig | null; error?: string } => {
-  const apiUrl =
-    import.meta.env['VITE_TIDAL_AGENT_API_URL'] ??
-    import.meta.env['VITE_OPENAI_API_URL'] ??
-    'https://api.openai.com/v1/chat/completions';
-  const apiKey = import.meta.env['VITE_TIDAL_AGENT_API_KEY'] ?? import.meta.env['VITE_OPENAI_API_KEY'] ?? '';
-  const model = import.meta.env['VITE_TIDAL_AGENT_MODEL'] ?? 'gpt-4o-mini';
-  if (!apiKey) {
-    return { config: null, error: 'Falta configurar VITE_TIDAL_AGENT_API_KEY (o VITE_OPENAI_API_KEY).' };
+  const apiBase = env.read('VITE_API_BASE');
+  const model = env.read('VITE_TIDAL_AGENT_MODEL');
+  if (!apiBase) {
+    return { config: null, error: 'Falta configurar VITE_API_BASE para conectar con el backend.' };
   }
-  return { config: { apiUrl, apiKey, model } };
+  return { config: { model } };
 };
 
 export const tidalAgentRequest = async (prompt: string, cfg: TidalAgentConfig): Promise<string> => {
-  const body = {
+  const payload = await post<{ content: string }>('/tidal-agent', {
+    prompt,
     model: cfg.model,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: prompt },
-    ],
-    temperature: 0.6,
-    max_tokens: 300,
-  };
-  const resp = await fetch(cfg.apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${cfg.apiKey}`,
-    },
-    body: JSON.stringify(body),
   });
-  if (!resp.ok) {
-    const text = await resp.text();
-    throw new Error(`API ${resp.status}: ${text.slice(0, 200)}`);
-  }
-  const json = await resp.json();
-  const content = json?.choices?.[0]?.message?.content;
+  const content = payload?.content;
   if (!content || typeof content !== 'string') {
     throw new Error('Respuesta vacía o inválida del modelo.');
   }

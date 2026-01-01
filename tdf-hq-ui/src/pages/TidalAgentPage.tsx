@@ -130,8 +130,8 @@ export default function TidalAgentPage() {
                   Falta configurar la API
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Define `VITE_TIDAL_AGENT_API_KEY` (o `VITE_OPENAI_API_KEY`) en las variables de entorno y vuelve a
-                  desplegar. Luego refresca esta página.
+                  Configura `VITE_API_BASE` para apuntar al backend y define `OPENAI_API_KEY` en el servidor.
+                  Luego despliega y refresca esta página.
                 </Typography>
                 <Stack direction="row" spacing={1}>
                   <Button href="/configuracion/preferencias" variant="contained">
@@ -398,7 +398,7 @@ export default function TidalAgentPage() {
         </Card>
 
             <Alert severity="info" variant="outlined">
-              Env vars: define `VITE_TIDAL_AGENT_API_KEY` (o `VITE_OPENAI_API_KEY`), opcional `VITE_TIDAL_AGENT_API_URL` y `VITE_TIDAL_AGENT_MODEL`.
+              Env vars: `VITE_API_BASE` en el frontend, `OPENAI_API_KEY` en el backend. Opcional `VITE_TIDAL_AGENT_MODEL`.
             </Alert>
           </>
         )}
