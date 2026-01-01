@@ -26,7 +26,6 @@ import           Data.Foldable (for_)
 import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
-import           Data.Tagged (Tagged(..))
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), encode, genericParseJSON, genericToJSON)
 import           Data.Aeson.Types (camelTo2, fieldLabelModifier, parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
@@ -232,14 +231,17 @@ mkApp env =
       ctxProxy = Proxy :: Proxy '[AuthHandler Wai.Request AuthedUser]
       ctx      = authContext env
       trials   = trialsServer (envPool env)
-      apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) server
+      apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) (server env)
   in serveWithContext combinedProxy ctx (trials :<|> apiSrv)
 
 nt :: Env -> AppM a -> Handler a
 nt env x = runReaderT x env
 
-server :: ServerT API AppM
-server =
+server :: Env -> ServerT API AppM
+server env =
+  let Env{envConfig} = env
+      assetsRoot = assetsRootDir envConfig
+  in
        versionServer
   :<|> health
   :<|> mcpServer
@@ -266,8 +268,8 @@ server =
   :<|> serviceCatalogPublicServer
   :<|> listEngineersPublic
   :<|> bookingPublicServer
-  :<|> inventoryStaticServer
-  :<|> assetsServeServer
+  :<|> inventoryStaticServer assetsRoot
+  :<|> assetsServeServer assetsRoot
   :<|> protectedServer
 
 authV1Server :: ServerT Api.AuthV1API AppM
@@ -3563,17 +3565,13 @@ partyRelated user pidI = do
 bookingPublicServer :: ServerT Api.BookingPublicAPI AppM
 bookingPublicServer = createPublicBooking
 
-inventoryStaticServer :: ServerT Api.AssetsAPI AppM
-inventoryStaticServer = Tagged $ do
-  Env{envConfig} <- ask
-  let assetsRoot = assetsRootDir envConfig
-  pure $ serveDirectoryFileServer (assetsRoot </> "inventory")
+inventoryStaticServer :: FilePath -> ServerT Api.AssetsAPI AppM
+inventoryStaticServer assetsRoot =
+  serveDirectoryFileServer (assetsRoot </> "inventory")
 
-assetsServeServer :: ServerT Api.AssetsServeAPI AppM
-assetsServeServer = Tagged $ do
-  Env{envConfig} <- ask
-  let assetsRoot = assetsRootDir envConfig
-  pure $ serveDirectoryFileServer assetsRoot
+assetsServeServer :: FilePath -> ServerT Api.AssetsServeAPI AppM
+assetsServeServer assetsRoot =
+  serveDirectoryFileServer assetsRoot
 
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
 bookingServer user =
