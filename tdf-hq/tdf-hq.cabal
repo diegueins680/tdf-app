@@ -134,6 +134,7 @@ executable tdf-hq-exe
     , base64-bytestring
     , directory
     , process
+    , temporary
     , bcrypt
     , path-pieces
     , uuid
