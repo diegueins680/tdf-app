@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -32,13 +33,17 @@ import QrCodeIcon from '@mui/icons-material/QrCode';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AssetCheckoutDTO, AssetDTO, AssetUpdate, PageResponse, RoomDTO } from '../api/types';
+import { Link as RouterLink } from 'react-router-dom';
+import type { AssetCheckoutDTO, AssetDTO, AssetUpdate, DropdownOptionDTO, PageResponse, RoomDTO } from '../api/types';
+import { Admin } from '../api/admin';
 import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest, type AssetQrDTO } from '../api/inventory';
 import { Rooms } from '../api/rooms';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
+import { deriveModulesFromRoles } from '../components/SidebarNav';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import { buildPublicContentUrl } from '../services/googleDrive';
+import { useSession } from '../session/SessionContext';
 
 interface AssetFormState {
   name: string;
@@ -59,6 +64,7 @@ function normalizeAssets(payload: AssetsPayload): AssetDTO[] {
 const API_BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
   ? import.meta.env.VITE_API_BASE
   : 'https://tdf-hq.fly.dev');
+const ASSET_CATEGORY_KEY = 'asset-category';
 
 const normalizeGoogleDriveUrl = (url: string): string | null => {
   const trimmed = url.trim();
@@ -132,6 +138,13 @@ const STATUS_OPTIONS = [
 
 export default function LabelAssetsPage() {
   const qc = useQueryClient();
+  const { session } = useSession();
+  const modules = useMemo(() => {
+    const provided = session?.modules ?? [];
+    const fromRoles = deriveModulesFromRoles(session?.roles);
+    return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
+  }, [session?.modules, session?.roles]);
+  const canManageCategories = modules.has('admin');
   const assetsQuery = useQuery({
     queryKey: ['assets'],
     queryFn: () => Inventory.list({ pageSize: 200 }).then(normalizeAssets),
@@ -139,6 +152,12 @@ export default function LabelAssetsPage() {
   const roomsQuery = useQuery({
     queryKey: ['rooms'],
     queryFn: () => Rooms.list(),
+  });
+  const dropdownsQuery = useQuery({
+    queryKey: ['dropdowns', ASSET_CATEGORY_KEY],
+    queryFn: () => Admin.listDropdowns(ASSET_CATEGORY_KEY, true),
+    enabled: canManageCategories,
+    staleTime: 5 * 60 * 1000,
   });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -300,10 +319,42 @@ export default function LabelAssetsPage() {
   const assets = useMemo(() => assetsQuery.data ?? [], [assetsQuery.data]);
   const rooms = useMemo(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const roomMap = useMemo(() => new Map<string, RoomDTO>(rooms.map((r) => [r.roomId, r])), [rooms]);
-  const categories = useMemo(
+  const dropdownOptions = useMemo(() => dropdownsQuery.data ?? [], [dropdownsQuery.data]);
+  const assetCategories = useMemo(
     () => Array.from(new Set(assets.map((a) => a.category))).sort((a, b) => a.localeCompare(b)),
     [assets],
   );
+  const categoryOptions = useMemo(() => {
+    const map = new Map<string, DropdownOptionDTO>();
+    dropdownOptions.forEach((opt) => {
+      map.set(opt.value, opt);
+    });
+    assetCategories.forEach((value) => {
+      if (!map.has(value)) {
+        map.set(value, {
+          optionId: `asset:${value}`,
+          category: ASSET_CATEGORY_KEY,
+          value,
+          label: null,
+          active: true,
+          sortOrder: null,
+        });
+      }
+    });
+    const list = Array.from(map.values());
+    list.sort((a, b) => {
+      const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
+      return (a.label ?? a.value).localeCompare(b.label ?? b.value);
+    });
+    return list;
+  }, [dropdownOptions, assetCategories]);
+  const selectedCategoryOption = useMemo(() => {
+    const trimmed = assetForm.category.trim();
+    if (!trimmed) return null;
+    return categoryOptions.find((opt) => opt.value === trimmed || opt.label === trimmed) ?? null;
+  }, [assetForm.category, categoryOptions]);
 
   const statusCounts = useMemo(() => {
     return assets.reduce<Record<string, number>>((acc, asset) => {
@@ -404,6 +455,15 @@ export default function LabelAssetsPage() {
           <Button variant="outlined" startIcon={<RefreshIcon />} onClick={() => void qc.invalidateQueries({ queryKey: ['assets'] })}>
             Actualizar
           </Button>
+          {canManageCategories && (
+            <Button
+              variant="outlined"
+              component={RouterLink}
+              to={`/configuracion/opciones-ux?category=${ASSET_CATEGORY_KEY}`}
+            >
+              Gestionar categorías
+            </Button>
+          )}
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
             Agregar asset
           </Button>
@@ -454,9 +514,9 @@ export default function LabelAssetsPage() {
               sx={{ minWidth: 180 }}
             >
               <MenuItem value="all">Todas</MenuItem>
-              {categories.map((cat) => (
-                <MenuItem key={cat} value={cat}>
-                  {cat}
+              {categoryOptions.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label ?? opt.value}
                 </MenuItem>
               ))}
             </TextField>
@@ -652,21 +712,43 @@ export default function LabelAssetsPage() {
               required
               fullWidth
             />
-            <TextField
-              label="Categoría"
-              value={assetForm.category}
-              onChange={(e) => setAssetForm((prev) => ({ ...prev, category: e.target.value }))}
-              required
+            <Autocomplete<DropdownOptionDTO, false, false, true>
+              freeSolo
               fullWidth
-              select={categories.length > 0}
-              helperText={categories.length ? 'Selecciona o escribe una categoría' : undefined}
-            >
-              {categories.map((cat) => (
-                <MenuItem key={cat} value={cat}>
-                  {cat}
-                </MenuItem>
-              ))}
-            </TextField>
+              options={categoryOptions}
+              value={selectedCategoryOption}
+              inputValue={assetForm.category}
+              onInputChange={(_, value) => setAssetForm((prev) => ({ ...prev, category: value }))}
+              onChange={(_, value) => {
+                if (!value) {
+                  setAssetForm((prev) => ({ ...prev, category: '' }));
+                } else if (typeof value === 'string') {
+                  setAssetForm((prev) => ({ ...prev, category: value }));
+                } else {
+                  setAssetForm((prev) => ({ ...prev, category: value.value }));
+                }
+              }}
+              getOptionLabel={(option) =>
+                typeof option === 'string' ? option : option.label ?? option.value
+              }
+              renderOption={(props, option) => {
+                const label = option.label ?? option.value;
+                return <li {...props}>{option.active ? label : `${label} (inactiva)`}</li>;
+              }}
+              noOptionsText={dropdownsQuery.isFetching ? 'Cargando categorías…' : 'Agrega una categoría'}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Categoría"
+                  required
+                  helperText={
+                    canManageCategories
+                      ? 'Gestiona categorías en Configuración → Opciones UX.'
+                      : 'Selecciona o escribe una categoría.'
+                  }
+                />
+              )}
+            />
             <GoogleDriveUploadWidget
               label="Subir foto"
               helperText="Adjunta una foto y la guardaremos en el host de assets."

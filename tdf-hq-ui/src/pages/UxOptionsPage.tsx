@@ -17,10 +17,11 @@ import {
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { Admin } from '../api/admin';
 import type { DropdownOptionDTO, DropdownOptionUpdate } from '../api/types';
 
-const DEFAULT_CATEGORIES = ['band-genre', 'band-role'];
+const DEFAULT_CATEGORIES = ['asset-category', 'band-genre', 'band-role'];
 
 function OptionRow({
   option,
@@ -124,10 +125,17 @@ function OptionRow({
 
 export default function UxOptionsPage() {
   const qc = useQueryClient();
-  const [category, setCategory] = useState<string>(DEFAULT_CATEGORIES[0] ?? '');
+  const [searchParams] = useSearchParams();
+  const requestedCategory = (searchParams.get('category') ?? '').trim();
+  const [category, setCategory] = useState<string>(requestedCategory || DEFAULT_CATEGORIES[0] ?? '');
   const [includeInactive, setIncludeInactive] = useState(false);
   const [newOption, setNewOption] = useState({ value: '', label: '', sortOrder: '', active: true });
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!requestedCategory) return;
+    setCategory((prev) => (prev === requestedCategory ? prev : requestedCategory));
+  }, [requestedCategory]);
 
   const optionsQuery = useQuery({
     queryKey: ['dropdowns', category, includeInactive],
