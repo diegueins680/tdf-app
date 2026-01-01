@@ -177,6 +177,7 @@ runAllMigrations cfg = do
   dropLegacyPartyColumns
   runMigration migrateAll
   runMigration migrateExtra
+  ensureBrainTagsArray
   runMigration migrateSocialEvents
   runMigration migrateTrials
   restoreLegacyPartyRoles legacyRoles
@@ -187,6 +188,42 @@ hasVectorExtension = do
     "SELECT 1 FROM pg_available_extensions WHERE name = 'vector'"
     [] :: SqlPersistT IO [Single Int]
   pure (not (null rows))
+
+ensureBrainTagsArray :: SqlPersistT IO ()
+ensureBrainTagsArray = do
+  mType <- lookupColumnType "studio_brain_entry" "tags"
+  case mType of
+    Nothing -> pure ()
+    Just (dataType, udtName) -> do
+      let normalizedType = T.toLower dataType
+          normalizedUdt = T.toLower udtName
+      if normalizedType == "array" && normalizedUdt == "_text"
+        then pure ()
+        else if normalizedType `elem` ["text", "character varying", "varchar"]
+          then rawExecute
+            "ALTER TABLE studio_brain_entry \
+            \ALTER COLUMN tags TYPE text[] \
+            \USING CASE \
+            \WHEN tags IS NULL OR tags = '' THEN NULL \
+            \ELSE string_to_array(tags, ',') \
+            \END"
+            []
+          else if normalizedType == "jsonb" || normalizedUdt == "jsonb"
+            then rawExecute
+              "ALTER TABLE studio_brain_entry \
+              \ALTER COLUMN tags TYPE text[] \
+              \USING CASE \
+              \WHEN tags IS NULL THEN NULL \
+              \WHEN jsonb_typeof(tags) = 'array' \
+              \  THEN ARRAY(SELECT jsonb_array_elements_text(tags)) \
+              \ELSE string_to_array(trim(both '\"' from tags::text), ',') \
+              \END"
+              []
+            else do
+              let message =
+                    "[migrations] studio_brain_entry.tags type=" <> T.unpack dataType
+                      <> " (" <> T.unpack udtName <> "); skipping conversion."
+              liftIO $ putStrLn message
 
 captureLegacyPartyRoles :: SqlPersistT IO [(PartyId, RoleEnum)]
 captureLegacyPartyRoles = do
@@ -262,3 +299,17 @@ columnExists column = do
     \LIMIT 1"
     [PersistText "party", PersistText column] :: SqlPersistT IO [Single Int]
   pure (not (null rows))
+
+lookupColumnType :: Text -> Text -> SqlPersistT IO (Maybe (Text, Text))
+lookupColumnType tableName columnName = do
+  rows <- rawSql
+    "SELECT data_type, udt_name \
+    \FROM information_schema.columns \
+    \WHERE table_schema = 'public' \
+    \  AND table_name = ? \
+    \  AND column_name = ? \
+    \LIMIT 1"
+    [PersistText tableName, PersistText columnName] :: SqlPersistT IO [(Single Text, Single Text)]
+  pure $ case rows of
+    (Single dataType, Single udtName) : _ -> Just (dataType, udtName)
+    _ -> Nothing
