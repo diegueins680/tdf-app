@@ -203,7 +203,7 @@ proposalsServer user =
         Just (Entity _ proposal) -> do
           versionEnt <- fetchVersion proposalKey mVersion
           let latex = ME.proposalVersionLatex (entityVal versionEnt)
-          pdfResult <- liftIO (InputList.generateInputListPdf latex)
+          pdfResult <- liftIO (InputList.generateInputListPdfWithAssets (Just proposalAssetsDir) latex)
           case pdfResult of
             Left errMsg -> throwError err500 { errBody = encodeUtf8Lazy errMsg }
             Right pdf -> do
@@ -417,6 +417,9 @@ loadTemplate key =
 
 templatesDir :: FilePath
 templatesDir = "templates" </> "proposals"
+
+proposalAssetsDir :: FilePath
+proposalAssetsDir = templatesDir </> "assets"
 
 isSafeTemplateKey :: Text -> Bool
 isSafeTemplateKey key =

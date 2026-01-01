@@ -13,12 +13,12 @@ module TDF.Handlers.InputList
   , fetchSessionInputRowsByKey
   , renderInputListLatex
   , generateInputListPdf
+  , generateInputListPdfWithAssets
   , sanitizeFileName
   ) where
 
 import           Control.Applicative        ((<|>))
-import           Control.Exception          (IOException, catch)
-import           Control.Monad              (guard)
+import           Control.Monad              (forM_, guard, when)
 import           Data.Char                  (isAlphaNum)
 import           Data.List                  (find)
 import qualified Data.Map.Strict            as Map
@@ -30,10 +30,12 @@ import qualified Data.ByteString.Lazy       as BL
 import           Data.Time                  (UTCTime)
 import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT)
-import           System.Directory           (createDirectoryIfMissing, removeFile)
+import           System.Directory           (copyFile, createDirectoryIfMissing, doesDirectoryExist,
+                                             listDirectory)
 import           System.Exit                (ExitCode(..))
 import           System.FilePath            ((</>))
 import           System.Process             (readProcessWithExitCode)
+import           System.IO.Temp             (withSystemTempDirectory)
 import qualified Data.Set                   as Set
 
 import qualified TDF.ModelsExtra            as ME
@@ -228,34 +230,45 @@ latexEscape = T.concatMap escapeChar
       _    -> T.singleton c
 
 generateInputListPdf :: Text -> IO (Either Text BL.ByteString)
-generateInputListPdf latex = do
-  let tmpDir  = "/tmp/tdf"
-      texFile = tmpDir </> "inputlist.tex"
-      pdfFile = tmpDir </> "inputlist.pdf"
-  createDirectoryIfMissing True tmpDir
-  TIO.writeFile texFile latex
-  (exitCode, _out, err) <- readProcessWithExitCode "tectonic" ["-Z", "shell-escape", "-o", tmpDir, texFile] ""
-  case exitCode of
-    ExitSuccess -> do
-      pdfBytes <- BL.readFile pdfFile
-      safeRemove texFile
-      safeRemove pdfFile
-      pure (Right pdfBytes)
-    ExitFailure code -> do
-      safeRemove texFile
-      let errMsg = T.concat
-            [ "tectonic exited with "
-            , T.pack (show code)
-            , ": "
-            , T.strip (T.pack err)
-            ]
-      pure (Left errMsg)
+generateInputListPdf = generateInputListPdfWithAssets Nothing
 
-safeRemove :: FilePath -> IO ()
-safeRemove path = removeFile path `catch` handleErr
-  where
-    handleErr :: IOException -> IO ()
-    handleErr _ = pure ()
+generateInputListPdfWithAssets :: Maybe FilePath -> Text -> IO (Either Text BL.ByteString)
+generateInputListPdfWithAssets mAssetsDir latex =
+  withSystemTempDirectory "tdf-latex" $ \tmpDir -> do
+    let texFile = tmpDir </> "inputlist.tex"
+        pdfFile = tmpDir </> "inputlist.pdf"
+        assetsDir = tmpDir </> "assets"
+    TIO.writeFile texFile latex
+    forM_ mAssetsDir (`copyAssetsDir` assetsDir)
+    (exitCode, _out, err) <- readProcessWithExitCode "tectonic"
+      ["-Z", "shell-escape", "-o", tmpDir, texFile] ""
+    case exitCode of
+      ExitSuccess -> Right <$> BL.readFile pdfFile
+      ExitFailure code -> do
+        let errMsg = T.concat
+              [ "tectonic exited with "
+              , T.pack (show code)
+              , ": "
+              , T.strip (T.pack err)
+              ]
+        pure (Left errMsg)
+
+copyAssetsDir :: FilePath -> FilePath -> IO ()
+copyAssetsDir src dest = do
+  exists <- doesDirectoryExist src
+  when exists (copyDirRecursive src dest)
+
+copyDirRecursive :: FilePath -> FilePath -> IO ()
+copyDirRecursive src dest = do
+  createDirectoryIfMissing True dest
+  entries <- listDirectory src
+  forM_ entries $ \entry -> do
+    let srcPath = src </> entry
+        destPath = dest </> entry
+    isDir <- doesDirectoryExist srcPath
+    if isDir
+      then copyDirRecursive srcPath destPath
+      else copyFile srcPath destPath
 
 sanitizeFileName :: Text -> Text
 sanitizeFileName txt =
