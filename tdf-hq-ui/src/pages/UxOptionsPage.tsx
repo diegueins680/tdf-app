@@ -127,7 +127,8 @@ export default function UxOptionsPage() {
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
   const requestedCategory = (searchParams.get('category') ?? '').trim();
-  const [category, setCategory] = useState<string>(requestedCategory || DEFAULT_CATEGORIES[0] ?? '');
+  const initialCategory = requestedCategory || DEFAULT_CATEGORIES[0] || '';
+  const [category, setCategory] = useState<string>(initialCategory);
   const [includeInactive, setIncludeInactive] = useState(false);
   const [newOption, setNewOption] = useState({ value: '', label: '', sortOrder: '', active: true });
   const [error, setError] = useState<string | null>(null);
