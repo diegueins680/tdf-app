@@ -31,9 +31,9 @@ import           Data.Time                  (UTCTime)
 import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT)
 import           System.Directory           (copyFile, createDirectoryIfMissing, doesDirectoryExist,
-                                             listDirectory)
+                                             findExecutable, listDirectory, withCurrentDirectory)
 import           System.Exit                (ExitCode(..))
-import           System.FilePath            ((</>))
+import           System.FilePath            ((</>), takeFileName)
 import           System.Process             (readProcessWithExitCode)
 import           System.IO.Temp             (withSystemTempDirectory)
 import qualified Data.Set                   as Set
@@ -240,18 +240,49 @@ generateInputListPdfWithAssets mAssetsDir latex =
         assetsDir = tmpDir </> "assets"
     TIO.writeFile texFile latex
     forM_ mAssetsDir (`copyAssetsDir` assetsDir)
-    (exitCode, _out, err) <- readProcessWithExitCode "tectonic"
-      ["-Z", "shell-escape", "-o", tmpDir, texFile] ""
+    tectonicResult <- runTectonic tmpDir texFile
+    case tectonicResult of
+      Right () -> Right <$> BL.readFile pdfFile
+      Left tectonicErr -> do
+        mXe <- findExecutable "xelatex"
+        case mXe of
+          Nothing -> pure (Left tectonicErr)
+          Just _ -> do
+            xeResult <- runXeLaTeX tmpDir texFile
+            case xeResult of
+              Right () -> Right <$> BL.readFile pdfFile
+              Left xeErr -> pure (Left (tectonicErr <> "\n" <> xeErr))
+
+runTectonic :: FilePath -> FilePath -> IO (Either Text ())
+runTectonic tmpDir texFile = do
+  (exitCode, out, err) <- readProcessWithExitCode "tectonic"
+    ["-Z", "shell-escape", "-o", tmpDir, texFile] ""
+  case exitCode of
+    ExitSuccess -> pure (Right ())
+    ExitFailure code -> pure (Left (formatProcessError "tectonic" code out err))
+
+runXeLaTeX :: FilePath -> FilePath -> IO (Either Text ())
+runXeLaTeX tmpDir texFile =
+  withCurrentDirectory tmpDir $ do
+    let inputName = takeFileName texFile
+    (exitCode, out, err) <- readProcessWithExitCode "xelatex"
+      ["-interaction=nonstopmode", "-halt-on-error", inputName] ""
     case exitCode of
-      ExitSuccess -> Right <$> BL.readFile pdfFile
-      ExitFailure code -> do
-        let errMsg = T.concat
-              [ "tectonic exited with "
-              , T.pack (show code)
-              , ": "
-              , T.strip (T.pack err)
-              ]
-        pure (Left errMsg)
+      ExitSuccess -> pure (Right ())
+      ExitFailure code -> pure (Left (formatProcessError "xelatex" code out err))
+
+formatProcessError :: Text -> Int -> String -> String -> Text
+formatProcessError name code out err =
+  let errText = T.strip (T.pack err)
+      outText = T.strip (T.pack out)
+      detail = if T.null errText then outText else errText
+  in T.concat
+       [ name
+       , " exited with "
+       , T.pack (show code)
+       , ": "
+       , detail
+       ]
 
 copyAssetsDir :: FilePath -> FilePath -> IO ()
 copyAssetsDir src dest = do
