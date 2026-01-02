@@ -71,6 +71,7 @@ import ChatKitPage from './pages/ChatKitPage';
 import LabelAssetsPage from './pages/LabelAssetsPage';
 import LabelTracksPage from './pages/LabelTracksPage';
 import AdminDiagnosticsPage from './pages/AdminDiagnosticsPage';
+import AdminTokenPage from './pages/AdminTokenPage';
 import PublicBookingPage from './pages/PublicBookingPage';
 import CourseBuilderPage from './pages/CourseBuilderPage';
 import UxOptionsPage from './pages/UxOptionsPage';
@@ -241,6 +242,7 @@ export default function App() {
           <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
           <Route path="/herramientas/chatkit" element={<ChatKitPage />} />
           <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
+          <Route path="/herramientas/token-admin" element={<AdminTokenPage />} />
           <Route path="/crm" element={<Outlet />}>
             <Route path="contactos" element={<PartiesPage />} />
             <Route path="empresas" element={<CompaniesPage />} />

@@ -83,6 +83,7 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   herramientas: 'Herramientas',
   'tidal-agent': 'Tidal Agent',
   'creador-musical': 'Creador musical',
+  'token-admin': 'Token API',
 };
 
 interface CartPreviewItem {
@@ -541,6 +542,11 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
         <MenuItem component={RouterLink} to="/herramientas/creador-musical" onClick={() => setResourcesAnchor(null)}>
           Creador musical
         </MenuItem>
+        {hasAdmin && (
+          <MenuItem component={RouterLink} to="/herramientas/token-admin" onClick={() => setResourcesAnchor(null)}>
+            Token API
+          </MenuItem>
+        )}
         <MenuItem component={RouterLink} to="/seguridad" onClick={() => setResourcesAnchor(null)}>
           Seguridad
         </MenuItem>

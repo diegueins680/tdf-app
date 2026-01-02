@@ -125,6 +125,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'ChatKit', path: '/herramientas/chatkit' },
       { label: 'Tidal Agent', path: '/herramientas/tidal-agent' },
       { label: 'Creador musical', path: '/herramientas/creador-musical' },
+      { label: 'Token API', path: '/herramientas/token-admin' },
     ],
   },
 ];
@@ -210,6 +211,7 @@ export const pathRequiresModule = (path: string): string | null => {
   if (path.startsWith('/finanzas')) return 'invoicing';
   if (path.startsWith('/configuracion')) return 'admin';
   if (path.startsWith('/admin')) return 'admin';
+  if (path.startsWith('/herramientas/token-admin')) return 'admin';
   if (path.startsWith('/operacion')) return 'ops';
   if (path.startsWith('/label')) return 'label';
   if (path.startsWith('/escuela')) return 'school';
