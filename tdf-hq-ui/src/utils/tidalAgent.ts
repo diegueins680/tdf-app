@@ -25,13 +25,9 @@ export interface TidalAgentConfig {
   model?: string;
 }
 
-export const buildDefaultConfig = (): { config: TidalAgentConfig | null; error?: string } => {
-  const apiBase = env.read('VITE_API_BASE');
+export const buildDefaultConfig = (): TidalAgentConfig => {
   const model = env.read('VITE_TIDAL_AGENT_MODEL');
-  if (!apiBase) {
-    return { config: null, error: 'Falta configurar VITE_API_BASE para conectar con el backend.' };
-  }
-  return { config: { model } };
+  return { model: model && model.trim() ? model.trim() : undefined };
 };
 
 export const tidalAgentRequest = async (prompt: string, cfg: TidalAgentConfig): Promise<string> => {

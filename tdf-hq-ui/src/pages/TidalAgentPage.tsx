@@ -27,7 +27,7 @@ interface HistoryItem {
 }
 
 export default function TidalAgentPage() {
-  const { config, error: configError } = useMemo(buildDefaultConfig, []);
+  const config = useMemo(buildDefaultConfig, []);
   const [prompt, setPrompt] = useState('');
   const [raw, setRaw] = useState<string | null>(null);
   const [code, setCode] = useState<string | null>(null);
@@ -55,7 +55,6 @@ export default function TidalAgentPage() {
   }, [history]);
 
   const handleSubmit = async () => {
-    if (!config) return;
     if (!prompt.trim()) {
       setError('Escribe un prompt.');
       return;
@@ -108,49 +107,9 @@ export default function TidalAgentPage() {
           </Typography>
         </Stack>
 
-        {configError && (
-          <Alert severity="warning">
-            {configError}{' '}
-            <Button
-              href="/configuracion/preferencias"
-              size="small"
-              color="inherit"
-              sx={{ ml: 1 }}
-            >
-              Ir a integraciones
-            </Button>
-          </Alert>
-        )}
-
-        {!config && (
-          <Card variant="outlined">
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Falta configurar la API
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Configura `VITE_API_BASE` para apuntar al backend y define `OPENAI_API_KEY` en el servidor.
-                  Luego despliega y refresca esta página.
-                </Typography>
-                <Stack direction="row" spacing={1}>
-                  <Button href="/configuracion/preferencias" variant="contained">
-                    Abrir configuraciones
-                  </Button>
-                  <Button href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" variant="text">
-                    Crear API key
-                  </Button>
-                </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
-        )}
-
-        {config && (
-          <>
-            <Card variant="outlined">
-              <CardContent>
-                <Stack spacing={2}>
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={2}>
               <TextField
                 label="Describe el patrón"
                 placeholder="ej. groove techno con bombo a negras y hats sincopados"
@@ -159,7 +118,7 @@ export default function TidalAgentPage() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 fullWidth
-                disabled={loading || !config}
+                disabled={loading}
               />
               <Stack direction="row" spacing={1}>
                 <Button
@@ -168,7 +127,7 @@ export default function TidalAgentPage() {
                   onClick={() => {
                     void handleSubmit();
                   }}
-                  disabled={loading || !config}
+                  disabled={loading}
                 >
                   {loading ? 'Generando…' : 'Generar código'}
                 </Button>
@@ -397,11 +356,9 @@ export default function TidalAgentPage() {
           </CardContent>
         </Card>
 
-            <Alert severity="info" variant="outlined">
-              Env vars: `VITE_API_BASE` en el frontend, `OPENAI_API_KEY` en el backend. Opcional `VITE_TIDAL_AGENT_MODEL`.
-            </Alert>
-          </>
-        )}
+        <Alert severity="info" variant="outlined">
+          Env vars: `VITE_API_BASE` en el frontend, `OPENAI_API_KEY` en el backend. Opcional `VITE_TIDAL_AGENT_MODEL`.
+        </Alert>
       </Stack>
     </Box>
   );
