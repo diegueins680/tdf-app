@@ -1039,6 +1039,7 @@ components:
       enum:
         - Admin
         - Manager
+        - Intern
         - Engineer
         - Teacher
         - Reception

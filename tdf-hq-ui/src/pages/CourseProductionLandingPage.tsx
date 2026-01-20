@@ -101,6 +101,7 @@ const buildFallbackCohortLabel = (slug: string) => {
   const match = /-([a-z]{3})-(\d{4})$/.exec(slug);
   if (!match) return slug.replace(/-/g, ' ');
   const [, month, year] = match;
+  if (!month || !year) return slug.replace(/-/g, ' ');
   const monthLabel = MONTH_LABELS[month] ?? month;
   return `Inicio ${monthLabel} ${year}`;
 };

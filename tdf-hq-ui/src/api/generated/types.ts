@@ -760,7 +760,7 @@ export interface components {
          * @description Assigned platform role.
          * @enum {string}
          */
-        Role: "Admin" | "Manager" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
+        Role: "Admin" | "Manager" | "Intern" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
         UserRoleSummary: {
             /** Format: int64 */
             id?: number;
