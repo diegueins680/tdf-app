@@ -52,6 +52,9 @@ data AppConfig = AppConfig
   , ragEmbedBatchSize :: Int
   , emailConfig     :: Maybe EmailConfig
   , googleClientId  :: Maybe Text
+  , facebookAppId   :: Maybe Text
+  , facebookAppSecret :: Maybe Text
+  , facebookGraphBase :: Text
   , instagramAppToken :: Maybe Text
   , instagramGraphBase :: Text
   , instagramMessagingToken :: Maybe Text
@@ -95,6 +98,9 @@ loadConfig = do
   assetsBaseEnv <- lookupEnv "HQ_ASSETS_BASE_URL"
   assetsDirEnv <- lookupEnv "HQ_ASSETS_DIR"
   googleClientIdEnv <- lookupEnv "GOOGLE_CLIENT_ID"
+  fbAppIdEnv <- lookupEnv "FACEBOOK_APP_ID" <|> lookupEnv "META_APP_ID"
+  fbAppSecretEnv <- lookupEnv "FACEBOOK_APP_SECRET" <|> lookupEnv "META_APP_SECRET"
+  fbGraphBaseEnv <- lookupEnv "FACEBOOK_GRAPH_BASE"
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
   courseInstructorAvatarEnv <- lookupEnv "COURSE_DEFAULT_INSTRUCTOR_AVATAR"
@@ -155,6 +161,9 @@ loadConfig = do
     , ragEmbedBatchSize = parseInt 64 ragEmbedBatchSizeEnv
     , emailConfig = mkEmailConfig smtpHostEnv smtpUserEnv smtpPassEnv smtpFromEnv smtpFromNameEnv smtpPortEnv smtpTlsEnv
     , googleClientId = fmap (T.strip . T.pack) googleClientIdEnv
+    , facebookAppId = fbAppIdEnv >>= nonEmpty . T.pack
+    , facebookAppSecret = fbAppSecretEnv >>= nonEmpty . T.pack
+    , facebookGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
     , instagramAppToken = fmap (T.strip . T.pack) igTokenEnv
     , instagramGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
     , instagramMessagingToken =

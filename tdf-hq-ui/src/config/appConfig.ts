@@ -64,6 +64,7 @@ const envTrimmedOrUndefined = (raw?: string): string | undefined => {
 
 const defaultCourseSlug =
   envTrimmedOrUndefined(envString('VITE_COURSE_SLUG')) ?? 'produccion-musical-dic-2025';
+const defaultCourseCohorts = parseList(envString('VITE_COURSE_COHORTS'));
 const defaultMapUrl =
   envTrimmedOrUndefined(envString('VITE_COURSE_MAP_URL')) ??
   'https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6';
@@ -80,6 +81,7 @@ export const COURSE_DEFAULTS = {
   whatsappUrl: defaultWhatsappUrl,
   instructorAvatarUrl: defaultInstructorAvatar,
 };
+export const COURSE_COHORTS = defaultCourseCohorts.length ? defaultCourseCohorts : [defaultCourseSlug];
 
 export const TRIALS_WHATSAPP_URL =
   envTrimmedOrUndefined(envString('VITE_TRIALS_WHATSAPP_URL')) ??

@@ -897,6 +897,29 @@ paths:
                 $ref: '#/components/schemas/DriveTokenResponse'
         '502':
           description: Google OAuth error
+  /radio/streams/now-playing:
+    post:
+      tags: [Radio]
+      summary: Get now playing metadata
+      description: Returns ICY StreamTitle metadata when the stream provides it.
+      operationId: getRadioNowPlaying
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RadioNowPlayingRequest'
+      responses:
+        '200':
+          description: Now playing metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RadioNowPlayingResult'
+        '400':
+          description: Invalid stream url
 security:
   - bearerAuth: [ ]
 
@@ -1683,3 +1706,26 @@ components:
         tokenType:
           type: string
           nullable: true
+    RadioNowPlayingRequest:
+      type: object
+      required: [rnpStreamUrl]
+      properties:
+        rnpStreamUrl:
+          type: string
+          description: Stream URL to inspect (http/https).
+          example: https://icecast.radiofrance.fr/fip-midfi.mp3
+    RadioNowPlayingResult:
+      type: object
+      properties:
+        rnpTitle:
+          type: string
+          nullable: true
+          description: Current StreamTitle metadata when available.
+        rnpArtist:
+          type: string
+          nullable: true
+          description: Parsed artist name when StreamTitle includes a separator.
+        rnpTrack:
+          type: string
+          nullable: true
+          description: Parsed track title when StreamTitle includes a separator.

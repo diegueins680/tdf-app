@@ -40,6 +40,7 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import Slider from '@mui/material/Slider';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
+import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import BoltIcon from '@mui/icons-material/Bolt';
 import ShareIcon from '@mui/icons-material/Share';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
@@ -335,6 +336,7 @@ export default function RadioWidget() {
   });
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [nowPlayingTitle, setNowPlayingTitle] = useState<string | null>(null);
   const [volume, setVolume] = useState<number>(() => {
     if (typeof window === 'undefined') return 0.8;
     const raw = window.localStorage.getItem('radio-volume');
@@ -660,7 +662,28 @@ export default function RadioWidget() {
     setMuted(false);
     setIsPlaying(true);
   }, [activeStation.id, sortedVisibleStations]);
+  const jumpToPreviousStation = useCallback(() => {
+    if (sortedVisibleStations.length === 0) return;
+    const idx = sortedVisibleStations.findIndex((s) => s.id === activeStation.id);
+    const safeIdx = idx === -1 ? 0 : idx;
+    const previous =
+      sortedVisibleStations[(safeIdx - 1 + sortedVisibleStations.length) % sortedVisibleStations.length];
+    if (!previous) return;
+    setActiveId(previous.id);
+    setPlaybackWarning(null);
+    setMuted(false);
+    setIsPlaying(true);
+  }, [activeStation.id, sortedVisibleStations]);
   const isFavoriteActive = useMemo(() => favoriteSet.has(keyFor(activeStation)), [favoriteSet, activeStation, keyFor]);
+  const canSkipStations = sortedVisibleStations.length > 1;
+  const nowPlayingStatus = isPlaying ? 'Reproduciendo' : 'En pausa';
+  const normalizedNowPlayingTitle = nowPlayingTitle?.trim() ?? '';
+  const hasNowPlayingTitle =
+    normalizedNowPlayingTitle.length > 0 &&
+    normalizedNowPlayingTitle.toLowerCase() !== activeStation.name.toLowerCase();
+  const stationDescriptor = [activeStation.name, activeStation.mood].filter(Boolean).join(' · ');
+  const nowPlayingLabel = hasNowPlayingTitle ? normalizedNowPlayingTitle : activeStation.name;
+  const nowPlayingSubtitle = hasNowPlayingTitle ? stationDescriptor : activeStation.genre ?? activeStation.mood;
 
   const clampPosition = useCallback(
     (x: number, y: number) => {
@@ -908,6 +931,36 @@ export default function RadioWidget() {
       clearTimeout(timer);
     };
   }, [activeStation.id, activeStation.name, activeStation.streamUrl, isPlaying]);
+
+  const fetchNowPlaying = useCallback(async () => {
+    if (!activeStation.streamUrl) {
+      setNowPlayingTitle(null);
+      return;
+    }
+    try {
+      const resp = await RadioAPI.nowPlaying({ rnpStreamUrl: activeStation.streamUrl });
+      const rawTitle = resp?.rnpTitle?.trim() ?? '';
+      const artist = resp?.rnpArtist?.trim() ?? '';
+      const track = resp?.rnpTrack?.trim() ?? '';
+      const combined = artist && track ? `${artist} - ${track}` : track || rawTitle;
+      setNowPlayingTitle(combined.length > 0 ? combined : null);
+    } catch {
+      setNowPlayingTitle(null);
+    }
+  }, [activeStation.streamUrl]);
+
+  useEffect(() => {
+    if (!isPlaying || !activeStation.streamUrl) {
+      setNowPlayingTitle(null);
+      return;
+    }
+    setNowPlayingTitle(null);
+    void fetchNowPlaying();
+    const interval = window.setInterval(() => {
+      void fetchNowPlaying();
+    }, 30000);
+    return () => window.clearInterval(interval);
+  }, [activeStation.streamUrl, fetchNowPlaying, isPlaying]);
 
   useEffect(() => {
     const handleLoadStream = (event: Event) => {
@@ -1581,10 +1634,31 @@ export default function RadioWidget() {
             {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
+        <Tooltip title="Saltar al anterior">
+          <span>
+            <IconButton
+              size="small"
+              onClick={jumpToPreviousStation}
+              data-no-drag
+              aria-label="Saltar a la estación anterior"
+              disabled={!canSkipStations}
+            >
+              <SkipPreviousIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
         <Tooltip title="Saltar al siguiente">
-          <IconButton size="small" onClick={jumpToNextStation} data-no-drag aria-label="Saltar a la siguiente estación">
-            <SkipNextIcon fontSize="small" />
-          </IconButton>
+          <span>
+            <IconButton
+              size="small"
+              onClick={jumpToNextStation}
+              data-no-drag
+              aria-label="Saltar a la siguiente estación"
+              disabled={!canSkipStations}
+            >
+              <SkipNextIcon fontSize="small" />
+            </IconButton>
+          </span>
         </Tooltip>
         <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
           <IconButton
@@ -1624,10 +1698,10 @@ export default function RadioWidget() {
         </Tooltip>
         <Box sx={{ minWidth: 0, maxWidth: shouldInlineMiniBar ? '100%' : 220 }}>
           <Typography variant="caption" fontWeight={700} noWrap>
-            {activeStation.name}
+            {nowPlayingStatus}: {nowPlayingLabel}
           </Typography>
           <Typography variant="caption" color="text.secondary" noWrap>
-            {activeStation.genre ?? activeStation.mood}
+            {nowPlayingSubtitle}
           </Typography>
         </Box>
       </Box>
@@ -1721,6 +1795,10 @@ export default function RadioWidget() {
               e.preventDefault();
               jumpToNextStation();
             }
+            if (e.key.toLowerCase() === 'p') {
+              e.preventDefault();
+              jumpToPreviousStation();
+            }
           }}
         >
       <Card
@@ -1797,7 +1875,10 @@ export default function RadioWidget() {
                 Radio Inteligente
               </Typography>
               <Typography variant="caption" color="text.secondary" noWrap>
-                {activeStation.name} · {activeStation.mood}
+                {nowPlayingStatus}: {nowPlayingLabel}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {nowPlayingSubtitle}
               </Typography>
               {recentStations.length > 1 && (
                 <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
@@ -1820,10 +1901,24 @@ export default function RadioWidget() {
                 </Stack>
               )}
             </Box>
+            <Tooltip title="Estación anterior">
+              <span>
+                <IconButton onClick={jumpToPreviousStation} data-no-drag sx={controlFadeSx} disabled={!canSkipStations}>
+                  <SkipPreviousIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
             <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
               <IconButton onClick={togglePlay} color="primary" data-no-drag>
                 {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
               </IconButton>
+            </Tooltip>
+            <Tooltip title="Estación siguiente">
+              <span>
+                <IconButton onClick={jumpToNextStation} data-no-drag sx={controlFadeSx} disabled={!canSkipStations}>
+                  <SkipNextIcon />
+                </IconButton>
+              </span>
             </Tooltip>
             <Tooltip title="Detener todo (audio y presencia)">
               <IconButton onClick={stopAllAudio} color="error" data-no-drag sx={controlFadeSx}>
@@ -1930,7 +2025,7 @@ export default function RadioWidget() {
               </Typography>
             </Stack>
             <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
-              Reproduciendo: {activeStation.name}
+              {nowPlayingStatus}: {nowPlayingLabel}
             </Typography>
             <Stack direction="row" spacing={1} mt={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
               <Button

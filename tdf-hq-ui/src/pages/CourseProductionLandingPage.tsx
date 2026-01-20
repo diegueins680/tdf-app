@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState, type ReactElement, type RefObject, type SyntheticEvent } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState, type ReactElement, type RefObject, type SyntheticEvent } from 'react';
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import {
   Alert,
   Avatar,
@@ -14,6 +14,7 @@ import {
   Divider,
   Grid,
   Link,
+  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -31,10 +32,84 @@ import { Courses } from '../api/courses';
 import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
-import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
+import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
+import { useLocation } from 'react-router-dom';
 
-const COURSE_SLUG = COURSE_DEFAULTS.slug;
 const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url) || /^data:image\//i.test(url);
+const normalizeCourseSlugs = (slugs: string[]) =>
+  Array.from(new Set(slugs.map((slug) => slug.trim()).filter(Boolean)));
+
+const formatCourseDate = (value?: string | null) => {
+  if (!value) return '—';
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (match) {
+    const [, y, m, d] = match;
+    const dt = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 12));
+    return dt.toLocaleDateString('es-EC', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const getSessionDates = (sessions?: CourseMetadata['sessions']) => {
+  if (!sessions?.length) return [];
+  return sessions
+    .map((s) => s.date)
+    .filter((date): date is string => Boolean(date))
+    .sort((a, b) => a.localeCompare(b));
+};
+
+const buildStartDateLabel = (sessions?: CourseMetadata['sessions']) => {
+  const dates = getSessionDates(sessions);
+  if (!dates.length) return null;
+  const label = formatCourseDate(dates[0]);
+  return label === '—' ? null : label;
+};
+
+const buildDateRangeLabel = (sessions?: CourseMetadata['sessions']) => {
+  const dates = getSessionDates(sessions);
+  if (!dates.length) return 'Fechas por confirmar';
+  const startLabel = formatCourseDate(dates[0]);
+  if (startLabel === '—') return 'Fechas por confirmar';
+  const endLabel = formatCourseDate(dates[dates.length - 1]);
+  if (endLabel === '—' || endLabel === startLabel) return `Inicio ${startLabel}`;
+  return `${startLabel} / ${endLabel}`;
+};
+
+const MONTH_LABELS: Record<string, string> = {
+  ene: 'Ene',
+  feb: 'Feb',
+  mar: 'Mar',
+  abr: 'Abr',
+  may: 'May',
+  jun: 'Jun',
+  jul: 'Jul',
+  ago: 'Ago',
+  sep: 'Sep',
+  oct: 'Oct',
+  nov: 'Nov',
+  dic: 'Dic',
+};
+
+const buildFallbackCohortLabel = (slug: string) => {
+  const match = /-([a-z]{3})-(\d{4})$/.exec(slug);
+  if (!match) return slug.replace(/-/g, ' ');
+  const [, month, year] = match;
+  const monthLabel = MONTH_LABELS[month] ?? month;
+  return `Inicio ${monthLabel} ${year}`;
+};
+
+const buildCohortLabel = (meta: CourseMetadata | undefined, slug: string) => {
+  const startLabel = buildStartDateLabel(meta?.sessions);
+  if (startLabel) return `Inicio ${startLabel}`;
+  return buildFallbackCohortLabel(slug);
+};
 const INSTRUCTOR_IMAGE_URL = (() => {
   const envUrl = COURSE_DEFAULTS.instructorAvatarUrl;
   if (envUrl && isAbsoluteUrl(envUrl)) return envUrl;
@@ -67,14 +142,39 @@ interface CourseCmsPayload {
 
 export default function CourseProductionLandingPage() {
   const formRef = useRef<HTMLDivElement | null>(null);
+  const location = useLocation();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [howHeard, setHowHeard] = useState('');
+  const availableSlugs = useMemo(() => {
+    const cleaned = normalizeCourseSlugs(COURSE_COHORTS);
+    return cleaned.length ? cleaned : [COURSE_DEFAULTS.slug];
+  }, []);
+  const pathSlug = useMemo(() => {
+    const normalizedPath = location.pathname.replace(/\/+$/, '');
+    const match = /\/curso\/([^/]+)$/.exec(normalizedPath);
+    return match?.[1];
+  }, [location.pathname]);
+  const [selectedSlug, setSelectedSlug] = useState(() => {
+    if (pathSlug && availableSlugs.includes(pathSlug)) return pathSlug;
+    return availableSlugs[0] ?? COURSE_DEFAULTS.slug;
+  });
 
   const metaQuery = useQuery({
-    queryKey: ['course-meta', COURSE_SLUG],
-    queryFn: () => Courses.getMetadata(COURSE_SLUG),
+    queryKey: ['course-meta', selectedSlug],
+    queryFn: () => Courses.getMetadata(selectedSlug),
+    enabled: Boolean(selectedSlug),
+  });
+  const cohortQueries = useQueries({
+    queries:
+      availableSlugs.length > 1
+        ? availableSlugs.map((slug) => ({
+            queryKey: ['course-meta', slug],
+            queryFn: () => Courses.getMetadata(slug),
+            enabled: Boolean(slug),
+          }))
+        : [],
   });
   const cmsQuery = useCmsContent('course-production', 'es');
   const cmsPayload = useMemo<CourseCmsPayload | null>(() => {
@@ -105,8 +205,11 @@ export default function CourseProductionLandingPage() {
   }, []);
 
   const registrationMutation = useMutation({
-    mutationFn: (payload: CourseRegistrationRequest) => Courses.register(COURSE_SLUG, payload),
+    mutationFn: (payload: CourseRegistrationRequest) => Courses.register(selectedSlug, payload),
   });
+  useEffect(() => {
+    registrationMutation.reset();
+  }, [registrationMutation, selectedSlug]);
 
   const handleSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
@@ -132,14 +235,16 @@ export default function CourseProductionLandingPage() {
   const isFull = remaining !== undefined && remaining <= 0;
   const whatsappHref = meta?.whatsappCtaUrl ?? COURSE_DEFAULTS.whatsappUrl;
   const seatsLabel = isFull ? 'Cupos agotados' : 'Cupos limitados';
-  const patchedSessions = useMemo(() => {
-    const targetDates = ['2026-01-17', '2026-01-24', '2026-01-31', '2026-02-07'];
-    if (!meta?.sessions?.length) return undefined;
-    return meta.sessions.map((s, idx) => ({
-      ...s,
-      date: targetDates[idx] ?? s.date,
-    }));
-  }, [meta?.sessions]);
+  const cohortOptions = availableSlugs.map((slug, idx) => {
+    const cohortMeta = availableSlugs.length > 1 ? cohortQueries[idx]?.data : undefined;
+    return {
+      slug,
+      label: buildCohortLabel(cohortMeta, slug),
+    };
+  });
+  const startDateLabel = buildStartDateLabel(meta?.sessions);
+  const dateRangeLabel = buildDateRangeLabel(meta?.sessions);
+  const brandTagline = startDateLabel ? `Producción Musical · ${startDateLabel}` : 'Producción Musical';
 
   const submitted = registrationMutation.isSuccess;
   const submitting = registrationMutation.isPending;
@@ -162,7 +267,7 @@ export default function CourseProductionLandingPage() {
             </Alert>
           )}
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <PublicBrandBar tagline="Producción Musical · 17 de enero 2026" />
+            <PublicBrandBar tagline={brandTagline} />
           </Box>
           <Hero
             meta={meta}
@@ -172,10 +277,11 @@ export default function CourseProductionLandingPage() {
             heroOverride={cmsPayload?.hero}
             seatsLabel={seatsLabel}
             isFull={isFull}
+            dateRangeLabel={dateRangeLabel}
           />
           <Grid container spacing={3}>
             <Grid item xs={12} md={7}>
-              <Info meta={meta} loading={metaQuery.isLoading} sessionsOverride={patchedSessions} />
+              <Info meta={meta} loading={metaQuery.isLoading} />
             </Grid>
             <Grid item xs={12} md={5}>
               <FormCard
@@ -194,6 +300,9 @@ export default function CourseProductionLandingPage() {
                 submitError={submitError}
                 isFull={isFull}
                 whatsappHref={whatsappHref}
+                cohortOptions={cohortOptions}
+                selectedSlug={selectedSlug}
+                onSlugChange={setSelectedSlug}
               />
               <InstructorCard meta={meta} />
               {meta?.locationLabel && meta?.locationMapUrl && (
@@ -286,6 +395,7 @@ function Hero({
   heroOverride,
   seatsLabel,
   isFull,
+  dateRangeLabel,
 }: {
   meta?: CourseMetadata;
   loading: boolean;
@@ -294,11 +404,13 @@ function Hero({
   heroOverride?: HeroOverrides;
   seatsLabel?: string;
   isFull: boolean;
+  dateRangeLabel?: string;
 }) {
   const title = loading ? 'Cargando curso…' : heroOverride?.title ?? meta?.title ?? 'Curso de Producción Musical';
   const subtitle = loading ? 'Preparando detalles...' : heroOverride?.subtitle ?? meta?.subtitle ?? 'Presencial · 4 sábados · 16 horas';
   const primaryCta = heroOverride?.cta ?? 'Inscribirme';
   const whatsappCta = heroOverride?.whatsappCta ?? 'Inscribirme por WhatsApp';
+  const badgeDate = heroOverride?.badge3 ?? dateRangeLabel ?? 'Fechas por confirmar';
   return (
     <Box
       sx={{
@@ -313,7 +425,7 @@ function Hero({
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
           <Chip icon={<VerifiedIcon />} label={heroOverride?.badge1 ?? 'Plazas limitadas'} color="default" sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
           <Chip icon={<HeadsetIcon />} label={heroOverride?.badge2 ?? 'Mentorías incluidas'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
-          <Chip icon={<CalendarTodayIcon />} label={heroOverride?.badge3 ?? '17 Ene 2026 / 7 Feb 2026'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
+          <Chip icon={<CalendarTodayIcon />} label={badgeDate} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
         </Stack>
         <Typography variant="h3" fontWeight={700} sx={{ color: '#f8fafc' }}>
           {title}
@@ -374,26 +486,8 @@ function Hero({
   );
 }
 
-function Info({ meta, loading, sessionsOverride }: { meta?: CourseMetadata; loading: boolean; sessionsOverride?: CourseMetadata['sessions'] }) {
-  const formatDate = (value?: string | null) => {
-    if (!value) return '—';
-    // Parse YYYY-MM-DD without shifting timezones.
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-    if (match) {
-      const [, y, m, d] = match;
-      const dt = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 12));
-      return dt.toLocaleDateString('es-EC', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        timeZone: 'UTC',
-      });
-    }
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return value;
-    return parsed.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
-
+function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
+  const sessions = meta?.sessions ?? [];
   return (
     <Stack spacing={3}>
       <Card
@@ -415,9 +509,12 @@ function Info({ meta, loading, sessionsOverride }: { meta?: CourseMetadata; load
             Fechas
           </Typography>
           {loading && <Typography>Cargando fechas...</Typography>}
-          {!loading && (
+          {!loading && sessions.length === 0 && (
+            <Typography>Fechas por confirmar.</Typography>
+          )}
+          {!loading && sessions.length > 0 && (
             <Stack spacing={1.2}>
-              {(sessionsOverride ?? meta?.sessions ?? []).map((session) => (
+              {sessions.map((session) => (
                 <Stack
                   key={`${session.date}-${session.label}`}
                   direction="row"
@@ -432,7 +529,7 @@ function Info({ meta, loading, sessionsOverride }: { meta?: CourseMetadata; load
                     sx={badgeStyle}
                   />
                   <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.8)' }}>
-                    {formatDate(session.date)}
+                    {formatCourseDate(session.date)}
                   </Typography>
                 </Stack>
               ))}
@@ -491,6 +588,9 @@ function FormCard({
   submitError,
   isFull,
   whatsappHref,
+  cohortOptions,
+  selectedSlug,
+  onSlugChange,
 }: {
   formRef: RefObject<HTMLDivElement>;
   onSubmit: (evt: React.FormEvent<HTMLFormElement>) => void;
@@ -507,8 +607,12 @@ function FormCard({
   submitError: string | null;
   isFull: boolean;
   whatsappHref: string;
+  cohortOptions: Array<{ slug: string; label: string }>;
+  selectedSlug: string;
+  onSlugChange: (slug: string) => void;
 }) {
   const disableInputs = submitted || isFull || submitting;
+  const disableCohortSelect = submitted || submitting;
   const seatsText = isFull ? 'Cupos agotados. Escríbenos y te avisamos si se libera un cupo.' : 'Cupos limitados.';
   return (
     <Card
@@ -549,6 +653,48 @@ function FormCard({
           )}
           <Box component="form" onSubmit={onSubmit}>
             <Stack spacing={1.5}>
+              {cohortOptions.length > 1 && (
+                <TextField
+                  select
+                  label="Fecha de inicio"
+                  value={selectedSlug}
+                  onChange={(e) => onSlugChange(e.target.value)}
+                  disabled={disableCohortSelect}
+                  helperText="Elige la fecha en la que quieres iniciar."
+                  fullWidth
+                  InputProps={{
+                    sx: {
+                      color: '#f8fafc',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.28)' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.45)' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
+                      input: {
+                        color: '#f8fafc',
+                        '::placeholder': { color: 'rgba(226,232,240,0.6)' },
+                        caretColor: '#f8fafc',
+                      },
+                    },
+                  }}
+                  InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.75)' } }}
+                  SelectProps={{
+                    MenuProps: {
+                      PaperProps: {
+                        sx: {
+                          bgcolor: '#0b1224',
+                          color: '#e2e8f0',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                        },
+                      },
+                    },
+                  }}
+                >
+                  {cohortOptions.map((option) => (
+                    <MenuItem key={option.slug} value={option.slug}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
               <TextField
                 label="Nombre completo"
                 required

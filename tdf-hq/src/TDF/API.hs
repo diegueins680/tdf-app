@@ -24,6 +24,7 @@ import           TDF.API.Bands     (BandsAPI)
 import           TDF.API.Inventory (InventoryAPI)
 import           TDF.API.Payments (PaymentsAPI)
 import           TDF.API.Instagram (InstagramAPI, InstagramWebhookAPI)
+import           TDF.API.InstagramOAuth (InstagramOAuthAPI)
 import           TDF.API.Internships (InternshipsAPI)
 import           TDF.API.Pipelines (PipelinesAPI)
 import           TDF.API.Proposals (ProposalsAPI)
@@ -243,6 +244,7 @@ type ProtectedAPI =
   :<|> "marketplace" :> MarketplaceAdminAPI
   :<|> "payments" :> PaymentsAPI
   :<|> InstagramAPI
+  :<|> InstagramOAuthAPI
   :<|> WhatsAppMessagesAPI
   :<|> "social" :> SocialAPI
   :<|> ChatAPI

@@ -10,6 +10,10 @@ export const defaultRoomsForService = (service: string, roomOptions: string[]) =
     roomOptions.find((room) => room.toLowerCase().includes(needle.toLowerCase()));
   const picks = (...needles: string[]) => needles.map(pick).filter(Boolean) as string[];
 
+  if (hasAny('grabacion audiovisual live', 'audiovisual live')) {
+    const candidates = picks('live', 'control');
+    if (candidates.length) return candidates;
+  }
   if (hasAny('grabacion de banda', 'grabacion banda', 'band recording', 'banda')) {
     const candidates = picks('live', 'control');
     if (candidates.length) return candidates;
@@ -48,4 +52,3 @@ export const sameRooms = (a: string[], b: string[]) => {
   const [as, bs] = [sort(a), sort(b)];
   return as.every((val, idx) => val === bs[idx]);
 };
-

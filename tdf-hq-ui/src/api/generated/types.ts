@@ -172,6 +172,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/instagram/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Instagram inbox messages
+         * @description Returns stored Instagram messages for auto-reply tracking.
+         */
+        get: operations["listInstagramMessages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/whatsapp/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List WhatsApp inbox messages
+         * @description Returns stored WhatsApp messages for auto-reply tracking.
+         */
+        get: operations["listWhatsAppMessages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/courses/{slug}/registrations/{registrationId}/status": {
         parameters: {
             query?: never;
@@ -582,6 +622,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/drive/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchange Google Drive OAuth code
+         * @description Exchanges a Google OAuth code (PKCE) for Drive tokens.
+         */
+        post: operations["exchangeDriveToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/drive/token/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh Google Drive access token
+         * @description Refreshes a Google Drive access token using a refresh token.
+         */
+        post: operations["refreshDriveToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams/now-playing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get now playing metadata
+         * @description Returns ICY StreamTitle metadata when the stream provides it.
+         */
+        post: operations["getRadioNowPlaying"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -638,22 +738,6 @@ export interface components {
              * @example changeme123
              */
             password: string;
-            /**
-             * Format: date
-             * @description Internship start date (YYYY-MM-DD).
-             */
-            internshipStartAt?: string | null;
-            /**
-             * Format: date
-             * @description Internship end date (YYYY-MM-DD).
-             */
-            internshipEndAt?: string | null;
-            /** @description Required internship hours. */
-            internshipRequiredHours?: number | null;
-            /** @description Skills or strengths for the internship. */
-            internshipSkills?: string | null;
-            /** @description Practice areas of interest. */
-            internshipAreas?: string | null;
             /** @description Optional roles (non-admin) to assign during signup. */
             roles?: components["schemas"]["Role"][];
             /** @description Artist or band ids the fan wants to follow immediately after signup. */
@@ -676,7 +760,7 @@ export interface components {
          * @description Assigned platform role.
          * @enum {string}
          */
-        Role: "Admin" | "Manager" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Webmaster" | "Intern" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
+        Role: "Admin" | "Manager" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
         UserRoleSummary: {
             /** Format: int64 */
             id?: number;
@@ -735,6 +819,19 @@ export interface components {
             cmBody?: string;
             /** Format: date-time */
             cmCreatedAt?: string;
+        };
+        SocialInboxMessage: {
+            externalId?: string;
+            senderId?: string;
+            senderName?: string | null;
+            text?: string | null;
+            direction?: string;
+            /** Format: date-time */
+            repliedAt?: string | null;
+            replyText?: string | null;
+            replyError?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
         };
         ChatSendMessageRequest: {
             csmBody: string;
@@ -963,6 +1060,35 @@ export interface components {
         /** @description Meta WhatsApp Cloud API webhook payload (pass-through, not strictly validated). */
         WhatsAppWebhook: {
             [key: string]: unknown;
+        };
+        DriveTokenExchangeRequest: {
+            code: string;
+            codeVerifier: string;
+            redirectUri?: string | null;
+        };
+        DriveTokenRefreshRequest: {
+            refreshToken: string;
+        };
+        DriveTokenResponse: {
+            accessToken: string;
+            refreshToken?: string | null;
+            expiresIn: number;
+            tokenType?: string | null;
+        };
+        RadioNowPlayingRequest: {
+            /**
+             * @description Stream URL to inspect (http/https).
+             * @example https://icecast.radiofrance.fr/fip-midfi.mp3
+             */
+            rnpStreamUrl: string;
+        };
+        RadioNowPlayingResult: {
+            /** @description Current StreamTitle metadata when available. */
+            rnpTitle?: string | null;
+            /** @description Parsed artist name when StreamTitle includes a separator. */
+            rnpArtist?: string | null;
+            /** @description Parsed track title when StreamTitle includes a separator. */
+            rnpTrack?: string | null;
         };
     };
     responses: never;
@@ -1225,6 +1351,54 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listInstagramMessages: {
+        parameters: {
+            query?: {
+                limit?: number;
+                direction?: "incoming" | "outgoing" | "all";
+                repliedOnly?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Messages list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialInboxMessage"][];
+                };
+            };
+        };
+    };
+    listWhatsAppMessages: {
+        parameters: {
+            query?: {
+                limit?: number;
+                direction?: "incoming" | "outgoing" | "all";
+                repliedOnly?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Messages list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialInboxMessage"][];
+                };
             };
         };
     };
@@ -1929,6 +2103,99 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    exchangeDriveToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DriveTokenExchangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Drive token response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriveTokenResponse"];
+                };
+            };
+            /** @description Google OAuth error */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refreshDriveToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DriveTokenRefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Drive token response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriveTokenResponse"];
+                };
+            };
+            /** @description Google OAuth error */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getRadioNowPlaying: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioNowPlayingRequest"];
+            };
+        };
+        responses: {
+            /** @description Now playing metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioNowPlayingResult"];
+                };
+            };
+            /** @description Invalid stream url */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

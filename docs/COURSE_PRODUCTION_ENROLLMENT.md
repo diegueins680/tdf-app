@@ -2,8 +2,9 @@
 
 End-to-end flow for the in-person course **“Curso de Producción Musical – Ene 2026 / Feb 2026”**. Includes public landing, backend endpoints, WhatsApp webhook, and admin status update.
 
-## Slug
+## Slugs
 - `produccion-musical-dic-2025`
+- Cohorts list for the selector page via `VITE_COURSE_COHORTS` (comma-separated).
 
 ## Database
 - New table `course_registration` via Persistent + SQL mirror: `tdf-hq/sql/2025-11-21_course_registrations.sql`.
@@ -41,7 +42,9 @@ End-to-end flow for the in-person course **“Curso de Producción Musical – E
 - `HQ_APP_URL` — base URL for the landing link in replies (defaults to `https://tdf-app.pages.dev`).
 
 ## Frontend (tdf-hq-ui)
-- Public route: `/curso/produccion-musical-dic-2025`.
+- Public routes:
+  - Selector: `/curso/produccion-musical` (lets users pick a start date).
+  - Direct cohort: `/curso/produccion-musical-dic-2025`.
 - Uses generated API client (`npm run generate:api:ui`) to hit the public registration endpoint.
 - Form auto-includes `source=landing` and UTM params from the URL (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`).
 - Success state locks the form and shows “¡Gracias! Hemos recibido tu inscripción…”. Errors prompt to retry or use WhatsApp.
@@ -49,4 +52,4 @@ End-to-end flow for the in-person course **“Curso de Producción Musical – E
 
 ## Quick local run
 - Backend: `cd tdf-hq && stack build && stack run` (ensure env vars + migrations applied).
-- Frontend: `cd tdf-hq-ui && npm install && npm run dev` then open `http://localhost:5173/curso/produccion-musical-dic-2025`.
+- Frontend: `cd tdf-hq-ui && npm install && npm run dev` then open `http://localhost:5173/curso/produccion-musical`.

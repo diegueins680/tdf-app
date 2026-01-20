@@ -46,6 +46,16 @@ export interface RadioTransmissionInfo {
   rtiWhipUrl: string;
 }
 
+export interface RadioNowPlayingRequest {
+  rnpStreamUrl: string;
+}
+
+export interface RadioNowPlayingResult {
+  rnpTitle?: string | null;
+  rnpArtist?: string | null;
+  rnpTrack?: string | null;
+}
+
 export const RadioAPI = {
   search: (params?: { country?: string; genre?: string }) => {
     const searchParams = new URLSearchParams();
@@ -56,6 +66,7 @@ export const RadioAPI = {
   },
   upsertActive: (payload: RadioStreamUpsert) => post<RadioStreamDTO>('/radio/streams/active', payload),
   importSources: (payload: RadioImportRequest) => post<RadioImportResult>('/radio/streams/import', payload),
+  nowPlaying: (payload: RadioNowPlayingRequest) => post<RadioNowPlayingResult>('/radio/streams/now-playing', payload),
   getPresence: (partyId?: number) =>
     partyId ? get<RadioPresenceDTO | null>(`/radio/presence/${partyId}`) : get<RadioPresenceDTO | null>('/radio/presence'),
   setPresence: (payload: RadioPresenceUpsert) => post<RadioPresenceDTO>('/radio/presence', payload),

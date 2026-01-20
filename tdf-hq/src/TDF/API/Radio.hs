@@ -11,7 +11,7 @@ import           Servant
 
 import           TDF.API.Types (RadioStreamDTO, RadioStreamUpsert, RadioPresenceDTO, RadioPresenceUpsert, RadioImportRequest,
                                 RadioImportResult, RadioMetadataRefreshRequest, RadioMetadataRefreshResult,
-                                RadioTransmissionRequest, RadioTransmissionInfo)
+                                RadioNowPlayingRequest, RadioNowPlayingResult, RadioTransmissionRequest, RadioTransmissionInfo)
 
 type RadioAPI =
   "radio" :>
@@ -31,6 +31,10 @@ type RadioAPI =
          :> "refresh-metadata"
          :> ReqBody '[JSON] RadioMetadataRefreshRequest
          :> Post '[JSON] RadioMetadataRefreshResult
+   :<|> "streams"
+         :> "now-playing"
+         :> ReqBody '[JSON] RadioNowPlayingRequest
+         :> Post '[JSON] RadioNowPlayingResult
    :<|> "transmissions"
          :> ReqBody '[JSON] RadioTransmissionRequest
          :> Post '[JSON] RadioTransmissionInfo

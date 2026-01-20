@@ -297,6 +297,9 @@ export default function BookingsPage() {
 
   const defaultRoomsForService = useCallback((svc: string): RoomDTO[] => {
     const lowered = svc.toLowerCase();
+    if (lowered.includes('audiovisual') && lowered.includes('live')) {
+      return [...categorizeRooms.liveRoom.slice(0, 1), ...categorizeRooms.controlRoom.slice(0, 1)];
+    }
     if (lowered.includes('dj')) {
       const defaults = pickFirst(categorizeRooms.djBooth);
       return defaults.length ? defaults : pickFirst(categorizeRooms.other);

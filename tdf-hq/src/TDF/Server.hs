@@ -77,6 +77,7 @@ import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers (socialEventsServer)
 import           TDF.ServerExtra (bandsServer, instagramServer, instagramWebhookServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
+import           TDF.ServerInstagramOAuth (instagramOAuthServer)
 import           TDF.ServerInternships (internshipsServer)
 import           TDF.Server.SocialSync (socialSyncServer)
 import qualified Data.Map.Strict            as Map
@@ -970,6 +971,7 @@ protectedServer user =
   :<|> marketplaceAdminServer user
   :<|> paymentsServer user
   :<|> instagramServer
+  :<|> instagramOAuthServer user
   :<|> whatsappMessagesServer user
   :<|> socialServer user
   :<|> chatServer user
@@ -4047,6 +4049,8 @@ defaultResourcesForService (Just service) start end = do
             boothMatches = filter boothPredicate rooms
         in dedupeEntities (nameMatches ++ boothMatches)
   case () of
+    _ | normalized `elem` ["grabacion audiovisual live", "grabación audiovisual live"] ->
+      pure $ map entityKey $ catMaybes (map findByName ["Live Room", "Control Room"])
     _ | normalized `elem` ["band recording", "grabacion banda", "grabación banda"] ->
       pure $ map entityKey $ catMaybes (map findByName ["Live Room", "Control Room"])
     _ | normalized `elem` ["vocal recording", "grabacion vocal", "grabación vocal"] ->

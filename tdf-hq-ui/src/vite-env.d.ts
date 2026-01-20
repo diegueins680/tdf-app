@@ -5,6 +5,10 @@ interface ImportMetaEnv {
   readonly VITE_API_DEMO_TOKEN?: string;
   readonly VITE_LIVE_SESSIONS_PUBLIC_TOKEN?: string;
   readonly VITE_CHATKIT_WORKFLOW_ID?: string;
+  readonly VITE_META_APP_ID?: string;
+  readonly VITE_FACEBOOK_APP_ID?: string;
+  readonly VITE_INSTAGRAM_REDIRECT_URI?: string;
+  readonly VITE_INSTAGRAM_SCOPES?: string;
 }
 
 interface ImportMeta {

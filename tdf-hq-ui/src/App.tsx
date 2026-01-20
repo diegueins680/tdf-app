@@ -62,6 +62,8 @@ import SecurityPage from './pages/SecurityPage';
 import MarketplacePage from './pages/MarketplacePage';
 import ManualPage from './pages/ManualPage';
 import GoogleDriveCallbackPage from './pages/GoogleDriveCallbackPage';
+import InstagramCallbackPage from './pages/InstagramCallbackPage';
+import InstagramConnectPage from './pages/InstagramConnectPage';
 import MarketplaceOrdersPage from './pages/MarketplaceOrdersPage';
 import DatafastReturnPage from './pages/DatafastReturnPage';
 import MarketplaceOrderTrackingPage from './pages/MarketplaceOrderTrackingPage';
@@ -204,6 +206,8 @@ export default function App() {
         <Route path="/marketplace/orden/:orderId" element={<PublicBranding><MarketplaceOrderTrackingPage /></PublicBranding>} />
         <Route path="/marketplace/pago-datafast" element={<PublicBranding><DatafastReturnPage /></PublicBranding>} />
         <Route path="/oauth/google-drive/callback" element={<PublicBranding><GoogleDriveCallbackPage /></PublicBranding>} />
+        <Route path="/oauth/instagram/callback" element={<PublicBranding><InstagramCallbackPage /></PublicBranding>} />
+        <Route path="/curso/produccion-musical" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
         <Route path="/curso/produccion-musical-dic-2025" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
         <Route path="/inscripcion/:slug" element={<PublicBranding><InscripcionPage /></PublicBranding>} />
         <Route path="/trials" element={<PublicBranding><TrialsPage /></PublicBranding>} />
@@ -231,6 +235,7 @@ export default function App() {
           <Route path="/mi-profesor" element={<TeacherPortalPage />} />
           <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
           <Route path="/social" element={<SocialPageView />} />
+          <Route path="/social/instagram" element={<InstagramConnectPage />} />
           <Route path="/social/inbox" element={<SocialInboxPage />} />
           <Route path="/social/eventos" element={<SocialEventsPage />} />
           <Route path="/chat" element={<ChatPage />} />

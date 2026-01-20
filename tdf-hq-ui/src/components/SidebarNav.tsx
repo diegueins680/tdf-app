@@ -36,6 +36,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: 'CRM',
     items: [
       { label: 'Conexiones', path: '/social' },
+      { label: 'Instagram', path: '/social/instagram' },
       { label: 'Chat', path: '/chat' },
       { label: 'Inbox social', path: '/social/inbox' },
       { label: 'Eventos sociales', path: '/social/eventos' },

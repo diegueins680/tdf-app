@@ -18,6 +18,7 @@ import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
 import           Data.Maybe             (catMaybes, fromMaybe, isNothing)
 import qualified Data.ByteString        as BS
+import qualified Data.ByteString.Char8  as BS8
 import qualified Data.CaseInsensitive   as CI
 import           Data.Text              (Text)
 import qualified Data.Text              as T
@@ -30,8 +31,8 @@ import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Desc
                                          selectList, selectFirst, update)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant                (NoContent(..), ServerError, ServerT, err400, errBody, throwError, (:<|>)(..))
-import           Network.HTTP.Client    (Manager, httpLbs, newManager, parseRequest, responseBody, responseHeaders,
-                                         responseTimeoutMicro, requestHeaders, Request(..))
+import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, newManager, parseRequest, responseBody,
+                                         responseHeaders, responseTimeoutMicro, requestHeaders, withResponse, Request(..))
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Data.UUID              (toText)
 import           Data.UUID.V4           (nextRandom)
@@ -40,6 +41,7 @@ import           TDF.API.Radio          (RadioAPI)
 import           TDF.API.Types          (RadioStreamDTO(..), RadioStreamUpsert(..), RadioPresenceDTO(..),
                                          RadioPresenceUpsert(..), RadioImportRequest(..), RadioImportResult(..),
                                          RadioMetadataRefreshRequest(..), RadioMetadataRefreshResult(..),
+                                         RadioNowPlayingRequest(..), RadioNowPlayingResult(..),
                                          RadioTransmissionRequest(..), RadioTransmissionInfo(..))
 import           TDF.Auth               (AuthedUser(..))
 import           TDF.DB                 (Env(..))
@@ -68,6 +70,7 @@ radioServer user =
   :<|> upsertActive
   :<|> importStreams
   :<|> refreshMetadata
+  :<|> nowPlaying
   :<|> createTransmission
   :<|> getSelfPresence
   :<|> upsertPresence
@@ -173,6 +176,23 @@ radioServer user =
         , rmrUpdated   = updated
         , rmrFailed    = failed
         }
+
+    nowPlaying :: RadioNowPlayingRequest -> m RadioNowPlayingResult
+    nowPlaying RadioNowPlayingRequest{..} = do
+      let streamUrl = T.strip rnpStreamUrl
+          lowerUrl = T.toLower streamUrl
+      when (T.null streamUrl) $
+        throwError err400 { errBody = "streamUrl is required" }
+      when (not ("http://" `T.isPrefixOf` lowerUrl || "https://" `T.isPrefixOf` lowerUrl)) $
+        throwError err400 { errBody = "streamUrl must be http(s)" }
+      manager <- liftIO $ newManager tlsManagerSettings
+      result <- liftIO $ fetchNowPlaying manager streamUrl
+      case result of
+        Left _ -> pure (RadioNowPlayingResult Nothing Nothing Nothing)
+        Right title ->
+          let cleaned = normalizeMaybe title
+              (artist, track) = maybe (Nothing, Nothing) splitStreamTitle cleaned
+          in pure (RadioNowPlayingResult cleaned artist track)
 
     saveStream :: UTCTime -> RadioStreamUpsert -> SqlPersistT IO (Entity RadioStream, Bool)
     saveStream now RadioStreamUpsert{..} = do
@@ -340,6 +360,110 @@ radioServer user =
           in if isNothing metaName && isNothing metaGenre
                then Left "no metadata"
                else Right StreamMetadata { smName = metaName, smGenre = metaGenre }
+
+    fetchNowPlaying :: Manager -> Text -> IO (Either Text (Maybe Text))
+    fetchNowPlaying manager url = do
+      result <- try $ do
+        req0 <- parseRequest (T.unpack url)
+        let req = req0
+              { requestHeaders = ("Icy-MetaData","1") : ("User-Agent","tdf-radio-now-playing/1.0") : requestHeaders req0
+              , responseTimeout = responseTimeoutMicro 5000000
+              }
+        withResponse req manager $ \resp -> do
+          let metaIntLimit = 262144
+          case parseIcyMetaInt (responseHeaders resp) of
+            Nothing -> pure Nothing
+            Just metaInt
+              | metaInt <= 0 -> pure Nothing
+              | metaInt > metaIntLimit -> pure Nothing
+              | otherwise -> readIcyStreamTitle (responseBody resp) metaInt 2
+      pure $ case result of
+        Left (ex :: SomeException) -> Left (T.pack (displayException ex))
+        Right title -> Right title
+
+    parseIcyMetaInt :: [(CI.CI BS.ByteString, BS.ByteString)] -> Maybe Int
+    parseIcyMetaInt hdrs = do
+      raw <- lookupHeader "icy-metaint" hdrs
+      case BS8.readInt raw of
+        Just (value, _) | value > 0 -> Just value
+        _ -> Nothing
+
+    readIcyStreamTitle :: BodyReader -> Int -> Int -> IO (Maybe Text)
+    readIcyStreamTitle body metaInt attempts = go BS.empty attempts
+      where
+        go _ 0 = pure Nothing
+        go leftover remaining = do
+          (audioChunk, rest) <- readExact body metaInt leftover
+          if BS.length audioChunk < metaInt
+            then pure Nothing
+            else do
+              (lenChunk, restLen) <- readExact body 1 rest
+              case BS.uncons lenChunk of
+                Nothing -> pure Nothing
+                Just (lenByte, restMetaStart) -> do
+                  let metaLen = fromIntegral lenByte * 16
+                  if metaLen <= 0
+                    then go restMetaStart (remaining - 1)
+                    else do
+                      (metaChunk, restMeta) <- readExact body metaLen restMetaStart
+                      if BS.length metaChunk < metaLen
+                        then pure Nothing
+                        else case parseStreamTitle metaChunk of
+                               Just title -> pure (Just title)
+                               Nothing -> go restMeta (remaining - 1)
+
+    readExact :: BodyReader -> Int -> BS.ByteString -> IO (BS.ByteString, BS.ByteString)
+    readExact _ need leftover | need <= 0 = pure (BS.empty, leftover)
+    readExact _ need leftover | BS.length leftover >= need =
+      let (wanted, rest) = BS.splitAt need leftover
+      in pure (wanted, rest)
+    readExact body need leftover = do
+      chunk <- brRead body
+      if BS.null chunk
+        then pure (leftover, BS.empty)
+        else readExact body need (BS.append leftover chunk)
+
+    parseStreamTitle :: BS.ByteString -> Maybe Text
+    parseStreamTitle raw =
+      let decoded = TE.decodeUtf8With lenientDecode raw
+          cleaned = T.strip (T.takeWhile (/= '\0') decoded)
+      in extractFieldInsensitive "StreamTitle" cleaned
+
+    splitStreamTitle :: Text -> (Maybe Text, Maybe Text)
+    splitStreamTitle title =
+      let trimmed = T.strip title
+          separators = [" - ", " -- ", " / ", " | ", " : "]
+          splitOn sep =
+            let (left, right) = T.breakOn sep trimmed
+            in if T.null right
+              then Nothing
+              else
+                let after = T.drop (T.length sep) right
+                    artist = T.strip left
+                    track = T.strip after
+                in if T.null artist || T.null track
+                  then Nothing
+                  else Just (artist, track)
+      in case catMaybes (map splitOn separators) of
+           (artist, track):_ -> (Just artist, Just track)
+           [] -> (Nothing, Nothing)
+
+    extractFieldInsensitive :: Text -> Text -> Maybe Text
+    extractFieldInsensitive field txt =
+      let lowerTxt = T.toLower txt
+          singleMarker = T.toLower field <> "='"
+          doubleMarker = T.toLower field <> "=\""
+          extract marker quoteChar =
+            let (before, rest) = T.breakOn marker lowerTxt
+            in if T.null rest
+              then Nothing
+              else
+                let idx = T.length before + T.length marker
+                    after = T.drop idx txt
+                    value = T.takeWhile (/= quoteChar) after
+                    trimmed = T.strip value
+                in if T.null trimmed then Nothing else Just trimmed
+      in extract singleMarker '\'' <|> extract doubleMarker '"'
 
     toDTO :: Entity RadioStream -> RadioStreamDTO
     toDTO (Entity sid RadioStream{..}) =
