@@ -205,10 +205,10 @@ export default function PublicBookingPage() {
     queryFn: () => Rooms.listPublic(),
     staleTime: 5 * 60 * 1000,
   });
-  const services = useMemo<ServiceType[]>(
-    () => mergeServiceTypes(serviceCatalogQuery.data, { sort: false }),
-    [serviceCatalogQuery.data],
-  );
+  const services = useMemo<ServiceType[]>(() => {
+    const merged = mergeServiceTypes(serviceCatalogQuery.data, { sort: false });
+    return merged.filter((svc) => svc.priceCents != null);
+  }, [serviceCatalogQuery.data]);
   const roomOptions = useMemo<string[]>(() => {
     const apiRooms = (roomsQuery.data ?? []).map((r) => r.rName).filter(Boolean);
     const unique = Array.from(new Set(apiRooms));
