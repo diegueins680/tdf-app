@@ -1,9 +1,9 @@
 # Curso de Producción Musical — Inscripciones
 
-End-to-end flow for the in-person course **“Curso de Producción Musical – Ene 2026 / Feb 2026”**. Includes public landing, backend endpoints, WhatsApp webhook, and admin status update.
+End-to-end flow for the in-person course **“Curso de Producción Musical – Feb 2026 / Mar 2026 (inicio 28 Feb 2026)”**. Includes public landing, backend endpoints, WhatsApp webhook, and admin status update.
 
 ## Slugs
-- `produccion-musical-dic-2025`
+- `produccion-musical-feb-2026`
 - Cohorts list for the selector page via `VITE_COURSE_COHORTS` (comma-separated).
 
 ## Database
@@ -26,7 +26,7 @@ End-to-end flow for the in-person course **“Curso de Producción Musical – E
       "phoneE164": "+593999001122",
       "source": "landing",
       "howHeard": "Instagram",
-      "utm": { "source": "ads", "medium": "ig", "campaign": "dic2025" }
+      "utm": { "source": "ads", "medium": "ig", "campaign": "feb2026" }
     }
     ```
   - Behavior: if a pending registration for the same slug + email/phone exists, it is updated; otherwise a new row is inserted.
@@ -44,7 +44,7 @@ End-to-end flow for the in-person course **“Curso de Producción Musical – E
 ## Frontend (tdf-hq-ui)
 - Public routes:
   - Selector: `/curso/produccion-musical` (lets users pick a start date).
-  - Direct cohort: `/curso/produccion-musical-dic-2025`.
+  - Direct cohort: `/curso/produccion-musical-feb-2026`.
 - Uses generated API client (`npm run generate:api:ui`) to hit the public registration endpoint.
 - Form auto-includes `source=landing` and UTM params from the URL (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`).
 - Success state locks the form and shows “¡Gracias! Hemos recibido tu inscripción…”. Errors prompt to retry or use WhatsApp.

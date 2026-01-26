@@ -37,10 +37,10 @@ const splitTopics = (input: string) =>
     .filter(Boolean);
 
 const DEFAULT_SESSIONS: SessionInput[] = [
-  { label: 'Sábado 1 · Introducción', date: '2026-01-17' },
-  { label: 'Sábado 2 · Grabación', date: '2026-01-24' },
-  { label: 'Sábado 3 · Mezcla', date: '2026-01-31' },
-  { label: 'Sábado 4 · Masterización', date: '2026-02-07' },
+  { label: 'Sábado 1 · Introducción', date: '2026-02-28' },
+  { label: 'Sábado 2 · Grabación', date: '2026-03-07' },
+  { label: 'Sábado 3 · Mezcla', date: '2026-03-14' },
+  { label: 'Sábado 4 · Masterización', date: '2026-03-21' },
 ];
 
 const DEFAULT_SYLLABUS: SyllabusInput[] = [

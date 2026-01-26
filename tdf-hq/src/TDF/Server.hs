@@ -1388,10 +1388,10 @@ courseMetadataFor cfg mWaContact slugVal =
     else
       let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
           sessions =
-            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 1 17)
-            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 1 24)
-            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2026 1 31)
-            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 2 7)
+            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 2 28)
+            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 3 7)
+            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2026 3 14)
+            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 3 21)
             ]
           syllabus =
             [ SyllabusItem "Introducción a la producción musical" ["Conceptos básicos", "Herramientas esenciales"]

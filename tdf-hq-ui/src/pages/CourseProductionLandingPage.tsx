@@ -489,6 +489,10 @@ function Hero({
 
 function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
   const sessions = meta?.sessions ?? [];
+  const includesList =
+    meta?.includes && meta.includes.length > 0
+      ? meta.includes
+      : ['Acceso a grabaciones', 'Certificado de participación', 'Mentorías', 'Grupo de WhatsApp', 'Acceso a la plataforma de TDF Records'];
   return (
     <Stack spacing={3}>
       <Card
@@ -563,7 +567,7 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
             Incluye
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {(meta?.includes ?? ['Acceso a grabaciones', 'Certificado de participación', 'Mentorías', 'Grupo de WhatsApp', 'Acceso a la plataforma de TDF Records']).map((item) => (
+            {includesList.map((item) => (
               <Chip key={item} icon={<CheckCircleIcon />} label={item} sx={badgeStyle} />
             ))}
           </Stack>

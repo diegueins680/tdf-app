@@ -1,7 +1,7 @@
 -- leads & whatsapp audit
 CREATE TABLE IF NOT EXISTS course_edition (
   id                SERIAL PRIMARY KEY,
-  slug              TEXT UNIQUE NOT NULL,         -- e.g. 'produccion-musical-dic-2025'
+  slug              TEXT UNIQUE NOT NULL,         -- e.g. 'produccion-musical-feb-2026'
   name              TEXT NOT NULL,                -- 'Curso de Producción Musical'
   registration_url  TEXT,
   starts_on         DATE NOT NULL,
@@ -36,13 +36,13 @@ CREATE TABLE IF NOT EXISTS whatsapp_message_log (
   created_at        TIMESTAMPTZ DEFAULT now()
 );
 
--- Seed (edición de enero 2026/febrero 2026)
+-- Seed (edición de febrero 2026/marzo 2026)
 INSERT INTO course_edition (slug, name, registration_url, starts_on, ends_on)
 VALUES (
-  'produccion-musical-dic-2025',
-  'Curso de Producción Musical (Ene 2026 / Feb 2026)',
+  'produccion-musical-feb-2026',
+  'Curso de Producción Musical (Feb 2026 / Mar 2026)',
   NULL,
-  '2026-01-17',
-  '2026-02-07'
+  '2026-02-28',
+  '2026-03-21'
 )
 ON CONFLICT (slug) DO NOTHING;
