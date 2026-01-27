@@ -79,6 +79,7 @@ instance FromJSON FacebookPageList where
     FacebookPageList <$> o .:? "data" .!= []
 
 newtype InstagramBusinessAccount = InstagramBusinessAccount { ibaId :: Text }
+  deriving (Show)
 
 instance FromJSON InstagramBusinessAccount where
   parseJSON = withObject "InstagramBusinessAccount" $ \o ->
