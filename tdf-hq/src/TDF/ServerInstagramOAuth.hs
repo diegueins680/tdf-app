@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -25,7 +26,7 @@ import           Data.Time.Format.ISO8601   (iso8601ParseM)
 import           Database.Persist           (upsert, (=.))
 import           Database.Persist.Sql       (runSqlPool)
 import           GHC.Generics               (Generic)
-import           Network.HTTP.Client        (Request, Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
+import           Network.HTTP.Client        (Manager, Request, Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
 import           Network.HTTP.Client.TLS    (tlsManagerSettings)
 import           Network.HTTP.Types.Status  (statusCode)
 import           Network.HTTP.Types.URI     (renderSimpleQuery)
