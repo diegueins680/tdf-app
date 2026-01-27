@@ -36,7 +36,7 @@ import           TDF.API.InstagramOAuth
 import           TDF.Auth                   (AuthedUser(..))
 import           TDF.Config                 (AppConfig(..), resolveConfiguredAppBase)
 import           TDF.DB                     (Env(..))
-import           TDF.Models                 (SocialSyncAccount(..))
+import           TDF.Models                 (SocialSyncAccount(..), SocialSyncAccountAccessToken, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountStatus, SocialSyncAccountUpdatedAt)
 
 data FacebookAccessToken = FacebookAccessToken
   { fatAccessToken :: Text
@@ -238,7 +238,7 @@ instagramOAuthServer user = exchangeHandler
         , imdCaption = imCaption
         , imdMediaUrl = imMediaUrl
         , imdPermalink = imPermalink
-        , imdTimestamp = imTimestamp >>= iso8601ParseM
+        , imdTimestamp = imTimestamp >>= (iso8601ParseM . T.unpack)
         }
 
 loadFacebookCreds :: MonadError ServerError m => AppConfig -> m (Text, Text)
@@ -396,4 +396,4 @@ buildRequest cfg path params = do
     Left err -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack (displayException err))) }
     Right req -> pure req
   where
-    toParam (k, v) = (TE.encodeUtf8 k, Just (TE.encodeUtf8 v))
+    toParam (k, v) = (TE.encodeUtf8 k, TE.encodeUtf8 v)
