@@ -36,7 +36,7 @@ import           TDF.API.InstagramOAuth
 import           TDF.Auth                   (AuthedUser(..))
 import           TDF.Config                 (AppConfig(..), resolveConfiguredAppBase)
 import           TDF.DB                     (Env(..))
-import           TDF.Models                 (SocialSyncAccount(..), SocialSyncAccountAccessToken, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountStatus, SocialSyncAccountUpdatedAt)
+import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountStatus, SocialSyncAccountUpdatedAt), SocialSyncAccount(..))
 
 data FacebookAccessToken = FacebookAccessToken
   { fatAccessToken :: Text
@@ -143,7 +143,7 @@ instagramOAuthServer
 instagramOAuthServer user = exchangeHandler
   where
     exchangeHandler InstagramOAuthExchangeRequest{..} = do
-      Env{envConfig, envPool} <- asks (\env -> (envConfig env, envPool env))
+      Env{envConfig, envPool} <- asks id
       (appId, appSecret) <- loadFacebookCreds envConfig
       let redirectUri = resolveInstagramRedirectUri envConfig ioeRedirectUri
       manager <- liftIO $ newManager tlsManagerSettings
