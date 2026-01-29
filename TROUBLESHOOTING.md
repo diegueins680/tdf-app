@@ -618,7 +618,7 @@ Error: heap out of memory
 2. **Check Node version**
    ```env
    # Add to Cloudflare environment variables
-   NODE_VERSION=20.19.1
+   NODE_VERSION=20.19.4
    ```
 
 3. **Check build logs**

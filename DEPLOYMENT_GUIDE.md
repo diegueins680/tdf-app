@@ -25,7 +25,7 @@ The TDF platform consists of three deployable components:
 - Docker knowledge (for containerized deployment)
 
 ### For Frontend
-- Node.js 20.19+ installed locally for builds
+- Node.js 20.19.4+ installed locally for builds
 - API endpoint URL ready
 
 ### For Mobile
@@ -229,7 +229,7 @@ Cloudflare Pages offers excellent performance with global CDN.
 Add in Cloudflare Pages settings:
 
 ```env
-NODE_VERSION=20.19.1
+NODE_VERSION=20.19.4
 VITE_API_BASE=https://your-api.koyeb.app
 VITE_TZ=America/Guayaquil
 ```

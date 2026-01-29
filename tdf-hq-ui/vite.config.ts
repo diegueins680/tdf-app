@@ -76,6 +76,12 @@ export default defineConfig({
           }
           if (id.includes('react-router')) return 'router';
           if (id.includes('@tanstack')) return 'tanstack';
+          if (id.includes('@fullcalendar/')) return 'fullcalendar';
+          if (id.includes('@mui/icons-material')) return 'mui-icons';
+          if (id.includes('@mui/x-date-pickers')) return 'mui-x';
+          if (id.includes('@mui/')) return 'mui';
+          if (id.includes('@emotion/')) return 'emotion';
+          if (id.includes('@hello-pangea/dnd')) return 'dnd';
           if (id.includes('luxon')) return 'luxon';
           if (id.includes('qrcode')) return 'qrcode';
           return 'vendor';

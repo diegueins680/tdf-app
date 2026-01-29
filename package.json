@@ -35,7 +35,7 @@
     "music-studio"
   ],
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=20.19.4"
   },
   "overrides": {
     "react-native-reanimated": "~4.1.1"

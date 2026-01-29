@@ -4,7 +4,7 @@ Spin up the backend API + web UI for local development.
 
 ## Prerequisites
 
-- Node.js 20.19+ and npm 10+
+- Node.js 20.19.4+ and npm 10+
 - Backend (pick one):
   - Docker + Docker Compose (recommended for first run), or
   - Stack + PostgreSQL 16+

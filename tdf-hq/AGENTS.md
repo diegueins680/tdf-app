@@ -41,7 +41,7 @@
 - UI snapshots such as `tdf-hq-ui.backup.*` are intentionally ignored in `.gitignore`. Treat them as personal sandboxes—never reference them from build scripts or CI.
 
 ## Deployment Runbooks
-- **Cloudflare Pages** – build from repo root with `npm run build:ui`, output `tdf-hq-ui/dist`. Set `NODE_VERSION=20.19.1`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil`, and optional `VITE_API_DEMO_TOKEN`.
+- **Cloudflare Pages** – build from repo root with `npm run build:ui`, output `tdf-hq-ui/dist`. Set `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil`, and optional `VITE_API_DEMO_TOKEN`.
 - **Vercel** – set the root directory to `tdf-hq-ui`, install via `npm install`, build with `npm run build`, output `dist`.
 - **Koyeb (API)** – configure all `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`). Without the CORS envs Cloudflare/Vercel frontends cannot talk to the API.
 - Whenever you need to test end-to-end, ensure the frontend env vars point at the deployed API and that the API allows the frontend’s origin.

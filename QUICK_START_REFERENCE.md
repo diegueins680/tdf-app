@@ -395,7 +395,7 @@ Output directory: tdf-hq-ui/dist
 Root directory: .
 
 # Environment variables
-NODE_VERSION=20.19.1
+NODE_VERSION=20.19.4
 VITE_API_BASE=https://your-api.koyeb.app
 VITE_TZ=America/Guayaquil
 ```

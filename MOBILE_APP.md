@@ -51,7 +51,7 @@ If the directory is empty or doesn't contain package.json, the submodule needs t
 
 ### Prerequisites
 
-- Node.js 20.19+ (Metro/Expo require >=20.19) and npm 10+
+- Node.js 20.19.4+ (Metro/Expo require >=20.19.4) and npm 10+
 - Expo CLI: `npm install -g expo-cli` or `npx expo`
 - iOS Simulator (Mac only) or Android Emulator
 - Expo Go app on your physical device (optional)
