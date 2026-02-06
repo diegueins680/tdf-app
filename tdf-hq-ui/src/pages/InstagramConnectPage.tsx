@@ -30,7 +30,8 @@ export default function InstagramConnectPage() {
 
   const pages = result?.pages ?? [];
   const media = result?.media ?? [];
-  const connectedHandle = result?.instagramUsername ?? null;
+  const connectedHandle = result?.instagramUsername?.trim();
+  const connectedHandleLabel = connectedHandle && connectedHandle.length > 0 ? connectedHandle : null;
 
   const pageSummary = useMemo(() => {
     if (pages.length === 0) return 'Sin páginas vinculadas todavía.';
@@ -57,7 +58,7 @@ export default function InstagramConnectPage() {
                 Estado de conexión
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {result ? `Conectado a ${connectedHandle ?? 'Instagram'}` : 'Aún no hay una conexión activa.'}
+                {result ? `Conectado a ${connectedHandleLabel ?? 'Instagram'}` : 'Aún no hay una conexión activa.'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {pageSummary}
@@ -111,12 +112,12 @@ export default function InstagramConnectPage() {
                 <Typography variant="h6" fontWeight={700}>
                   Media reciente
                 </Typography>
-                {result.instagramUserId && (
+                {connectedHandleLabel && (
                   <Button
                     size="small"
                     variant="text"
                     endIcon={<OpenInNewIcon />}
-                    href={`https://www.instagram.com/${connectedHandle ?? ''}`}
+                    href={`https://www.instagram.com/${connectedHandleLabel}`}
                     target="_blank"
                     rel="noreferrer"
                   >

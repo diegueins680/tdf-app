@@ -11,6 +11,7 @@ import {
 } from '../services/instagramAuth';
 
 export type InstagramAuthStatus = 'idle' | 'authenticating' | 'ready' | 'error';
+const STATE_TTL_MS = 10 * 60 * 1000;
 
 export function useInstagramAuth() {
   const [status, setStatus] = useState<InstagramAuthStatus>(() =>
@@ -57,9 +58,29 @@ export function useInstagramCallback() {
     const search = new URLSearchParams(window.location.search);
     const code = search.get('code');
     const error = search.get('error');
-    const rawState = search.get('state') ?? consumeInstagramState();
-    const parsed = parseInstagramState(rawState);
-    const returnTo = parsed?.['returnTo'];
+    const rawState = search.get('state');
+    const storedState = consumeInstagramState();
+    const parsedState = rawState ? parseInstagramState(rawState) : null;
+    const parsedReturnTo = typeof parsedState?.returnTo === 'string' ? parsedState.returnTo : undefined;
+    const parsedIssuedAt = typeof parsedState?.issuedAt === 'number' ? parsedState.issuedAt : undefined;
+    const returnTo = storedState?.returnTo ?? parsedReturnTo;
+    const now = Date.now();
+
+    if (storedState) {
+      if (!rawState || rawState !== storedState.state) {
+        setResult({ ok: false, message: 'Estado de OAuth inválido o expirado.', returnTo });
+        return;
+      }
+    } else if (!rawState) {
+      setResult({ ok: false, message: 'Estado de OAuth inválido o expirado.', returnTo });
+      return;
+    }
+
+    const issuedAt = storedState?.issuedAt ?? parsedIssuedAt;
+    if (issuedAt && now - issuedAt > STATE_TTL_MS) {
+      setResult({ ok: false, message: 'Estado de OAuth expirado.', returnTo });
+      return;
+    }
 
     if (error) {
       setResult({ ok: false, message: error, returnTo });

@@ -17,13 +17,14 @@ import           Data.Aeson                 (FromJSON(..), eitherDecode, withObj
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import           Data.List                  (find)
 import           Data.Maybe                 (fromMaybe, listToMaybe)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (getCurrentTime)
 import           Data.Time.Format.ISO8601   (iso8601ParseM)
-import           Database.Persist           (upsert, (=.))
+import           Database.Persist           (Entity(..), SelectOpt(Desc), selectList, upsert, (=.), (==.))
 import           Database.Persist.Sql       (runSqlPool)
 import           GHC.Generics               (Generic)
 import           Network.HTTP.Client        (Manager, Request, Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
@@ -36,7 +37,7 @@ import           TDF.API.InstagramOAuth
 import           TDF.Auth                   (AuthedUser(..))
 import           TDF.Config                 (AppConfig(..), resolveConfiguredAppBase)
 import           TDF.DB                     (Env(..))
-import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountStatus, SocialSyncAccountUpdatedAt), SocialSyncAccount(..))
+import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountPlatform, SocialSyncAccountStatus, SocialSyncAccountTokenExpiresAt, SocialSyncAccountUpdatedAt), SocialSyncAccount(..))
 
 data FacebookAccessToken = FacebookAccessToken
   { fatAccessToken :: Text
@@ -152,10 +153,18 @@ instagramOAuthServer user = exchangeHandler
       longToken <- requestLongLivedToken manager envConfig appId appSecret (fatAccessToken shortToken)
       let token = fromMaybe shortToken longToken
           accessToken = fatAccessToken token
-          expiresIn = fromMaybe 3600 (fatExpiresIn token)
+          expiresIn = fromMaybe 0 (fatExpiresIn token)
 
       fbUser <- requestFacebookUser manager envConfig accessToken
       pages <- requestFacebookPages manager envConfig accessToken
+      existing <- liftIO $ flip runSqlPool envPool $ do
+        selectList
+          [ SocialSyncAccountPartyId ==. Just (auPartyId user)
+          , SocialSyncAccountPlatform ==. "instagram"
+          ]
+          [Desc SocialSyncAccountUpdatedAt]
+      let preferredIds = map (socialSyncAccountExternalUserId . entityVal) existing
+
       pageContexts <- forM pages $ \page -> do
         mIg <- requestInstagramAccount manager envConfig (fpAccessToken page) (fpId page)
         mHandle <- case mIg of
@@ -193,13 +202,14 @@ instagramOAuthServer user = exchangeHandler
               [ SocialSyncAccountPartyId =. Just (auPartyId user)
               , SocialSyncAccountHandle =. pcInstagramHandle ctx
               , SocialSyncAccountAccessToken =. Just (pcAccessToken ctx)
+              , SocialSyncAccountTokenExpiresAt =. Nothing
               , SocialSyncAccountStatus =. "connected"
               , SocialSyncAccountUpdatedAt =. Just now
               ]
             pure ()
 
       let pagesDto = map toPageDTO pageContexts
-          primary = listToMaybe (filter hasInstagram pageContexts)
+          primary = selectPrimary preferredIds pageContexts
       (mPrimaryId, mPrimaryHandle, media) <-
         case primary of
           Nothing -> pure (Nothing, Nothing, [])
@@ -223,6 +233,17 @@ instagramOAuthServer user = exchangeHandler
         }
 
     hasInstagram PageContext{..} = pcInstagramUserId /= Nothing
+
+    selectPrimary preferredIds contexts =
+      case go preferredIds of
+        Just ctx -> Just ctx
+        Nothing -> listToMaybe (filter hasInstagram contexts)
+      where
+        go [] = Nothing
+        go (pid:rest) =
+          case find (\ctx -> pcInstagramUserId ctx == Just pid) contexts of
+            Just ctx -> Just ctx
+            Nothing -> go rest
 
     toPageDTO PageContext{..} =
       InstagramOAuthPage

@@ -10,6 +10,13 @@ const SCOPES =
   'instagram_basic,pages_show_list,pages_read_engagement';
 const STATE_KEY = 'tdf-instagram-oauth-state';
 const RESULT_KEY = 'tdf-instagram-oauth-result';
+const DEFAULT_RETURN_TO = '/social/instagram';
+
+export interface InstagramOAuthStateRecord {
+  state: string;
+  returnTo?: string;
+  issuedAt: number;
+}
 
 const getRedirectUri = () => {
   const configured = env.read('VITE_INSTAGRAM_REDIRECT_URI');
@@ -18,18 +25,78 @@ const getRedirectUri = () => {
   return `${window.location.origin}/oauth/instagram/callback`;
 };
 
-const encodeState = (payload: Record<string, string | undefined>) => {
+const base64Encode = (value: string) => {
+  try {
+    if (typeof TextEncoder !== 'undefined') {
+      const bytes = new TextEncoder().encode(value);
+      let binary = '';
+      bytes.forEach((b) => {
+        binary += String.fromCharCode(b);
+      });
+      return btoa(binary);
+    }
+  } catch {
+    // fall through to legacy path
+  }
+  const encoded = encodeURIComponent(value).replace(/%([0-9A-F]{2})/g, (_match, hex: string) =>
+    String.fromCharCode(Number.parseInt(hex, 16)),
+  );
+  return btoa(encoded);
+};
+
+const base64Decode = (value: string) => {
+  try {
+    if (typeof TextDecoder !== 'undefined') {
+      const binary = atob(value);
+      const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    }
+  } catch {
+    // fall through to legacy path
+  }
+  const binary = atob(value);
+  const percentEncoded = Array.from(binary)
+    .map((c) => `%${c.charCodeAt(0).toString(16).padStart(2, '0')}`)
+    .join('');
+  return decodeURIComponent(percentEncoded);
+};
+
+const encodeState = (payload: Record<string, unknown>) => {
   const raw = JSON.stringify(payload);
-  return btoa(raw);
+  return base64Encode(raw);
 };
 
 const decodeState = (value: string) => {
   try {
-    const raw = atob(value);
-    return JSON.parse(raw) as Record<string, string | undefined>;
+    const raw = base64Decode(value);
+    return JSON.parse(raw) as Record<string, string | number | undefined>;
   } catch {
     return null;
   }
+};
+
+const sanitizeReturnTo = (value?: string | null) => {
+  if (!value) return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) return '';
+  return trimmed;
+};
+
+export const resolveInstagramReturnTo = (value?: string | null) => {
+  const safe = sanitizeReturnTo(value);
+  return safe !== '' ? safe : DEFAULT_RETURN_TO;
+};
+
+const createNonce = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+  return Math.random().toString(16).slice(2);
 };
 
 export const instagramConfigError = () => {
@@ -42,8 +109,16 @@ export const buildInstagramAuthUrl = (returnTo?: string) => {
   if (!APP_ID) throw new Error('Falta configurar VITE_META_APP_ID.');
   const redirectUri = getRedirectUri();
   if (!redirectUri) throw new Error('Falta configurar VITE_INSTAGRAM_REDIRECT_URI.');
-  const state = encodeState({ returnTo: returnTo ?? '' });
-  sessionStorage.setItem(STATE_KEY, state);
+  const issuedAt = Date.now();
+  const safeReturnTo = sanitizeReturnTo(returnTo);
+  const returnToValue = safeReturnTo !== '' ? safeReturnTo : undefined;
+  const state = encodeState({ returnTo: returnToValue, nonce: createNonce(), issuedAt });
+  const stored: InstagramOAuthStateRecord = {
+    state,
+    returnTo: returnToValue,
+    issuedAt,
+  };
+  sessionStorage.setItem(STATE_KEY, JSON.stringify(stored));
   const params = new URLSearchParams({
     client_id: APP_ID,
     redirect_uri: redirectUri,
@@ -54,11 +129,16 @@ export const buildInstagramAuthUrl = (returnTo?: string) => {
   return `https://www.facebook.com/v20.0/dialog/oauth?${params.toString()}`;
 };
 
-export const consumeInstagramState = () => {
+export const consumeInstagramState = (): InstagramOAuthStateRecord | null => {
   if (typeof window === 'undefined') return null;
-  const stored = sessionStorage.getItem(STATE_KEY);
-  if (stored) sessionStorage.removeItem(STATE_KEY);
-  return stored;
+  const raw = sessionStorage.getItem(STATE_KEY);
+  if (raw) sessionStorage.removeItem(STATE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as InstagramOAuthStateRecord;
+  } catch {
+    return null;
+  }
 };
 
 export const parseInstagramState = (state: string | null) => {

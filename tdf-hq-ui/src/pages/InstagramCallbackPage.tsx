@@ -2,6 +2,7 @@ import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/ma
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInstagramCallback } from '../hooks/useInstagramAuth';
+import { resolveInstagramReturnTo } from '../services/instagramAuth';
 
 export default function InstagramCallbackPage() {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ export default function InstagramCallbackPage() {
 
   useEffect(() => {
     if (!result.ok) return;
-    const target = result.returnTo?.trim() || '/social/instagram';
+    const target = resolveInstagramReturnTo(result.returnTo);
     navigate(target, { replace: true });
   }, [navigate, result]);
 
@@ -34,7 +35,7 @@ export default function InstagramCallbackPage() {
             No pudimos autorizar Instagram: {result.message}
             <br />
             Revisa el redirect configurado en Meta:{' '}
-            {import.meta.env['VITE_INSTAGRAM_REDIRECT_URI'] ?? 'no definido'}
+            {import.meta.env.VITE_INSTAGRAM_REDIRECT_URI ?? 'no definido'}
           </Alert>
           <Button variant="contained" onClick={() => navigate('/social/instagram', { replace: true })}>
             Volver
