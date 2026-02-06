@@ -61,8 +61,10 @@ export function useInstagramCallback() {
     const rawState = search.get('state');
     const storedState = consumeInstagramState();
     const parsedState = rawState ? parseInstagramState(rawState) : null;
-    const parsedReturnTo = typeof parsedState?.returnTo === 'string' ? parsedState.returnTo : undefined;
-    const parsedIssuedAt = typeof parsedState?.issuedAt === 'number' ? parsedState.issuedAt : undefined;
+    const parsedReturnTo =
+      typeof parsedState?.['returnTo'] === 'string' ? parsedState['returnTo'] : undefined;
+    const parsedIssuedAt =
+      typeof parsedState?.['issuedAt'] === 'number' ? parsedState['issuedAt'] : undefined;
     const returnTo = storedState?.returnTo ?? parsedReturnTo;
     const now = Date.now();
 
