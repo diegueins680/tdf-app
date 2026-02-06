@@ -772,7 +772,7 @@ whatsappConsentRoutes defaultSource requireGate =
               , ME.whatsAppConsentCreatedAt = now
               , ME.whatsAppConsentUpdatedAt = now
               }
-      upsert record
+      _ <- upsert record
         [ ME.WhatsAppConsentDisplayName =. nameClean
         , ME.WhatsAppConsentConsent =. True
         , ME.WhatsAppConsentSource =. sourceClean
@@ -796,7 +796,7 @@ whatsappConsentRoutes defaultSource requireGate =
               , ME.whatsAppConsentCreatedAt = now
               , ME.whatsAppConsentUpdatedAt = now
               }
-      upsert record
+      _ <- upsert record
         [ ME.WhatsAppConsentDisplayName =. Nothing
         , ME.WhatsAppConsentConsent =. False
         , ME.WhatsAppConsentSource =. Just "opt-out"
@@ -1020,9 +1020,9 @@ driveTokenRefreshServer _ DriveTokenRefreshRequest{..} = do
 
 resolveDriveRedirectUri :: AppConfig -> Maybe Text -> Text
 resolveDriveRedirectUri cfg mProvided =
-  fromMaybe (resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback") (mProvided >>= nonEmptyText)
+  fromMaybe (resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback") (mProvided >>= nonEmptyTextLocal)
   where
-    nonEmptyText txt =
+    nonEmptyTextLocal txt =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
 
@@ -2526,7 +2526,7 @@ signup SignupRequest
           -> Maybe Text
           -> UTCTime
           -> SqlPersistT IO ()
-        upsertInternProfile pid startAt endAt requiredHours skills areas nowVal = do
+        upsertInternProfile pid startAt endAt requiredHours skills areas nowStamp = do
           mProfile <- getBy (ME.UniqueInternProfile pid)
           let updates = catMaybes
                 [ fmap (ME.InternProfileStartAt =.) (fmap Just startAt)
@@ -2538,7 +2538,7 @@ signup SignupRequest
           case mProfile of
             Just (Entity key _) ->
               unless (null updates) $
-                update key (updates ++ [ME.InternProfileUpdatedAt =. nowVal])
+                update key (updates ++ [ME.InternProfileUpdatedAt =. nowStamp])
             Nothing -> do
               _ <- insert ME.InternProfile
                 { ME.internProfilePartyId   = pid
@@ -2547,8 +2547,8 @@ signup SignupRequest
                 , ME.internProfileRequiredHours = requiredHours
                 , ME.internProfileSkills    = skills
                 , ME.internProfileAreas     = areas
-                , ME.internProfileCreatedAt = nowVal
-                , ME.internProfileUpdatedAt = nowVal
+                , ME.internProfileCreatedAt = nowStamp
+                , ME.internProfileUpdatedAt = nowStamp
                 }
               pure ()
 
@@ -2781,10 +2781,10 @@ passwordResetConfirm PasswordResetConfirmRequest{..} = do
     resetTokenUsername :: Text -> Maybe Text
     resetTokenUsername lbl =
       let prefix = "password-reset:"
-      in T.stripPrefix prefix lbl >>= nonEmptyText
+      in T.stripPrefix prefix lbl >>= nonEmptyTextLocal
 
-    nonEmptyText :: Text -> Maybe Text
-    nonEmptyText txt
+    nonEmptyTextLocal :: Text -> Maybe Text
+    nonEmptyTextLocal txt
       | T.null (T.strip txt) = Nothing
       | otherwise = Just (T.strip txt)
 

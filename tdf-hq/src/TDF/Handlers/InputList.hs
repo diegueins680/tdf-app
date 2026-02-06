@@ -286,8 +286,8 @@ formatProcessError name code out err =
 
 copyAssetsDir :: FilePath -> FilePath -> IO ()
 copyAssetsDir src dest = do
-  exists <- doesDirectoryExist src
-  when exists (copyDirRecursive src dest)
+  dirExists <- doesDirectoryExist src
+  when dirExists (copyDirRecursive src dest)
 
 copyDirRecursive :: FilePath -> FilePath -> IO ()
 copyDirRecursive src dest = do

@@ -10,7 +10,7 @@ module TDF.ServerInstagramOAuth
 
 import           Control.Exception          (SomeException, displayException, try)
 import           Control.Monad              (forM, forM_, when)
-import           Control.Monad.Except       (MonadError, catchError, throwError)
+import           Control.Monad.Except       (MonadError, catchError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Aeson                 (FromJSON(..), eitherDecode, withObject, (.:), (.:?), (.!=))

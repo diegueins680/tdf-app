@@ -39,7 +39,7 @@ import           System.IO                  (hPutStrLn, stderr)
 import           Database.Persist        hiding (Active)
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
-import           Servant.Multipart          (FileData(..), Tmp)
+import           Servant.Multipart          (FileData(..))
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
 
 import           TDF.API.Inventory          (InventoryAPI, AssetUploadForm(..))
@@ -1081,10 +1081,6 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
     normalizeName txt =
       let trimmed = T.strip txt
       in if T.null trimmed then throwError err400 { errBody = "Nombre requerido" } else pure trimmed
-
-    normalizeNameMaybe txt =
-      let trimmed = T.strip txt
-      in if T.null trimmed then pure Nothing else pure (Just trimmed)
 
     normalizeCurrency txt =
       let trimmed = T.toUpper (T.strip txt)

@@ -38,6 +38,7 @@ spec = describe "Artist profile helpers" $ do
       insertFanFollow artistId "Edu"
       let payload = ArtistProfileUpsert
             { apuArtistId        = fromSqlKey artistId
+            , apuDisplayName     = Just "Los Mentores"
             , apuSlug            = Just "los-mentores"
             , apuBio             = Just "Fusionando ritmos latinos con neo soul."
             , apuCity            = Just "Quito"

@@ -159,6 +159,7 @@ test-suite tdf-hq-test
     TDF.API.Feedback
     TDF.API.Inventory
     TDF.API.Instagram
+    TDF.API.InstagramOAuth
     TDF.API.Internships
     TDF.API.SocialSyncAPI
     TDF.API.Calendar
@@ -173,6 +174,7 @@ test-suite tdf-hq-test
     TDF.API.Drive
     TDF.Calendar.Models
     TDF.API.Pipelines
+    TDF.API.Proposals
     TDF.API.Rooms
     TDF.API.Sessions
     TDF.API.SocialEventsAPI
@@ -197,13 +199,16 @@ test-suite tdf-hq-test
     TDF.Pipelines
     TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec
+    TDF.RagStore
     TDF.Routes.Academy
     TDF.Routes.Courses
     TDF.Seed
     TDF.Server
     TDF.ServerAdmin
     TDF.ServerExtra
+    TDF.ServerInstagramOAuth
     TDF.ServerInternships
+    TDF.ServerProposals
     TDF.Server.SocialSync
     TDF.Server.SocialEventsHandlers
     TDF.ServerFuture
@@ -212,6 +217,7 @@ test-suite tdf-hq-test
     TDF.ServerRadio
     TDF.ServerSpec
     TDF.Services
+    TDF.Services.InstagramMessaging
     TDF.Services.InstagramSync
     TDF.Trials.API
     TDF.Trials.DTO

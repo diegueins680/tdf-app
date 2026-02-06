@@ -36,17 +36,17 @@ data WAReferral = WAReferral
 
 instance FromJSON WAReferral where
   parseJSON = withObject "WAReferral" $ \o -> do
-    sourceId <- o .:? "source_id"
-    sourceType <- o .:? "source_type"
-    sourceUrl <- o .:? "source_url"
-    headline <- o .:? "headline"
-    waBody <- o .:? "body"
+    sourceIdVal <- o .:? "source_id"
+    sourceTypeVal <- o .:? "source_type"
+    sourceUrlVal <- o .:? "source_url"
+    headlineVal <- o .:? "headline"
+    waBodyVal <- o .:? "body"
     pure WAReferral
-      { sourceId = sourceId
-      , sourceType = sourceType
-      , sourceUrl = sourceUrl
-      , headline = headline
-      , waBody = waBody
+      { sourceId = sourceIdVal
+      , sourceType = sourceTypeVal
+      , sourceUrl = sourceUrlVal
+      , headline = headlineVal
+      , waBody = waBodyVal
       }
 
 data WAContext = WAContext
@@ -54,8 +54,8 @@ data WAContext = WAContext
   } deriving (Show, Generic)
 instance FromJSON WAContext where
   parseJSON = withObject "WAContext" $ \o -> do
-    waContextReferral <- o .:? "referral"
-    pure WAContext { waContextReferral = waContextReferral }
+    referralVal <- o .:? "referral"
+    pure WAContext { waContextReferral = referralVal }
 
 data WAMessage = WAMessage
   { waId  :: Maybe Text

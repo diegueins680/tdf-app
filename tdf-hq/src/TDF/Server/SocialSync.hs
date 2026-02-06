@@ -7,12 +7,12 @@ module TDF.Server.SocialSync
   ) where
 
 import           Control.Monad              (forM)
-import           Control.Monad.Except       (MonadError, throwError)
+import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
-import           Data.Maybe                 (catMaybes, fromMaybe, listToMaybe, mapMaybe)
+import           Data.Maybe                 (catMaybes, fromMaybe, listToMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import           Data.Time                  (getCurrentTime)

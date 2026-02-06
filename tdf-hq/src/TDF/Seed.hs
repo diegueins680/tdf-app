@@ -239,14 +239,6 @@ seedProductionCourse now = do
       locationMap = Just (fromMaybe "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6" (mapEnv >>= nonEmptyText))
       whatsappCta = Just (fromMaybe "https://wa.me/593995413168?text=Quiero%20inscribirme%20al%20curso" (whatsappEnv >>= nonEmptyText))
       landingUrl = Just (baseUrl <> "/curso/" <> slugVal)
-      dawsList = Just ["Logic", "Luna"]
-      includesList = Just
-        [ "Acceso a grabaciones"
-        , "Certificado de participación"
-        , "Mentorías"
-        , "Grupo de WhatsApp"
-        , "Acceso a la plataforma de TDF Records"
-        ]
       instructorName = Just "Esteban Muñoz"
       instructorBio = Just "Productor en TDF Records. 10+ años grabando bandas, rap y electrónica."
       instructorAvatar = Just (fromMaybe (baseUrl <> "/assets/esteban-munoz.jpg") (instructorAvatarEnv >>= nonEmptyText))

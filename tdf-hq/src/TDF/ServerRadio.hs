@@ -397,7 +397,7 @@ radioServer user =
           if BS.length audioChunk < metaInt
             then pure Nothing
             else do
-              (lenChunk, restLen) <- readExact body 1 rest
+              (lenChunk, _restLen) <- readExact body 1 rest
               case BS.uncons lenChunk of
                 Nothing -> pure Nothing
                 Just (lenByte, restMetaStart) -> do

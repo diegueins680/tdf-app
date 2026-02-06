@@ -40,7 +40,7 @@ instance FromJSON InstagramMedia where
     imTimestamp <- traverse iso8601ParseM tsTxt
     pure InstagramMedia{..}
 
-newtype InstagramMediaList = InstagramMediaList { imlData :: [InstagramMedia] }
+newtype InstagramMediaList = InstagramMediaList [InstagramMedia]
 
 instance FromJSON InstagramMediaList where
   parseJSON = withObject "InstagramMediaList" $ \o ->
