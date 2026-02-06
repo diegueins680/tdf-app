@@ -19,12 +19,12 @@ import {
 } from '@mui/material';
 import { SocialInboxAPI, type SocialMessage } from '../api/socialInbox';
 
-type MessageStats = {
+interface MessageStats {
   incoming: SocialMessage[];
   replied: SocialMessage[];
   pending: SocialMessage[];
   failed: SocialMessage[];
-};
+}
 
 type FilterKey = 'all' | 'pending' | 'replied' | 'failed';
 
@@ -70,12 +70,12 @@ const formatBody = (value?: string | null) => {
   return trimmed && trimmed.length > 0 ? trimmed : '—';
 };
 
-type ChannelPanelProps = {
+interface ChannelPanelProps {
   label: string;
   stats: MessageStats;
   messages: SocialMessage[];
   loading: boolean;
-};
+}
 
 const ChannelPanel = ({ label, stats, messages, loading }: ChannelPanelProps) => (
   <Paper variant="outlined" sx={{ p: 2, flex: 1, minWidth: 0 }}>

@@ -195,8 +195,7 @@ const normalizeOptionalInt = (value?: string | null) => {
 export default function InternshipsPage() {
   const { session } = useSession();
   const qc = useQueryClient();
-  const roles = session?.roles ?? [];
-  const lowerRoles = useMemo(() => roles.map((r) => r.toLowerCase()), [roles]);
+  const lowerRoles = useMemo(() => (session?.roles ?? []).map((r) => r.toLowerCase()), [session?.roles]);
   const isAdmin = useMemo(
     () => lowerRoles.some((role) => ['admin', 'manager', 'studiomanager'].includes(role)),
     [lowerRoles],

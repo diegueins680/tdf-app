@@ -21,12 +21,12 @@ import { loginRequest } from '../api/auth';
 import { useSession } from '../session/SessionContext';
 import { deriveModulesFromRoles } from '../components/SidebarNav';
 
-type TokenDetails = {
+interface TokenDetails {
   username: string;
   partyId?: number;
   roles: string[];
   modules: string[];
-};
+}
 
 const resolveApiBase = () => {
   const configured = import.meta.env.VITE_API_BASE ?? '';

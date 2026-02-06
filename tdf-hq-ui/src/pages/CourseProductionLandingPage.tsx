@@ -612,7 +612,7 @@ function FormCard({
   submitError: string | null;
   isFull: boolean;
   whatsappHref: string;
-  cohortOptions: Array<{ slug: string; label: string }>;
+  cohortOptions: { slug: string; label: string }[];
   selectedSlug: string;
   onSlugChange: (slug: string) => void;
 }) {

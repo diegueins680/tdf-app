@@ -12,11 +12,11 @@ export interface SocialMessage {
   createdAt: string;
 }
 
-type SocialInboxFilters = {
+interface SocialInboxFilters {
   limit?: number;
   direction?: 'incoming' | 'outgoing' | 'all';
   repliedOnly?: boolean;
-};
+}
 
 const buildQuery = (params: Record<string, string | number | boolean | undefined | null>) => {
   const qs = new URLSearchParams();

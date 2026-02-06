@@ -27,7 +27,9 @@ export interface TidalAgentConfig {
 
 export const buildDefaultConfig = (): TidalAgentConfig => {
   const model = env.read('VITE_TIDAL_AGENT_MODEL');
-  return { model: model && model.trim() ? model.trim() : undefined };
+  const trimmed = model?.trim();
+  const normalized = trimmed === '' ? undefined : trimmed;
+  return { model: normalized };
 };
 
 export const tidalAgentRequest = async (prompt: string, cfg: TidalAgentConfig): Promise<string> => {

@@ -17,12 +17,12 @@ import {
 } from '@mui/material';
 import { SocialInboxAPI, type SocialMessage } from '../api/socialInbox';
 
-type MessageStats = {
+interface MessageStats {
   incoming: SocialMessage[];
   replied: SocialMessage[];
   pending: SocialMessage[];
   failed: SocialMessage[];
-};
+}
 
 const buildStats = (messages: SocialMessage[] | undefined): MessageStats => {
   const incoming = (messages ?? []).filter((msg) => msg.direction === 'incoming');

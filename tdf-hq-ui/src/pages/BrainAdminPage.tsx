@@ -27,13 +27,13 @@ import ApiErrorNotice from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
 import { useSession } from '../session/SessionContext';
 
-type BrainFormState = {
+interface BrainFormState {
   title: string;
   body: string;
   category: string;
   tags: string;
   active: boolean;
-};
+}
 
 const emptyForm: BrainFormState = {
   title: '',
