@@ -273,6 +273,135 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SocialInboxMessage'
+  /whatsapp/consent:
+    post:
+      tags: [WhatsApp]
+      summary: Record WhatsApp consent (admin)
+      description: Stores explicit consent and optionally sends a confirmation message.
+      operationId: createWhatsAppConsent
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhatsAppConsentRequest'
+      responses:
+        '200':
+          description: Consent stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsAppConsentResponse'
+        '400':
+          description: Invalid payload
+    get:
+      tags: [WhatsApp]
+      summary: Fetch WhatsApp consent status (admin)
+      operationId: getWhatsAppConsent
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: phone
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Consent status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsAppConsentStatus'
+        '400':
+          description: Missing or invalid phone
+  /whatsapp/opt-out:
+    post:
+      tags: [WhatsApp]
+      summary: Revoke WhatsApp consent (admin)
+      operationId: optOutWhatsAppConsent
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhatsAppOptOutRequest'
+      responses:
+        '200':
+          description: Consent revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsAppConsentResponse'
+        '400':
+          description: Invalid payload
+  /public/whatsapp/consent:
+    post:
+      tags: [WhatsApp]
+      summary: Record WhatsApp consent (public)
+      description: Stores explicit consent and optionally sends a confirmation message.
+      operationId: createWhatsAppConsentPublic
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhatsAppConsentRequest'
+      responses:
+        '200':
+          description: Consent stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsAppConsentResponse'
+        '400':
+          description: Invalid payload
+    get:
+      tags: [WhatsApp]
+      summary: Fetch WhatsApp consent status (public)
+      operationId: getWhatsAppConsentPublic
+      security: [ ]
+      parameters:
+        - name: phone
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Consent status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsAppConsentStatus'
+        '400':
+          description: Missing or invalid phone
+  /public/whatsapp/opt-out:
+    post:
+      tags: [WhatsApp]
+      summary: Revoke WhatsApp consent (public)
+      operationId: optOutWhatsAppConsentPublic
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhatsAppOptOutRequest'
+      responses:
+        '200':
+          description: Consent revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsAppConsentResponse'
+        '400':
+          description: Invalid payload
   /admin/courses/{slug}/registrations/{registrationId}/status:
     parameters:
       - name: slug
@@ -1206,6 +1335,66 @@ components:
         createdAt:
           type: string
           format: date-time
+    WhatsAppConsentRequest:
+      type: object
+      required: [phone, consent]
+      properties:
+        phone:
+          type: string
+          description: Phone number in E.164 format.
+          example: "+593995413168"
+        name:
+          type: string
+          nullable: true
+        consent:
+          type: boolean
+        source:
+          type: string
+          nullable: true
+        sendMessage:
+          type: boolean
+          nullable: true
+    WhatsAppOptOutRequest:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          description: Phone number in E.164 format.
+        reason:
+          type: string
+          nullable: true
+        sendMessage:
+          type: boolean
+          nullable: true
+    WhatsAppConsentStatus:
+      type: object
+      properties:
+        phone:
+          type: string
+        consent:
+          type: boolean
+        consentedAt:
+          type: string
+          format: date-time
+          nullable: true
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+        displayName:
+          type: string
+          nullable: true
+    WhatsAppConsentResponse:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/WhatsAppConsentStatus'
+        messageSent:
+          type: boolean
+        message:
+          type: string
+          nullable: true
     ChatSendMessageRequest:
       type: object
       required: [csmBody]

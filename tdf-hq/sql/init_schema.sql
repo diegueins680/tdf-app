@@ -401,6 +401,19 @@ CREATE UNIQUE INDEX idx_lead_token ON lead(token);
 CREATE INDEX idx_lead_course ON lead(course_edition_id);
 CREATE INDEX idx_lead_phone ON lead(phone_e164);
 
+CREATE TABLE IF NOT EXISTS whatsapp_consent (
+    id           BIGSERIAL PRIMARY KEY,
+    phone_e164   TEXT NOT NULL UNIQUE,
+    display_name TEXT,
+    consent      BOOLEAN NOT NULL DEFAULT FALSE,
+    source       TEXT,
+    note         TEXT,
+    consented_at TIMESTAMPTZ,
+    revoked_at   TIMESTAMPTZ,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS whatsapp_message_log (
     id          BIGSERIAL PRIMARY KEY,
     direction   TEXT NOT NULL,

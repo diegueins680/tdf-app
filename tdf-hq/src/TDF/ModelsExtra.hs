@@ -125,6 +125,19 @@ WhatsAppMessage
     UniqueWhatsAppMessage externalId
     deriving Show Generic
 
+WhatsAppConsent
+    phoneE164    Text
+    displayName  Text Maybe
+    consent      Bool default=False
+    source       Text Maybe
+    note         Text Maybe
+    consentedAt  UTCTime Maybe
+    revokedAt    UTCTime Maybe
+    createdAt    UTCTime default=now()
+    updatedAt    UTCTime default=now()
+    UniqueWhatsAppConsent phoneE164
+    deriving Show Generic
+
 CourseRegistration
     courseSlug   Text
     fullName     Text Maybe

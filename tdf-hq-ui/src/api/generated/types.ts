@@ -212,6 +212,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/whatsapp/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fetch WhatsApp consent status (admin) */
+        get: operations["getWhatsAppConsent"];
+        put?: never;
+        /**
+         * Record WhatsApp consent (admin)
+         * @description Stores explicit consent and optionally sends a confirmation message.
+         */
+        post: operations["createWhatsAppConsent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/whatsapp/opt-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke WhatsApp consent (admin) */
+        post: operations["optOutWhatsAppConsent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/whatsapp/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fetch WhatsApp consent status (public) */
+        get: operations["getWhatsAppConsentPublic"];
+        put?: never;
+        /**
+         * Record WhatsApp consent (public)
+         * @description Stores explicit consent and optionally sends a confirmation message.
+         */
+        post: operations["createWhatsAppConsentPublic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/whatsapp/opt-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke WhatsApp consent (public) */
+        post: operations["optOutWhatsAppConsentPublic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/courses/{slug}/registrations/{registrationId}/status": {
         parameters: {
             query?: never;
@@ -833,6 +909,37 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        WhatsAppConsentRequest: {
+            /**
+             * @description Phone number in E.164 format.
+             * @example +593995413168
+             */
+            phone: string;
+            name?: string | null;
+            consent: boolean;
+            source?: string | null;
+            sendMessage?: boolean | null;
+        };
+        WhatsAppOptOutRequest: {
+            /** @description Phone number in E.164 format. */
+            phone: string;
+            reason?: string | null;
+            sendMessage?: boolean | null;
+        };
+        WhatsAppConsentStatus: {
+            phone?: string;
+            consent?: boolean;
+            /** Format: date-time */
+            consentedAt?: string | null;
+            /** Format: date-time */
+            revokedAt?: string | null;
+            displayName?: string | null;
+        };
+        WhatsAppConsentResponse: {
+            status?: components["schemas"]["WhatsAppConsentStatus"];
+            messageSent?: boolean;
+            message?: string | null;
+        };
         ChatSendMessageRequest: {
             csmBody: string;
         };
@@ -1399,6 +1506,188 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SocialInboxMessage"][];
                 };
+            };
+        };
+    };
+    getWhatsAppConsent: {
+        parameters: {
+            query: {
+                phone: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Consent status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatsAppConsentStatus"];
+                };
+            };
+            /** @description Missing or invalid phone */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createWhatsAppConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppConsentRequest"];
+            };
+        };
+        responses: {
+            /** @description Consent stored */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatsAppConsentResponse"];
+                };
+            };
+            /** @description Invalid payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    optOutWhatsAppConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppOptOutRequest"];
+            };
+        };
+        responses: {
+            /** @description Consent revoked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatsAppConsentResponse"];
+                };
+            };
+            /** @description Invalid payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getWhatsAppConsentPublic: {
+        parameters: {
+            query: {
+                phone: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Consent status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatsAppConsentStatus"];
+                };
+            };
+            /** @description Missing or invalid phone */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createWhatsAppConsentPublic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppConsentRequest"];
+            };
+        };
+        responses: {
+            /** @description Consent stored */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatsAppConsentResponse"];
+                };
+            };
+            /** @description Invalid payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    optOutWhatsAppConsentPublic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppOptOutRequest"];
+            };
+        };
+        responses: {
+            /** @description Consent revoked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatsAppConsentResponse"];
+                };
+            };
+            /** @description Invalid payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

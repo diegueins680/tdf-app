@@ -142,6 +142,63 @@ type WhatsAppMessagesAPI =
          :> QueryParam "repliedOnly" Text
          :> Get '[JSON] Value
 
+type WhatsAppConsentRoutes =
+       "consent"
+         :> ReqBody '[JSON] WhatsAppConsentRequest
+         :> Post '[JSON] WhatsAppConsentResponse
+  :<|> "opt-out"
+         :> ReqBody '[JSON] WhatsAppOptOutRequest
+         :> Post '[JSON] WhatsAppConsentResponse
+  :<|> "consent"
+         :> QueryParam "phone" Text
+         :> Get '[JSON] WhatsAppConsentStatus
+
+type WhatsAppConsentAPI =
+       "whatsapp" :> WhatsAppConsentRoutes
+
+type WhatsAppConsentPublicAPI =
+       "public" :> "whatsapp" :> WhatsAppConsentRoutes
+
+data WhatsAppConsentRequest = WhatsAppConsentRequest
+  { wcrPhone       :: Text
+  , wcrName        :: Maybe Text
+  , wcrConsent     :: Bool
+  , wcrSource      :: Maybe Text
+  , wcrSendMessage :: Maybe Bool
+  } deriving (Show, Generic)
+
+instance FromJSON WhatsAppConsentRequest where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data WhatsAppOptOutRequest = WhatsAppOptOutRequest
+  { worPhone       :: Text
+  , worReason      :: Maybe Text
+  , worSendMessage :: Maybe Bool
+  } deriving (Show, Generic)
+
+instance FromJSON WhatsAppOptOutRequest where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data WhatsAppConsentStatus = WhatsAppConsentStatus
+  { wcsPhone       :: Text
+  , wcsConsent     :: Bool
+  , wcsConsentedAt :: Maybe UTCTime
+  , wcsRevokedAt   :: Maybe UTCTime
+  , wcsDisplayName :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON WhatsAppConsentStatus where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data WhatsAppConsentResponse = WhatsAppConsentResponse
+  { wcrsStatus      :: WhatsAppConsentStatus
+  , wcrsMessageSent :: Bool
+  , wcrsMessage     :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON WhatsAppConsentResponse where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+
 type BookingAPI =
        QueryParam "bookingId" Int64
          :> QueryParam "partyId" Int64
@@ -246,6 +303,7 @@ type ProtectedAPI =
   :<|> InstagramAPI
   :<|> InstagramOAuthAPI
   :<|> WhatsAppMessagesAPI
+  :<|> WhatsAppConsentAPI
   :<|> "social" :> SocialAPI
   :<|> ChatAPI
   :<|> ChatKitSessionAPI
@@ -283,6 +341,7 @@ type API =
   :<|> "input-list" :> InputListAPI
   :<|> AdsPublicAPI
   :<|> CmsPublicAPI
+  :<|> WhatsAppConsentPublicAPI
   :<|> "marketplace" :> MarketplaceAPI
   :<|> "contracts" :> ContractsAPI
   :<|> RadioPublicAPI

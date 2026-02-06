@@ -262,6 +262,7 @@ server env =
   :<|> inputListServer
   :<|> adsPublicServer
   :<|> cmsPublicServer
+  :<|> whatsappConsentPublicServer
   :<|> marketplacePublicServer
   :<|> contractsServer
   :<|> radioPresencePublicServer
@@ -720,6 +721,161 @@ whatsappMessagesServer _ mLimit mDirection mRepliedOnly = do
         ]
   pure (toJSON (map toObj rows))
 
+whatsappConsentServer :: AuthedUser -> ServerT Api.WhatsAppConsentAPI AppM
+whatsappConsentServer user =
+  let requireAdmin = unless (hasRole Admin user) $ throwError err403
+  in whatsappConsentRoutes "tdf-hq-ui" requireAdmin
+
+whatsappConsentPublicServer :: ServerT Api.WhatsAppConsentPublicAPI AppM
+whatsappConsentPublicServer = whatsappConsentRoutes "public" (pure ())
+
+whatsappConsentRoutes :: Text -> AppM () -> ServerT Api.WhatsAppConsentRoutes AppM
+whatsappConsentRoutes defaultSource requireGate =
+       createConsent
+  :<|> revokeConsent
+  :<|> fetchStatus
+  where
+    normalizePhoneOrFail raw =
+      case normalizePhone raw of
+        Just val -> pure val
+        Nothing -> throwBadRequest "Número de WhatsApp inválido."
+
+    toStatus phoneVal mRow =
+      case mRow of
+        Nothing ->
+          WhatsAppConsentStatus
+            { wcsPhone = phoneVal
+            , wcsConsent = False
+            , wcsConsentedAt = Nothing
+            , wcsRevokedAt = Nothing
+            , wcsDisplayName = Nothing
+            }
+        Just (Entity _ row) ->
+          WhatsAppConsentStatus
+            { wcsPhone = phoneVal
+            , wcsConsent = ME.whatsAppConsentConsent row
+            , wcsConsentedAt = ME.whatsAppConsentConsentedAt row
+            , wcsRevokedAt = ME.whatsAppConsentRevokedAt row
+            , wcsDisplayName = ME.whatsAppConsentDisplayName row
+            }
+
+    persistConsent phoneVal nameClean sourceClean noteClean now = runDB $ do
+      let record =
+            ME.WhatsAppConsent
+              { ME.whatsAppConsentPhoneE164 = phoneVal
+              , ME.whatsAppConsentDisplayName = nameClean
+              , ME.whatsAppConsentConsent = True
+              , ME.whatsAppConsentSource = sourceClean
+              , ME.whatsAppConsentNote = noteClean
+              , ME.whatsAppConsentConsentedAt = Just now
+              , ME.whatsAppConsentRevokedAt = Nothing
+              , ME.whatsAppConsentCreatedAt = now
+              , ME.whatsAppConsentUpdatedAt = now
+              }
+      upsert record
+        [ ME.whatsAppConsentDisplayName =. nameClean
+        , ME.whatsAppConsentConsent =. True
+        , ME.whatsAppConsentSource =. sourceClean
+        , ME.whatsAppConsentNote =. noteClean
+        , ME.whatsAppConsentConsentedAt =. Just now
+        , ME.whatsAppConsentRevokedAt =. Nothing
+        , ME.whatsAppConsentUpdatedAt =. now
+        ]
+      getBy (ME.UniqueWhatsAppConsent phoneVal)
+
+    persistOptOut phoneVal reasonClean now = runDB $ do
+      let record =
+            ME.WhatsAppConsent
+              { ME.whatsAppConsentPhoneE164 = phoneVal
+              , ME.whatsAppConsentDisplayName = Nothing
+              , ME.whatsAppConsentConsent = False
+              , ME.whatsAppConsentSource = Just "opt-out"
+              , ME.whatsAppConsentNote = reasonClean
+              , ME.whatsAppConsentConsentedAt = Nothing
+              , ME.whatsAppConsentRevokedAt = Just now
+              , ME.whatsAppConsentCreatedAt = now
+              , ME.whatsAppConsentUpdatedAt = now
+              }
+      upsert record
+        [ ME.whatsAppConsentDisplayName =. Nothing
+        , ME.whatsAppConsentConsent =. False
+        , ME.whatsAppConsentSource =. Just "opt-out"
+        , ME.whatsAppConsentNote =. reasonClean
+        , ME.whatsAppConsentConsentedAt =. Nothing
+        , ME.whatsAppConsentRevokedAt =. Just now
+        , ME.whatsAppConsentUpdatedAt =. now
+        ]
+      getBy (ME.UniqueWhatsAppConsent phoneVal)
+
+    sendConsentMessage phoneVal nameClean = do
+      waEnv <- liftIO loadWhatsAppEnv
+      let greeting =
+            case nameClean of
+              Just nm -> "Hola " <> nm <> "! "
+              Nothing -> "Hola! "
+          msg = greeting <>
+            "Gracias por aceptar recibir mensajes de TDF Records por WhatsApp. " <>
+            "Responde STOP si deseas dejar de recibir mensajes."
+      sendWhatsAppText waEnv phoneVal msg
+
+    sendOptOutMessage phoneVal = do
+      waEnv <- liftIO loadWhatsAppEnv
+      let msg = "Listo. No recibirás más mensajes de TDF Records por WhatsApp. " <>
+                "Si fue un error, escríbenos y lo reactivamos."
+      sendWhatsAppText waEnv phoneVal msg
+
+    createConsent WhatsAppConsentRequest{..} = do
+      requireGate
+      unless wcrConsent $ throwBadRequest "Debes aceptar el consentimiento para continuar."
+      phoneVal <- normalizePhoneOrFail wcrPhone
+      now <- liftIO getCurrentTime
+      let nameClean = cleanOptional wcrName
+          sourceClean = cleanOptional wcrSource <|> Just defaultSource
+          noteClean = Just "consent"
+          shouldSend = fromMaybe True wcrSendMessage
+      _ <- persistConsent phoneVal nameClean sourceClean noteClean now
+      (sent, msgText) <- if shouldSend
+        then do
+          res <- sendConsentMessage phoneVal nameClean
+          pure $ case res of
+            Left err -> (False, Just err)
+            Right msg -> (True, Just msg)
+        else pure (False, Nothing)
+      status <- runDB $ getBy (ME.UniqueWhatsAppConsent phoneVal)
+      pure WhatsAppConsentResponse
+        { wcrsStatus = toStatus phoneVal status
+        , wcrsMessageSent = sent
+        , wcrsMessage = msgText
+        }
+
+    revokeConsent WhatsAppOptOutRequest{..} = do
+      requireGate
+      phoneVal <- normalizePhoneOrFail worPhone
+      now <- liftIO getCurrentTime
+      let reasonClean = cleanOptional worReason
+          shouldSend = fromMaybe True worSendMessage
+      _ <- persistOptOut phoneVal reasonClean now
+      (sent, msgText) <- if shouldSend
+        then do
+          res <- sendOptOutMessage phoneVal
+          pure $ case res of
+            Left err -> (False, Just err)
+            Right msg -> (True, Just msg)
+        else pure (False, Nothing)
+      status <- runDB $ getBy (ME.UniqueWhatsAppConsent phoneVal)
+      pure WhatsAppConsentResponse
+        { wcrsStatus = toStatus phoneVal status
+        , wcrsMessageSent = sent
+        , wcrsMessage = msgText
+        }
+
+    fetchStatus mPhone = do
+      requireGate
+      phoneRaw <- maybe (throwBadRequest "phone requerido") pure mPhone
+      phoneVal <- normalizePhoneOrFail phoneRaw
+      mRow <- runDB $ getBy (ME.UniqueWhatsAppConsent phoneVal)
+      pure (toStatus phoneVal mRow)
+
 normalizeLimit :: Maybe Int -> Int
 normalizeLimit = max 1 . min 200 . fromMaybe 100
 
@@ -973,6 +1129,7 @@ protectedServer user =
   :<|> instagramServer
   :<|> instagramOAuthServer user
   :<|> whatsappMessagesServer user
+  :<|> whatsappConsentServer user
   :<|> socialServer user
   :<|> chatServer user
   :<|> chatkitSessionServer user
@@ -1921,6 +2078,16 @@ sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVer
     Left err -> Left (T.pack err)
     Right _ -> Right msg
 sendWhatsappReply _ _ = pure (Left "WhatsApp config not available")
+
+sendWhatsAppText :: WhatsAppEnv -> Text -> Text -> AppM (Either Text Text)
+sendWhatsAppText WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVersion = mVersion} phone msg = do
+  manager <- liftIO $ newManager tlsManagerSettings
+  let version = fromMaybe "v20.0" mVersion
+  res <- liftIO $ sendText manager version tok pid phone msg
+  pure $ case res of
+    Left err -> Left (T.pack err)
+    Right _ -> Right msg
+sendWhatsAppText _ _ _ = pure (Left "WhatsApp config not available")
 
 normalizePhone :: Text -> Maybe Text
 normalizePhone raw =

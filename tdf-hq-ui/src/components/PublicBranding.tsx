@@ -1,4 +1,4 @@
-import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip } from '@mui/material';
+import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import type { ReactNode } from 'react';
@@ -90,6 +90,47 @@ export default function PublicBranding({
       <Container maxWidth="xl" sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 } }}>
         {children}
       </Container>
+      <Box
+        sx={{
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: '#0f1118',
+          py: 2,
+        }}
+      >
+        <Container maxWidth="xl">
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={1.5}
+            alignItems={{ xs: 'flex-start', md: 'center' }}
+            justifyContent="space-between"
+          >
+            <Typography variant="body2" color="text.secondary">
+              TDF Records
+            </Typography>
+            <Stack direction="row" spacing={2} flexWrap="wrap">
+              <Button
+                size="small"
+                color="inherit"
+                component={RouterLink}
+                to="/whatsapp/consentimiento"
+                sx={{ textTransform: 'none' }}
+              >
+                Consentimiento WhatsApp
+              </Button>
+              <Button
+                size="small"
+                color="inherit"
+                component={RouterLink}
+                to="/whatsapp/ok"
+                sx={{ textTransform: 'none' }}
+              >
+                Confirmacion WhatsApp
+              </Button>
+            </Stack>
+          </Stack>
+        </Container>
+      </Box>
     </Box>
   );
 }

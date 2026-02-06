@@ -78,6 +78,9 @@ import PublicBookingPage from './pages/PublicBookingPage';
 import CourseBuilderPage from './pages/CourseBuilderPage';
 import UxOptionsPage from './pages/UxOptionsPage';
 import InternshipsPage from './pages/InternshipsPage';
+import WhatsAppConsentPage from './pages/WhatsAppConsentPage';
+import PublicWhatsAppConsentPage from './pages/PublicWhatsAppConsentPage';
+import PublicWhatsAppConsentSuccessPage from './pages/PublicWhatsAppConsentSuccessPage';
 
 function Shell() {
   const { session } = useSession();
@@ -214,6 +217,8 @@ export default function App() {
         <Route path="/trials" element={<PublicBranding><TrialsPage /></PublicBranding>} />
         <Route path="/live-sessions/registro" element={<PublicBranding><LiveSessionPublicPage /></PublicBranding>} />
         <Route path="/feedback" element={<PublicBranding><FeedbackPage /></PublicBranding>} />
+        <Route path="/whatsapp/consentimiento" element={<PublicBranding><PublicWhatsAppConsentPage /></PublicBranding>} />
+        <Route path="/whatsapp/ok" element={<PublicBranding><PublicWhatsAppConsentSuccessPage /></PublicBranding>} />
         <Route path="/records" element={<PublicBranding><RecordsPublicPage /></PublicBranding>} />
         <Route path="/inventario/scan/:token" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />
         <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
@@ -306,6 +311,7 @@ export default function App() {
             <Route path="roles-permisos" element={<UserRoleManagement />} />
             <Route path="integraciones/calendario" element={<CalendarSyncPage />} />
             <Route path="cms" element={<CmsAdminPage />} />
+            <Route path="whatsapp-consentimiento" element={<WhatsAppConsentPage />} />
             <Route path="opciones-ux" element={<UxOptionsPage />} />
             <Route path="preferencias" element={<SystemPage />} />
             <Route index element={<Navigate to="roles-permisos" replace />} />
