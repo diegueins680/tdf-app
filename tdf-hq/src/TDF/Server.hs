@@ -773,13 +773,13 @@ whatsappConsentRoutes defaultSource requireGate =
               , ME.whatsAppConsentUpdatedAt = now
               }
       upsert record
-        [ ME.whatsAppConsentDisplayName =. nameClean
-        , ME.whatsAppConsentConsent =. True
-        , ME.whatsAppConsentSource =. sourceClean
-        , ME.whatsAppConsentNote =. noteClean
-        , ME.whatsAppConsentConsentedAt =. Just now
-        , ME.whatsAppConsentRevokedAt =. Nothing
-        , ME.whatsAppConsentUpdatedAt =. now
+        [ ME.WhatsAppConsentDisplayName =. nameClean
+        , ME.WhatsAppConsentConsent =. True
+        , ME.WhatsAppConsentSource =. sourceClean
+        , ME.WhatsAppConsentNote =. noteClean
+        , ME.WhatsAppConsentConsentedAt =. Just now
+        , ME.WhatsAppConsentRevokedAt =. Nothing
+        , ME.WhatsAppConsentUpdatedAt =. now
         ]
       getBy (ME.UniqueWhatsAppConsent phoneVal)
 
@@ -797,13 +797,13 @@ whatsappConsentRoutes defaultSource requireGate =
               , ME.whatsAppConsentUpdatedAt = now
               }
       upsert record
-        [ ME.whatsAppConsentDisplayName =. Nothing
-        , ME.whatsAppConsentConsent =. False
-        , ME.whatsAppConsentSource =. Just "opt-out"
-        , ME.whatsAppConsentNote =. reasonClean
-        , ME.whatsAppConsentConsentedAt =. Nothing
-        , ME.whatsAppConsentRevokedAt =. Just now
-        , ME.whatsAppConsentUpdatedAt =. now
+        [ ME.WhatsAppConsentDisplayName =. Nothing
+        , ME.WhatsAppConsentConsent =. False
+        , ME.WhatsAppConsentSource =. Just "opt-out"
+        , ME.WhatsAppConsentNote =. reasonClean
+        , ME.WhatsAppConsentConsentedAt =. Nothing
+        , ME.WhatsAppConsentRevokedAt =. Just now
+        , ME.WhatsAppConsentUpdatedAt =. now
         ]
       getBy (ME.UniqueWhatsAppConsent phoneVal)
 
