@@ -18,7 +18,9 @@ import           Data.List                  (sortOn)
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set                   as Set
-import           Data.Char                  (isAlphaNum, isAscii)
+import           Data.Bits                  (xor)
+import           Data.Char                  (isAlphaNum, isAscii, ord)
+import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
@@ -30,6 +32,7 @@ import           Data.UUID.V4               (nextRandom)
 import           Data.Aeson                 (object, (.:), (.:?), (.=))
 import           Data.Aeson.Types           (parseMaybe, withObject, (.!=))
 import qualified Data.Aeson                as A
+import           Numeric                    (showHex)
 import           System.Directory           (copyFile, createDirectoryIfMissing)
 import           System.FilePath            ((</>), takeExtension, takeFileName)
 import           System.IO                  (hPutStrLn, stderr)
@@ -1262,6 +1265,7 @@ data IGMessage = IGMessage
   , igText   :: Maybe Text
   , igIsEcho :: Maybe Bool
   , igReferral :: Maybe IGReferral
+  , igAttachments :: Maybe [A.Value]
   } deriving (Show)
 
 data IGReferral = IGReferral
@@ -1301,6 +1305,7 @@ instance A.FromJSON IGMessage where
     igText <- o .:? "text"
     igIsEcho <- o .:? "is_echo"
     igReferral <- o .:? "referral"
+    igAttachments <- o .:? "attachments"
     pure IGMessage{..}
 
 instance A.FromJSON IGReferral where
@@ -1340,13 +1345,32 @@ extractInstagramInbound payload =
   where
     extractEntry IGEntry{igMessaging} = mapMaybe extractEvent igMessaging
     extractEvent IGMessaging{igSender, igMessage, igReferral = eventReferral, igTimestamp} = do
-      IGMessage{igMid, igText, igIsEcho, igReferral = msgReferral} <- igMessage
+      IGMessage{igMid, igText, igIsEcho, igReferral = msgReferral, igAttachments} <- igMessage
       guard (not (fromMaybe False igIsEcho))
-      body <- igText
       let ref = eventReferral <|> msgReferral
-          fallbackId = igId igSender <> "-" <> maybe "0" (T.pack . show) igTimestamp
+          (adExt, adName, campExt, campName, refMeta) = toReferralMeta ref
+          attachmentPairs = case igAttachments of
+            Just xs | not (null xs) -> ["attachments" .= xs]
+            _ -> []
+          metaPairs = refMeta ++ attachmentPairs
+          meta = if null metaPairs
+            then Nothing
+            else Just (TE.decodeUtf8 (BL.toStrict (A.encode (object metaPairs))))
+          rawText = fromMaybe "" igText
+          body = if not (T.null (T.strip rawText))
+            then rawText
+            else if null attachmentPairs
+              then ""
+              else "[attachment]"
+      guard (not (T.null (T.strip body)))
+      let fallbackBase = T.intercalate "|"
+            [ igId igSender
+            , maybe "" (T.pack . show) igTimestamp
+            , body
+            , fromMaybe "" meta
+            ]
+          fallbackId = igId igSender <> "-" <> toHashText fallbackBase
           externalId = fromMaybe fallbackId igMid
-          (adExt, adName, campExt, campName, meta) = toReferralMeta ref
       pure IGInbound
         { igInboundExternalId = externalId
         , igInboundSenderId = igId igSender
@@ -1358,13 +1382,21 @@ extractInstagramInbound payload =
         , igInboundMetadata = meta
         }
 
-    toReferralMeta Nothing = (Nothing, Nothing, Nothing, Nothing, Nothing)
+    simpleHash64 = T.foldl' step (14695981039346656037 :: Word64)
+      where
+        step h c = (h `xor` fromIntegral (ord c)) * 1099511628211
+
+    toHashText txt =
+      let hexTxt = T.pack (showHex (simpleHash64 txt) "")
+      in T.justifyRight 16 '0' hexTxt
+
+    toReferralMeta Nothing = (Nothing, Nothing, Nothing, Nothing, [])
     toReferralMeta (Just IGReferral{..}) =
       let adExt = igRefAdId <|> igRefSourceId
           adName = igRefAdTitle
           campExt = igRefCampaignId
           campName = igRefCampaignName
-          metaObj = object
+          metaPairs =
             [ "ad_id" .= igRefAdId
             , "ad_title" .= igRefAdTitle
             , "campaign_id" .= igRefCampaignId
@@ -1372,8 +1404,7 @@ extractInstagramInbound payload =
             , "source_type" .= igRefSourceType
             , "source_id" .= igRefSourceId
             ]
-          metaTxt = TE.decodeUtf8 (BL.toStrict (A.encode metaObj))
-      in (adExt, adName, campExt, campName, Just metaTxt)
+      in (adExt, adName, campExt, campName, metaPairs)
 
 instagramWebhookServer
   :: ( MonadIO m
