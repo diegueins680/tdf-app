@@ -57,6 +57,7 @@ import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
 import           TDF.Config                 (assetsRootDir, instagramAppToken, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
 import           TDF.Services.InstagramMessaging (sendInstagramText)
+import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
 import           TDF.ModelsExtra
@@ -1724,8 +1725,38 @@ facebookServer
      )
   => ServerT FB.FacebookAPI m
 facebookServer =
-  listMessages
+       handleReply
+  :<|> listMessages
   where
+    handleReply req = do
+      now <- liftIO getCurrentTime
+      Env{..} <- ask
+      let recipient = FB.frSenderId req
+          body = T.strip (FB.frMessage req)
+      when (T.null body) $
+        throwError err400 { errBody = "Empty message" }
+      sendResult <- liftIO $ sendFacebookText envConfig recipient body
+      liftIO $ flip runSqlPool envPool $ do
+        insert_ (ME.FacebookMessage (recipient <> "-out-" <> T.pack (show now))
+                  recipient
+                  Nothing
+                  (Just body)
+                  "outgoing"
+                  Nothing
+                  Nothing
+                  Nothing
+                  Nothing
+                  Nothing
+                  Nothing
+                  Nothing
+                  (either Just (const Nothing) sendResult)
+                  now)
+      case sendResult of
+        Left err ->
+          pure (object ["status" .= ("error" :: Text), "message" .= err])
+        Right responseBody ->
+          pure (object ["status" .= ("ok" :: Text), "message" .= ("sent" :: Text), "response" .= responseBody])
+
     listMessages mLimit mDirection mRepliedOnly = do
       Env{..} <- ask
       let limit = normalizeSocialLimit mLimit
@@ -1751,6 +1782,7 @@ facebookServer =
             , "createdAt"  .= ME.facebookMessageCreatedAt m
             ]
       pure (A.toJSON (map toObj rows))
+
 
 normalizeSocialLimit :: Maybe Int -> Int
 normalizeSocialLimit = max 1 . min 200 . fromMaybe 100

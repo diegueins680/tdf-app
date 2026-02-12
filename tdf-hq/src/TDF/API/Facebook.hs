@@ -1,14 +1,25 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module TDF.API.Facebook where
 
-import           Data.Aeson (Value)
+import           Data.Aeson (Value, FromJSON, ToJSON)
 import           Data.Text (Text)
+import           GHC.Generics (Generic)
 import           Servant
 
+data FacebookReplyReq = FacebookReplyReq
+  { frSenderId :: Text
+  , frMessage  :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON FacebookReplyReq
+instance ToJSON FacebookReplyReq
+
 type FacebookAPI =
-       "facebook" :> "messages"
+       "facebook" :> "reply" :> ReqBody '[JSON] FacebookReplyReq :> Post '[JSON] Value
+  :<|> "facebook" :> "messages"
          :> QueryParam "limit" Int
          :> QueryParam "direction" Text
          :> QueryParam "repliedOnly" Text

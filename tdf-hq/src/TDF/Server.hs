@@ -1258,8 +1258,12 @@ metaBackfillServer user payload = do
                 configuredIgId = fromMaybe "" mConfiguredIgId
             in Just (configuredIgId, tok, mConfiguredIgId)
           _ -> Nothing
+      configuredFacebookToken =
+        case fmap T.strip (facebookMessagingToken envConfig) of
+          Just tok | not (T.null tok) -> Just tok
+          _ -> Nothing
       instagramSources = nub (sources ++ maybeToList configuredSource)
-      facebookTokens = nub [ tok | (_, tok, _) <- instagramSources ]
+      facebookTokens = nub ([ tok | (_, tok, _) <- instagramSources ] ++ maybeToList configuredFacebookToken)
       runInstagram = mboPlatform opts == "all" || mboPlatform opts == "instagram"
       runFacebook = mboPlatform opts == "all" || mboPlatform opts == "facebook"
   facebookResults <-
@@ -1301,6 +1305,7 @@ metaBackfillServer user payload = do
         [ "instagramAccounts" .= length instagramSources
         , "facebookTokens" .= length facebookTokens
         , "configuredMessagingToken" .= isJust configuredSource
+        , "configuredFacebookToken" .= isJust configuredFacebookToken
         ]
     , "totals" .= object
         [ "imported" .= importedTotal

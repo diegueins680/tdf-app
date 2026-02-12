@@ -195,6 +195,33 @@ paths:
       responses:
         '204':
           description: Processed
+  /instagram/reply:
+    post:
+      tags: [Instagram]
+      summary: Send Instagram reply
+      description: Sends a manual Instagram reply and stores it.
+      operationId: sendInstagramReply
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [irSenderId, irMessage]
+              properties:
+                irSenderId:
+                  type: string
+                irMessage:
+                  type: string
+      responses:
+        '200':
+          description: Reply status
+          content:
+            application/json:
+              schema:
+                type: object
   /instagram/messages:
     get:
       tags: [Instagram]
@@ -234,6 +261,33 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SocialInboxMessage'
+  /facebook/reply:
+    post:
+      tags: [Facebook]
+      summary: Send Facebook reply
+      description: Sends a manual Facebook Messenger reply and stores it.
+      operationId: sendFacebookReply
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [frSenderId, frMessage]
+              properties:
+                frSenderId:
+                  type: string
+                frMessage:
+                  type: string
+      responses:
+        '200':
+          description: Reply status
+          content:
+            application/json:
+              schema:
+                type: object
   /facebook/webhook:
     get:
       tags: [Facebook]
