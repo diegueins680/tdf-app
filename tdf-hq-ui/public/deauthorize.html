@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TDF InstG Bot Deauthorization</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f6fa;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #4c8bf5;
+        --border: rgba(148, 163, 184, 0.25);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Inter", "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 48px 24px 72px;
+      }
+      h1 {
+        font-size: 2.1rem;
+        margin: 0 0 8px;
+      }
+      h2 {
+        font-size: 1.25rem;
+        margin: 28px 0 8px;
+      }
+      p {
+        margin: 0 0 16px;
+        color: var(--muted);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      }
+      ul {
+        margin: 0 0 16px 18px;
+        color: var(--muted);
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Deauthorization Information</h1>
+      <div class="meta">Last updated: 2026-02-12</div>
+
+      <div class="card">
+        <p>
+          This endpoint is used for Meta app deauthorization callbacks for TDF InstG Bot.
+        </p>
+
+        <h2>What deauthorization means</h2>
+        <ul>
+          <li>Future message access is revoked once app access is removed in Meta.</li>
+          <li>Previously stored conversation data may remain until a deletion request is submitted.</li>
+        </ul>
+
+        <h2>Request data deletion</h2>
+        <p>
+          To request data deletion, visit
+          <a href="/data-deletion">/data-deletion</a>
+          or email
+          <a href="mailto:info@tdfrecords.net">info@tdfrecords.net</a>.
+        </p>
+
+        <h2>Privacy policy</h2>
+        <p>
+          Privacy details are available at
+          <a href="/privacy">/privacy</a>.
+        </p>
+      </div>
+    </main>
+  </body>
+</html>
