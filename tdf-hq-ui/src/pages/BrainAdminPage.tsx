@@ -45,11 +45,9 @@ const emptyForm: BrainFormState = {
 
 const formatTimestamp = (value?: string | null) => {
   if (!value) return '-';
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
 };
 
 const parseTags = (raw: string) =>

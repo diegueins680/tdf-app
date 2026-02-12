@@ -55,6 +55,7 @@ import qualified TDF.LogBuffer           as LogBuf
 import qualified TDF.ModelsExtra         as ME
 import           TDF.Models
 import           TDF.Services.InstagramMessaging (sendInstagramText)
+import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Services.InstagramSync (InstagramMedia(..), fetchUserMedia)
 import           TDF.Routes.Courses      (CourseMetadata(..))
 import           TDF.Server              ( buildLandingUrl
@@ -242,9 +243,11 @@ sendSocialAutoReplies env@Env{envPool, envConfig} = do
     Right (Right False) ->
       pure ()
   igCount <- processInstagramReplies env
+  fbCount <- processFacebookReplies env
   waCount <- processWhatsAppReplies env
   LogBuf.addLog LogBuf.LogInfo
     ("[Cron][SocialAutoReply] Instagram replies: " <> T.pack (show igCount)
+      <> " | Facebook replies: " <> T.pack (show fbCount)
       <> " | WhatsApp replies: " <> T.pack (show waCount))
 
 data AdContext = AdContext
@@ -366,6 +369,95 @@ replyInstagramOne cfg pool acc (Entity key msg) = do
                                 (instagramMessageAdExternalId msg)
                                 (acAdName adContext)
                                 (instagramMessageCampaignExternalId msg)
+                                (acCampaignName adContext)
+                                Nothing
+                                Nothing
+                                Nothing
+                                Nothing
+                                now)
+                    )
+                    pool
+                  pure (acc + 1)
+
+processFacebookReplies :: Env -> IO Int
+processFacebookReplies Env{envPool, envConfig} = do
+  pending <- runSqlPool
+    (selectList
+      [ ME.FacebookMessageDirection ==. "incoming"
+      , ME.FacebookMessageRepliedAt ==. Nothing
+      ]
+      [Asc ME.FacebookMessageCreatedAt, LimitTo 200])
+    envPool
+  foldM (replyFacebookOne envConfig envPool) 0 pending
+
+replyFacebookOne :: AppConfig -> ConnectionPool -> Int -> Entity ME.FacebookMessage -> IO Int
+replyFacebookOne cfg pool acc (Entity key msg) = do
+  now <- getCurrentTime
+  let body = fromMaybe "" (ME.facebookMessageText msg)
+  if T.null (T.strip body)
+    then pure acc
+    else do
+      adContext <- runSqlPool
+        (resolveAdContext (ME.facebookMessageAdExternalId msg) (ME.facebookMessageAdName msg) (ME.facebookMessageCampaignName msg))
+        pool
+      let channelNote = buildChannelNote "facebook" (acAdName adContext) (acCampaignName adContext)
+      examples <- runSqlPool
+        (loadAdExamples (isJust (acAdId adContext)) (maybe [] pure (acAdId adContext)))
+        pool
+      kb <- retrieveRagContext cfg pool body
+      replyRes <- runRagChatWithStatus cfg kb examples body (Just channelNote)
+      case replyRes of
+        Left err -> do
+          runSqlPool
+            (update key
+              [ ME.FacebookMessageReplyError =. Just err
+              , ME.FacebookMessageAdName =. acAdName adContext
+              , ME.FacebookMessageCampaignName =. acCampaignName adContext
+              ])
+            pool
+          pure acc
+        Right replyRaw -> do
+          let reply = T.strip replyRaw
+          if T.null reply
+            then do
+              runSqlPool
+                (update key
+                  [ ME.FacebookMessageReplyError =. Just "OpenAI response empty"
+                  , ME.FacebookMessageAdName =. acAdName adContext
+                  , ME.FacebookMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            else do
+              sendResult <- sendFacebookText cfg (ME.facebookMessageSenderId msg) reply
+              case sendResult of
+                Left err -> do
+                  runSqlPool
+                    (update key
+                      [ ME.FacebookMessageReplyError =. Just err
+                      , ME.FacebookMessageAdName =. acAdName adContext
+                      , ME.FacebookMessageCampaignName =. acCampaignName adContext
+                      ])
+                    pool
+                  pure acc
+                Right _ -> do
+                  runSqlPool
+                    (do
+                      update key
+                        [ ME.FacebookMessageRepliedAt =. Just now
+                        , ME.FacebookMessageReplyText =. Just reply
+                        , ME.FacebookMessageReplyError =. Nothing
+                        , ME.FacebookMessageAdName =. acAdName adContext
+                        , ME.FacebookMessageCampaignName =. acCampaignName adContext
+                        ]
+                      insert_ (ME.FacebookMessage (ME.facebookMessageExternalId msg <> "-out-" <> T.pack (show now))
+                                (ME.facebookMessageSenderId msg)
+                                (ME.facebookMessageSenderName msg)
+                                (Just reply)
+                                "outgoing"
+                                (ME.facebookMessageAdExternalId msg)
+                                (acAdName adContext)
+                                (ME.facebookMessageCampaignExternalId msg)
                                 (acCampaignName adContext)
                                 Nothing
                                 Nothing

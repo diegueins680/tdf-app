@@ -7,3 +7,7 @@
 .stack-root/
 .env
 .DS_Store
+
+# local env
+.env.local
+.rag-refresh.log

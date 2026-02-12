@@ -58,11 +58,9 @@ const selectMessages = (stats: MessageStats, filter: FilterKey) => {
 
 const formatTimestamp = (value?: string | null) => {
   if (!value) return '—';
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
 };
 
 const formatBody = (value?: string | null) => {
@@ -169,16 +167,23 @@ export default function SocialInboxPage() {
     queryKey: ['social-inbox', 'instagram', limit, direction, repliedOnly],
     queryFn: () => SocialInboxAPI.listInstagramMessages({ limit, direction, repliedOnly }),
   });
+  const facebookQuery = useQuery({
+    queryKey: ['social-inbox', 'facebook', limit, direction, repliedOnly],
+    queryFn: () => SocialInboxAPI.listFacebookMessages({ limit, direction, repliedOnly }),
+  });
   const whatsappQuery = useQuery({
     queryKey: ['social-inbox', 'whatsapp', limit, direction, repliedOnly],
     queryFn: () => SocialInboxAPI.listWhatsAppMessages({ limit, direction, repliedOnly }),
   });
   const instagramStats = useMemo(() => buildStats(instagramQuery.data), [instagramQuery.data]);
+  const facebookStats = useMemo(() => buildStats(facebookQuery.data), [facebookQuery.data]);
   const whatsappStats = useMemo(() => buildStats(whatsappQuery.data), [whatsappQuery.data]);
   const instagramMessages = useMemo(() => selectMessages(instagramStats, filter), [instagramStats, filter]);
+  const facebookMessages = useMemo(() => selectMessages(facebookStats, filter), [facebookStats, filter]);
   const whatsappMessages = useMemo(() => selectMessages(whatsappStats, filter), [whatsappStats, filter]);
   const refetch = () => {
     void instagramQuery.refetch();
+    void facebookQuery.refetch();
     void whatsappQuery.refetch();
   };
 
@@ -212,7 +217,7 @@ export default function SocialInboxPage() {
             variant="outlined"
             size="small"
             onClick={refetch}
-            disabled={instagramQuery.isFetching || whatsappQuery.isFetching}
+            disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
           >
             Actualizar
           </Button>
@@ -241,11 +246,16 @@ export default function SocialInboxPage() {
           )}
         </Stack>
       </Paper>
-      {(instagramQuery.isError || whatsappQuery.isError) && (
+      {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (
         <Stack spacing={1}>
           {instagramQuery.isError && (
             <Alert severity="error">
               Instagram: {instagramQuery.error instanceof Error ? instagramQuery.error.message : 'Error inesperado.'}
+            </Alert>
+          )}
+          {facebookQuery.isError && (
+            <Alert severity="error">
+              Facebook: {facebookQuery.error instanceof Error ? facebookQuery.error.message : 'Error inesperado.'}
             </Alert>
           )}
           {whatsappQuery.isError && (
@@ -261,6 +271,12 @@ export default function SocialInboxPage() {
           stats={instagramStats}
           messages={instagramMessages}
           loading={instagramQuery.isLoading}
+        />
+        <ChannelPanel
+          label="Facebook"
+          stats={facebookStats}
+          messages={facebookMessages}
+          loading={facebookQuery.isLoading}
         />
         <ChannelPanel
           label="WhatsApp"

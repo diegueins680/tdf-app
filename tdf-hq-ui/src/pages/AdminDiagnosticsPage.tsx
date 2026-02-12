@@ -34,11 +34,9 @@ const buildStats = (messages: SocialMessage[] | undefined): MessageStats => {
 
 const formatTimestamp = (value?: string | null) => {
   if (!value) return '—';
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
 };
 
 const formatBody = (value?: string | null) => {
@@ -57,18 +55,25 @@ export default function AdminDiagnosticsPage() {
     queryKey: ['social-inbox', 'instagram'],
     queryFn: () => SocialInboxAPI.listInstagramMessages({ direction: 'incoming' }),
   });
+  const facebookQuery = useQuery({
+    queryKey: ['social-inbox', 'facebook'],
+    queryFn: () => SocialInboxAPI.listFacebookMessages({ direction: 'incoming' }),
+  });
   const whatsappQuery = useQuery({
     queryKey: ['social-inbox', 'whatsapp'],
     queryFn: () => SocialInboxAPI.listWhatsAppMessages({ direction: 'incoming' }),
   });
   const instagramStats = useMemo(() => buildStats(instagramQuery.data), [instagramQuery.data]);
+  const facebookStats = useMemo(() => buildStats(facebookQuery.data), [facebookQuery.data]);
   const whatsappStats = useMemo(() => buildStats(whatsappQuery.data), [whatsappQuery.data]);
   const socialChannels = [
     { label: 'Instagram', stats: instagramStats, loading: instagramQuery.isLoading },
+    { label: 'Facebook', stats: facebookStats, loading: facebookQuery.isLoading },
     { label: 'WhatsApp', stats: whatsappStats, loading: whatsappQuery.isLoading },
   ];
   const refetchSocialMessages = () => {
     void instagramQuery.refetch();
+    void facebookQuery.refetch();
     void whatsappQuery.refetch();
   };
 
@@ -110,11 +115,16 @@ export default function AdminDiagnosticsPage() {
           Abrir página de sincronización
         </Button>
       </Paper>
-      {(instagramQuery.isError || whatsappQuery.isError) && (
+      {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (
         <Stack spacing={1}>
           {instagramQuery.isError && (
             <Alert severity="error">
               Instagram: {instagramQuery.error instanceof Error ? instagramQuery.error.message : 'Error inesperado.'}
+            </Alert>
+          )}
+          {facebookQuery.isError && (
+            <Alert severity="error">
+              Facebook: {facebookQuery.error instanceof Error ? facebookQuery.error.message : 'Error inesperado.'}
             </Alert>
           )}
           {whatsappQuery.isError && (
@@ -132,7 +142,7 @@ export default function AdminDiagnosticsPage() {
               variant="outlined"
               size="small"
               onClick={refetchSocialMessages}
-              disabled={instagramQuery.isFetching || whatsappQuery.isFetching}
+              disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
             >
               Actualizar mensajes
             </Button>

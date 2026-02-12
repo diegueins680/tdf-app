@@ -14,7 +14,7 @@ module TDF.Server where
 import           Control.Applicative ((<|>))
 import           Control.Exception (SomeException, displayException, try)
 import           Control.Concurrent (forkIO)
-import           Control.Monad (forM, forM_, void, when, unless, (>=>), join)
+import           Control.Monad (foldM, forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.Except (catchError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
@@ -27,6 +27,7 @@ import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), encode, genericParseJSON, genericToJSON)
+import qualified Data.Aeson.Key as AKey
 import           Data.Aeson.Types (camelTo2, fieldLabelModifier, parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -36,6 +37,7 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import qualified Data.Scientific as Sci
 import           Data.Time (Day, UTCTime (..), fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime, secondsToDiffTime)
 import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
@@ -76,7 +78,7 @@ import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceLi
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers (socialEventsServer)
-import           TDF.ServerExtra (bandsServer, instagramServer, instagramWebhookServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
+import           TDF.ServerExtra (bandsServer, facebookServer, facebookWebhookServer, instagramServer, instagramWebhookServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
 import           TDF.ServerInstagramOAuth (instagramOAuthServer)
 import           TDF.ServerInternships (internshipsServer)
 import           TDF.Server.SocialSync (socialSyncServer)
@@ -254,6 +256,7 @@ server env =
   :<|> fanPublicServer
   :<|> coursesPublicServer
   :<|> instagramWebhookServer
+  :<|> facebookWebhookServer
   :<|> whatsappHooksServer
   :<|> whatsappWebhookServer
   :<|> metaServer
@@ -902,6 +905,413 @@ parseDirectionParam (Just raw) =
     "outgoing" -> pure (Just "outgoing")
     _ -> throwBadRequest "Invalid direction value"
 
+data MetaChannel = MetaInstagram | MetaFacebook
+  deriving (Show, Eq)
+
+data MetaBackfillOptions = MetaBackfillOptions
+  { mboPlatform :: Text
+  , mboConversationLimit :: Int
+  , mboMessagesPerConversation :: Int
+  , mboOnlyUnread :: Bool
+  , mboDryRun :: Bool
+  } deriving (Show, Eq)
+
+parseMetaBackfillOptions :: Value -> Maybe MetaBackfillOptions
+parseMetaBackfillOptions =
+  parseMaybe $ withObject "MetaBackfillOptions" $ \o -> do
+    mPlatform <- o .:? "platform"
+    mConversationLimit <- o .:? "conversationLimit"
+    mMessagesPerConversation <- o .:? "messagesPerConversation"
+    mOnlyUnread <- o .:? "onlyUnread"
+    mDryRun <- o .:? "dryRun"
+    let platformRaw = fromMaybe "all" (mPlatform :: Maybe Text)
+        platformNorm =
+          case T.toCaseFold (T.strip platformRaw) of
+            "instagram" -> "instagram"
+            "facebook" -> "facebook"
+            "all" -> "all"
+            _ -> "all"
+        clamp minV maxV v = max minV (min maxV v)
+        convLimit = clamp 1 200 (fromMaybe 50 (mConversationLimit :: Maybe Int))
+        msgLimit = clamp 1 200 (fromMaybe 50 (mMessagesPerConversation :: Maybe Int))
+    pure MetaBackfillOptions
+      { mboPlatform = platformNorm
+      , mboConversationLimit = convLimit
+      , mboMessagesPerConversation = msgLimit
+      , mboOnlyUnread = fromMaybe True (mOnlyUnread :: Maybe Bool)
+      , mboDryRun = fromMaybe False (mDryRun :: Maybe Bool)
+      }
+
+jsonTextField :: Text -> Value -> Maybe Text
+jsonTextField fieldName payload =
+  join (parseMaybe (withObject "jsonTextField" (\o -> o .:? AKey.fromText fieldName)) payload)
+
+jsonBoolField :: Text -> Value -> Maybe Bool
+jsonBoolField fieldName payload =
+  join (parseMaybe (withObject "jsonBoolField" (\o -> o .:? AKey.fromText fieldName)) payload)
+
+jsonValueField :: Text -> Value -> Maybe Value
+jsonValueField fieldName payload =
+  join (parseMaybe (withObject "jsonValueField" (\o -> o .:? AKey.fromText fieldName)) payload)
+
+jsonArrayField :: Text -> Value -> [Value]
+jsonArrayField fieldName payload =
+  fromMaybe [] (parseMaybe (withObject "jsonArrayField" (\o -> o .:? AKey.fromText fieldName .!= [])) payload)
+
+jsonNestedArrayField :: Text -> Text -> Value -> [Value]
+jsonNestedArrayField outer inner payload =
+  case jsonValueField outer payload of
+    Nothing -> []
+    Just nested -> jsonArrayField inner nested
+
+jsonIntFromValue :: Value -> Maybe Int
+jsonIntFromValue (Number n) = Sci.toBoundedInteger n
+jsonIntFromValue (String txt) =
+  case reads (T.unpack (T.strip txt)) of
+    [(v, "")] -> Just v
+    _ -> Nothing
+jsonIntFromValue _ = Nothing
+
+jsonIntField :: Text -> Value -> Maybe Int
+jsonIntField fieldName payload = jsonValueField fieldName payload >>= jsonIntFromValue
+
+parseMetaMessageTime :: Maybe Text -> Maybe UTCTime
+parseMetaMessageTime Nothing = Nothing
+parseMetaMessageTime (Just txt) = iso8601ParseM (T.unpack (T.strip txt))
+
+serverErrorToText :: ServerError -> Text
+serverErrorToText err =
+  let bodyTxt = T.strip (TE.decodeUtf8 (BL.toStrict (errBody err)))
+  in if T.null bodyTxt then "Server error" else bodyTxt
+
+tokenSuffix :: Text -> Text
+tokenSuffix tok =
+  let trimmed = T.strip tok
+      suffixLen = min 8 (T.length trimmed)
+  in if suffixLen <= 0 then "empty" else T.takeEnd suffixLen trimmed
+
+buildFacebookGraphRequest
+  :: AppConfig
+  -> Text
+  -> [(Text, Text)]
+  -> AppM Request
+buildFacebookGraphRequest cfg path params = do
+  let base = T.dropWhileEnd (== '/') (facebookGraphBase cfg)
+      normalizedPath = if "/" `T.isPrefixOf` path then path else "/" <> path
+      query = renderSimpleQuery True (map (\(k, v) -> (TE.encodeUtf8 k, TE.encodeUtf8 v)) params)
+      url = T.unpack (base <> normalizedPath <> TE.decodeUtf8 query)
+  reqE <- liftIO (try (parseRequest url) :: IO (Either SomeException Request))
+  case reqE of
+    Left err -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack (displayException err))) }
+    Right req -> pure req
+
+requestFacebookGraphValue
+  :: Manager
+  -> AppConfig
+  -> Text
+  -> [(Text, Text)]
+  -> AppM Value
+requestFacebookGraphValue manager cfg path params = do
+  req <- buildFacebookGraphRequest cfg path params
+  respE <- liftIO (try (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString)))
+  resp <- case respE of
+    Left err ->
+      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack (displayException err))) }
+    Right ok -> pure ok
+  let status = statusCode (responseStatus resp)
+  when (status >= 400) $ do
+    let bodySnippet = take 2000 (BL8.unpack (responseBody resp))
+    throwError err502
+      { errBody = BL.fromStrict (TE.encodeUtf8 ("Facebook request failed (" <> T.pack (show status) <> ") " <> T.pack bodySnippet)) }
+  case eitherDecode (responseBody resp) of
+    Left err ->
+      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Facebook parse error: " <> T.pack err)) }
+    Right val -> pure val
+
+fetchGraphOwnId :: Manager -> AppConfig -> Text -> AppM Text
+fetchGraphOwnId manager cfg accessToken = do
+  payload <- requestFacebookGraphValue manager cfg "/me"
+    [ ("fields", "id,name")
+    , ("access_token", accessToken)
+    ]
+  case jsonTextField "id" payload of
+    Just ownerId | not (T.null (T.strip ownerId)) -> pure (T.strip ownerId)
+    _ -> throwError err502 { errBody = "Facebook /me response missing id" }
+
+fetchGraphConversations
+  :: Manager
+  -> AppConfig
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> MetaBackfillOptions
+  -> AppM [Value]
+fetchGraphConversations manager cfg path accessToken mPlatform MetaBackfillOptions{..} = do
+  let fields = T.concat
+        [ "id,updated_time,unread_count,messages.limit("
+        , T.pack (show mboMessagesPerConversation)
+        , "){id,from,message,text,created_time,is_echo}"
+        ]
+      baseParams =
+        [ ("fields", fields)
+        , ("limit", T.pack (show mboConversationLimit))
+        , ("access_token", accessToken)
+        ]
+      params = maybe baseParams (\platformVal -> ("platform", platformVal) : baseParams) mPlatform
+  payload <- requestFacebookGraphValue manager cfg path params
+  pure (jsonArrayField "data" payload)
+
+isIncomingMetaMessage :: Text -> Value -> Bool
+isIncomingMetaMessage ownId msgVal =
+  let mFrom = jsonValueField "from" msgVal
+      senderId = mFrom >>= jsonTextField "id"
+      isEcho = fromMaybe False (jsonBoolField "is_echo" msgVal)
+  in case senderId of
+       Nothing -> False
+       Just sid ->
+         let normalizedSender = T.toCaseFold (T.strip sid)
+             normalizedOwn = T.toCaseFold (T.strip ownId)
+         in not isEcho && normalizedSender /= normalizedOwn
+
+selectConversationMessages :: MetaBackfillOptions -> Value -> [Value]
+selectConversationMessages MetaBackfillOptions{..} conversationVal =
+  let allMessages = jsonNestedArrayField "messages" "data" conversationVal
+      unreadCount = jsonIntField "unread_count" conversationVal
+      sortedByNewest =
+        sortOn
+          (Down . fromMaybe (UTCTime (fromGregorian 1970 1 1) 0) . parseMetaMessageTime . jsonTextField "created_time")
+          allMessages
+      toTake =
+        if mboOnlyUnread
+          then case unreadCount of
+            Just n | n > 0 -> n
+            Just _ -> 0
+            Nothing -> length sortedByNewest
+          else length sortedByNewest
+  in take (max 0 toTake) sortedByNewest
+
+storeBackfilledMessage
+  :: MetaChannel
+  -> MetaBackfillOptions
+  -> Text
+  -> Value
+  -> AppM Bool
+storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = do
+  now <- liftIO getCurrentTime
+  let externalId = jsonTextField "id" msgVal
+      mFrom = jsonValueField "from" msgVal
+      senderId = mFrom >>= jsonTextField "id"
+      senderName = (mFrom >>= jsonTextField "name") <|> (mFrom >>= jsonTextField "username")
+      bodyRaw = jsonTextField "message" msgVal <|> jsonTextField "text" msgVal
+      body =
+        case bodyRaw of
+          Just txt | not (T.null (T.strip txt)) -> T.strip txt
+          _ -> "[attachment]"
+      createdAt = fromMaybe now (parseMetaMessageTime (jsonTextField "created_time" msgVal))
+      metadata = TE.decodeUtf8 (BL.toStrict (encode (object
+        [ "backfilled" .= True
+        , "conversationId" .= conversationId
+        , "source" .= ("meta-graph" :: Text)
+        ])))
+  case (externalId, senderId) of
+    (Just extId, Just sid) | not (T.null (T.strip extId)) && not (T.null (T.strip sid)) -> do
+      if mboDryRun
+        then pure True
+        else do
+          case channel of
+            MetaInstagram ->
+              runDB $ do
+                _ <- upsert (InstagramMessage extId
+                              sid
+                              senderName
+                              (Just body)
+                              "incoming"
+                              Nothing
+                              Nothing
+                              Nothing
+                              Nothing
+                              (Just metadata)
+                              Nothing
+                              Nothing
+                              Nothing
+                              createdAt)
+                     [ InstagramMessageSenderName =. senderName
+                     , InstagramMessageText =. Just body
+                     , InstagramMessageDirection =. "incoming"
+                     , InstagramMessageMetadata =. Just metadata
+                     ]
+                pure ()
+            MetaFacebook ->
+              runDB $ do
+                _ <- upsert (ME.FacebookMessage extId
+                              sid
+                              senderName
+                              (Just body)
+                              "incoming"
+                              Nothing
+                              Nothing
+                              Nothing
+                              Nothing
+                              (Just metadata)
+                              Nothing
+                              Nothing
+                              Nothing
+                              createdAt)
+                     [ ME.FacebookMessageSenderName =. senderName
+                     , ME.FacebookMessageText =. Just body
+                     , ME.FacebookMessageDirection =. "incoming"
+                     , ME.FacebookMessageMetadata =. Just metadata
+                     ]
+                pure ()
+          pure True
+    _ -> pure False
+
+backfillFacebookToken
+  :: Manager
+  -> AppConfig
+  -> MetaBackfillOptions
+  -> Text
+  -> AppM Value
+backfillFacebookToken manager cfg opts accessToken = do
+  ownerId <- fetchGraphOwnId manager cfg accessToken
+  conversations <- fetchGraphConversations manager cfg "/me/conversations" accessToken Nothing opts
+  (incomingScanned, importedCount) <- foldM
+    (\(scannedAcc, importedAcc) conversationVal -> do
+      let conversationId = fromMaybe "unknown" (jsonTextField "id" conversationVal)
+          incomingMessages = filter (isIncomingMetaMessage ownerId) (selectConversationMessages opts conversationVal)
+      stored <- mapM (storeBackfilledMessage MetaFacebook opts conversationId) incomingMessages
+      let imported = length (filter (\ok -> ok) stored)
+      pure (scannedAcc + length incomingMessages, importedAcc + imported)
+    )
+    (0, 0)
+    conversations
+  pure (object
+    [ "platform" .= ("facebook" :: Text)
+    , "tokenSuffix" .= tokenSuffix accessToken
+    , "ownerId" .= ownerId
+    , "conversations" .= length conversations
+    , "incomingScanned" .= incomingScanned
+    , "imported" .= importedCount
+    ])
+
+backfillInstagramAccount
+  :: Manager
+  -> AppConfig
+  -> MetaBackfillOptions
+  -> (Text, Text, Maybe Text)
+  -> AppM Value
+backfillInstagramAccount manager cfg opts (igUserId, accessToken, mHandle) = do
+  let trimmedIgUserId = T.strip igUserId
+      fetchByMe = fetchGraphConversations manager cfg "/me/conversations" accessToken (Just "instagram") opts
+  conversations <-
+    if T.null trimmedIgUserId
+      then fetchByMe
+      else
+        fetchGraphConversations manager cfg ("/" <> trimmedIgUserId <> "/conversations") accessToken (Just "instagram") opts
+          `catchError` \_ -> fetchByMe
+  (incomingScanned, importedCount) <- foldM
+    (\(scannedAcc, importedAcc) conversationVal -> do
+      let conversationId = fromMaybe "unknown" (jsonTextField "id" conversationVal)
+          incomingMessages = filter (isIncomingMetaMessage igUserId) (selectConversationMessages opts conversationVal)
+      stored <- mapM (storeBackfilledMessage MetaInstagram opts conversationId) incomingMessages
+      let imported = length (filter (\ok -> ok) stored)
+      pure (scannedAcc + length incomingMessages, importedAcc + imported)
+    )
+    (0, 0)
+    conversations
+  pure (object
+    [ "platform" .= ("instagram" :: Text)
+    , "igUserId" .= igUserId
+    , "handle" .= mHandle
+    , "tokenSuffix" .= tokenSuffix accessToken
+    , "conversations" .= length conversations
+    , "incomingScanned" .= incomingScanned
+    , "imported" .= importedCount
+    ])
+
+metaBackfillServer :: AuthedUser -> Value -> AppM Value
+metaBackfillServer user payload = do
+  unless (hasRole Admin user) $ throwError err403
+  opts <- maybe (throwBadRequest "Invalid meta backfill payload") pure (parseMetaBackfillOptions payload)
+  Env{envConfig} <- ask
+  manager <- liftIO $ newManager tlsManagerSettings
+  rows <- runDB $
+    selectList
+      [ SocialSyncAccountPlatform ==. "instagram"
+      , SocialSyncAccountAccessToken !=. Nothing
+      , SocialSyncAccountStatus ==. "connected"
+      ]
+      [Desc SocialSyncAccountUpdatedAt]
+  let sources =
+        [ (socialSyncAccountExternalUserId acc, tok, socialSyncAccountHandle acc)
+        | Entity _ acc <- rows
+        , let extId = T.strip (socialSyncAccountExternalUserId acc)
+        , not (T.null extId)
+        , Just rawTok <- [socialSyncAccountAccessToken acc]
+        , let tok = T.strip rawTok
+        , not (T.null tok)
+        ]
+      configuredSource =
+        case fmap T.strip (instagramMessagingToken envConfig) of
+          Just tok | not (T.null tok) ->
+            let mConfiguredIgId = fmap T.strip (instagramMessagingAccountId envConfig)
+                configuredIgId = fromMaybe "" mConfiguredIgId
+            in Just (configuredIgId, tok, mConfiguredIgId)
+          _ -> Nothing
+      instagramSources = nub (sources ++ maybeToList configuredSource)
+      facebookTokens = nub [ tok | (_, tok, _) <- instagramSources ]
+      runInstagram = mboPlatform opts == "all" || mboPlatform opts == "instagram"
+      runFacebook = mboPlatform opts == "all" || mboPlatform opts == "facebook"
+  facebookResults <-
+    if runFacebook
+      then forM facebookTokens $ \tok ->
+        (Right <$> backfillFacebookToken manager envConfig opts tok)
+          `catchError` \err ->
+            pure (Left (object
+              [ "platform" .= ("facebook" :: Text)
+              , "tokenSuffix" .= tokenSuffix tok
+              , "error" .= serverErrorToText err
+              ]))
+      else pure []
+  instagramResults <-
+    if runInstagram
+      then forM instagramSources $ \src@(_igUserId, tok, _handle) ->
+        (Right <$> backfillInstagramAccount manager envConfig opts src)
+          `catchError` \err ->
+            pure (Left (object
+              [ "platform" .= ("instagram" :: Text)
+              , "tokenSuffix" .= tokenSuffix tok
+              , "error" .= serverErrorToText err
+              ]))
+      else pure []
+  let successes = [val | Right val <- facebookResults ++ instagramResults]
+      failures = [val | Left val <- facebookResults ++ instagramResults]
+      importedTotal = sum (map (\v -> fromMaybe 0 (jsonIntField "imported" v)) successes)
+      scannedTotal = sum (map (\v -> fromMaybe 0 (jsonIntField "incomingScanned" v)) successes)
+  pure (object
+    [ "status" .= ("ok" :: Text)
+    , "options" .= object
+        [ "platform" .= mboPlatform opts
+        , "conversationLimit" .= mboConversationLimit opts
+        , "messagesPerConversation" .= mboMessagesPerConversation opts
+        , "onlyUnread" .= mboOnlyUnread opts
+        , "dryRun" .= mboDryRun opts
+        ]
+    , "sources" .= object
+        [ "instagramAccounts" .= length instagramSources
+        , "facebookTokens" .= length facebookTokens
+        , "configuredMessagingToken" .= isJust configuredSource
+        ]
+    , "totals" .= object
+        [ "imported" .= importedTotal
+        , "incomingScanned" .= scannedTotal
+        , "successes" .= length successes
+        , "failures" .= length failures
+        ]
+    , "results" .= successes
+    , "errors" .= failures
+    ])
+
 fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
@@ -1127,6 +1537,7 @@ protectedServer user =
   :<|> marketplaceAdminServer user
   :<|> paymentsServer user
   :<|> instagramServer
+  :<|> facebookServer
   :<|> instagramOAuthServer user
   :<|> whatsappMessagesServer user
   :<|> whatsappConsentServer user
@@ -1135,6 +1546,7 @@ protectedServer user =
   :<|> chatkitSessionServer user
   :<|> tidalAgentServer user
   :<|> socialSyncServer user
+  :<|> metaBackfillServer user
   :<|> socialEventsServer user
   :<|> internshipsServer user
   :<|> adsAdminServer user

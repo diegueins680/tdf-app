@@ -234,6 +234,123 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SocialInboxMessage'
+  /facebook/webhook:
+    get:
+      tags: [Facebook]
+      summary: Verify Facebook webhook
+      description: Echoes hub.challenge when verify token matches.
+      security: [ ]
+      parameters:
+        - name: hub.mode
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.verify_token
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.challenge
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification challenge
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Verify token mismatch
+    post:
+      tags: [Facebook]
+      summary: Receive Facebook webhook
+      description: Consumes Meta Page webhook payloads for Messenger inbox ingestion.
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '204':
+          description: Processed
+  /facebook/messages:
+    get:
+      tags: [Facebook]
+      summary: List Facebook inbox messages
+      description: Returns stored Facebook Messenger messages for inbox tracking.
+      operationId: listFacebookMessages
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+        - name: direction
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [incoming, outgoing, all]
+            default: all
+        - name: repliedOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Messages list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SocialInboxMessage'
+  /meta/backfill:
+    post:
+      tags: [Admin]
+      summary: Backfill Meta inbox messages
+      description: One-time admin trigger to import unread Instagram/Facebook messages from Graph API.
+      operationId: backfillMetaInbox
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                platform:
+                  type: string
+                  enum: [all, instagram, facebook]
+                conversationLimit:
+                  type: integer
+                messagesPerConversation:
+                  type: integer
+                onlyUnread:
+                  type: boolean
+                dryRun:
+                  type: boolean
+      responses:
+        '200':
+          description: Backfill result
+          content:
+            application/json:
+              schema:
+                type: object
   /whatsapp/messages:
     get:
       tags: [WhatsApp]

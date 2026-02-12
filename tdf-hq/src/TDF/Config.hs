@@ -55,6 +55,9 @@ data AppConfig = AppConfig
   , facebookAppId   :: Maybe Text
   , facebookAppSecret :: Maybe Text
   , facebookGraphBase :: Text
+  , facebookMessagingToken :: Maybe Text
+  , facebookMessagingPageId :: Maybe Text
+  , facebookMessagingApiBase :: Text
   , instagramAppToken :: Maybe Text
   , instagramGraphBase :: Text
   , instagramMessagingToken :: Maybe Text
@@ -101,6 +104,9 @@ loadConfig = do
   fbAppIdEnv <- lookupEnv "FACEBOOK_APP_ID" <|> lookupEnv "META_APP_ID"
   fbAppSecretEnv <- lookupEnv "FACEBOOK_APP_SECRET" <|> lookupEnv "META_APP_SECRET"
   fbGraphBaseEnv <- lookupEnv "FACEBOOK_GRAPH_BASE"
+  fbMsgTokenEnv <- lookupEnv "FACEBOOK_MESSAGING_TOKEN" <|> lookupEnv "FACEBOOK_PAGE_ACCESS_TOKEN"
+  fbMsgPageIdEnv <- lookupEnv "FACEBOOK_MESSAGING_PAGE_ID" <|> lookupEnv "FACEBOOK_PAGE_ID"
+  fbMsgBaseEnv <- lookupEnv "FACEBOOK_MESSAGING_API_BASE"
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
   courseInstructorAvatarEnv <- lookupEnv "COURSE_DEFAULT_INSTRUCTOR_AVATAR"
@@ -130,6 +136,8 @@ loadConfig = do
   igMsgBaseEnv <- lookupEnv "INSTAGRAM_MESSAGING_API_BASE"
   igVerifyEnv <- lookupEnv "INSTAGRAM_VERIFY_TOKEN" <|> lookupEnv "IG_VERIFY_TOKEN"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
+  let fbGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
+      igGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
   pure AppConfig
     { dbHost = h
     , dbPort = p
@@ -163,9 +171,12 @@ loadConfig = do
     , googleClientId = fmap (T.strip . T.pack) googleClientIdEnv
     , facebookAppId = fbAppIdEnv >>= nonEmpty . T.pack
     , facebookAppSecret = fbAppSecretEnv >>= nonEmpty . T.pack
-    , facebookGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
+    , facebookGraphBase = fbGraphBase
+    , facebookMessagingToken = fmap (T.strip . T.pack) fbMsgTokenEnv >>= nonEmpty
+    , facebookMessagingPageId = fmap (T.strip . T.pack) fbMsgPageIdEnv >>= nonEmpty
+    , facebookMessagingApiBase = maybe fbGraphBase (T.strip . T.pack) fbMsgBaseEnv
     , instagramAppToken = fmap (T.strip . T.pack) igTokenEnv
-    , instagramGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
+    , instagramGraphBase = igGraphBase
     , instagramMessagingToken =
         case fmap (T.strip . T.pack) igMsgTokenEnv of
           Just val | not (T.null val) -> Just val

@@ -21,6 +21,7 @@ import qualified Data.ByteString.Lazy as BL
 import           TDF.API.Admin     (AdminAPI)
 import           TDF.API.Future    (FutureAPI)
 import           TDF.API.Bands     (BandsAPI)
+import           TDF.API.Facebook  (FacebookAPI, FacebookWebhookAPI)
 import           TDF.API.Inventory (InventoryAPI)
 import           TDF.API.Payments (PaymentsAPI)
 import           TDF.API.Instagram (InstagramAPI, InstagramWebhookAPI)
@@ -134,6 +135,11 @@ type ChatKitSessionAPI =
 
 type TidalAgentAPI =
        "tidal-agent" :> ReqBody '[JSON] TidalAgentRequest :> Post '[JSON] TidalAgentResponse
+
+type MetaBackfillAPI =
+       "meta" :> "backfill"
+         :> ReqBody '[JSON] Value
+         :> Post '[JSON] Value
 
 type WhatsAppMessagesAPI =
        "whatsapp" :> "messages"
@@ -301,6 +307,7 @@ type ProtectedAPI =
   :<|> "marketplace" :> MarketplaceAdminAPI
   :<|> "payments" :> PaymentsAPI
   :<|> InstagramAPI
+  :<|> FacebookAPI
   :<|> InstagramOAuthAPI
   :<|> WhatsAppMessagesAPI
   :<|> WhatsAppConsentAPI
@@ -309,6 +316,7 @@ type ProtectedAPI =
   :<|> ChatKitSessionAPI
   :<|> TidalAgentAPI
   :<|> "social-sync" :> SocialSyncAPI
+  :<|> MetaBackfillAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> InternshipsAPI
   :<|> AdsAdminAPI
@@ -333,6 +341,7 @@ type API =
   :<|> "fans" :> FanPublicAPI
   :<|> CoursesPublicAPI
   :<|> InstagramWebhookAPI
+  :<|> FacebookWebhookAPI
   :<|> WhatsAppHooksAPI
   :<|> WhatsAppWebhookAPI
   :<|> MetaAPI

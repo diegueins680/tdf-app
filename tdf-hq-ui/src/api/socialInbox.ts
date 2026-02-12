@@ -37,6 +37,14 @@ export const SocialInboxAPI = {
         repliedOnly: filters.repliedOnly,
       })}`,
     ),
+  listFacebookMessages: (filters: SocialInboxFilters = {}) =>
+    get<SocialMessage[]>(
+      `/facebook/messages${buildQuery({
+        limit: filters.limit,
+        direction: filters.direction,
+        repliedOnly: filters.repliedOnly,
+      })}`,
+    ),
   listWhatsAppMessages: (filters: SocialInboxFilters = {}) =>
     get<SocialMessage[]>(
       `/whatsapp/messages${buildQuery({
