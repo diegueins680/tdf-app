@@ -1667,6 +1667,8 @@ instagramServer =
       Env{..} <- ask
       let recipient = IG.irSenderId req
           body = T.strip (IG.irMessage req)
+          mExternalId =
+            IG.irExternalId req >>= (\raw -> let trimmed = T.strip raw in if T.null trimmed then Nothing else Just trimmed)
       when (T.null body) $
         throwError err400 { errBody = "Empty message" }
       sendResult <- liftIO $ sendInstagramText envConfig recipient body
@@ -1685,6 +1687,23 @@ instagramServer =
                   Nothing
                   (either Just (const Nothing) sendResult)
                   now)
+        for_ mExternalId $ \extId -> do
+          let baseFilters =
+                [ M.InstagramMessageExternalId ==. extId
+                , M.InstagramMessageDirection ==. "incoming"
+                , M.InstagramMessageRepliedAt ==. Nothing
+                ]
+          case sendResult of
+            Left err ->
+              updateWhere baseFilters
+                [ M.InstagramMessageReplyError =. Just err
+                ]
+            Right _ ->
+              updateWhere baseFilters
+                [ M.InstagramMessageRepliedAt =. Just now
+                , M.InstagramMessageReplyText =. Just body
+                , M.InstagramMessageReplyError =. Nothing
+                ]
       case sendResult of
         Left err ->
           pure (object ["status" .= ("error" :: Text), "message" .= err])
@@ -1733,6 +1752,8 @@ facebookServer =
       Env{..} <- ask
       let recipient = FB.frSenderId req
           body = T.strip (FB.frMessage req)
+          mExternalId =
+            FB.frExternalId req >>= (\raw -> let trimmed = T.strip raw in if T.null trimmed then Nothing else Just trimmed)
       when (T.null body) $
         throwError err400 { errBody = "Empty message" }
       sendResult <- liftIO $ sendFacebookText envConfig recipient body
@@ -1751,6 +1772,23 @@ facebookServer =
                   Nothing
                   (either Just (const Nothing) sendResult)
                   now)
+        for_ mExternalId $ \extId -> do
+          let baseFilters =
+                [ ME.FacebookMessageExternalId ==. extId
+                , ME.FacebookMessageDirection ==. "incoming"
+                , ME.FacebookMessageRepliedAt ==. Nothing
+                ]
+          case sendResult of
+            Left err ->
+              updateWhere baseFilters
+                [ ME.FacebookMessageReplyError =. Just err
+                ]
+            Right _ ->
+              updateWhere baseFilters
+                [ ME.FacebookMessageRepliedAt =. Just now
+                , ME.FacebookMessageReplyText =. Just body
+                , ME.FacebookMessageReplyError =. Nothing
+                ]
       case sendResult of
         Left err ->
           pure (object ["status" .= ("error" :: Text), "message" .= err])

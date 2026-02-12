@@ -724,6 +724,54 @@ whatsappMessagesServer _ mLimit mDirection mRepliedOnly = do
         ]
   pure (toJSON (map toObj rows))
 
+whatsappReplyServer :: AuthedUser -> ServerT Api.WhatsAppReplyAPI AppM
+whatsappReplyServer _ WhatsAppReplyReq{..} = do
+  now <- liftIO getCurrentTime
+  waEnv <- liftIO loadWhatsAppEnv
+  let recipient = T.strip wrSenderId
+      body = T.strip wrMessage
+      mExternalId = wrExternalId >>= (\raw -> let trimmed = T.strip raw in if T.null trimmed then Nothing else Just trimmed)
+  when (T.null recipient) $ throwBadRequest "Remitente requerido"
+  when (T.null body) $ throwBadRequest "Mensaje vacío"
+  sendResult <- sendWhatsAppText waEnv recipient body
+  runDB $ do
+    insert_ (ME.WhatsAppMessage (recipient <> "-out-" <> T.pack (show now))
+              recipient
+              Nothing
+              (Just body)
+              "outgoing"
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              (either Just (const Nothing) sendResult)
+              now)
+    for_ mExternalId $ \extId -> do
+      let baseFilters =
+            [ ME.WhatsAppMessageExternalId ==. extId
+            , ME.WhatsAppMessageDirection ==. "incoming"
+            , ME.WhatsAppMessageRepliedAt ==. Nothing
+            ]
+      case sendResult of
+        Left err ->
+          updateWhere baseFilters
+            [ ME.WhatsAppMessageReplyError =. Just err
+            ]
+        Right _ ->
+          updateWhere baseFilters
+            [ ME.WhatsAppMessageRepliedAt =. Just now
+            , ME.WhatsAppMessageReplyText =. Just body
+            , ME.WhatsAppMessageReplyError =. Nothing
+            ]
+  case sendResult of
+    Left err ->
+      pure (object ["status" .= ("error" :: Text), "message" .= err])
+    Right responseBody ->
+      pure (object ["status" .= ("ok" :: Text), "message" .= ("sent" :: Text), "response" .= responseBody])
+
 whatsappConsentServer :: AuthedUser -> ServerT Api.WhatsAppConsentAPI AppM
 whatsappConsentServer user =
   let requireAdmin = unless (hasRole Admin user) $ throwError err403
@@ -984,6 +1032,13 @@ serverErrorToText err =
   let bodyTxt = T.strip (TE.decodeUtf8 (BL.toStrict (errBody err)))
   in if T.null bodyTxt then "Server error" else bodyTxt
 
+isMetaGraphTimeoutError :: ServerError -> Bool
+isMetaGraphTimeoutError err =
+  let bodyTxt = T.toCaseFold (serverErrorToText err)
+  in "request timed out" `T.isInfixOf` bodyTxt
+      || ("oauthexception" `T.isInfixOf` bodyTxt && "2534084" `T.isInfixOf` bodyTxt)
+      || "reduce the amount of data you're asking for" `T.isInfixOf` bodyTxt
+
 tokenSuffix :: Text -> Text
 tokenSuffix tok =
   let trimmed = T.strip tok
@@ -1047,19 +1102,63 @@ fetchGraphConversations
   -> MetaBackfillOptions
   -> AppM [Value]
 fetchGraphConversations manager cfg path accessToken mPlatform MetaBackfillOptions{..} = do
-  let fields = T.concat
-        [ "id,updated_time,unread_count,messages.limit("
-        , T.pack (show mboMessagesPerConversation)
-        , "){id,from,message,text,created_time,is_echo}"
-        ]
-      baseParams =
-        [ ("fields", fields)
-        , ("limit", T.pack (show mboConversationLimit))
-        , ("access_token", accessToken)
-        ]
-      params = maybe baseParams (\platformVal -> ("platform", platformVal) : baseParams) mPlatform
-  payload <- requestFacebookGraphValue manager cfg path params
-  pure (jsonArrayField "data" payload)
+  let fetchConversationStubs conversationLimit = do
+        let baseParams =
+              [ ("fields", "id,updated_time,unread_count")
+              , ("limit", T.pack (show conversationLimit))
+              , ("access_token", accessToken)
+              ]
+            params = maybe baseParams (\platformVal -> ("platform", platformVal) : baseParams) mPlatform
+        payload <- requestFacebookGraphValue manager cfg path params
+        pure (jsonArrayField "data" payload)
+
+      fetchConversationMessages conversationId = do
+        let trimmedId = T.strip conversationId
+            msgParams =
+              [ ("fields", "id,from,message,text,created_time,is_echo")
+              , ("limit", T.pack (show mboMessagesPerConversation))
+              , ("access_token", accessToken)
+              ]
+        payload <- requestFacebookGraphValue manager cfg ("/" <> trimmedId <> "/messages") msgParams
+        pure (jsonArrayField "data" payload)
+
+      withMessages :: Value -> [Value] -> Value
+      withMessages conversationVal messages =
+        object
+          [ "id" .= jsonTextField "id" conversationVal
+          , "updated_time" .= jsonTextField "updated_time" conversationVal
+          , "unread_count" .= jsonIntField "unread_count" conversationVal
+          , "messages" .= object [ "data" .= messages ]
+          ]
+
+      hydrateConversation conversationVal = do
+        let unreadCount = fromMaybe 0 (jsonIntField "unread_count" conversationVal)
+            mConversationId = fmap T.strip (jsonTextField "id" conversationVal)
+            shouldSkipMessages = mboOnlyUnread && unreadCount <= 0
+        case mConversationId of
+          Nothing -> pure (withMessages conversationVal [])
+          Just conversationId
+            | T.null conversationId -> pure (withMessages conversationVal [])
+            | shouldSkipMessages -> pure (withMessages conversationVal [])
+            | otherwise -> do
+                messages <- fetchConversationMessages conversationId
+                  `catchError` \err ->
+                    if isMetaGraphTimeoutError err
+                      then pure []
+                      else throwError err
+                pure (withMessages conversationVal messages)
+
+      runAttempt conversationLimit = do
+        stubs <- fetchConversationStubs conversationLimit
+        mapM hydrateConversation stubs
+
+      retryWithLowerLimit conversationLimit = do
+        runAttempt conversationLimit
+          `catchError` \err ->
+            if isMetaGraphTimeoutError err && conversationLimit > 1
+              then retryWithLowerLimit (max 1 (conversationLimit `div` 2))
+              else throwError err
+  retryWithLowerLimit (max 1 mboConversationLimit)
 
 isIncomingMetaMessage :: Text -> Value -> Bool
 isIncomingMetaMessage ownId msgVal =
@@ -1545,6 +1644,7 @@ protectedServer user =
   :<|> facebookServer
   :<|> instagramOAuthServer user
   :<|> whatsappMessagesServer user
+  :<|> whatsappReplyServer user
   :<|> whatsappConsentServer user
   :<|> socialServer user
   :<|> chatServer user

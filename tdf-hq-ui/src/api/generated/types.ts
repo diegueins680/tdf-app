@@ -172,6 +172,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/instagram/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Instagram reply
+         * @description Sends a manual Instagram reply and stores it.
+         */
+        post: operations["sendInstagramReply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/instagram/messages": {
         parameters: {
             query?: never;
@@ -192,6 +212,101 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/facebook/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Facebook reply
+         * @description Sends a manual Facebook Messenger reply and stores it.
+         */
+        post: operations["sendFacebookReply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/facebook/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify Facebook webhook
+         * @description Echoes hub.challenge when verify token matches.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    "hub.mode"?: string;
+                    "hub.verify_token"?: string;
+                    "hub.challenge"?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Verification challenge */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": string;
+                    };
+                };
+                /** @description Verify token mismatch */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Receive Facebook webhook
+         * @description Consumes Meta Page webhook payloads for Messenger inbox ingestion.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Processed */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/facebook/messages": {
         parameters: {
             query?: never;
@@ -206,6 +321,46 @@ export interface paths {
         get: operations["listFacebookMessages"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meta/backfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Backfill Meta inbox messages
+         * @description One-time admin trigger to import unread Instagram/Facebook messages from Graph API.
+         */
+        post: operations["backfillMetaInbox"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/whatsapp/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send WhatsApp reply
+         * @description Sends a manual WhatsApp reply and stores it.
+         */
+        post: operations["sendWhatsAppReply"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1481,6 +1636,35 @@ export interface operations {
             };
         };
     };
+    sendInstagramReply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    irSenderId: string;
+                    irMessage: string;
+                    /** @description Optional externalId of the inbound message to mark it as replied. */
+                    irExternalId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Reply status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
     listInstagramMessages: {
         parameters: {
             query?: {
@@ -1505,6 +1689,35 @@ export interface operations {
             };
         };
     };
+    sendFacebookReply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    frSenderId: string;
+                    frMessage: string;
+                    /** @description Optional externalId of the inbound message to mark it as replied. */
+                    frExternalId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Reply status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
     listFacebookMessages: {
         parameters: {
             query?: {
@@ -1525,6 +1738,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SocialInboxMessage"][];
+                };
+            };
+        };
+    };
+    backfillMetaInbox: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    platform?: "all" | "instagram" | "facebook";
+                    conversationLimit?: number;
+                    messagesPerConversation?: number;
+                    onlyUnread?: boolean;
+                    dryRun?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Backfill result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    sendWhatsAppReply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    wrSenderId: string;
+                    wrMessage: string;
+                    /** @description Optional externalId of the inbound message to mark it as replied. */
+                    wrExternalId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Reply status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

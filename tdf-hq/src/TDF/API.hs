@@ -148,6 +148,18 @@ type WhatsAppMessagesAPI =
          :> QueryParam "repliedOnly" Text
          :> Get '[JSON] Value
 
+data WhatsAppReplyReq = WhatsAppReplyReq
+  { wrSenderId   :: Text
+  , wrMessage    :: Text
+  , wrExternalId :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON WhatsAppReplyReq
+instance ToJSON WhatsAppReplyReq
+
+type WhatsAppReplyAPI =
+       "whatsapp" :> "reply" :> ReqBody '[JSON] WhatsAppReplyReq :> Post '[JSON] Value
+
 type WhatsAppConsentRoutes =
        "consent"
          :> ReqBody '[JSON] WhatsAppConsentRequest
@@ -310,6 +322,7 @@ type ProtectedAPI =
   :<|> FacebookAPI
   :<|> InstagramOAuthAPI
   :<|> WhatsAppMessagesAPI
+  :<|> WhatsAppReplyAPI
   :<|> WhatsAppConsentAPI
   :<|> "social" :> SocialAPI
   :<|> ChatAPI

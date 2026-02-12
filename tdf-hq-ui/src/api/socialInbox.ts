@@ -1,4 +1,4 @@
-import { get } from './client';
+import { get, post } from './client';
 
 export interface SocialMessage {
   externalId: string;
@@ -10,6 +10,24 @@ export interface SocialMessage {
   replyText?: string | null;
   replyError?: string | null;
   createdAt: string;
+}
+
+export type SocialChannel = 'instagram' | 'facebook' | 'whatsapp';
+
+interface ReplyStatusResponse {
+  status?: 'ok' | 'error' | string;
+  message?: string;
+  response?: unknown;
+}
+
+interface ReplyRequestBase {
+  senderId: string;
+  message: string;
+  externalId?: string;
+}
+
+interface AdsAssistResponse {
+  aasReply: string;
 }
 
 interface SocialInboxFilters {
@@ -53,4 +71,61 @@ export const SocialInboxAPI = {
         repliedOnly: filters.repliedOnly,
       })}`,
     ),
+
+  sendReply: async (channel: SocialChannel, payload: ReplyRequestBase) => {
+    const senderId = payload.senderId.trim();
+    const message = payload.message.trim();
+    if (!senderId) throw new Error('Remitente inválido.');
+    if (!message) throw new Error('Escribe una respuesta antes de enviar.');
+
+    const externalId = payload.externalId?.trim();
+    const safeExternalId = externalId ? externalId : undefined;
+
+    let result: ReplyStatusResponse;
+    switch (channel) {
+      case 'instagram':
+        result = await post<ReplyStatusResponse>('/instagram/reply', {
+          irSenderId: senderId,
+          irMessage: message,
+          ...(safeExternalId ? { irExternalId: safeExternalId } : {}),
+        });
+        break;
+      case 'facebook':
+        result = await post<ReplyStatusResponse>('/facebook/reply', {
+          frSenderId: senderId,
+          frMessage: message,
+          ...(safeExternalId ? { frExternalId: safeExternalId } : {}),
+        });
+        break;
+      case 'whatsapp':
+        result = await post<ReplyStatusResponse>('/whatsapp/reply', {
+          wrSenderId: senderId,
+          wrMessage: message,
+          ...(safeExternalId ? { wrExternalId: safeExternalId } : {}),
+        });
+        break;
+      default:
+        throw new Error('Canal no soportado.');
+    }
+
+    if (result?.status === 'error') {
+      throw new Error(result?.message || 'No se pudo enviar el mensaje.');
+    }
+    return result;
+  },
+
+  suggestReply: async (channel: SocialChannel, message: string, hint?: string) => {
+    const trimmed = message.trim();
+    if (!trimmed) throw new Error('El mensaje está vacío.');
+    const hintClean = hint?.trim();
+    const prompt = hintClean ? `${trimmed}\n\nInstrucciones adicionales:\n${hintClean}` : trimmed;
+
+    const res = await post<AdsAssistResponse>('/ads/assist', {
+      aarMessage: prompt,
+      aarChannel: channel,
+    });
+    const reply = res?.aasReply;
+    if (!reply || typeof reply !== 'string') throw new Error('Respuesta IA vacía o inválida.');
+    return reply.trim();
+  },
 };

@@ -12,6 +12,7 @@ import           Servant
 data InstagramReplyReq = InstagramReplyReq
   { irSenderId :: Text
   , irMessage  :: Text
+  , irExternalId :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON InstagramReplyReq

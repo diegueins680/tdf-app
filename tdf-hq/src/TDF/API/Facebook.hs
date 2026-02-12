@@ -12,6 +12,7 @@ import           Servant
 data FacebookReplyReq = FacebookReplyReq
   { frSenderId :: Text
   , frMessage  :: Text
+  , frExternalId :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON FacebookReplyReq

@@ -215,6 +215,9 @@ paths:
                   type: string
                 irMessage:
                   type: string
+                irExternalId:
+                  type: string
+                  description: Optional externalId of the inbound message to mark it as replied.
       responses:
         '200':
           description: Reply status
@@ -281,6 +284,9 @@ paths:
                   type: string
                 frMessage:
                   type: string
+                frExternalId:
+                  type: string
+                  description: Optional externalId of the inbound message to mark it as replied.
       responses:
         '200':
           description: Reply status
@@ -401,6 +407,36 @@ paths:
       responses:
         '200':
           description: Backfill result
+          content:
+            application/json:
+              schema:
+                type: object
+  /whatsapp/reply:
+    post:
+      tags: [WhatsApp]
+      summary: Send WhatsApp reply
+      description: Sends a manual WhatsApp reply and stores it.
+      operationId: sendWhatsAppReply
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [wrSenderId, wrMessage]
+              properties:
+                wrSenderId:
+                  type: string
+                wrMessage:
+                  type: string
+                wrExternalId:
+                  type: string
+                  description: Optional externalId of the inbound message to mark it as replied.
+      responses:
+        '200':
+          description: Reply status
           content:
             application/json:
               schema:
