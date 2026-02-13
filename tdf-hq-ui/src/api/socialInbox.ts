@@ -5,6 +5,7 @@ export interface SocialMessage {
   senderId: string;
   senderName?: string | null;
   text?: string | null;
+  metadata?: string | null;
   direction: string;
   repliedAt?: string | null;
   replyText?: string | null;

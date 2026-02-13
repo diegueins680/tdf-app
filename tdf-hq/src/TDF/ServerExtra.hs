@@ -10,6 +10,7 @@ module TDF.ServerExtra where
 
 import           Control.Monad              (filterM, unless, when, join, guard)
 import           Control.Applicative        ((<|>))
+import           Control.Exception          (SomeException, try)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask, asks)
@@ -24,6 +25,7 @@ import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
+import qualified Data.ByteString.Char8      as BS
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
@@ -39,6 +41,10 @@ import           System.FilePath            ((</>), takeExtension, takeFileName)
 import           System.IO                  (hPutStrLn, stderr)
 import           Database.Persist        hiding (Active)
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Network.HTTP.Client        (Manager, Request(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
+import           Network.HTTP.Client.TLS    (tlsManagerSettings)
+import           Network.HTTP.Types.Header  (hAuthorization)
+import           Network.HTTP.Types.Status  (statusCode)
 import           Servant
 import           Servant.Multipart          (FileData(..))
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
@@ -55,7 +61,7 @@ import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), P
 import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
-import           TDF.Config                 (assetsRootDir, instagramAppToken, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
+import           TDF.Config                 (AppConfig, assetsRootDir, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
 import           TDF.Services.InstagramMessaging (sendInstagramText)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
@@ -1724,11 +1730,25 @@ instagramServer =
       rows <- liftIO $
         flip runSqlPool envPool $
           selectList filters [Desc M.InstagramMessageCreatedAt, LimitTo limit]
-      let toObj (Entity _ m) = object
+      let missing =
+            [ (key, M.instagramMessageSenderId m)
+            | Entity key m <- rows
+            , isNothing (stripNonEmptyText (M.instagramMessageSenderName m))
+            ]
+      resolved <- liftIO $ resolveMetaSenderLabels envConfig MetaInstagram (map snd missing)
+      liftIO $ flip runSqlPool envPool $
+        for_ missing $ \(key, sid) ->
+          for_ (Map.lookup (T.strip sid) resolved) $ \label ->
+            update key [M.InstagramMessageSenderName =. Just label]
+      let toObj (Entity _ m) =
+            let sid = M.instagramMessageSenderId m
+                senderName = stripNonEmptyText (M.instagramMessageSenderName m) <|> Map.lookup (T.strip sid) resolved
+            in object
             [ "externalId" .= M.instagramMessageExternalId m
             , "senderId"   .= M.instagramMessageSenderId m
-            , "senderName" .= M.instagramMessageSenderName m
+            , "senderName" .= senderName
             , "text"       .= M.instagramMessageText m
+            , "metadata"   .= M.instagramMessageMetadata m
             , "direction"  .= M.instagramMessageDirection m
             , "repliedAt"  .= M.instagramMessageRepliedAt m
             , "replyText"  .= M.instagramMessageReplyText m
@@ -1808,11 +1828,25 @@ facebookServer =
       rows <- liftIO $
         flip runSqlPool envPool $
           selectList filters [Desc ME.FacebookMessageCreatedAt, LimitTo limit]
-      let toObj (Entity _ m) = object
+      let missing =
+            [ (key, ME.facebookMessageSenderId m)
+            | Entity key m <- rows
+            , isNothing (stripNonEmptyText (ME.facebookMessageSenderName m))
+            ]
+      resolved <- liftIO $ resolveMetaSenderLabels envConfig MetaFacebook (map snd missing)
+      liftIO $ flip runSqlPool envPool $
+        for_ missing $ \(key, sid) ->
+          for_ (Map.lookup (T.strip sid) resolved) $ \label ->
+            update key [ME.FacebookMessageSenderName =. Just label]
+      let toObj (Entity _ m) =
+            let sid = ME.facebookMessageSenderId m
+                senderName = stripNonEmptyText (ME.facebookMessageSenderName m) <|> Map.lookup (T.strip sid) resolved
+            in object
             [ "externalId" .= ME.facebookMessageExternalId m
             , "senderId"   .= ME.facebookMessageSenderId m
-            , "senderName" .= ME.facebookMessageSenderName m
+            , "senderName" .= senderName
             , "text"       .= ME.facebookMessageText m
+            , "metadata"   .= ME.facebookMessageMetadata m
             , "direction"  .= ME.facebookMessageDirection m
             , "repliedAt"  .= ME.facebookMessageRepliedAt m
             , "replyText"  .= ME.facebookMessageReplyText m
@@ -1821,6 +1855,92 @@ facebookServer =
             ]
       pure (A.toJSON (map toObj rows))
 
+data MetaProfile = MetaProfile
+  { mpUsername :: Maybe Text
+  , mpName :: Maybe Text
+  , mpFirstName :: Maybe Text
+  , mpLastName :: Maybe Text
+  } deriving (Show)
+
+instance A.FromJSON MetaProfile where
+  parseJSON = withObject "MetaProfile" $ \o -> do
+    mpUsername <- o .:? "username"
+    mpName <- o .:? "name"
+    mpFirstName <- o .:? "first_name"
+    mpLastName <- o .:? "last_name"
+    pure MetaProfile{..}
+
+stripNonEmptyText :: Maybe Text -> Maybe Text
+stripNonEmptyText Nothing = Nothing
+stripNonEmptyText (Just raw) =
+  let trimmed = T.strip raw
+  in if T.null trimmed then Nothing else Just trimmed
+
+metaProfileLabel :: MetaChannel -> MetaProfile -> Maybe Text
+metaProfileLabel MetaInstagram MetaProfile{..} =
+  stripNonEmptyText (mpUsername <|> mpName)
+metaProfileLabel MetaFacebook MetaProfile{..} =
+  let first = stripNonEmptyText mpFirstName
+      lastN = stripNonEmptyText mpLastName
+      fullName =
+        case (first, lastN) of
+          (Just f, Just l) -> Just (f <> " " <> l)
+          (Just f, Nothing) -> Just f
+          (Nothing, Just l) -> Just l
+          _ -> Nothing
+  in fullName <|> stripNonEmptyText mpName
+
+fetchMetaProfileLabel :: Manager -> Text -> Text -> MetaChannel -> Text -> IO (Maybe Text)
+fetchMetaProfileLabel manager base token channel senderId = do
+  let sid = T.strip senderId
+  if T.null sid
+    then pure Nothing
+    else do
+      let baseClean = T.dropWhileEnd (== '/') (T.strip base)
+          fields = case channel of
+            MetaInstagram -> "username,name"
+            MetaFacebook -> "name,first_name,last_name"
+          urlTxt = baseClean <> "/" <> sid <> "?fields=" <> fields
+      reqE <- try (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)
+      case reqE of
+        Left _ -> pure Nothing
+        Right req0 -> do
+          let req = req0
+                { method = "GET"
+                , requestHeaders =
+                    (hAuthorization, BS.pack ("Bearer " <> T.unpack token)) : requestHeaders req0
+                }
+          respE <- try (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString))
+          case respE of
+            Left _ -> pure Nothing
+            Right resp -> do
+              let st = statusCode (responseStatus resp)
+              if st < 200 || st >= 300
+                then pure Nothing
+                else
+                  case A.eitherDecode (responseBody resp) of
+                    Left _ -> pure Nothing
+                    Right profile -> pure (metaProfileLabel channel profile)
+
+resolveMetaSenderLabels :: AppConfig -> MetaChannel -> [Text] -> IO (Map.Map Text Text)
+resolveMetaSenderLabels cfg channel senderIds = do
+  let mToken =
+        case channel of
+          MetaInstagram -> stripNonEmptyText (instagramMessagingToken cfg <|> instagramAppToken cfg)
+          MetaFacebook -> stripNonEmptyText (facebookMessagingToken cfg)
+      base = case channel of
+        MetaInstagram -> instagramMessagingApiBase cfg
+        MetaFacebook -> facebookMessagingApiBase cfg
+  case mToken of
+    Nothing -> pure Map.empty
+    Just tok -> do
+      manager <- newManager tlsManagerSettings
+      let uniqueIds = take 25 (Set.toList (Set.fromList (map T.strip senderIds)))
+      pairs <- mapM (\sid -> do
+        mLabel <- fetchMetaProfileLabel manager base tok channel sid
+        pure (sid, mLabel)
+        ) uniqueIds
+      pure $ Map.fromList [ (sid, label) | (sid, Just label) <- pairs, not (T.null (T.strip label)) ]
 
 normalizeSocialLimit :: Maybe Int -> Int
 normalizeSocialLimit = max 1 . min 200 . fromMaybe 100

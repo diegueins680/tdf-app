@@ -716,6 +716,7 @@ whatsappMessagesServer _ mLimit mDirection mRepliedOnly = do
         , "senderId"   .= ME.whatsAppMessageSenderId m
         , "senderName" .= ME.whatsAppMessageSenderName m
         , "text"       .= ME.whatsAppMessageText m
+        , "metadata"   .= ME.whatsAppMessageMetadata m
         , "direction"  .= ME.whatsAppMessageDirection m
         , "repliedAt"  .= ME.whatsAppMessageRepliedAt m
         , "replyText"  .= ME.whatsAppMessageReplyText m
@@ -1115,7 +1116,7 @@ fetchGraphConversations manager cfg path accessToken mPlatform MetaBackfillOptio
       fetchConversationMessages conversationId = do
         let trimmedId = T.strip conversationId
             msgParams =
-              [ ("fields", "id,from,message,text,created_time,is_echo")
+              [ ("fields", "id,from{id,name,username},message,text,created_time,is_echo,attachments{mime_type,name,image_data,video_data,file_url}")
               , ("limit", T.pack (show mboMessagesPerConversation))
               , ("access_token", accessToken)
               ]
@@ -1199,6 +1200,7 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
   now <- liftIO getCurrentTime
   let externalId = jsonTextField "id" msgVal
       mFrom = jsonValueField "from" msgVal
+      mAttachments = jsonValueField "attachments" msgVal
       senderId = mFrom >>= jsonTextField "id"
       senderName = (mFrom >>= jsonTextField "name") <|> (mFrom >>= jsonTextField "username")
       bodyRaw = jsonTextField "message" msgVal <|> jsonTextField "text" msgVal
@@ -1207,11 +1209,14 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
           Just txt | not (T.null (T.strip txt)) -> T.strip txt
           _ -> "[attachment]"
       createdAt = fromMaybe now (parseMetaMessageTime (jsonTextField "created_time" msgVal))
-      metadata = TE.decodeUtf8 (BL.toStrict (encode (object
+      metaPairs =
         [ "backfilled" .= True
         , "conversationId" .= conversationId
         , "source" .= ("meta-graph" :: Text)
-        ])))
+        ]
+        <> maybe [] (\fromVal -> ["from" .= fromVal]) mFrom
+        <> maybe [] (\attVal -> ["attachments" .= attVal]) mAttachments
+      metadata = TE.decodeUtf8 (BL.toStrict (encode (object metaPairs)))
   case (externalId, senderId) of
     (Just extId, Just sid) | not (T.null (T.strip extId)) && not (T.null (T.strip sid)) -> do
       if mboDryRun

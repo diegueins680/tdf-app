@@ -82,6 +82,78 @@ const formatBody = (value?: string | null) => {
   return trimmed && trimmed.length > 0 ? trimmed : '—';
 };
 
+const parseJson = (value?: string | null) => {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return null;
+  }
+};
+
+type ParsedAttachment = {
+  kind: string;
+  label: string;
+  url?: string;
+};
+
+const coerceText = (value: unknown) => (typeof value === 'string' ? value : undefined);
+
+const extractAttachments = (metadata?: string | null): ParsedAttachment[] => {
+  const parsed = parseJson(metadata);
+  if (!parsed || typeof parsed !== 'object') return [];
+
+  const attachmentsRaw = (parsed as Record<string, unknown>)['attachments'];
+  const items: unknown[] = Array.isArray(attachmentsRaw)
+    ? attachmentsRaw
+    : attachmentsRaw &&
+        typeof attachmentsRaw === 'object' &&
+        Array.isArray((attachmentsRaw as Record<string, unknown>)['data'])
+      ? ((attachmentsRaw as Record<string, unknown>)['data'] as unknown[])
+      : [];
+
+  return items
+    .map<ParsedAttachment | null>((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const obj = item as Record<string, unknown>;
+
+      // Webhook-style: { type, payload: { url, ... } }
+      const type = coerceText(obj['type']);
+      const payload =
+        obj['payload'] && typeof obj['payload'] === 'object' ? (obj['payload'] as Record<string, unknown>) : null;
+      const payloadUrl = payload ? coerceText(payload['url']) : undefined;
+
+      // Graph-style: { mime_type, name, image_data: { url }, video_data: { url }, file_url }
+      const mimeType = coerceText(obj['mime_type']);
+      const name = coerceText(obj['name']);
+      const fileUrl = coerceText(obj['file_url']) ?? coerceText(obj['url']);
+      const imageData =
+        obj['image_data'] && typeof obj['image_data'] === 'object'
+          ? (obj['image_data'] as Record<string, unknown>)
+          : null;
+      const videoData =
+        obj['video_data'] && typeof obj['video_data'] === 'object'
+          ? (obj['video_data'] as Record<string, unknown>)
+          : null;
+      const imageUrl = imageData ? coerceText(imageData['url']) ?? coerceText(imageData['preview_url']) : undefined;
+      const videoUrl = videoData ? coerceText(videoData['url']) : undefined;
+
+      const url = payloadUrl ?? imageUrl ?? videoUrl ?? fileUrl;
+      const kind = type ?? mimeType ?? 'attachment';
+      const label = name ?? type ?? mimeType ?? 'Adjunto';
+      return { kind, label, url } satisfies ParsedAttachment;
+    })
+    .filter((value): value is ParsedAttachment => value !== null);
+};
+
+const guessIsImage = (attachment: ParsedAttachment) => {
+  const kind = attachment.kind.toLowerCase();
+  if (kind.includes('image')) return true;
+  const url = attachment.url?.toLowerCase();
+  if (!url) return false;
+  return ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.avif'].some((ext) => url.includes(ext));
+};
+
 const channelToLabel = (channel: SocialChannel) => {
   switch (channel) {
     case 'instagram':
@@ -148,7 +220,10 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
 
   const senderLabel = useMemo(() => {
     if (!msg) return '';
-    return msg.senderName ? `${msg.senderName} · ${msg.senderId}` : msg.senderId;
+    const meta = parseJson(msg.metadata);
+    const metaSender =
+      meta && typeof meta === 'object' ? coerceText((meta as Record<string, unknown>)['sender_name']) : undefined;
+    return (msg.senderName ?? metaSender ?? msg.senderId).trim();
   }, [msg]);
 
   const canGenerate = Boolean(channel && msg && (msg.text ?? '').trim().length > 0 && !aiLoading && !sendLoading);
@@ -220,6 +295,9 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
   const repliedAtValue = optimisticRepliedAt ?? msg?.repliedAt;
   const replyTextValue = optimisticReplyText ?? msg?.replyText;
   const replyErrorValue = optimisticReplyError ?? msg?.replyError;
+  const attachments = useMemo(() => extractAttachments(msg?.metadata), [msg?.metadata]);
+  const rawBody = (msg?.text ?? '').trim();
+  const showBody = rawBody.length > 0 && rawBody.toLowerCase() !== '[attachment]';
 
   return (
     <Dialog open={open} onClose={onClose} fullScreen={fullScreen} fullWidth maxWidth="lg">
@@ -253,7 +331,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
                       <Typography
                         variant="body2"
-                        sx={{ fontFamily: 'monospace', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        sx={{ fontSize: '0.95rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis' }}
                         noWrap
                       >
                         {senderLabel}
@@ -298,9 +376,65 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                         mt: 0.5,
                       }}
                     >
-                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                        {formatBody(msg.text)}
-                      </Typography>
+                      {showBody ? (
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {formatBody(msg.text)}
+                        </Typography>
+                      ) : attachments.length > 0 ? (
+                        <Stack spacing={1}>
+                          <Typography variant="body2" color="text.secondary">
+                            Adjuntos
+                          </Typography>
+                          {attachments.map((att, idx) => (
+                            <Paper
+                              key={`${att.kind}-${att.url ?? att.label ?? idx}`}
+                              variant="outlined"
+                              sx={{ p: 1, bgcolor: 'rgba(15,23,42,0.02)' }}
+                            >
+                              <Stack spacing={0.75}>
+                                <Typography variant="caption" color="text.secondary">
+                                  {att.label ?? 'Adjunto'}
+                                </Typography>
+                                {att.url ? (
+                                  guessIsImage(att) ? (
+                                    <Box
+                                      component="img"
+                                      src={att.url}
+                                      alt={att.label ?? 'Adjunto'}
+                                      sx={{
+                                        width: '100%',
+                                        maxHeight: 320,
+                                        objectFit: 'contain',
+                                        borderRadius: 1,
+                                        border: '1px solid rgba(15,23,42,0.08)',
+                                      }}
+                                    />
+                                  ) : (
+                                    <Typography
+                                      variant="body2"
+                                      component="a"
+                                      href={att.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      sx={{ wordBreak: 'break-all', color: 'primary.main', textDecoration: 'none' }}
+                                    >
+                                      {att.url}
+                                    </Typography>
+                                  )
+                                ) : (
+                                  <Typography variant="body2" color="text.secondary">
+                                    (Sin URL disponible)
+                                  </Typography>
+                                )}
+                              </Stack>
+                            </Paper>
+                          ))}
+                        </Stack>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          —
+                        </Typography>
+                      )}
                     </Paper>
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -469,7 +603,20 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, onSelect }: Ch
             )}
             {!loading &&
               messages.map((msg) => {
-                const senderLabel = msg.senderName ? `${msg.senderName} · ${msg.senderId}` : msg.senderId;
+                const meta = parseJson(msg.metadata);
+                const metaSender =
+                  meta && typeof meta === 'object'
+                    ? coerceText((meta as Record<string, unknown>)['sender_name'])
+                    : undefined;
+                const senderLabel = (msg.senderName ?? metaSender ?? msg.senderId).trim();
+                const attachments = extractAttachments(msg.metadata);
+                const rawBody = (msg.text ?? '').trim();
+                const previewText =
+                  rawBody && rawBody.toLowerCase() !== '[attachment]'
+                    ? rawBody
+                    : attachments.length > 0
+                      ? 'Adjunto'
+                      : '';
                 return (
                   <TableRow
                     key={msg.externalId}
@@ -484,13 +631,13 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, onSelect }: Ch
                       <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                      <Typography variant="body2" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>
                         {senderLabel}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                        {formatBody(msg.text)}
+                        {previewText ? formatBody(previewText) : '—'}
                       </Typography>
                     </TableCell>
                     <TableCell>

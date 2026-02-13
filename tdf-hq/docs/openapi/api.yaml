@@ -1527,6 +1527,9 @@ components:
         text:
           type: string
           nullable: true
+        metadata:
+          type: string
+          nullable: true
         direction:
           type: string
         repliedAt:
