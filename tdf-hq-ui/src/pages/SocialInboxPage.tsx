@@ -132,11 +132,11 @@ const resolveSenderName = (msg: SocialMessage) => {
   return 'Sin nombre';
 };
 
-type ParsedAttachment = {
+interface ParsedAttachment {
   kind: string;
   label: string;
   url?: string;
-};
+}
 
 const coerceText = (value: unknown) => (typeof value === 'string' ? value : undefined);
 
@@ -257,7 +257,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
     setOptimisticRepliedAt(null);
     setOptimisticReplyText(null);
     setOptimisticReplyError(null);
-  }, [open, msg?.externalId]);
+  }, [open, msg]);
 
   const senderLabel = useMemo(() => {
     if (!msg) return '';
