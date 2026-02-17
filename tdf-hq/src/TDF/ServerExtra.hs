@@ -45,6 +45,7 @@ import           Network.HTTP.Client        (Manager, Request(..), Response, htt
 import           Network.HTTP.Client.TLS    (tlsManagerSettings)
 import           Network.HTTP.Types.Header  (hAuthorization)
 import           Network.HTTP.Types.Status  (statusCode)
+import           Network.HTTP.Types.URI     (urlEncode)
 import           Servant
 import           Servant.Multipart          (FileData(..))
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
@@ -1733,7 +1734,7 @@ instagramServer =
       let missing =
             [ (key, M.instagramMessageSenderId m)
             | Entity key m <- rows
-            , isNothing (stripNonEmptyText (M.instagramMessageSenderName m))
+            , isNothing (stripNonEmptyText (M.instagramMessageSenderName m) <|> extractSenderNameFromMetadata (M.instagramMessageMetadata m))
             ]
       resolved <- liftIO $ resolveMetaSenderLabels envConfig MetaInstagram (map snd missing)
       liftIO $ flip runSqlPool envPool $
@@ -1742,7 +1743,10 @@ instagramServer =
             update key [M.InstagramMessageSenderName =. Just label]
       let toObj (Entity _ m) =
             let sid = M.instagramMessageSenderId m
-                senderName = stripNonEmptyText (M.instagramMessageSenderName m) <|> Map.lookup (T.strip sid) resolved
+                senderName =
+                  stripNonEmptyText (M.instagramMessageSenderName m)
+                    <|> extractSenderNameFromMetadata (M.instagramMessageMetadata m)
+                    <|> Map.lookup (T.strip sid) resolved
             in object
             [ "externalId" .= M.instagramMessageExternalId m
             , "senderId"   .= M.instagramMessageSenderId m
@@ -1831,7 +1835,7 @@ facebookServer =
       let missing =
             [ (key, ME.facebookMessageSenderId m)
             | Entity key m <- rows
-            , isNothing (stripNonEmptyText (ME.facebookMessageSenderName m))
+            , isNothing (stripNonEmptyText (ME.facebookMessageSenderName m) <|> extractSenderNameFromMetadata (ME.facebookMessageMetadata m))
             ]
       resolved <- liftIO $ resolveMetaSenderLabels envConfig MetaFacebook (map snd missing)
       liftIO $ flip runSqlPool envPool $
@@ -1840,7 +1844,10 @@ facebookServer =
             update key [ME.FacebookMessageSenderName =. Just label]
       let toObj (Entity _ m) =
             let sid = ME.facebookMessageSenderId m
-                senderName = stripNonEmptyText (ME.facebookMessageSenderName m) <|> Map.lookup (T.strip sid) resolved
+                senderName =
+                  stripNonEmptyText (ME.facebookMessageSenderName m)
+                    <|> extractSenderNameFromMetadata (ME.facebookMessageMetadata m)
+                    <|> Map.lookup (T.strip sid) resolved
             in object
             [ "externalId" .= ME.facebookMessageExternalId m
             , "senderId"   .= ME.facebookMessageSenderId m
@@ -1876,6 +1883,44 @@ stripNonEmptyText (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
+extractSenderNameFromMetadata :: Maybe Text -> Maybe Text
+extractSenderNameFromMetadata Nothing = Nothing
+extractSenderNameFromMetadata (Just raw) =
+  case A.decodeStrict' (TE.encodeUtf8 raw) of
+    Nothing -> Nothing
+    Just payload -> parseMaybe parseSender payload >>= stripNonEmptyText . Just
+  where
+    parseSender = withObject "MetaMessageMetadata" $ \o -> do
+      mDirect <- o .:? "sender_name"
+      case mDirect >>= stripNonEmptyText of
+        Just label -> pure label
+        Nothing -> do
+          mFrom <- o .:? "from"
+          fromLabel <- case mFrom of
+            Just (A.Object fromObj) -> do
+              fromName <- fromObj .:? "name"
+              fromUsername <- fromObj .:? "username"
+              pure (stripNonEmptyText fromName <|> stripNonEmptyText fromUsername)
+            _ -> pure Nothing
+          case fromLabel of
+            Just label -> pure label
+            Nothing -> do
+              mContacts <- (o .:? "contacts" :: Parser (Maybe [A.Value]))
+              case mContacts of
+                Just (firstContact : _) ->
+                  case firstContact of
+                    A.Object contactObj -> do
+                      mProfile <- contactObj .:? "profile"
+                      case mProfile of
+                        Just (A.Object profileObj) -> do
+                          profileName <- profileObj .:? "name"
+                          case stripNonEmptyText profileName of
+                            Just label -> pure label
+                            Nothing -> fail "contact profile name missing"
+                        _ -> fail "contact profile missing"
+                    _ -> fail "contact invalid"
+                _ -> fail "contacts missing"
+
 metaProfileLabel :: MetaChannel -> MetaProfile -> Maybe Text
 metaProfileLabel MetaInstagram MetaProfile{..} =
   stripNonEmptyText (mpUsername <|> mpName)
@@ -1897,10 +1942,11 @@ fetchMetaProfileLabel manager base token channel senderId = do
     then pure Nothing
     else do
       let baseClean = T.dropWhileEnd (== '/') (T.strip base)
+          encodedSid = TE.decodeUtf8 (urlEncode True (TE.encodeUtf8 sid))
           fields = case channel of
             MetaInstagram -> "username,name"
             MetaFacebook -> "name,first_name,last_name"
-          urlTxt = baseClean <> "/" <> sid <> "?fields=" <> fields
+          urlTxt = baseClean <> "/" <> encodedSid <> "?fields=" <> fields
       reqE <- try (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)
       case reqE of
         Left _ -> pure Nothing

@@ -5653,12 +5653,20 @@ callOpenAIChat cfg messages =
               , requestBody = RequestBodyLBS body
               }
       resp <- httpLbs req manager
-      let raw = responseBody resp
-      case eitherDecode raw of
-        Left err -> pure (Left (T.pack err))
-        Right ChatCompletionResp{choices = (ChatChoice OpenAIChatMessage{content = reply} : _)} ->
-          pure (Right reply)
-        Right _ -> pure (Left "Sin respuesta de modelo")
+      let status = statusCode (responseStatus resp)
+          raw = responseBody resp
+      if status >= 200 && status < 300
+        then case eitherDecode raw of
+          Left err -> pure (Left (T.pack err))
+          Right ChatCompletionResp{choices = (ChatChoice OpenAIChatMessage{content = reply} : _)} ->
+            pure (Right reply)
+          Right _ -> pure (Left "Sin respuesta de modelo")
+        else do
+          let baseMsg = "Error al generar respuesta (HTTP " <> T.pack (show status) <> ")"
+              msg = case eitherDecode raw of
+                Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
+                Left _ -> baseMsg
+          pure (Left msg)
 
 tidalSystemPrompt :: Text
 tidalSystemPrompt = T.intercalate "\n"

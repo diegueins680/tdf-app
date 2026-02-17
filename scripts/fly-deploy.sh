@@ -31,7 +31,7 @@ docker buildx build \
   --build-arg SOURCE_COMMIT="$COMMIT_SHA" \
   -f "$APP_DIR/Dockerfile" \
   -t "$FULL_IMAGE" \
-  "$APP_DIR" \
+  "$ROOT_DIR" \
   --push
 
 echo "Deploying commit $COMMIT_SHA (image ${FULL_IMAGE}) to Fly..." >&2

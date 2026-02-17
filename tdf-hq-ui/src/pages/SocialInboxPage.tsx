@@ -91,6 +91,47 @@ const parseJson = (value?: string | null) => {
   }
 };
 
+const extractSenderNameFromMetadata = (metadata?: string | null) => {
+  const parsed = parseJson(metadata);
+  if (!parsed || typeof parsed !== 'object') return null;
+  const root = parsed as Record<string, unknown>;
+
+  const directName = coerceText(root['sender_name']) ?? coerceText(root['senderName']);
+  if (directName?.trim()) return directName.trim();
+
+  const from = root['from'];
+  if (from && typeof from === 'object') {
+    const fromObj = from as Record<string, unknown>;
+    const fromName = coerceText(fromObj['name']) ?? coerceText(fromObj['username']);
+    if (fromName?.trim()) return fromName.trim();
+  }
+
+  const contacts = root['contacts'];
+  if (Array.isArray(contacts) && contacts.length > 0) {
+    const first = contacts[0];
+    if (first && typeof first === 'object') {
+      const firstObj = first as Record<string, unknown>;
+      const profile = firstObj['profile'];
+      if (profile && typeof profile === 'object') {
+        const profileName = coerceText((profile as Record<string, unknown>)['name']);
+        if (profileName?.trim()) return profileName.trim();
+      }
+    }
+  }
+
+  return null;
+};
+
+const resolveSenderName = (msg: SocialMessage) => {
+  const senderName = msg.senderName?.trim();
+  if (senderName) return senderName;
+
+  const metaName = extractSenderNameFromMetadata(msg.metadata);
+  if (metaName) return metaName;
+
+  return 'Sin nombre';
+};
+
 type ParsedAttachment = {
   kind: string;
   label: string;
@@ -220,10 +261,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
 
   const senderLabel = useMemo(() => {
     if (!msg) return '';
-    const meta = parseJson(msg.metadata);
-    const metaSender =
-      meta && typeof meta === 'object' ? coerceText((meta as Record<string, unknown>)['sender_name']) : undefined;
-    return (msg.senderName ?? metaSender ?? msg.senderId).trim();
+    return resolveSenderName(msg);
   }, [msg]);
 
   const canGenerate = Boolean(channel && msg && (msg.text ?? '').trim().length > 0 && !aiLoading && !sendLoading);
@@ -603,12 +641,7 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, onSelect }: Ch
             )}
             {!loading &&
               messages.map((msg) => {
-                const meta = parseJson(msg.metadata);
-                const metaSender =
-                  meta && typeof meta === 'object'
-                    ? coerceText((meta as Record<string, unknown>)['sender_name'])
-                    : undefined;
-                const senderLabel = (msg.senderName ?? metaSender ?? msg.senderId).trim();
+                const senderLabel = resolveSenderName(msg);
                 const attachments = extractAttachments(msg.metadata);
                 const rawBody = (msg.text ?? '').trim();
                 const previewText =
