@@ -98,9 +98,7 @@ cronLoop env = forever $ do
 nextNineAMUtc :: IO UTCTime
 nextNineAMUtc = nextLocalTimeUtc (TimeOfDay 9 0 0)
 
-nextTenThirtyAMUtc :: IO UTCTime
-nextTenThirtyAMUtc = nextLocalTimeUtc (TimeOfDay 10 30 0)
-
+-- (removed)
 nextLocalTimeUtc :: TimeOfDay -> IO UTCTime
 nextLocalTimeUtc targetTime = do
   now <- getZonedTime
