@@ -276,14 +276,20 @@ Add in Cloudflare Pages settings:
 
 ```env
 NODE_VERSION=20.19.4
-VITE_API_BASE=https://your-api.koyeb.app
+VITE_API_BASE=https://tdf-hq.fly.dev
 VITE_TZ=America/Guayaquil
+VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
+VITE_GOOGLE_CLIENT_ID=your-google-client-id
+VITE_CHATKIT_WORKFLOW_ID=your-chatkit-workflow-id
+VITE_META_APP_ID=your-meta-app-id
 ```
 
 Optional for demo mode:
 ```env
 VITE_API_DEMO_TOKEN=your-demo-token
 ```
+
+**Important:** The `VITE_PAYPAL_CLIENT_ID` must be set in Cloudflare Pages environment variables for PayPal buttons to appear in the Marketplace. This is separate from the Fly secret since the UI is built and served by Cloudflare Pages.
 
 #### 4. Deploy
 
@@ -324,8 +330,12 @@ Vercel is a great alternative with similar features.
 Add in Vercel project settings:
 
 ```env
-VITE_API_BASE=https://your-api.koyeb.app
+VITE_API_BASE=https://tdf-hq.fly.dev
 VITE_TZ=America/Guayaquil
+VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
+VITE_GOOGLE_CLIENT_ID=your-google-client-id
+VITE_CHATKIT_WORKFLOW_ID=your-chatkit-workflow-id
+VITE_META_APP_ID=your-meta-app-id
 ```
 
 #### 4. Deploy
