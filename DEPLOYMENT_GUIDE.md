@@ -201,6 +201,52 @@ Steps:
    - Calls `fly deploy --image ... --env SOURCE_COMMIT=... --env GIT_SHA=...`.
 4. For manual Fly commands, pass the same env vars (`--env SOURCE_COMMIT=$(git rev-parse HEAD) --env GIT_SHA=$(git rev-parse HEAD)`) and reference the pushed Docker Hub image to avoid re-building inside Fly.
 
+### Setting Secrets in Fly
+
+Sensitive values like API keys should be set as secrets instead of environment variables in `fly.toml`:
+
+```bash
+# Set PayPal client ID
+flyctl secrets set VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
+
+# Set live sessions token
+flyctl secrets set VITE_LIVE_SESSIONS_PUBLIC_TOKEN=your-token
+
+# List current secrets
+flyctl secrets list
+```
+
+Note: Secrets are not shown in `fly.toml` to avoid leaking sensitive values.
+
+### Health Check
+
+The API provides a health check endpoint at `/health` that returns:
+
+```json
+{
+  "status": "ok",
+  "db": "ok"
+}
+```
+
+After deploying or updating secrets, verify the service is healthy:
+
+```bash
+# Check health endpoint
+curl https://tdf-hq.fly.dev/health
+
+# Check deployment status
+flyctl status
+
+# View logs
+flyctl logs
+```
+
+The service is configured to:
+- Listen on `0.0.0.0:8080` (accepts connections from Fly's proxy)
+- Use `internal_port = 8080` in fly.toml for service binding
+- Expose ports 80 (HTTP) and 443 (HTTPS) via Fly's proxy
+
 ## Frontend Deployment
 
 ### Option 1: Cloudflare Pages (Recommended)
