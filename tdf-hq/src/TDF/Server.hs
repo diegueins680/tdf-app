@@ -640,12 +640,18 @@ whatsappWebhookServer =
                          waInboundCampaignExternalId
                          waInboundCampaignName
                          waInboundMetadata
+                         "pending"
+                         Nothing
+                         Nothing
+                         Nothing
+                         0
                          Nothing
                          Nothing
                          Nothing
                          now)
                [ ME.WhatsAppMessageText =. Just waInboundText
                , ME.WhatsAppMessageDirection =. "incoming"
+               , ME.WhatsAppMessageReplyStatus =. "pending"
                , ME.WhatsAppMessageAdExternalId =. waInboundAdExternalId
                , ME.WhatsAppMessageAdName =. waInboundAdName
                , ME.WhatsAppMessageCampaignExternalId =. waInboundCampaignExternalId
@@ -689,6 +695,11 @@ whatsappWebhookServer =
                                   waInboundCampaignExternalId
                                   waInboundCampaignName
                                   Nothing
+                                  "sent"
+                                  Nothing
+                                  Nothing
+                                  (Just now)
+                                  1
                                   Nothing
                                   Nothing
                                   Nothing
@@ -746,6 +757,11 @@ whatsappReplyServer _ WhatsAppReplyReq{..} = do
               Nothing
               Nothing
               Nothing
+              "sent"
+              Nothing
+              Nothing
+              (Just now)
+              1
               Nothing
               Nothing
               (either Just (const Nothing) sendResult)
@@ -1235,6 +1251,11 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
                               Nothing
                               Nothing
                               (Just metadata)
+                              "pending"
+                              Nothing
+                              Nothing
+                              Nothing
+                              0
                               Nothing
                               Nothing
                               Nothing
@@ -1243,6 +1264,7 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
                      , InstagramMessageText =. Just body
                      , InstagramMessageDirection =. "incoming"
                      , InstagramMessageMetadata =. Just metadata
+                     , InstagramMessageReplyStatus =. "pending"
                      ]
                 pure ()
             MetaFacebook ->
@@ -1257,6 +1279,11 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
                               Nothing
                               Nothing
                               (Just metadata)
+                              "pending"
+                              Nothing
+                              Nothing
+                              Nothing
+                              0
                               Nothing
                               Nothing
                               Nothing
@@ -1265,6 +1292,7 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
                      , ME.FacebookMessageText =. Just body
                      , ME.FacebookMessageDirection =. "incoming"
                      , ME.FacebookMessageMetadata =. Just metadata
+                     , ME.FacebookMessageReplyStatus =. "pending"
                      ]
                 pure ()
           pure True
@@ -5325,9 +5353,16 @@ adsAssistPublic AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel}
         pure (maybe ads (:ads) adKey)
   examples <- runDB $ loadAdExamples hasScope candidateAds
   kb <- liftIO $ retrieveRagContext (envConfig env) (envPool env) body
-  reply <- liftIO $ runRagChat (envConfig env) kb examples body aarChannel
+  reply <- liftIO $ runRagChatWithStatus (envConfig env) kb examples body aarChannel
+  finalReply <-
+    case reply of
+      Right txt | not (T.null (T.strip txt)) -> pure (T.strip txt)
+      Left err ->
+        throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
+      _ ->
+        throwError err502 { errBody = "No pude generar una respuesta automática en este momento." }
   pure AdsAssistResponse
-    { aasReply = reply
+    { aasReply = finalReply
     , aasUsedExamples = map adExampleToDTO examples
     , aasKnowledgeUsed = kb
     }

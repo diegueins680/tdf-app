@@ -1551,6 +1551,11 @@ persistMetaInbound channel now incoming =
                     campExt
                     campName
                     meta
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
                     Nothing
                     Nothing
                     Nothing
@@ -1558,6 +1563,7 @@ persistMetaInbound channel now incoming =
            [ M.InstagramMessageSenderName =. senderName
            , M.InstagramMessageText =. Just body
            , M.InstagramMessageDirection =. "incoming"
+           , M.InstagramMessageReplyStatus =. "pending"
            , M.InstagramMessageAdExternalId =. adExt
            , M.InstagramMessageAdName =. adName
            , M.InstagramMessageCampaignExternalId =. campExt
@@ -1577,6 +1583,11 @@ persistMetaInbound channel now incoming =
                     campExt
                     campName
                     meta
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
                     Nothing
                     Nothing
                     Nothing
@@ -1584,6 +1595,7 @@ persistMetaInbound channel now incoming =
            [ ME.FacebookMessageSenderName =. senderName
            , ME.FacebookMessageText =. Just body
            , ME.FacebookMessageDirection =. "incoming"
+           , ME.FacebookMessageReplyStatus =. "pending"
            , ME.FacebookMessageAdExternalId =. adExt
            , ME.FacebookMessageAdName =. adName
            , ME.FacebookMessageCampaignExternalId =. campExt
@@ -1690,6 +1702,11 @@ instagramServer =
                   Nothing
                   Nothing
                   Nothing
+                  "sent"
+                  Nothing
+                  Nothing
+                  (Just now)
+                  1
                   Nothing
                   Nothing
                   (either Just (const Nothing) sendResult)
@@ -1792,6 +1809,11 @@ facebookServer =
                   Nothing
                   Nothing
                   Nothing
+                  "sent"
+                  Nothing
+                  Nothing
+                  (Just now)
+                  1
                   Nothing
                   Nothing
                   (either Just (const Nothing) sendResult)

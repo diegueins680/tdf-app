@@ -482,20 +482,25 @@ PaymentSplit
     deriving Show Generic
 
 InstagramMessage
-    externalId       Text
-    senderId         Text
-    senderName       Text Maybe
-    text             Text Maybe
-    direction        Text
-    adExternalId     Text Maybe
-    adName           Text Maybe
+    externalId         Text
+    senderId           Text
+    senderName         Text Maybe
+    text               Text Maybe
+    direction          Text
+    adExternalId       Text Maybe
+    adName             Text Maybe
     campaignExternalId Text Maybe
-    campaignName     Text Maybe
-    metadata         Text Maybe
-    repliedAt        UTCTime Maybe
-    replyText        Text Maybe
-    replyError       Text Maybe
-    createdAt        UTCTime
+    campaignName       Text Maybe
+    metadata           Text Maybe
+    replyStatus        Text default='pending'
+    holdReason         Text Maybe
+    holdRequiredFields Text Maybe -- JSON array or comma-separated list
+    lastAttemptAt      UTCTime Maybe
+    attemptCount       Int default=0
+    repliedAt          UTCTime Maybe
+    replyText          Text Maybe
+    replyError         Text Maybe
+    createdAt          UTCTime
     UniqueInstagramMessage externalId
     deriving Show Generic
 SocialSyncAccount

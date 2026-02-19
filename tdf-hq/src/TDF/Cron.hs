@@ -211,16 +211,15 @@ dedupeByEmail =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
 
--- | Launch a background thread that sends daily auto replies for social inbox messages.
+-- | Launch a background thread that sends auto replies for social inbox messages.
+-- Runs every 60s (near real-time), rather than once per day.
 startSocialAutoReplyJob :: Env -> IO ()
 startSocialAutoReplyJob env = do
   void (forkIO (socialReplyLoop env))
-  LogBuf.addLog LogBuf.LogInfo "[Cron][SocialAutoReply] Scheduled daily replies at 10:30 local time."
+  LogBuf.addLog LogBuf.LogInfo "[Cron][SocialAutoReply] Scheduled replies every 60s."
 
 socialReplyLoop :: Env -> IO ()
 socialReplyLoop env = forever $ do
-  target <- nextTenThirtyAMUtc
-  waitUntil target
   result <- try (sendSocialAutoReplies env) :: IO (Either SomeException ())
   case result of
     Left err -> do
@@ -228,7 +227,8 @@ socialReplyLoop env = forever $ do
       hPutStrLn stderr (T.unpack msg)
       LogBuf.addLog LogBuf.LogError msg
     Right () ->
-      LogBuf.addLog LogBuf.LogInfo "[Cron][SocialAutoReply] Reply job finished."
+      LogBuf.addLog LogBuf.LogInfo "[Cron][SocialAutoReply] Reply tick finished."
+  threadDelay (60 * 1000000)
 
 sendSocialAutoReplies :: Env -> IO ()
 sendSocialAutoReplies env@Env{envPool, envConfig} = do
@@ -296,6 +296,7 @@ processInstagramReplies Env{envPool, envConfig} = do
     (selectList
       [ InstagramMessageDirection ==. "incoming"
       , InstagramMessageRepliedAt ==. Nothing
+      , InstagramMessageReplyStatus ==. "pending"
       ]
       [Asc InstagramMessageCreatedAt, LimitTo 200])
     envPool
@@ -308,6 +309,12 @@ replyInstagramOne cfg pool acc (Entity key msg) = do
   if T.null (T.strip body)
     then pure acc
     else do
+      runSqlPool
+        (update key
+          [ InstagramMessageLastAttemptAt =. Just now
+          , InstagramMessageAttemptCount =. instagramMessageAttemptCount msg + 1
+          ])
+        pool
       adContext <- runSqlPool
         (resolveAdContext (instagramMessageAdExternalId msg) (instagramMessageAdName msg) (instagramMessageCampaignName msg))
         pool
@@ -321,7 +328,8 @@ replyInstagramOne cfg pool acc (Entity key msg) = do
         Left err -> do
           runSqlPool
             (update key
-              [ InstagramMessageReplyError =. Just err
+              [ InstagramMessageReplyStatus =. "error"
+              , InstagramMessageReplyError =. Just err
               , InstagramMessageAdName =. acAdName adContext
               , InstagramMessageCampaignName =. acCampaignName adContext
               ])
@@ -333,7 +341,8 @@ replyInstagramOne cfg pool acc (Entity key msg) = do
             then do
               runSqlPool
                 (update key
-                  [ InstagramMessageReplyError =. Just "OpenAI response empty"
+                  [ InstagramMessageReplyStatus =. "error"
+                  , InstagramMessageReplyError =. Just "OpenAI response empty"
                   , InstagramMessageAdName =. acAdName adContext
                   , InstagramMessageCampaignName =. acCampaignName adContext
                   ])
@@ -345,7 +354,8 @@ replyInstagramOne cfg pool acc (Entity key msg) = do
                 Left err -> do
                   runSqlPool
                     (update key
-                      [ InstagramMessageReplyError =. Just err
+                      [ InstagramMessageReplyStatus =. "error"
+                      , InstagramMessageReplyError =. Just err
                       , InstagramMessageAdName =. acAdName adContext
                       , InstagramMessageCampaignName =. acCampaignName adContext
                       ])
@@ -355,7 +365,8 @@ replyInstagramOne cfg pool acc (Entity key msg) = do
                   runSqlPool
                     (do
                       update key
-                        [ InstagramMessageRepliedAt =. Just now
+                        [ InstagramMessageReplyStatus =. "sent"
+                        , InstagramMessageRepliedAt =. Just now
                         , InstagramMessageReplyText =. Just reply
                         , InstagramMessageReplyError =. Nothing
                         , InstagramMessageAdName =. acAdName adContext
@@ -371,6 +382,11 @@ replyInstagramOne cfg pool acc (Entity key msg) = do
                                 (instagramMessageCampaignExternalId msg)
                                 (acCampaignName adContext)
                                 Nothing
+                                "sent"
+                                Nothing
+                                Nothing
+                                (Just now)
+                                1
                                 Nothing
                                 Nothing
                                 Nothing
@@ -385,6 +401,7 @@ processFacebookReplies Env{envPool, envConfig} = do
     (selectList
       [ ME.FacebookMessageDirection ==. "incoming"
       , ME.FacebookMessageRepliedAt ==. Nothing
+      , ME.FacebookMessageReplyStatus ==. "pending"
       ]
       [Asc ME.FacebookMessageCreatedAt, LimitTo 200])
     envPool
@@ -397,6 +414,12 @@ replyFacebookOne cfg pool acc (Entity key msg) = do
   if T.null (T.strip body)
     then pure acc
     else do
+      runSqlPool
+        (update key
+          [ ME.FacebookMessageLastAttemptAt =. Just now
+          , ME.FacebookMessageAttemptCount =. ME.facebookMessageAttemptCount msg + 1
+          ])
+        pool
       adContext <- runSqlPool
         (resolveAdContext (ME.facebookMessageAdExternalId msg) (ME.facebookMessageAdName msg) (ME.facebookMessageCampaignName msg))
         pool
@@ -410,7 +433,8 @@ replyFacebookOne cfg pool acc (Entity key msg) = do
         Left err -> do
           runSqlPool
             (update key
-              [ ME.FacebookMessageReplyError =. Just err
+              [ ME.FacebookMessageReplyStatus =. "error"
+              , ME.FacebookMessageReplyError =. Just err
               , ME.FacebookMessageAdName =. acAdName adContext
               , ME.FacebookMessageCampaignName =. acCampaignName adContext
               ])
@@ -422,7 +446,8 @@ replyFacebookOne cfg pool acc (Entity key msg) = do
             then do
               runSqlPool
                 (update key
-                  [ ME.FacebookMessageReplyError =. Just "OpenAI response empty"
+                  [ ME.FacebookMessageReplyStatus =. "error"
+                  , ME.FacebookMessageReplyError =. Just "OpenAI response empty"
                   , ME.FacebookMessageAdName =. acAdName adContext
                   , ME.FacebookMessageCampaignName =. acCampaignName adContext
                   ])
@@ -434,7 +459,8 @@ replyFacebookOne cfg pool acc (Entity key msg) = do
                 Left err -> do
                   runSqlPool
                     (update key
-                      [ ME.FacebookMessageReplyError =. Just err
+                      [ ME.FacebookMessageReplyStatus =. "error"
+                      , ME.FacebookMessageReplyError =. Just err
                       , ME.FacebookMessageAdName =. acAdName adContext
                       , ME.FacebookMessageCampaignName =. acCampaignName adContext
                       ])
@@ -444,7 +470,8 @@ replyFacebookOne cfg pool acc (Entity key msg) = do
                   runSqlPool
                     (do
                       update key
-                        [ ME.FacebookMessageRepliedAt =. Just now
+                        [ ME.FacebookMessageReplyStatus =. "sent"
+                        , ME.FacebookMessageRepliedAt =. Just now
                         , ME.FacebookMessageReplyText =. Just reply
                         , ME.FacebookMessageReplyError =. Nothing
                         , ME.FacebookMessageAdName =. acAdName adContext
@@ -460,6 +487,11 @@ replyFacebookOne cfg pool acc (Entity key msg) = do
                                 (ME.facebookMessageCampaignExternalId msg)
                                 (acCampaignName adContext)
                                 Nothing
+                                "sent"
+                                Nothing
+                                Nothing
+                                (Just now)
+                                1
                                 Nothing
                                 Nothing
                                 Nothing
@@ -475,6 +507,7 @@ processWhatsAppReplies Env{envPool, envConfig} = do
     (selectList
       [ ME.WhatsAppMessageDirection ==. "incoming"
       , ME.WhatsAppMessageRepliedAt ==. Nothing
+      , ME.WhatsAppMessageReplyStatus ==. "pending"
       ]
       [Asc ME.WhatsAppMessageCreatedAt, LimitTo 200])
     envPool
@@ -487,6 +520,12 @@ replyWhatsAppOne cfg pool waEnv acc (Entity key msg) = do
   if T.null (T.strip body)
     then pure acc
     else do
+      runSqlPool
+        (update key
+          [ ME.WhatsAppMessageLastAttemptAt =. Just now
+          , ME.WhatsAppMessageAttemptCount =. ME.whatsAppMessageAttemptCount msg + 1
+          ])
+        pool
       adContext <- runSqlPool
         (resolveAdContext (ME.whatsAppMessageAdExternalId msg) (ME.whatsAppMessageAdName msg) (ME.whatsAppMessageCampaignName msg))
         pool
@@ -500,7 +539,8 @@ replyWhatsAppOne cfg pool waEnv acc (Entity key msg) = do
         Left err -> do
           runSqlPool
             (update key
-              [ ME.WhatsAppMessageReplyError =. Just err
+              [ ME.WhatsAppMessageReplyStatus =. "error"
+              , ME.WhatsAppMessageReplyError =. Just err
               , ME.WhatsAppMessageAdName =. acAdName adContext
               , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
               ])
@@ -512,7 +552,8 @@ replyWhatsAppOne cfg pool waEnv acc (Entity key msg) = do
             then do
               runSqlPool
                 (update key
-                  [ ME.WhatsAppMessageReplyError =. Just "OpenAI response empty"
+                  [ ME.WhatsAppMessageReplyStatus =. "error"
+                  , ME.WhatsAppMessageReplyError =. Just "OpenAI response empty"
                   , ME.WhatsAppMessageAdName =. acAdName adContext
                   , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
                   ])
@@ -524,7 +565,8 @@ replyWhatsAppOne cfg pool waEnv acc (Entity key msg) = do
                 Left err -> do
                   runSqlPool
                     (update key
-                      [ ME.WhatsAppMessageReplyError =. Just err
+                      [ ME.WhatsAppMessageReplyStatus =. "error"
+                      , ME.WhatsAppMessageReplyError =. Just err
                       , ME.WhatsAppMessageAdName =. acAdName adContext
                       , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
                       ])
@@ -534,7 +576,8 @@ replyWhatsAppOne cfg pool waEnv acc (Entity key msg) = do
                   runSqlPool
                     (do
                       update key
-                        [ ME.WhatsAppMessageRepliedAt =. Just now
+                        [ ME.WhatsAppMessageReplyStatus =. "sent"
+                        , ME.WhatsAppMessageRepliedAt =. Just now
                         , ME.WhatsAppMessageReplyText =. Just reply
                         , ME.WhatsAppMessageReplyError =. Nothing
                         , ME.WhatsAppMessageAdName =. acAdName adContext
@@ -550,6 +593,11 @@ replyWhatsAppOne cfg pool waEnv acc (Entity key msg) = do
                                 (ME.whatsAppMessageCampaignExternalId msg)
                                 (acCampaignName adContext)
                                 Nothing
+                                "sent"
+                                Nothing
+                                Nothing
+                                (Just now)
+                                1
                                 Nothing
                                 Nothing
                                 Nothing
