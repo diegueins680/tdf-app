@@ -201,6 +201,52 @@ Steps:
    - Calls `fly deploy --image ... --env SOURCE_COMMIT=... --env GIT_SHA=...`.
 4. For manual Fly commands, pass the same env vars (`--env SOURCE_COMMIT=$(git rev-parse HEAD) --env GIT_SHA=$(git rev-parse HEAD)`) and reference the pushed Docker Hub image to avoid re-building inside Fly.
 
+### Setting Secrets in Fly
+
+Sensitive values like API keys should be set as secrets instead of environment variables in `fly.toml`:
+
+```bash
+# Set PayPal client ID
+flyctl secrets set VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
+
+# Set live sessions token
+flyctl secrets set VITE_LIVE_SESSIONS_PUBLIC_TOKEN=your-token
+
+# List current secrets
+flyctl secrets list
+```
+
+Note: Secrets are not shown in `fly.toml` to avoid leaking sensitive values.
+
+### Health Check
+
+The API provides a health check endpoint at `/health` that returns:
+
+```json
+{
+  "status": "ok",
+  "db": "ok"
+}
+```
+
+After deploying or updating secrets, verify the service is healthy:
+
+```bash
+# Check health endpoint
+curl https://tdf-hq.fly.dev/health
+
+# Check deployment status
+flyctl status
+
+# View logs
+flyctl logs
+```
+
+The service is configured to:
+- Listen on `0.0.0.0:8080` (accepts connections from Fly's proxy)
+- Use `internal_port = 8080` in fly.toml for service binding
+- Expose ports 80 (HTTP) and 443 (HTTPS) via Fly's proxy
+
 ## Frontend Deployment
 
 ### Option 1: Cloudflare Pages (Recommended)
@@ -230,14 +276,20 @@ Add in Cloudflare Pages settings:
 
 ```env
 NODE_VERSION=20.19.4
-VITE_API_BASE=https://your-api.koyeb.app
+VITE_API_BASE=https://tdf-hq.fly.dev
 VITE_TZ=America/Guayaquil
+VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
+VITE_GOOGLE_CLIENT_ID=your-google-client-id
+VITE_CHATKIT_WORKFLOW_ID=your-chatkit-workflow-id
+VITE_META_APP_ID=your-meta-app-id
 ```
 
 Optional for demo mode:
 ```env
 VITE_API_DEMO_TOKEN=your-demo-token
 ```
+
+**Important:** The `VITE_PAYPAL_CLIENT_ID` must be set in Cloudflare Pages environment variables for PayPal buttons to appear in the Marketplace. This is separate from the Fly secret since the UI is built and served by Cloudflare Pages.
 
 #### 4. Deploy
 
@@ -278,8 +330,12 @@ Vercel is a great alternative with similar features.
 Add in Vercel project settings:
 
 ```env
-VITE_API_BASE=https://your-api.koyeb.app
+VITE_API_BASE=https://tdf-hq.fly.dev
 VITE_TZ=America/Guayaquil
+VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
+VITE_GOOGLE_CLIENT_ID=your-google-client-id
+VITE_CHATKIT_WORKFLOW_ID=your-chatkit-workflow-id
+VITE_META_APP_ID=your-meta-app-id
 ```
 
 #### 4. Deploy

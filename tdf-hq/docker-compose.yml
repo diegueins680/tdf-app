@@ -22,8 +22,8 @@ services:
 
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: tdf-hq/Dockerfile
     environment:
       DB_HOST: db
       DB_PORT: "5432"

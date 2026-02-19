@@ -8,8 +8,8 @@ app = "tdf-hq"
   ALLOW_ORIGINS = "https://tdf-app.pages.dev"
   ALLOW_ALL_ORIGINS = "true"
   HQ_ASSETS_DIR = "/data/assets"
-  VITE_PAYPAL_CLIENT_ID = "AfPPuaIkpj5aWoweUi1hL7s94NUo9fZdsN8e6P7v0zftuWAuWJvdNm6aHK_fboeSnZetnTLnnoBesxQ2"
-  VITE_LIVE_SESSIONS_PUBLIC_TOKEN = "f96db9e5-8b43-4923-85d6-c1cc9bb2cb7f"
+  # VITE_PAYPAL_CLIENT_ID is set as a Fly secret (flyctl secrets set VITE_PAYPAL_CLIENT_ID=...)
+  # VITE_LIVE_SESSIONS_PUBLIC_TOKEN is set as a Fly secret (flyctl secrets set VITE_LIVE_SESSIONS_PUBLIC_TOKEN=...)
 
 [[mounts]]
   source = "tdf_assets"
