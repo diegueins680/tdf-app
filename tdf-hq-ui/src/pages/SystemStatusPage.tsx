@@ -2,11 +2,14 @@ import { Card, CardContent, Grid, Stack, Typography, Button, Tooltip } from '@mu
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Meta } from '../api/meta';
+import { API_BASE_URL } from '../api/client';
 
 export default function SystemStatusPage() {
   const qc = useQueryClient();
   const versionQuery = useQuery({ queryKey: ['meta', 'version'], queryFn: Meta.version });
   const healthQuery = useQuery({ queryKey: ['meta', 'health'], queryFn: Meta.health });
+  const apiBase = API_BASE_URL.trim();
+  const apiBaseConfigured = apiBase.length > 0;
 
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['meta', 'version'] });
@@ -38,6 +41,8 @@ export default function SystemStatusPage() {
                   <Row label="Versión" value={versionQuery.data.version} />
                   <Row label="Commit" value={versionQuery.data.commit ?? '—'} />
                   <Row label="Build time" value={versionQuery.data.buildTime ?? '—'} />
+                  <Row label="VITE_API_BASE" value={apiBaseConfigured ? 'set' : 'missing'} />
+                  <Row label="API base URL" value={apiBaseConfigured ? apiBase : '—'} />
                 </Stack>
               )}
             </CardContent>
