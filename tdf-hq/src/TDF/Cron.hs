@@ -15,7 +15,7 @@ import           Control.Monad.IO.Class  (liftIO)
 import           Data.Foldable           (for_)
 import           Data.List               (find, foldl')
 import qualified Data.Map.Strict         as Map
-import           Data.Maybe              (catMaybes, fromMaybe, isJust)
+import           Data.Maybe              (catMaybes, fromMaybe, isJust, listToMaybe)
 import           Data.Text               (Text)
 import qualified Data.Text               as T
 import           Data.Time               ( LocalTime(..)
@@ -74,6 +74,27 @@ import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials
 import           TDF.Config              (AppConfig, instagramAppToken)
 import           TDF.WhatsApp.Client     (sendText)
+
+-- Auto-reply directive parsing
+data Directive = Send Text | Hold Text (Maybe Text) deriving (Show, Eq)
+
+parseDirective :: Text -> Either Text Directive
+parseDirective raw0 =
+  let raw = T.strip raw0
+      stripPrefixCI p t = T.strip <$> T.stripPrefix p (T.strip t)
+  in case () of
+      _ | Just rest <- stripPrefixCI "SEND:" raw ->
+            let msg = T.strip rest
+            in if T.null msg then Left "SEND directive empty" else Right (Send msg)
+        | Just rest <- stripPrefixCI "HOLD:" raw ->
+            let parts = T.splitOn "\n" rest
+                reason = T.strip (head parts)
+                needLine = listToMaybe [T.strip (T.drop 5 ln) | ln <- parts, "NEED:" `T.isPrefixOf` T.strip ln]
+                needTxt = case needLine of
+                  Nothing -> Nothing
+                  Just v -> let vv = T.strip v in if T.null vv then Nothing else Just vv
+            in if T.null reason then Left "HOLD directive empty" else Right (Hold reason needTxt)
+        | otherwise -> Left "Invalid directive: expected SEND: or HOLD:"
 
 -- | Launch a background thread that sends payment reminders every day at 09:00 (server local time).
 startCoursePaymentReminderJob :: Env -> IO ()
@@ -334,19 +355,31 @@ replyInstagramOne cfg pool acc (Entity key msg) = do
             pool
           pure acc
         Right replyRaw -> do
-          let reply = T.strip replyRaw
-          if T.null reply
-            then do
+          let raw = T.strip replyRaw
+          case parseDirective raw of
+            Left parseErr -> do
               runSqlPool
                 (update key
                   [ InstagramMessageReplyStatus =. "error"
-                  , InstagramMessageReplyError =. Just "OpenAI response empty"
+                  , InstagramMessageReplyError =. Just parseErr
                   , InstagramMessageAdName =. acAdName adContext
                   , InstagramMessageCampaignName =. acCampaignName adContext
                   ])
                 pool
               pure acc
-            else do
+            Right (Hold reason needTxt) -> do
+              runSqlPool
+                (update key
+                  [ InstagramMessageReplyStatus =. "hold"
+                  , InstagramMessageHoldReason =. Just reason
+                  , InstagramMessageHoldRequiredFields =. needTxt
+                  , InstagramMessageReplyError =. Nothing
+                  , InstagramMessageAdName =. acAdName adContext
+                  , InstagramMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            Right (Send reply) -> do
               sendResult <- sendInstagramText cfg (instagramMessageSenderId msg) reply
               case sendResult of
                 Left err -> do
@@ -439,19 +472,31 @@ replyFacebookOne cfg pool acc (Entity key msg) = do
             pool
           pure acc
         Right replyRaw -> do
-          let reply = T.strip replyRaw
-          if T.null reply
-            then do
+          let raw = T.strip replyRaw
+          case parseDirective raw of
+            Left parseErr -> do
               runSqlPool
                 (update key
                   [ ME.FacebookMessageReplyStatus =. "error"
-                  , ME.FacebookMessageReplyError =. Just "OpenAI response empty"
+                  , ME.FacebookMessageReplyError =. Just parseErr
                   , ME.FacebookMessageAdName =. acAdName adContext
                   , ME.FacebookMessageCampaignName =. acCampaignName adContext
                   ])
                 pool
               pure acc
-            else do
+            Right (Hold reason needTxt) -> do
+              runSqlPool
+                (update key
+                  [ ME.FacebookMessageReplyStatus =. "hold"
+                  , ME.FacebookMessageHoldReason =. Just reason
+                  , ME.FacebookMessageHoldRequiredFields =. needTxt
+                  , ME.FacebookMessageReplyError =. Nothing
+                  , ME.FacebookMessageAdName =. acAdName adContext
+                  , ME.FacebookMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            Right (Send reply) -> do
               sendResult <- sendFacebookText cfg (ME.facebookMessageSenderId msg) reply
               case sendResult of
                 Left err -> do
@@ -545,19 +590,31 @@ replyWhatsAppOne cfg pool waEnv acc (Entity key msg) = do
             pool
           pure acc
         Right replyRaw -> do
-          let reply = T.strip replyRaw
-          if T.null reply
-            then do
+          let raw = T.strip replyRaw
+          case parseDirective raw of
+            Left parseErr -> do
               runSqlPool
                 (update key
                   [ ME.WhatsAppMessageReplyStatus =. "error"
-                  , ME.WhatsAppMessageReplyError =. Just "OpenAI response empty"
+                  , ME.WhatsAppMessageReplyError =. Just parseErr
                   , ME.WhatsAppMessageAdName =. acAdName adContext
                   , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
                   ])
                 pool
               pure acc
-            else do
+            Right (Hold reason needTxt) -> do
+              runSqlPool
+                (update key
+                  [ ME.WhatsAppMessageReplyStatus =. "hold"
+                  , ME.WhatsAppMessageHoldReason =. Just reason
+                  , ME.WhatsAppMessageHoldRequiredFields =. needTxt
+                  , ME.WhatsAppMessageReplyError =. Nothing
+                  , ME.WhatsAppMessageAdName =. acAdName adContext
+                  , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            Right (Send reply) -> do
               sendResult <- sendWhatsAppAutoReply waEnv (ME.whatsAppMessageSenderId msg) reply
               case sendResult of
                 Left err -> do

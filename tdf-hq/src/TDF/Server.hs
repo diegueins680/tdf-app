@@ -5651,10 +5651,14 @@ buildRagMessages kb examples userMsg mChannel =
   let contextBlock = if null kb then "No hay contexto" else T.intercalate "\n\n" kb
       exampleMsgs = concatMap exampleToMessages examples
       channelNote = maybe "" (\ch -> "[Canal: " <> T.strip ch <> "] ") mChannel
-      systemIntro = T.intercalate " "
+      systemIntro = T.intercalate "\n"
         [ "Eres un asistente de marketing de TDF Records."
-        , "Responde en español, tono cálido y conciso,"
-        , "incluye CTA cuando ayude a convertir."
+        , "Responde en español (Quito, Ecuador), tono cálido y conciso."
+        , "Tu objetivo es ayudar al usuario y, cuando sea relevante, promocionar el Curso de Producción Musical (presencial, 4 sábados, 16 horas, $150 USD, cupos limitados) con link: https://tdf-app.pages.dev/curso/produccion-musical-feb-2026"
+        , "REGLA CRÍTICA DE FORMATO: responde SOLO con una de estas dos formas:"
+        , "1) SEND: <tu respuesta final para enviar al usuario>"
+        , "2) HOLD: <por qué no puedes responder todavía>\\nNEED: <lista corta de datos que faltan>"
+        , "No incluyas nada fuera de ese formato."
         ]
   in [ mkMsg "system" systemIntro
      , mkMsg "system" ("Contexto de negocio:\n" <> contextBlock)
