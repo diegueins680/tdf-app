@@ -175,7 +175,7 @@ adminServer user =
       ragStatusHandler :<|> ragRefreshHandler
 
     socialRouter =
-      socialUnholdHandler :<|> socialStatusHandler
+      socialUnholdHandler :<|> socialStatusHandler :<|> socialErrorsHandler
 
     socialUnholdHandler SocialUnholdRequest{..} = do
       ensureModule ModuleAdmin user
@@ -215,6 +215,61 @@ adminServer user =
         , "facebook" .= object ["pending" .= (let (p,_,_) = fb in p), "hold" .= (let (_,h,_) = fb in h), "error" .= (let (_,_,e) = fb in e)]
         , "whatsapp" .= object ["pending" .= (let (p,_,_) = wa in p), "hold" .= (let (_,h,_) = wa in h), "error" .= (let (_,_,e) = wa in e)]
         ]
+
+    socialErrorsHandler mChannel mLimit = do
+      ensureModule ModuleAdmin user
+      let channel = T.toLower (T.strip (fromMaybe "instagram" mChannel))
+          limit = max 1 (min 200 (fromMaybe 50 mLimit))
+      case channel of
+        "instagram" -> do
+          rows <- withPool $ selectList
+            [ InstagramMessageDirection ==. "incoming"
+            , InstagramMessageReplyStatus ==. "error"
+            ]
+            [Desc InstagramMessageCreatedAt, LimitTo limit]
+          pure $ object
+            [ "channel" .= channel
+            , "items" .= map (\(Entity _ m) -> object
+                [ "externalId" .= instagramMessageExternalId m
+                , "senderId" .= instagramMessageSenderId m
+                , "text" .= instagramMessageText m
+                , "replyError" .= instagramMessageReplyError m
+                , "createdAt" .= instagramMessageCreatedAt m
+                ]) rows
+            ]
+        "facebook" -> do
+          rows <- withPool $ selectList
+            [ ME.FacebookMessageDirection ==. "incoming"
+            , ME.FacebookMessageReplyStatus ==. "error"
+            ]
+            [Desc ME.FacebookMessageCreatedAt, LimitTo limit]
+          pure $ object
+            [ "channel" .= channel
+            , "items" .= map (\(Entity _ m) -> object
+                [ "externalId" .= ME.facebookMessageExternalId m
+                , "senderId" .= ME.facebookMessageSenderId m
+                , "text" .= ME.facebookMessageText m
+                , "replyError" .= ME.facebookMessageReplyError m
+                , "createdAt" .= ME.facebookMessageCreatedAt m
+                ]) rows
+            ]
+        "whatsapp" -> do
+          rows <- withPool $ selectList
+            [ ME.WhatsAppMessageDirection ==. "incoming"
+            , ME.WhatsAppMessageReplyStatus ==. "error"
+            ]
+            [Desc ME.WhatsAppMessageCreatedAt, LimitTo limit]
+          pure $ object
+            [ "channel" .= channel
+            , "items" .= map (\(Entity _ m) -> object
+                [ "externalId" .= ME.whatsAppMessageExternalId m
+                , "senderId" .= ME.whatsAppMessageSenderId m
+                , "text" .= ME.whatsAppMessageText m
+                , "replyError" .= ME.whatsAppMessageReplyError m
+                , "createdAt" .= ME.whatsAppMessageCreatedAt m
+                ]) rows
+            ]
+        _ -> throwError err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
 
     unholdByExternalId channel extId =
       case channel of

@@ -70,6 +70,7 @@ type RagAdminAPI =
 type SocialAdminAPI =
        "social" :> "unhold" :> ReqBody '[JSON] SocialUnholdRequest :> Post '[JSON] Value
   :<|> "social" :> "status" :> Get '[JSON] Value
+  :<|> "social" :> "errors" :> QueryParam "channel" Text :> QueryParam "limit" Int :> Get '[JSON] Value
 
 type AdminAPI =
        "seed" :> Post '[JSON] NoContent
