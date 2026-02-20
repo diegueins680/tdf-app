@@ -20,11 +20,13 @@ import           Data.Maybe             (catMaybes, fromMaybe, isJust)
 import qualified Data.Set               as Set
 import           Data.Text              (Text)
 import qualified Data.Text              as T
-import qualified Data.Text.Encoding     as TE
+import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Time              (diffUTCTime, getCurrentTime)
 import           Database.Persist       ( (==.), (!=.)
                                         , (=.)
+                                        , count
+                                        , updateWhere
                                         , Entity(..)
                                         , Update
                                         , SelectOpt(..)
@@ -51,6 +53,7 @@ import           TDF.API.Admin          ( AdminAPI
                                         , EmailTestResponse(..)
                                         , RagIndexStatus(..)
                                         , RagRefreshResponse(..)
+                                        , SocialUnholdRequest(..)
                                         )
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
@@ -75,6 +78,7 @@ import           TDF.Config             (ragRefreshHours)
 import           TDF.Models
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
+import           Data.Aeson (object, (.=))
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
 import qualified TDF.Email.Service      as EmailSvc
@@ -103,6 +107,7 @@ adminServer user =
   :<|> emailTestHandler
   :<|> brainRouter
   :<|> ragRouter
+  :<|> socialRouter
   where
     seedHandler = do
       ensureModule ModuleAdmin user
@@ -168,6 +173,96 @@ adminServer user =
 
     ragRouter =
       ragStatusHandler :<|> ragRefreshHandler
+
+    socialRouter =
+      socialUnholdHandler :<|> socialStatusHandler
+
+    socialUnholdHandler SocialUnholdRequest{..} = do
+      ensureModule ModuleAdmin user
+      now <- liftIO getCurrentTime
+      let channel = T.toLower (T.strip surChannel)
+          mExtId = fmap T.strip surExternalId
+          mSender = fmap T.strip surSenderId
+      case (mExtId, mSender) of
+        (Just extId, _) | not (T.null extId) -> do
+          _ <- unholdByExternalId channel extId
+          liftIO $ addLog LogInfo ("[Admin][Social] Unhold " <> channel <> " extId=" <> extId)
+          pure (object ["status" .= ("ok" :: Text), "channel" .= channel, "externalId" .= extId, "ts" .= T.pack (show now)])
+        (_, Just sid) | not (T.null sid) -> do
+          res <- unholdLatestBySender channel sid
+          pure res
+        _ -> throwError err400 { errBody = "Provide externalId or senderId" }
+
+    socialStatusHandler = do
+      ensureModule ModuleAdmin user
+      ig <- withPool $ do
+        pending <- count [InstagramMessageReplyStatus ==. "pending", InstagramMessageDirection ==. "incoming"]
+        hold <- count [InstagramMessageReplyStatus ==. "hold", InstagramMessageDirection ==. "incoming"]
+        err <- count [InstagramMessageReplyStatus ==. "error", InstagramMessageDirection ==. "incoming"]
+        pure (pending, hold, err)
+      fb <- withPool $ do
+        pending <- count [ME.FacebookMessageReplyStatus ==. "pending", ME.FacebookMessageDirection ==. "incoming"]
+        hold <- count [ME.FacebookMessageReplyStatus ==. "hold", ME.FacebookMessageDirection ==. "incoming"]
+        err <- count [ME.FacebookMessageReplyStatus ==. "error", ME.FacebookMessageDirection ==. "incoming"]
+        pure (pending, hold, err)
+      wa <- withPool $ do
+        pending <- count [ME.WhatsAppMessageReplyStatus ==. "pending", ME.WhatsAppMessageDirection ==. "incoming"]
+        hold <- count [ME.WhatsAppMessageReplyStatus ==. "hold", ME.WhatsAppMessageDirection ==. "incoming"]
+        err <- count [ME.WhatsAppMessageReplyStatus ==. "error", ME.WhatsAppMessageDirection ==. "incoming"]
+        pure (pending, hold, err)
+      pure $ object
+        [ "instagram" .= object ["pending" .= (let (p,_,_) = ig in p), "hold" .= (let (_,h,_) = ig in h), "error" .= (let (_,_,e) = ig in e)]
+        , "facebook" .= object ["pending" .= (let (p,_,_) = fb in p), "hold" .= (let (_,h,_) = fb in h), "error" .= (let (_,_,e) = fb in e)]
+        , "whatsapp" .= object ["pending" .= (let (p,_,_) = wa in p), "hold" .= (let (_,h,_) = wa in h), "error" .= (let (_,_,e) = wa in e)]
+        ]
+
+    unholdByExternalId channel extId =
+      case channel of
+        "instagram" -> withPool $ updateWhere
+          [ InstagramMessageExternalId ==. extId ]
+          [ InstagramMessageReplyStatus =. "pending"
+          , InstagramMessageHoldReason =. Nothing
+          , InstagramMessageHoldRequiredFields =. Nothing
+          , InstagramMessageLastAttemptAt =. Nothing
+          , InstagramMessageReplyError =. Nothing
+          ]
+        "facebook" -> withPool $ updateWhere
+          [ ME.FacebookMessageExternalId ==. extId ]
+          [ ME.FacebookMessageReplyStatus =. "pending"
+          , ME.FacebookMessageHoldReason =. Nothing
+          , ME.FacebookMessageHoldRequiredFields =. Nothing
+          , ME.FacebookMessageLastAttemptAt =. Nothing
+          , ME.FacebookMessageReplyError =. Nothing
+          ]
+        "whatsapp" -> withPool $ updateWhere
+          [ ME.WhatsAppMessageExternalId ==. extId ]
+          [ ME.WhatsAppMessageReplyStatus =. "pending"
+          , ME.WhatsAppMessageHoldReason =. Nothing
+          , ME.WhatsAppMessageHoldRequiredFields =. Nothing
+          , ME.WhatsAppMessageLastAttemptAt =. Nothing
+          , ME.WhatsAppMessageReplyError =. Nothing
+          ]
+        _ -> throwError err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
+
+    unholdLatestBySender channel senderId = do
+      now <- liftIO getCurrentTime
+      mExt <- case channel of
+        "instagram" -> withPool $ do
+          mRow <- selectFirst [InstagramMessageSenderId ==. senderId, InstagramMessageReplyStatus ==. "hold", InstagramMessageDirection ==. "incoming"] [Desc InstagramMessageCreatedAt]
+          pure (fmap (instagramMessageExternalId . entityVal) mRow)
+        "facebook" -> withPool $ do
+          mRow <- selectFirst [ME.FacebookMessageSenderId ==. senderId, ME.FacebookMessageReplyStatus ==. "hold", ME.FacebookMessageDirection ==. "incoming"] [Desc ME.FacebookMessageCreatedAt]
+          pure (fmap (ME.facebookMessageExternalId . entityVal) mRow)
+        "whatsapp" -> withPool $ do
+          mRow <- selectFirst [ME.WhatsAppMessageSenderId ==. senderId, ME.WhatsAppMessageReplyStatus ==. "hold", ME.WhatsAppMessageDirection ==. "incoming"] [Desc ME.WhatsAppMessageCreatedAt]
+          pure (fmap (ME.whatsAppMessageExternalId . entityVal) mRow)
+        _ -> throwError err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
+      case mExt of
+        Nothing -> pure (object ["status" .= ("noop" :: Text), "channel" .= channel, "senderId" .= senderId, "message" .= ("No hold found" :: Text), "ts" .= T.pack (show now)])
+        Just extId -> do
+          _ <- unholdByExternalId channel extId
+          liftIO $ addLog LogInfo ("[Admin][Social] Unhold latest hold " <> channel <> " senderId=" <> senderId <> " extId=" <> extId)
+          pure (object ["status" .= ("ok" :: Text), "channel" .= channel, "senderId" .= senderId, "externalId" .= extId, "ts" .= T.pack (show now)])
 
     brainListHandler mIncludeInactive = do
       ensureModule ModuleAdmin user
@@ -680,3 +775,4 @@ levelToText :: LogLevel -> Text
 levelToText LogInfo = "info"
 levelToText LogWarning = "warning"
 levelToText LogError = "error"
+

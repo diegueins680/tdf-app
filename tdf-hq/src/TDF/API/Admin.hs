@@ -67,6 +67,10 @@ type RagAdminAPI =
        "rag" :> "status" :> Get '[JSON] RagIndexStatus
   :<|> "rag" :> "refresh" :> Post '[JSON] RagRefreshResponse
 
+type SocialAdminAPI =
+       "social" :> "unhold" :> ReqBody '[JSON] SocialUnholdRequest :> Post '[JSON] Value
+  :<|> "social" :> "status" :> Get '[JSON] Value
+
 type AdminAPI =
        "seed" :> Post '[JSON] NoContent
   :<|> "dropdowns" :> Capture "category" Text :> DropdownCategoryAPI
@@ -77,6 +81,19 @@ type AdminAPI =
   :<|> "email-test" :> ReqBody '[JSON] EmailTestRequest :> Post '[JSON] EmailTestResponse
   :<|> BrainAdminAPI
   :<|> RagAdminAPI
+  :<|> SocialAdminAPI
+
+-- | Unhold a social inbound message so the auto-reply worker can retry.
+-- One of externalId/ids should be provided.
+data SocialUnholdRequest = SocialUnholdRequest
+  { surChannel    :: Text  -- instagram|facebook|whatsapp
+  , surExternalId :: Maybe Text
+  , surSenderId   :: Maybe Text
+  , surNote       :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON SocialUnholdRequest
+
 
 data EmailTestRequest = EmailTestRequest
   { etrEmail   :: Text
