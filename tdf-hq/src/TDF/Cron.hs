@@ -13,7 +13,7 @@ import           Control.Applicative    ((<|>))
 import           Control.Monad           (forever, void, when, foldM)
 import           Control.Monad.IO.Class  (liftIO)
 import           Data.Foldable           (for_)
-import           Data.List               (find, foldl')
+import           Data.List                  (find, foldl', nub)
 import qualified Data.Map.Strict         as Map
 import           Data.Maybe              (catMaybes, fromMaybe, isJust, listToMaybe)
 import           Data.Text               (Text)
@@ -95,6 +95,9 @@ parseDirective raw0 =
                   Just v -> let vv = T.strip v in if T.null vv then Nothing else Just vv
             in if T.null reason then Left "HOLD directive empty" else Right (Hold reason needTxt)
         | otherwise -> Left "Invalid directive: expected SEND: or HOLD:"
+
+uniq :: Ord a => [a] -> [a]
+uniq = nub
 
 -- | Launch a background thread that sends payment reminders every day at 09:00 (server local time).
 startCoursePaymentReminderJob :: Env -> IO ()
@@ -311,120 +314,17 @@ buildChannelNote channel mAd mCampaign =
 
 processInstagramReplies :: Env -> IO Int
 processInstagramReplies Env{envPool, envConfig} = do
+  -- Conversation-aware: reply once per senderId (latest pending).
   pending <- runSqlPool
     (selectList
       [ InstagramMessageDirection ==. "incoming"
       , InstagramMessageRepliedAt ==. Nothing
       , InstagramMessageReplyStatus ==. "pending"
       ]
-      [Asc InstagramMessageCreatedAt, LimitTo 200])
+      [Desc InstagramMessageCreatedAt, LimitTo 200])
     envPool
-  foldM (replyInstagramOne envConfig envPool) 0 pending
-
-replyInstagramOne :: AppConfig -> ConnectionPool -> Int -> Entity InstagramMessage -> IO Int
-replyInstagramOne cfg pool acc (Entity key msg) = do
-  now <- getCurrentTime
-  let body = fromMaybe "" (instagramMessageText msg)
-  if T.null (T.strip body)
-    then pure acc
-    else do
-      runSqlPool
-        (update key
-          [ InstagramMessageLastAttemptAt =. Just now
-          , InstagramMessageAttemptCount =. instagramMessageAttemptCount msg + 1
-          ])
-        pool
-      adContext <- runSqlPool
-        (resolveAdContext (instagramMessageAdExternalId msg) (instagramMessageAdName msg) (instagramMessageCampaignName msg))
-        pool
-      let channelNote = buildChannelNote "instagram" (acAdName adContext) (acCampaignName adContext)
-      examples <- runSqlPool
-        (loadAdExamples (isJust (acAdId adContext)) (maybe [] pure (acAdId adContext)))
-        pool
-      kb <- retrieveRagContext cfg pool body
-      replyRes <- runRagChatWithStatus cfg kb examples body (Just channelNote)
-      case replyRes of
-        Left err -> do
-          runSqlPool
-            (update key
-              [ InstagramMessageReplyStatus =. "error"
-              , InstagramMessageReplyError =. Just err
-              , InstagramMessageAdName =. acAdName adContext
-              , InstagramMessageCampaignName =. acCampaignName adContext
-              ])
-            pool
-          pure acc
-        Right replyRaw -> do
-          let raw = T.strip replyRaw
-          case parseDirective raw of
-            Left parseErr -> do
-              runSqlPool
-                (update key
-                  [ InstagramMessageReplyStatus =. "error"
-                  , InstagramMessageReplyError =. Just parseErr
-                  , InstagramMessageAdName =. acAdName adContext
-                  , InstagramMessageCampaignName =. acCampaignName adContext
-                  ])
-                pool
-              pure acc
-            Right (Hold reason needTxt) -> do
-              runSqlPool
-                (update key
-                  [ InstagramMessageReplyStatus =. "hold"
-                  , InstagramMessageHoldReason =. Just reason
-                  , InstagramMessageHoldRequiredFields =. needTxt
-                  , InstagramMessageReplyError =. Nothing
-                  , InstagramMessageAdName =. acAdName adContext
-                  , InstagramMessageCampaignName =. acCampaignName adContext
-                  ])
-                pool
-              pure acc
-            Right (Send reply) -> do
-              sendResult <- sendInstagramText cfg (instagramMessageSenderId msg) reply
-              case sendResult of
-                Left err -> do
-                  runSqlPool
-                    (update key
-                      [ InstagramMessageReplyStatus =. "error"
-                      , InstagramMessageReplyError =. Just err
-                      , InstagramMessageAdName =. acAdName adContext
-                      , InstagramMessageCampaignName =. acCampaignName adContext
-                      ])
-                    pool
-                  pure acc
-                Right _ -> do
-                  runSqlPool
-                    (do
-                      update key
-                        [ InstagramMessageReplyStatus =. "sent"
-                        , InstagramMessageRepliedAt =. Just now
-                        , InstagramMessageReplyText =. Just reply
-                        , InstagramMessageReplyError =. Nothing
-                        , InstagramMessageAdName =. acAdName adContext
-                        , InstagramMessageCampaignName =. acCampaignName adContext
-                        ]
-                      insert_ (InstagramMessage (instagramMessageExternalId msg <> "-out-" <> T.pack (show now))
-                                (instagramMessageSenderId msg)
-                                (instagramMessageSenderName msg)
-                                (Just reply)
-                                "outgoing"
-                                (instagramMessageAdExternalId msg)
-                                (acAdName adContext)
-                                (instagramMessageCampaignExternalId msg)
-                                (acCampaignName adContext)
-                                Nothing
-                                "sent"
-                                Nothing
-                                Nothing
-                                (Just now)
-                                1
-                                Nothing
-                                Nothing
-                                Nothing
-                                now)
-                    )
-                    pool
-                  pure (acc + 1)
+  let senderIds = uniq (map (instagramMessageSenderId . entityVal) pending)
+  foldM (replyInstagramConversation envConfig envPool) 0 senderIds
 
 processFacebookReplies :: Env -> IO Int
 processFacebookReplies Env{envPool, envConfig} = do
@@ -434,114 +334,10 @@ processFacebookReplies Env{envPool, envConfig} = do
       , ME.FacebookMessageRepliedAt ==. Nothing
       , ME.FacebookMessageReplyStatus ==. "pending"
       ]
-      [Asc ME.FacebookMessageCreatedAt, LimitTo 200])
+      [Desc ME.FacebookMessageCreatedAt, LimitTo 200])
     envPool
-  foldM (replyFacebookOne envConfig envPool) 0 pending
-
-replyFacebookOne :: AppConfig -> ConnectionPool -> Int -> Entity ME.FacebookMessage -> IO Int
-replyFacebookOne cfg pool acc (Entity key msg) = do
-  now <- getCurrentTime
-  let body = fromMaybe "" (ME.facebookMessageText msg)
-  if T.null (T.strip body)
-    then pure acc
-    else do
-      runSqlPool
-        (update key
-          [ ME.FacebookMessageLastAttemptAt =. Just now
-          , ME.FacebookMessageAttemptCount =. ME.facebookMessageAttemptCount msg + 1
-          ])
-        pool
-      adContext <- runSqlPool
-        (resolveAdContext (ME.facebookMessageAdExternalId msg) (ME.facebookMessageAdName msg) (ME.facebookMessageCampaignName msg))
-        pool
-      let channelNote = buildChannelNote "facebook" (acAdName adContext) (acCampaignName adContext)
-      examples <- runSqlPool
-        (loadAdExamples (isJust (acAdId adContext)) (maybe [] pure (acAdId adContext)))
-        pool
-      kb <- retrieveRagContext cfg pool body
-      replyRes <- runRagChatWithStatus cfg kb examples body (Just channelNote)
-      case replyRes of
-        Left err -> do
-          runSqlPool
-            (update key
-              [ ME.FacebookMessageReplyStatus =. "error"
-              , ME.FacebookMessageReplyError =. Just err
-              , ME.FacebookMessageAdName =. acAdName adContext
-              , ME.FacebookMessageCampaignName =. acCampaignName adContext
-              ])
-            pool
-          pure acc
-        Right replyRaw -> do
-          let raw = T.strip replyRaw
-          case parseDirective raw of
-            Left parseErr -> do
-              runSqlPool
-                (update key
-                  [ ME.FacebookMessageReplyStatus =. "error"
-                  , ME.FacebookMessageReplyError =. Just parseErr
-                  , ME.FacebookMessageAdName =. acAdName adContext
-                  , ME.FacebookMessageCampaignName =. acCampaignName adContext
-                  ])
-                pool
-              pure acc
-            Right (Hold reason needTxt) -> do
-              runSqlPool
-                (update key
-                  [ ME.FacebookMessageReplyStatus =. "hold"
-                  , ME.FacebookMessageHoldReason =. Just reason
-                  , ME.FacebookMessageHoldRequiredFields =. needTxt
-                  , ME.FacebookMessageReplyError =. Nothing
-                  , ME.FacebookMessageAdName =. acAdName adContext
-                  , ME.FacebookMessageCampaignName =. acCampaignName adContext
-                  ])
-                pool
-              pure acc
-            Right (Send reply) -> do
-              sendResult <- sendFacebookText cfg (ME.facebookMessageSenderId msg) reply
-              case sendResult of
-                Left err -> do
-                  runSqlPool
-                    (update key
-                      [ ME.FacebookMessageReplyStatus =. "error"
-                      , ME.FacebookMessageReplyError =. Just err
-                      , ME.FacebookMessageAdName =. acAdName adContext
-                      , ME.FacebookMessageCampaignName =. acCampaignName adContext
-                      ])
-                    pool
-                  pure acc
-                Right _ -> do
-                  runSqlPool
-                    (do
-                      update key
-                        [ ME.FacebookMessageReplyStatus =. "sent"
-                        , ME.FacebookMessageRepliedAt =. Just now
-                        , ME.FacebookMessageReplyText =. Just reply
-                        , ME.FacebookMessageReplyError =. Nothing
-                        , ME.FacebookMessageAdName =. acAdName adContext
-                        , ME.FacebookMessageCampaignName =. acCampaignName adContext
-                        ]
-                      insert_ (ME.FacebookMessage (ME.facebookMessageExternalId msg <> "-out-" <> T.pack (show now))
-                                (ME.facebookMessageSenderId msg)
-                                (ME.facebookMessageSenderName msg)
-                                (Just reply)
-                                "outgoing"
-                                (ME.facebookMessageAdExternalId msg)
-                                (acAdName adContext)
-                                (ME.facebookMessageCampaignExternalId msg)
-                                (acCampaignName adContext)
-                                Nothing
-                                "sent"
-                                Nothing
-                                Nothing
-                                (Just now)
-                                1
-                                Nothing
-                                Nothing
-                                Nothing
-                                now)
-                    )
-                    pool
-                  pure (acc + 1)
+  let senderIds = uniq (map (ME.facebookMessageSenderId . entityVal) pending)
+  foldM (replyFacebookConversation envConfig envPool) 0 senderIds
 
 processWhatsAppReplies :: Env -> IO Int
 processWhatsAppReplies Env{envPool, envConfig} = do
@@ -552,114 +348,10 @@ processWhatsAppReplies Env{envPool, envConfig} = do
       , ME.WhatsAppMessageRepliedAt ==. Nothing
       , ME.WhatsAppMessageReplyStatus ==. "pending"
       ]
-      [Asc ME.WhatsAppMessageCreatedAt, LimitTo 200])
+      [Desc ME.WhatsAppMessageCreatedAt, LimitTo 200])
     envPool
-  foldM (replyWhatsAppOne envConfig envPool waEnv) 0 pending
-
-replyWhatsAppOne :: AppConfig -> ConnectionPool -> WhatsAppEnv -> Int -> Entity ME.WhatsAppMessage -> IO Int
-replyWhatsAppOne cfg pool waEnv acc (Entity key msg) = do
-  now <- getCurrentTime
-  let body = fromMaybe "" (ME.whatsAppMessageText msg)
-  if T.null (T.strip body)
-    then pure acc
-    else do
-      runSqlPool
-        (update key
-          [ ME.WhatsAppMessageLastAttemptAt =. Just now
-          , ME.WhatsAppMessageAttemptCount =. ME.whatsAppMessageAttemptCount msg + 1
-          ])
-        pool
-      adContext <- runSqlPool
-        (resolveAdContext (ME.whatsAppMessageAdExternalId msg) (ME.whatsAppMessageAdName msg) (ME.whatsAppMessageCampaignName msg))
-        pool
-      let channelNote = buildChannelNote "whatsapp" (acAdName adContext) (acCampaignName adContext)
-      examples <- runSqlPool
-        (loadAdExamples (isJust (acAdId adContext)) (maybe [] pure (acAdId adContext)))
-        pool
-      kb <- retrieveRagContext cfg pool body
-      replyRes <- runRagChatWithStatus cfg kb examples body (Just channelNote)
-      case replyRes of
-        Left err -> do
-          runSqlPool
-            (update key
-              [ ME.WhatsAppMessageReplyStatus =. "error"
-              , ME.WhatsAppMessageReplyError =. Just err
-              , ME.WhatsAppMessageAdName =. acAdName adContext
-              , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
-              ])
-            pool
-          pure acc
-        Right replyRaw -> do
-          let raw = T.strip replyRaw
-          case parseDirective raw of
-            Left parseErr -> do
-              runSqlPool
-                (update key
-                  [ ME.WhatsAppMessageReplyStatus =. "error"
-                  , ME.WhatsAppMessageReplyError =. Just parseErr
-                  , ME.WhatsAppMessageAdName =. acAdName adContext
-                  , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
-                  ])
-                pool
-              pure acc
-            Right (Hold reason needTxt) -> do
-              runSqlPool
-                (update key
-                  [ ME.WhatsAppMessageReplyStatus =. "hold"
-                  , ME.WhatsAppMessageHoldReason =. Just reason
-                  , ME.WhatsAppMessageHoldRequiredFields =. needTxt
-                  , ME.WhatsAppMessageReplyError =. Nothing
-                  , ME.WhatsAppMessageAdName =. acAdName adContext
-                  , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
-                  ])
-                pool
-              pure acc
-            Right (Send reply) -> do
-              sendResult <- sendWhatsAppAutoReply waEnv (ME.whatsAppMessageSenderId msg) reply
-              case sendResult of
-                Left err -> do
-                  runSqlPool
-                    (update key
-                      [ ME.WhatsAppMessageReplyStatus =. "error"
-                      , ME.WhatsAppMessageReplyError =. Just err
-                      , ME.WhatsAppMessageAdName =. acAdName adContext
-                      , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
-                      ])
-                    pool
-                  pure acc
-                Right _ -> do
-                  runSqlPool
-                    (do
-                      update key
-                        [ ME.WhatsAppMessageReplyStatus =. "sent"
-                        , ME.WhatsAppMessageRepliedAt =. Just now
-                        , ME.WhatsAppMessageReplyText =. Just reply
-                        , ME.WhatsAppMessageReplyError =. Nothing
-                        , ME.WhatsAppMessageAdName =. acAdName adContext
-                        , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
-                        ]
-                      insert_ (ME.WhatsAppMessage (ME.whatsAppMessageExternalId msg <> "-out-" <> T.pack (show now))
-                                (ME.whatsAppMessageSenderId msg)
-                                (ME.whatsAppMessageSenderName msg)
-                                (Just reply)
-                                "outgoing"
-                                (ME.whatsAppMessageAdExternalId msg)
-                                (acAdName adContext)
-                                (ME.whatsAppMessageCampaignExternalId msg)
-                                (acCampaignName adContext)
-                                Nothing
-                                "sent"
-                                Nothing
-                                Nothing
-                                (Just now)
-                                1
-                                Nothing
-                                Nothing
-                                Nothing
-                                now)
-                    )
-                    pool
-                  pure (acc + 1)
+  let senderIds = uniq (map (ME.whatsAppMessageSenderId . entityVal) pending)
+  foldM (replyWhatsAppConversation envConfig envPool waEnv) 0 senderIds
 
 sendWhatsAppAutoReply :: WhatsAppEnv -> Text -> Text -> IO (Either Text ())
 sendWhatsAppAutoReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVersion = mVersion} phone reply = do
@@ -864,3 +556,400 @@ isNewSince acc media =
       case imTimestamp media of
         Nothing    -> True
         Just postedTs -> postedTs > lastTs
+
+-- Conversation-aware reply helpers -----------------------------------------
+
+conversationLimit :: Int
+conversationLimit = 12
+
+renderConversation :: (Text, Text) -> Text
+renderConversation (roleTag, msg) = roleTag <> ": " <> msg
+
+mkConversationPrompt :: Text -> [Text] -> Text
+mkConversationPrompt latestUserMsg historyLines =
+  T.intercalate "\n"
+    ( [ "Historial (más reciente al final):" ]
+      ++ historyLines
+      ++ [ "\nMensaje actual:" ]
+      ++ [ latestUserMsg ]
+    )
+
+replyInstagramConversation :: AppConfig -> ConnectionPool -> Int -> Text -> IO Int
+replyInstagramConversation cfg pool acc senderId = do
+  now <- getCurrentTime
+  mLatestPending <- runSqlPool
+    (selectFirst
+      [ InstagramMessageSenderId ==. senderId
+      , InstagramMessageDirection ==. "incoming"
+      , InstagramMessageRepliedAt ==. Nothing
+      , InstagramMessageReplyStatus ==. "pending"
+      ]
+      [Desc InstagramMessageCreatedAt])
+    pool
+  case mLatestPending of
+    Nothing -> pure acc
+    Just (Entity key msg) -> do
+      -- Fetch recent conversation
+      recent <- runSqlPool
+        (selectList
+          [ InstagramMessageSenderId ==. senderId ]
+          [Desc InstagramMessageCreatedAt, LimitTo conversationLimit])
+        pool
+      let history = reverse recent
+          toLine (Entity _ m) =
+            let txt = fromMaybe "" (instagramMessageText m)
+                roleTag = if instagramMessageDirection m == "outgoing" then "assistant" else "user"
+            in renderConversation (roleTag, T.strip txt)
+          historyLines = map toLine history
+          latestText = fromMaybe "" (instagramMessageText msg)
+          userPrompt = mkConversationPrompt (T.strip latestText) historyLines
+      -- attempt bookkeeping
+      runSqlPool
+        (update key
+          [ InstagramMessageLastAttemptAt =. Just now
+          , InstagramMessageAttemptCount =. instagramMessageAttemptCount msg + 1
+          ])
+        pool
+      adContext <- runSqlPool
+        (resolveAdContext (instagramMessageAdExternalId msg) (instagramMessageAdName msg) (instagramMessageCampaignName msg))
+        pool
+      let channelNote = buildChannelNote "instagram" (acAdName adContext) (acCampaignName adContext)
+      examples <- runSqlPool
+        (loadAdExamples (isJust (acAdId adContext)) (maybe [] pure (acAdId adContext)))
+        pool
+      kb <- retrieveRagContext cfg pool userPrompt
+      replyRes <- runRagChatWithStatus cfg kb examples userPrompt (Just channelNote)
+      case replyRes of
+        Left err -> do
+          runSqlPool
+            (update key
+              [ InstagramMessageReplyStatus =. "error"
+              , InstagramMessageReplyError =. Just err
+              , InstagramMessageAdName =. acAdName adContext
+              , InstagramMessageCampaignName =. acCampaignName adContext
+              ])
+            pool
+          pure acc
+        Right replyRaw -> do
+          let raw = T.strip replyRaw
+          case parseDirective raw of
+            Left parseErr -> do
+              runSqlPool
+                (update key
+                  [ InstagramMessageReplyStatus =. "error"
+                  , InstagramMessageReplyError =. Just parseErr
+                  , InstagramMessageAdName =. acAdName adContext
+                  , InstagramMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            Right (Hold reason needTxt) -> do
+              runSqlPool
+                (update key
+                  [ InstagramMessageReplyStatus =. "hold"
+                  , InstagramMessageHoldReason =. Just reason
+                  , InstagramMessageHoldRequiredFields =. needTxt
+                  , InstagramMessageReplyError =. Nothing
+                  , InstagramMessageAdName =. acAdName adContext
+                  , InstagramMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            Right (Send reply) -> do
+              sendResult <- sendInstagramText cfg senderId reply
+              case sendResult of
+                Left err -> do
+                  runSqlPool
+                    (update key
+                      [ InstagramMessageReplyStatus =. "error"
+                      , InstagramMessageReplyError =. Just err
+                      , InstagramMessageAdName =. acAdName adContext
+                      , InstagramMessageCampaignName =. acCampaignName adContext
+                      ])
+                    pool
+                  pure acc
+                Right _ -> do
+                  runSqlPool
+                    (do
+                      update key
+                        [ InstagramMessageReplyStatus =. "sent"
+                        , InstagramMessageRepliedAt =. Just now
+                        , InstagramMessageReplyText =. Just reply
+                        , InstagramMessageReplyError =. Nothing
+                        , InstagramMessageAdName =. acAdName adContext
+                        , InstagramMessageCampaignName =. acCampaignName adContext
+                        ]
+                      insert_ (InstagramMessage (instagramMessageExternalId msg <> "-out-" <> T.pack (show now))
+                                senderId
+                                (instagramMessageSenderName msg)
+                                (Just reply)
+                                "outgoing"
+                                (instagramMessageAdExternalId msg)
+                                (acAdName adContext)
+                                (instagramMessageCampaignExternalId msg)
+                                (acCampaignName adContext)
+                                Nothing
+                                "sent"
+                                Nothing
+                                Nothing
+                                (Just now)
+                                1
+                                Nothing
+                                Nothing
+                                Nothing
+                                now)
+                    )
+                    pool
+                  pure (acc + 1)
+
+replyFacebookConversation :: AppConfig -> ConnectionPool -> Int -> Text -> IO Int
+replyFacebookConversation cfg pool acc senderId = do
+  now <- getCurrentTime
+  mLatestPending <- runSqlPool
+    (selectFirst
+      [ ME.FacebookMessageSenderId ==. senderId
+      , ME.FacebookMessageDirection ==. "incoming"
+      , ME.FacebookMessageRepliedAt ==. Nothing
+      , ME.FacebookMessageReplyStatus ==. "pending"
+      ]
+      [Desc ME.FacebookMessageCreatedAt])
+    pool
+  case mLatestPending of
+    Nothing -> pure acc
+    Just (Entity key msg) -> do
+      recent <- runSqlPool
+        (selectList
+          [ ME.FacebookMessageSenderId ==. senderId ]
+          [Desc ME.FacebookMessageCreatedAt, LimitTo conversationLimit])
+        pool
+      let history = reverse recent
+          toLine (Entity _ m) =
+            let txt = fromMaybe "" (ME.facebookMessageText m)
+                roleTag = if ME.facebookMessageDirection m == "outgoing" then "assistant" else "user"
+            in renderConversation (roleTag, T.strip txt)
+          historyLines = map toLine history
+          latestText = fromMaybe "" (ME.facebookMessageText msg)
+          userPrompt = mkConversationPrompt (T.strip latestText) historyLines
+      runSqlPool
+        (update key
+          [ ME.FacebookMessageLastAttemptAt =. Just now
+          , ME.FacebookMessageAttemptCount =. ME.facebookMessageAttemptCount msg + 1
+          ])
+        pool
+      adContext <- runSqlPool
+        (resolveAdContext (ME.facebookMessageAdExternalId msg) (ME.facebookMessageAdName msg) (ME.facebookMessageCampaignName msg))
+        pool
+      let channelNote = buildChannelNote "facebook" (acAdName adContext) (acCampaignName adContext)
+      examples <- runSqlPool
+        (loadAdExamples (isJust (acAdId adContext)) (maybe [] pure (acAdId adContext)))
+        pool
+      kb <- retrieveRagContext cfg pool userPrompt
+      replyRes <- runRagChatWithStatus cfg kb examples userPrompt (Just channelNote)
+      case replyRes of
+        Left err -> do
+          runSqlPool
+            (update key
+              [ ME.FacebookMessageReplyStatus =. "error"
+              , ME.FacebookMessageReplyError =. Just err
+              , ME.FacebookMessageAdName =. acAdName adContext
+              , ME.FacebookMessageCampaignName =. acCampaignName adContext
+              ])
+            pool
+          pure acc
+        Right replyRaw -> do
+          let raw = T.strip replyRaw
+          case parseDirective raw of
+            Left parseErr -> do
+              runSqlPool
+                (update key
+                  [ ME.FacebookMessageReplyStatus =. "error"
+                  , ME.FacebookMessageReplyError =. Just parseErr
+                  , ME.FacebookMessageAdName =. acAdName adContext
+                  , ME.FacebookMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            Right (Hold reason needTxt) -> do
+              runSqlPool
+                (update key
+                  [ ME.FacebookMessageReplyStatus =. "hold"
+                  , ME.FacebookMessageHoldReason =. Just reason
+                  , ME.FacebookMessageHoldRequiredFields =. needTxt
+                  , ME.FacebookMessageReplyError =. Nothing
+                  , ME.FacebookMessageAdName =. acAdName adContext
+                  , ME.FacebookMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            Right (Send reply) -> do
+              sendResult <- sendFacebookText cfg senderId reply
+              case sendResult of
+                Left err -> do
+                  runSqlPool
+                    (update key
+                      [ ME.FacebookMessageReplyStatus =. "error"
+                      , ME.FacebookMessageReplyError =. Just err
+                      , ME.FacebookMessageAdName =. acAdName adContext
+                      , ME.FacebookMessageCampaignName =. acCampaignName adContext
+                      ])
+                    pool
+                  pure acc
+                Right _ -> do
+                  runSqlPool
+                    (do
+                      update key
+                        [ ME.FacebookMessageReplyStatus =. "sent"
+                        , ME.FacebookMessageRepliedAt =. Just now
+                        , ME.FacebookMessageReplyText =. Just reply
+                        , ME.FacebookMessageReplyError =. Nothing
+                        , ME.FacebookMessageAdName =. acAdName adContext
+                        , ME.FacebookMessageCampaignName =. acCampaignName adContext
+                        ]
+                      insert_ (ME.FacebookMessage (ME.facebookMessageExternalId msg <> "-out-" <> T.pack (show now))
+                                senderId
+                                (ME.facebookMessageSenderName msg)
+                                (Just reply)
+                                "outgoing"
+                                (ME.facebookMessageAdExternalId msg)
+                                (acAdName adContext)
+                                (ME.facebookMessageCampaignExternalId msg)
+                                (acCampaignName adContext)
+                                Nothing
+                                "sent"
+                                Nothing
+                                Nothing
+                                (Just now)
+                                1
+                                Nothing
+                                Nothing
+                                Nothing
+                                now)
+                    )
+                    pool
+                  pure (acc + 1)
+
+replyWhatsAppConversation :: AppConfig -> ConnectionPool -> WhatsAppEnv -> Int -> Text -> IO Int
+replyWhatsAppConversation cfg pool waEnv acc senderId = do
+  now <- getCurrentTime
+  mLatestPending <- runSqlPool
+    (selectFirst
+      [ ME.WhatsAppMessageSenderId ==. senderId
+      , ME.WhatsAppMessageDirection ==. "incoming"
+      , ME.WhatsAppMessageRepliedAt ==. Nothing
+      , ME.WhatsAppMessageReplyStatus ==. "pending"
+      ]
+      [Desc ME.WhatsAppMessageCreatedAt])
+    pool
+  case mLatestPending of
+    Nothing -> pure acc
+    Just (Entity key msg) -> do
+      recent <- runSqlPool
+        (selectList
+          [ ME.WhatsAppMessageSenderId ==. senderId ]
+          [Desc ME.WhatsAppMessageCreatedAt, LimitTo conversationLimit])
+        pool
+      let history = reverse recent
+          toLine (Entity _ m) =
+            let txt = fromMaybe "" (ME.whatsAppMessageText m)
+                roleTag = if ME.whatsAppMessageDirection m == "outgoing" then "assistant" else "user"
+            in renderConversation (roleTag, T.strip txt)
+          historyLines = map toLine history
+          latestText = fromMaybe "" (ME.whatsAppMessageText msg)
+          userPrompt = mkConversationPrompt (T.strip latestText) historyLines
+      runSqlPool
+        (update key
+          [ ME.WhatsAppMessageLastAttemptAt =. Just now
+          , ME.WhatsAppMessageAttemptCount =. ME.whatsAppMessageAttemptCount msg + 1
+          ])
+        pool
+      adContext <- runSqlPool
+        (resolveAdContext (ME.whatsAppMessageAdExternalId msg) (ME.whatsAppMessageAdName msg) (ME.whatsAppMessageCampaignName msg))
+        pool
+      let channelNote = buildChannelNote "whatsapp" (acAdName adContext) (acCampaignName adContext)
+      examples <- runSqlPool
+        (loadAdExamples (isJust (acAdId adContext)) (maybe [] pure (acAdId adContext)))
+        pool
+      kb <- retrieveRagContext cfg pool userPrompt
+      replyRes <- runRagChatWithStatus cfg kb examples userPrompt (Just channelNote)
+      case replyRes of
+        Left err -> do
+          runSqlPool
+            (update key
+              [ ME.WhatsAppMessageReplyStatus =. "error"
+              , ME.WhatsAppMessageReplyError =. Just err
+              , ME.WhatsAppMessageAdName =. acAdName adContext
+              , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
+              ])
+            pool
+          pure acc
+        Right replyRaw -> do
+          let raw = T.strip replyRaw
+          case parseDirective raw of
+            Left parseErr -> do
+              runSqlPool
+                (update key
+                  [ ME.WhatsAppMessageReplyStatus =. "error"
+                  , ME.WhatsAppMessageReplyError =. Just parseErr
+                  , ME.WhatsAppMessageAdName =. acAdName adContext
+                  , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            Right (Hold reason needTxt) -> do
+              runSqlPool
+                (update key
+                  [ ME.WhatsAppMessageReplyStatus =. "hold"
+                  , ME.WhatsAppMessageHoldReason =. Just reason
+                  , ME.WhatsAppMessageHoldRequiredFields =. needTxt
+                  , ME.WhatsAppMessageReplyError =. Nothing
+                  , ME.WhatsAppMessageAdName =. acAdName adContext
+                  , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
+                  ])
+                pool
+              pure acc
+            Right (Send reply) -> do
+              sendResult <- sendWhatsAppAutoReply waEnv senderId reply
+              case sendResult of
+                Left err -> do
+                  runSqlPool
+                    (update key
+                      [ ME.WhatsAppMessageReplyStatus =. "error"
+                      , ME.WhatsAppMessageReplyError =. Just err
+                      , ME.WhatsAppMessageAdName =. acAdName adContext
+                      , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
+                      ])
+                    pool
+                  pure acc
+                Right _ -> do
+                  runSqlPool
+                    (do
+                      update key
+                        [ ME.WhatsAppMessageReplyStatus =. "sent"
+                        , ME.WhatsAppMessageRepliedAt =. Just now
+                        , ME.WhatsAppMessageReplyText =. Just reply
+                        , ME.WhatsAppMessageReplyError =. Nothing
+                        , ME.WhatsAppMessageAdName =. acAdName adContext
+                        , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
+                        ]
+                      insert_ (ME.WhatsAppMessage (ME.whatsAppMessageExternalId msg <> "-out-" <> T.pack (show now))
+                                senderId
+                                (ME.whatsAppMessageSenderName msg)
+                                (Just reply)
+                                "outgoing"
+                                (ME.whatsAppMessageAdExternalId msg)
+                                (acAdName adContext)
+                                (ME.whatsAppMessageCampaignExternalId msg)
+                                (acCampaignName adContext)
+                                Nothing
+                                "sent"
+                                Nothing
+                                Nothing
+                                (Just now)
+                                1
+                                Nothing
+                                Nothing
+                                Nothing
+                                now)
+                    )
+                    pool
+                  pure (acc + 1)
