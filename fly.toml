@@ -6,7 +6,6 @@ app = "tdf-hq"
 [env]
   APP_PORT = "8080"
   ALLOW_ORIGINS = "https://tdf-app.pages.dev"
-  ALLOW_ALL_ORIGINS = "true"
   HQ_ASSETS_DIR = "/data/assets"
   # VITE_PAYPAL_CLIENT_ID is set as a Fly secret (flyctl secrets set VITE_PAYPAL_CLIENT_ID=...)
   # VITE_LIVE_SESSIONS_PUBLIC_TOKEN is set as a Fly secret (flyctl secrets set VITE_LIVE_SESSIONS_PUBLIC_TOKEN=...)
