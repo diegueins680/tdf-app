@@ -94,7 +94,7 @@ loadConfig = do
   d          <- get "DB_NAME" "tdf_hq"
   ap         <- get "APP_PORT" "8080"
   rdb        <- get "RESET_DB" "false"
-  sdb        <- get "SEED_DB" "true"
+  sdb        <- get "SEED_DB" "false"
   mig        <- get "RUN_MIGRATIONS" "true"
   seedEnv    <- lookupEnv "SEED_TRIGGER_TOKEN"
   baseUrlEnv <- lookupEnv "HQ_APP_URL"
@@ -199,10 +199,9 @@ loadConfig = do
         _ -> def
     mkSeedToken mVal =
       case fmap (T.strip . T.pack) mVal of
-        Nothing -> Just defaultSeed
+        Nothing  -> Nothing
         Just txt | T.null txt -> Nothing
                  | otherwise -> Just txt
-    defaultSeed = T.pack "tdf-bootstrap-seed"
     mkEmailConfig mHost mUser mPass mFrom mFromName mPort mTls = do
       host <- fmap (T.strip . T.pack) mHost
       user <- fmap (T.strip . T.pack) mUser
