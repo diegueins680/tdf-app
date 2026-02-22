@@ -5695,14 +5695,16 @@ callOpenAIChat cfg messages =
       let status = statusCode (responseStatus resp)
           raw = responseBody resp
       if status >= 200 && status < 300
-        then case eitherDecode raw of
+        then case (eitherDecode raw :: Either String Value) of
           Left err -> pure (Left (T.pack err))
-          Right ChatCompletionResp{choices = (ChatChoice OpenAIChatMessage{content = reply} : _)} ->
-            pure (Right reply)
-          Right _ -> pure (Left "Sin respuesta de modelo")
+          Right payload ->
+            case extractModelReplyText payload of
+              Just reply -> pure (Right reply)
+              Nothing ->
+                pure (Left (fromMaybe "Sin respuesta de modelo" (extractApiErrorMessage payload)))
         else do
           let baseMsg = "Error al generar respuesta (HTTP " <> T.pack (show status) <> ")"
-              msg = case eitherDecode raw of
+              msg = case (eitherDecode raw :: Either String Value) of
                 Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
                 Left _ -> baseMsg
           pure (Left msg)
@@ -5750,16 +5752,19 @@ tidalAgentServer _ TidalAgentRequest{..} = do
   let status = statusCode (responseStatus resp)
       raw = responseBody resp
   if status >= 200 && status < 300
-    then case eitherDecode raw of
+    then case (eitherDecode raw :: Either String Value) of
       Left err ->
         throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack err)) }
-      Right ChatCompletionResp{choices = (ChatChoice OpenAIChatMessage{content = reply} : _)} ->
-        pure (TidalAgentResponse reply)
-      Right _ ->
-        throwError err502 { errBody = "Sin respuesta de modelo" }
+      Right payload ->
+        case extractModelReplyText payload of
+          Just reply ->
+            pure (TidalAgentResponse reply)
+          Nothing -> do
+            let msg = fromMaybe "Sin respuesta de modelo" (extractApiErrorMessage payload)
+            throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     else do
       let baseMsg = "Error al generar respuesta (HTTP " <> T.pack (show status) <> ")"
-          msg = case eitherDecode raw of
+          msg = case (eitherDecode raw :: Either String Value) of
             Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
             Left _ -> baseMsg
       throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
@@ -5845,6 +5850,51 @@ extractApiErrorMessage = parseMaybe $ withObject "ApiError" $ \o -> do
       case mVal of
         Just txt -> pure txt
         Nothing -> fail "message missing"
+
+extractModelReplyText :: Value -> Maybe Text
+extractModelReplyText payload =
+  extractChatCompletionText payload
+    <|> extractResponsesOutputText payload
+
+extractChatCompletionText :: Value -> Maybe Text
+extractChatCompletionText payload = do
+  ChatCompletionResp{choices = (ChatChoice OpenAIChatMessage{content = reply} : _)} <- parseMaybe parseJSON payload
+  nonEmptyText reply
+
+extractResponsesOutputText :: Value -> Maybe Text
+extractResponsesOutputText payload = parseMaybe parsePayload payload
+  where
+    parsePayload = withObject "ResponsesPayload" $ \o -> do
+      mOutputText <- o .:? "output_text"
+      case mOutputText >>= nonEmptyText of
+        Just txt -> pure txt
+        Nothing -> do
+          outputs <- o .:? "output" .!= ([] :: [Value])
+          let fragments = concatMap extractOutputFragments outputs
+          case nonEmptyText (T.intercalate "\n" fragments) of
+            Just txt -> pure txt
+            Nothing -> fail "output text missing"
+
+extractOutputFragments :: Value -> [Text]
+extractOutputFragments value =
+  let directText =
+        catMaybes
+          [ join (parseMaybe (withObject "OutputItemText" (\o -> o .:? "text")) value) >>= nonEmptyText
+          , join (parseMaybe (withObject "OutputItemContentText" (\o -> o .:? "content")) value) >>= nonEmptyText
+          ]
+      contentParts =
+        fromMaybe []
+          (parseMaybe (withObject "OutputItemContent" (\o -> o .:? "content" .!= ([] :: [Value]))) value)
+      partText =
+        concatMap
+          (\part ->
+            catMaybes
+              [ join (parseMaybe (withObject "OutputPartText" (\o -> o .:? "text")) part) >>= nonEmptyText
+              , join (parseMaybe (withObject "OutputPartContentText" (\o -> o .:? "content")) part) >>= nonEmptyText
+              ]
+          )
+          contentParts
+  in directText <> partText
 
 ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO PartyId
 ensurePartyForInquiry AdsInquiry{..} now = do
