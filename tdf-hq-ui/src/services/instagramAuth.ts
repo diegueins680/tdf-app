@@ -1,16 +1,50 @@
 import { InstagramOAuthAPI, type InstagramOAuthExchangeResponse } from '../api/instagramOAuth';
 import { env } from '../utils/env';
 
+type InstagramOAuthProvider = 'facebook' | 'instagram';
+
 const APP_ID =
   env.read('VITE_META_APP_ID') ??
   env.read('VITE_FACEBOOK_APP_ID') ??
   '';
-const SCOPES =
-  env.read('VITE_INSTAGRAM_SCOPES') ??
-  'instagram_basic,pages_show_list,pages_read_engagement';
+const DEFAULT_FACEBOOK_SCOPES = 'instagram_basic,pages_show_list,pages_read_engagement';
+const DEFAULT_INSTAGRAM_SCOPES = 'instagram_business_basic,instagram_business_content_publish';
 const STATE_KEY = 'tdf-instagram-oauth-state';
 const RESULT_KEY = 'tdf-instagram-oauth-result';
 const DEFAULT_RETURN_TO = '/social/instagram';
+
+const parseScopes = (raw: string) =>
+  raw
+    .split(/[\s,]+/)
+    .map((scope) => scope.trim())
+    .filter((scope) => scope.length > 0);
+
+const uniqueScopes = (scopes: string[]) => Array.from(new Set(scopes));
+
+const resolveOAuthProvider = (scopes: string[]): InstagramOAuthProvider => {
+  const configured = env.read('VITE_INSTAGRAM_OAUTH_PROVIDER')?.trim().toLowerCase();
+  if (configured === 'facebook' || configured === 'instagram') return configured;
+  return scopes.some((scope) => scope.startsWith('instagram_business_')) ? 'instagram' : 'facebook';
+};
+
+const resolveScopes = (provider: InstagramOAuthProvider, scopes: string[]) => {
+  if (provider === 'instagram') {
+    const businessScopes = uniqueScopes(scopes.filter((scope) => scope.startsWith('instagram_business_')));
+    if (businessScopes.length > 0) return businessScopes.join(',');
+    return uniqueScopes(parseScopes(DEFAULT_INSTAGRAM_SCOPES)).join(',');
+  }
+  return uniqueScopes(scopes).join(',');
+};
+
+const rawScopes = env.read('VITE_INSTAGRAM_SCOPES')?.trim();
+const requestedScopes = parseScopes(rawScopes && rawScopes.length > 0 ? rawScopes : DEFAULT_FACEBOOK_SCOPES);
+const OAUTH_PROVIDER = resolveOAuthProvider(requestedScopes);
+const SCOPES = resolveScopes(OAUTH_PROVIDER, requestedScopes);
+
+const authUrlForProvider = (provider: InstagramOAuthProvider) =>
+  provider === 'instagram'
+    ? 'https://www.instagram.com/oauth/authorize'
+    : 'https://www.facebook.com/v20.0/dialog/oauth';
 
 export interface InstagramOAuthStateRecord {
   state: string;
@@ -126,7 +160,7 @@ export const buildInstagramAuthUrl = (returnTo?: string) => {
     response_type: 'code',
     state,
   });
-  return `https://www.facebook.com/v20.0/dialog/oauth?${params.toString()}`;
+  return `${authUrlForProvider(OAUTH_PROVIDER)}?${params.toString()}`;
 };
 
 export const consumeInstagramState = (): InstagramOAuthStateRecord | null => {
