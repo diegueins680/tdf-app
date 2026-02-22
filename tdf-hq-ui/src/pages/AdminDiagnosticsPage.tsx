@@ -44,6 +44,58 @@ const formatBody = (value?: string | null) => {
   return trimmed && trimmed.length > 0 ? trimmed : '—';
 };
 
+const parseJson = (value?: string | null) => {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return null;
+  }
+};
+
+const coerceText = (value: unknown) => (typeof value === 'string' ? value : undefined);
+
+const extractSenderNameFromMetadata = (metadata?: string | null) => {
+  const parsed = parseJson(metadata);
+  if (!parsed || typeof parsed !== 'object') return null;
+  const root = parsed as Record<string, unknown>;
+
+  const directName = coerceText(root['sender_name']) ?? coerceText(root['senderName']);
+  if (directName?.trim()) return directName.trim();
+
+  const from = root['from'];
+  if (from && typeof from === 'object') {
+    const fromObj = from as Record<string, unknown>;
+    const fromName = coerceText(fromObj['name']) ?? coerceText(fromObj['username']);
+    if (fromName?.trim()) return fromName.trim();
+  }
+
+  const contacts = root['contacts'];
+  if (Array.isArray(contacts) && contacts.length > 0) {
+    const first = contacts[0];
+    if (first && typeof first === 'object') {
+      const firstObj = first as Record<string, unknown>;
+      const profile = firstObj['profile'];
+      if (profile && typeof profile === 'object') {
+        const profileName = coerceText((profile as Record<string, unknown>)['name']);
+        if (profileName?.trim()) return profileName.trim();
+      }
+    }
+  }
+
+  return null;
+};
+
+const resolveSenderName = (msg: SocialMessage) => {
+  const senderName = msg.senderName?.trim();
+  if (senderName) return senderName;
+
+  const metadataName = extractSenderNameFromMetadata(msg.metadata);
+  if (metadataName) return metadataName;
+
+  return 'Sin nombre';
+};
+
 export default function AdminDiagnosticsPage() {
   const missingEnv =
     typeof window !== 'undefined'
@@ -196,14 +248,14 @@ export default function AdminDiagnosticsPage() {
                         )}
                         {!loading &&
                           stats.replied.map((msg) => {
-                            const senderLabel = msg.senderName ? `${msg.senderName} · ${msg.senderId}` : msg.senderId;
+                            const senderLabel = resolveSenderName(msg);
                             return (
                               <TableRow key={msg.externalId} hover>
                                 <TableCell>
                                   <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
                                 </TableCell>
                                 <TableCell>
-                                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                                  <Typography variant="body2" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>
                                     {senderLabel}
                                   </Typography>
                                 </TableCell>
