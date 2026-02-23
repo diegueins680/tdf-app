@@ -3,9 +3,13 @@ import { env } from '../utils/env';
 
 type InstagramOAuthProvider = 'facebook' | 'instagram';
 
-const APP_ID =
+const FACEBOOK_APP_ID =
   env.read('VITE_META_APP_ID') ??
   env.read('VITE_FACEBOOK_APP_ID') ??
+  '';
+const INSTAGRAM_APP_ID =
+  env.read('VITE_INSTAGRAM_CLIENT_ID') ??
+  env.read('VITE_INSTAGRAM_APP_ID') ??
   '';
 const DEFAULT_FACEBOOK_SCOPES = 'instagram_basic,pages_show_list,pages_read_engagement';
 const DEFAULT_INSTAGRAM_SCOPES = 'instagram_business_basic,instagram_business_content_publish';
@@ -45,6 +49,11 @@ const authUrlForProvider = (provider: InstagramOAuthProvider) =>
   provider === 'instagram'
     ? 'https://www.instagram.com/oauth/authorize'
     : 'https://www.facebook.com/v20.0/dialog/oauth';
+
+const resolveClientId = (provider: InstagramOAuthProvider) =>
+  provider === 'instagram'
+    ? (INSTAGRAM_APP_ID || FACEBOOK_APP_ID)
+    : FACEBOOK_APP_ID;
 
 export interface InstagramOAuthStateRecord {
   state: string;
@@ -134,13 +143,24 @@ const createNonce = () => {
 };
 
 export const instagramConfigError = () => {
-  if (!APP_ID) return 'Falta VITE_META_APP_ID o VITE_FACEBOOK_APP_ID.';
+  if (!resolveClientId(OAUTH_PROVIDER)) {
+    if (OAUTH_PROVIDER === 'instagram') {
+      return 'Falta VITE_INSTAGRAM_CLIENT_ID (o VITE_INSTAGRAM_APP_ID) para Instagram Login.';
+    }
+    return 'Falta VITE_META_APP_ID o VITE_FACEBOOK_APP_ID.';
+  }
   if (!getRedirectUri()) return 'Falta VITE_INSTAGRAM_REDIRECT_URI.';
   return null;
 };
 
 export const buildInstagramAuthUrl = (returnTo?: string) => {
-  if (!APP_ID) throw new Error('Falta configurar VITE_META_APP_ID.');
+  const clientId = resolveClientId(OAUTH_PROVIDER);
+  if (!clientId) {
+    if (OAUTH_PROVIDER === 'instagram') {
+      throw new Error('Falta configurar VITE_INSTAGRAM_CLIENT_ID (o VITE_INSTAGRAM_APP_ID).');
+    }
+    throw new Error('Falta configurar VITE_META_APP_ID.');
+  }
   const redirectUri = getRedirectUri();
   if (!redirectUri) throw new Error('Falta configurar VITE_INSTAGRAM_REDIRECT_URI.');
   const issuedAt = Date.now();
@@ -154,7 +174,7 @@ export const buildInstagramAuthUrl = (returnTo?: string) => {
   };
   sessionStorage.setItem(STATE_KEY, JSON.stringify(stored));
   const params = new URLSearchParams({
-    client_id: APP_ID,
+    client_id: clientId,
     redirect_uri: redirectUri,
     scope: SCOPES,
     response_type: 'code',
