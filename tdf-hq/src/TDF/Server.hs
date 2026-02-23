@@ -556,7 +556,7 @@ coursesAdminServer user =
   :<|> getRegistrationH
   :<|> updateStatusH
   where
-    requireCourseAdmin = unless (hasRole Admin user || hasRole Webmaster user) $
+    requireCourseAdmin = unless (hasModuleAccess ModuleAdmin user) $
       throwError err403
 
     upsertCourseH payload = do
