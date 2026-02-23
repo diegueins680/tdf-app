@@ -165,6 +165,7 @@ type CoursesAdminAPI =
          QueryParam "limit" Int :>
          Get '[JSON] [TDF.DTO.CourseRegistrationDTO]
   :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> Get '[JSON] TDF.DTO.CourseRegistrationDTO
+  :<|> "courses" :> "registrations" :> Capture "registrationId" Int64 :> "emails" :> QueryParam "limit" Int :> Get '[JSON] [TDF.DTO.CourseEmailEventDTO]
   :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "status" :> ReqBody '[JSON] CourseRegistrationStatusUpdate :> Patch '[JSON] CourseRegistrationResponse
 
 type WhatsAppWebhookAPI =

@@ -554,6 +554,7 @@ coursesAdminServer user =
        upsertCourseH
   :<|> listRegistrationsH
   :<|> getRegistrationH
+  :<|> listEmailEventsH
   :<|> updateStatusH
   where
     requireCourseAdmin = unless (hasModuleAccess ModuleAdmin user) $
@@ -570,6 +571,10 @@ coursesAdminServer user =
     getRegistrationH slug regId = do
       requireCourseAdmin
       fetchCourseRegistration slug regId
+
+    listEmailEventsH regId mLimit = do
+      requireCourseAdmin
+      listCourseRegistrationEmailEvents regId mLimit
 
     updateStatusH slug regId statusPayload = do
       requireCourseAdmin
@@ -2436,6 +2441,37 @@ updateCourseRegistrationStatus rawSlug regId CourseRegistrationStatusUpdate{..} 
             ]
           pure CourseRegistrationResponse { id = regId, status = newStatus }
 
+listCourseRegistrationEmailEvents
+  :: Int64
+  -> Maybe Int
+  -> AppM [DTO.CourseEmailEventDTO]
+listCourseRegistrationEmailEvents regId mLimit = do
+  let regKey = toSqlKey regId :: Key ME.CourseRegistration
+      capped = max 1 (min 500 (fromMaybe 100 mLimit))
+  mRow <- runDB $ getEntity regKey
+  case mRow of
+    Nothing -> throwNotFound "Registro no encontrado"
+    Just (Entity _ reg) -> do
+      let mEmail =
+            case ME.courseRegistrationEmail reg of
+              Nothing -> Nothing
+              Just raw ->
+                let normalized = T.toLower (T.strip raw)
+                in if T.null normalized then Nothing else Just normalized
+          byRegistration = [ME.CourseEmailEventRegistrationId ==. Just regKey]
+          rowsQuery =
+            case mEmail of
+              Nothing -> selectList byRegistration [Desc ME.CourseEmailEventCreatedAt, LimitTo capped]
+              Just emailVal ->
+                selectList
+                  (byRegistration ||.
+                    [ ME.CourseEmailEventCourseSlug ==. ME.courseRegistrationCourseSlug reg
+                    , ME.CourseEmailEventRecipientEmail ==. emailVal
+                    ])
+                  [Desc ME.CourseEmailEventCreatedAt, LimitTo capped]
+      rows <- runDB rowsQuery
+      pure (map toCourseEmailEventDTO rows)
+
 toCourseRegistrationDTO :: Entity ME.CourseRegistration -> DTO.CourseRegistrationDTO
 toCourseRegistrationDTO (Entity rid reg) =
   DTO.CourseRegistrationDTO
@@ -2454,6 +2490,44 @@ toCourseRegistrationDTO (Entity rid reg) =
     , DTO.crCreatedAt = ME.courseRegistrationCreatedAt reg
     , DTO.crUpdatedAt = ME.courseRegistrationUpdatedAt reg
     }
+
+toCourseEmailEventDTO :: Entity ME.CourseEmailEvent -> DTO.CourseEmailEventDTO
+toCourseEmailEventDTO (Entity eventId ev) =
+  DTO.CourseEmailEventDTO
+    { DTO.ceId = fromSqlKey eventId
+    , DTO.ceCourseSlug = ME.courseEmailEventCourseSlug ev
+    , DTO.ceRegistrationId = fromSqlKey <$> ME.courseEmailEventRegistrationId ev
+    , DTO.ceRecipientEmail = ME.courseEmailEventRecipientEmail ev
+    , DTO.ceRecipientName = ME.courseEmailEventRecipientName ev
+    , DTO.ceEventType = ME.courseEmailEventEventType ev
+    , DTO.ceStatus = ME.courseEmailEventStatus ev
+    , DTO.ceMessage = ME.courseEmailEventMessage ev
+    , DTO.ceCreatedAt = ME.courseEmailEventCreatedAt ev
+    }
+
+recordCourseEmailEvent
+  :: Text
+  -> Maybe ME.CourseRegistrationId
+  -> Text
+  -> Maybe Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> AppM ()
+recordCourseEmailEvent rawSlug mRegistrationId rawRecipientEmail mRecipientName rawEventType rawStatus mMessage = do
+  let recipientEmail = T.toLower (T.strip rawRecipientEmail)
+  unless (T.null recipientEmail) $ do
+    now <- liftIO getCurrentTime
+    runDB $ insert_ ME.CourseEmailEvent
+      { ME.courseEmailEventCourseSlug = normalizeSlug rawSlug
+      , ME.courseEmailEventRegistrationId = mRegistrationId
+      , ME.courseEmailEventRecipientEmail = recipientEmail
+      , ME.courseEmailEventRecipientName = cleanOptional mRecipientName
+      , ME.courseEmailEventEventType = T.toLower (T.strip rawEventType)
+      , ME.courseEmailEventStatus = T.toLower (T.strip rawStatus)
+      , ME.courseEmailEventMessage = cleanOptional mMessage
+      , ME.courseEmailEventCreatedAt = now
+      }
 
 createOrUpdateRegistration :: Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
 createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
@@ -2498,7 +2572,7 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)
         , ME.CourseRegistrationUpdatedAt =. now
         ]
-      sendConfirmation metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
+      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
     _ -> do
       regId <- runDB $ insert ME.CourseRegistration
@@ -2516,10 +2590,10 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.courseRegistrationCreatedAt = now
         , ME.courseRegistrationUpdatedAt = now
         }
-      sendConfirmation metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
+      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
   where
-    sendConfirmation courseTitle landing metaSessions nameClean mEmail mNewUser =
+    sendConfirmation courseSlug regKey courseTitle landing metaSessions nameClean mEmail mNewUser =
       case mEmail of
         Nothing -> pure ()
         Just emailAddr -> do
@@ -2531,32 +2605,77 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
                 in T.intercalate ", " (map (\Courses.CourseSession{ Courses.date = d } -> fmt d) metaSessions)
           -- Check if email is configured before attempting to send
           case EmailSvc.esConfig emailSvc of
-            Nothing -> liftIO $ do
+            Nothing -> do
               let msg = "[CourseRegistration] WARNING: SMTP not configured. Email confirmation not sent to " <> emailAddr
-              hPutStrLn stderr (T.unpack msg)
-              LogBuf.addLog LogBuf.LogWarning msg
-            Just _ -> liftIO $ do
+              liftIO $ do
+                hPutStrLn stderr (T.unpack msg)
+                LogBuf.addLog LogBuf.LogWarning msg
+              recordCourseEmailEvent
+                courseSlug
+                (Just regKey)
+                emailAddr
+                nameClean
+                "registration_confirmation"
+                "skipped"
+                (Just msg)
+            Just _ -> do
               -- Send registration confirmation
-              result <- try $ EmailSvc.sendCourseRegistration emailSvc displayName emailAddr courseTitle landing datesSummary
+              result <- liftIO $ try $ EmailSvc.sendCourseRegistration emailSvc displayName emailAddr courseTitle landing datesSummary
               case result of
                 Left err -> do
-                  let msg = "[CourseRegistration] Failed to send confirmation email to " <> emailAddr <> ": " <> T.pack (show (err :: SomeException))
-                  hPutStrLn stderr (T.unpack msg)
-                  LogBuf.addLog LogBuf.LogError msg
-                Right () -> do
-                  let msg = "[CourseRegistration] Successfully sent confirmation email to " <> emailAddr
-                  LogBuf.addLog LogBuf.LogInfo msg
-              -- Send welcome email if we just created credentials
-              for_ mNewUser $ \(username, tempPassword) -> do
-                welcomeResult <- try $ EmailSvc.sendWelcome emailSvc displayName emailAddr username tempPassword
-                case welcomeResult of
-                  Left err -> do
-                    let msg = "[CourseRegistration] Failed to send welcome email to " <> emailAddr <> ": " <> T.pack (show (err :: SomeException))
+                  let errorMsg = T.pack (displayException (err :: SomeException))
+                      msg = "[CourseRegistration] Failed to send confirmation email to " <> emailAddr <> ": " <> errorMsg
+                  liftIO $ do
                     hPutStrLn stderr (T.unpack msg)
                     LogBuf.addLog LogBuf.LogError msg
+                  recordCourseEmailEvent
+                    courseSlug
+                    (Just regKey)
+                    emailAddr
+                    nameClean
+                    "registration_confirmation"
+                    "failed"
+                    (Just errorMsg)
+                Right () -> do
+                  let msg = "[CourseRegistration] Successfully sent confirmation email to " <> emailAddr
+                  liftIO $ LogBuf.addLog LogBuf.LogInfo msg
+                  recordCourseEmailEvent
+                    courseSlug
+                    (Just regKey)
+                    emailAddr
+                    nameClean
+                    "registration_confirmation"
+                    "sent"
+                    Nothing
+              -- Send welcome email if we just created credentials
+              for_ mNewUser $ \(username, tempPassword) -> do
+                welcomeResult <- liftIO $ try $ EmailSvc.sendWelcome emailSvc displayName emailAddr username tempPassword
+                case welcomeResult of
+                  Left err -> do
+                    let errorMsg = T.pack (displayException (err :: SomeException))
+                        msg = "[CourseRegistration] Failed to send welcome email to " <> emailAddr <> ": " <> errorMsg
+                    liftIO $ do
+                      hPutStrLn stderr (T.unpack msg)
+                      LogBuf.addLog LogBuf.LogError msg
+                    recordCourseEmailEvent
+                      courseSlug
+                      (Just regKey)
+                      emailAddr
+                      nameClean
+                      "welcome_credentials"
+                      "failed"
+                      (Just errorMsg)
                   Right () -> do
                     let msg = "[CourseRegistration] Sent welcome credentials to " <> emailAddr
-                    LogBuf.addLog LogBuf.LogInfo msg
+                    liftIO $ LogBuf.addLog LogBuf.LogInfo msg
+                    recordCourseEmailEvent
+                      courseSlug
+                      (Just regKey)
+                      emailAddr
+                      nameClean
+                      "welcome_credentials"
+                      "sent"
+                      Nothing
 
 -- | Returns messages that include text bodies, paired with the sender phone.
 extractTextMessages :: WAMetaWebhook -> [(Text, Text)]

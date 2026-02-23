@@ -31,6 +31,7 @@ End-to-end flow for the in-person course **“Curso de Producción Musical – F
     ```
   - Behavior: if a pending registration for the same slug + email/phone exists, it is updated; otherwise a new row is inserted.
 - **PATCH /admin/courses/{slug}/registrations/{id}/status** (bearer auth, ModuleAdmin) → body `{ "status": "pending_payment" | "paid" | "cancelled" }`.
+- **GET /admin/courses/registrations/{id}/emails?limit=200** (bearer auth, ModuleAdmin) → persistent email audit trail for that registration (`sent` / `failed` / `skipped`, event type, timestamp, message).
 - **GET /webhooks/whatsapp** → verification (hub.challenge echo when tokens match).
 - **POST /webhooks/whatsapp** → listens for messages containing “inscribirme” (case-insensitive); creates/reuses a registration with `source=whatsapp` and replies with the landing link.
 

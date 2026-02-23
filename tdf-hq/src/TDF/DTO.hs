@@ -304,6 +304,19 @@ data CourseRegistrationDTO = CourseRegistrationDTO
   } deriving (Show, Generic)
 instance ToJSON CourseRegistrationDTO
 
+data CourseEmailEventDTO = CourseEmailEventDTO
+  { ceId             :: Int64
+  , ceCourseSlug     :: Text
+  , ceRegistrationId :: Maybe Int64
+  , ceRecipientEmail :: Text
+  , ceRecipientName  :: Maybe Text
+  , ceEventType      :: Text
+  , ceStatus         :: Text
+  , ceMessage        :: Maybe Text
+  , ceCreatedAt      :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON CourseEmailEventDTO
+
 -- Logs
 data LogEntryDTO = LogEntryDTO
   { logTimestamp :: UTCTime

@@ -182,6 +182,17 @@ CourseRegistration
     updatedAt    UTCTime default=now()
     deriving Show Generic
 
+CourseEmailEvent
+    courseSlug      Text
+    registrationId  CourseRegistrationId Maybe
+    recipientEmail  Text
+    recipientName   Text Maybe
+    eventType       Text
+    status          Text
+    message         Text Maybe
+    createdAt       UTCTime default=now()
+    deriving Show Generic
+
 DropdownOption
     Id         UUID default=gen_random_uuid()
     category   Text

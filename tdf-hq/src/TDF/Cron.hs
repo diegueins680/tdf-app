@@ -8,7 +8,7 @@ module TDF.Cron
   ) where
 
 import           Control.Concurrent      (forkIO, threadDelay)
-import           Control.Exception       (SomeException, try)
+import           Control.Exception       (SomeException, displayException, try)
 import           Control.Applicative    ((<|>))
 import           Control.Monad           (forever, void, when, foldM)
 import           Control.Monad.IO.Class  (liftIO)
@@ -197,8 +197,18 @@ sendCoursePaymentReminders Env{..} = do
       let msg = "[Cron][CoursePayment] SMTP not configured; skipped sending reminders."
       hPutStrLn stderr (T.unpack msg)
       LogBuf.addLog LogBuf.LogWarning msg
+      for_ recipients $ \(regKey, nameTxt, emailTxt) ->
+        recordCourseEmailEventIO
+          envPool
+          slugVal
+          (Just regKey)
+          emailTxt
+          (Just nameTxt)
+          "payment_reminder"
+          "skipped"
+          (Just msg)
     Just _ ->
-      for_ recipients $ \(nameTxt, emailTxt) -> do
+      for_ recipients $ \(regKey, nameTxt, emailTxt) -> do
         sendResult <- try
           (EmailSvc.sendCoursePaymentReminder
             emailSvc
@@ -211,25 +221,79 @@ sendCoursePaymentReminders Env{..} = do
           :: IO (Either SomeException ())
         case sendResult of
           Left err -> do
-            let msg = "[Cron][CoursePayment] Failed to email " <> emailTxt <> ": " <> T.pack (show err)
+            let errorMsg = T.pack (displayException err)
+                msg = "[Cron][CoursePayment] Failed to email " <> emailTxt <> ": " <> errorMsg
             hPutStrLn stderr (T.unpack msg)
             LogBuf.addLog LogBuf.LogError msg
-          Right () ->
+            recordCourseEmailEventIO
+              envPool
+              slugVal
+              (Just regKey)
+              emailTxt
+              (Just nameTxt)
+              "payment_reminder"
+              "failed"
+              (Just errorMsg)
+          Right () -> do
             LogBuf.addLog LogBuf.LogInfo ("[Cron][CoursePayment] Reminder sent to " <> emailTxt)
+            recordCourseEmailEventIO
+              envPool
+              slugVal
+              (Just regKey)
+              emailTxt
+              (Just nameTxt)
+              "payment_reminder"
+              "sent"
+              Nothing
 
 -- | Keep only the latest registration per email (case-insensitive).
-dedupeByEmail :: [Entity ME.CourseRegistration] -> [(Text, Text)]
+dedupeByEmail :: [Entity ME.CourseRegistration] -> [(ME.CourseRegistrationId, Text, Text)]
 dedupeByEmail =
   Map.elems . foldl' go Map.empty
   where
-    go acc (Entity _ reg) =
+    go acc (Entity regKey reg) =
       case ME.courseRegistrationEmail reg >>= nonEmpty of
         Nothing       -> acc
         Just rawEmail ->
           let key = T.toLower rawEmail
-              entry = (fromMaybe "" (ME.courseRegistrationFullName reg), rawEmail)
+              entry = (regKey, fromMaybe "" (ME.courseRegistrationFullName reg), rawEmail)
           in Map.insertWith (\_ old -> old) key entry acc
     nonEmpty txt =
+      let trimmed = T.strip txt
+      in if T.null trimmed then Nothing else Just trimmed
+
+recordCourseEmailEventIO
+  :: ConnectionPool
+  -> Text
+  -> Maybe ME.CourseRegistrationId
+  -> Text
+  -> Maybe Text
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO ()
+recordCourseEmailEventIO pool rawSlug mRegId rawEmail mName rawEventType rawStatus mMessage = do
+  let recipientEmail = T.toLower (T.strip rawEmail)
+      recipientName = mName >>= nonEmptyLocal
+      eventType = T.toLower (T.strip rawEventType)
+      statusVal = T.toLower (T.strip rawStatus)
+      messageVal = mMessage >>= nonEmptyLocal
+  when (not (T.null recipientEmail)) $ do
+    now <- getCurrentTime
+    runSqlPool
+      (insert_ ME.CourseEmailEvent
+        { ME.courseEmailEventCourseSlug = normalizeSlug rawSlug
+        , ME.courseEmailEventRegistrationId = mRegId
+        , ME.courseEmailEventRecipientEmail = recipientEmail
+        , ME.courseEmailEventRecipientName = recipientName
+        , ME.courseEmailEventEventType = eventType
+        , ME.courseEmailEventStatus = statusVal
+        , ME.courseEmailEventMessage = messageVal
+        , ME.courseEmailEventCreatedAt = now
+        })
+      pool
+  where
+    nonEmptyLocal txt =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
 

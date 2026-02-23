@@ -66,6 +66,18 @@ export interface CourseRegistrationDTO {
   crUpdatedAt: string;
 }
 
+export interface CourseEmailEventDTO {
+  ceId: number;
+  ceCourseSlug: string;
+  ceRegistrationId?: number | null;
+  ceRecipientEmail: string;
+  ceRecipientName?: string | null;
+  ceEventType: string;
+  ceStatus: string;
+  ceMessage?: string | null;
+  ceCreatedAt: string;
+}
+
 const courseBase = (slug: string) => `/public/courses/${slug}`;
 
 export const Courses = {
@@ -83,6 +95,8 @@ export const Courses = {
     const qs = search.toString();
     return get<CourseRegistrationDTO[]>(`/admin/courses/registrations${qs ? `?${qs}` : ''}`);
   },
+  listRegistrationEmails: (registrationId: number, limit = 100) =>
+    get<CourseEmailEventDTO[]>(`/admin/courses/registrations/${registrationId}/emails?limit=${limit}`),
   getRegistration: (slug: string, registrationId: number) =>
     get<CourseRegistrationDTO>(`/admin/courses/${slug}/registrations/${registrationId}`),
 };
