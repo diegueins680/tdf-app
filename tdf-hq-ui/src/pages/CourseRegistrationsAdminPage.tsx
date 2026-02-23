@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Box,
   Button,
+  CircularProgress,
   Chip,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   IconButton,
   MenuItem,
@@ -19,6 +25,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/HourglassBottom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Courses, type CourseRegistrationDTO } from '../api/courses';
+import { Admin, type LogEntry } from '../api/admin';
 import { useSearchParams } from 'react-router-dom';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
@@ -31,6 +38,27 @@ const statusChip = (status: string) => {
   if (normalized === 'paid') return <Chip label="Paid" color="success" size="small" />;
   if (normalized === 'cancelled') return <Chip label="Cancelled" color="error" size="small" />;
   return <Chip label="Pending payment" color="warning" size="small" />;
+};
+
+const isCourseEmailLog = (message: string) =>
+  message.startsWith('[CourseRegistration]') || message.startsWith('[Cron][CoursePayment]');
+
+const extractEmailFromMessage = (message: string): string | null => {
+  const match = message.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  const email = match?.[0]?.trim().toLowerCase();
+  return email && email.length > 0 ? email : null;
+};
+
+const getEmailKey = (rawEmail?: string | null): string | null => {
+  const normalized = rawEmail?.trim().toLowerCase();
+  return normalized && normalized.length > 0 ? normalized : null;
+};
+
+const logLevelColor = (level: LogEntry['logLevel']): 'default' | 'info' | 'warning' | 'error' => {
+  if (level === 'error') return 'error';
+  if (level === 'warning') return 'warning';
+  if (level === 'info') return 'info';
+  return 'default';
 };
 
 const actionButtons = (
@@ -90,6 +118,7 @@ export default function CourseRegistrationsAdminPage() {
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [selectedRegForLogs, setSelectedRegForLogs] = useState<CourseRegistrationDTO | null>(null);
 
   const queryKey = useMemo(
     () => ['admin', 'course-registrations', { slug, status, limit }],
@@ -105,6 +134,35 @@ export default function CourseRegistrationsAdminPage() {
         limit,
       }),
   });
+
+  const emailLogsQuery = useQuery<LogEntry[]>({
+    queryKey: ['admin', 'logs', 'course-email'],
+    queryFn: () => Admin.getLogs(1000),
+    staleTime: 30_000,
+  });
+
+  const emailLogsByEmail = useMemo(() => {
+    const grouped = new Map<string, LogEntry[]>();
+    for (const entry of emailLogsQuery.data ?? []) {
+      if (!isCourseEmailLog(entry.logMessage)) continue;
+      const email = extractEmailFromMessage(entry.logMessage);
+      if (!email) continue;
+      const current = grouped.get(email) ?? [];
+      current.push(entry);
+      grouped.set(email, current);
+    }
+    return grouped;
+  }, [emailLogsQuery.data]);
+
+  const getLogsForEmail = (rawEmail?: string | null): LogEntry[] => {
+    const key = getEmailKey(rawEmail);
+    if (!key) return [];
+    return emailLogsByEmail.get(key) ?? [];
+  };
+
+  const selectedRegLogs = getLogsForEmail(selectedRegForLogs?.crEmail);
+
+  const closeLogDialog = () => setSelectedRegForLogs(null);
   const statusCounts = useMemo(() => {
     const base = { total: 0, pending_payment: 0, paid: 0, cancelled: 0 };
     if (!regsQuery.data) return base;
@@ -253,44 +311,129 @@ export default function CourseRegistrationsAdminPage() {
             No se pudieron cargar las inscripciones: {regsQuery.error instanceof Error ? regsQuery.error.message : 'Error'}
           </Typography>
         )}
+        {emailLogsQuery.isError && (
+          <Typography color="warning.main" variant="body2" sx={{ mb: 1 }}>
+            No se pudieron cargar los logs de correos: {emailLogsQuery.error instanceof Error ? emailLogsQuery.error.message : 'Error'}
+          </Typography>
+        )}
         {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
         {!regsQuery.isLoading && regsQuery.data?.length === 0 && (
           <Typography color="text.secondary">No hay inscripciones para estos filtros.</Typography>
         )}
         {regsQuery.data?.length ? (
           <Stack divider={<Divider flexItem />} spacing={2}>
-            {regsQuery.data.map((reg) => (
-              <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                <Box sx={{ minWidth: 220 }}>
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    {reg.crFullName ?? 'Sin nombre'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {reg.crEmail ?? 'Sin correo'}
-                  </Typography>
-                  {reg.crPhoneE164 && (
-                    <Typography variant="body2" color="text.secondary">
-                      {reg.crPhoneE164}
+            {regsQuery.data.map((reg) => {
+              const logCount = getLogsForEmail(reg.crEmail).length;
+              const logCountLabel = emailLogsQuery.isLoading ? '…' : String(logCount);
+              return (
+                <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Box sx={{ minWidth: 220 }}>
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      {reg.crFullName ?? 'Sin nombre'}
                     </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {reg.crEmail ?? 'Sin correo'}
+                    </Typography>
+                    {reg.crPhoneE164 && (
+                      <Typography variant="body2" color="text.secondary">
+                        {reg.crPhoneE164}
+                      </Typography>
+                    )}
+                  </Box>
+                  <Box sx={{ minWidth: 160 }}>
+                    <Typography variant="body2">Slug: {reg.crCourseSlug}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Fuente: {reg.crSource}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Creado: {formatDate(reg.crCreatedAt)}
+                    </Typography>
+                  </Box>
+                  <Box>{statusChip(reg.crStatus)}</Box>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setSelectedRegForLogs(reg)}
+                    disabled={!reg.crEmail}
+                  >
+                    Ver correos ({logCountLabel})
+                  </Button>
+                  <Box sx={{ flexGrow: 1 }} />
+                  {actionButtons(
+                    reg,
+                    (newStatus) => updateStatusMutation.mutate({ id: reg.crId, newStatus }),
+                    updateStatusMutation.isPending,
                   )}
                 </Box>
-                <Box sx={{ minWidth: 160 }}>
-                  <Typography variant="body2">Slug: {reg.crCourseSlug}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Fuente: {reg.crSource}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Creado: {formatDate(reg.crCreatedAt)}
-                  </Typography>
-                </Box>
-                <Box>{statusChip(reg.crStatus)}</Box>
-                <Box sx={{ flexGrow: 1 }} />
-                {actionButtons(reg, (newStatus) => updateStatusMutation.mutate({ id: reg.crId, newStatus }), updateStatusMutation.isPending)}
-              </Box>
-            ))}
+              );
+            })}
           </Stack>
         ) : null}
       </Paper>
+
+      <Dialog open={Boolean(selectedRegForLogs)} onClose={closeLogDialog} fullWidth maxWidth="md">
+        <DialogTitle>Historial de correos</DialogTitle>
+        <DialogContent dividers>
+          {selectedRegForLogs && (
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2">
+                {selectedRegForLogs.crFullName ?? 'Sin nombre'} · {selectedRegForLogs.crEmail ?? 'Sin correo'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Solo se muestran logs de curso que incluyan este email.
+              </Typography>
+
+              {emailLogsQuery.isLoading && (
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <CircularProgress size={18} />
+                  <Typography variant="body2">Cargando logs…</Typography>
+                </Stack>
+              )}
+
+              {emailLogsQuery.isError && (
+                <Alert severity="error">
+                  No se pudieron cargar los logs: {emailLogsQuery.error instanceof Error ? emailLogsQuery.error.message : 'Error'}
+                </Alert>
+              )}
+
+              {!selectedRegForLogs.crEmail && (
+                <Alert severity="info">Esta inscripción no tiene correo asociado.</Alert>
+              )}
+
+              {!emailLogsQuery.isLoading && !emailLogsQuery.isError && selectedRegForLogs.crEmail && selectedRegLogs.length === 0 && (
+                <Alert severity="info">No hay eventos de correo para este estudiante en el buffer actual.</Alert>
+              )}
+
+              {!emailLogsQuery.isLoading && !emailLogsQuery.isError && selectedRegLogs.length > 0 && (
+                <Stack spacing={1}>
+                  {selectedRegLogs.map((entry, idx) => (
+                    <Paper key={`${entry.logTimestamp}-${idx}`} variant="outlined" sx={{ p: 1.5 }}>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }}>
+                        <Chip size="small" label={entry.logLevel} color={logLevelColor(entry.logLevel)} />
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDate(entry.logTimestamp)}
+                        </Typography>
+                      </Stack>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                      >
+                        {entry.logMessage}
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => void emailLogsQuery.refetch()} disabled={emailLogsQuery.isFetching}>
+            Actualizar logs
+          </Button>
+          <Button onClick={closeLogDialog}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }
