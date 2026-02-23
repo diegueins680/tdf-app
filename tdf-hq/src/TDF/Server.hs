@@ -5796,37 +5796,89 @@ callOpenAIChat cfg messages =
     Just key -> do
       manager <- newManager tlsManagerSettings
       reqBase <- parseRequest "https://api.openai.com/v1/chat/completions"
-      let body = encode ChatCompletionReq
-            { model = openAiModel cfg
-            , messages = messages
-            , temperature = 0.3
-            }
-          req =
-            reqBase
-              { method = "POST"
-              , requestHeaders =
-                  [ ("Content-Type", "application/json")
-                  , ("Authorization", "Bearer " <> TE.encodeUtf8 key)
-                  ]
-              , requestBody = RequestBodyLBS body
-              }
-      resp <- httpLbs req manager
-      let status = statusCode (responseStatus resp)
-          raw = responseBody resp
-      if status >= 200 && status < 300
-        then case (eitherDecode raw :: Either String Value) of
-          Left err -> pure (Left (T.pack err))
-          Right payload ->
-            case extractModelReplyText payload of
-              Just reply -> pure (Right reply)
-              Nothing ->
-                pure (Left (fromMaybe "Sin respuesta de modelo" (extractApiErrorMessage payload)))
-        else do
-          let baseMsg = "Error al generar respuesta (HTTP " <> T.pack (show status) <> ")"
-              msg = case (eitherDecode raw :: Either String Value) of
-                Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
-                Left _ -> baseMsg
-          pure (Left msg)
+      let models = openAIChatModelCandidates (openAiModel cfg)
+      tryModels manager reqBase key models Nothing
+  where
+    tryModels :: Manager -> Request -> Text -> [Text] -> Maybe Text -> IO (Either Text Text)
+    tryModels _ _ _ [] lastErr =
+      pure (Left (fromMaybe "No pude generar una respuesta automática en este momento." lastErr))
+    tryModels manager reqBase key (modelName:remaining) _ = do
+      attempt <- requestOpenAIChat manager reqBase key modelName messages
+      case attempt of
+        Right reply -> pure (Right reply)
+        Left (status, msg)
+          | shouldRetryWithFallbackModel status msg && not (null remaining) -> do
+              hPutStrLn stderr
+                ("[openai] Modelo " <> T.unpack modelName <> " no disponible (" <> show status <> "). Intentando fallback.")
+              tryModels manager reqBase key remaining (Just msg)
+          | otherwise ->
+              pure (Left msg)
+
+requestOpenAIChat
+  :: Manager
+  -> Request
+  -> Text
+  -> Text
+  -> [OpenAIChatMessage]
+  -> IO (Either (Int, Text) Text)
+requestOpenAIChat manager reqBase key modelName messages = do
+  let body = encode ChatCompletionReq
+        { model = modelName
+        , messages = messages
+        , temperature = 0.3
+        }
+      req =
+        reqBase
+          { method = "POST"
+          , requestHeaders =
+              [ ("Content-Type", "application/json")
+              , ("Authorization", "Bearer " <> TE.encodeUtf8 key)
+              ]
+          , requestBody = RequestBodyLBS body
+          }
+  resp <- httpLbs req manager
+  let status = statusCode (responseStatus resp)
+      raw = responseBody resp
+  if status >= 200 && status < 300
+    then case (eitherDecode raw :: Either String Value) of
+      Left err ->
+        pure (Left (status, T.pack err))
+      Right payload ->
+        case extractModelReplyText payload of
+          Just reply -> pure (Right reply)
+          Nothing ->
+            pure (Left (status, fromMaybe "Sin respuesta de modelo" (extractApiErrorMessage payload)))
+    else do
+      let baseMsg = "Error al generar respuesta (HTTP " <> T.pack (show status) <> ")"
+          msg = case (eitherDecode raw :: Either String Value) of
+            Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
+            Left _ -> baseMsg
+      pure (Left (status, msg))
+
+openAIChatModelCandidates :: Text -> [Text]
+openAIChatModelCandidates primaryModel =
+  nub $
+    filter (not . T.null)
+      [ T.strip primaryModel
+      , "gpt-4.1-mini"
+      , "gpt-4.1"
+      , "gpt-4o-mini"
+      , "gpt-4o"
+      ]
+
+shouldRetryWithFallbackModel :: Int -> Text -> Bool
+shouldRetryWithFallbackModel status rawMessage =
+  status `elem` [400, 403, 404] && any (`T.isInfixOf` msg) markers
+  where
+    msg = T.toLower (T.strip rawMessage)
+    markers =
+      [ "does not have access to model"
+      , "model not found"
+      , "unknown model"
+      , "invalid model"
+      , "not a valid model"
+      , "model_not_found"
+      ]
 
 tidalSystemPrompt :: Text
 tidalSystemPrompt = T.intercalate "\n"
