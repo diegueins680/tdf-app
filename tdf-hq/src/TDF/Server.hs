@@ -5861,18 +5861,21 @@ openAIChatModelCandidates primaryModel =
     filter (not . T.null)
       [ T.strip primaryModel
       , "gpt-4.1-mini"
-      , "gpt-4.1"
+      , "gpt-4.1-nano"
       , "gpt-4o-mini"
-      , "gpt-4o"
+      , "gpt-4.1"
       ]
 
 shouldRetryWithFallbackModel :: Int -> Text -> Bool
 shouldRetryWithFallbackModel status rawMessage =
-  status `elem` [400, 403, 404] && any (`T.isInfixOf` msg) markers
+  hasMarker || (status `elem` [400, 401, 403, 404] && "error al generar respuesta (http " `T.isPrefixOf` msg)
   where
     msg = T.toLower (T.strip rawMessage)
+    hasMarker = any (`T.isInfixOf` msg) markers
     markers =
       [ "does not have access to model"
+      , "do not have access to model"
+      , "access to model"
       , "model not found"
       , "unknown model"
       , "invalid model"
