@@ -41,6 +41,12 @@ interface MessageStats {
 }
 
 type FilterKey = 'all' | 'pending' | 'replied' | 'failed';
+const LIMIT_OPTIONS = [50, 100, 200] as const;
+
+const parseInboxLimit = (value: string, fallback = 100): number => {
+  const parsed = Number.parseInt(value, 10);
+  return LIMIT_OPTIONS.includes(parsed as (typeof LIMIT_OPTIONS)[number]) ? parsed : fallback;
+};
 
 const FILTERS: { id: FilterKey; label: string }[] = [
   { id: 'all', label: 'Todos' },
@@ -735,10 +741,10 @@ export default function SocialInboxPage() {
             label="Limite"
             size="small"
             value={limit}
-            onChange={(e) => setLimit(parseInt(e.target.value, 10) || 100)}
+            onChange={(e) => setLimit(parseInboxLimit(e.target.value))}
             sx={{ minWidth: 120 }}
           >
-            {[50, 100, 200].map((value) => (
+            {LIMIT_OPTIONS.map((value) => (
               <MenuItem key={value} value={value}>
                 {value}
               </MenuItem>

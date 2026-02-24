@@ -85,6 +85,12 @@ const bookingStatusMap: Record<StatusKey, string> = {
   reprogramada: 'Confirmed',
 };
 
+const parseFilterId = (raw: string | null): number | 'all' => {
+  if (!raw) return 'all';
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 'all';
+};
+
 const parseStatusFilter = (raw: string | null): StatusKey | 'all' =>
   raw && statusOptions.includes(raw as StatusKey) ? (raw as StatusKey) : 'all';
 
@@ -131,13 +137,11 @@ export default function TrialLessonsPage() {
 
   const [subjectFilter, setSubjectFilter] = useState<number | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';
-    const raw = window.localStorage.getItem('trial.filter.subject');
-    return raw ? (Number.parseInt(raw, 10) || 'all') : 'all';
+    return parseFilterId(window.localStorage.getItem('trial.filter.subject'));
   });
   const [teacherFilter, setTeacherFilter] = useState<number | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';
-    const raw = window.localStorage.getItem('trial.filter.teacher');
-    return raw ? (Number.parseInt(raw, 10) || 'all') : 'all';
+    return parseFilterId(window.localStorage.getItem('trial.filter.teacher'));
   });
   const [statusFilter, setStatusFilter] = useState<StatusKey | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';

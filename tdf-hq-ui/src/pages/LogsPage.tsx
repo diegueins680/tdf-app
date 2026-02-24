@@ -27,6 +27,12 @@ interface LogEntry {
   logMessage: string;
 }
 
+const parseLogLimit = (value: string, fallback = 100): number => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(1000, Math.max(1, parsed));
+};
+
 export default function LogsPage() {
   const [limit, setLimit] = useState(100);
   const qc = useQueryClient();
@@ -77,7 +83,7 @@ export default function LogsPage() {
             type="number"
             label="Limit"
             value={limit}
-            onChange={(e) => setLimit(parseInt(e.target.value) || 100)}
+            onChange={(e) => setLimit(parseLogLimit(e.target.value))}
             size="small"
             sx={{ width: 100 }}
             inputProps={{ min: 1, max: 1000 }}
