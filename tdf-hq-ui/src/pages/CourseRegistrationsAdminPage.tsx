@@ -33,6 +33,15 @@ import { useSearchParams } from 'react-router-dom';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
+const statusFilters: StatusFilter[] = ['all', 'pending_payment', 'paid', 'cancelled'];
+
+const parseStatusFilter = (value: string | null): StatusFilter =>
+  value && statusFilters.includes(value as StatusFilter) ? (value as StatusFilter) : 'all';
+
+const parsePositiveLimit = (value: string | null, fallback = 200): number => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
 
 const formatDate = (iso: string) => new Date(iso).toLocaleString();
 
@@ -112,8 +121,8 @@ export default function CourseRegistrationsAdminPage() {
   const qc = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSlug = searchParams.get('slug') ?? 'produccion-musical-feb-2026';
-  const initialStatus = (searchParams.get('status') as StatusFilter | null) ?? 'all';
-  const initialLimit = Number(searchParams.get('limit') ?? '200') || 200;
+  const initialStatus = parseStatusFilter(searchParams.get('status'));
+  const initialLimit = parsePositiveLimit(searchParams.get('limit'));
   const [slug, setSlug] = useState(initialSlug);
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
@@ -153,8 +162,9 @@ export default function CourseRegistrationsAdminPage() {
     return regsQuery.data.reduce(
       (acc, reg) => {
         acc.total += 1;
-        const key = reg.crStatus as keyof typeof base;
-        if (key in acc) acc[key] += 1;
+        if (reg.crStatus === 'pending_payment' || reg.crStatus === 'paid' || reg.crStatus === 'cancelled') {
+          acc[reg.crStatus] += 1;
+        }
         return acc;
       },
       { ...base },
@@ -239,7 +249,7 @@ export default function CourseRegistrationsAdminPage() {
               select
               label="Estado"
               value={status}
-              onChange={(e) => setStatus(e.target.value as StatusFilter)}
+              onChange={(e) => setStatus(parseStatusFilter(e.target.value))}
               fullWidth
               size="small"
             >
@@ -255,7 +265,7 @@ export default function CourseRegistrationsAdminPage() {
               type="number"
               inputProps={{ min: 1 }}
               value={limit}
-              onChange={(e) => setLimit(Number(e.target.value) || 100)}
+              onChange={(e) => setLimit(parsePositiveLimit(e.target.value, 100))}
               fullWidth
               size="small"
             />

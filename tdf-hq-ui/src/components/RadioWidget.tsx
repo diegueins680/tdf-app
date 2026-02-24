@@ -302,11 +302,14 @@ export default function RadioWidget() {
     cozy: { width: { xs: '95%', sm: 440 }, bodyHeight: '68vh' },
     roomy: { width: { xs: '95%', sm: 540 }, bodyHeight: '80vh' },
   } as const;
-  type PanelSize = keyof typeof sizeOptions;
+  const panelSizes = ['compact', 'cozy', 'roomy'] as const;
+  type PanelSize = (typeof panelSizes)[number];
+  const parsePanelSize = (value: string | null): PanelSize | null =>
+    value && panelSizes.includes(value as PanelSize) ? (value as PanelSize) : null;
   const [panelSize, setPanelSize] = useState<PanelSize>(() => {
     if (typeof window === 'undefined') return 'cozy';
-    const stored = window.localStorage.getItem('radio-panel-size') as PanelSize | null;
-    if (stored && sizeOptions[stored]) return stored;
+    const stored = parsePanelSize(window.localStorage.getItem('radio-panel-size'));
+    if (stored) return stored;
     return 'cozy';
   });
   useEffect(() => {
@@ -2082,7 +2085,7 @@ export default function RadioWidget() {
                   <Typography variant="caption" color="text.secondary">
                     Tamaño del widget:
                   </Typography>
-                  {(['compact', 'cozy', 'roomy'] as PanelSize[]).map((key) => (
+                  {panelSizes.map((key) => (
                     <Chip
                       key={key}
                       size="small"
