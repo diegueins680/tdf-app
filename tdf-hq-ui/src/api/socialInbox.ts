@@ -16,7 +16,7 @@ export interface SocialMessage {
 export type SocialChannel = 'instagram' | 'facebook' | 'whatsapp';
 
 interface ReplyStatusResponse {
-  status?: 'ok' | 'error' | string;
+  status?: string;
   message?: string;
   response?: unknown;
 }
@@ -79,8 +79,7 @@ export const SocialInboxAPI = {
     if (!senderId) throw new Error('Remitente inválido.');
     if (!message) throw new Error('Escribe una respuesta antes de enviar.');
 
-    const externalId = payload.externalId?.trim();
-    const safeExternalId = externalId ? externalId : undefined;
+    const safeExternalId = payload.externalId?.trim();
 
     let result: ReplyStatusResponse;
     switch (channel) {
@@ -110,7 +109,7 @@ export const SocialInboxAPI = {
     }
 
     if (result?.status === 'error') {
-      throw new Error(result?.message || 'No se pudo enviar el mensaje.');
+      throw new Error(result?.message ?? 'No se pudo enviar el mensaje.');
     }
     return result;
   },
