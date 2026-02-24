@@ -5476,6 +5476,9 @@ adsAssistPublic AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel}
   finalReply <-
     case reply of
       Right txt | not (T.null (T.strip txt)) -> pure (T.strip txt)
+      Left err
+        | shouldRetryWithFallbackModel 0 err ->
+            pure (adsAssistNoAiFallback (envConfig env))
       Left err ->
         throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
       _ ->
@@ -5485,6 +5488,19 @@ adsAssistPublic AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel}
     , aasUsedExamples = map adExampleToDTO examples
     , aasKnowledgeUsed = kb
     }
+
+adsAssistNoAiFallback :: AppConfig -> Text
+adsAssistNoAiFallback cfg =
+  let courseUrl = resolveConfiguredAppBase cfg <> "/curso/" <> courseSlugFallback cfg
+  in T.intercalate " "
+       [ "Gracias por escribirnos."
+       , "Ahora mismo el asistente automático no está disponible,"
+       , "pero te comparto lo principal:"
+       , "el Curso de Producción Musical es presencial en Quito,"
+       , "dura 4 sábados (16 horas), cuesta $150 USD y tiene cupos limitados."
+       , "Más info e inscripción aquí:"
+       , courseUrl
+       ]
 
 adsAdminServer :: AuthedUser -> ServerT AdsAdminAPI AppM
 adsAdminServer user =
