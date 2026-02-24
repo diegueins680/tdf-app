@@ -85,6 +85,9 @@ const bookingStatusMap: Record<StatusKey, string> = {
   reprogramada: 'Confirmed',
 };
 
+const parseStatusFilter = (raw: string | null): StatusKey | 'all' =>
+  raw && statusOptions.includes(raw as StatusKey) ? (raw as StatusKey) : 'all';
+
 const toLocalInput = (iso?: string | null) => {
   if (!iso) return '';
   const d = new Date(iso);
@@ -139,7 +142,7 @@ export default function TrialLessonsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusKey | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';
     const raw = window.localStorage.getItem('trial.filter.status');
-    return (raw as StatusKey) ?? 'all';
+    return parseStatusFilter(raw);
   });
   const [fromInput, setFromInput] = useState(() => {
     if (typeof window === 'undefined') {
