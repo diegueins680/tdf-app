@@ -35,6 +35,8 @@ const defaultSlugs = [
 const locales = ['es', 'en'];
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
 const DRAFT_PREFIX = 'tdf-cms-admin:draft';
+const STATUS_FILTER_OPTIONS = ['all', 'published', 'draft', 'archived'] as const;
+type StatusFilter = (typeof STATUS_FILTER_OPTIONS)[number];
 type SamplePayload = {
   heroTitle?: string;
   heroSubtitle?: string;
@@ -97,6 +99,17 @@ const buildLineDiff = (left: string, right: string): DiffLine[] => {
   return result;
 };
 
+const isStatusFilter = (value: string): value is StatusFilter =>
+  STATUS_FILTER_OPTIONS.some((status) => status === value);
+
+const parseMinVersionFilter = (raw: string): number | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number(trimmed);
+  return Number.isSafeInteger(parsed) ? parsed : null;
+};
+
 export default function CmsAdminPage() {
   const qc = useQueryClient();
   const [slugFilter, setSlugFilter] = useState<string>(() => {
@@ -125,7 +138,7 @@ export default function CmsAdminPage() {
   const [editingFromId, setEditingFromId] = useState<number | null>(null);
   const [payloadError, setPayloadError] = useState<string | null>(null);
   const [formattedPayload, setFormattedPayload] = useState<string>('{}');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [minVersionFilter, setMinVersionFilter] = useState<number | null>(null);
   const [loadingLiveOnDemand, setLoadingLiveOnDemand] = useState(false);
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
@@ -766,7 +779,10 @@ export default function CmsAdminPage() {
                 size="small"
                 label="Estado"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                onChange={(e) => {
+                  const next = e.target.value.trim();
+                  setStatusFilter(isStatusFilter(next) ? next : 'all');
+                }}
                 sx={{ minWidth: 140 }}
               >
                 <MenuItem value="all">Todos</MenuItem>
@@ -779,9 +795,7 @@ export default function CmsAdminPage() {
                 type="number"
                 label="Versión mínima"
                 value={minVersionFilter ?? ''}
-                onChange={(e) =>
-                  setMinVersionFilter(e.target.value ? Number(e.target.value) : null)
-                }
+                onChange={(e) => setMinVersionFilter(parseMinVersionFilter(e.target.value))}
                 sx={{ width: 150 }}
               />
               <Button

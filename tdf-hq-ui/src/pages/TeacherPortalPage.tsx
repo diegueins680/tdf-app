@@ -89,11 +89,16 @@ const validateLocalRange = (startValue: string, endValue: string): string | null
   return null;
 };
 
-const parsePositiveIntId = (value: string): number | null => {
-  const trimmed = value.trim();
+const parsePositiveIntId = (value: string | number): number | null => {
+  const trimmed = String(value).trim();
   if (!/^\d+$/.test(trimmed)) return null;
   const parsed = Number(trimmed);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const parsePositiveIntFieldValue = (value: string): number | '' => {
+  const parsed = parsePositiveIntId(value);
+  return parsed ?? '';
 };
 
 const formatDateTime = (iso: string) => {
@@ -601,7 +606,8 @@ export default function TeacherPortalPage() {
 
   const submitAvailability = async () => {
     setAvailabilityDialogError(null);
-    if (!availabilityForm.subjectId || !availabilityForm.roomId) {
+    const subjectIdNum = parsePositiveIntId(availabilityForm.subjectId);
+    if (subjectIdNum == null || !availabilityForm.roomId) {
       setAvailabilityDialogError('Completa materia y sala.');
       return;
     }
@@ -617,7 +623,7 @@ export default function TeacherPortalPage() {
     }
     const payload: TrialAvailabilityUpsert = {
       availabilityId: editingAvailability?.availabilityId ?? undefined,
-      subjectId: Number(availabilityForm.subjectId),
+      subjectId: subjectIdNum,
       roomId: availabilityForm.roomId,
       startAt: startIso,
       endAt: endIso,
@@ -637,7 +643,10 @@ export default function TeacherPortalPage() {
 
   const submitClass = async () => {
     setClassDialogError(null);
-    if (!classForm.subjectId || !classForm.studentId || !classForm.roomId) {
+    const subjectIdNum = parsePositiveIntId(classForm.subjectId);
+    const studentIdNum = parsePositiveIntId(classForm.studentId);
+    const roomIdNum = parsePositiveIntId(classForm.roomId);
+    if (subjectIdNum == null || studentIdNum == null || roomIdNum == null) {
       setClassDialogError('Completa materia, alumno, sala y horario.');
       return;
     }
@@ -655,9 +664,9 @@ export default function TeacherPortalPage() {
     if (!editingClass) {
       try {
         await createClassMutation.mutateAsync({
-          subjectId: Number(classForm.subjectId),
-          studentId: Number(classForm.studentId),
-          roomId: classForm.roomId,
+          subjectId: subjectIdNum,
+          studentId: studentIdNum,
+          roomId: String(roomIdNum),
           startIso,
           endIso,
         });
@@ -671,14 +680,9 @@ export default function TeacherPortalPage() {
       return;
     }
 
-    const roomIdNum = parsePositiveIntId(classForm.roomId);
-    if (roomIdNum == null) {
-      setClassDialogError('Sala inválida.');
-      return;
-    }
     const patch: ClassSessionUpdate = {
-      subjectId: Number(classForm.subjectId),
-      studentId: Number(classForm.studentId),
+      subjectId: subjectIdNum,
+      studentId: studentIdNum,
       roomId: roomIdNum,
       startAt: startIso,
       endAt: endIso,
@@ -1222,7 +1226,11 @@ export default function TeacherPortalPage() {
               select
               label="Materia"
               value={availabilityForm.subjectId}
-              onChange={(e) => setAvailabilityForm((prev) => ({ ...prev, subjectId: e.target.value === '' ? '' : Number(e.target.value), roomId: '' }))}
+              onChange={(e) => setAvailabilityForm((prev) => ({
+                ...prev,
+                subjectId: parsePositiveIntFieldValue(e.target.value),
+                roomId: '',
+              }))}
               required
             >
               <MenuItem value="">Selecciona</MenuItem>
@@ -1324,7 +1332,11 @@ export default function TeacherPortalPage() {
               select
               label="Materia"
               value={classForm.subjectId}
-              onChange={(e) => setClassForm((prev) => ({ ...prev, subjectId: e.target.value === '' ? '' : Number(e.target.value), roomId: '' }))}
+              onChange={(e) => setClassForm((prev) => ({
+                ...prev,
+                subjectId: parsePositiveIntFieldValue(e.target.value),
+                roomId: '',
+              }))}
               required
             >
               <MenuItem value="">Selecciona</MenuItem>
@@ -1341,7 +1353,10 @@ export default function TeacherPortalPage() {
               select
               label="Alumno"
               value={classForm.studentId}
-              onChange={(e) => setClassForm((prev) => ({ ...prev, studentId: e.target.value === '' ? '' : Number(e.target.value) }))}
+              onChange={(e) => setClassForm((prev) => ({
+                ...prev,
+                studentId: parsePositiveIntFieldValue(e.target.value),
+              }))}
               required
             >
               <MenuItem value="">Selecciona</MenuItem>

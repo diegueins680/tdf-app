@@ -38,6 +38,14 @@ const inputToDate = (val: string) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
+const parseTeacherFilter = (raw: string): number | 'all' => {
+  const trimmed = raw.trim();
+  if (trimmed === 'all') return 'all';
+  if (!/^\d+$/.test(trimmed)) return 'all';
+  const parsed = Number(trimmed);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 'all';
+};
+
 export default function ReportsPage() {
   const bookingsQuery = useQuery({
     queryKey: ['reports-bookings'],
@@ -274,7 +282,7 @@ export default function ReportsPage() {
             select
             label="Profesor"
             value={teacherFilter}
-            onChange={(e) => setTeacherFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+            onChange={(e) => setTeacherFilter(parseTeacherFilter(e.target.value))}
             fullWidth
             SelectProps={{ native: true }}
           >

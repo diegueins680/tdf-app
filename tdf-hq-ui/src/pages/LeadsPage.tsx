@@ -32,6 +32,8 @@ import PartyRelatedPopover from '../components/PartyRelatedPopover';
 
 const STATUS_OPTIONS = ['Nuevo', 'Contactado', 'En progreso', 'Ganado', 'Perdido'] as const;
 type LeadStatus = (typeof STATUS_OPTIONS)[number];
+const isLeadStatus = (value: string): value is LeadStatus =>
+  STATUS_OPTIONS.some((status) => status === value);
 
 interface LeadCreateDialogProps {
   open: boolean;
@@ -99,7 +101,10 @@ function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
               labelId="status-label"
               label="Estado"
               value={status}
-              onChange={(e) => setStatus(e.target.value as LeadStatus)}
+              onChange={(e) => {
+                const nextStatus = e.target.value.trim();
+                setStatus(isLeadStatus(nextStatus) ? nextStatus : 'Nuevo');
+              }}
             >
               {STATUS_OPTIONS.map((opt) => (
                 <MenuItem key={opt} value={opt}>
