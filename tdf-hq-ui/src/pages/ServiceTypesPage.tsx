@@ -193,7 +193,7 @@ export default function ServiceTypesPage() {
     }
     const priceRaw = form.price.trim();
     const priceNumber = priceRaw === '' ? null : Number(priceRaw);
-    const priceInvalid = priceNumber !== null && (Number.isNaN(priceNumber) || priceNumber < 0);
+    const priceInvalid = priceNumber !== null && (!Number.isFinite(priceNumber) || priceNumber < 0);
     if (priceInvalid) {
       setError('Corrige los campos resaltados.');
       setFieldErrors((prev) => ({ ...prev, price: 'Usa un valor numérico mayor o igual a 0 o deja vacío.' }));
@@ -202,7 +202,7 @@ export default function ServiceTypesPage() {
     const rateCents = priceNumber === null ? null : Math.round(priceNumber * 100);
     const taxRaw = form.taxBps.trim();
     const taxNumber = taxRaw === '' ? null : Number(taxRaw);
-    const taxInvalid = taxNumber !== null && (Number.isNaN(taxNumber) || taxNumber < 0);
+    const taxInvalid = taxNumber !== null && (!Number.isFinite(taxNumber) || taxNumber < 0);
     if (taxInvalid) {
       setError('Corrige los campos resaltados.');
       setFieldErrors((prev) => ({ ...prev, tax: 'Ingresa puntos base numéricos o deja vacío si no aplica.' }));

@@ -23,17 +23,24 @@ import { RadioAPI } from '../api/radio';
 import type { RadioPresenceDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 
+const parsePositiveIntParam = (value: string | undefined): number | null => {
+  const raw = value?.trim();
+  if (!raw || !/^\d+$/.test(raw)) return null;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 export default function PublicProfilePage() {
   const { partyId } = useParams();
-  const parsedId = Number(partyId ?? '');
-  const enabled = Number.isFinite(parsedId) && parsedId > 0;
+  const parsedId = parsePositiveIntParam(partyId);
+  const enabled = parsedId !== null;
   const qc = useQueryClient();
   const { session } = useSession();
   const isSelf = session?.partyId === parsedId;
 
   const partyQuery = useQuery({
     queryKey: ['public-party', parsedId],
-    queryFn: () => Parties.getOne(parsedId),
+    queryFn: () => Parties.getOne(parsedId ?? 0),
     enabled,
   });
 
@@ -55,7 +62,7 @@ export default function PublicProfilePage() {
 
   const presenceQuery = useQuery({
     queryKey: ['radio-presence', parsedId],
-    queryFn: () => RadioAPI.getPresence(parsedId),
+    queryFn: () => RadioAPI.getPresence(parsedId ?? 0),
     enabled,
     refetchInterval: 30_000,
   });
@@ -75,6 +82,9 @@ export default function PublicProfilePage() {
 
   const friendMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
+      if (parsedId === null) {
+        throw new Error('ID de perfil inválido.');
+      }
       if (isFriend) {
         await SocialAPI.removeFriend(parsedId);
       } else {
