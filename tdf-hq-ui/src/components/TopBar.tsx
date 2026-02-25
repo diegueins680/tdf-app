@@ -90,6 +90,31 @@ interface CartPreviewItem {
   title: string;
   subtotal: string;
 }
+
+const sanitizeCartCount = (raw: unknown): number => {
+  if (typeof raw !== 'number') return 0;
+  if (!Number.isFinite(raw)) return 0;
+  const floored = Math.floor(raw);
+  return floored > 0 ? floored : 0;
+};
+
+const sanitizeCartPreview = (raw: unknown): CartPreviewItem[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const title = typeof (item as { title?: unknown }).title === 'string' ? (item as { title: string }).title : '';
+      const subtotal =
+        typeof (item as { subtotal?: unknown }).subtotal === 'string'
+          ? (item as { subtotal: string }).subtotal
+          : '';
+      if (!title.trim() || !subtotal.trim()) return null;
+      return { title, subtotal };
+    })
+    .filter((item): item is CartPreviewItem => item != null)
+    .slice(0, 5);
+};
+
 const readCartMeta = (): { cartId: string; count: number; preview: CartPreviewItem[] } => {
   try {
     const raw = localStorage.getItem(CART_META_KEY);
@@ -97,8 +122,8 @@ const readCartMeta = (): { cartId: string; count: number; preview: CartPreviewIt
     const parsed = JSON.parse(raw) as Partial<{ cartId: string; count: number; preview: CartPreviewItem[] }>;
     return {
       cartId: typeof parsed?.cartId === 'string' ? parsed.cartId : '',
-      count: typeof parsed?.count === 'number' ? parsed.count : 0,
-      preview: Array.isArray(parsed?.preview) ? parsed.preview : [],
+      count: sanitizeCartCount(parsed?.count),
+      preview: sanitizeCartPreview(parsed?.preview),
     };
   } catch {
     return { cartId: '', count: 0, preview: [] };

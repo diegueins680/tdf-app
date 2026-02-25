@@ -57,14 +57,17 @@ interface FriendOption {
 
 const SELECTED_THREAD_STORAGE_KEY = 'tdf-chat-selected-thread-v1';
 
+const parsePositiveInt = (raw: string | null | undefined): number | null => {
+  const trimmed = raw?.trim() ?? '';
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number(trimmed);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 const loadSelectedThreadId = (): number | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(SELECTED_THREAD_STORAGE_KEY);
-    if (!raw) return null;
-    const numeric = Number(raw);
-    if (!Number.isFinite(numeric) || numeric <= 0) return null;
-    return numeric;
+    return parsePositiveInt(window.localStorage.getItem(SELECTED_THREAD_STORAGE_KEY));
   } catch {
     return null;
   }
@@ -212,8 +215,8 @@ export default function ChatPage() {
     if (!rawParty) return;
     requestParamConsumed.current = true;
     navigate('/chat', { replace: true });
-    const numeric = Number(rawParty);
-    if (!Number.isFinite(numeric) || numeric <= 0) {
+    const numeric = parsePositiveInt(rawParty);
+    if (numeric == null) {
       setBannerError('El enlace de chat tiene un Party ID inválido.');
       return;
     }
@@ -255,8 +258,8 @@ export default function ChatPage() {
   };
 
   const handleCreateChat = () => {
-    const numeric = newChatSelection?.partyId ?? Number(newChatInput.trim());
-    if (!Number.isFinite(numeric) || numeric <= 0) {
+    const numeric = newChatSelection?.partyId ?? parsePositiveInt(newChatInput);
+    if (numeric == null) {
       setNewChatError('Selecciona un contacto o ingresa un ID válido.');
       return;
     }

@@ -269,6 +269,12 @@ export default function RadioWidget() {
   const [liveStartedAt, setLiveStartedAt] = useState<number | null>(null);
   const [liveElapsedMs, setLiveElapsedMs] = useState(0);
   const [autoStopMinutes, setAutoStopMinutes] = useState(120);
+  const autoStopOptions = [0, 30, 60, 90, 120, 180] as const;
+  const parseAutoStopMinutes = (raw: string): number => {
+    const parsed = Number(raw);
+    if (!Number.isInteger(parsed)) return 120;
+    return autoStopOptions.some((opt) => opt === parsed) ? parsed : 120;
+  };
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
   const [selectedAudioInput, setSelectedAudioInput] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
@@ -304,8 +310,12 @@ export default function RadioWidget() {
   } as const;
   const panelSizes = ['compact', 'cozy', 'roomy'] as const;
   type PanelSize = (typeof panelSizes)[number];
-  const parsePanelSize = (value: string | null): PanelSize | null =>
-    value && panelSizes.includes(value as PanelSize) ? (value as PanelSize) : null;
+  const isPanelSize = (value: string): value is PanelSize =>
+    panelSizes.some((size) => size === value);
+  const parsePanelSize = (value: string | null): PanelSize | null => {
+    const trimmed = value?.trim() ?? '';
+    return isPanelSize(trimmed) ? trimmed : null;
+  };
   const [panelSize, setPanelSize] = useState<PanelSize>(() => {
     if (typeof window === 'undefined') return 'cozy';
     const stored = parsePanelSize(window.localStorage.getItem('radio-panel-size'));
@@ -2306,11 +2316,11 @@ export default function RadioWidget() {
                                 label="Auto-stop"
                                 size="small"
                                 value={autoStopMinutes}
-                                onChange={(e) => setAutoStopMinutes(Number(e.target.value))}
+                                onChange={(e) => setAutoStopMinutes(parseAutoStopMinutes(e.target.value))}
                                 sx={{ minWidth: 140 }}
                               >
                                 <MenuItem value={0}>Sin límite</MenuItem>
-                                {[30, 60, 90, 120, 180].map((mins) => (
+                                {autoStopOptions.filter((mins) => mins > 0).map((mins) => (
                                   <MenuItem key={mins} value={mins}>
                                     {mins} min
                                   </MenuItem>
