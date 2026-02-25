@@ -11,6 +11,8 @@ Use this flow to re-record the App Review screencast for:
 1. Frontend env scopes must include at least:
    - `instagram_basic`
    - `instagram_manage_messages`
+   - `instagram_business_basic`
+   - `instagram_business_manage_messages`
 2. Log in with a test user that can connect a Page with a professional Instagram account.
 3. Have a real inbound DM already present in `/social/inbox`.
 4. Keep app UI in English by using review mode routes below.

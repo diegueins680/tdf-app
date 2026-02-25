@@ -282,6 +282,9 @@ VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
 VITE_GOOGLE_CLIENT_ID=your-google-client-id
 VITE_CHATKIT_WORKFLOW_ID=your-chatkit-workflow-id
 VITE_META_APP_ID=your-meta-app-id
+VITE_INSTAGRAM_OAUTH_PROVIDER=instagram
+VITE_INSTAGRAM_CLIENT_ID=your-instagram-platform-app-id
+VITE_INSTAGRAM_SCOPES=instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages
 ```
 
 Optional for demo mode:
@@ -336,6 +339,9 @@ VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
 VITE_GOOGLE_CLIENT_ID=your-google-client-id
 VITE_CHATKIT_WORKFLOW_ID=your-chatkit-workflow-id
 VITE_META_APP_ID=your-meta-app-id
+VITE_INSTAGRAM_OAUTH_PROVIDER=instagram
+VITE_INSTAGRAM_CLIENT_ID=your-instagram-platform-app-id
+VITE_INSTAGRAM_SCOPES=instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages
 ```
 
 #### 4. Deploy

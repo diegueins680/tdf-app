@@ -12,7 +12,7 @@ const INSTAGRAM_APP_ID =
   env.read('VITE_INSTAGRAM_APP_ID') ??
   '';
 const DEFAULT_FACEBOOK_SCOPES = 'instagram_basic,instagram_manage_messages,pages_show_list,pages_read_engagement';
-const DEFAULT_INSTAGRAM_SCOPES = 'instagram_business_basic,instagram_business_content_publish';
+const DEFAULT_INSTAGRAM_SCOPES = 'instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages';
 const STATE_KEY = 'tdf-instagram-oauth-state';
 const RESULT_KEY = 'tdf-instagram-oauth-result';
 const REVIEW_ASSET_KEY = 'tdf-instagram-review-asset';
@@ -34,8 +34,8 @@ const resolveOAuthProvider = (scopes: string[]): InstagramOAuthProvider => {
 
 const resolveScopes = (provider: InstagramOAuthProvider, scopes: string[]) => {
   if (provider === 'instagram') {
-    const businessScopes = uniqueScopes(scopes.filter((scope) => scope.startsWith('instagram_business_')));
-    if (businessScopes.length > 0) return businessScopes.join(',');
+    const configuredScopes = uniqueScopes(scopes);
+    if (configuredScopes.length > 0) return configuredScopes.join(',');
     return uniqueScopes(parseScopes(DEFAULT_INSTAGRAM_SCOPES)).join(',');
   }
   return uniqueScopes(scopes).join(',');
