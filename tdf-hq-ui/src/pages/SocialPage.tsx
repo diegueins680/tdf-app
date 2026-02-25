@@ -54,6 +54,13 @@ function formatParty(byId: Map<number, PartyDTO>, partyId: number) {
   return party.displayName ?? party.legalName ?? `Party #${partyId}`;
 }
 
+const parsePositivePartyId = (value: string): number | null => {
+  const raw = value.trim();
+  if (!raw || !/^\d+$/.test(raw)) return null;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 export default function SocialPage() {
   const qc = useQueryClient();
   const { session } = useSession();
@@ -104,8 +111,8 @@ export default function SocialPage() {
     if (!trimmed) return null;
     const parsed = parseVCardPayload(trimmed);
     if (parsed) return parsed;
-    const numeric = Number(trimmed);
-    if (Number.isFinite(numeric) && numeric > 0) {
+    const numeric = parsePositivePartyId(trimmed);
+    if (numeric !== null) {
       return {
         kind: 'vcard-exchange',
         partyId: numeric,
@@ -155,8 +162,10 @@ export default function SocialPage() {
 
   const addMutation = useMutation<void, Error, number | undefined>({
     mutationFn: async (targetId) => {
-      const numeric = targetId ?? Number(addId.trim());
-      if (!Number.isFinite(numeric) || numeric <= 0) throw new Error('Ingresa un ID válido.');
+      const numeric =
+        (typeof targetId === 'number' && Number.isSafeInteger(targetId) && targetId > 0 ? targetId : null)
+        ?? parsePositivePartyId(addId);
+      if (numeric === null) throw new Error('Ingresa un ID válido.');
       await SocialAPI.addFriend(numeric);
     },
     onSuccess: () => {
@@ -255,8 +264,8 @@ export default function SocialPage() {
             loading={partiesQuery.isLoading}
             getOptionLabel={(option) => option.displayName ?? option.legalName ?? `Party #${option.partyId}`}
             value={(() => {
-              const numeric = Number(addId);
-              if (!Number.isFinite(numeric)) return null;
+              const numeric = parsePositivePartyId(addId);
+              if (numeric === null) return null;
               return (partiesQuery.data ?? []).find((p) => p.partyId === numeric) ?? null;
             })()}
             onChange={(_, value) => setAddId(value ? String(value.partyId) : '')}
