@@ -31,7 +31,13 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { SocialInboxAPI, type SocialChannel, type SocialMessage } from '../api/socialInbox';
+import {
+  getMetaReviewAssetSelection,
+  getStoredInstagramResult,
+  type MetaReviewAssetSelection,
+} from '../services/instagramAuth';
 
 interface MessageStats {
   incoming: SocialMessage[];
@@ -147,6 +153,42 @@ interface ParsedAttachment {
 
 const coerceText = (value: unknown) => (typeof value === 'string' ? value : undefined);
 
+interface MetaMessageAsset {
+  recipientId?: string;
+  entryId?: string;
+  sourceId?: string;
+  sourceType?: string;
+}
+
+const extractMetaMessageAsset = (metadata?: string | null): MetaMessageAsset | null => {
+  const parsed = parseJson(metadata);
+  if (!parsed || typeof parsed !== 'object') return null;
+  const root = parsed as Record<string, unknown>;
+  const recipientId = coerceText(root['recipient_id']);
+  const entryId = coerceText(root['entry_id']);
+  const sourceId = coerceText(root['source_id']);
+  const sourceType = coerceText(root['source_type']);
+  if (!recipientId && !entryId && !sourceId && !sourceType) return null;
+  return { recipientId, entryId, sourceId, sourceType };
+};
+
+const normalizePhoneForWa = (raw: string) => raw.replace(/[^\d]/g, '');
+
+const resolveNativeClientUrl = (channel: SocialChannel, senderId: string) => {
+  switch (channel) {
+    case 'instagram':
+      return 'https://www.instagram.com/direct/inbox/';
+    case 'facebook':
+      return 'https://www.facebook.com/messages';
+    case 'whatsapp': {
+      const normalized = normalizePhoneForWa(senderId);
+      return normalized ? `https://wa.me/${normalized}` : 'https://web.whatsapp.com/';
+    }
+    default:
+      return '';
+  }
+};
+
 const extractAttachments = (metadata?: string | null): ParsedAttachment[] => {
   const parsed = parseJson(metadata);
   if (!parsed || typeof parsed !== 'object') return [];
@@ -232,11 +274,13 @@ interface SelectedMessage {
 
 interface SocialMessageDialogProps {
   selection: SelectedMessage | null;
+  reviewMode: boolean;
+  activeAsset: MetaReviewAssetSelection | null;
   onClose: () => void;
   onRefresh: () => void;
 }
 
-const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDialogProps) => {
+const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRefresh }: SocialMessageDialogProps) => {
   const open = Boolean(selection);
   const channel = selection?.channel;
   const msg = selection?.message;
@@ -252,6 +296,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
   const [optimisticRepliedAt, setOptimisticRepliedAt] = useState<string | null>(null);
   const [optimisticReplyText, setOptimisticReplyText] = useState<string | null>(null);
   const [optimisticReplyError, setOptimisticReplyError] = useState<string | null>(null);
+  const [providerMessageId, setProviderMessageId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !msg) return;
@@ -264,6 +309,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
     setOptimisticRepliedAt(null);
     setOptimisticReplyText(null);
     setOptimisticReplyError(null);
+    setProviderMessageId(null);
   }, [open, msg]);
 
   const senderLabel = useMemo(() => {
@@ -273,6 +319,27 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
 
   const canGenerate = Boolean(channel && msg && (msg.text ?? '').trim().length > 0 && !aiLoading && !sendLoading);
   const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !sendLoading);
+
+  const extractProviderMessageId = (payload: unknown): string | null => {
+    if (!payload || typeof payload !== 'object') return null;
+    const obj = payload as Record<string, unknown>;
+    const direct =
+      coerceText(obj['message_id']) ??
+      coerceText(obj['messageId']) ??
+      coerceText(obj['id']);
+    if (direct) return direct;
+    const messages = obj['messages'];
+    if (Array.isArray(messages) && messages.length > 0) {
+      const first = messages[0];
+      if (first && typeof first === 'object') {
+        const messageId =
+          coerceText((first as Record<string, unknown>)['id']) ??
+          coerceText((first as Record<string, unknown>)['message_id']);
+        if (messageId) return messageId;
+      }
+    }
+    return null;
+  };
 
   const handleGenerate = async () => {
     if (!channel || !msg) return;
@@ -297,21 +364,24 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
     setError(null);
     setNotice(null);
     try {
-      await SocialInboxAPI.sendReply(channel, {
+      const response = await SocialInboxAPI.sendReply(channel, {
         senderId: msg.senderId,
         message: replyDraft,
         externalId: msg.externalId,
       });
+      const outboundId = extractProviderMessageId(response?.response);
+      setProviderMessageId(outboundId);
       setOptimisticRepliedAt(new Date().toISOString());
       setOptimisticReplyText(replyDraft.trim());
       setOptimisticReplyError(null);
-      setNotice('Respuesta enviada.');
+      setNotice(reviewMode ? 'Message sent from app UI.' : 'Respuesta enviada.');
       onRefresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No se pudo enviar la respuesta.';
       setOptimisticRepliedAt(null);
       setOptimisticReplyText(null);
       setOptimisticReplyError(message);
+      setProviderMessageId(null);
       setError(message);
     } finally {
       setSendLoading(false);
@@ -321,28 +391,30 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
   const handleCopySender = async () => {
     if (!msg) return;
     const ok = await copyText(msg.senderId);
-    if (ok) setNotice('Remitente copiado.');
+    if (ok) setNotice(reviewMode ? 'Sender copied.' : 'Remitente copiado.');
   };
 
   const handleCopyExternal = async () => {
     if (!msg) return;
     const ok = await copyText(msg.externalId);
-    if (ok) setNotice('ID copiado.');
+    if (ok) setNotice(reviewMode ? 'Message ID copied.' : 'ID copiado.');
   };
 
   const handleCopyReply = async () => {
     const body = replyDraft.trim();
     if (!body) return;
     const ok = await copyText(body);
-    if (ok) setNotice('Respuesta copiada.');
+    if (ok) setNotice(reviewMode ? 'Reply copied.' : 'Respuesta copiada.');
   };
 
   const repliedAtValue = optimisticRepliedAt ?? msg?.repliedAt;
   const replyTextValue = optimisticReplyText ?? msg?.replyText;
   const replyErrorValue = optimisticReplyError ?? msg?.replyError;
   const attachments = useMemo(() => extractAttachments(msg?.metadata), [msg?.metadata]);
+  const messageAsset = useMemo(() => extractMetaMessageAsset(msg?.metadata), [msg?.metadata]);
   const rawBody = (msg?.text ?? '').trim();
   const showBody = rawBody.length > 0 && rawBody.toLowerCase() !== '[attachment]';
+  const nativeClientUrl = msg && channel ? resolveNativeClientUrl(channel, msg.senderId) : '';
 
   return (
     <Dialog open={open} onClose={onClose} fullScreen={fullScreen} fullWidth maxWidth="lg">
@@ -353,25 +425,44 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
               {channel ? channelToLabel(channel) : 'Mensaje'}
             </Typography>
             <Typography variant="caption" color="text.secondary" noWrap>
-              {msg ? `${formatTimestamp(msg.createdAt)} · ${msg.repliedAt ? 'Respondido' : msg.replyError ? 'Fallido' : 'Pendiente'}` : ''}
+              {msg
+                ? `${formatTimestamp(msg.createdAt)} · ${
+                    msg.repliedAt
+                      ? reviewMode
+                        ? 'Replied'
+                        : 'Respondido'
+                      : msg.replyError
+                        ? reviewMode
+                          ? 'Failed'
+                          : 'Fallido'
+                        : reviewMode
+                          ? 'Pending'
+                          : 'Pendiente'
+                  }`
+                : ''}
             </Typography>
           </Stack>
-          <IconButton aria-label="Cerrar" onClick={onClose}>
+          <IconButton aria-label={reviewMode ? 'Close' : 'Cerrar'} onClick={onClose}>
             <CloseIcon />
           </IconButton>
         </Stack>
       </DialogTitle>
       <DialogContent dividers sx={{ p: 3 }}>
         {!msg ? (
-          <Typography color="text.secondary">Selecciona un mensaje.</Typography>
+          <Typography color="text.secondary">{reviewMode ? 'Select a message.' : 'Selecciona un mensaje.'}</Typography>
         ) : (
           <Stack spacing={2.5}>
+            {reviewMode && (
+              <Alert severity="info" variant="outlined">
+                Step 2 of 3: keep this dialog visible, click <strong>Send</strong>, then show the same delivered text in the native client.
+              </Alert>
+            )}
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Stack spacing={1}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="space-between">
                   <Stack spacing={0.25} sx={{ minWidth: 0 }}>
                     <Typography variant="overline" color="text.secondary">
-                      Remitente
+                      {reviewMode ? 'Sender' : 'Remitente'}
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
                       <Typography
@@ -381,7 +472,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                       >
                         {senderLabel}
                       </Typography>
-                      <Tooltip title="Copiar remitente">
+                      <Tooltip title={reviewMode ? 'Copy sender' : 'Copiar remitente'}>
                         <IconButton size="small" onClick={() => void handleCopySender()}>
                           <ContentCopyIcon fontSize="inherit" />
                         </IconButton>
@@ -390,13 +481,13 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                   </Stack>
                   <Stack spacing={0.25} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
                     <Typography variant="overline" color="text.secondary">
-                      ID
+                      {reviewMode ? 'Message ID' : 'ID'}
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
                         {msg.externalId}
                       </Typography>
-                      <Tooltip title="Copiar ID">
+                      <Tooltip title={reviewMode ? 'Copy ID' : 'Copiar ID'}>
                         <IconButton size="small" onClick={() => void handleCopyExternal()}>
                           <ContentCopyIcon fontSize="inherit" />
                         </IconButton>
@@ -410,7 +501,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="overline" color="text.secondary">
-                      Mensaje
+                      {reviewMode ? 'Inbound message' : 'Mensaje'}
                     </Typography>
                     <Paper
                       variant="outlined"
@@ -428,7 +519,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                       ) : attachments.length > 0 ? (
                         <Stack spacing={1}>
                           <Typography variant="body2" color="text.secondary">
-                            Adjuntos
+                            {reviewMode ? 'Attachments' : 'Adjuntos'}
                           </Typography>
                           {attachments.map((att, idx) => (
                             <Paper
@@ -468,7 +559,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                                   )
                                 ) : (
                                   <Typography variant="body2" color="text.secondary">
-                                    (Sin URL disponible)
+                                    {reviewMode ? '(No URL available)' : '(Sin URL disponible)'}
                                   </Typography>
                                 )}
                               </Stack>
@@ -484,19 +575,47 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="overline" color="text.secondary">
-                      Estado
+                      {reviewMode ? 'Delivery status' : 'Estado'}
                     </Typography>
                     <Stack spacing={1} sx={{ mt: 0.5 }}>
-                      {replyErrorValue && <Alert severity="error">Último intento falló: {replyErrorValue}</Alert>}
+                      {replyErrorValue && (
+                        <Alert severity="error">
+                          {reviewMode ? 'Last attempt failed:' : 'Último intento falló:'} {replyErrorValue}
+                        </Alert>
+                      )}
                       {repliedAtValue && (
                         <Alert severity="success">
-                          Respondido: {formatTimestamp(repliedAtValue)}
+                          {reviewMode ? 'Sent from app UI:' : 'Respondido:'} {formatTimestamp(repliedAtValue)}
                           {replyTextValue ? ` · ${replyTextValue}` : ''}
+                        </Alert>
+                      )}
+                      {providerMessageId && (
+                        <Alert severity="info" variant="outlined">
+                          {reviewMode ? 'Provider message ID:' : 'ID de mensaje en proveedor:'} {providerMessageId}
+                        </Alert>
+                      )}
+                      {messageAsset && (
+                        <Alert severity="info" variant="outlined">
+                          {reviewMode ? 'Conversation asset metadata:' : 'Metadata del asset de conversación:'}{' '}
+                          {[
+                            messageAsset.recipientId ? `recipient_id=${messageAsset.recipientId}` : null,
+                            messageAsset.entryId ? `entry_id=${messageAsset.entryId}` : null,
+                            messageAsset.sourceId ? `source_id=${messageAsset.sourceId}` : null,
+                            messageAsset.sourceType ? `source_type=${messageAsset.sourceType}` : null,
+                          ]
+                            .filter((value): value is string => Boolean(value))
+                            .join(' · ')}
+                        </Alert>
+                      )}
+                      {reviewMode && activeAsset && (
+                        <Alert severity="info" variant="outlined">
+                          Active selected asset: {activeAsset.pageName} (Page ID: {activeAsset.pageId}
+                          {activeAsset.instagramUserId ? ` · IG User ID: ${activeAsset.instagramUserId}` : ''})
                         </Alert>
                       )}
                       {!repliedAtValue && !replyErrorValue && (
                         <Alert severity="info" variant="outlined">
-                          Pendiente de respuesta.
+                          {reviewMode ? 'Pending reply.' : 'Pendiente de respuesta.'}
                         </Alert>
                       )}
                     </Stack>
@@ -509,7 +628,7 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
                   <Typography variant="subtitle1" fontWeight={800}>
-                    Responder
+                    {reviewMode ? 'Reply from app UI' : 'Responder'}
                   </Typography>
                   <Stack direction="row" spacing={1}>
                     <Button
@@ -519,17 +638,44 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                       onClick={() => void handleCopyReply()}
                       disabled={!replyDraft.trim()}
                     >
-                      Copiar
+                      {reviewMode ? 'Copy' : 'Copiar'}
                     </Button>
                     <Button variant="outlined" size="small" onClick={() => setReplyDraft('')} disabled={!replyDraft.trim()}>
-                      Limpiar
+                      {reviewMode ? 'Clear' : 'Limpiar'}
                     </Button>
                   </Stack>
                 </Stack>
 
+                {reviewMode && (
+                  <Alert severity="info" variant="outlined">
+                    Explain each button while recording: AI draft (optional), message textarea, and Send action.
+                  </Alert>
+                )}
+
                 {notice && (
                   <Alert severity="success" onClose={() => setNotice(null)}>
                     {notice}
+                  </Alert>
+                )}
+                {reviewMode && replyTextValue && (
+                  <Alert
+                    severity="success"
+                    action={
+                      nativeClientUrl ? (
+                        <Button
+                          color="inherit"
+                          size="small"
+                          component="a"
+                          href={nativeClientUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open native client
+                        </Button>
+                      ) : undefined
+                    }
+                  >
+                    Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “{replyTextValue}”.
                   </Alert>
                 )}
                 {error && (
@@ -540,8 +686,12 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
 
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                   <TextField
-                    label="Instrucciones para IA (opcional)"
-                    placeholder="ej. Responder breve y ofrecer link de inscripción."
+                    label={reviewMode ? 'AI instructions (optional)' : 'Instrucciones para IA (opcional)'}
+                    placeholder={
+                      reviewMode
+                        ? 'ex. Keep it concise and offer signup link.'
+                        : 'ej. Responder breve y ofrecer link de inscripción.'
+                    }
                     value={hint}
                     onChange={(e) => setHint(e.target.value)}
                     disabled={aiLoading || sendLoading}
@@ -554,13 +704,13 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
                     disabled={!canGenerate}
                     sx={{ alignSelf: { xs: 'stretch', md: 'flex-start' }, minWidth: 200 }}
                   >
-                    {aiLoading ? 'Generando…' : 'Generar con IA'}
+                    {aiLoading ? (reviewMode ? 'Generating…' : 'Generando…') : reviewMode ? 'Generate with AI' : 'Generar con IA'}
                   </Button>
                 </Stack>
 
                 <TextField
-                  label="Respuesta"
-                  placeholder="Escribe la respuesta..."
+                  label={reviewMode ? 'Outgoing message' : 'Respuesta'}
+                  placeholder={reviewMode ? 'Type the message to send...' : 'Escribe la respuesta...'}
                   value={replyDraft}
                   onChange={(e) => setReplyDraft(e.target.value)}
                   disabled={sendLoading}
@@ -575,16 +725,31 @@ const SocialMessageDialog = ({ selection, onClose, onRefresh }: SocialMessageDia
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={onClose} variant="outlined">
-          Cerrar
+          {reviewMode ? 'Close' : 'Cerrar'}
         </Button>
-        <Button
-          onClick={() => void handleSend()}
-          variant="contained"
-          startIcon={<SendIcon />}
-          disabled={!canSend}
+        {reviewMode && nativeClientUrl && replyTextValue && (
+          <Button component="a" href={nativeClientUrl} target="_blank" rel="noreferrer" variant="outlined">
+            Open native client
+          </Button>
+        )}
+        <Tooltip
+          title={
+            reviewMode
+              ? 'Click to send from app UI. Keep this on screen before switching to native client.'
+              : 'Enviar respuesta'
+          }
         >
-          {sendLoading ? 'Enviando…' : 'Enviar'}
-        </Button>
+          <span>
+            <Button
+              onClick={() => void handleSend()}
+              variant="contained"
+              startIcon={<SendIcon />}
+              disabled={!canSend}
+            >
+              {sendLoading ? (reviewMode ? 'Sending…' : 'Enviando…') : reviewMode ? 'Send message' : 'Enviar'}
+            </Button>
+          </span>
+        </Tooltip>
       </DialogActions>
     </Dialog>
   );
@@ -596,23 +761,24 @@ interface ChannelPanelProps {
   stats: MessageStats;
   messages: SocialMessage[];
   loading: boolean;
+  reviewMode: boolean;
   onSelect: (selection: SelectedMessage) => void;
 }
 
-const ChannelPanel = ({ label, channel, stats, messages, loading, onSelect }: ChannelPanelProps) => (
+const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, onSelect }: ChannelPanelProps) => (
   <Paper variant="outlined" sx={{ p: 2, flex: 1, minWidth: 0 }}>
     <Stack spacing={1.5}>
       <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
         <Typography variant="subtitle1" fontWeight={700}>
           {label}
         </Typography>
-        <Chip label={`Entrantes: ${stats.incoming.length}`} size="small" variant="outlined" />
+        <Chip label={`${reviewMode ? 'Inbound' : 'Entrantes'}: ${stats.incoming.length}`} size="small" variant="outlined" />
       </Stack>
       <Stack direction="row" spacing={1} flexWrap="wrap">
-        <Chip label={`Respondidos: ${stats.replied.length}`} size="small" color="success" />
-        <Chip label={`Pendientes: ${stats.pending.length}`} size="small" color="warning" />
+        <Chip label={`${reviewMode ? 'Replied' : 'Respondidos'}: ${stats.replied.length}`} size="small" color="success" />
+        <Chip label={`${reviewMode ? 'Pending' : 'Pendientes'}: ${stats.pending.length}`} size="small" color="warning" />
         <Chip
-          label={`Fallidos: ${stats.failed.length}`}
+          label={`${reviewMode ? 'Failed' : 'Fallidos'}: ${stats.failed.length}`}
           size="small"
           color={stats.failed.length > 0 ? 'error' : 'default'}
           variant={stats.failed.length > 0 ? 'filled' : 'outlined'}
@@ -622,11 +788,11 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, onSelect }: Ch
         <Table size="small" stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: 160 }}>Recibido</TableCell>
-              <TableCell sx={{ width: 160 }}>Respondido</TableCell>
-              <TableCell sx={{ width: 200 }}>Remitente</TableCell>
-              <TableCell>Mensaje</TableCell>
-              <TableCell>Respuesta / Error</TableCell>
+              <TableCell sx={{ width: 160 }}>{reviewMode ? 'Received' : 'Recibido'}</TableCell>
+              <TableCell sx={{ width: 160 }}>{reviewMode ? 'Replied' : 'Respondido'}</TableCell>
+              <TableCell sx={{ width: 200 }}>{reviewMode ? 'Sender' : 'Remitente'}</TableCell>
+              <TableCell>{reviewMode ? 'Message' : 'Mensaje'}</TableCell>
+              <TableCell>{reviewMode ? 'Reply / Error' : 'Respuesta / Error'}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -641,7 +807,7 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, onSelect }: Ch
               <TableRow>
                 <TableCell colSpan={5} align="center">
                   <Typography variant="body2" color="text.secondary">
-                    Sin mensajes para este filtro.
+                    {reviewMode ? 'No messages for this filter.' : 'Sin mensajes para este filtro.'}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -696,9 +862,34 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, onSelect }: Ch
 );
 
 export default function SocialInboxPage() {
+  const location = useLocation();
+  const reviewMode = useMemo(() => new URLSearchParams(location.search).get('review') === '1', [location.search]);
   const [filter, setFilter] = useState<FilterKey>('pending');
   const [limit, setLimit] = useState(100);
   const [selection, setSelection] = useState<SelectedMessage | null>(null);
+  const [activeAsset, setActiveAsset] = useState<MetaReviewAssetSelection | null>(() => getMetaReviewAssetSelection());
+
+  useEffect(() => {
+    if (!reviewMode) return;
+    const stored = getMetaReviewAssetSelection();
+    if (stored) {
+      setActiveAsset(stored);
+      return;
+    }
+    const fallback = getStoredInstagramResult()?.pages?.[0];
+    if (!fallback) {
+      setActiveAsset(null);
+      return;
+    }
+    setActiveAsset({
+      pageId: fallback.pageId,
+      pageName: fallback.pageName,
+      instagramUserId: fallback.instagramUserId ?? null,
+      instagramUsername: fallback.instagramUsername ?? null,
+      selectedAt: Date.now(),
+    });
+  }, [reviewMode]);
+
   const direction = 'incoming' as const;
   const repliedOnly = filter === 'replied';
   const instagramQuery = useQuery({
@@ -730,16 +921,18 @@ export default function SocialInboxPage() {
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }}>
         <Stack spacing={0.5}>
           <Typography variant="h4" fontWeight={800}>
-            Inbox social
+            {reviewMode ? 'Meta App Review: Messaging Inbox' : 'Inbox social'}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Auto respuestas registradas por el cron diario.
+            {reviewMode
+              ? 'Step 2/3: send a live reply from app UI, then show the same message in native client.'
+              : 'Auto respuestas registradas por el cron diario.'}
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center">
           <TextField
             select
-            label="Limite"
+            label={reviewMode ? 'Limit' : 'Limite'}
             size="small"
             value={limit}
             onChange={(e) => setLimit(parseInboxLimit(e.target.value))}
@@ -757,20 +950,61 @@ export default function SocialInboxPage() {
             onClick={refetch}
             disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
           >
-            Actualizar
+            {reviewMode ? 'Refresh' : 'Actualizar'}
           </Button>
         </Stack>
       </Stack>
+      {reviewMode && (
+        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+          <Stack spacing={1.25}>
+            <Typography variant="subtitle1" fontWeight={700}>
+              Recording checklist
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Keep this panel visible and narrate: selected asset, inbound message, send action, and native-client delivery confirmation.
+            </Typography>
+            {activeAsset ? (
+              <Alert severity="success" variant="outlined">
+                Selected asset: {activeAsset.pageName} (Page ID: {activeAsset.pageId}
+                {activeAsset.instagramUsername ? ` · @${activeAsset.instagramUsername}` : ''}
+                {activeAsset.instagramUserId ? ` · IG User ID: ${activeAsset.instagramUserId}` : ''})
+              </Alert>
+            ) : (
+              <Alert severity="warning" variant="outlined">
+                No asset selected yet. Go to Instagram setup and select the Page/account first.
+              </Alert>
+            )}
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined">
+                Open Instagram setup
+              </Button>
+              <Button component={RouterLink} to="/social/instagram?review=1" variant="text">
+                Re-select asset
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Stack spacing={1.5}>
           <Typography variant="subtitle2" color="text.secondary">
-            Filtro
+            {reviewMode ? 'Filter' : 'Filtro'}
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {FILTERS.map((item) => (
               <Chip
                 key={item.id}
-                label={item.label}
+                label={
+                  reviewMode
+                    ? item.id === 'all'
+                      ? 'All'
+                      : item.id === 'pending'
+                        ? 'Pending'
+                        : item.id === 'replied'
+                          ? 'Replied'
+                          : 'Failed'
+                    : item.label
+                }
                 onClick={() => setFilter(item.id)}
                 color={filter === item.id ? 'primary' : 'default'}
                 variant={filter === item.id ? 'filled' : 'outlined'}
@@ -779,7 +1013,7 @@ export default function SocialInboxPage() {
           </Stack>
           {repliedOnly && (
             <Typography variant="caption" color="text.secondary">
-              Solo respondidos (filtrado en servidor).
+              {reviewMode ? 'Replied only (server-side filter).' : 'Solo respondidos (filtrado en servidor).'}
             </Typography>
           )}
         </Stack>
@@ -788,17 +1022,32 @@ export default function SocialInboxPage() {
         <Stack spacing={1}>
           {instagramQuery.isError && (
             <Alert severity="error">
-              Instagram: {instagramQuery.error instanceof Error ? instagramQuery.error.message : 'Error inesperado.'}
+              Instagram:{' '}
+              {instagramQuery.error instanceof Error
+                ? instagramQuery.error.message
+                : reviewMode
+                  ? 'Unexpected error.'
+                  : 'Error inesperado.'}
             </Alert>
           )}
           {facebookQuery.isError && (
             <Alert severity="error">
-              Facebook: {facebookQuery.error instanceof Error ? facebookQuery.error.message : 'Error inesperado.'}
+              Facebook:{' '}
+              {facebookQuery.error instanceof Error
+                ? facebookQuery.error.message
+                : reviewMode
+                  ? 'Unexpected error.'
+                  : 'Error inesperado.'}
             </Alert>
           )}
           {whatsappQuery.isError && (
             <Alert severity="error">
-              WhatsApp: {whatsappQuery.error instanceof Error ? whatsappQuery.error.message : 'Error inesperado.'}
+              WhatsApp:{' '}
+              {whatsappQuery.error instanceof Error
+                ? whatsappQuery.error.message
+                : reviewMode
+                  ? 'Unexpected error.'
+                  : 'Error inesperado.'}
             </Alert>
           )}
         </Stack>
@@ -810,6 +1059,7 @@ export default function SocialInboxPage() {
           stats={instagramStats}
           messages={instagramMessages}
           loading={instagramQuery.isLoading}
+          reviewMode={reviewMode}
           onSelect={(next) => setSelection(next)}
         />
         <ChannelPanel
@@ -818,6 +1068,7 @@ export default function SocialInboxPage() {
           stats={facebookStats}
           messages={facebookMessages}
           loading={facebookQuery.isLoading}
+          reviewMode={reviewMode}
           onSelect={(next) => setSelection(next)}
         />
         <ChannelPanel
@@ -826,11 +1077,14 @@ export default function SocialInboxPage() {
           stats={whatsappStats}
           messages={whatsappMessages}
           loading={whatsappQuery.isLoading}
+          reviewMode={reviewMode}
           onSelect={(next) => setSelection(next)}
         />
       </Stack>
       <SocialMessageDialog
         selection={selection}
+        reviewMode={reviewMode}
+        activeAsset={activeAsset}
         onClose={() => setSelection(null)}
         onRefresh={refetch}
       />

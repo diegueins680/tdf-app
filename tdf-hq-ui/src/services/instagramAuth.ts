@@ -1,4 +1,4 @@
-import { InstagramOAuthAPI, type InstagramOAuthExchangeResponse } from '../api/instagramOAuth';
+import { InstagramOAuthAPI, type InstagramOAuthExchangeResponse, type InstagramOAuthPage } from '../api/instagramOAuth';
 import { env } from '../utils/env';
 
 type InstagramOAuthProvider = 'facebook' | 'instagram';
@@ -11,10 +11,11 @@ const INSTAGRAM_APP_ID =
   env.read('VITE_INSTAGRAM_CLIENT_ID') ??
   env.read('VITE_INSTAGRAM_APP_ID') ??
   '';
-const DEFAULT_FACEBOOK_SCOPES = 'instagram_basic,pages_show_list,pages_read_engagement';
+const DEFAULT_FACEBOOK_SCOPES = 'instagram_basic,instagram_manage_messages,pages_show_list,pages_read_engagement';
 const DEFAULT_INSTAGRAM_SCOPES = 'instagram_business_basic,instagram_business_content_publish';
 const STATE_KEY = 'tdf-instagram-oauth-state';
 const RESULT_KEY = 'tdf-instagram-oauth-result';
+const REVIEW_ASSET_KEY = 'tdf-instagram-review-asset';
 const DEFAULT_RETURN_TO = '/social/instagram';
 
 const parseScopes = (raw: string) =>
@@ -44,6 +45,14 @@ const rawScopes = env.read('VITE_INSTAGRAM_SCOPES')?.trim();
 const requestedScopes = parseScopes(rawScopes && rawScopes.length > 0 ? rawScopes : DEFAULT_FACEBOOK_SCOPES);
 const OAUTH_PROVIDER = resolveOAuthProvider(requestedScopes);
 const SCOPES = resolveScopes(OAUTH_PROVIDER, requestedScopes);
+
+export interface MetaReviewAssetSelection {
+  pageId: string;
+  pageName: string;
+  instagramUserId?: string | null;
+  instagramUsername?: string | null;
+  selectedAt: number;
+}
 
 const authUrlForProvider = (provider: InstagramOAuthProvider) =>
   provider === 'instagram'
@@ -183,6 +192,8 @@ export const buildInstagramAuthUrl = (returnTo?: string) => {
   return `${authUrlForProvider(OAUTH_PROVIDER)}?${params.toString()}`;
 };
 
+export const getInstagramRequestedScopes = () => parseScopes(SCOPES);
+
 export const consumeInstagramState = (): InstagramOAuthStateRecord | null => {
   if (typeof window === 'undefined') return null;
   const raw = sessionStorage.getItem(STATE_KEY);
@@ -224,4 +235,45 @@ export const getStoredInstagramResult = (): InstagramOAuthExchangeResponse | nul
 export const clearInstagramResult = () => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(RESULT_KEY);
+};
+
+const toMetaReviewAssetSelection = (page: InstagramOAuthPage): MetaReviewAssetSelection => ({
+  pageId: page.pageId,
+  pageName: page.pageName,
+  instagramUserId: page.instagramUserId ?? null,
+  instagramUsername: page.instagramUsername ?? null,
+  selectedAt: Date.now(),
+});
+
+const parseMetaReviewAssetSelection = (raw: string): MetaReviewAssetSelection | null => {
+  try {
+    const parsed = JSON.parse(raw) as Partial<MetaReviewAssetSelection>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (typeof parsed.pageId !== 'string' || typeof parsed.pageName !== 'string') return null;
+    return {
+      pageId: parsed.pageId,
+      pageName: parsed.pageName,
+      instagramUserId: typeof parsed.instagramUserId === 'string' ? parsed.instagramUserId : null,
+      instagramUsername: typeof parsed.instagramUsername === 'string' ? parsed.instagramUsername : null,
+      selectedAt: typeof parsed.selectedAt === 'number' ? parsed.selectedAt : Date.now(),
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const setMetaReviewAssetSelection = (page: InstagramOAuthPage | null) => {
+  if (typeof window === 'undefined') return;
+  if (!page) {
+    localStorage.removeItem(REVIEW_ASSET_KEY);
+    return;
+  }
+  localStorage.setItem(REVIEW_ASSET_KEY, JSON.stringify(toMetaReviewAssetSelection(page)));
+};
+
+export const getMetaReviewAssetSelection = (): MetaReviewAssetSelection | null => {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(REVIEW_ASSET_KEY);
+  if (!raw) return null;
+  return parseMetaReviewAssetSelection(raw);
 };

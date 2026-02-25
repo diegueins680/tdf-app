@@ -1268,7 +1268,8 @@ data IGWebhook = IGWebhook
   } deriving (Show)
 
 data IGEntry = IGEntry
-  { igMessaging :: [IGMessaging]
+  { igEntryId :: Maybe Text
+  , igMessaging :: [IGMessaging]
   , igChanges :: [IGChange]
   } deriving (Show)
 
@@ -1325,6 +1326,7 @@ instance A.FromJSON IGWebhook where
 
 instance A.FromJSON IGEntry where
   parseJSON = withObject "IGEntry" $ \o -> do
+    igEntryId <- o .:? "id"
     igMessaging <- o .:? "messaging" .!= []
     igChanges <- o .:? "changes" .!= []
     pure IGEntry{..}
@@ -1417,14 +1419,16 @@ extractMetaInbound payload =
     Nothing -> []
     Just IGWebhook{igEntries} -> concatMap extractEntry igEntries
   where
-    extractEntry IGEntry{igMessaging, igChanges} =
-      mapMaybe extractMessagingEvent igMessaging <> mapMaybe extractChangeEvent igChanges
+    extractEntry IGEntry{igEntryId, igMessaging, igChanges} =
+      mapMaybe (extractMessagingEvent igEntryId) igMessaging <> mapMaybe (extractChangeEvent igEntryId) igChanges
 
-    extractMessagingEvent IGMessaging{igSender, igMessage, igReferral = eventReferral, igTimestamp} = do
+    extractMessagingEvent mEntryId IGMessaging{igSender, igRecipient, igMessage, igReferral = eventReferral, igTimestamp} = do
       IGMessage{igMid, igText, igIsEcho, igReferral = msgReferral, igAttachments} <- igMessage
       buildInbound
         (igId igSender)
         Nothing
+        (igId <$> igRecipient)
+        mEntryId
         igMid
         igText
         igIsEcho
@@ -1432,7 +1436,7 @@ extractMetaInbound payload =
         igAttachments
         igTimestamp
 
-    extractChangeEvent IGChange{igChangeField, igChangeValue} = do
+    extractChangeEvent mEntryId IGChange{igChangeField, igChangeValue} = do
       guard (maybe True (\raw -> T.toCaseFold (T.strip raw) == "messages") igChangeField)
       IGChangeValue{igChangeMessage, igChangeFrom, igChangeTimestamp, igChangeReferral} <- igChangeValue
       IGChangeActor{igActorId, igActorName} <- igChangeFrom
@@ -1440,6 +1444,8 @@ extractMetaInbound payload =
       buildInbound
         igActorId
         igActorName
+        Nothing
+        mEntryId
         igMid
         igText
         igIsEcho
@@ -1447,7 +1453,7 @@ extractMetaInbound payload =
         igAttachments
         igChangeTimestamp
 
-    buildInbound senderId senderName mMid mText mIsEcho mReferral mAttachments mTs = do
+    buildInbound senderId senderName mRecipientId mEntryId mMid mText mIsEcho mReferral mAttachments mTs = do
       guard (not (fromMaybe False mIsEcho))
       let (adExt, adName, campExt, campName, refMeta) = toReferralMeta mReferral
           attachmentPairs = case mAttachments of
@@ -1456,7 +1462,13 @@ extractMetaInbound payload =
           senderNamePairs = case senderName of
             Just nm | not (T.null (T.strip nm)) -> ["sender_name" .= nm]
             _ -> []
-          metaPairs = refMeta ++ attachmentPairs ++ senderNamePairs
+          recipientPairs = case mRecipientId of
+            Just rid | not (T.null (T.strip rid)) -> ["recipient_id" .= rid]
+            _ -> []
+          entryPairs = case mEntryId of
+            Just eid | not (T.null (T.strip eid)) -> ["entry_id" .= eid]
+            _ -> []
+          metaPairs = refMeta ++ attachmentPairs ++ senderNamePairs ++ recipientPairs ++ entryPairs
           meta = if null metaPairs
             then Nothing
             else Just (TE.decodeUtf8 (BL.toStrict (A.encode (object metaPairs))))
@@ -1470,6 +1482,8 @@ extractMetaInbound payload =
       let fallbackBase = T.intercalate "|"
             [ senderId
             , fromMaybe "" senderName
+            , fromMaybe "" mRecipientId
+            , fromMaybe "" mEntryId
             , maybe "" (T.pack . show) mTs
             , body
             , fromMaybe "" meta
