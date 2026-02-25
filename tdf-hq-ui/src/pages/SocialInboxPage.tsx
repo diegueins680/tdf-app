@@ -44,7 +44,8 @@ type FilterKey = 'all' | 'pending' | 'replied' | 'failed';
 const LIMIT_OPTIONS = [50, 100, 200] as const;
 
 const parseInboxLimit = (value: string, fallback = 100): number => {
-  const parsed = Number.parseInt(value, 10);
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) return fallback;
   return LIMIT_OPTIONS.includes(parsed as (typeof LIMIT_OPTIONS)[number]) ? parsed : fallback;
 };
 

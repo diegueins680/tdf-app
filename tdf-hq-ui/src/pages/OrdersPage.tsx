@@ -54,6 +54,13 @@ const STATUS_LOOKUP = STATUS_VARIANTS.reduce<Record<string, { label: string; col
 }, {});
 
 const TZ = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
+const ROWS_PER_PAGE_OPTIONS = [5, 10, 25] as const;
+
+const parseRowsPerPage = (value: string, fallback = 10): number => {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) return fallback;
+  return ROWS_PER_PAGE_OPTIONS.includes(parsed as (typeof ROWS_PER_PAGE_OPTIONS)[number]) ? parsed : fallback;
+};
 
 function formatScheduleRange(start: string, end: string) {
   const s = DateTime.fromISO(start, { zone: TZ });
@@ -164,7 +171,7 @@ export default function OrdersPage() {
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    setRowsPerPage(parseRowsPerPage(event.target.value, rowsPerPage));
     setPage(0);
   };
 
@@ -315,7 +322,7 @@ export default function OrdersPage() {
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           labelRowsPerPage="Rows per page"
         />
       </Paper>

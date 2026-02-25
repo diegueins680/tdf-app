@@ -86,8 +86,9 @@ const bookingStatusMap: Record<StatusKey, string> = {
 };
 
 const parseFilterId = (raw: string | null): number | 'all' => {
-  if (!raw) return 'all';
-  const parsed = Number(raw);
+  const trimmed = raw?.trim() ?? '';
+  if (!/^\d+$/.test(trimmed)) return 'all';
+  const parsed = Number(trimmed);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 'all';
 };
 

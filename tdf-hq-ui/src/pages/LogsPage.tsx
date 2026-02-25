@@ -28,8 +28,8 @@ interface LogEntry {
 }
 
 const parseLogLimit = (value: string, fallback = 100): number => {
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isFinite(parsed)) return fallback;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) return fallback;
   return Math.min(1000, Math.max(1, parsed));
 };
 

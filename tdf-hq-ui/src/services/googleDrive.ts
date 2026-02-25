@@ -77,9 +77,19 @@ export const getStoredToken = (): StoredToken | null => {
   try {
     const raw = localStorage.getItem(TOKEN_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as StoredToken;
-    if (!parsed.accessToken || !parsed.expiresAt) return null;
-    return parsed;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object') return null;
+    const value = parsed as Record<string, unknown>;
+    const accessTokenRaw = value['accessToken'];
+    const refreshTokenRaw = value['refreshToken'];
+    const expiresAtRaw = value['expiresAt'];
+    if (typeof accessTokenRaw !== 'string' || accessTokenRaw.trim() === '') return null;
+    if (typeof expiresAtRaw !== 'number' || !Number.isFinite(expiresAtRaw)) return null;
+    return {
+      accessToken: accessTokenRaw,
+      refreshToken: typeof refreshTokenRaw === 'string' ? refreshTokenRaw : undefined,
+      expiresAt: expiresAtRaw,
+    };
   } catch {
     return null;
   }

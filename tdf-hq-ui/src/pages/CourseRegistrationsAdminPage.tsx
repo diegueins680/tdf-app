@@ -39,8 +39,10 @@ const parseStatusFilter = (value: string | null): StatusFilter =>
   value && statusFilters.includes(value as StatusFilter) ? (value as StatusFilter) : 'all';
 
 const parsePositiveLimit = (value: string | null, fallback = 200): number => {
-  const parsed = Number.parseInt(value ?? '', 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  const trimmed = value?.trim() ?? '';
+  if (!/^\d+$/.test(trimmed)) return fallback;
+  const parsed = Number(trimmed);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 };
 
 const formatDate = (iso: string) => new Date(iso).toLocaleString();

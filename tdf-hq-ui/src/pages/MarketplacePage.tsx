@@ -127,6 +127,12 @@ const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 const PAYMENT_PREF_KEY = 'tdf-marketplace-payment-pref';
 const FILTERS_KEY = 'tdf-marketplace-filters';
 
+const parseCartQuantity = (value: string, fallback = 0): number => {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) return fallback;
+  return Math.min(99, Math.max(0, parsed));
+};
+
 interface SavedFilters {
   search?: string;
   category?: string;
@@ -1608,7 +1614,7 @@ export default function MarketplacePage() {
                               label="Cantidad"
                               value={item.mciQuantity}
                               onChange={(e) =>
-                                handleUpdateQty(item, Math.max(0, parseInt(e.target.value ?? '0', 10)))
+                                handleUpdateQty(item, parseCartQuantity(e.target.value ?? '0', item.mciQuantity))
                               }
                               inputProps={{ min: 0, max: 99 }}
                               sx={{ width: 120 }}
