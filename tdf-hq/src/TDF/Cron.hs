@@ -22,6 +22,7 @@ import           Data.Time               ( LocalTime(..)
                                          , TimeOfDay(..)
                                          , UTCTime
                                          , ZonedTime(..)
+                                         , addUTCTime
                                          , addDays
                                          , diffUTCTime
                                          , getCurrentTime
@@ -30,6 +31,7 @@ import           Data.Time               ( LocalTime(..)
                                          )
 import           Database.Persist        ( (!=.)
                                          , (==.)
+                                         , (>=.)
                                          , Entity(..)
                                          , SelectOpt(..)
                                          , count
@@ -209,22 +211,11 @@ sendCoursePaymentReminders Env{..} = do
           (Just msg)
     Just _ ->
       for_ recipients $ \(regKey, nameTxt, emailTxt) -> do
-        sendResult <- try
-          (EmailSvc.sendCoursePaymentReminder
-            emailSvc
-            nameTxt
-            emailTxt
-            courseTitle
-            priceUsd
-            remainingSeats
-            landingUrl)
-          :: IO (Either SomeException ())
-        case sendResult of
-          Left err -> do
-            let errorMsg = T.pack (displayException err)
-                msg = "[Cron][CoursePayment] Failed to email " <> emailTxt <> ": " <> errorMsg
-            hPutStrLn stderr (T.unpack msg)
-            LogBuf.addLog LogBuf.LogError msg
+        alreadySent <- courseEmailSentWithinLast24HoursIO envPool emailTxt
+        if alreadySent
+          then do
+            let msg = "[Cron][CoursePayment] Skipped reminder for " <> emailTxt <> ": daily email cap reached (max 1 every 24h)."
+            LogBuf.addLog LogBuf.LogWarning msg
             recordCourseEmailEventIO
               envPool
               slugVal
@@ -232,19 +223,45 @@ sendCoursePaymentReminders Env{..} = do
               emailTxt
               (Just nameTxt)
               "payment_reminder"
-              "failed"
-              (Just errorMsg)
-          Right () -> do
-            LogBuf.addLog LogBuf.LogInfo ("[Cron][CoursePayment] Reminder sent to " <> emailTxt)
-            recordCourseEmailEventIO
-              envPool
-              slugVal
-              (Just regKey)
-              emailTxt
-              (Just nameTxt)
-              "payment_reminder"
-              "sent"
-              Nothing
+              "skipped"
+              (Just msg)
+          else do
+            sendResult <- try
+              (EmailSvc.sendCoursePaymentReminder
+                emailSvc
+                nameTxt
+                emailTxt
+                courseTitle
+                priceUsd
+                remainingSeats
+                landingUrl)
+              :: IO (Either SomeException ())
+            case sendResult of
+              Left err -> do
+                let errorMsg = T.pack (displayException err)
+                    msg = "[Cron][CoursePayment] Failed to email " <> emailTxt <> ": " <> errorMsg
+                hPutStrLn stderr (T.unpack msg)
+                LogBuf.addLog LogBuf.LogError msg
+                recordCourseEmailEventIO
+                  envPool
+                  slugVal
+                  (Just regKey)
+                  emailTxt
+                  (Just nameTxt)
+                  "payment_reminder"
+                  "failed"
+                  (Just errorMsg)
+              Right () -> do
+                LogBuf.addLog LogBuf.LogInfo ("[Cron][CoursePayment] Reminder sent to " <> emailTxt)
+                recordCourseEmailEventIO
+                  envPool
+                  slugVal
+                  (Just regKey)
+                  emailTxt
+                  (Just nameTxt)
+                  "payment_reminder"
+                  "sent"
+                  Nothing
 
 -- | Keep only the latest registration per email (case-insensitive).
 dedupeByEmail :: [Entity ME.CourseRegistration] -> [(ME.CourseRegistrationId, Text, Text)]
@@ -261,6 +278,24 @@ dedupeByEmail =
     nonEmpty txt =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
+
+courseEmailSentWithinLast24HoursIO :: ConnectionPool -> Text -> IO Bool
+courseEmailSentWithinLast24HoursIO pool rawRecipientEmail = do
+  let recipientEmail = T.toLower (T.strip rawRecipientEmail)
+  if T.null recipientEmail
+    then pure False
+    else do
+      now <- getCurrentTime
+      let cutoff = addUTCTime (negate 86400) now
+      mRecent <- runSqlPool
+        (selectFirst
+          [ ME.CourseEmailEventRecipientEmail ==. recipientEmail
+          , ME.CourseEmailEventStatus ==. "sent"
+          , ME.CourseEmailEventCreatedAt >=. cutoff
+          ]
+          [Desc ME.CourseEmailEventCreatedAt])
+        pool
+      pure (isJust mRecent)
 
 recordCourseEmailEventIO
   :: ConnectionPool

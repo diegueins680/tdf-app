@@ -2529,6 +2529,22 @@ recordCourseEmailEvent rawSlug mRegistrationId rawRecipientEmail mRecipientName 
       , ME.courseEmailEventCreatedAt = now
       }
 
+courseEmailSentWithinLast24Hours :: Text -> AppM Bool
+courseEmailSentWithinLast24Hours rawRecipientEmail = do
+  let recipientEmail = T.toLower (T.strip rawRecipientEmail)
+  if T.null recipientEmail
+    then pure False
+    else do
+      now <- liftIO getCurrentTime
+      let cutoff = addUTCTime (negate 86400) now
+      mRecent <- runDB $ selectFirst
+        [ ME.CourseEmailEventRecipientEmail ==. recipientEmail
+        , ME.CourseEmailEventStatus ==. "sent"
+        , ME.CourseEmailEventCreatedAt >=. cutoff
+        ]
+        [Desc ME.CourseEmailEventCreatedAt]
+      pure (isJust mRecent)
+
 createOrUpdateRegistration :: Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
 createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
   metaRaw <- loadCourseMetadata rawSlug
@@ -2619,63 +2635,92 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
                 "skipped"
                 (Just msg)
             Just _ -> do
-              -- Send registration confirmation
-              result <- liftIO $ try $ EmailSvc.sendCourseRegistration emailSvc displayName emailAddr courseTitle landing datesSummary
-              case result of
-                Left err -> do
-                  let errorMsg = T.pack (displayException (err :: SomeException))
-                      msg = "[CourseRegistration] Failed to send confirmation email to " <> emailAddr <> ": " <> errorMsg
-                  liftIO $ do
-                    hPutStrLn stderr (T.unpack msg)
-                    LogBuf.addLog LogBuf.LogError msg
+              alreadySent <- courseEmailSentWithinLast24Hours emailAddr
+              if alreadySent
+                then do
+                  let msg = "[CourseRegistration] Skipped registration confirmation to " <> emailAddr <> ": daily email cap reached (max 1 every 24h)."
+                  liftIO $ LogBuf.addLog LogBuf.LogWarning msg
                   recordCourseEmailEvent
                     courseSlug
                     (Just regKey)
                     emailAddr
                     nameClean
                     "registration_confirmation"
-                    "failed"
-                    (Just errorMsg)
-                Right () -> do
-                  let msg = "[CourseRegistration] Successfully sent confirmation email to " <> emailAddr
-                  liftIO $ LogBuf.addLog LogBuf.LogInfo msg
-                  recordCourseEmailEvent
-                    courseSlug
-                    (Just regKey)
-                    emailAddr
-                    nameClean
-                    "registration_confirmation"
-                    "sent"
-                    Nothing
-              -- Send welcome email if we just created credentials
+                    "skipped"
+                    (Just msg)
+                else do
+                  result <- liftIO $ try $ EmailSvc.sendCourseRegistration emailSvc displayName emailAddr courseTitle landing datesSummary
+                  case result of
+                    Left err -> do
+                      let errorMsg = T.pack (displayException (err :: SomeException))
+                          msg = "[CourseRegistration] Failed to send confirmation email to " <> emailAddr <> ": " <> errorMsg
+                      liftIO $ do
+                        hPutStrLn stderr (T.unpack msg)
+                        LogBuf.addLog LogBuf.LogError msg
+                      recordCourseEmailEvent
+                        courseSlug
+                        (Just regKey)
+                        emailAddr
+                        nameClean
+                        "registration_confirmation"
+                        "failed"
+                        (Just errorMsg)
+                    Right () -> do
+                      let msg = "[CourseRegistration] Successfully sent confirmation email to " <> emailAddr
+                      liftIO $ LogBuf.addLog LogBuf.LogInfo msg
+                      recordCourseEmailEvent
+                        courseSlug
+                        (Just regKey)
+                        emailAddr
+                        nameClean
+                        "registration_confirmation"
+                        "sent"
+                        Nothing
+              -- Send welcome email if we just created credentials.
+              -- This is evaluated after registration_confirmation, so a just-sent
+              -- confirmation will block welcome in the same request.
               for_ mNewUser $ \(username, tempPassword) -> do
-                welcomeResult <- liftIO $ try $ EmailSvc.sendWelcome emailSvc displayName emailAddr username tempPassword
-                case welcomeResult of
-                  Left err -> do
-                    let errorMsg = T.pack (displayException (err :: SomeException))
-                        msg = "[CourseRegistration] Failed to send welcome email to " <> emailAddr <> ": " <> errorMsg
-                    liftIO $ do
-                      hPutStrLn stderr (T.unpack msg)
-                      LogBuf.addLog LogBuf.LogError msg
+                welcomeAlreadySent <- courseEmailSentWithinLast24Hours emailAddr
+                if welcomeAlreadySent
+                  then do
+                    let msg = "[CourseRegistration] Skipped welcome email to " <> emailAddr <> ": daily email cap reached (max 1 every 24h)."
+                    liftIO $ LogBuf.addLog LogBuf.LogWarning msg
                     recordCourseEmailEvent
                       courseSlug
                       (Just regKey)
                       emailAddr
                       nameClean
                       "welcome_credentials"
-                      "failed"
-                      (Just errorMsg)
-                  Right () -> do
-                    let msg = "[CourseRegistration] Sent welcome credentials to " <> emailAddr
-                    liftIO $ LogBuf.addLog LogBuf.LogInfo msg
-                    recordCourseEmailEvent
-                      courseSlug
-                      (Just regKey)
-                      emailAddr
-                      nameClean
-                      "welcome_credentials"
-                      "sent"
-                      Nothing
+                      "skipped"
+                      (Just msg)
+                  else do
+                    welcomeResult <- liftIO $ try $ EmailSvc.sendWelcome emailSvc displayName emailAddr username tempPassword
+                    case welcomeResult of
+                      Left err -> do
+                        let errorMsg = T.pack (displayException (err :: SomeException))
+                            msg = "[CourseRegistration] Failed to send welcome email to " <> emailAddr <> ": " <> errorMsg
+                        liftIO $ do
+                          hPutStrLn stderr (T.unpack msg)
+                          LogBuf.addLog LogBuf.LogError msg
+                        recordCourseEmailEvent
+                          courseSlug
+                          (Just regKey)
+                          emailAddr
+                          nameClean
+                          "welcome_credentials"
+                          "failed"
+                          (Just errorMsg)
+                      Right () -> do
+                        let msg = "[CourseRegistration] Sent welcome credentials to " <> emailAddr
+                        liftIO $ LogBuf.addLog LogBuf.LogInfo msg
+                        recordCourseEmailEvent
+                          courseSlug
+                          (Just regKey)
+                          emailAddr
+                          nameClean
+                          "welcome_credentials"
+                          "sent"
+                          Nothing
 
 -- | Returns messages that include text bodies, paired with the sender phone.
 extractTextMessages :: WAMetaWebhook -> [(Text, Text)]
