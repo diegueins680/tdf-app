@@ -71,6 +71,7 @@ const roundToNext = (date: Date, minutes: number) => {
 
 const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
+const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const ROOM_FALLBACKS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
 
 const zoneLabel = (zone: string) => {
@@ -121,6 +122,12 @@ const alignToStepMinutes = (dt: DateTime, stepMinutes = START_STEP_MINUTES) => {
   const remainder = normalized.minute % stepMinutes;
   if (remainder === 0) return normalized;
   return normalized.plus({ minutes: stepMinutes - remainder });
+};
+
+const normalizeDurationMinutes = (value: number, fallback = 60): number => {
+  if (!Number.isFinite(value)) return fallback;
+  const rounded = Math.round(value);
+  return Math.min(MAX_DURATION_MINUTES, Math.max(30, rounded));
 };
 
 const buildInitialForm = (defaultService: string, roomOptions: string[]) => {
@@ -383,7 +390,7 @@ export default function PublicBookingPage() {
 
   useEffect(() => {
     const parsed = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
-    const duration = Math.max(30, Number(form.durationMinutes) || 60);
+    const duration = normalizeDurationMinutes(form.durationMinutes);
     if (!parsed.isValid) {
       setAvailabilityStatus('idle');
       setAvailabilityNote(null);
@@ -461,7 +468,7 @@ export default function PublicBookingPage() {
       setError('Elige un horario al menos 15 minutos en el futuro.');
       return;
     }
-    const durationMinutes = Math.max(30, Number(form.durationMinutes) || 60);
+    const durationMinutes = normalizeDurationMinutes(form.durationMinutes);
     const startStudio = parsedStartLocal.setZone(studioTimeZone);
     const openStudio = startStudio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
     const closeStudio = startStudio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
@@ -526,7 +533,7 @@ export default function PublicBookingPage() {
     if (!form.startsAt) return null;
     const startLocal = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
     if (!startLocal.isValid) return null;
-    const duration = Math.max(30, Number(form.durationMinutes) || 60);
+    const duration = normalizeDurationMinutes(form.durationMinutes);
     const startStudio = startLocal.setZone(studioTimeZone);
     const openStudio = startStudio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
     const closeStudio = startStudio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
@@ -550,7 +557,7 @@ export default function PublicBookingPage() {
     if (svc?.priceCents == null) return null;
     const base = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
     if (svc.billingUnit?.toLowerCase().includes('hora')) {
-      const hours = Math.max(0.5, (Number(form.durationMinutes) || 60) / 60);
+      const hours = Math.max(0.5, normalizeDurationMinutes(form.durationMinutes) / 60);
       const total = (svc.priceCents / 100) * hours;
       return `${svc.currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} aprox (${hours.toFixed(1)}h)`;
     }
@@ -800,7 +807,7 @@ export default function PublicBookingPage() {
 
   const suggestedSlots = useMemo(() => {
     const slots: { value: string; label: string; helper: string }[] = [];
-    const duration = Math.max(30, Number(form.durationMinutes) || 60);
+    const duration = normalizeDurationMinutes(form.durationMinutes);
     const nowUser = DateTime.now().setZone(userTimeZone).plus({ minutes: 15 });
     const baseDay = DateTime.fromISO(form.startsAt || '', { zone: userTimeZone });
     const day = baseDay.isValid ? baseDay.startOf('day') : nowUser.startOf('day');
@@ -1204,7 +1211,7 @@ export default function PublicBookingPage() {
                         onChange={(e) => {
                           setDurationNotice(null);
                           const next = DateTime.fromISO(e.target.value, { zone: userTimeZone });
-                          const duration = Math.max(30, Number(form.durationMinutes) || 60);
+                          const duration = normalizeDurationMinutes(form.durationMinutes);
                           if (!next.isValid) {
                             setForm((prev) => ({ ...prev, startsAt: e.target.value }));
                             return;
@@ -1304,7 +1311,10 @@ export default function PublicBookingPage() {
                         value={form.durationMinutes}
                         onChange={(e) => {
                           setDurationNotice(null);
-                          setForm((prev) => ({ ...prev, durationMinutes: Number(e.target.value) }));
+                          setForm((prev) => ({
+                            ...prev,
+                            durationMinutes: normalizeDurationMinutes(Number(e.target.value), prev.durationMinutes),
+                          }));
                         }}
                         fullWidth
                         disabled={formDisabled}
@@ -1540,7 +1550,7 @@ export default function PublicBookingPage() {
                                 variant="outlined"
                               />
                               <Chip
-                                label={`Duración: ${form.durationMinutes || 60} min`}
+                                label={`Duración: ${normalizeDurationMinutes(form.durationMinutes)} min`}
                                 size="small"
                                 variant="outlined"
                               />
