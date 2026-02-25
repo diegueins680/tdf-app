@@ -34,6 +34,7 @@ import type { DriveFileInfo } from '../services/googleDrive';
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'COP'];
 const CONCEPT_PRESETS = ['Honorarios', 'Adelanto', 'Licencia', 'Reembolso', 'Otros'];
+const MONTH_CODES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'] as const;
 
 const partyFilterOptions = createFilterOptions<PartyDTO>({
   stringify: (option) =>
@@ -50,10 +51,32 @@ const partyFilterOptions = createFilterOptions<PartyDTO>({
 });
 
 const toPeriod = (isoDate: string) => {
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return '';
-  const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-  return `${month}-${date.getFullYear()}`;
+  const raw = isoDate.trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (!match) return '';
+  const [, yearRaw, monthRaw, dayRaw] = match;
+  if (!yearRaw || !monthRaw || !dayRaw) return '';
+  const year = Number.parseInt(yearRaw, 10);
+  const month = Number.parseInt(monthRaw, 10);
+  const day = Number.parseInt(dayRaw, 10);
+  if (!Number.isSafeInteger(year) || month < 1 || month > 12 || day < 1 || day > 31) return '';
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  if (
+    utcDate.getUTCFullYear() !== year
+    || utcDate.getUTCMonth() !== month - 1
+    || utcDate.getUTCDate() !== day
+  ) {
+    return '';
+  }
+  return `${MONTH_CODES[month - 1]}-${year}`;
+};
+
+const parseOptionalPositiveInt = (value: string): number | null | 'invalid' => {
+  const raw = value.trim();
+  if (!raw) return null;
+  if (!/^\d+$/.test(raw)) return 'invalid';
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 'invalid';
 };
 
 const formatAmount = (cents: number, currency: string) =>
@@ -154,19 +177,31 @@ function PaymentForm({
       setFieldHints((prev) => ({ ...prev, date: 'Selecciona la fecha del pago.' }));
       return;
     }
+    const parsedOrderId = parseOptionalPositiveInt(orderId);
+    if (parsedOrderId === 'invalid') {
+      setError('Orden inválida: usa un ID numérico positivo o déjalo vacío.');
+      return;
+    }
+    const parsedInvoiceId = parseOptionalPositiveInt(invoiceId);
+    if (parsedInvoiceId === 'invalid') {
+      setError('Factura inválida: usa un ID numérico positivo o déjalo vacío.');
+      return;
+    }
+    const conceptValue = concept.trim() || 'Honorarios';
+    const periodValue = period.trim() || null;
     setError(null);
     setFieldHints({});
     const payload: PaymentCreate = {
       pcPartyId: parsedPartyId,
-      pcOrderId: orderId.trim() ? Number(orderId) : null,
-      pcInvoiceId: invoiceId.trim() ? Number(invoiceId) : null,
+      pcOrderId: parsedOrderId,
+      pcInvoiceId: parsedInvoiceId,
       pcAmountCents: Math.round(normalizedAmount * 100),
       pcCurrency: currency.trim() || 'USD',
       pcMethod: method,
       pcReference: reference.trim() || null,
       pcPaidAt: paidAt,
-      pcConcept: concept.trim() ?? 'Honorarios',
-      pcPeriod: period.trim() ?? null,
+      pcConcept: conceptValue,
+      pcPeriod: periodValue,
       pcAttachmentUrl: attachmentUrl.trim() || null,
     };
     mutation.mutate(payload);
