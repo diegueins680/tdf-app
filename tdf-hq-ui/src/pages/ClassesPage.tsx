@@ -36,6 +36,7 @@ import { Rooms } from '../api/rooms';
 import { useLocation } from 'react-router-dom';
 
 type StatusKey = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
+const STATUS_OPTIONS: readonly StatusKey[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
 
 const statusMeta: Record<StatusKey, { label: string; color: string; bg: string; border: string; icon: JSX.Element }> = {
   programada: {
@@ -75,6 +76,29 @@ const statusMeta: Record<StatusKey, { label: string; color: string; bg: string; 
   },
 };
 
+const isStatusKey = (value: string): value is StatusKey =>
+  STATUS_OPTIONS.some((status) => status === value);
+
+const normalizeStatus = (status: string): StatusKey => {
+  const trimmed = status.trim();
+  return isStatusKey(trimmed) ? trimmed : 'programada';
+};
+
+const parsePositiveInt = (raw: string | number | null | undefined): number | null => {
+  if (typeof raw === 'number') {
+    return Number.isSafeInteger(raw) && raw > 0 ? raw : null;
+  }
+  const trimmed = raw?.trim() ?? '';
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number(trimmed);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const toIsoOrNull = (raw: string): string | null => {
+  const parsedDate = new Date(raw);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
+};
+
 const toLocalInput = (iso?: string | null) => {
   if (!iso) return '';
   const d = new Date(iso);
@@ -99,21 +123,9 @@ const formatDateTime = (iso: string) => {
 export default function ClassesPage() {
   const location = useLocation();
   const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const queryTeacherId = useMemo(() => {
-    const raw = query.get('teacherId');
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  }, [query]);
-  const queryStudentId = useMemo(() => {
-    const raw = query.get('studentId');
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  }, [query]);
-  const queryClassSessionId = useMemo(() => {
-    const raw = query.get('classSessionId');
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  }, [query]);
+  const queryTeacherId = useMemo(() => parsePositiveInt(query.get('teacherId')), [query]);
+  const queryStudentId = useMemo(() => parsePositiveInt(query.get('studentId')), [query]);
+  const queryClassSessionId = useMemo(() => parsePositiveInt(query.get('classSessionId')), [query]);
   const queryFocusAt = useMemo(() => query.get('at'), [query]);
   const applyQueryHandled = useRef(false);
   const autoOpenHandled = useRef(false);
@@ -285,29 +297,43 @@ export default function ClassesPage() {
   const closeStudentDialog = () => setStudentDialogOpen(false);
 
   const handleDateChange = (value: string, minutesFallback: number) => {
-    const iso = value ? new Date(value).toISOString() : '';
+    const iso = value ? toIsoOrNull(value) : null;
     const endIso = iso ? addMinutes(iso, minutesFallback) : '';
     setForm((prev) => ({
       ...prev,
       startAt: value,
-      endAt: prev.endAt ? prev.endAt : toLocalInput(endIso),
+      endAt: prev.endAt ? prev.endAt : endIso ? toLocalInput(endIso) : '',
     }));
   };
 
   const handleSubmit = async () => {
     setFormError(null);
     const { studentId, teacherId, subjectId, roomId, startAt, endAt, notes } = form;
-    if (!studentId || !teacherId || !subjectId || !roomId || !startAt || !endAt) {
+    const parsedStudentId = parsePositiveInt(studentId);
+    const parsedTeacherId = parsePositiveInt(teacherId);
+    const parsedSubjectId = parsePositiveInt(subjectId);
+    const parsedRoomId = parsePositiveInt(roomId);
+    if (!parsedStudentId || !parsedTeacherId || !parsedSubjectId || !parsedRoomId || !startAt || !endAt) {
       setFormError('Completa estudiante, profesor, materia, sala y horario.');
       return;
     }
+    const startAtIso = toIsoOrNull(startAt);
+    const endAtIso = toIsoOrNull(endAt);
+    if (!startAtIso || !endAtIso) {
+      setFormError('Selecciona fecha y hora válidas para inicio y fin.');
+      return;
+    }
+    if (new Date(startAtIso).getTime() >= new Date(endAtIso).getTime()) {
+      setFormError('La hora de fin debe ser posterior a la hora de inicio.');
+      return;
+    }
     const basePayload: ClassSessionCreate = {
-      studentId: Number(studentId),
-      teacherId: Number(teacherId),
-      subjectId: Number(subjectId),
-      startAt: new Date(startAt).toISOString(),
-      endAt: new Date(endAt).toISOString(),
-      roomId: Number(roomId),
+      studentId: parsedStudentId,
+      teacherId: parsedTeacherId,
+      subjectId: parsedSubjectId,
+      startAt: startAtIso,
+      endAt: endAtIso,
+      roomId: parsedRoomId,
     };
 
     try {
@@ -329,9 +355,6 @@ export default function ClassesPage() {
 
   const data = classesQuery.data ?? [];
   const loading = classesQuery.isLoading || subjectsQuery.isLoading || teachersQuery.isLoading || roomsQuery.isLoading || studentsQuery.isLoading;
-
-  const normalizedStatus = (status: string): StatusKey =>
-    (['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'].includes(status) ? status : 'programada') as StatusKey;
 
   const chipFilters = (
     <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -438,8 +461,8 @@ export default function ClassesPage() {
               if (val === 'all') {
                 setStudentFilter('all');
               } else {
-                const parsed = Number(val);
-                setStudentFilter(Number.isFinite(parsed) ? parsed : 'all');
+                const parsed = parsePositiveInt(val);
+                setStudentFilter(parsed ?? 'all');
               }
             }}
             sx={{ maxWidth: 420 }}
@@ -463,12 +486,12 @@ export default function ClassesPage() {
           )}
           <Stack spacing={1.25}>
             {data.map((cls) => {
-              const meta = statusMeta[normalizedStatus(cls.status)];
+              const meta = statusMeta[normalizeStatus(cls.status)];
               const teacher = teachers.find((t) => t.teacherId === cls.teacherId);
               const subject = subjects.find((s) => s.subjectId === cls.subjectId);
               const room = rooms.find((r) => r.roomId === cls.roomId);
               const student = students.find((p) => p.studentId === cls.studentId);
-              const isDone = normalizedStatus(cls.status) === 'realizada';
+              const isDone = normalizeStatus(cls.status) === 'realizada';
               return (
                 <Paper
                   key={cls.classSessionId}
@@ -539,7 +562,7 @@ export default function ClassesPage() {
               select
               label="Alumno"
               value={form.studentId ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, studentId: Number(e.target.value) }))}
+              onChange={(e) => setForm((prev) => ({ ...prev, studentId: parsePositiveInt(e.target.value) }))}
               fullWidth
             >
               {students.map((p) => (
@@ -552,7 +575,7 @@ export default function ClassesPage() {
               select
               label="Materia"
               value={form.subjectId ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, subjectId: Number(e.target.value) }))}
+              onChange={(e) => setForm((prev) => ({ ...prev, subjectId: parsePositiveInt(e.target.value) }))}
               fullWidth
             >
               {subjects.map((s) => (
@@ -565,7 +588,7 @@ export default function ClassesPage() {
               select
               label="Profesor"
               value={form.teacherId ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, teacherId: Number(e.target.value) }))}
+              onChange={(e) => setForm((prev) => ({ ...prev, teacherId: parsePositiveInt(e.target.value) }))}
               fullWidth
             >
               {teachers.map((t) => (

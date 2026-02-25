@@ -29,6 +29,7 @@ import { Trials } from '../api/trials';
 import { Parties } from '../api/parties';
 
 type ClassStatus = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
+const CLASS_STATUS_OPTIONS: readonly ClassStatus[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
 
 interface TeacherProfile {
   id: number;
@@ -277,9 +278,12 @@ const buildClassesFromSlots = (slots: TrialSlot[], subjectMap: Map<number, strin
   return rows;
 };
 
+const isClassStatus = (value: string): value is ClassStatus =>
+  CLASS_STATUS_OPTIONS.some((status) => status === value);
+
 const normalizeStatus = (status: string): ClassStatus => {
-  const allowed: ClassStatus[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
-  return allowed.includes(status as ClassStatus) ? (status as ClassStatus) : 'programada';
+  const trimmed = status.trim();
+  return isClassStatus(trimmed) ? trimmed : 'programada';
 };
 
 const buildClassesFromDTO = (classes: ClassSessionDTO[]): ClassRow[] =>

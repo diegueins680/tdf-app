@@ -38,6 +38,7 @@ import { Trials } from '../api/trials';
 import { Rooms } from '../api/rooms';
 
 type StatusKey = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
+const STATUS_OPTIONS: readonly StatusKey[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
 
 const statusMeta: Record<StatusKey, { label: string; color: string; bg: string; border: string; icon: JSX.Element }> = {
   programada: {
@@ -76,7 +77,6 @@ const statusMeta: Record<StatusKey, { label: string; color: string; bg: string; 
     icon: <EventAvailableIcon fontSize="small" />,
   },
 };
-const statusOptions: StatusKey[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
 const bookingStatusMap: Record<StatusKey, string> = {
   programada: 'Confirmed',
   'por-confirmar': 'Tentative',
@@ -85,15 +85,38 @@ const bookingStatusMap: Record<StatusKey, string> = {
   reprogramada: 'Confirmed',
 };
 
-const parseFilterId = (raw: string | null): number | 'all' => {
-  const trimmed = raw?.trim() ?? '';
-  if (!/^\d+$/.test(trimmed)) return 'all';
-  const parsed = Number(trimmed);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : 'all';
+const isStatusKey = (value: string): value is StatusKey =>
+  STATUS_OPTIONS.some((status) => status === value);
+
+const normalizeStatus = (status: string): StatusKey => {
+  const trimmed = status.trim();
+  return isStatusKey(trimmed) ? trimmed : 'programada';
 };
 
-const parseStatusFilter = (raw: string | null): StatusKey | 'all' =>
-  raw && statusOptions.includes(raw as StatusKey) ? (raw as StatusKey) : 'all';
+const parsePositiveInt = (raw: string | number | null | undefined): number | null => {
+  if (typeof raw === 'number') {
+    return Number.isSafeInteger(raw) && raw > 0 ? raw : null;
+  }
+  const trimmed = raw?.trim() ?? '';
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number(trimmed);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const toIsoOrNull = (raw: string): string | null => {
+  const parsedDate = new Date(raw);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
+};
+
+const parseFilterId = (raw: string | null): number | 'all' => {
+  const parsed = parsePositiveInt(raw);
+  return parsed ?? 'all';
+};
+
+const parseStatusFilter = (raw: string | null): StatusKey | 'all' => {
+  const trimmed = raw?.trim() ?? '';
+  return isStatusKey(trimmed) ? trimmed : 'all';
+};
 
 const toLocalInput = (iso?: string | null) => {
   if (!iso) return '';
@@ -313,7 +336,7 @@ export default function TrialLessonsPage() {
       startAt: toLocalInput(cls.startAt),
       endAt: toLocalInput(cls.endAt),
       notes: cls.notes ?? '',
-      status: normalizedStatus(cls.status),
+      status: normalizeStatus(cls.status),
     });
     setDialogOpen(true);
   };
@@ -343,12 +366,12 @@ export default function TrialLessonsPage() {
   const closeStudentDialog = () => setStudentDialogOpen(false);
 
   const handleDateChange = (value: string, minutesFallback: number) => {
-    const iso = value ? new Date(value).toISOString() : '';
+    const iso = value ? toIsoOrNull(value) : null;
     const endIso = iso ? addMinutes(iso, minutesFallback) : '';
     setForm((prev) => ({
       ...prev,
       startAt: value,
-      endAt: prev.endAt ? prev.endAt : toLocalInput(endIso),
+      endAt: prev.endAt ? prev.endAt : endIso ? toLocalInput(endIso) : '',
     }));
   };
 
@@ -356,17 +379,31 @@ export default function TrialLessonsPage() {
     setFormError(null);
     setListError(null);
     const { studentId, teacherId, subjectId, roomId, startAt, endAt, notes } = form;
-    if (!studentId || !teacherId || !subjectId || !roomId || !startAt || !endAt) {
+    const parsedStudentId = parsePositiveInt(studentId);
+    const parsedTeacherId = parsePositiveInt(teacherId);
+    const parsedSubjectId = parsePositiveInt(subjectId);
+    const parsedRoomId = parsePositiveInt(roomId);
+    if (!parsedStudentId || !parsedTeacherId || !parsedSubjectId || !parsedRoomId || !startAt || !endAt) {
       setFormError('Completa estudiante, profesor, materia, sala y horario.');
       return;
     }
+    const startAtIso = toIsoOrNull(startAt);
+    const endAtIso = toIsoOrNull(endAt);
+    if (!startAtIso || !endAtIso) {
+      setFormError('Selecciona fecha y hora válidas para inicio y fin.');
+      return;
+    }
+    if (new Date(startAtIso).getTime() >= new Date(endAtIso).getTime()) {
+      setFormError('La hora de fin debe ser posterior a la hora de inicio.');
+      return;
+    }
     const basePayload: ClassSessionCreate = {
-      studentId: Number(studentId),
-      teacherId: Number(teacherId),
-      subjectId: Number(subjectId),
-      startAt: new Date(startAt).toISOString(),
-      endAt: new Date(endAt).toISOString(),
-      roomId: Number(roomId),
+      studentId: parsedStudentId,
+      teacherId: parsedTeacherId,
+      subjectId: parsedSubjectId,
+      startAt: startAtIso,
+      endAt: endAtIso,
+      roomId: parsedRoomId,
       status: form.status,
     };
 
@@ -377,7 +414,7 @@ export default function TrialLessonsPage() {
           notes: notes.trim() || undefined,
         };
         await updateMutation.mutateAsync({ id: editing.classSessionId, patch });
-        if (normalizedStatus(editing.status) !== form.status) {
+        if (normalizeStatus(editing.status) !== form.status) {
           await syncStatus(editing, form.status, form.notes);
           setStatusToast(`Estado actualizado: ${statusMeta[form.status].label}`);
           void qc.invalidateQueries({ queryKey: ['trial-class-sessions'] });
@@ -444,9 +481,6 @@ export default function TrialLessonsPage() {
     studentsQuery.isLoading ||
     (!rangeError && classesQuery.isLoading);
   const queryError = rangeError ? null : classesQuery.error;
-
-  const normalizedStatus = (status: string): StatusKey =>
-    (['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'].includes(status) ? status : 'programada') as StatusKey;
 
   const handleQuickStatus = (cls: ClassSessionDTO, nextStatus: StatusKey) => {
     statusMutation.mutate({ cls, nextStatus });
@@ -650,7 +684,7 @@ export default function TrialLessonsPage() {
           )}
           <Stack spacing={1.25}>
             {data.map((cls) => {
-              const meta = statusMeta[normalizedStatus(cls.status)];
+              const meta = statusMeta[normalizeStatus(cls.status)];
               const teacher = teachers.find((t) => t.teacherId === cls.teacherId);
               const subject = subjects.find((s) => s.subjectId === cls.subjectId);
               const room = rooms.find((r) => r.roomId === cls.roomId);
@@ -730,7 +764,7 @@ export default function TrialLessonsPage() {
                             : <CheckCircleIcon fontSize="small" />
                         }
                         onClick={() => handleQuickStatus(cls, 'realizada')}
-                        disabled={rowPending || normalizedStatus(cls.status) === 'realizada'}
+                        disabled={rowPending || normalizeStatus(cls.status) === 'realizada'}
                       >
                         Realizada
                       </Button>
@@ -744,7 +778,7 @@ export default function TrialLessonsPage() {
                             : <CancelIcon fontSize="small" />
                         }
                         onClick={() => handleQuickStatus(cls, 'cancelada')}
-                        disabled={rowPending || normalizedStatus(cls.status) === 'cancelada'}
+                        disabled={rowPending || normalizeStatus(cls.status) === 'cancelada'}
                       >
                         Cancelar
                       </Button>
@@ -773,7 +807,7 @@ export default function TrialLessonsPage() {
               select
               label="Alumno"
               value={form.studentId ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, studentId: Number(e.target.value) }))}
+              onChange={(e) => setForm((prev) => ({ ...prev, studentId: parsePositiveInt(e.target.value) }))}
               fullWidth
             >
               {students.map((p) => (
@@ -786,7 +820,7 @@ export default function TrialLessonsPage() {
               select
               label="Materia"
               value={form.subjectId ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, subjectId: Number(e.target.value) }))}
+              onChange={(e) => setForm((prev) => ({ ...prev, subjectId: parsePositiveInt(e.target.value) }))}
               fullWidth
             >
               {subjects.map((s) => (
@@ -799,7 +833,7 @@ export default function TrialLessonsPage() {
               select
               label="Profesor"
               value={form.teacherId ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, teacherId: Number(e.target.value) }))}
+              onChange={(e) => setForm((prev) => ({ ...prev, teacherId: parsePositiveInt(e.target.value) }))}
               fullWidth
             >
               {teachers.map((t) => (
@@ -825,11 +859,14 @@ export default function TrialLessonsPage() {
               select
               label="Estado"
               value={form.status}
-              onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value as StatusKey }))}
+              onChange={(e) => {
+                const nextStatus = e.target.value.trim();
+                setForm((prev) => ({ ...prev, status: isStatusKey(nextStatus) ? nextStatus : prev.status }));
+              }}
               helperText="Se sincroniza con la reserva asociada cuando exista."
               fullWidth
             >
-              {statusOptions.map((st) => (
+              {STATUS_OPTIONS.map((st) => (
                 <MenuItem key={st} value={st}>
                   {statusMeta[st].label}
                 </MenuItem>
