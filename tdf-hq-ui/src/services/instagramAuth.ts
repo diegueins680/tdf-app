@@ -61,7 +61,7 @@ const authUrlForProvider = (provider: InstagramOAuthProvider) =>
 
 const resolveClientId = (provider: InstagramOAuthProvider) =>
   provider === 'instagram'
-    ? (INSTAGRAM_APP_ID || FACEBOOK_APP_ID)
+    ? INSTAGRAM_APP_ID
     : FACEBOOK_APP_ID;
 
 export interface InstagramOAuthStateRecord {
