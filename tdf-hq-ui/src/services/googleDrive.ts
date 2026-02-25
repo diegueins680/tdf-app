@@ -74,23 +74,40 @@ const consumeState = () => {
 };
 
 export const getStoredToken = (): StoredToken | null => {
+  const invalidateStoredToken = () => {
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+    } catch {
+      // ignore storage cleanup failures
+    }
+  };
   try {
     const raw = localStorage.getItem(TOKEN_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== 'object') return null;
+    if (!parsed || typeof parsed !== 'object') {
+      invalidateStoredToken();
+      return null;
+    }
     const value = parsed as Record<string, unknown>;
     const accessTokenRaw = value['accessToken'];
     const refreshTokenRaw = value['refreshToken'];
     const expiresAtRaw = value['expiresAt'];
-    if (typeof accessTokenRaw !== 'string' || accessTokenRaw.trim() === '') return null;
-    if (typeof expiresAtRaw !== 'number' || !Number.isFinite(expiresAtRaw)) return null;
+    if (typeof accessTokenRaw !== 'string' || accessTokenRaw.trim() === '') {
+      invalidateStoredToken();
+      return null;
+    }
+    if (typeof expiresAtRaw !== 'number' || !Number.isFinite(expiresAtRaw)) {
+      invalidateStoredToken();
+      return null;
+    }
     return {
       accessToken: accessTokenRaw,
       refreshToken: typeof refreshTokenRaw === 'string' ? refreshTokenRaw : undefined,
       expiresAt: expiresAtRaw,
     };
   } catch {
+    invalidateStoredToken();
     return null;
   }
 };
