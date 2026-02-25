@@ -36,25 +36,26 @@ import { useLocation } from 'react-router-dom';
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
 
+const parsePositiveInt = (raw: string | null): number | null => {
+  const trimmed = raw?.trim() ?? '';
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number(trimmed);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 export default function BookingsPage() {
   const location = useLocation();
   const calendarRef = useRef<FullCalendar | null>(null);
   const autoOpenHandled = useRef(false);
   const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const bookingIdFilter = useMemo(() => {
-    const raw = query.get('bookingId');
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    return parsePositiveInt(query.get('bookingId'));
   }, [query]);
   const partyIdFilter = useMemo(() => {
-    const raw = query.get('partyId');
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    return parsePositiveInt(query.get('partyId'));
   }, [query]);
   const engineerPartyIdFilter = useMemo(() => {
-    const raw = query.get('engineerPartyId');
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    return parsePositiveInt(query.get('engineerPartyId'));
   }, [query]);
 
   const bookingsQuery: UseQueryResult<BookingDTO[], Error> = useQuery<BookingDTO[], Error>({
@@ -691,7 +692,8 @@ const openDialogForRange = (start: Date, end: Date) => {
       setCourseNotice('Los bloques del curso son de solo lectura. Revisa los detalles del horario aquí.');
       return;
     }
-    const bookingId = Number.parseInt(info.event.id, 10);
+    const bookingId = parsePositiveInt(info.event.id);
+    if (bookingId == null) return;
     const booking = bookings.find((b) => b.bookingId === bookingId);
     if (!booking) return;
     openBooking(booking);
@@ -702,7 +704,11 @@ const openDialogForRange = (start: Date, end: Date) => {
       arg.revert?.();
       return;
     }
-    const bookingId = Number.parseInt(arg.event.id, 10);
+    const bookingId = parsePositiveInt(arg.event.id);
+    if (bookingId == null) {
+      arg.revert?.();
+      return;
+    }
     if (!arg.event.start || !arg.event.end) return;
     const startIso = toUtcIso(formatForInput(arg.event.start));
     const endIso = toUtcIso(formatForInput(arg.event.end));

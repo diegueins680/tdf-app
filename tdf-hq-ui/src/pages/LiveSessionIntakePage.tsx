@@ -58,6 +58,14 @@ interface SongEntry {
   lyrics: string;
 }
 
+const parseBpm = (value: string): number | null => {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number(trimmed);
+  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  return parsed;
+};
+
 const emptySong = (): SongEntry => ({
   id: crypto.randomUUID(),
   title: '',
@@ -261,10 +269,10 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
         musicians: ensuredMusicians,
         setlist: setlist
           .map((song, idx) => {
-            const bpmValue = Number.parseInt(song.bpm.trim(), 10);
+            const bpmValue = parseBpm(song.bpm);
             return {
               title: song.title.trim(),
-              bpm: Number.isFinite(bpmValue) ? bpmValue : null,
+              bpm: bpmValue,
               songKey: asNullableString(song.songKey),
               lyrics: asNullableString(song.lyrics),
               sortOrder: idx,

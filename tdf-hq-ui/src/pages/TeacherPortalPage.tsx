@@ -89,6 +89,13 @@ const validateLocalRange = (startValue: string, endValue: string): string | null
   return null;
 };
 
+const parsePositiveIntId = (value: string): number | null => {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const parsed = Number(trimmed);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 const formatDateTime = (iso: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
@@ -309,8 +316,8 @@ export default function TeacherPortalPage() {
 
   const createClassMutation = useMutation({
     mutationFn: async (payload: { subjectId: number; studentId: number; roomId: string; startIso: string; endIso: string }) => {
-      const roomIdNum = Number.parseInt(payload.roomId, 10);
-      if (!Number.isFinite(roomIdNum)) {
+      const roomIdNum = parsePositiveIntId(payload.roomId);
+      if (roomIdNum == null) {
         throw new Error('Sala inválida.');
       }
       return Trials.createClassSession({
@@ -664,8 +671,8 @@ export default function TeacherPortalPage() {
       return;
     }
 
-    const roomIdNum = Number.parseInt(classForm.roomId, 10);
-    if (!Number.isFinite(roomIdNum)) {
+    const roomIdNum = parsePositiveIntId(classForm.roomId);
+    if (roomIdNum == null) {
       setClassDialogError('Sala inválida.');
       return;
     }
