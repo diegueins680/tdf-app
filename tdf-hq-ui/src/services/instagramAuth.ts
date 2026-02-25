@@ -26,10 +26,22 @@ const parseScopes = (raw: string) =>
 
 const uniqueScopes = (scopes: string[]) => Array.from(new Set(scopes));
 
+const hasBusinessScopes = (scopes: string[]) => scopes.some((scope) => scope.startsWith('instagram_business_'));
+
+const hasClassicInstagramScopes = (scopes: string[]) =>
+  scopes.some((scope) => scope === 'instagram_basic' || scope === 'instagram_manage_messages');
+
 const resolveOAuthProvider = (scopes: string[]): InstagramOAuthProvider => {
   const configured = env.read('VITE_INSTAGRAM_OAUTH_PROVIDER')?.trim().toLowerCase();
-  if (configured === 'facebook' || configured === 'instagram') return configured;
-  return scopes.some((scope) => scope.startsWith('instagram_business_')) ? 'instagram' : 'facebook';
+  if (configured === 'facebook') return 'facebook';
+  if (configured === 'instagram') {
+    // Instagram Login does not accept the classic facebook-login instagram_* scopes.
+    if (hasClassicInstagramScopes(scopes)) return 'facebook';
+    return INSTAGRAM_APP_ID ? 'instagram' : 'facebook';
+  }
+  // Default behavior: use Facebook Login for mixed/classic scopes; Instagram Login only for pure business scopes.
+  if (hasBusinessScopes(scopes) && !hasClassicInstagramScopes(scopes) && INSTAGRAM_APP_ID) return 'instagram';
+  return 'facebook';
 };
 
 const resolveScopes = (provider: InstagramOAuthProvider, scopes: string[]) => {
