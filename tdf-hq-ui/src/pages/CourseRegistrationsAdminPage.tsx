@@ -33,16 +33,21 @@ import { useSearchParams } from 'react-router-dom';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
-const statusFilters: StatusFilter[] = ['all', 'pending_payment', 'paid', 'cancelled'];
+const statusFilters: readonly StatusFilter[] = ['all', 'pending_payment', 'paid', 'cancelled'];
 
-const parseStatusFilter = (value: string | null): StatusFilter =>
-  value && statusFilters.includes(value as StatusFilter) ? (value as StatusFilter) : 'all';
+const isStatusFilter = (value: string): value is StatusFilter =>
+  statusFilters.some((status) => status === value);
+
+const parseStatusFilter = (value: string | null): StatusFilter => {
+  const trimmed = value?.trim() ?? '';
+  return isStatusFilter(trimmed) ? trimmed : 'all';
+};
 
 const parsePositiveLimit = (value: string | null, fallback = 200): number => {
   const trimmed = value?.trim() ?? '';
   if (!/^\d+$/.test(trimmed)) return fallback;
   const parsed = Number(trimmed);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
 };
 
 const formatDate = (iso: string) => new Date(iso).toLocaleString();

@@ -52,21 +52,25 @@ interface FormState {
   active: boolean;
 }
 
-const SERVICE_KIND_OPTIONS: ServiceKind[] = ['Recording', 'Mixing', 'Mastering', 'Rehearsal', 'Classes', 'EventProduction'];
-const PRICING_MODEL_OPTIONS: PricingModel[] = ['Hourly', 'PerSong', 'Package', 'Quote', 'Retainer'];
+const SERVICE_KIND_OPTIONS: readonly ServiceKind[] = ['Recording', 'Mixing', 'Mastering', 'Rehearsal', 'Classes', 'EventProduction'];
+const PRICING_MODEL_OPTIONS: readonly PricingModel[] = ['Hourly', 'PerSong', 'Package', 'Quote', 'Retainer'];
 const SERVICE_QUERY_KEY = ['service-catalog', 'admin'];
 
 const isServiceKind = (value: string): value is ServiceKind =>
-  SERVICE_KIND_OPTIONS.includes(value as ServiceKind);
+  SERVICE_KIND_OPTIONS.some((kind) => kind === value);
 
 const isPricingModel = (value: string): value is PricingModel =>
-  PRICING_MODEL_OPTIONS.includes(value as PricingModel);
+  PRICING_MODEL_OPTIONS.some((model) => model === value);
 
-const normalizeServiceKind = (value: string | null | undefined): ServiceKind =>
-  value && isServiceKind(value) ? value : 'Recording';
+const normalizeServiceKind = (value: string | null | undefined): ServiceKind => {
+  const trimmed = value?.trim() ?? '';
+  return isServiceKind(trimmed) ? trimmed : 'Recording';
+};
 
-const normalizePricingModel = (value: string | null | undefined): PricingModel =>
-  value && isPricingModel(value) ? value : 'Hourly';
+const normalizePricingModel = (value: string | null | undefined): PricingModel => {
+  const trimmed = value?.trim() ?? '';
+  return isPricingModel(trimmed) ? trimmed : 'Hourly';
+};
 
 const formatPrice = (svc: ServiceType) => {
   if (svc.priceCents == null) return '—';
