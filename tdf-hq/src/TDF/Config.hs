@@ -156,7 +156,7 @@ loadConfig = do
     , courseDefaultMapUrl = fmap (T.strip . T.pack) courseMapEnv
     , courseDefaultInstructorAvatar = fmap (T.strip . T.pack) courseInstructorAvatarEnv
     , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
-    , openAiModel = fromMaybe "gpt-4.1-mini" (openAiModelEnv >>= nonEmpty . T.pack)
+    , openAiModel = fromMaybe "gpt-5-chat-latest" (openAiModelEnv >>= nonEmpty . T.pack)
     , openAiEmbedModel = fromMaybe "text-embedding-3-small" (openAiEmbedModelEnv >>= nonEmpty . T.pack)
     , chatKitWorkflowId = chatKitWorkflowEnv >>= nonEmpty . T.pack
     , chatKitApiBase = fromMaybe "https://api.openai.com" (chatKitApiBaseEnv >>= nonEmpty . T.pack)
