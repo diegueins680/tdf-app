@@ -206,7 +206,8 @@ export default function CourseBuilderPage() {
       return Number.isFinite(num) ? num : null;
     };
     const cleanCapacity = Number.isFinite(Number(capacity)) ? Number(capacity) : 0;
-    const cleanPrice = Math.round((Number(price) || 0) * 100);
+    const numericPrice = Number(price);
+    const cleanPrice = Number.isFinite(numericPrice) ? Math.max(0, Math.round(numericPrice * 100)) : 0;
     const landing = landingUrl.trim();
     const sessionStart = toOptionalNumber(sessionStartHour);
     const sessionDuration = toOptionalNumber(sessionDurationHours);
