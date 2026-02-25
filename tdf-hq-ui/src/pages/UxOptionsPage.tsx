@@ -47,7 +47,7 @@ function OptionRow({
   const trimmedValue = value.trim();
   const cleanLabel = label.trim();
   const sortNumber = sortOrder.trim() === '' ? null : Number(sortOrder.trim());
-  const sortInvalid = sortOrder.trim() !== '' && Number.isNaN(sortNumber);
+  const sortInvalid = sortOrder.trim() !== '' && !Number.isFinite(sortNumber);
   const payload: DropdownOptionUpdate = {};
   if (trimmedValue !== option.value) payload.douValue = trimmedValue;
   if (cleanLabel !== (option.label ?? '')) payload.douLabel = cleanLabel || null;
@@ -180,7 +180,7 @@ export default function UxOptionsPage() {
       setError('Agrega un valor para la opción.');
       return;
     }
-    if (newOption.sortOrder.trim() && Number.isNaN(Number(newOption.sortOrder.trim()))) {
+    if (newOption.sortOrder.trim() && !Number.isFinite(Number(newOption.sortOrder.trim()))) {
       setError('El orden debe ser numérico.');
       return;
     }
