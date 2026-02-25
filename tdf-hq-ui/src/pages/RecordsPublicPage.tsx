@@ -50,6 +50,13 @@ const SERVICE_OPTIONS = [
   'Mezcla / Post',
 ];
 
+const parseDurationMinutes = (raw: string, fallback: number): number => {
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return fallback;
+  const rounded = Math.round(parsed);
+  return Math.max(30, rounded);
+};
+
 const overlap = (startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime) =>
   endA > startB && startA < endB;
 
@@ -388,7 +395,7 @@ function BookingRequestDialog({
                 label="Duración (min)"
                 type="number"
                 value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
+                onChange={(e) => setDuration(parseDurationMinutes(e.target.value, duration))}
                 fullWidth
                 inputProps={{ min: 30, step: 15 }}
               />

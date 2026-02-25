@@ -35,6 +35,8 @@ const defaultSlugs = [
 const locales = ['es', 'en'];
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
 const DRAFT_PREFIX = 'tdf-cms-admin:draft';
+const CONTENT_STATUS_OPTIONS = ['draft', 'published'] as const;
+type ContentStatus = (typeof CONTENT_STATUS_OPTIONS)[number];
 const STATUS_FILTER_OPTIONS = ['all', 'published', 'draft', 'archived'] as const;
 type StatusFilter = (typeof STATUS_FILTER_OPTIONS)[number];
 type SamplePayload = {
@@ -102,6 +104,9 @@ const buildLineDiff = (left: string, right: string): DiffLine[] => {
 const isStatusFilter = (value: string): value is StatusFilter =>
   STATUS_FILTER_OPTIONS.some((status) => status === value);
 
+const isContentStatus = (value: string): value is ContentStatus =>
+  CONTENT_STATUS_OPTIONS.some((status) => status === value);
+
 const parseMinVersionFilter = (raw: string): number | null => {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -134,7 +139,7 @@ export default function CmsAdminPage() {
   });
   const [title, setTitle] = useState('');
   const [payload, setPayload] = useState('{}');
-  const [status, setStatus] = useState<'draft' | 'published'>('draft');
+  const [status, setStatus] = useState<ContentStatus>('draft');
   const [editingFromId, setEditingFromId] = useState<number | null>(null);
   const [payloadError, setPayloadError] = useState<string | null>(null);
   const [formattedPayload, setFormattedPayload] = useState<string>('{}');
@@ -160,10 +165,10 @@ export default function CmsAdminPage() {
     try {
       const raw = window.localStorage.getItem(draftKey);
       if (!raw) return;
-      const parsed = JSON.parse(raw) as { title?: string; payload?: string; status?: 'draft' | 'published' };
+      const parsed = JSON.parse(raw) as { title?: string; payload?: string; status?: string };
       if (parsed.title !== undefined) setTitle(parsed.title);
       if (parsed.payload !== undefined) setPayload(parsed.payload);
-      if (parsed.status) setStatus(parsed.status);
+      if (parsed.status && isContentStatus(parsed.status)) setStatus(parsed.status);
       setEditingFromId(null);
     } catch {
       // ignore broken drafts
@@ -719,7 +724,10 @@ export default function CmsAdminPage() {
                   select
                   label="Estado"
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
+                  onChange={(e) => {
+                    const next = e.target.value.trim();
+                    setStatus(isContentStatus(next) ? next : 'draft');
+                  }}
                   sx={{ width: 240 }}
                 >
                   <MenuItem value="draft">Borrador</MenuItem>

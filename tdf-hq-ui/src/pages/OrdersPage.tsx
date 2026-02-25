@@ -48,9 +48,13 @@ const STATUS_VARIANTS: { value: StatusValue; label: string; color: ChipProps['co
   { value: 'NoShow', label: 'No asistencia', color: 'warning' },
 ];
 const STATUS_VALUES: StatusValue[] = STATUS_VARIANTS.map((item) => item.value);
+const isStatusValue = (value: string): value is StatusValue =>
+  STATUS_VALUES.some((status) => status === value);
 
-const normalizeStatusValue = (value: string | null | undefined): StatusValue =>
-  value && STATUS_VALUES.includes(value as StatusValue) ? (value as StatusValue) : 'Tentative';
+const normalizeStatusValue = (value: string | null | undefined): StatusValue => {
+  const trimmed = value?.trim() ?? '';
+  return isStatusValue(trimmed) ? trimmed : 'Tentative';
+};
 
 const STATUS_LOOKUP = STATUS_VARIANTS.reduce<Record<string, { label: string; color: ChipProps['color'] }>>((acc, item) => {
   acc[item.value] = { label: item.label, color: item.color };
@@ -63,7 +67,7 @@ const ROWS_PER_PAGE_OPTIONS = [5, 10, 25] as const;
 const parseRowsPerPage = (value: string, fallback = 10): number => {
   const parsed = Number(value);
   if (!Number.isInteger(parsed)) return fallback;
-  return ROWS_PER_PAGE_OPTIONS.includes(parsed as (typeof ROWS_PER_PAGE_OPTIONS)[number]) ? parsed : fallback;
+  return ROWS_PER_PAGE_OPTIONS.some((option) => option === parsed) ? parsed : fallback;
 };
 
 function formatScheduleRange(start: string, end: string) {

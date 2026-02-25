@@ -37,6 +37,10 @@ type ReleaseRow = ArtistReleaseDTO & {
   artistCity?: string | null;
   artistHeroImageUrl?: string | null;
 };
+type SortOrder = 'newest' | 'oldest' | 'artist';
+const SORT_ORDER_OPTIONS: readonly SortOrder[] = ['newest', 'oldest', 'artist'];
+const isSortOrder = (value: string): value is SortOrder =>
+  SORT_ORDER_OPTIONS.some((order) => order === value);
 
 const emptyForm = {
   artistId: null as number | null,
@@ -88,7 +92,7 @@ export default function LabelReleasesPage() {
   const [usedFanFallback, setUsedFanFallback] = useState(false);
   const [filterArtistId, setFilterArtistId] = useState<number | null>(null);
   const [filterWindow, setFilterWindow] = useState<'all' | 'upcoming' | 'past'>('all');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'artist'>('newest');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
 
   const artistsQuery = useQuery({
     queryKey: ['admin', 'artists'],
@@ -300,7 +304,10 @@ export default function LabelReleasesPage() {
             size="small"
             label="Ordenar"
             value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
+            onChange={(e) => {
+              const next = e.target.value.trim();
+              setSortOrder(isSortOrder(next) ? next : 'newest');
+            }}
             sx={{ minWidth: 180 }}
           >
             <MenuItem value="newest">Más recientes</MenuItem>

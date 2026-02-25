@@ -26,6 +26,11 @@ interface HistoryItem {
   code: string;
 }
 
+type TidalTarget = 'd1' | 'd2' | 'd3' | 'd4';
+const TIDAL_TARGET_OPTIONS: readonly TidalTarget[] = ['d1', 'd2', 'd3', 'd4'];
+const isTidalTarget = (value: string): value is TidalTarget =>
+  TIDAL_TARGET_OPTIONS.some((target) => target === value);
+
 export default function TidalAgentPage() {
   const config = useMemo(buildDefaultConfig, []);
   const [prompt, setPrompt] = useState('');
@@ -37,7 +42,7 @@ export default function TidalAgentPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showRaw, setShowRaw] = useState(false);
   const [historyMode, setHistoryMode] = useState<'full' | 'code'>('full');
-  const [target, setTarget] = useState<'d1' | 'd2' | 'd3' | 'd4'>('d1');
+  const [target, setTarget] = useState<TidalTarget>('d1');
   const [pinned, setPinned] = useState<HistoryItem | null>(null);
 
   const exportRecentHistory = useCallback(async () => {
@@ -172,12 +177,14 @@ export default function TidalAgentPage() {
                   labelId="tidal-target-label"
                   label="Destino"
                   value={target}
-                  onChange={(e) => setTarget(e.target.value as typeof target)}
+                  onChange={(e) => {
+                    const next = e.target.value.trim();
+                    setTarget(isTidalTarget(next) ? next : 'd1');
+                  }}
                 >
-                  <MenuItem value="d1">d1</MenuItem>
-                  <MenuItem value="d2">d2</MenuItem>
-                  <MenuItem value="d3">d3</MenuItem>
-                  <MenuItem value="d4">d4</MenuItem>
+                  {TIDAL_TARGET_OPTIONS.map((targetOption) => (
+                    <MenuItem key={targetOption} value={targetOption}>{targetOption}</MenuItem>
+                  ))}
                 </Select>
               </FormControl>
 

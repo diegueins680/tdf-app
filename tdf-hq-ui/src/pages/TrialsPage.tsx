@@ -31,6 +31,13 @@ interface SlotInput {
 
 const emptySlots: SlotInput[] = [{ start: '' }, { start: '' }, { start: '' }];
 
+const parsePositiveSubjectId = (raw: string): number | '' => {
+  const trimmed = raw.trim();
+  if (!/^\d+$/.test(trimmed)) return '';
+  const parsed = Number(trimmed);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : '';
+};
+
 const fieldSx = {
   '& .MuiOutlinedInput-root': {
     color: '#f8fafc',
@@ -231,7 +238,7 @@ export default function TrialsPage() {
                       label="Materia"
                       select
                       value={subjectId}
-                      onChange={(e) => setSubjectId(Number(e.target.value))}
+                      onChange={(e) => setSubjectId(parsePositiveSubjectId(e.target.value))}
                       disabled={subjectsQuery.isLoading}
                       required
                       fullWidth
