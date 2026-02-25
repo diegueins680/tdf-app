@@ -56,6 +56,18 @@ const SERVICE_KIND_OPTIONS: ServiceKind[] = ['Recording', 'Mixing', 'Mastering',
 const PRICING_MODEL_OPTIONS: PricingModel[] = ['Hourly', 'PerSong', 'Package', 'Quote', 'Retainer'];
 const SERVICE_QUERY_KEY = ['service-catalog', 'admin'];
 
+const isServiceKind = (value: string): value is ServiceKind =>
+  SERVICE_KIND_OPTIONS.includes(value as ServiceKind);
+
+const isPricingModel = (value: string): value is PricingModel =>
+  PRICING_MODEL_OPTIONS.includes(value as PricingModel);
+
+const normalizeServiceKind = (value: string | null | undefined): ServiceKind =>
+  value && isServiceKind(value) ? value : 'Recording';
+
+const normalizePricingModel = (value: string | null | undefined): PricingModel =>
+  value && isPricingModel(value) ? value : 'Hourly';
+
 const formatPrice = (svc: ServiceType) => {
   if (svc.priceCents == null) return '—';
   const amount = svc.priceCents / 100;
@@ -149,8 +161,8 @@ export default function ServiceTypesPage() {
       price: item.priceCents != null ? String(item.priceCents / 100) : '',
       currency: item.currency,
       billingUnit: item.billingUnit ?? '',
-      kind: (item.kind as ServiceKind) ?? 'Recording',
-      pricingModel: (item.pricingModel as PricingModel) ?? 'Hourly',
+      kind: normalizeServiceKind(item.kind),
+      pricingModel: normalizePricingModel(item.pricingModel),
       taxBps: item.taxBps != null ? String(item.taxBps) : '',
       active: item.active,
     });
@@ -379,7 +391,7 @@ export default function ServiceTypesPage() {
                   select
                   label="Tipo"
                   value={form.kind}
-                  onChange={(e) => setForm((prev) => ({ ...prev, kind: e.target.value as ServiceKind }))}
+                  onChange={(e) => setForm((prev) => ({ ...prev, kind: normalizeServiceKind(e.target.value) }))}
                   fullWidth
                 >
                   {SERVICE_KIND_OPTIONS.map((kind) => (
@@ -395,7 +407,7 @@ export default function ServiceTypesPage() {
                   label="Modelo de cobro"
                   value={form.pricingModel}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, pricingModel: e.target.value as PricingModel }))
+                    setForm((prev) => ({ ...prev, pricingModel: normalizePricingModel(e.target.value) }))
                   }
                   fullWidth
                 >

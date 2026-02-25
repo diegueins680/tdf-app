@@ -47,6 +47,10 @@ const STATUS_VARIANTS: { value: StatusValue; label: string; color: ChipProps['co
   { value: 'Cancelled', label: 'Cancelada', color: 'default' },
   { value: 'NoShow', label: 'No asistencia', color: 'warning' },
 ];
+const STATUS_VALUES: StatusValue[] = STATUS_VARIANTS.map((item) => item.value);
+
+const normalizeStatusValue = (value: string | null | undefined): StatusValue =>
+  value && STATUS_VALUES.includes(value as StatusValue) ? (value as StatusValue) : 'Tentative';
 
 const STATUS_LOOKUP = STATUS_VARIANTS.reduce<Record<string, { label: string; color: ChipProps['color'] }>>((acc, item) => {
   acc[item.value] = { label: item.label, color: item.color };
@@ -352,7 +356,7 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
   const [form, setForm] = useState({
     title: '',
     serviceType: '',
-    status: 'Tentative' as StatusValue,
+    status: normalizeStatusValue('Tentative'),
     notes: '',
   });
 
@@ -361,7 +365,7 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
     setForm({
       title: booking.title ?? '',
       serviceType: booking.serviceType ?? '',
-      status: (booking.status as StatusValue) ?? 'Tentative',
+      status: normalizeStatusValue(booking.status),
       notes: booking.notes ?? '',
     });
   }, [booking]);
@@ -376,7 +380,7 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
     };
 
   const handleStatusChange = (event: SelectChangeEvent) => {
-    setForm((prev) => ({ ...prev, status: event.target.value as StatusValue }));
+    setForm((prev) => ({ ...prev, status: normalizeStatusValue(event.target.value) }));
   };
 
   const handleSubmit = async (event: FormEvent) => {
