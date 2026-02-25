@@ -57,6 +57,22 @@ const parseDurationMinutes = (raw: string, fallback: number): number => {
   return Math.max(30, rounded);
 };
 
+const toObject = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+
+const toText = (value: unknown): string | null => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return null;
+};
+
+const toNonEmptyText = (value: unknown): string | null => {
+  const text = toText(value);
+  if (!text) return null;
+  const trimmed = text.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
 const overlap = (startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime) =>
   endA > startB && startA < endB;
 
@@ -781,33 +797,26 @@ export default function RecordsPublicPage() {
   const sessions: SessionItem[] = useMemo(() => {
     const mapped =
       sessionsQuery.data
-        ?.map((entry) => {
-          const payload = entry.ccdPayload;
-          if (!payload || typeof payload !== 'object') return null;
-          const p = payload as Partial<{
-            youtubeId: string;
-            youtubeID: string;
-            id: string;
-            title: string;
-            duration: string;
-            guests: string;
-            description: string;
-            url: string;
-          }>;
-          const youtubeId = p.youtubeId ?? p.youtubeID ?? p.id;
+        ?.map((entry): SessionItem | null => {
+          const payload = toObject(entry.ccdPayload);
+          if (!payload) return null;
+          const youtubeId =
+            toNonEmptyText(payload['youtubeId']) ??
+            toNonEmptyText(payload['youtubeID']) ??
+            toNonEmptyText(payload['id']);
           if (!youtubeId) return null;
-          const url = p.url ?? `https://www.youtube.com/watch?v=${youtubeId}`;
+          const url = toNonEmptyText(payload['url']) ?? `https://www.youtube.com/watch?v=${youtubeId}`;
           return {
             youtubeId,
-            title: p.title ?? entry.ccdTitle ?? 'TDF Session',
-            duration: p.duration ?? '',
-            guests: p.guests ?? '',
-            description: p.description ?? '',
+            title: toNonEmptyText(payload['title']) ?? toNonEmptyText(entry.ccdTitle) ?? 'TDF Session',
+            duration: toText(payload['duration']) ?? '',
+            guests: toText(payload['guests']) ?? '',
+            description: toText(payload['description']) ?? '',
             url,
           };
         })
-        .filter(Boolean) ?? [];
-    return (mapped as SessionItem[]).length ? (mapped as SessionItem[]) : defaultSessionItems;
+        .filter((item): item is SessionItem => item != null) ?? [];
+    return mapped.length > 0 ? mapped : defaultSessionItems;
   }, [sessionsQuery.data]);
 
   const [firstDefaultRelease] = defaultReleaseItems;
@@ -816,78 +825,57 @@ export default function RecordsPublicPage() {
   const releases: ReleaseItem[] = useMemo(() => {
     const mapped =
       releasesQuery.data
-        ?.map((entry) => {
-          const payload = entry.ccdPayload;
-          if (!payload || typeof payload !== 'object') return null;
-          const p = payload as Partial<{
-            links: { platform?: string; url?: string; accent?: string }[];
-            title: string;
-            artist: string;
-            releasedOn: string;
-            date: string;
-            description: string;
-            blurb: string;
-            cover: string;
-            image: string;
-            url: string;
-          }>;
-          const linksRaw = Array.isArray(p.links) ? p.links : [];
-          const links =
-            linksRaw
-              .map((l) =>
-                l?.url
-                  ? {
-                      platform: l.platform ?? 'Link',
-                      url: l.url,
-                      accent: l.accent ?? '#a5b4fc',
-                    }
-                  : null,
-              )
-              .filter(Boolean) ?? [];
-          const primaryUrl = typeof p.url === 'string' ? p.url : links[0]?.url;
-          if (!p.title && !entry.ccdTitle) return null;
+        ?.map((entry): ReleaseItem | null => {
+          const payload = toObject(entry.ccdPayload);
+          if (!payload) return null;
+          const linksRaw = Array.isArray(payload['links']) ? payload['links'] : [];
+          const links: ReleaseItem['links'] = linksRaw.flatMap((item) => {
+            const link = toObject(item);
+            if (!link) return [];
+            const url = toNonEmptyText(link['url']);
+            if (!url) return [];
+            return [{
+              platform: toNonEmptyText(link['platform']) ?? 'Link',
+              url,
+              accent: toNonEmptyText(link['accent']) ?? '#a5b4fc',
+            }];
+          });
+          const title = toNonEmptyText(payload['title']) ?? toNonEmptyText(entry.ccdTitle);
+          if (!title) return null;
           return {
-            title: p.title ?? entry.ccdTitle ?? 'Release',
-            artist: p.artist ?? 'TDF House Band',
-            releasedOn: p.releasedOn ?? p.date ?? '',
-            blurb: p.description ?? p.blurb ?? '',
-            cover: p.cover ?? p.image ?? defaultReleaseCover,
+            title,
+            artist: toNonEmptyText(payload['artist']) ?? 'TDF House Band',
+            releasedOn: toText(payload['releasedOn']) ?? toText(payload['date']) ?? '',
+            blurb: toText(payload['description']) ?? toText(payload['blurb']) ?? '',
+            cover: toNonEmptyText(payload['cover']) ?? toNonEmptyText(payload['image']) ?? defaultReleaseCover,
             links,
-            primaryUrl,
+            primaryUrl: toNonEmptyText(payload['url']) ?? links[0]?.url,
           };
         })
-        .filter(Boolean) ?? [];
-    return (mapped as ReleaseItem[]).length ? (mapped as ReleaseItem[]) : defaultReleaseItems;
+        .filter((item): item is ReleaseItem => item != null) ?? [];
+    return mapped.length > 0 ? mapped : defaultReleaseItems;
   }, [releasesQuery.data, defaultReleaseCover]);
 
   const recordings: RecordingItem[] = useMemo(() => {
     const mapped =
       recordingsQuery.data
-        ?.map((entry) => {
-          const payload = entry.ccdPayload;
-          if (!payload || typeof payload !== 'object') return null;
-          const p = payload as Partial<{
-            title: string;
-            image: string;
-            artist: string;
-            recordedAt: string;
-            date: string;
-            vibe: string;
-            tag: string;
-            description: string;
-          }>;
-          if (!p.title || !p.image) return null;
+        ?.map((entry): RecordingItem | null => {
+          const payload = toObject(entry.ccdPayload);
+          if (!payload) return null;
+          const title = toNonEmptyText(payload['title']);
+          const image = toNonEmptyText(payload['image']);
+          if (!title || !image) return null;
           return {
-            title: p.title,
-            artist: p.artist ?? '',
-            recordedAt: p.recordedAt ?? p.date ?? '',
-            vibe: p.vibe ?? p.tag ?? 'Live',
-            description: p.description ?? '',
-            image: p.image,
+            title,
+            artist: toText(payload['artist']) ?? '',
+            recordedAt: toText(payload['recordedAt']) ?? toText(payload['date']) ?? '',
+            vibe: toText(payload['vibe']) ?? toText(payload['tag']) ?? 'Live',
+            description: toText(payload['description']) ?? '',
+            image,
           };
         })
-        .filter(Boolean) ?? [];
-    return (mapped as RecordingItem[]).length ? (mapped as RecordingItem[]) : defaultRecordings;
+        .filter((item): item is RecordingItem => item != null) ?? [];
+    return mapped.length > 0 ? mapped : defaultRecordings;
   }, [recordingsQuery.data]);
 
   const heroTitle = 'Historias desde el estudio, releases y TDF Sessions en un solo lugar.';

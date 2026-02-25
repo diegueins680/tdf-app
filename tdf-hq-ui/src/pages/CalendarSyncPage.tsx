@@ -22,6 +22,22 @@ import EventIcon from '@mui/icons-material/Event';
 import { DateTime } from 'luxon';
 import { CalendarApi } from '../api/calendar';
 
+const normalizeStoredText = (value: string | null): string => value?.trim() ?? '';
+
+const normalizeHistoryEntries = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return Array.from(
+    new Set(
+      value
+        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .filter((item) => item.length > 0),
+    ),
+  ).slice(0, 5);
+};
+
+const sameStringArray = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((value, idx) => value === b[idx]);
+
 export default function CalendarSyncPage() {
   const zone: string = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
   const [calendarId, setCalendarId] = useState('');
@@ -93,18 +109,19 @@ export default function CalendarSyncPage() {
     const storedAccount = window.localStorage.getItem('calendar-sync.account');
     const storedHistory = window.localStorage.getItem('calendar-sync.history');
 
-    if (storedId) {
-      setCalendarId(storedId);
-    } else {
-      setCalendarId('primary');
-    }
-    if (storedConnected) setConnectedCalendar(storedConnected);
-    if (storedLastSync) setLastSyncAt(storedLastSync);
-    if (storedAccount) setAccountEmail(storedAccount);
+    const normalizedStoredId = normalizeStoredText(storedId);
+    setCalendarId(normalizedStoredId || 'primary');
+    const normalizedConnected = normalizeStoredText(storedConnected);
+    if (normalizedConnected) setConnectedCalendar(normalizedConnected);
+    const normalizedLastSync = normalizeStoredText(storedLastSync);
+    if (normalizedLastSync) setLastSyncAt(normalizedLastSync);
+    const normalizedAccount = normalizeStoredText(storedAccount);
+    if (normalizedAccount) setAccountEmail(normalizedAccount);
     if (storedHistory) {
       try {
-        const parsed = JSON.parse(storedHistory) as string[];
-        if (Array.isArray(parsed)) setCalendarHistory(parsed);
+        const parsed = JSON.parse(storedHistory) as unknown;
+        const normalizedHistory = normalizeHistoryEntries(parsed);
+        if (normalizedHistory.length > 0) setCalendarHistory(normalizedHistory);
       } catch {
         // ignore malformed history
       }
@@ -127,13 +144,15 @@ export default function CalendarSyncPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem('calendar-sync.calendarId', calendarId);
-    if (calendarId) {
-      const nextHistory = Array.from(new Set([calendarId, ...calendarHistory])).slice(0, 5);
-      setCalendarHistory(nextHistory);
+    const normalizedCalendarId = trimmedCalendarId || 'primary';
+    window.localStorage.setItem('calendar-sync.calendarId', normalizedCalendarId);
+    setCalendarHistory((prev) => {
+      const nextHistory = normalizeHistoryEntries([normalizedCalendarId, ...prev]);
+      if (sameStringArray(prev, nextHistory)) return prev;
       window.localStorage.setItem('calendar-sync.history', JSON.stringify(nextHistory));
-    }
-  }, [calendarHistory, calendarId]);
+      return nextHistory;
+    });
+  }, [trimmedCalendarId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -171,7 +190,7 @@ export default function CalendarSyncPage() {
     queryKey: ['calendar-events', trimmedCalendarId, fromIso, toIso],
     queryFn: () =>
       CalendarApi.listEvents({
-        calendarId: trimmedCalendarId ?? undefined,
+        calendarId: trimmedCalendarId || undefined,
         from: fromIso ?? undefined,
         to: toIso ?? undefined,
       }),
