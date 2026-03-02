@@ -10,8 +10,6 @@ module TDF.SocialEvents
 
 import RIO
 
--- TODO: Add imports for Persistent, Servant, and DTO conversions
-
 -- Example stubbed handler signature (to be implemented):
 -- getEvent :: ID -> AppM EventDTO
 
