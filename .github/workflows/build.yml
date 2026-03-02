@@ -47,9 +47,9 @@ jobs:
         run: npm ci
       - name: Mobile quality gate
         run: |
-          npm run lint --workspace=tdf-mobile
-          npm run typecheck --workspace=tdf-mobile
-          npm run test --workspace=tdf-mobile -- --runInBand
+          npm run lint:mobile
+          npm run typecheck:mobile
+          npm run test:mobile
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
