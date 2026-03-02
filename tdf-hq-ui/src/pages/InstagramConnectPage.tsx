@@ -53,7 +53,7 @@ export default function InstagramConnectPage() {
     }
   }, [status]);
 
-  const pages = result?.pages ?? [];
+  const pages = useMemo(() => result?.pages ?? [], [result?.pages]);
   const media = result?.media ?? [];
   const connectedHandle = result?.instagramUsername?.trim();
   const connectedHandleLabel = connectedHandle && connectedHandle.length > 0 ? connectedHandle : null;
