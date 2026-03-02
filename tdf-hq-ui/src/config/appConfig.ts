@@ -63,7 +63,7 @@ const envTrimmedOrUndefined = (raw?: string): string | undefined => {
 };
 
 const defaultCourseSlug =
-  envTrimmedOrUndefined(envString('VITE_COURSE_SLUG')) ?? 'produccion-musical-feb-2026';
+  envTrimmedOrUndefined(envString('VITE_COURSE_SLUG')) ?? 'produccion-musical-abr-2026';
 const defaultCourseCohorts = parseList(envString('VITE_COURSE_COHORTS'));
 const defaultMapUrl =
   envTrimmedOrUndefined(envString('VITE_COURSE_MAP_URL')) ??

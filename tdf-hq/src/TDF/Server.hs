@@ -2100,10 +2100,10 @@ courseMetadataFor cfg mWaContact slugVal =
     else
       let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
           sessions =
-            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 2 28)
-            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 3 7)
-            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2026 3 14)
-            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 3 21)
+            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 4 11)
+            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 4 18)
+            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2026 4 25)
+            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 5 2)
             ]
           syllabus =
             [ SyllabusItem "Introducción a la producción musical" ["Conceptos básicos", "Herramientas esenciales"]
@@ -2114,9 +2114,9 @@ courseMetadataFor cfg mWaContact slugVal =
       in Just CourseMetadata
         { slug = fallbackSlug
         , title = "Curso de Producción Musical"
-        , subtitle = "Presencial · 4 sábados · 16 horas"
+        , subtitle = "Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: segundo sábado de abril"
         , format = "Presencial"
-        , duration = "4 sábados · 16 horas"
+        , duration = "Cuatro sábados (16 horas en total)"
         , price = productionCoursePrice
         , currency = "USD"
         , capacity = productionCourseCapacity
@@ -5542,7 +5542,7 @@ adsAssistNoAiFallback cfg =
        , "Ahora mismo el asistente automático no está disponible,"
        , "pero te comparto lo principal:"
        , "el Curso de Producción Musical es presencial en Quito,"
-       , "dura 4 sábados (16 horas), cuesta $150 USD y tiene cupos limitados."
+       , "dura cuatro sábados (16 horas en total), cuesta $150 USD y tiene cupos limitados."
        , "Más info e inscripción aquí:"
        , courseUrl
        ]
@@ -5834,7 +5834,7 @@ buildRagMessages kb examples userMsg mChannel =
       systemIntro = T.intercalate "\n"
         [ "Eres un asistente de marketing de TDF Records."
         , "Responde en español (Quito, Ecuador), tono cálido y conciso."
-        , "Tu objetivo es ayudar al usuario y, cuando sea relevante, promocionar el Curso de Producción Musical (presencial, 4 sábados, 16 horas, $150 USD, cupos limitados) con link: https://tdf-app.pages.dev/curso/produccion-musical-feb-2026"
+        , "Tu objetivo es ayudar al usuario y, cuando sea relevante, promocionar el Curso de Producción Musical (presencial, cuatro sábados, 16 horas en total, $150 USD, cupos limitados) con link: https://tdf-app.pages.dev/curso/produccion-musical-abr-2026"
         , "REGLA CRÍTICA DE FORMATO: responde SOLO con una de estas dos formas:"
         , "1) SEND: <tu respuesta final para enviar al usuario>"
         , "2) HOLD: <por qué no puedes responder todavía>\\nNEED: <lista corta de datos que faltan>"

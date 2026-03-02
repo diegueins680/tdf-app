@@ -37,10 +37,10 @@ const splitTopics = (input: string) =>
     .filter(Boolean);
 
 const DEFAULT_SESSIONS: SessionInput[] = [
-  { label: 'Sábado 1 · Introducción', date: '2026-02-28' },
-  { label: 'Sábado 2 · Grabación', date: '2026-03-07' },
-  { label: 'Sábado 3 · Mezcla', date: '2026-03-14' },
-  { label: 'Sábado 4 · Masterización', date: '2026-03-21' },
+  { label: 'Sábado 1 · Introducción', date: '2026-04-11' },
+  { label: 'Sábado 2 · Grabación', date: '2026-04-18' },
+  { label: 'Sábado 3 · Mezcla', date: '2026-04-25' },
+  { label: 'Sábado 4 · Masterización', date: '2026-05-02' },
 ];
 
 const DEFAULT_SYLLABUS: SyllabusInput[] = [
@@ -100,9 +100,9 @@ const DEFAULT_SLUG = COURSE_DEFAULTS.slug || generateSlug(DEFAULT_TITLE, DEFAULT
 
 export default function CourseBuilderPage() {
   const [title, setTitle] = useState(DEFAULT_TITLE);
-  const [subtitle, setSubtitle] = useState('Presencial · 4 sábados · 16 horas');
+  const [subtitle, setSubtitle] = useState('Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: segundo sábado de abril');
   const [format, setFormat] = useState('Presencial');
-  const [duration, setDuration] = useState('4 sábados · 16 horas');
+  const [duration, setDuration] = useState('Cuatro sábados (16 horas en total)');
   const [price, setPrice] = useState('150');
   const [currency, setCurrency] = useState('USD');
   const [capacity, setCapacity] = useState('16');

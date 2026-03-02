@@ -225,11 +225,11 @@ seedProductionCourse now = do
         let txt = T.strip (T.pack raw)
         in if T.null txt then Nothing else Just txt
       baseUrl = resolveAppBase (fmap T.pack baseEnv)
-      slugVal = fromMaybe "produccion-musical-feb-2026" (slugEnv >>= nonEmptyText)
+      slugVal = fromMaybe "produccion-musical-abr-2026" (slugEnv >>= nonEmptyText)
       courseTitle = "Curso de Producción Musical"
-      subtitleTxt = Just "Presencial · 4 sábados · 16 horas"
+      subtitleTxt = Just "Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: segundo sábado de abril"
       formatTxt = Just "Presencial"
-      durationTxt = Just "4 sábados · 16 horas"
+      durationTxt = Just "Cuatro sábados (16 horas en total)"
       priceCentsVal = 15000
       currencyVal = "USD"
       capacityVal = 16
@@ -243,10 +243,10 @@ seedProductionCourse now = do
       instructorBio = Just "Productor en TDF Records. 10+ años grabando bandas, rap y electrónica."
       instructorAvatar = Just (fromMaybe (baseUrl <> "/assets/esteban-munoz.jpg") (instructorAvatarEnv >>= nonEmptyText))
       sessions =
-        [ ("Sábado 1 · Introducción", fromGregorian 2026 2 28)
-        , ("Sábado 2 · Grabación", fromGregorian 2026 3 7)
-        , ("Sábado 3 · Mezcla", fromGregorian 2026 3 14)
-        , ("Sábado 4 · Masterización", fromGregorian 2026 3 21)
+        [ ("Sábado 1 · Introducción", fromGregorian 2026 4 11)
+        , ("Sábado 2 · Grabación", fromGregorian 2026 4 18)
+        , ("Sábado 3 · Mezcla", fromGregorian 2026 4 25)
+        , ("Sábado 4 · Masterización", fromGregorian 2026 5 2)
         ]
       syllabus =
         [ ("Introducción a la producción musical", ["Conceptos básicos", "Herramientas esenciales"])

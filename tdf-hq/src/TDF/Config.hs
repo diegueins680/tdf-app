@@ -152,7 +152,7 @@ loadConfig = do
     , appBaseUrl = fmap (T.strip . T.pack) baseUrlEnv
     , assetsBaseUrl = fmap (T.strip . T.pack) assetsBaseEnv
     , assetsRootDir = assetsRoot
-    , courseDefaultSlug = maybe "produccion-musical-feb-2026" (T.strip . T.pack) courseSlugEnv
+    , courseDefaultSlug = maybe "produccion-musical-abr-2026" (T.strip . T.pack) courseSlugEnv
     , courseDefaultMapUrl = fmap (T.strip . T.pack) courseMapEnv
     , courseDefaultInstructorAvatar = fmap (T.strip . T.pack) courseInstructorAvatarEnv
     , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
@@ -247,7 +247,7 @@ resolveConfiguredAssetsBase cfg = sanitizeBaseUrl (fromMaybe defaultAssetsBase (
 courseSlugFallback :: AppConfig -> Text
 courseSlugFallback cfg =
   let val = T.strip (courseDefaultSlug cfg)
-  in if T.null val then "produccion-musical-feb-2026" else val
+  in if T.null val then "produccion-musical-abr-2026" else val
 
 courseMapFallback :: AppConfig -> Text
 courseMapFallback cfg = fromMaybe "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6" (courseDefaultMapUrl cfg >>= nonEmpty)

@@ -408,7 +408,7 @@ function Hero({
   dateRangeLabel?: string;
 }) {
   const title = loading ? 'Cargando curso…' : heroOverride?.title ?? meta?.title ?? 'Curso de Producción Musical';
-  const subtitle = loading ? 'Preparando detalles...' : heroOverride?.subtitle ?? meta?.subtitle ?? 'Presencial · 4 sábados · 16 horas';
+  const subtitle = loading ? 'Preparando detalles...' : heroOverride?.subtitle ?? meta?.subtitle ?? 'Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: segundo sábado de abril';
   const primaryCta = heroOverride?.cta ?? 'Inscribirme';
   const whatsappCta = heroOverride?.whatsappCta ?? 'Inscribirme por WhatsApp';
   const badgeDate = heroOverride?.badge3 ?? dateRangeLabel ?? 'Fechas por confirmar';
@@ -505,7 +505,7 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
         <CardContent>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
             <Badge icon={<CelebrationIcon />} label="Presencial" />
-            <Badge icon={<HeadsetIcon />} label="4 sábados · 16h" />
+            <Badge icon={<HeadsetIcon />} label="Cuatro sábados · 16h total" />
             <Badge icon={<MusicNoteIcon />} label="DAWs: Logic y Luna" />
             <Badge icon={<CheckCircleIcon />} label="Incluye grabaciones y certificado" />
           </Stack>

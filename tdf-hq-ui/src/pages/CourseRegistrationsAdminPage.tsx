@@ -127,7 +127,7 @@ const actionButtons = (
 export default function CourseRegistrationsAdminPage() {
   const qc = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialSlug = searchParams.get('slug') ?? 'produccion-musical-feb-2026';
+  const initialSlug = searchParams.get('slug') ?? 'produccion-musical-abr-2026';
   const initialStatus = parseStatusFilter(searchParams.get('status'));
   const initialLimit = parsePositiveLimit(searchParams.get('limit'));
   const [slug, setSlug] = useState(initialSlug);
