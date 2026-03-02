@@ -26,7 +26,7 @@
     "typecheck:mobile": "if [ -f tdf-mobile/package.json ]; then npm run typecheck --workspace=tdf-mobile; elif [ \"${REQUIRE_MOBILE_WORKSPACE:-0}\" = \"1\" ]; then echo 'Missing tdf-mobile workspace. Run: git submodule update --init --recursive' >&2; exit 1; else echo 'Skipping mobile typecheck: tdf-mobile workspace not present'; fi",
     "quality": "./scripts/quality-check.sh",
     "generate:api:ui": "npm run generate:api --workspace=tdf-hq-ui",
-    "generate:api:mobile": "npm run generate:api --workspace=tdf-mobile",
+    "generate:api:mobile": "if [ -f tdf-mobile/package.json ]; then npm run generate:api --workspace=tdf-mobile; elif [ \"${REQUIRE_MOBILE_WORKSPACE:-0}\" = \"1\" ]; then echo 'Missing tdf-mobile workspace. Run: git submodule update --init --recursive' >&2; exit 1; else echo 'Skipping mobile API generation: tdf-mobile workspace not present'; fi",
     "clean": "rm -rf node_modules tdf-hq-ui/node_modules tdf-mobile/node_modules",
     "clean:build": "rm -rf tdf-hq-ui/dist tdf-mobile/dist tdf-hq/.stack-work",
     "cron:sync-drive": "node scripts/sync-artist-drive.js"
