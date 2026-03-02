@@ -20,6 +20,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useInstagramAuth } from '../hooks/useInstagramAuth';
 import {
+  getInstagramOAuthProvider,
   getInstagramRequestedScopes,
   getMetaReviewAssetSelection,
   getStoredInstagramResult,
@@ -27,9 +28,12 @@ import {
 } from '../services/instagramAuth';
 import type { InstagramOAuthExchangeResponse } from '../api/instagramOAuth';
 
-const META_REVIEW_REQUIRED_SCOPES = [
+const META_REVIEW_REQUIRED_SCOPES_FACEBOOK = [
   'instagram_basic',
   'instagram_manage_messages',
+] as const;
+
+const META_REVIEW_REQUIRED_SCOPES_INSTAGRAM = [
   'instagram_business_basic',
   'instagram_business_manage_messages',
 ] as const;
@@ -53,11 +57,16 @@ export default function InstagramConnectPage() {
   const media = result?.media ?? [];
   const connectedHandle = result?.instagramUsername?.trim();
   const connectedHandleLabel = connectedHandle && connectedHandle.length > 0 ? connectedHandle : null;
+  const oauthProvider = useMemo(() => getInstagramOAuthProvider(), []);
+  const requiredReviewScopes = useMemo(
+    () => (oauthProvider === 'instagram' ? META_REVIEW_REQUIRED_SCOPES_INSTAGRAM : META_REVIEW_REQUIRED_SCOPES_FACEBOOK),
+    [oauthProvider],
+  );
   const requestedScopes = useMemo(() => getInstagramRequestedScopes(), []);
 
   const missingReviewScopes = useMemo(
-    () => META_REVIEW_REQUIRED_SCOPES.filter((scope) => !requestedScopes.includes(scope)),
-    [requestedScopes],
+    () => requiredReviewScopes.filter((scope) => !requestedScopes.includes(scope)),
+    [requiredReviewScopes, requestedScopes],
   );
 
   useEffect(() => {
@@ -117,7 +126,7 @@ export default function InstagramConnectPage() {
                 Start recording before clicking Connect, keep the permissions dialog visible, and return to this page after consent.
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap">
-                {META_REVIEW_REQUIRED_SCOPES.map((scope) => {
+                {requiredReviewScopes.map((scope) => {
                   const enabled = requestedScopes.includes(scope);
                   return (
                     <Chip
@@ -132,7 +141,7 @@ export default function InstagramConnectPage() {
               </Stack>
               {missingReviewScopes.length > 0 && (
                 <Alert severity="warning">
-                  Missing scopes in current config: {missingReviewScopes.join(', ')}
+                  Missing scopes in current config ({oauthProvider}): {missingReviewScopes.join(', ')}
                 </Alert>
               )}
             </Stack>

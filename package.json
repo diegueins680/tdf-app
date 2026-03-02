@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@testomatio/reporter": "^2.3.8",
+    "playwright": "^1.58.2",
     "react-native-reanimated": "~4.1.1"
   }
 }

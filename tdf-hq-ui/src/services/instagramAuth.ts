@@ -46,11 +46,12 @@ const resolveOAuthProvider = (scopes: string[]): InstagramOAuthProvider => {
 
 const resolveScopes = (provider: InstagramOAuthProvider, scopes: string[]) => {
   if (provider === 'instagram') {
-    const configuredScopes = uniqueScopes(scopes);
-    if (configuredScopes.length > 0) return configuredScopes.join(',');
+    const businessScopes = uniqueScopes(scopes.filter((scope) => scope.startsWith('instagram_business_')));
+    if (businessScopes.length > 0) return businessScopes.join(',');
     return uniqueScopes(parseScopes(DEFAULT_INSTAGRAM_SCOPES)).join(',');
   }
-  return uniqueScopes(scopes).join(',');
+  const facebookScopes = uniqueScopes(scopes.filter((scope) => !scope.startsWith('instagram_business_')));
+  return facebookScopes.join(',');
 };
 
 const rawScopes = env.read('VITE_INSTAGRAM_SCOPES')?.trim();
@@ -205,6 +206,7 @@ export const buildInstagramAuthUrl = (returnTo?: string) => {
 };
 
 export const getInstagramRequestedScopes = () => parseScopes(SCOPES);
+export const getInstagramOAuthProvider = (): InstagramOAuthProvider => OAUTH_PROVIDER;
 
 export const consumeInstagramState = (): InstagramOAuthStateRecord | null => {
   if (typeof window === 'undefined') return null;
