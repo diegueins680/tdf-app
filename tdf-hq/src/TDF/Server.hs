@@ -3007,10 +3007,10 @@ verifyGoogleIdToken manager rawToken mExpectedClientId = do
           in Right profile
 
 issuerAllowed :: Maybe Text -> Bool
-issuerAllowed Nothing = True
+issuerAllowed Nothing = False
 issuerAllowed (Just issRaw) =
   let issuer = T.toLower (T.strip issRaw)
-  in "accounts.google.com" `T.isInfixOf` issuer
+  in issuer == "accounts.google.com" || issuer == "https://accounts.google.com"
 
 completeGoogleLogin :: GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
 completeGoogleLogin GoogleProfile{..} = do
