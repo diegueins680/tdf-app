@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -11,6 +12,12 @@ module TDF.DTO.SocialEventsDTO
   , EventDTO(..)
   , RsvpDTO(..)
   , InvitationDTO(..)
+  , TicketTierDTO(..)
+  , TicketPurchaseRequestDTO(..)
+  , TicketOrderStatusUpdateDTO(..)
+  , TicketCheckInRequestDTO(..)
+  , TicketDTO(..)
+  , TicketOrderDTO(..)
   ) where
 
 import           Data.Aeson (FromJSON, ToJSON, withObject, (.:), (.:?), (.=), object, toJSON, parseJSON)
@@ -108,6 +115,7 @@ instance FromJSON VenueDTO
 
 data EventDTO = EventDTO
   { eventId          :: Maybe Text
+  , eventOrganizerPartyId :: Maybe Text
   , eventTitle       :: Text
   , eventDescription :: Maybe Text
   , eventStart       :: UTCTime
@@ -142,3 +150,79 @@ data InvitationDTO = InvitationDTO
   } deriving (Show, Eq, Generic)
 instance ToJSON InvitationDTO
 instance FromJSON InvitationDTO
+
+data TicketTierDTO = TicketTierDTO
+  { ticketTierId            :: Maybe Text
+  , ticketTierEventId       :: Maybe Text
+  , ticketTierCode          :: Text
+  , ticketTierName          :: Text
+  , ticketTierDescription   :: Maybe Text
+  , ticketTierPriceCents    :: Int
+  , ticketTierCurrency      :: Text
+  , ticketTierQuantityTotal :: Int
+  , ticketTierQuantitySold  :: Int
+  , ticketTierSalesStart    :: Maybe UTCTime
+  , ticketTierSalesEnd      :: Maybe UTCTime
+  , ticketTierActive        :: Bool
+  , ticketTierPosition      :: Maybe Int
+  } deriving (Show, Eq, Generic)
+instance ToJSON TicketTierDTO
+instance FromJSON TicketTierDTO
+
+data TicketPurchaseRequestDTO = TicketPurchaseRequestDTO
+  { ticketPurchaseTierId    :: Text
+  , ticketPurchaseQuantity  :: Int
+  , ticketPurchaseBuyerPartyId :: Maybe Text
+  , ticketPurchaseBuyerName :: Maybe Text
+  , ticketPurchaseBuyerEmail :: Maybe Text
+  } deriving (Show, Eq, Generic)
+instance ToJSON TicketPurchaseRequestDTO
+instance FromJSON TicketPurchaseRequestDTO
+
+data TicketOrderStatusUpdateDTO = TicketOrderStatusUpdateDTO
+  { ticketOrderStatus :: Text
+  } deriving (Show, Eq, Generic)
+instance ToJSON TicketOrderStatusUpdateDTO
+instance FromJSON TicketOrderStatusUpdateDTO
+
+data TicketCheckInRequestDTO = TicketCheckInRequestDTO
+  { ticketCheckInTicketId   :: Maybe Text
+  , ticketCheckInTicketCode :: Maybe Text
+  } deriving (Show, Eq, Generic)
+instance ToJSON TicketCheckInRequestDTO
+instance FromJSON TicketCheckInRequestDTO
+
+data TicketDTO = TicketDTO
+  { ticketId          :: Maybe Text
+  , ticketEventId     :: Maybe Text
+  , ticketTierId      :: Maybe Text
+  , ticketOrderId     :: Maybe Text
+  , ticketCode        :: Text
+  , ticketStatus      :: Text
+  , ticketHolderName  :: Maybe Text
+  , ticketHolderEmail :: Maybe Text
+  , ticketCheckedInAt :: Maybe UTCTime
+  , ticketCreatedAt   :: Maybe UTCTime
+  , ticketUpdatedAt   :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+instance ToJSON TicketDTO
+instance FromJSON TicketDTO
+
+data TicketOrderDTO = TicketOrderDTO
+  { ticketOrderId          :: Maybe Text
+  , ticketOrderEventId     :: Maybe Text
+  , ticketOrderTierId      :: Maybe Text
+  , ticketOrderBuyerPartyId :: Maybe Text
+  , ticketOrderBuyerName   :: Maybe Text
+  , ticketOrderBuyerEmail  :: Maybe Text
+  , ticketOrderQuantity    :: Int
+  , ticketOrderAmountCents :: Int
+  , ticketOrderCurrency    :: Text
+  , ticketOrderStatusValue :: Text
+  , ticketOrderPurchasedAt :: Maybe UTCTime
+  , ticketOrderCreatedAt   :: Maybe UTCTime
+  , ticketOrderUpdatedAt   :: Maybe UTCTime
+  , ticketOrderTickets     :: [TicketDTO]
+  } deriving (Show, Eq, Generic)
+instance ToJSON TicketOrderDTO
+instance FromJSON TicketOrderDTO

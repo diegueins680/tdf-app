@@ -11,7 +11,12 @@ import           Test.Hspec
 
 import           TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
 import           TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
-import           TDF.Server.SocialEventsHandlers (normalizeInvitationStatus, parseInvitationIdsEither)
+import           TDF.Server.SocialEventsHandlers
+  ( normalizeInvitationStatus
+  , normalizeTicketOrderStatus
+  , normalizeTicketStatus
+  , parseInvitationIdsEither
+  )
 
 main :: IO ()
 main = hspec $ do
@@ -35,6 +40,24 @@ main = hspec $ do
       case parseInvitationIdsEither "x" "1" of
         Left err -> BL.unpack (errBody err) `shouldContain` "Invalid event or invitation id"
         Right _  -> expectationFailure "Expected an error for invalid ids"
+
+  describe "normalizeTicketOrderStatus" $ do
+    it "defaults to pending for empty/unknown values" $ do
+      normalizeTicketOrderStatus Nothing `shouldBe` "pending"
+      normalizeTicketOrderStatus (Just "  ") `shouldBe` "pending"
+      normalizeTicketOrderStatus (Just "unknown") `shouldBe` "pending"
+
+    it "normalizes valid statuses" $ do
+      normalizeTicketOrderStatus (Just "PAID") `shouldBe` "paid"
+      normalizeTicketOrderStatus (Just "canceled") `shouldBe` "cancelled"
+
+  describe "normalizeTicketStatus" $ do
+    it "defaults to issued when missing" $ do
+      normalizeTicketStatus Nothing `shouldBe` "issued"
+
+    it "normalizes alternate ticket status spellings" $ do
+      normalizeTicketStatus (Just "checkedin") `shouldBe` "checked_in"
+      normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
 
   describe "availabilityOverlaps" $ do
     let day = fromGregorian 2025 1 1

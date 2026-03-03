@@ -97,4 +97,52 @@ ArtistFollow
     createdAt UTCTime default=now()
     Primary artistId followerPartyId
     deriving Show Generic
+
+EventTicketTier
+    eventId SocialEventId
+    code Text
+    name Text
+    description Text Maybe
+    priceCents Int
+    currency Text
+    quantityTotal Int
+    quantitySold Int
+    salesStart UTCTime Maybe
+    salesEnd UTCTime Maybe
+    isActive Bool
+    position Int Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniqueEventTicketTierCode eventId code
+    deriving Show Generic
+
+EventTicketOrder
+    eventId SocialEventId
+    tierId EventTicketTierId
+    buyerPartyId Text Maybe
+    buyerName Text Maybe
+    buyerEmail Text Maybe
+    quantity Int
+    amountCents Int
+    currency Text
+    status Text
+    metadata Text Maybe
+    purchasedAt UTCTime
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
+
+EventTicket
+    eventId SocialEventId
+    tierRefId EventTicketTierId
+    orderRefId EventTicketOrderId
+    holderName Text Maybe
+    holderEmail Text Maybe
+    code Text
+    status Text
+    checkedInAt UTCTime Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniqueEventTicketCode code
+    deriving Show Generic
 |]

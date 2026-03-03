@@ -9,32 +9,52 @@ module TDF.Server.SocialEventsHandlers
   , normalizeInvitationStatus
   , parseInvitationIdsEither
   , followArtistDb
+  , normalizeTicketOrderStatus
+  , normalizeTicketStatus
   ) where
 
 import           Control.Applicative ((<|>))
-import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad (forM, forM_, replicateM, when)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
+import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Lazy as BL
+import           Data.Char (isAlphaNum)
+import           Data.Int (Int64)
+import           Data.Maybe (catMaybes, fromMaybe, isNothing)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Text.Read (readMaybe)
-import           Data.Int (Int64)
-import           Data.Time (getCurrentTime)
+import           Data.Time (UTCTime, getCurrentTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
-import           Data.Maybe (isNothing, catMaybes, fromMaybe)
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.Aeson as Aeson
-import           Control.Monad (forM, forM_, when)
+import qualified Data.UUID as UUID
+import qualified Data.UUID.V4 as UUIDV4
+import           Text.Read (readMaybe)
 
 import           Servant
 
--- Pull in full Persistent surface so TH-generated field constructors (EventRsvpEventId, SocialEventStartTime, etc.)
--- are available for filters/updates.
+-- Pull in full Persistent surface so TH-generated field constructors
+-- (EventRsvpEventId, SocialEventStartTime, etc.) are available.
 import           Database.Persist
-import           Database.Persist.Sql (ConnectionPool, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist.Sql (ConnectionPool, SqlBackend, fromSqlKey, runSqlPool, toSqlKey)
 
 import           TDF.API.SocialEventsAPI
-import           TDF.Auth (AuthedUser)
-import           TDF.DTO.SocialEventsDTO (EventDTO(..), VenueDTO(..), ArtistDTO(..), ArtistSocialLinksDTO(..), ArtistFollowerDTO(..), ArtistFollowRequest(..), RsvpDTO(..), InvitationDTO(..))
+import           TDF.Auth (AuthedUser(..))
+import           TDF.DTO.SocialEventsDTO
+  ( EventDTO(..)
+  , VenueDTO(..)
+  , ArtistDTO(..)
+  , ArtistSocialLinksDTO(..)
+  , ArtistFollowerDTO(..)
+  , ArtistFollowRequest(..)
+  , RsvpDTO(..)
+  , InvitationDTO(..)
+  , TicketTierDTO(..)
+  , TicketPurchaseRequestDTO(..)
+  , TicketOrderStatusUpdateDTO(..)
+  , TicketCheckInRequestDTO(..)
+  , TicketDTO(..)
+  , TicketOrderDTO(..)
+  )
 import           TDF.DB (Env(..))
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueName)
 import qualified TDF.Models.SocialEventsModels as SM
@@ -51,12 +71,16 @@ encodeSocialLinks mLinks =
   fmap (TE.decodeUtf8 . BL.toStrict . Aeson.encode) mLinks
 
 socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
-socialEventsServer _user = eventsServer
+socialEventsServer user = eventsServer
                :<|> venuesServer
                :<|> artistsServer
                :<|> rsvpsServer
                :<|> invitationsServer
+               :<|> ticketsServer
   where
+    currentPartyId :: T.Text
+    currentPartyId = renderPartyId user
+
     -- Events
     eventsServer :: ServerT EventsRoutes AppM
     eventsServer = listEvents
@@ -100,38 +124,9 @@ socialEventsServer _user = eventsServer
             else pure [SocialEventId <-. eventIds]
       let filters = startFilter ++ cityFilter ++ venueFilter ++ artistFilter
       rows <- liftIO $ runSqlPool (selectList filters [Desc SocialEventStartTime, LimitTo 200]) envPool
-      forM rows $ \(Entity eid e) -> do
-        artistLinks <- liftIO $ runSqlPool (selectList [EventArtistEventId ==. eid] []) envPool
-        artists <- forM artistLinks $ \(Entity _ link) -> do
-          mArtist <- liftIO $ runSqlPool (get (eventArtistArtistId link)) envPool
-          pure $ case mArtist of
-            Nothing -> ArtistDTO
-              { artistId = Nothing
-              , artistName = "(unknown)"
-              , artistGenres = []
-              , artistBio = Nothing
-              , artistAvatarUrl = Nothing
-              , artistSocialLinks = Nothing
-              }
-            Just a -> ArtistDTO 
-              { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link))))
-              , artistName = artistProfileName a
-              , artistGenres = maybe [] id (artistProfileGenres a)
-              , artistBio = artistProfileBio a
-              , artistAvatarUrl = artistProfileAvatarUrl a
-              , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
-              }
-        pure EventDTO
-          { eventId = Just (T.pack (show (fromSqlKey eid)))
-          , eventTitle = socialEventTitle e
-          , eventDescription = socialEventDescription e
-          , eventStart = socialEventStartTime e
-          , eventEnd = socialEventEndTime e
-          , eventVenueId = fmap (T.pack . show . fromSqlKey) (socialEventVenueId e)
-          , eventPriceCents = socialEventPriceCents e
-          , eventCapacity = socialEventCapacity e
-          , eventArtists = artists
-          }
+      forM rows $ \(Entity eid eventRow) -> do
+        artists <- liftIO $ loadEventArtists envPool eid
+        pure (eventEntityToDTO eid eventRow artists)
 
     createEvent :: EventDTO -> AppM EventDTO
     createEvent dto = do
@@ -145,7 +140,7 @@ socialEventsServer _user = eventsServer
           Nothing -> throwError err400 { errBody = "Invalid venue id" }
           Just vnum -> pure (Just (toSqlKey vnum))
       key <- liftIO $ runSqlPool (insert SocialEvent
-        { socialEventOrganizerPartyId = Nothing
+        { socialEventOrganizerPartyId = Just currentPartyId
         , socialEventTitle = eventTitle dto
         , socialEventDescription = eventDescription dto
         , socialEventVenueId = mVenueKey
@@ -167,110 +162,77 @@ socialEventsServer _user = eventsServer
                Just anum -> insert_ (EventArtist key (toSqlKey anum) Nothing)
         )
         envPool
-      let createdDto = dto { eventId = Just (T.pack (show (fromSqlKey key))) }
-      pure createdDto
+      pure dto
+        { eventId = Just (renderKeyText key)
+        , eventOrganizerPartyId = Just currentPartyId
+        }
 
     getEvent :: T.Text -> AppM EventDTO
     getEvent rawId = do
       Env{..} <- ask
-      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid event id" }
-        Just num -> do
-          let key = toSqlKey num :: SocialEventId
-          mEnt <- liftIO $ runSqlPool (get key) envPool
-          case mEnt of
-            Nothing -> throwError err404 { errBody = "Event not found" }
-            Just e  -> do
-              artistLinks <- liftIO $ runSqlPool (selectList [EventArtistEventId ==. key] []) envPool
-              artists <- forM artistLinks $ \(Entity _ link) -> do
-                mArtist <- liftIO $ runSqlPool (get (eventArtistArtistId link)) envPool
-                pure $ case mArtist of
-                  Nothing -> ArtistDTO
-                    { artistId = Nothing
-                    , artistName = "(unknown)"
-                    , artistGenres = []
-                    , artistBio = Nothing
-                    , artistAvatarUrl = Nothing
-                    , artistSocialLinks = Nothing
-                    }
-                  Just a -> ArtistDTO 
-                    { artistId = Just (T.pack (show (fromSqlKey (eventArtistArtistId link))))
-                    , artistName = artistProfileName a
-                    , artistGenres = maybe [] id (artistProfileGenres a)
-                    , artistBio = artistProfileBio a
-                    , artistAvatarUrl = artistProfileAvatarUrl a
-                    , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
-                    }
-              pure $ EventDTO
-                { eventId = Just (T.pack (show num))
-                , eventTitle = socialEventTitle e
-                , eventDescription = socialEventDescription e
-                , eventStart = socialEventStartTime e
-                , eventEnd = socialEventEndTime e
-                , eventVenueId = fmap (T.pack . show . fromSqlKey) (socialEventVenueId e)
-                , eventPriceCents = socialEventPriceCents e
-                , eventCapacity = socialEventCapacity e
-                , eventArtists = artists
-                }
+      eventKey <- parseKeyOr400 "event" rawId
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      case mEvent of
+        Nothing -> throwError err404 { errBody = "Event not found" }
+        Just eventRow -> do
+          artists <- liftIO $ loadEventArtists envPool eventKey
+          pure (eventEntityToDTO eventKey eventRow artists)
 
     updateEvent :: T.Text -> EventDTO -> AppM EventDTO
     updateEvent rawId dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
-      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid event id" }
-        Just num -> do
-          let key = toSqlKey num :: SocialEventId
-          mExisting <- liftIO $ runSqlPool (get key) envPool
-          when (isNothing mExisting) $ throwError err404 { errBody = "Event not found" }
-          when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
-          when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
-          mVenueKey <- case eventVenueId dto of
-            Nothing -> pure Nothing
-            Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
-              Nothing -> throwError err400 { errBody = "Invalid venue id" }
-              Just vnum -> pure (Just (toSqlKey vnum))
-          liftIO $ runSqlPool (update key
-            [ SocialEventTitle =. eventTitle dto
-            , SocialEventDescription =. eventDescription dto
-            , SocialEventVenueId =. mVenueKey
-            , SocialEventStartTime =. eventStart dto
-            , SocialEventEndTime =. eventEnd dto
-            , SocialEventPriceCents =. eventPriceCents dto
-            , SocialEventCapacity =. eventCapacity dto
-            , SocialEventUpdatedAt =. now
-            ]) envPool
-          liftIO $ runSqlPool (deleteWhere [EventArtistEventId ==. key]) envPool
-          let artists = eventArtists dto
-          liftIO $ runSqlPool
-            (forM_ artists $ \a ->
-               case artistId a of
-                 Nothing -> pure ()
-                 Just atxt -> case readMaybe (T.unpack atxt) :: Maybe Int64 of
-                   Nothing -> pure ()
-                   Just anum -> insert_ (EventArtist key (toSqlKey anum) Nothing)
-            )
-            envPool
-          pure (dto { eventId = Just rawId })
+      eventKey <- parseKeyOr400 "event" rawId
+      mExisting <- liftIO $ runSqlPool (get eventKey) envPool
+      existing <- maybe (throwError err404 { errBody = "Event not found" }) pure mExisting
+      when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
+      when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
+      mVenueKey <- case eventVenueId dto of
+        Nothing -> pure Nothing
+        Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
+          Nothing -> throwError err400 { errBody = "Invalid venue id" }
+          Just vnum -> pure (Just (toSqlKey vnum))
+      liftIO $ runSqlPool (update eventKey
+        [ SocialEventTitle =. eventTitle dto
+        , SocialEventDescription =. eventDescription dto
+        , SocialEventVenueId =. mVenueKey
+        , SocialEventStartTime =. eventStart dto
+        , SocialEventEndTime =. eventEnd dto
+        , SocialEventPriceCents =. eventPriceCents dto
+        , SocialEventCapacity =. eventCapacity dto
+        , SocialEventUpdatedAt =. now
+        ]) envPool
+      liftIO $ runSqlPool (deleteWhere [EventArtistEventId ==. eventKey]) envPool
+      let artists = eventArtists dto
+      liftIO $ runSqlPool
+        (forM_ artists $ \a ->
+           case artistId a of
+             Nothing -> pure ()
+             Just atxt -> case readMaybe (T.unpack atxt) :: Maybe Int64 of
+               Nothing -> pure ()
+               Just anum -> insert_ (EventArtist eventKey (toSqlKey anum) Nothing)
+        )
+        envPool
+      pure (dto { eventId = Just rawId, eventOrganizerPartyId = socialEventOrganizerPartyId existing })
 
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
       Env{..} <- ask
-      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid event id" }
-        Just num -> do
-          let key = toSqlKey num :: SocialEventId
-          mExisting <- liftIO $ runSqlPool (get key) envPool
-          when (isNothing mExisting) $ throwError err404 { errBody = "Event not found" }
-          liftIO $ runSqlPool
-            (do
-              deleteWhere [EventArtistEventId ==. key]
-              deleteWhere [EventRsvpEventId ==. key]
-              deleteWhere [EventInvitationEventId ==. key]
-              delete key
-            )
-            envPool
-          pure NoContent
+      eventKey <- parseKeyOr400 "event" rawId
+      mExisting <- liftIO $ runSqlPool (get eventKey) envPool
+      when (isNothing mExisting) $ throwError err404 { errBody = "Event not found" }
+      liftIO $ runSqlPool
+        (do
+          deleteWhere [EventArtistEventId ==. eventKey]
+          deleteWhere [EventRsvpEventId ==. eventKey]
+          deleteWhere [EventInvitationEventId ==. eventKey]
+          deleteWhere [EventTicketEventId ==. eventKey]
+          deleteWhere [EventTicketOrderEventId ==. eventKey]
+          deleteWhere [EventTicketTierEventId ==. eventKey]
+          delete eventKey
+        )
+        envPool
+      pure NoContent
 
     -- Venues
     venuesServer :: ServerT VenuesRoutes AppM
@@ -287,7 +249,7 @@ socialEventsServer _user = eventsServer
                       _ -> []
       rows <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 200]) envPool
       pure $ map (\(Entity vid v) -> VenueDTO
-        { venueId = Just (T.pack (show (fromSqlKey vid)))
+        { venueId = Just (renderKeyText vid)
         , venueName = SM.venueName v
         , venueAddress = SM.venueAddress v
         , venueCity = SM.venueCity v
@@ -314,53 +276,46 @@ socialEventsServer _user = eventsServer
         , venueCreatedAt = now
         , venueUpdatedAt = now
         }) envPool
-      let created = dto { venueId = Just (T.pack (show (fromSqlKey key))) }
-      pure created
+      pure (dto { venueId = Just (renderKeyText key) })
 
     getVenue :: T.Text -> AppM VenueDTO
     getVenue rawId = do
       Env{..} <- ask
-      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid venue id" }
-        Just num -> do
-          let key = toSqlKey num :: VenueId
-          mEnt <- liftIO $ runSqlPool (get key) envPool
-          case mEnt of
-            Nothing -> throwError err404 { errBody = "Venue not found" }
-            Just v -> pure VenueDTO
-              { venueId = Just (T.pack (show num))
-              , venueName = SM.venueName v
-              , venueAddress = SM.venueAddress v
-              , venueCity = SM.venueCity v
-              , venueCountry = SM.venueCountry v
-              , venueLat = venueLatitude v
-              , venueLng = venueLongitude v
-              , venueCapacity = SM.venueCapacity v
-              , venueContact = SM.venueContact v
-              }
+      venueKey <- parseKeyOr400 "venue" rawId
+      mEnt <- liftIO $ runSqlPool (get venueKey) envPool
+      case mEnt of
+        Nothing -> throwError err404 { errBody = "Venue not found" }
+        Just v -> pure VenueDTO
+          { venueId = Just (T.strip rawId)
+          , venueName = SM.venueName v
+          , venueAddress = SM.venueAddress v
+          , venueCity = SM.venueCity v
+          , venueCountry = SM.venueCountry v
+          , venueLat = venueLatitude v
+          , venueLng = venueLongitude v
+          , venueCapacity = SM.venueCapacity v
+          , venueContact = SM.venueContact v
+          }
 
     updateVenue :: T.Text -> VenueDTO -> AppM VenueDTO
     updateVenue rawId dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
-      case readMaybe (T.unpack (T.strip rawId)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid venue id" }
-        Just num -> do
-          let key = toSqlKey num :: VenueId
-          mExisting <- liftIO $ runSqlPool (get key) envPool
-          when (isNothing mExisting) $ throwError err404 { errBody = "Venue not found" }
-          liftIO $ runSqlPool (update key
-            [ VenueName =. venueName dto
-            , VenueAddress =. venueAddress dto
-            , VenueCity =. venueCity dto
-            , VenueCountry =. venueCountry dto
-            , VenueLatitude =. venueLat dto
-            , VenueLongitude =. venueLng dto
-            , VenueCapacity =. venueCapacity dto
-            , VenueContact =. venueContact dto
-            , VenueUpdatedAt =. now
-            ]) envPool
-          pure (dto { venueId = Just rawId })
+      venueKey <- parseKeyOr400 "venue" rawId
+      mExisting <- liftIO $ runSqlPool (get venueKey) envPool
+      when (isNothing mExisting) $ throwError err404 { errBody = "Venue not found" }
+      liftIO $ runSqlPool (update venueKey
+        [ VenueName =. venueName dto
+        , VenueAddress =. venueAddress dto
+        , VenueCity =. venueCity dto
+        , VenueCountry =. venueCountry dto
+        , VenueLatitude =. venueLat dto
+        , VenueLongitude =. venueLng dto
+        , VenueCapacity =. venueCapacity dto
+        , VenueContact =. venueContact dto
+        , VenueUpdatedAt =. now
+        ]) envPool
+      pure (dto { venueId = Just rawId })
 
     -- Artists
     artistsServer :: ServerT ArtistsRoutes AppM
@@ -389,7 +344,7 @@ socialEventsServer _user = eventsServer
               Just genre -> any ((== genre) . T.toCaseFold) genreList
         pure $ if nameMatches && genreMatches
           then Just ArtistDTO
-            { artistId = Just (T.pack (show (fromSqlKey aid)))
+            { artistId = Just (renderKeyText aid)
             , artistName = artistProfileName a
             , artistGenres = genreList
             , artistBio = artistProfileBio a
@@ -415,7 +370,7 @@ socialEventsServer _user = eventsServer
       rows <- liftIO $ runSqlPool
         (selectList [ArtistFollowArtistId ==. artistKey] [Desc ArtistFollowCreatedAt])
         envPool
-      let artistIdTxt = T.pack (show (fromSqlKey artistKey))
+      let artistIdTxt = renderKeyText artistKey
       pure $ map (\(Entity _ follow) ->
         ArtistFollowerDTO
           { afFollowId = Just (renderFollowId artistKey (artistFollowFollowerPartyId follow))
@@ -423,6 +378,7 @@ socialEventsServer _user = eventsServer
           , afFollowerPartyId = artistFollowFollowerPartyId follow
           , afCreatedAt = Just (artistFollowCreatedAt follow)
           }) rows
+
     createArtist :: ArtistDTO -> AppM ArtistDTO
     createArtist dto = do
       Env{..} <- ask
@@ -447,7 +403,7 @@ socialEventsServer _user = eventsServer
         )
         envPool
       pure ArtistDTO
-        { artistId = Just (T.pack (show (fromSqlKey key)))
+        { artistId = Just (renderKeyText key)
         , artistName = artistName dto
         , artistGenres = genreList
         , artistBio = artistBio dto
@@ -458,50 +414,44 @@ socialEventsServer _user = eventsServer
     getArtist :: T.Text -> AppM ArtistDTO
     getArtist idStr = do
       Env{..} <- ask
-      case readMaybe (T.unpack (T.strip idStr)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid artist id" }
-        Just num -> do
-          let key = toSqlKey num :: ArtistProfileId
-          mArtist <- liftIO $ runSqlPool (get key) envPool
-          case mArtist of
-            Nothing -> throwError err404 { errBody = "Artist not found" }
-            Just a -> do
-              genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. key] []) envPool
-              pure ArtistDTO
-                { artistId = Just (T.strip idStr)
-                , artistName = artistProfileName a
-                , artistGenres = map (artistGenreGenre . entityVal) genres
-                , artistBio = artistProfileBio a
-                , artistAvatarUrl = artistProfileAvatarUrl a
-                , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
-                }
+      artistKey <- parseArtistId idStr
+      mArtist <- liftIO $ runSqlPool (get artistKey) envPool
+      case mArtist of
+        Nothing -> throwError err404 { errBody = "Artist not found" }
+        Just a -> do
+          genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. artistKey] []) envPool
+          pure ArtistDTO
+            { artistId = Just (T.strip idStr)
+            , artistName = artistProfileName a
+            , artistGenres = map (artistGenreGenre . entityVal) genres
+            , artistBio = artistProfileBio a
+            , artistAvatarUrl = artistProfileAvatarUrl a
+            , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
+            }
 
     updateArtist :: T.Text -> ArtistDTO -> AppM ArtistDTO
     updateArtist idStr dto = do
       Env{..} <- ask
-      case readMaybe (T.unpack (T.strip idStr)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid artist id" }
-        Just num -> do
-          let key = toSqlKey num :: ArtistProfileId
-          now <- liftIO getCurrentTime
-          liftIO $ runSqlPool (update key [ArtistProfileName =. artistName dto
-                                          , ArtistProfileBio =. artistBio dto
-                                          , ArtistProfileAvatarUrl =. artistAvatarUrl dto
-                                          , ArtistProfileGenres =. Just (artistGenres dto)
-                                          , ArtistProfileSocialLinks =. encodeSocialLinks (artistSocialLinks dto)
-                                          , ArtistProfileUpdatedAt =. now
-                                          ]) envPool
-          -- Update genres
-          liftIO $ runSqlPool (deleteWhere [ArtistGenreArtistId ==. key]) envPool
-          liftIO $ runSqlPool
-            (forM_ (artistGenres dto) $ \g ->
-               insert_ ArtistGenre
-                 { artistGenreArtistId = key
-                 , artistGenreGenre = g
-                 }
-            )
-            envPool
-          pure dto { artistId = Just (T.strip idStr) }
+      artistKey <- parseArtistId idStr
+      now <- liftIO getCurrentTime
+      liftIO $ runSqlPool (update artistKey
+        [ ArtistProfileName =. artistName dto
+        , ArtistProfileBio =. artistBio dto
+        , ArtistProfileAvatarUrl =. artistAvatarUrl dto
+        , ArtistProfileGenres =. Just (artistGenres dto)
+        , ArtistProfileSocialLinks =. encodeSocialLinks (artistSocialLinks dto)
+        , ArtistProfileUpdatedAt =. now
+        ]) envPool
+      liftIO $ runSqlPool (deleteWhere [ArtistGenreArtistId ==. artistKey]) envPool
+      liftIO $ runSqlPool
+        (forM_ (artistGenres dto) $ \g ->
+           insert_ ArtistGenre
+             { artistGenreArtistId = artistKey
+             , artistGenreGenre = g
+             }
+        )
+        envPool
+      pure dto { artistId = Just (T.strip idStr) }
 
     followArtist :: T.Text -> ArtistFollowRequest -> AppM ArtistFollowerDTO
     followArtist artistIdStr ArtistFollowRequest{..} = do
@@ -519,9 +469,8 @@ socialEventsServer _user = eventsServer
       artistKey <- parseArtistId artistIdStr
       mArtist <- liftIO $ runSqlPool (get artistKey) envPool
       when (isNothing mArtist) $ throwError err404 { errBody = "Artist not found" }
-      followerParty <- case fmap T.strip mFollower of
+      followerParty <- case cleanMaybeText mFollower of
         Nothing -> throwError err400 { errBody = "follower query param is required" }
-        Just t | T.null t -> throwError err400 { errBody = "follower query param is required" }
         Just t -> pure t
       liftIO $ runSqlPool
         (deleteWhere [ArtistFollowArtistId ==. artistKey, ArtistFollowFollowerPartyId ==. followerParty])
@@ -535,56 +484,46 @@ socialEventsServer _user = eventsServer
     listRsvps :: T.Text -> AppM [RsvpDTO]
     listRsvps eventIdStr = do
       Env{..} <- ask
-      case readMaybe (T.unpack eventIdStr) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid event id" }
-        Just num -> do
-          let eventKey = toSqlKey num :: SocialEventId
-          rsvpRows <- liftIO $ runSqlPool (selectList [EventRsvpEventId ==. eventKey] []) envPool
-          pure $ map (\(Entity rid rsvp) -> RsvpDTO
-            { rsvpId = Just (T.pack (show (fromSqlKey rid)))
-            , rsvpEventId = eventIdStr
-            , rsvpPartyId = eventRsvpPartyId rsvp
-            , rsvpStatus = eventRsvpStatus rsvp
-            , rsvpCreatedAt = Just (eventRsvpCreatedAt rsvp)
-            }) rsvpRows
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      rsvpRows <- liftIO $ runSqlPool (selectList [EventRsvpEventId ==. eventKey] []) envPool
+      pure $ map (\(Entity rid rsvp) -> RsvpDTO
+        { rsvpId = Just (renderKeyText rid)
+        , rsvpEventId = eventIdStr
+        , rsvpPartyId = eventRsvpPartyId rsvp
+        , rsvpStatus = eventRsvpStatus rsvp
+        , rsvpCreatedAt = Just (eventRsvpCreatedAt rsvp)
+        }) rsvpRows
 
     createRsvp :: T.Text -> RsvpDTO -> AppM RsvpDTO
     createRsvp eventIdStr dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
-      case readMaybe (T.unpack eventIdStr) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid event id" }
-        Just num -> do
-          let eventKey = toSqlKey num :: SocialEventId
-          -- Verify event exists
-          mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-          when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
-          
-          -- Check if RSVP already exists for this party/event
-          existingRsvps <- liftIO $ runSqlPool 
-            (selectList [EventRsvpEventId ==. eventKey, EventRsvpPartyId ==. rsvpPartyId dto] [])
-            envPool
-          
-          key <- case existingRsvps of
-            [] -> do
-              -- Create new RSVP
-              liftIO $ runSqlPool (insert EventRsvp
-                { eventRsvpEventId = eventKey
-                , eventRsvpPartyId = rsvpPartyId dto
-                , eventRsvpStatus = rsvpStatus dto
-                , eventRsvpMetadata = Nothing
-                , eventRsvpCreatedAt = now
-                , eventRsvpUpdatedAt = now
-                }) envPool
-            (Entity existingKey _ : _) -> do
-              -- Update existing RSVP
-              liftIO $ runSqlPool (update existingKey
-                [EventRsvpStatus =. rsvpStatus dto
-                , EventRsvpUpdatedAt =. now
-                ]) envPool
-              pure existingKey
-          
-          pure dto { rsvpId = Just (T.pack (show (fromSqlKey key))) }
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
+
+      existingRsvps <- liftIO $ runSqlPool
+        (selectList [EventRsvpEventId ==. eventKey, EventRsvpPartyId ==. rsvpPartyId dto] [])
+        envPool
+
+      key <- case existingRsvps of
+        [] ->
+          liftIO $ runSqlPool (insert EventRsvp
+            { eventRsvpEventId = eventKey
+            , eventRsvpPartyId = rsvpPartyId dto
+            , eventRsvpStatus = rsvpStatus dto
+            , eventRsvpMetadata = Nothing
+            , eventRsvpCreatedAt = now
+            , eventRsvpUpdatedAt = now
+            }) envPool
+        (Entity existingKey _ : _) -> do
+          liftIO $ runSqlPool (update existingKey
+            [ EventRsvpStatus =. rsvpStatus dto
+            , EventRsvpUpdatedAt =. now
+            ]) envPool
+          pure existingKey
+
+      pure dto { rsvpId = Just (renderKeyText key) }
 
     -- Invitations
     invitationsServer :: ServerT InvitationsRoutes AppM
@@ -596,58 +535,52 @@ socialEventsServer _user = eventsServer
     listInvitations :: T.Text -> AppM [InvitationDTO]
     listInvitations eventIdStr = do
       Env{..} <- ask
-      case readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid event id" }
-        Just num -> do
-          let eventKey = toSqlKey num :: SocialEventId
-          mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-          when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
-          rows <- liftIO $ runSqlPool (selectList [EventInvitationEventId ==. eventKey] [Desc EventInvitationCreatedAt]) envPool
-          pure $ map (\(Entity iid inv) ->
-            InvitationDTO
-              { invitationId = Just (T.pack (show (fromSqlKey iid)))
-              , invitationEventId = Just (T.strip eventIdStr)
-              , invitationFromPartyId = eventInvitationFromPartyId inv
-              , invitationToPartyId = maybe "" id (eventInvitationToPartyId inv)
-              , invitationStatus = eventInvitationStatus inv
-              , invitationMessage = eventInvitationMessage inv
-              , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
-              , invitationUpdatedAt = Just (eventInvitationUpdatedAt inv)
-              }
-            ) rows
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
+      rows <- liftIO $ runSqlPool (selectList [EventInvitationEventId ==. eventKey] [Desc EventInvitationCreatedAt]) envPool
+      pure $ map (\(Entity iid inv) ->
+        InvitationDTO
+          { invitationId = Just (renderKeyText iid)
+          , invitationEventId = Just (T.strip eventIdStr)
+          , invitationFromPartyId = eventInvitationFromPartyId inv
+          , invitationToPartyId = maybe "" id (eventInvitationToPartyId inv)
+          , invitationStatus = eventInvitationStatus inv
+          , invitationMessage = eventInvitationMessage inv
+          , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
+          , invitationUpdatedAt = Just (eventInvitationUpdatedAt inv)
+          }
+        ) rows
 
     createInvitation :: T.Text -> InvitationDTO -> AppM InvitationDTO
     createInvitation eventIdStr dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
-      case readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid event id" }
-        Just num -> do
-          let eventKey = toSqlKey num :: SocialEventId
-          mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-          when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
-          let toParty = T.strip (invitationToPartyId dto)
-          when (T.null toParty) $ throwError err400 { errBody = "invitationToPartyId is required" }
-          let statusVal = normalizeInvitationStatus (invitationStatus dto)
-          key <- liftIO $ runSqlPool (insert EventInvitation
-            { eventInvitationEventId = eventKey
-            , eventInvitationFromPartyId = fmap T.strip (invitationFromPartyId dto)
-            , eventInvitationToPartyId = Just toParty
-            , eventInvitationStatus = Just statusVal
-            , eventInvitationMessage = invitationMessage dto
-            , eventInvitationCreatedAt = now
-            , eventInvitationUpdatedAt = now
-            }) envPool
-          pure InvitationDTO
-            { invitationId = Just (T.pack (show (fromSqlKey key)))
-            , invitationEventId = Just (T.strip eventIdStr)
-            , invitationFromPartyId = invitationFromPartyId dto
-            , invitationToPartyId = toParty
-            , invitationStatus = Just statusVal
-            , invitationMessage = invitationMessage dto
-            , invitationCreatedAt = Just now
-            , invitationUpdatedAt = Just now
-            }
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
+      let toParty = T.strip (invitationToPartyId dto)
+      when (T.null toParty) $ throwError err400 { errBody = "invitationToPartyId is required" }
+      let statusVal = normalizeInvitationStatus (invitationStatus dto)
+      key <- liftIO $ runSqlPool (insert EventInvitation
+        { eventInvitationEventId = eventKey
+        , eventInvitationFromPartyId = cleanMaybeText (invitationFromPartyId dto)
+        , eventInvitationToPartyId = Just toParty
+        , eventInvitationStatus = Just statusVal
+        , eventInvitationMessage = invitationMessage dto
+        , eventInvitationCreatedAt = now
+        , eventInvitationUpdatedAt = now
+        }) envPool
+      pure InvitationDTO
+        { invitationId = Just (renderKeyText key)
+        , invitationEventId = Just (T.strip eventIdStr)
+        , invitationFromPartyId = invitationFromPartyId dto
+        , invitationToPartyId = toParty
+        , invitationStatus = Just statusVal
+        , invitationMessage = invitationMessage dto
+        , invitationCreatedAt = Just now
+        , invitationUpdatedAt = Just now
+        }
 
     updateInvitation :: T.Text -> T.Text -> InvitationDTO -> AppM InvitationDTO
     updateInvitation eventIdStr invitationIdStr dto = do
@@ -663,8 +596,8 @@ socialEventsServer _user = eventsServer
           when (eventInvitationEventId inv /= eventKey) $ throwError err400 { errBody = "Invitation does not belong to this event" }
           let statusVal = normalizeInvitationStatus (invitationStatus dto)
           let messageVal = invitationMessage dto <|> eventInvitationMessage inv
-          let newToParty = T.strip (invitationToPartyId dto)
-          let toPartyVal = if T.null newToParty then eventInvitationToPartyId inv else Just newToParty
+          let newToParty = cleanMaybeText (Just (invitationToPartyId dto))
+          let toPartyVal = newToParty <|> eventInvitationToPartyId inv
           liftIO $ runSqlPool (update invitationKey
             [ EventInvitationStatus =. Just statusVal
             , EventInvitationMessage =. messageVal
@@ -672,7 +605,7 @@ socialEventsServer _user = eventsServer
             , EventInvitationUpdatedAt =. now
             ]) envPool
           pure InvitationDTO
-            { invitationId = Just (T.pack (show (fromSqlKey invitationKey)))
+            { invitationId = Just (renderKeyText invitationKey)
             , invitationEventId = Just (T.strip eventIdStr)
             , invitationFromPartyId = eventInvitationFromPartyId inv
             , invitationToPartyId = maybe "" id toPartyVal
@@ -681,6 +614,376 @@ socialEventsServer _user = eventsServer
             , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
             , invitationUpdatedAt = Just now
             }
+
+    -- Tickets
+    ticketsServer :: ServerT TicketsRoutes AppM
+    ticketsServer = listTicketTiers
+               :<|> createTicketTier
+               :<|> updateTicketTier
+               :<|> listTicketOrders
+               :<|> createTicketOrder
+               :<|> updateTicketOrderStatus
+               :<|> listTickets
+               :<|> checkInTicket
+
+    listTicketTiers :: T.Text -> AppM [TicketTierDTO]
+    listTicketTiers eventIdStr = do
+      Env{..} <- ask
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
+      rows <- liftIO $ runSqlPool
+        (selectList [EventTicketTierEventId ==. eventKey] [Asc EventTicketTierPosition, Asc EventTicketTierId])
+        envPool
+      pure (map (ticketTierEntityToDTO eventKey) rows)
+
+    createTicketTier :: T.Text -> TicketTierDTO -> AppM TicketTierDTO
+    createTicketTier eventIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+      let tierName = T.strip (ticketTierName dto)
+      when (T.null tierName) $ throwError err400 { errBody = "ticket tier name is required" }
+      when (ticketTierPriceCents dto < 0) $ throwError err400 { errBody = "ticket tier price must be >= 0" }
+      when (ticketTierQuantityTotal dto <= 0) $ throwError err400 { errBody = "ticket tier quantity must be > 0" }
+      let baseCode = cleanMaybeText (Just (ticketTierCode dto)) <|> Just tierName
+          tierCode = normalizeTicketTierCode (fromMaybe tierName baseCode)
+          currencyVal = normalizeCurrency (ticketTierCurrency dto)
+          salesStartVal = ticketTierSalesStart dto
+          salesEndVal = ticketTierSalesEnd dto
+      when (invalidSalesWindow salesStartVal salesEndVal) $ throwError err400 { errBody = "invalid sales window" }
+      mInserted <- liftIO $ runSqlPool (insertUnique EventTicketTier
+        { eventTicketTierEventId = eventKey
+        , eventTicketTierCode = tierCode
+        , eventTicketTierName = tierName
+        , eventTicketTierDescription = cleanMaybeText (ticketTierDescription dto)
+        , eventTicketTierPriceCents = ticketTierPriceCents dto
+        , eventTicketTierCurrency = currencyVal
+        , eventTicketTierQuantityTotal = ticketTierQuantityTotal dto
+        , eventTicketTierQuantitySold = 0
+        , eventTicketTierSalesStart = salesStartVal
+        , eventTicketTierSalesEnd = salesEndVal
+        , eventTicketTierIsActive = ticketTierActive dto
+        , eventTicketTierPosition = ticketTierPosition dto
+        , eventTicketTierCreatedAt = now
+        , eventTicketTierUpdatedAt = now
+        }) envPool
+      tierKey <- maybe (throwError err409 { errBody = "ticket tier code already exists for this event" }) pure mInserted
+      mTier <- liftIO $ runSqlPool (getEntity tierKey) envPool
+      maybe (throwError err500 { errBody = "Could not create ticket tier" })
+            (pure . ticketTierEntityToDTO eventKey)
+            mTier
+
+    updateTicketTier :: T.Text -> T.Text -> TicketTierDTO -> AppM TicketTierDTO
+    updateTicketTier eventIdStr tierIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      tierKey <- parseKeyOr400 "ticket tier" tierIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+      mTier <- liftIO $ runSqlPool (get tierKey) envPool
+      tier <- maybe (throwError err404 { errBody = "Ticket tier not found" }) pure mTier
+      when (eventTicketTierEventId tier /= eventKey) $ throwError err400 { errBody = "Ticket tier does not belong to this event" }
+      let tierName = T.strip (ticketTierName dto)
+      when (T.null tierName) $ throwError err400 { errBody = "ticket tier name is required" }
+      when (ticketTierPriceCents dto < 0) $ throwError err400 { errBody = "ticket tier price must be >= 0" }
+      when (ticketTierQuantityTotal dto < eventTicketTierQuantitySold tier) $ throwError err400 { errBody = "ticket tier quantity cannot be below sold quantity" }
+      let baseCode = cleanMaybeText (Just (ticketTierCode dto)) <|> Just tierName
+          tierCode = normalizeTicketTierCode (fromMaybe tierName baseCode)
+          currencyVal = normalizeCurrency (ticketTierCurrency dto)
+          salesStartVal = ticketTierSalesStart dto
+          salesEndVal = ticketTierSalesEnd dto
+      when (invalidSalesWindow salesStartVal salesEndVal) $ throwError err400 { errBody = "invalid sales window" }
+      mCodeOwner <- liftIO $ runSqlPool (getBy (UniqueEventTicketTierCode eventKey tierCode)) envPool
+      case mCodeOwner of
+        Just (Entity existingKey _) | existingKey /= tierKey ->
+          throwError err409 { errBody = "ticket tier code already exists for this event" }
+        _ -> pure ()
+      liftIO $ runSqlPool (update tierKey
+        [ EventTicketTierCode =. tierCode
+        , EventTicketTierName =. tierName
+        , EventTicketTierDescription =. cleanMaybeText (ticketTierDescription dto)
+        , EventTicketTierPriceCents =. ticketTierPriceCents dto
+        , EventTicketTierCurrency =. currencyVal
+        , EventTicketTierQuantityTotal =. ticketTierQuantityTotal dto
+        , EventTicketTierSalesStart =. salesStartVal
+        , EventTicketTierSalesEnd =. salesEndVal
+        , EventTicketTierIsActive =. ticketTierActive dto
+        , EventTicketTierPosition =. ticketTierPosition dto
+        , EventTicketTierUpdatedAt =. now
+        ]) envPool
+      mUpdated <- liftIO $ runSqlPool (getEntity tierKey) envPool
+      maybe (throwError err500 { errBody = "Could not update ticket tier" })
+            (pure . ticketTierEntityToDTO eventKey)
+            mUpdated
+
+    listTicketOrders :: T.Text -> Maybe T.Text -> Maybe T.Text -> AppM [TicketOrderDTO]
+    listTicketOrders eventIdStr mBuyerPartyId mStatus = do
+      Env{..} <- ask
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      let manager = isEventManager currentPartyId eventVal
+          requestedBuyer = cleanMaybeText mBuyerPartyId
+      buyerFilters <-
+        if manager
+          then pure $ maybe [] (\buyer -> [EventTicketOrderBuyerPartyId ==. Just buyer]) requestedBuyer
+          else case requestedBuyer of
+            Nothing -> pure [EventTicketOrderBuyerPartyId ==. Just currentPartyId]
+            Just buyer
+              | buyer == currentPartyId -> pure [EventTicketOrderBuyerPartyId ==. Just currentPartyId]
+              | otherwise -> throwError err403 { errBody = "You can only list your own ticket orders" }
+      statusFilters <- case cleanMaybeText mStatus of
+        Nothing -> pure []
+        Just raw -> case parseTicketOrderStatus raw of
+          Nothing -> throwError err400 { errBody = "Invalid ticket order status" }
+          Just statusVal -> pure [EventTicketOrderStatus ==. statusVal]
+      let filters = [EventTicketOrderEventId ==. eventKey] ++ buyerFilters ++ statusFilters
+      rows <- liftIO $ runSqlPool (selectList filters [Desc EventTicketOrderPurchasedAt, LimitTo 200]) envPool
+      forM rows $ \orderEnt@(Entity orderKey _) -> do
+        tickets <- liftIO $ runSqlPool (selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]) envPool
+        pure (ticketOrderEntityToDTO orderEnt tickets)
+
+    createTicketOrder :: T.Text -> TicketPurchaseRequestDTO -> AppM TicketOrderDTO
+    createTicketOrder eventIdStr TicketPurchaseRequestDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      tierKey <- parseKeyOr400 "ticket tier" ticketPurchaseTierId
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      mTier <- liftIO $ runSqlPool (get tierKey) envPool
+      tier <- maybe (throwError err404 { errBody = "Ticket tier not found" }) pure mTier
+      when (eventTicketTierEventId tier /= eventKey) $ throwError err400 { errBody = "Ticket tier does not belong to this event" }
+      when (ticketPurchaseQuantity <= 0) $ throwError err400 { errBody = "Quantity must be > 0" }
+      when (not (isTicketTierSaleOpen now tier)) $ throwError err400 { errBody = "Ticket sales are closed for this tier" }
+
+      let manager = isEventManager currentPartyId eventVal
+          requestedBuyer = cleanMaybeText ticketPurchaseBuyerPartyId
+      buyerParty <- case requestedBuyer of
+        Nothing -> pure (Just currentPartyId)
+        Just buyer
+          | buyer == currentPartyId -> pure (Just currentPartyId)
+          | manager -> pure (Just buyer)
+          | otherwise -> throwError err403 { errBody = "Cannot assign tickets to another buyer" }
+
+      soldAcross <- liftIO $ runSqlPool
+        (selectList [EventTicketTierEventId ==. eventKey] [])
+        envPool
+      let soldCount = sum (map (eventTicketTierQuantitySold . entityVal) soldAcross)
+          availableInTier = ticketTierAvailability tier
+      when (ticketPurchaseQuantity > availableInTier) $ throwError err409 { errBody = "Not enough tickets available" }
+      case socialEventCapacity eventVal of
+        Nothing -> pure ()
+        Just cap ->
+          when (soldCount + ticketPurchaseQuantity > cap) $ throwError err409 { errBody = "Event capacity reached" }
+
+      let orderAmountCents = ticketPurchaseQuantity * eventTicketTierPriceCents tier
+          buyerName = cleanMaybeText ticketPurchaseBuyerName
+          buyerEmail = cleanMaybeText ticketPurchaseBuyerEmail
+      when (orderAmountCents < 0) $ throwError err400 { errBody = "Invalid amount" }
+
+      orderDto <- liftIO $ runSqlPool (do
+        update tierKey
+          [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
+          , EventTicketTierUpdatedAt =. now
+          ]
+        let orderRecord = EventTicketOrder
+              { eventTicketOrderEventId = eventKey
+              , eventTicketOrderTierId = tierKey
+              , eventTicketOrderBuyerPartyId = buyerParty
+              , eventTicketOrderBuyerName = buyerName
+              , eventTicketOrderBuyerEmail = buyerEmail
+              , eventTicketOrderQuantity = ticketPurchaseQuantity
+              , eventTicketOrderAmountCents = orderAmountCents
+              , eventTicketOrderCurrency = eventTicketTierCurrency tier
+              , eventTicketOrderStatus = "paid"
+              , eventTicketOrderMetadata = Nothing
+              , eventTicketOrderPurchasedAt = now
+              , eventTicketOrderCreatedAt = now
+              , eventTicketOrderUpdatedAt = now
+              }
+        orderKey <- insert orderRecord
+        tickets <- replicateM ticketPurchaseQuantity $ do
+          ticketCodeValue <- generateUniqueTicketCode
+          ticketKey <- insert EventTicket
+            { eventTicketEventId = eventKey
+            , eventTicketTierRefId = tierKey
+            , eventTicketOrderRefId = orderKey
+            , eventTicketHolderName = buyerName
+            , eventTicketHolderEmail = buyerEmail
+            , eventTicketCode = ticketCodeValue
+            , eventTicketStatus = "issued"
+            , eventTicketCheckedInAt = Nothing
+            , eventTicketCreatedAt = now
+            , eventTicketUpdatedAt = now
+            }
+          getJustEntity ticketKey
+        pure (ticketOrderEntityToDTO (Entity orderKey orderRecord) tickets)
+        ) envPool
+
+      pure orderDto
+
+    updateTicketOrderStatus :: T.Text -> T.Text -> TicketOrderStatusUpdateDTO -> AppM TicketOrderDTO
+    updateTicketOrderStatus eventIdStr orderIdStr TicketOrderStatusUpdateDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      orderKey <- parseKeyOr400 "ticket order" orderIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+      newStatus <- case parseTicketOrderStatus ticketOrderStatus of
+        Nothing -> throwError err400 { errBody = "Invalid ticket order status" }
+        Just "pending" -> throwError err400 { errBody = "Use paid, cancelled or refunded" }
+        Just s -> pure s
+
+      mOrder <- liftIO $ runSqlPool (get orderKey) envPool
+      order <- maybe (throwError err404 { errBody = "Ticket order not found" }) pure mOrder
+      when (eventTicketOrderEventId order /= eventKey) $ throwError err400 { errBody = "Ticket order does not belong to this event" }
+      let oldStatus = normalizeTicketOrderStatus (Just (eventTicketOrderStatus order))
+      when (oldStatus `elem` ["cancelled", "refunded"] && newStatus == "paid") $
+        throwError err400 { errBody = "Closed orders cannot be moved back to paid" }
+
+      mTier <- liftIO $ runSqlPool (get (eventTicketOrderTierId order)) envPool
+      tier <- maybe (throwError err404 { errBody = "Ticket tier not found" }) pure mTier
+      let qty = eventTicketOrderQuantity order
+          tierAvailable = ticketTierAvailability tier
+          capacity = socialEventCapacity eventVal
+          soldAdjust
+            | oldStatus == "paid" && newStatus /= "paid" = negate qty
+            | oldStatus /= "paid" && newStatus == "paid" = qty
+            | otherwise = 0
+      when (soldAdjust > 0 && soldAdjust > tierAvailable) $ throwError err409 { errBody = "Not enough ticket inventory to mark as paid" }
+      when (soldAdjust > 0) $ do
+        soldAcross <- liftIO $ runSqlPool
+          (selectList [EventTicketTierEventId ==. eventKey] [])
+          envPool
+        let soldCount = sum (map (eventTicketTierQuantitySold . entityVal) soldAcross)
+        case capacity of
+          Nothing -> pure ()
+          Just cap ->
+            when (soldCount + soldAdjust > cap) $ throwError err409 { errBody = "Event capacity reached" }
+      when (eventTicketTierQuantitySold tier + soldAdjust < 0) $ throwError err409 { errBody = "Sold quantity underflow" }
+
+      let nextTicketStatus = case newStatus of
+            "paid" -> "issued"
+            "cancelled" -> "cancelled"
+            "refunded" -> "refunded"
+            _ -> "issued"
+      orderDto <- liftIO $ runSqlPool (do
+        when (soldAdjust /= 0) $
+          update (eventTicketOrderTierId order)
+            [ EventTicketTierQuantitySold +=. soldAdjust
+            , EventTicketTierUpdatedAt =. now
+            ]
+        update orderKey
+          [ EventTicketOrderStatus =. newStatus
+          , EventTicketOrderUpdatedAt =. now
+          ]
+        let ticketUpdates =
+              [ EventTicketStatus =. nextTicketStatus
+              , EventTicketUpdatedAt =. now
+              ] ++
+              if nextTicketStatus == "issued"
+                then [EventTicketCheckedInAt =. Nothing]
+                else []
+        updateWhere [EventTicketOrderRefId ==. orderKey] ticketUpdates
+        mOrderEnt <- getEntity orderKey
+        case mOrderEnt of
+          Nothing -> pure Nothing
+          Just orderEnt -> do
+            tickets <- selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
+            pure (Just (ticketOrderEntityToDTO orderEnt tickets))
+        ) envPool
+
+      maybe (throwError err500 { errBody = "Could not update ticket order" }) pure orderDto
+
+    listTickets :: T.Text -> Maybe T.Text -> Maybe T.Text -> AppM [TicketDTO]
+    listTickets eventIdStr mOrderId mStatus = do
+      Env{..} <- ask
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      let manager = isEventManager currentPartyId eventVal
+      orderFilters <- case cleanMaybeText mOrderId of
+        Nothing ->
+          if manager
+            then pure []
+            else do
+              ownOrders <- liftIO $ runSqlPool
+                (selectList [EventTicketOrderEventId ==. eventKey, EventTicketOrderBuyerPartyId ==. Just currentPartyId] [LimitTo 500])
+                envPool
+              let orderIds = map entityKey ownOrders
+              if null orderIds
+                then pure [EventTicketId ==. toSqlKey 0]
+                else pure [EventTicketOrderRefId <-. orderIds]
+        Just rawOrderId -> do
+          orderKey <- parseKeyOr400 "ticket order" rawOrderId
+          mOrder <- liftIO $ runSqlPool (get orderKey) envPool
+          order <- maybe (throwError err404 { errBody = "Ticket order not found" }) pure mOrder
+          when (eventTicketOrderEventId order /= eventKey) $ throwError err400 { errBody = "Ticket order does not belong to this event" }
+          when (not manager && eventTicketOrderBuyerPartyId order /= Just currentPartyId) $
+            throwError err403 { errBody = "You can only list your own tickets" }
+          pure [EventTicketOrderRefId ==. orderKey]
+
+      statusFilters <- case cleanMaybeText mStatus of
+        Nothing -> pure []
+        Just raw -> case parseTicketStatus raw of
+          Nothing -> throwError err400 { errBody = "Invalid ticket status" }
+          Just statusVal -> pure [EventTicketStatus ==. statusVal]
+
+      let filters = [EventTicketEventId ==. eventKey] ++ orderFilters ++ statusFilters
+      rows <- liftIO $ runSqlPool (selectList filters [Asc EventTicketId, LimitTo 400]) envPool
+      pure (map ticketEntityToDTO rows)
+
+    checkInTicket :: T.Text -> TicketCheckInRequestDTO -> AppM TicketDTO
+    checkInTicket eventIdStr TicketCheckInRequestDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+
+      ticketEntity <- case (cleanMaybeText ticketCheckInTicketId, cleanMaybeText ticketCheckInTicketCode) of
+        (Just rawTicketId, _) -> do
+          ticketKey <- parseKeyOr400 "ticket" rawTicketId
+          mTicket <- liftIO $ runSqlPool (getEntity ticketKey) envPool
+          maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
+        (Nothing, Just rawCode) -> do
+          let codeVal = T.toUpper (T.strip rawCode)
+          mTicket <- liftIO $ runSqlPool
+            (selectFirst [EventTicketEventId ==. eventKey, EventTicketCode ==. codeVal] [])
+            envPool
+          maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
+        _ -> throwError err400 { errBody = "Provide ticketCheckInTicketId or ticketCheckInTicketCode" }
+
+      let ticketKey = entityKey ticketEntity
+          ticketVal = entityVal ticketEntity
+      when (eventTicketEventId ticketVal /= eventKey) $ throwError err400 { errBody = "Ticket does not belong to this event" }
+      orderRef <- liftIO $ runSqlPool (get (eventTicketOrderRefId ticketVal)) envPool
+      let orderStatus = maybe "pending" (normalizeTicketOrderStatus . Just . eventTicketOrderStatus) orderRef
+      when (orderStatus /= "paid") $ throwError err400 { errBody = "Only paid tickets can be checked in" }
+      case normalizeTicketStatus (Just (eventTicketStatus ticketVal)) of
+        "cancelled" -> throwError err400 { errBody = "Cancelled tickets cannot be checked in" }
+        "refunded" -> throwError err400 { errBody = "Refunded tickets cannot be checked in" }
+        "checked_in" -> pure (ticketEntityToDTO ticketEntity)
+        _ -> do
+          liftIO $ runSqlPool (update ticketKey
+            [ EventTicketStatus =. "checked_in"
+            , EventTicketCheckedInAt =. Just now
+            , EventTicketUpdatedAt =. now
+            ]) envPool
+          mUpdated <- liftIO $ runSqlPool (getEntity ticketKey) envPool
+          maybe (throwError err500 { errBody = "Could not check in ticket" })
+                (pure . ticketEntityToDTO)
+                mUpdated
 
     parseIds :: T.Text -> T.Text -> AppM (SocialEventId, EventInvitationId)
     parseIds eventIdStr invitationIdStr =
@@ -697,7 +1000,7 @@ socialEventsServer _user = eventsServer
 -- | Stable, human-friendly identifier for a follow (artistId + follower id).
 renderFollowId :: ArtistProfileId -> T.Text -> T.Text
 renderFollowId artistId followerPartyId =
-  T.intercalate ":" [T.pack (show (fromSqlKey artistId)), followerPartyId]
+  T.intercalate ":" [renderKeyText artistId, followerPartyId]
 
 -- | Insert or fetch an artist follow while keeping the created timestamp stable.
 followArtistDb :: ConnectionPool -> ArtistProfileId -> T.Text -> IO ArtistFollowerDTO
@@ -714,7 +1017,7 @@ followArtistDb pool artistId followerPartyIdRaw = do
   let createdAtVal = maybe now artistFollowCreatedAt existing
   pure ArtistFollowerDTO
     { afFollowId = Just (renderFollowId artistId followerPartyId)
-    , afArtistId = Just (T.pack (show (fromSqlKey artistId)))
+    , afArtistId = Just (renderKeyText artistId)
     , afFollowerPartyId = followerPartyId
     , afCreatedAt = Just createdAtVal
     }
@@ -727,9 +1030,217 @@ normalizeInvitationStatus mStatus =
     Just s | T.null s -> "pending"
     Just s -> s
 
+normalizeTicketOrderStatus :: Maybe T.Text -> T.Text
+normalizeTicketOrderStatus mStatus =
+  case mStatus >>= parseTicketOrderStatus of
+    Nothing -> "pending"
+    Just s -> s
+
+normalizeTicketStatus :: Maybe T.Text -> T.Text
+normalizeTicketStatus mStatus =
+  case mStatus >>= parseTicketStatus of
+    Nothing -> "issued"
+    Just s -> s
+
+parseTicketOrderStatus :: T.Text -> Maybe T.Text
+parseTicketOrderStatus raw =
+  case T.toLower (T.strip raw) of
+    "pending" -> Just "pending"
+    "paid" -> Just "paid"
+    "cancelled" -> Just "cancelled"
+    "canceled" -> Just "cancelled"
+    "refunded" -> Just "refunded"
+    _ -> Nothing
+
+parseTicketStatus :: T.Text -> Maybe T.Text
+parseTicketStatus raw =
+  case T.toLower (T.strip raw) of
+    "issued" -> Just "issued"
+    "checked_in" -> Just "checked_in"
+    "checkedin" -> Just "checked_in"
+    "cancelled" -> Just "cancelled"
+    "canceled" -> Just "cancelled"
+    "refunded" -> Just "refunded"
+    _ -> Nothing
+
 -- | Parse event and invitation ids, returning a typed pair or an HTTP 400 error.
 parseInvitationIdsEither :: T.Text -> T.Text -> Either ServerError (SocialEventId, EventInvitationId)
 parseInvitationIdsEither eventIdStr invitationIdStr =
-  case (readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64, readMaybe (T.unpack (T.strip invitationIdStr)) :: Maybe Int64) of
-    (Just e, Just i) -> Right (toSqlKey e, toSqlKey i)
+  case ( readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64
+       , readMaybe (T.unpack (T.strip invitationIdStr)) :: Maybe Int64
+       ) of
+    (Just eventNum, Just invitationNum) -> Right (toSqlKey eventNum, toSqlKey invitationNum)
     _ -> Left err400 { errBody = "Invalid event or invitation id" }
+
+parseInt64Either :: T.Text -> T.Text -> Either ServerError Int64
+parseInt64Either label raw =
+  case readMaybe (T.unpack (T.strip raw)) :: Maybe Int64 of
+    Just n -> Right n
+    Nothing ->
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
+        }
+
+parseKeyOr400 :: ToBackendKey SqlBackend record => T.Text -> T.Text -> AppM (Key record)
+parseKeyOr400 label raw =
+  case parseInt64Either label raw of
+    Left e -> throwError e
+    Right n -> pure (toSqlKey n)
+
+renderPartyId :: AuthedUser -> T.Text
+renderPartyId = renderKeyText . auPartyId
+
+renderKeyText :: ToBackendKey SqlBackend record => Key record -> T.Text
+renderKeyText = T.pack . show . fromSqlKey
+
+cleanMaybeText :: Maybe T.Text -> Maybe T.Text
+cleanMaybeText mVal =
+  case fmap T.strip mVal of
+    Just txt | not (T.null txt) -> Just txt
+    _ -> Nothing
+
+normalizeCurrency :: T.Text -> T.Text
+normalizeCurrency raw =
+  let cleaned = T.toUpper (T.strip raw)
+  in if T.null cleaned then "USD" else cleaned
+
+normalizeTicketTierCode :: T.Text -> T.Text
+normalizeTicketTierCode raw =
+  let upper = T.toUpper (T.strip raw)
+      withDash = T.map (\c -> if c == ' ' then '-' else c) upper
+      cleaned = T.filter (\c -> isAlphaNum c || c == '-' || c == '_') withDash
+      chunks = filter (not . T.null) (T.splitOn "-" cleaned)
+      normalized = T.intercalate "-" chunks
+  in if T.null normalized then "GENERAL" else normalized
+
+invalidSalesWindow :: Maybe UTCTime -> Maybe UTCTime -> Bool
+invalidSalesWindow (Just startAt) (Just endAt) = startAt >= endAt
+invalidSalesWindow _ _ = False
+
+ticketTierAvailability :: EventTicketTier -> Int
+ticketTierAvailability tier =
+  max 0 (eventTicketTierQuantityTotal tier - eventTicketTierQuantitySold tier)
+
+isTicketTierSaleOpen :: UTCTime -> EventTicketTier -> Bool
+isTicketTierSaleOpen now tier =
+  eventTicketTierIsActive tier
+    && maybe True (<= now) (eventTicketTierSalesStart tier)
+    && maybe True (>= now) (eventTicketTierSalesEnd tier)
+
+isEventManager :: T.Text -> SocialEvent -> Bool
+isEventManager currentParty eventRow =
+  case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
+    Nothing -> False
+    Just owner -> owner == currentParty
+
+claimOrRequireEventManager :: T.Text -> ConnectionPool -> SocialEventId -> SocialEvent -> AppM SocialEvent
+claimOrRequireEventManager currentParty pool eventKey eventRow =
+  case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
+    Just owner | owner == currentParty -> pure eventRow
+    Just _ -> throwError err403 { errBody = "Only the event organizer can manage tickets" }
+    Nothing -> do
+      now <- liftIO getCurrentTime
+      liftIO $ runSqlPool
+        (update eventKey [SocialEventOrganizerPartyId =. Just currentParty, SocialEventUpdatedAt =. now])
+        pool
+      pure eventRow { socialEventOrganizerPartyId = Just currentParty, socialEventUpdatedAt = now }
+
+loadEventArtists :: ConnectionPool -> SocialEventId -> IO [ArtistDTO]
+loadEventArtists pool eventKey = runSqlPool (do
+  artistLinks <- selectList [EventArtistEventId ==. eventKey] []
+  forM artistLinks $ \(Entity _ link) -> do
+    mArtist <- get (eventArtistArtistId link)
+    pure $ case mArtist of
+      Nothing -> ArtistDTO
+        { artistId = Nothing
+        , artistName = "(unknown)"
+        , artistGenres = []
+        , artistBio = Nothing
+        , artistAvatarUrl = Nothing
+        , artistSocialLinks = Nothing
+        }
+      Just a -> ArtistDTO
+        { artistId = Just (renderKeyText (eventArtistArtistId link))
+        , artistName = artistProfileName a
+        , artistGenres = fromMaybe [] (artistProfileGenres a)
+        , artistBio = artistProfileBio a
+        , artistAvatarUrl = artistProfileAvatarUrl a
+        , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
+        }
+  ) pool
+
+eventEntityToDTO :: SocialEventId -> SocialEvent -> [ArtistDTO] -> EventDTO
+eventEntityToDTO eid eventRow artists = EventDTO
+  { eventId = Just (renderKeyText eid)
+  , eventOrganizerPartyId = socialEventOrganizerPartyId eventRow
+  , eventTitle = socialEventTitle eventRow
+  , eventDescription = socialEventDescription eventRow
+  , eventStart = socialEventStartTime eventRow
+  , eventEnd = socialEventEndTime eventRow
+  , eventVenueId = fmap renderKeyText (socialEventVenueId eventRow)
+  , eventPriceCents = socialEventPriceCents eventRow
+  , eventCapacity = socialEventCapacity eventRow
+  , eventArtists = artists
+  }
+
+ticketTierEntityToDTO :: SocialEventId -> Entity EventTicketTier -> TicketTierDTO
+ticketTierEntityToDTO eventKey (Entity tierKey tier) = TicketTierDTO
+  { ticketTierId = Just (renderKeyText tierKey)
+  , ticketTierEventId = Just (renderKeyText eventKey)
+  , ticketTierCode = eventTicketTierCode tier
+  , ticketTierName = eventTicketTierName tier
+  , ticketTierDescription = eventTicketTierDescription tier
+  , ticketTierPriceCents = eventTicketTierPriceCents tier
+  , ticketTierCurrency = eventTicketTierCurrency tier
+  , ticketTierQuantityTotal = eventTicketTierQuantityTotal tier
+  , ticketTierQuantitySold = eventTicketTierQuantitySold tier
+  , ticketTierSalesStart = eventTicketTierSalesStart tier
+  , ticketTierSalesEnd = eventTicketTierSalesEnd tier
+  , ticketTierActive = eventTicketTierIsActive tier
+  , ticketTierPosition = eventTicketTierPosition tier
+  }
+
+ticketEntityToDTO :: Entity EventTicket -> TicketDTO
+ticketEntityToDTO (Entity ticketKey ticketRow) = TicketDTO
+  { ticketId = Just (renderKeyText ticketKey)
+  , ticketEventId = Just (renderKeyText (eventTicketEventId ticketRow))
+  , ticketTierId = Just (renderKeyText (eventTicketTierRefId ticketRow))
+  , ticketOrderId = Just (renderKeyText (eventTicketOrderRefId ticketRow))
+  , ticketCode = eventTicketCode ticketRow
+  , ticketStatus = normalizeTicketStatus (Just (eventTicketStatus ticketRow))
+  , ticketHolderName = eventTicketHolderName ticketRow
+  , ticketHolderEmail = eventTicketHolderEmail ticketRow
+  , ticketCheckedInAt = eventTicketCheckedInAt ticketRow
+  , ticketCreatedAt = Just (eventTicketCreatedAt ticketRow)
+  , ticketUpdatedAt = Just (eventTicketUpdatedAt ticketRow)
+  }
+
+ticketOrderEntityToDTO :: Entity EventTicketOrder -> [Entity EventTicket] -> TicketOrderDTO
+ticketOrderEntityToDTO (Entity orderKey orderRow) tickets = TicketOrderDTO
+  { ticketOrderId = Just (renderKeyText orderKey)
+  , ticketOrderEventId = Just (renderKeyText (eventTicketOrderEventId orderRow))
+  , ticketOrderTierId = Just (renderKeyText (eventTicketOrderTierId orderRow))
+  , ticketOrderBuyerPartyId = eventTicketOrderBuyerPartyId orderRow
+  , ticketOrderBuyerName = eventTicketOrderBuyerName orderRow
+  , ticketOrderBuyerEmail = eventTicketOrderBuyerEmail orderRow
+  , ticketOrderQuantity = eventTicketOrderQuantity orderRow
+  , ticketOrderAmountCents = eventTicketOrderAmountCents orderRow
+  , ticketOrderCurrency = eventTicketOrderCurrency orderRow
+  , ticketOrderStatusValue = normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRow))
+  , ticketOrderPurchasedAt = Just (eventTicketOrderPurchasedAt orderRow)
+  , ticketOrderCreatedAt = Just (eventTicketOrderCreatedAt orderRow)
+  , ticketOrderUpdatedAt = Just (eventTicketOrderUpdatedAt orderRow)
+  , ticketOrderTickets = map ticketEntityToDTO tickets
+  }
+
+generateUniqueTicketCode :: MonadIO m => ReaderT SqlBackend m T.Text
+generateUniqueTicketCode = do
+  uuidVal <- liftIO UUIDV4.nextRandom
+  let baseCode =
+        T.toUpper
+          (T.take 12 (T.replace "-" "" (UUID.toText uuidVal)))
+      code = "TDF-" <> baseCode
+  mExisting <- getBy (UniqueEventTicketCode code)
+  case mExisting of
+    Nothing -> pure code
+    Just _ -> generateUniqueTicketCode

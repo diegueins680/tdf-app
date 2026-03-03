@@ -9,13 +9,28 @@ module TDF.API.SocialEventsAPI
   , ArtistsRoutes
   , RsvpRoutes
   , InvitationsRoutes
+  , TicketsRoutes
   , IdParam
   ) where
 
 import Servant
 import Data.Text (Text)
 
-import TDF.DTO.SocialEventsDTO (EventDTO, VenueDTO, ArtistDTO, ArtistFollowerDTO, ArtistFollowRequest, RsvpDTO, InvitationDTO)
+import TDF.DTO.SocialEventsDTO
+  ( EventDTO
+  , VenueDTO
+  , ArtistDTO
+  , ArtistFollowerDTO
+  , ArtistFollowRequest
+  , RsvpDTO
+  , InvitationDTO
+  , TicketTierDTO
+  , TicketPurchaseRequestDTO
+  , TicketOrderStatusUpdateDTO
+  , TicketCheckInRequestDTO
+  , TicketDTO
+  , TicketOrderDTO
+  )
 
 type IdParam = Capture "id" Text
 
@@ -57,8 +72,25 @@ type InvitationsRoutes =
       :<|> Capture "invitationId" Text :> ReqBody '[JSON] InvitationDTO :> Put '[JSON] InvitationDTO
          )
 
+type TicketsRoutes =
+       "events" :> Capture "eventId" Text :> "ticket-tiers" :> Get '[JSON] [TicketTierDTO]
+  :<|> "events" :> Capture "eventId" Text :> "ticket-tiers" :> ReqBody '[JSON] TicketTierDTO :> Post '[JSON] TicketTierDTO
+  :<|> "events" :> Capture "eventId" Text :> "ticket-tiers" :> Capture "tierId" Text :> ReqBody '[JSON] TicketTierDTO :> Put '[JSON] TicketTierDTO
+  :<|> "events" :> Capture "eventId" Text :> "ticket-orders"
+         :> QueryParam "buyerPartyId" Text
+         :> QueryParam "status" Text
+         :> Get '[JSON] [TicketOrderDTO]
+  :<|> "events" :> Capture "eventId" Text :> "ticket-orders" :> ReqBody '[JSON] TicketPurchaseRequestDTO :> Post '[JSON] TicketOrderDTO
+  :<|> "events" :> Capture "eventId" Text :> "ticket-orders" :> Capture "orderId" Text :> "status" :> ReqBody '[JSON] TicketOrderStatusUpdateDTO :> Put '[JSON] TicketOrderDTO
+  :<|> "events" :> Capture "eventId" Text :> "tickets"
+         :> QueryParam "orderId" Text
+         :> QueryParam "status" Text
+         :> Get '[JSON] [TicketDTO]
+  :<|> "events" :> Capture "eventId" Text :> "tickets" :> "check-in" :> ReqBody '[JSON] TicketCheckInRequestDTO :> Post '[JSON] TicketDTO
+
 type SocialEventsAPI = EventsRoutes
                :<|> VenuesRoutes
                :<|> ArtistsRoutes
                :<|> RsvpRoutes
                :<|> InvitationsRoutes
+               :<|> TicketsRoutes
