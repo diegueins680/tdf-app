@@ -27,13 +27,16 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { DateTime } from 'luxon';
 import {
   SocialEventsAPI,
+  type SocialEventDTO,
   type SocialEventBudgetLineDTO,
   type SocialEventFinanceEntryDTO,
+  type SocialEventFinanceSummaryDTO,
   type SocialInvitationDTO,
   type SocialRsvpStatus,
   type SocialTicketOrderDTO,
   type SocialTicketTierDTO,
 } from '../api/socialEvents';
+import { ContractsAPI } from '../api/contracts';
 import { useSession } from '../session/SessionContext';
 
 interface InvitationState {
@@ -77,6 +80,16 @@ interface FinanceEntryFormState {
   externalRef: string;
   notes: string;
   occurredAt: string;
+}
+
+interface ContractDraftState {
+  kind: string;
+  counterparty: string;
+  concept: string;
+  amountCents: string;
+  currency: string;
+  status: 'draft' | 'pending' | 'posted';
+  notes: string;
 }
 
 const BUDGET_CATEGORY_OPTIONS = [
@@ -177,6 +190,172 @@ const toUtcIso = (dateTimeInput: string) => {
   return dt.isValid ? (dt.toUTC().toISO() ?? new Date().toISOString()) : new Date().toISOString();
 };
 
+const csvEscape = (value: string | number | boolean | null | undefined) =>
+  `"${String(value ?? '').replace(/"/g, '""')}"`;
+
+const downloadCsvFile = (filename: string, rows: (string | number | boolean | null | undefined)[][]) => {
+  const csv = rows.map((row) => row.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+const buildEventFinanceCsvRows = (
+  event: SocialEventDTO,
+  budgetLines: SocialEventBudgetLineDTO[],
+  financeEntries: SocialEventFinanceEntryDTO[],
+  financeSummary: SocialEventFinanceSummaryDTO | null,
+) => {
+  const rows: (string | number | boolean | null | undefined)[][] = [];
+  rows.push([
+    'record_type',
+    'event_id',
+    'event_title',
+    'event_start',
+    'event_end',
+    'currency',
+    'metric_name',
+    'metric_value',
+    'line_id',
+    'line_code',
+    'line_name',
+    'line_type',
+    'line_category',
+    'line_planned_cents',
+    'line_actual_cents',
+    'entry_id',
+    'entry_direction',
+    'entry_source',
+    'entry_category',
+    'entry_status',
+    'entry_concept',
+    'entry_amount_cents',
+    'entry_external_ref',
+    'entry_occurred_at',
+  ]);
+
+  const eventId = event.eventId ?? '';
+  const eventTitle = event.eventTitle;
+  const eventStart = event.eventStart;
+  const eventEnd = event.eventEnd;
+  const eventCurrency = (financeSummary?.efsCurrency ?? event.eventCurrency ?? 'USD').toUpperCase();
+
+  const summaryMetrics: [string, number | string | null | undefined][] = [
+    ['budget_cents', financeSummary?.efsBudgetCents],
+    ['planned_income_cents', financeSummary?.efsPlannedIncomeCents],
+    ['planned_expense_cents', financeSummary?.efsPlannedExpenseCents],
+    ['actual_income_cents', financeSummary?.efsActualIncomeCents],
+    ['actual_expense_cents', financeSummary?.efsActualExpenseCents],
+    ['net_cents', financeSummary?.efsNetCents],
+    ['ticket_paid_revenue_cents', financeSummary?.efsTicketPaidRevenueCents],
+    ['ticket_refunded_revenue_cents', financeSummary?.efsTicketRefundedRevenueCents],
+    ['ticket_pending_revenue_cents', financeSummary?.efsTicketPendingRevenueCents],
+    ['accounts_payable_cents', financeSummary?.efsAccountsPayableCents],
+    ['accounts_receivable_cents', financeSummary?.efsAccountsReceivableCents],
+    ['contract_committed_cents', financeSummary?.efsContractCommittedCents],
+    ['contract_paid_cents', financeSummary?.efsContractPaidCents],
+    ['procurement_committed_cents', financeSummary?.efsProcurementCommittedCents],
+    ['procurement_paid_cents', financeSummary?.efsProcurementPaidCents],
+    ['asset_investment_cents', financeSummary?.efsAssetInvestmentCents],
+    ['liability_balance_cents', financeSummary?.efsLiabilityBalanceCents],
+    ['budget_variance_cents', financeSummary?.efsBudgetVarianceCents],
+    ['budget_utilization_pct', financeSummary?.efsBudgetUtilizationPct],
+  ];
+
+  summaryMetrics.forEach(([metricName, metricValue]) => {
+    rows.push([
+      'summary',
+      eventId,
+      eventTitle,
+      eventStart,
+      eventEnd,
+      eventCurrency,
+      metricName,
+      metricValue,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+    ]);
+  });
+
+  budgetLines.forEach((line) => {
+    rows.push([
+      'budget_line',
+      eventId,
+      eventTitle,
+      eventStart,
+      eventEnd,
+      eventCurrency,
+      '',
+      '',
+      line.eblId ?? '',
+      line.eblCode,
+      line.eblName,
+      line.eblType,
+      line.eblCategory,
+      line.eblPlannedCents,
+      line.eblActualCents ?? '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+    ]);
+  });
+
+  financeEntries.forEach((entry) => {
+    rows.push([
+      'finance_entry',
+      eventId,
+      eventTitle,
+      eventStart,
+      eventEnd,
+      eventCurrency,
+      '',
+      '',
+      entry.efeBudgetLineId ?? '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      entry.efeId ?? '',
+      entry.efeDirection,
+      entry.efeSource,
+      entry.efeCategory,
+      entry.efeStatus,
+      entry.efeConcept,
+      entry.efeAmountCents,
+      entry.efeExternalRef ?? '',
+      entry.efeOccurredAt,
+    ]);
+  });
+
+  return rows;
+};
+
 export default function SocialEventsPage() {
   const qc = useQueryClient();
   const { session } = useSession();
@@ -189,6 +368,7 @@ export default function SocialEventsPage() {
   const [ticketTierForms, setTicketTierForms] = useState<Record<string, TicketTierFormState>>({});
   const [budgetLineForms, setBudgetLineForms] = useState<Record<string, BudgetLineFormState>>({});
   const [financeEntryForms, setFinanceEntryForms] = useState<Record<string, FinanceEntryFormState>>({});
+  const [contractDrafts, setContractDrafts] = useState<Record<string, ContractDraftState>>({});
   const [checkInCodes, setCheckInCodes] = useState<Record<string, string>>({});
   const startAfter = useMemo(() => new Date().toISOString(), []);
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
@@ -520,6 +700,88 @@ export default function SocialEventsPage() {
     onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
 
+  const createContractCommitmentMutation = useMutation({
+    mutationFn: async ({ eventId }: { eventId: string }) => {
+      const draft = contractDrafts[eventId] ?? {
+        kind: 'event_vendor_contract',
+        counterparty: '',
+        concept: '',
+        amountCents: '',
+        currency: 'USD',
+        status: 'pending' as const,
+        notes: '',
+      };
+      const amountCents = Number.parseInt(draft.amountCents, 10);
+      if (!draft.concept.trim()) throw new Error('Concepto de contrato requerido.');
+      if (!Number.isFinite(amountCents) || amountCents <= 0) throw new Error('Monto de contrato inválido (usa centavos).');
+      const currency = draft.currency.trim().toUpperCase() || 'USD';
+      const contractResponse = await ContractsAPI.create({
+        kind: draft.kind.trim() || 'event_vendor_contract',
+        eventId,
+        counterparty: draft.counterparty.trim() || null,
+        concept: draft.concept.trim(),
+        amountCents,
+        currency,
+        notes: draft.notes.trim() || null,
+        metadata: {
+          module: 'social_events',
+          flow: 'project_contracting',
+          createdAt: new Date().toISOString(),
+        },
+      });
+      await SocialEventsAPI.createFinanceEntry(eventId, {
+        efeBudgetLineId: null,
+        efeDirection: 'expense',
+        efeSource: 'contract_commitment',
+        efeCategory: 'contracting',
+        efeConcept: draft.concept.trim(),
+        efeAmountCents: amountCents,
+        efeCurrency: currency,
+        efeStatus: draft.status,
+        efeExternalRef: contractResponse.id,
+        efeNotes: draft.notes.trim() || null,
+        efeOccurredAt: new Date().toISOString(),
+      });
+      return contractResponse.id;
+    },
+    onSuccess: (contractId, { eventId }) => {
+      setContractDrafts((prev) => ({
+        ...prev,
+        [eventId]: {
+          kind: 'event_vendor_contract',
+          counterparty: '',
+          concept: '',
+          amountCents: '',
+          currency: 'USD',
+          status: 'pending',
+          notes: '',
+        },
+      }));
+      void qc.invalidateQueries({ queryKey: ['social-finance-entries', eventId] });
+      void qc.invalidateQueries({ queryKey: ['social-budget-lines', eventId] });
+      void qc.invalidateQueries({ queryKey: ['social-finance-summary', eventId] });
+      setFeedback({
+        kind: 'success',
+        message: `Contrato creado y compromiso registrado (ID ${contractId}).`,
+      });
+    },
+    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
+  });
+
+  const downloadContractPdfMutation = useMutation({
+    mutationFn: ({ contractId }: { contractId: string }) => ContractsAPI.downloadPdf(contractId),
+    onSuccess: (blob, { contractId }) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `contrato-${contractId}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setFeedback({ kind: 'success', message: `PDF de contrato ${contractId} descargado.` });
+    },
+    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
+  });
+
   const createFinanceEntryMutation = useMutation({
     mutationFn: ({ eventId }: { eventId: string }) => {
       const draft = financeEntryForms[eventId] ?? {
@@ -577,6 +839,26 @@ export default function SocialEventsPage() {
     },
     onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
+
+  const exportEventFinanceCsv = ({
+    event,
+    budgetLines,
+    financeEntries,
+    financeSummary,
+  }: {
+    event: SocialEventDTO;
+    budgetLines: SocialEventBudgetLineDTO[];
+    financeEntries: SocialEventFinanceEntryDTO[];
+    financeSummary: SocialEventFinanceSummaryDTO | null;
+  }) => {
+    const eventId = event.eventId ? String(event.eventId) : '';
+    if (!eventId) return;
+    const rows = buildEventFinanceCsvRows(event, budgetLines, financeEntries, financeSummary);
+    const safeTitle = event.eventTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const filename = `reporte-financiero-${safeTitle || 'evento'}-${eventId}-${Date.now()}.csv`;
+    downloadCsvFile(filename, rows);
+    setFeedback({ kind: 'success', message: `Reporte CSV exportado para ${event.eventTitle}.` });
+  };
 
   const renderOrders = (orders: SocialTicketOrderDTO[], eventId: string, isOrganizer: boolean) => {
     if (orders.length === 0) {
@@ -766,6 +1048,26 @@ export default function SocialEventsPage() {
               notes: '',
               occurredAt: toDateTimeInputValue(),
             };
+            const contractDraft = contractDrafts[eventId] ?? {
+              kind: 'event_vendor_contract',
+              counterparty: '',
+              concept: '',
+              amountCents: '',
+              currency: ev.eventCurrency ?? 'USD',
+              status: 'pending' as const,
+              notes: '',
+            };
+            const contractRefs = Array.from(
+              new Set(
+                financeEntries
+                  .filter(
+                    (entry) =>
+                      (entry.efeSource === 'contract_commitment' || entry.efeSource === 'contract_payment')
+                      && Boolean(entry.efeExternalRef),
+                  )
+                  .map((entry) => String(entry.efeExternalRef)),
+              ),
+            );
             const checkInCode = checkInCodes[eventId] ?? '';
 
             return (
@@ -1099,21 +1401,39 @@ export default function SocialEventsPage() {
                             ) : financeSummaryQueries[index]?.error ? (
                               <Alert severity="warning">No se pudo cargar el resumen financiero.</Alert>
                             ) : financeSummary ? (
-                              <Stack direction="row" spacing={1} flexWrap="wrap">
-                                <Chip size="small" label={`Ingresos: ${formatMoney(financeSummary.efsActualIncomeCents, financeSummary.efsCurrency)}`} color="success" />
-                                <Chip size="small" label={`Gastos: ${formatMoney(financeSummary.efsActualExpenseCents, financeSummary.efsCurrency)}`} color="warning" />
-                                <Chip size="small" label={`Neto: ${formatMoney(financeSummary.efsNetCents, financeSummary.efsCurrency)}`} />
-                                <Chip size="small" label={`Utilización: ${formatPercent(financeSummary.efsBudgetUtilizationPct)}`} variant="outlined" />
-                                <Chip size="small" label={`CxP: ${formatMoney(financeSummary.efsAccountsPayableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                <Chip size="small" label={`CxC: ${formatMoney(financeSummary.efsAccountsReceivableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                <Chip size="small" label={`Contratos comprometidos: ${formatMoney(financeSummary.efsContractCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                <Chip size="small" label={`Contratos pagados: ${formatMoney(financeSummary.efsContractPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                <Chip size="small" label={`Compras comprometidas: ${formatMoney(financeSummary.efsProcurementCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                <Chip size="small" label={`Compras pagadas: ${formatMoney(financeSummary.efsProcurementPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                <Chip size="small" label={`Activos: ${formatMoney(financeSummary.efsAssetInvestmentCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                <Chip size="small" label={`Pasivo neto: ${formatMoney(financeSummary.efsLiabilityBalanceCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                <Chip size="small" label={`Tickets pagados: ${formatMoney(financeSummary.efsTicketPaidRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
-                                <Chip size="small" label={`Tickets reembolsados: ${formatMoney(financeSummary.efsTicketRefundedRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
+                              <Stack spacing={1}>
+                                <Stack direction="row" spacing={1} flexWrap="wrap">
+                                  <Chip size="small" label={`Ingresos: ${formatMoney(financeSummary.efsActualIncomeCents, financeSummary.efsCurrency)}`} color="success" />
+                                  <Chip size="small" label={`Gastos: ${formatMoney(financeSummary.efsActualExpenseCents, financeSummary.efsCurrency)}`} color="warning" />
+                                  <Chip size="small" label={`Neto: ${formatMoney(financeSummary.efsNetCents, financeSummary.efsCurrency)}`} />
+                                  <Chip size="small" label={`Utilización: ${formatPercent(financeSummary.efsBudgetUtilizationPct)}`} variant="outlined" />
+                                  <Chip size="small" label={`CxP: ${formatMoney(financeSummary.efsAccountsPayableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  <Chip size="small" label={`CxC: ${formatMoney(financeSummary.efsAccountsReceivableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  <Chip size="small" label={`Contratos comprometidos: ${formatMoney(financeSummary.efsContractCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  <Chip size="small" label={`Contratos pagados: ${formatMoney(financeSummary.efsContractPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  <Chip size="small" label={`Compras comprometidas: ${formatMoney(financeSummary.efsProcurementCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  <Chip size="small" label={`Compras pagadas: ${formatMoney(financeSummary.efsProcurementPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  <Chip size="small" label={`Activos: ${formatMoney(financeSummary.efsAssetInvestmentCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  <Chip size="small" label={`Pasivo neto: ${formatMoney(financeSummary.efsLiabilityBalanceCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  <Chip size="small" label={`Tickets pagados: ${formatMoney(financeSummary.efsTicketPaidRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  <Chip size="small" label={`Tickets reembolsados: ${formatMoney(financeSummary.efsTicketRefundedRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
+                                </Stack>
+                                <Stack direction="row" spacing={1}>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={() =>
+                                      exportEventFinanceCsv({
+                                        event: ev,
+                                        budgetLines,
+                                        financeEntries,
+                                        financeSummary,
+                                      })
+                                    }
+                                  >
+                                    Exportar CSV
+                                  </Button>
+                                </Stack>
                               </Stack>
                             ) : null}
 
@@ -1213,6 +1533,157 @@ export default function SocialEventsPage() {
                                 disabled={seedBudgetTemplateMutation.isPending || !eventId}
                               >
                                 Plantilla PM
+                              </Button>
+                            </Stack>
+
+                            <Divider />
+
+                            <Typography variant="body2" fontWeight={700}>Contratos y compromisos</Typography>
+                            {contractRefs.length === 0 ? (
+                              <Typography variant="body2" color="text.secondary">
+                                Aún no hay contratos vinculados.
+                              </Typography>
+                            ) : (
+                              <Stack spacing={0.75}>
+                                {contractRefs.map((contractId) => (
+                                  <Stack key={contractId} direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                                    <Chip size="small" label={`Contrato ${contractId}`} />
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      onClick={() => downloadContractPdfMutation.mutate({ contractId })}
+                                      disabled={downloadContractPdfMutation.isPending}
+                                    >
+                                      PDF
+                                    </Button>
+                                    <Button
+                                      size="small"
+                                      variant="text"
+                                      onClick={() =>
+                                        setFinanceEntryForms((prev) => ({
+                                          ...prev,
+                                          [eventId]: {
+                                            ...financeDraft,
+                                            source: 'contract_payment',
+                                            direction: 'expense',
+                                            category: 'contracting',
+                                            externalRef: contractId,
+                                            concept: financeDraft.concept || `Pago contrato ${contractId}`,
+                                          },
+                                        }))
+                                      }
+                                    >
+                                      Registrar pago
+                                    </Button>
+                                  </Stack>
+                                ))}
+                              </Stack>
+                            )}
+
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <TextField
+                                label="Tipo de contrato"
+                                size="small"
+                                value={contractDraft.kind}
+                                onChange={(e) =>
+                                  setContractDrafts((prev) => ({
+                                    ...prev,
+                                    [eventId]: { ...contractDraft, kind: e.target.value },
+                                  }))
+                                }
+                                sx={{ minWidth: 180 }}
+                              />
+                              <TextField
+                                label="Contraparte"
+                                size="small"
+                                value={contractDraft.counterparty}
+                                onChange={(e) =>
+                                  setContractDrafts((prev) => ({
+                                    ...prev,
+                                    [eventId]: { ...contractDraft, counterparty: e.target.value },
+                                  }))
+                                }
+                                sx={{ flex: 1 }}
+                              />
+                              <TextField
+                                label="Concepto"
+                                size="small"
+                                value={contractDraft.concept}
+                                onChange={(e) =>
+                                  setContractDrafts((prev) => ({
+                                    ...prev,
+                                    [eventId]: { ...contractDraft, concept: e.target.value },
+                                  }))
+                                }
+                                sx={{ flex: 1 }}
+                              />
+                            </Stack>
+
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <TextField
+                                label="Monto (centavos)"
+                                size="small"
+                                type="number"
+                                value={contractDraft.amountCents}
+                                onChange={(e) =>
+                                  setContractDrafts((prev) => ({
+                                    ...prev,
+                                    [eventId]: { ...contractDraft, amountCents: e.target.value },
+                                  }))
+                                }
+                                sx={{ width: 170 }}
+                              />
+                              <TextField
+                                label="Moneda"
+                                size="small"
+                                value={contractDraft.currency}
+                                onChange={(e) =>
+                                  setContractDrafts((prev) => ({
+                                    ...prev,
+                                    [eventId]: { ...contractDraft, currency: e.target.value.toUpperCase() },
+                                  }))
+                                }
+                                sx={{ width: 110 }}
+                              />
+                              <TextField
+                                select
+                                label="Estado compromiso"
+                                size="small"
+                                value={contractDraft.status}
+                                onChange={(e) =>
+                                  setContractDrafts((prev) => ({
+                                    ...prev,
+                                    [eventId]: {
+                                      ...contractDraft,
+                                      status: e.target.value as ContractDraftState['status'],
+                                    },
+                                  }))
+                                }
+                                sx={{ width: 180 }}
+                              >
+                                <MenuItem value="pending">Pendiente</MenuItem>
+                                <MenuItem value="draft">Borrador</MenuItem>
+                                <MenuItem value="posted">Publicado</MenuItem>
+                              </TextField>
+                              <TextField
+                                label="Notas"
+                                size="small"
+                                value={contractDraft.notes}
+                                onChange={(e) =>
+                                  setContractDrafts((prev) => ({
+                                    ...prev,
+                                    [eventId]: { ...contractDraft, notes: e.target.value },
+                                  }))
+                                }
+                                sx={{ flex: 1 }}
+                              />
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => eventId && createContractCommitmentMutation.mutate({ eventId })}
+                                disabled={createContractCommitmentMutation.isPending || !eventId}
+                              >
+                                Crear contrato
                               </Button>
                             </Stack>
 
