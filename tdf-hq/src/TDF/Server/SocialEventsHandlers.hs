@@ -21,7 +21,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isAlphaNum)
 import           Data.Int (Int64)
-import           Data.Maybe (catMaybes, fromMaybe, isNothing)
+import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, getCurrentTime)
@@ -126,6 +126,85 @@ mergeEventMetadata incoming existing = EventMetadataDTO
   { emTicketUrl = emTicketUrl incoming <|> emTicketUrl existing
   , emImageUrl = emImageUrl incoming <|> emImageUrl existing
   , emIsPublic = emIsPublic incoming <|> emIsPublic existing
+  }
+
+data VenueContactMetadata = VenueContactMetadata
+  { vcmPhone :: Maybe T.Text
+  , vcmWebsite :: Maybe T.Text
+  , vcmState :: Maybe T.Text
+  , vcmZipCode :: Maybe T.Text
+  , vcmImageUrl :: Maybe T.Text
+  }
+
+emptyVenueContactMetadata :: VenueContactMetadata
+emptyVenueContactMetadata = VenueContactMetadata
+  { vcmPhone = Nothing
+  , vcmWebsite = Nothing
+  , vcmState = Nothing
+  , vcmZipCode = Nothing
+  , vcmImageUrl = Nothing
+  }
+
+instance Aeson.ToJSON VenueContactMetadata where
+  toJSON VenueContactMetadata{..} = Aeson.object
+    [ "phone" Aeson..= vcmPhone
+    , "website" Aeson..= vcmWebsite
+    , "state" Aeson..= vcmState
+    , "zipCode" Aeson..= vcmZipCode
+    , "imageUrl" Aeson..= vcmImageUrl
+    ]
+
+instance Aeson.FromJSON VenueContactMetadata where
+  parseJSON = Aeson.withObject "VenueContactMetadata" $ \o ->
+    VenueContactMetadata
+      <$> o Aeson..:? "phone"
+      <*> o Aeson..:? "website"
+      <*> o Aeson..:? "state"
+      <*> o Aeson..:? "zipCode"
+      <*> o Aeson..:? "imageUrl"
+
+decodeVenueContactMetadata :: Maybe T.Text -> VenueContactMetadata
+decodeVenueContactMetadata mTxt =
+  case cleanMaybeText mTxt of
+    Nothing -> emptyVenueContactMetadata
+    Just raw ->
+      case Aeson.decodeStrict (TE.encodeUtf8 raw) of
+        Just meta -> meta
+        Nothing -> emptyVenueContactMetadata { vcmPhone = Just raw }
+
+encodeVenueContactMetadata :: VenueContactMetadata -> Maybe T.Text
+encodeVenueContactMetadata VenueContactMetadata{..}
+  | isNothing vcmPhone && isNothing vcmWebsite && isNothing vcmState && isNothing vcmZipCode && isNothing vcmImageUrl = Nothing
+  | isJust vcmPhone && isNothing vcmWebsite && isNothing vcmState && isNothing vcmZipCode && isNothing vcmImageUrl = vcmPhone
+  | otherwise =
+      Just
+        (TE.decodeUtf8 . BL.toStrict . Aeson.encode $
+          VenueContactMetadata
+            { vcmPhone = vcmPhone
+            , vcmWebsite = vcmWebsite
+            , vcmState = vcmState
+            , vcmZipCode = vcmZipCode
+            , vcmImageUrl = vcmImageUrl
+            })
+
+venueContactMetadataFromDTO :: VenueDTO -> VenueContactMetadata
+venueContactMetadataFromDTO dto =
+  let parsedContact = decodeVenueContactMetadata (venueContact dto)
+  in VenueContactMetadata
+      { vcmPhone = cleanMaybeText (venuePhone dto) <|> vcmPhone parsedContact
+      , vcmWebsite = cleanMaybeText (venueWebsite dto) <|> vcmWebsite parsedContact
+      , vcmState = cleanMaybeText (venueState dto) <|> vcmState parsedContact
+      , vcmZipCode = cleanMaybeText (venueZipCode dto) <|> vcmZipCode parsedContact
+      , vcmImageUrl = cleanMaybeText (venueImageUrl dto) <|> vcmImageUrl parsedContact
+      }
+
+mergeVenueContactMetadata :: VenueContactMetadata -> VenueContactMetadata -> VenueContactMetadata
+mergeVenueContactMetadata incoming existing = VenueContactMetadata
+  { vcmPhone = vcmPhone incoming <|> vcmPhone existing
+  , vcmWebsite = vcmWebsite incoming <|> vcmWebsite existing
+  , vcmState = vcmState incoming <|> vcmState existing
+  , vcmZipCode = vcmZipCode incoming <|> vcmZipCode existing
+  , vcmImageUrl = vcmImageUrl incoming <|> vcmImageUrl existing
   }
 
 socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
@@ -338,24 +417,32 @@ socialEventsServer user = eventsServer
                       Just c | not (T.null (T.strip c)) -> [VenueCity ==. Just (T.strip c)]
                       _ -> []
       rows <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo limit, OffsetBy offset]) envPool
-      pure $ map (\(Entity vid v) -> VenueDTO
-        { venueId = Just (renderKeyText vid)
-        , venueName = SM.venueName v
-        , venueAddress = SM.venueAddress v
-        , venueCity = SM.venueCity v
-        , venueCountry = SM.venueCountry v
-        , venueLat = venueLatitude v
-        , venueLng = venueLongitude v
-        , venueCapacity = SM.venueCapacity v
-        , venueContact = SM.venueContact v
-        , venueCreatedAt = Just (SM.venueCreatedAt v)
-        , venueUpdatedAt = Just (SM.venueUpdatedAt v)
-        }) rows
+      pure $ map (\(Entity vid v) ->
+        let contactMeta = decodeVenueContactMetadata (SM.venueContact v)
+        in VenueDTO
+          { venueId = Just (renderKeyText vid)
+          , venueName = SM.venueName v
+          , venueAddress = SM.venueAddress v
+          , venueCity = SM.venueCity v
+          , venueCountry = SM.venueCountry v
+          , venueLat = venueLatitude v
+          , venueLng = venueLongitude v
+          , venueCapacity = SM.venueCapacity v
+          , venueContact = vcmPhone contactMeta
+          , venuePhone = vcmPhone contactMeta
+          , venueWebsite = vcmWebsite contactMeta
+          , venueState = vcmState contactMeta
+          , venueZipCode = vcmZipCode contactMeta
+          , venueImageUrl = vcmImageUrl contactMeta
+          , venueCreatedAt = Just (SM.venueCreatedAt v)
+          , venueUpdatedAt = Just (SM.venueUpdatedAt v)
+          }) rows
 
     createVenue :: VenueDTO -> AppM VenueDTO
     createVenue dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
+      let contactMeta = venueContactMetadataFromDTO dto
       key <- liftIO $ runSqlPool (insert Venue
         { venueName = venueName dto
         , venueAddress = venueAddress dto
@@ -364,12 +451,18 @@ socialEventsServer user = eventsServer
         , venueLatitude = venueLat dto
         , venueLongitude = venueLng dto
         , venueCapacity = venueCapacity dto
-        , venueContact = venueContact dto
+        , venueContact = encodeVenueContactMetadata contactMeta
         , venueCreatedAt = now
         , venueUpdatedAt = now
         }) envPool
       pure (dto
         { venueId = Just (renderKeyText key)
+        , venueContact = vcmPhone contactMeta
+        , venuePhone = vcmPhone contactMeta
+        , venueWebsite = vcmWebsite contactMeta
+        , venueState = vcmState contactMeta
+        , venueZipCode = vcmZipCode contactMeta
+        , venueImageUrl = vcmImageUrl contactMeta
         , venueCreatedAt = Just now
         , venueUpdatedAt = Just now
         })
@@ -381,19 +474,26 @@ socialEventsServer user = eventsServer
       mEnt <- liftIO $ runSqlPool (get venueKey) envPool
       case mEnt of
         Nothing -> throwError err404 { errBody = "Venue not found" }
-        Just v -> pure VenueDTO
-          { venueId = Just (T.strip rawId)
-          , venueName = SM.venueName v
-          , venueAddress = SM.venueAddress v
-          , venueCity = SM.venueCity v
-          , venueCountry = SM.venueCountry v
-          , venueLat = venueLatitude v
-          , venueLng = venueLongitude v
-          , venueCapacity = SM.venueCapacity v
-          , venueContact = SM.venueContact v
-          , venueCreatedAt = Just (SM.venueCreatedAt v)
-          , venueUpdatedAt = Just (SM.venueUpdatedAt v)
-          }
+        Just v ->
+          let contactMeta = decodeVenueContactMetadata (SM.venueContact v)
+          in pure VenueDTO
+              { venueId = Just (T.strip rawId)
+              , venueName = SM.venueName v
+              , venueAddress = SM.venueAddress v
+              , venueCity = SM.venueCity v
+              , venueCountry = SM.venueCountry v
+              , venueLat = venueLatitude v
+              , venueLng = venueLongitude v
+              , venueCapacity = SM.venueCapacity v
+              , venueContact = vcmPhone contactMeta
+              , venuePhone = vcmPhone contactMeta
+              , venueWebsite = vcmWebsite contactMeta
+              , venueState = vcmState contactMeta
+              , venueZipCode = vcmZipCode contactMeta
+              , venueImageUrl = vcmImageUrl contactMeta
+              , venueCreatedAt = Just (SM.venueCreatedAt v)
+              , venueUpdatedAt = Just (SM.venueUpdatedAt v)
+              }
 
     updateVenue :: T.Text -> VenueDTO -> AppM VenueDTO
     updateVenue rawId dto = do
@@ -402,6 +502,9 @@ socialEventsServer user = eventsServer
       venueKey <- parseKeyOr400 "venue" rawId
       mExisting <- liftIO $ runSqlPool (get venueKey) envPool
       existing <- maybe (throwError err404 { errBody = "Venue not found" }) pure mExisting
+      let existingContactMeta = decodeVenueContactMetadata (SM.venueContact existing)
+          requestedContactMeta = venueContactMetadataFromDTO dto
+          mergedContactMeta = mergeVenueContactMetadata requestedContactMeta existingContactMeta
       liftIO $ runSqlPool (update venueKey
         [ VenueName =. venueName dto
         , VenueAddress =. venueAddress dto
@@ -410,11 +513,17 @@ socialEventsServer user = eventsServer
         , VenueLatitude =. venueLat dto
         , VenueLongitude =. venueLng dto
         , VenueCapacity =. venueCapacity dto
-        , VenueContact =. venueContact dto
+        , VenueContact =. encodeVenueContactMetadata mergedContactMeta
         , VenueUpdatedAt =. now
         ]) envPool
       pure (dto
         { venueId = Just rawId
+        , venueContact = vcmPhone mergedContactMeta
+        , venuePhone = vcmPhone mergedContactMeta
+        , venueWebsite = vcmWebsite mergedContactMeta
+        , venueState = vcmState mergedContactMeta
+        , venueZipCode = vcmZipCode mergedContactMeta
+        , venueImageUrl = vcmImageUrl mergedContactMeta
         , venueCreatedAt = Just (SM.venueCreatedAt existing)
         , venueUpdatedAt = Just now
         })

@@ -112,6 +112,11 @@ data VenueDTO = VenueDTO
   , venueLng      :: Maybe Double
   , venueCapacity :: Maybe Int
   , venueContact  :: Maybe Text
+  , venuePhone    :: Maybe Text
+  , venueWebsite  :: Maybe Text
+  , venueState    :: Maybe Text
+  , venueZipCode  :: Maybe Text
+  , venueImageUrl :: Maybe Text
   , venueCreatedAt :: Maybe UTCTime
   , venueUpdatedAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
