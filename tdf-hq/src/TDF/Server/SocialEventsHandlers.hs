@@ -555,7 +555,14 @@ socialEventsServer user = eventsServer
       offset <- resolveOffset mOffset
       let nameFilter = normalizeFilter mNameFilter
           genreFilter = normalizeFilter mGenreFilter
-      rows <- liftIO $ runSqlPool (selectList [] [Desc ArtistProfileCreatedAt, LimitTo limit, OffsetBy offset]) envPool
+          hasFilter = isJust nameFilter || isJust genreFilter
+      rows <- liftIO $ runSqlPool
+        (selectList []
+          ([Desc ArtistProfileCreatedAt] ++
+            if hasFilter
+              then [LimitTo 1000]
+              else [LimitTo limit, OffsetBy offset]))
+        envPool
       artists <- forM rows $ \(Entity aid a) -> do
         genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. aid] []) envPool
         let genreList = map (artistGenreGenre . entityVal) genres
@@ -578,7 +585,11 @@ socialEventsServer user = eventsServer
             , artistUpdatedAt = Just (artistProfileUpdatedAt a)
             }
           else Nothing
-      pure (catMaybes artists)
+      let filtered = catMaybes artists
+      pure
+        (if hasFilter
+          then take limit (drop offset filtered)
+          else filtered)
 
     normalizeFilter :: Maybe T.Text -> Maybe T.Text
     normalizeFilter mVal =
