@@ -27,7 +27,6 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { DateTime } from 'luxon';
 import {
   SocialEventsAPI,
-  type SocialEventDTO,
   type SocialInvitationDTO,
   type SocialRsvpStatus,
   type SocialTicketOrderDTO,

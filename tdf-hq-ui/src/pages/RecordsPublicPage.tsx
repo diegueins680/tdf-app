@@ -15,6 +15,7 @@ import {
   Grid,
   Link as MuiLink,
   Autocomplete,
+  CircularProgress,
   MenuItem,
   Stack,
   TextField,
@@ -34,6 +35,7 @@ import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { Admin } from '../api/admin';
 import { Services } from '../api/services';
+import { Engineers } from '../api/engineers';
 import { useSession } from '../session/SessionContext';
 import { deriveModulesFromRoles } from '../components/SidebarNav';
 import EditIcon from '@mui/icons-material/Edit';
@@ -136,10 +138,22 @@ function BookingRequestDialog({
     queryFn: () => Rooms.list(),
     enabled: open && hasToken,
   });
+  const engineersQuery = useQuery({
+    queryKey: ['engineers-public'],
+    queryFn: () => Engineers.listPublic(),
+    enabled: open && hasToken,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const engineerOptions = useMemo(() => {
     const engineers = new Set<string>();
+    (engineersQuery.data ?? []).forEach((engineer) => {
+      const name = engineer.peName?.trim();
+      if (name) engineers.add(name);
+    });
     (bookingsQuery.data ?? []).forEach((booking) => {
+      const directName = booking.engineerName?.trim();
+      if (directName) engineers.add(directName);
       booking.resources.forEach((res) => {
         if (res.brRole.toLowerCase().includes('engineer')) {
           const name = res.brRoomName?.trim();
@@ -148,7 +162,14 @@ function BookingRequestDialog({
       });
     });
     return Array.from(engineers).sort((a, b) => a.localeCompare(b));
-  }, [bookingsQuery.data]);
+  }, [bookingsQuery.data, engineersQuery.data]);
+
+  const selectedEngineerPartyId = useMemo(() => {
+    const engineerLower = engineerName.trim().toLowerCase();
+    if (!engineerLower) return null;
+    const matched = (engineersQuery.data ?? []).find((engineer) => engineer.peName.trim().toLowerCase() === engineerLower);
+    return matched?.peId ?? null;
+  }, [engineerName, engineersQuery.data]);
 
   const parsedStart = useMemo(
     () => DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone: BOOKING_ZONE }),
@@ -190,6 +211,8 @@ function BookingRequestDialog({
     if (!engineerName.trim() || !isTimeValid) return [];
     const engineerLower = engineerName.trim().toLowerCase();
     return relevantConflicts.filter((booking) =>
+      (selectedEngineerPartyId != null && booking.engineerPartyId === selectedEngineerPartyId) ||
+      booking.engineerName?.trim().toLowerCase() === engineerLower ||
       booking.resources.some(
         (res) =>
           res.brRole.toLowerCase().includes('engineer') &&
@@ -197,7 +220,7 @@ function BookingRequestDialog({
           res.brRoomName.toLowerCase() === engineerLower,
       ),
     );
-  }, [engineerName, relevantConflicts, isTimeValid]);
+  }, [engineerName, relevantConflicts, isTimeValid, selectedEngineerPartyId]);
 
   const nextRoomConflict = roomConflicts[0] ?? null;
   const nextEngineerConflict = engineerConflicts[0] ?? null;
@@ -271,6 +294,8 @@ function BookingRequestDialog({
         cbNotes: augmentedNotes || null,
         cbServiceType: serviceType,
         cbPartyId: party.partyId,
+        cbEngineerPartyId: selectedEngineerPartyId,
+        cbEngineerName: engineerName.trim() || null,
         cbResourceIds: selectedRoomId ? [selectedRoomId] : null,
       });
     },
@@ -443,24 +468,35 @@ function BookingRequestDialog({
               </TextField>
               <Autocomplete
                 options={engineerOptions}
-                freeSolo={engineerOptions.length === 0}
+                freeSolo
                 value={engineerName || null}
                 onChange={(_, value) => setEngineerName(value ?? '')}
                 onInputChange={(_, value, reason) => {
                   if (reason === 'clear') setEngineerName('');
-                  if (reason === 'input' && engineerOptions.length === 0) setEngineerName(value);
+                  if (reason === 'input') setEngineerName(value);
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Ingeniero (opcional)"
-                    placeholder={engineerOptions.length ? 'Selecciona para validar choques' : 'Escribe el nombre del ingeniero'}
+                    placeholder={engineerOptions.length ? 'Selecciona o escribe para validar choques' : 'Escribe el nombre del ingeniero'}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {engineersQuery.isFetching ? <CircularProgress size={16} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
                     helperText={
                       engineerName
                         ? nextEngineerConflict
                           ? `Cruce: ${formatRange(nextEngineerConflict.startsAt, nextEngineerConflict.endsAt)}`
                           : 'Sin choques en este horario.'
-                        : 'Selecciona un ingeniero para asegurar disponibilidad.'
+                        : engineersQuery.isError
+                          ? 'Catálogo no disponible; puedes escribir el nombre manualmente.'
+                          : 'Selecciona un ingeniero para asegurar disponibilidad.'
                     }
                     fullWidth
                   />

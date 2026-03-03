@@ -1446,7 +1446,18 @@ export default function PublicBookingPage() {
                                 setForm((prev) => ({ ...prev, engineerId: id, engineerName: name }));
                               }}
                               inputValue={form.engineerName}
-                              onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, engineerName: value }))}
+                              onInputChange={(_evt, value, reason) => {
+                                if (reason === 'reset') return;
+                                setForm((prev) => {
+                                  const normalized = value.trim().toLowerCase();
+                                  const exact = engineers.find((opt) => opt.peName.trim().toLowerCase() === normalized);
+                                  return {
+                                    ...prev,
+                                    engineerName: value,
+                                    engineerId: exact?.peId ?? null,
+                                  };
+                                });
+                              }}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
