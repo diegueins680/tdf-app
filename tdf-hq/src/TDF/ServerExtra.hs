@@ -1977,7 +1977,7 @@ extractRecipientIdFromMetadata (Just raw) =
 
 resolveInstagramReplyContext :: Maybe Text -> SqlPersistT IO (Maybe Text, Maybe Text)
 resolveInstagramReplyContext mExternalId = do
-  let mCleanExternalId = mExternalId >>= stripNonEmptyText
+  let mCleanExternalId = stripNonEmptyText mExternalId
   mPreferredAccountId <- case mCleanExternalId of
     Nothing -> pure Nothing
     Just extId -> do
@@ -1997,10 +1997,10 @@ resolveInstagramDeliveryAccount mPreferredAccountId = do
         , M.SocialSyncAccountAccessToken !=. Nothing
         ]
       ordering = [Desc M.SocialSyncAccountUpdatedAt, Desc M.SocialSyncAccountCreatedAt]
-      mCleanPreferred = mPreferredAccountId >>= stripNonEmptyText
+      mCleanPreferred = stripNonEmptyText mPreferredAccountId
   mSelected <- case mCleanPreferred of
     Just accountId -> do
-      mExact <- selectFirst (M.SocialSyncAccountExternalUserId ==. accountId : baseFilters) ordering
+      mExact <- selectFirst ([M.SocialSyncAccountExternalUserId ==. accountId] ++ baseFilters) ordering
       case mExact of
         Just row -> pure (Just row)
         Nothing -> selectFirst baseFilters ordering
