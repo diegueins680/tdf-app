@@ -63,7 +63,28 @@ data ArtistDTO = ArtistDTO
   , artistUpdatedAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON ArtistDTO
-instance FromJSON ArtistDTO
+instance FromJSON ArtistDTO where
+  parseJSON = withObject "ArtistDTO" $ \o -> do
+    artistId <- o .:? "artistId"
+    artistPartyId <- o .:? "artistPartyId"
+    mName <- o .:? "artistName"
+    mGenres <- o .:? "artistGenres"
+    artistBio <- o .:? "artistBio"
+    artistAvatarUrl <- o .:? "artistAvatarUrl"
+    artistSocialLinks <- o .:? "artistSocialLinks"
+    artistCreatedAt <- o .:? "artistCreatedAt"
+    artistUpdatedAt <- o .:? "artistUpdatedAt"
+    pure ArtistDTO
+      { artistId = artistId
+      , artistPartyId = artistPartyId
+      , artistName = maybe "" id mName
+      , artistGenres = maybe [] id mGenres
+      , artistBio = artistBio
+      , artistAvatarUrl = artistAvatarUrl
+      , artistSocialLinks = artistSocialLinks
+      , artistCreatedAt = artistCreatedAt
+      , artistUpdatedAt = artistUpdatedAt
+      }
 
 data ArtistFollowerDTO = ArtistFollowerDTO
   { afFollowId         :: Maybe Text

@@ -626,6 +626,7 @@ socialEventsServer user = eventsServer
     createArtist dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
+      when (T.null (T.strip (artistName dto))) $ throwError err400 { errBody = "artist name is required" }
       key <- liftIO $ runSqlPool (insert ArtistProfile
         { artistProfilePartyId = cleanMaybeText (artistPartyId dto)
         , artistProfileName = artistName dto
@@ -683,6 +684,7 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       artistKey <- parseArtistId idStr
       now <- liftIO getCurrentTime
+      when (T.null (T.strip (artistName dto))) $ throwError err400 { errBody = "artist name is required" }
       mExisting <- liftIO $ runSqlPool (get artistKey) envPool
       existing <- maybe (throwError err404 { errBody = "Artist not found" }) pure mExisting
       let nextPartyId = cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
