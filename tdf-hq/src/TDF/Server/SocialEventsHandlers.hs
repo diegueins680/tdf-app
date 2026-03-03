@@ -409,24 +409,45 @@ socialEventsServer user = eventsServer
                :<|> updateVenue
 
     listVenues :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [VenueDTO]
-    listVenues mCity _mNear mQuery mLimit mOffset = do
+    listVenues mCity mNear mQuery mLimit mOffset = do
       Env{..} <- ask
       limit <- resolveLimit 200 500 mLimit
       offset <- resolveOffset mOffset
       let searchNeedle = fmap (T.toCaseFold . T.strip) mQuery
+      nearFilter <- case mNear of
+        Nothing -> pure Nothing
+        Just raw ->
+          case parseNearQueryEither raw of
+            Left e -> throwError e
+            Right parsed -> pure (Just parsed)
       let filters = case mCity of
                       Just c | not (T.null (T.strip c)) -> [VenueCity ==. Just (T.strip c)]
                       _ -> []
-      rows <- case searchNeedle of
-        Just q | not (T.null q) -> do
-          seeded <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 1000]) envPool
-          let matches (Entity _ v) =
-                let nameVal = T.toCaseFold (SM.venueName v)
-                    cityVal = maybe "" T.toCaseFold (SM.venueCity v)
-                    addressVal = maybe "" T.toCaseFold (SM.venueAddress v)
-                in T.isInfixOf q nameVal || T.isInfixOf q cityVal || T.isInfixOf q addressVal
-          pure $ take limit (drop offset (filter matches seeded))
-        _ -> liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo limit, OffsetBy offset]) envPool
+      let hasTextQuery = maybe False (not . T.null) searchNeedle
+          hasNearQuery = isJust nearFilter
+          needsInMemoryFilter = hasTextQuery || hasNearQuery
+      seeded <- if needsInMemoryFilter
+        then liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 2000]) envPool
+        else liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo limit, OffsetBy offset]) envPool
+      let matchesText q (Entity _ v) =
+            let nameVal = T.toCaseFold (SM.venueName v)
+                cityVal = maybe "" T.toCaseFold (SM.venueCity v)
+                addressVal = maybe "" T.toCaseFold (SM.venueAddress v)
+            in T.isInfixOf q nameVal || T.isInfixOf q cityVal || T.isInfixOf q addressVal
+          matchesNear (lat, lng, radiusKm) (Entity _ v) =
+            case (venueLatitude v, venueLongitude v) of
+              (Just venueLat, Just venueLng) ->
+                haversineDistanceKm lat lng venueLat venueLng <= radiusKm
+              _ -> False
+          rowsFilteredByText = case searchNeedle of
+            Just q | not (T.null q) -> filter (matchesText q) seeded
+            _ -> seeded
+          rowsFiltered = case nearFilter of
+            Just nearSpec -> filter (matchesNear nearSpec) rowsFilteredByText
+            Nothing -> rowsFilteredByText
+          rows = if needsInMemoryFilter
+            then take limit (drop offset rowsFiltered)
+            else seeded
       pure $ map (\(Entity vid v) ->
         let contactMeta = decodeVenueContactMetadata (SM.venueContact v)
         in VenueDTO
@@ -1361,6 +1382,63 @@ parseInt64Either label raw =
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
         }
+
+parseDoubleEither :: T.Text -> T.Text -> Either ServerError Double
+parseDoubleEither label raw =
+  case readMaybe (T.unpack (T.strip raw)) :: Maybe Double of
+    Just n -> Right n
+    Nothing ->
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label))
+        }
+
+parseNearQueryEither :: T.Text -> Either ServerError (Double, Double, Double)
+parseNearQueryEither raw =
+  case map T.strip (T.splitOn "," raw) of
+    [latRaw, lngRaw] -> do
+      lat <- parseDoubleEither "near latitude" latRaw
+      lng <- parseDoubleEither "near longitude" lngRaw
+      validateCoordinates lat lng
+      pure (lat, lng, 25)
+    [latRaw, lngRaw, radiusRaw] -> do
+      lat <- parseDoubleEither "near latitude" latRaw
+      lng <- parseDoubleEither "near longitude" lngRaw
+      radiusKm <- parseDoubleEither "near radiusKm" radiusRaw
+      validateCoordinates lat lng
+      validateRadius radiusKm
+      pure (lat, lng, radiusKm)
+    _ ->
+      Left err400
+        { errBody = "near must use format lat,lng or lat,lng,radiusKm"
+        }
+
+validateCoordinates :: Double -> Double -> Either ServerError ()
+validateCoordinates lat lng
+  | lat < (-90) || lat > 90 = Left err400 { errBody = "near latitude must be between -90 and 90" }
+  | lng < (-180) || lng > 180 = Left err400 { errBody = "near longitude must be between -180 and 180" }
+  | otherwise = Right ()
+
+validateRadius :: Double -> Either ServerError ()
+validateRadius radiusKm
+  | radiusKm <= 0 = Left err400 { errBody = "near radiusKm must be greater than 0" }
+  | radiusKm > 1000 = Left err400 { errBody = "near radiusKm exceeds allowed maximum" }
+  | otherwise = Right ()
+
+haversineDistanceKm :: Double -> Double -> Double -> Double -> Double
+haversineDistanceKm lat1 lng1 lat2 lng2 =
+  let earthRadiusKm = 6371
+      dLat = degToRad (lat2 - lat1)
+      dLng = degToRad (lng2 - lng1)
+      lat1Rad = degToRad lat1
+      lat2Rad = degToRad lat2
+      a =
+        (sin (dLat / 2) * sin (dLat / 2)) +
+          (cos lat1Rad * cos lat2Rad * sin (dLng / 2) * sin (dLng / 2))
+      c = 2 * atan2 (sqrt a) (sqrt (1 - a))
+  in earthRadiusKm * c
+
+degToRad :: Double -> Double
+degToRad deg = deg * pi / 180
 
 parseKeyOr400 :: ToBackendKey SqlBackend record => T.Text -> T.Text -> AppM (Key record)
 parseKeyOr400 label raw =
