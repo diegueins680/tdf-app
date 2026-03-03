@@ -40,6 +40,8 @@ type EventsRoutes =
          :> QueryParam "start_after" Text
          :> QueryParam "artistId" Text
          :> QueryParam "venueId" Text
+         :> QueryParam "limit" Int
+         :> QueryParam "offset" Int
          :> Get '[JSON] [EventDTO]
   :<|> "events" :> ReqBody '[JSON] EventDTO :> Post '[JSON] EventDTO
   :<|> "events" :> IdParam :> Get '[JSON] EventDTO
@@ -47,13 +49,13 @@ type EventsRoutes =
   :<|> "events" :> IdParam :> DeleteNoContent
 
 type VenuesRoutes =
-       "venues" :> QueryParam "city" Text :> QueryParam "near" Text :> Get '[JSON] [VenueDTO]
+       "venues" :> QueryParam "city" Text :> QueryParam "near" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [VenueDTO]
   :<|> "venues" :> ReqBody '[JSON] VenueDTO :> Post '[JSON] VenueDTO
   :<|> "venues" :> IdParam :> Get '[JSON] VenueDTO
   :<|> "venues" :> IdParam :> ReqBody '[JSON] VenueDTO :> Put '[JSON] VenueDTO
 
 type ArtistsRoutes =
-       "artists" :> QueryParam "name" Text :> QueryParam "genre" Text :> Get '[JSON] [ArtistDTO]
+       "artists" :> QueryParam "name" Text :> QueryParam "genre" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [ArtistDTO]
   :<|> "artists" :> ReqBody '[JSON] ArtistDTO :> Post '[JSON] ArtistDTO
   :<|> "artists" :> IdParam :> Get '[JSON] ArtistDTO
   :<|> "artists" :> IdParam :> ReqBody '[JSON] ArtistDTO :> Put '[JSON] ArtistDTO

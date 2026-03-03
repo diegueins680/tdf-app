@@ -147,9 +147,11 @@ socialEventsServer user = eventsServer
                :<|> updateEvent
                :<|> deleteEvent
 
-    listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> AppM [EventDTO]
-    listEvents mCity mStartAfter mArtistId mVenueId = do
+    listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [EventDTO]
+    listEvents mCity mStartAfter mArtistId mVenueId mLimit mOffset = do
       Env{..} <- ask
+      limit <- resolveLimit 200 500 mLimit
+      offset <- resolveOffset mOffset
       let startFilter = case mStartAfter of
             Nothing -> []
             Just raw -> case iso8601ParseM (T.unpack raw) of
@@ -181,7 +183,7 @@ socialEventsServer user = eventsServer
             then pure [SocialEventId ==. toSqlKey 0]
             else pure [SocialEventId <-. eventIds]
       let filters = startFilter ++ cityFilter ++ venueFilter ++ artistFilter
-      rows <- liftIO $ runSqlPool (selectList filters [Desc SocialEventStartTime, LimitTo 200]) envPool
+      rows <- liftIO $ runSqlPool (selectList filters [Desc SocialEventStartTime, LimitTo limit, OffsetBy offset]) envPool
       forM rows $ \(Entity eid eventRow) -> do
         artists <- liftIO $ loadEventArtists envPool eid
         pure (eventEntityToDTO eid eventRow artists)
@@ -327,13 +329,15 @@ socialEventsServer user = eventsServer
                :<|> getVenue
                :<|> updateVenue
 
-    listVenues :: Maybe T.Text -> Maybe T.Text -> AppM [VenueDTO]
-    listVenues mCity _mNear = do
+    listVenues :: Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [VenueDTO]
+    listVenues mCity _mNear mLimit mOffset = do
       Env{..} <- ask
+      limit <- resolveLimit 200 500 mLimit
+      offset <- resolveOffset mOffset
       let filters = case mCity of
                       Just c | not (T.null (T.strip c)) -> [VenueCity ==. Just (T.strip c)]
                       _ -> []
-      rows <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 200]) envPool
+      rows <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo limit, OffsetBy offset]) envPool
       pure $ map (\(Entity vid v) -> VenueDTO
         { venueId = Just (renderKeyText vid)
         , venueName = SM.venueName v
@@ -425,12 +429,14 @@ socialEventsServer user = eventsServer
                :<|> followArtist
                :<|> unfollowArtist
 
-    listArtists :: Maybe T.Text -> Maybe T.Text -> AppM [ArtistDTO]
-    listArtists mNameFilter mGenreFilter = do
+    listArtists :: Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
+    listArtists mNameFilter mGenreFilter mLimit mOffset = do
       Env{..} <- ask
+      limit <- resolveLimit 500 1000 mLimit
+      offset <- resolveOffset mOffset
       let nameFilter = normalizeFilter mNameFilter
           genreFilter = normalizeFilter mGenreFilter
-      rows <- liftIO $ runSqlPool (selectList [] [Desc ArtistProfileCreatedAt, LimitTo 500]) envPool
+      rows <- liftIO $ runSqlPool (selectList [] [Desc ArtistProfileCreatedAt, LimitTo limit, OffsetBy offset]) envPool
       artists <- forM rows $ \(Entity aid a) -> do
         genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. aid] []) envPool
         let genreList = map (artistGenreGenre . entityVal) genres
@@ -461,6 +467,23 @@ socialEventsServer user = eventsServer
         Nothing -> Nothing
         Just t | T.null t -> Nothing
         Just t -> Just t
+
+    resolveLimit :: Int -> Int -> Maybe Int -> AppM Int
+    resolveLimit defaultLimit maxLimit mVal =
+      case mVal of
+        Nothing -> pure defaultLimit
+        Just n
+          | n <= 0 -> throwError err400 { errBody = "limit must be greater than 0" }
+          | n > maxLimit -> throwError err400 { errBody = "limit exceeds allowed maximum" }
+          | otherwise -> pure n
+
+    resolveOffset :: Maybe Int -> AppM Int
+    resolveOffset mVal =
+      case mVal of
+        Nothing -> pure 0
+        Just n
+          | n < 0 -> throwError err400 { errBody = "offset must be greater than or equal to 0" }
+          | otherwise -> pure n
 
     listArtistFollowers :: T.Text -> AppM [ArtistFollowerDTO]
     listArtistFollowers artistIdStr = do
