@@ -135,12 +135,31 @@ const extractSenderNameFromMetadata = (metadata?: string | null) => {
   return null;
 };
 
+const looksLikeOpaqueSenderValue = (value: string) => /^[A-Za-z0-9+/=_-]{48,}$/.test(value);
+
+const normalizeSenderLabel = (value?: string | null) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (looksLikeOpaqueSenderValue(trimmed)) return null;
+  if (trimmed.length > 70 && !trimmed.includes(' ')) return null;
+  return trimmed;
+};
+
+const compactIdentifier = (value: string) => {
+  const trimmed = value.trim();
+  if (trimmed.length <= 22) return trimmed;
+  return `${trimmed.slice(0, 10)}…${trimmed.slice(-6)}`;
+};
+
 const resolveSenderName = (msg: SocialMessage) => {
-  const senderName = msg.senderName?.trim();
+  const senderName = normalizeSenderLabel(msg.senderName);
   if (senderName) return senderName;
 
-  const metaName = extractSenderNameFromMetadata(msg.metadata);
+  const metaName = normalizeSenderLabel(extractSenderNameFromMetadata(msg.metadata));
   if (metaName) return metaName;
+
+  const senderId = msg.senderId?.trim();
+  if (senderId) return `ID ${compactIdentifier(senderId)}`;
 
   return 'Sin nombre';
 };
@@ -244,6 +263,73 @@ const guessIsImage = (attachment: ParsedAttachment) => {
   return ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.avif'].some((ext) => url.includes(ext));
 };
 
+const isInstagramCdnAsset = (url?: string) => {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    return host.endsWith('cdninstagram.com');
+  } catch {
+    return false;
+  }
+};
+
+interface ReplyErrorSummary {
+  headline: string;
+  guidance?: string;
+  technical: string;
+}
+
+const summarizeReplyError = (value: string | null | undefined, reviewMode: boolean): ReplyErrorSummary | null => {
+  const technical = value?.replace(/\s+/g, ' ').trim();
+  if (!technical) return null;
+  const lower = technical.toLowerCase();
+
+  if (lower.includes('instagram_manage_messages') && lower.includes('advanced access')) {
+    return {
+      headline: reviewMode
+        ? 'Delivery blocked: Meta app lacks Advanced Access for Instagram messaging.'
+        : 'Envío bloqueado: la app de Meta no tiene Advanced Access para mensajería de Instagram.',
+      guidance: reviewMode
+        ? 'Grant Advanced Access to instagram_manage_messages, then reconnect the Instagram asset.'
+        : 'Activa Advanced Access para instagram_manage_messages y reconecta el asset de Instagram.',
+      technical,
+    };
+  }
+
+  if (lower.includes('recipient user does not have role on app') || lower.includes('2534048')) {
+    return {
+      headline: reviewMode
+        ? 'Delivery blocked: recipient account has no role/tester access on this Meta app.'
+        : 'Envío bloqueado: la cuenta destinataria no tiene rol/tester en esta app de Meta.',
+      guidance: reviewMode
+        ? 'Add the account as tester/developer for review environments, or use a production-enabled account.'
+        : 'Agrega la cuenta como tester/developer (entorno review) o usa una cuenta habilitada para producción.',
+      technical,
+    };
+  }
+
+  if (lower.includes('application does not have the capability to make this api call') || lower.includes('"code":3')) {
+    return {
+      headline: reviewMode
+        ? 'Delivery blocked: app permissions/capabilities are missing for this channel.'
+        : 'Envío bloqueado: faltan permisos/capacidades de la app para este canal.',
+      guidance: reviewMode
+        ? 'Validate app mode, granted permissions, and the selected Page/IG asset in Meta settings.'
+        : 'Verifica modo de app, permisos otorgados y la Página/asset IG seleccionado en Meta.',
+      technical,
+    };
+  }
+
+  return {
+    headline: reviewMode ? 'Message delivery failed.' : 'Falló el envío del mensaje.',
+    guidance: reviewMode
+      ? 'Review channel credentials, selected asset, and provider permissions.'
+      : 'Revisa credenciales del canal, asset seleccionado y permisos del proveedor.',
+    technical,
+  };
+};
+
 const channelToLabel = (channel: SocialChannel) => {
   switch (channel) {
     case 'instagram':
@@ -297,6 +383,9 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
   const [optimisticReplyText, setOptimisticReplyText] = useState<string | null>(null);
   const [optimisticReplyError, setOptimisticReplyError] = useState<string | null>(null);
   const [providerMessageId, setProviderMessageId] = useState<string | null>(null);
+  const [showReplyErrorDetails, setShowReplyErrorDetails] = useState(false);
+  const [showSendErrorDetails, setShowSendErrorDetails] = useState(false);
+  const [failedAttachmentUrls, setFailedAttachmentUrls] = useState<string[]>([]);
 
   useEffect(() => {
     if (!open || !msg) return;
@@ -310,6 +399,9 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
     setOptimisticReplyText(null);
     setOptimisticReplyError(null);
     setProviderMessageId(null);
+    setShowReplyErrorDetails(false);
+    setShowSendErrorDetails(false);
+    setFailedAttachmentUrls([]);
   }, [open, msg]);
 
   const senderLabel = useMemo(() => {
@@ -410,11 +502,19 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
   const repliedAtValue = optimisticRepliedAt ?? msg?.repliedAt;
   const replyTextValue = optimisticReplyText ?? msg?.replyText;
   const replyErrorValue = optimisticReplyError ?? msg?.replyError;
+  const replyErrorSummary = useMemo(
+    () => summarizeReplyError(replyErrorValue, reviewMode),
+    [replyErrorValue, reviewMode],
+  );
+  const sendErrorSummary = useMemo(() => summarizeReplyError(error, reviewMode), [error, reviewMode]);
   const attachments = useMemo(() => extractAttachments(msg?.metadata), [msg?.metadata]);
   const messageAsset = useMemo(() => extractMetaMessageAsset(msg?.metadata), [msg?.metadata]);
   const rawBody = (msg?.text ?? '').trim();
   const showBody = rawBody.length > 0 && rawBody.toLowerCase() !== '[attachment]';
   const nativeClientUrl = msg && channel ? resolveNativeClientUrl(channel, msg.senderId) : '';
+  const markAttachmentFailed = (url: string) => {
+    setFailedAttachmentUrls((prev) => (prev.includes(url) ? prev : [...prev, url]));
+  };
 
   return (
     <Dialog open={open} onClose={onClose} fullScreen={fullScreen} fullWidth maxWidth="lg">
@@ -532,11 +632,14 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
                                   {att.label ?? 'Adjunto'}
                                 </Typography>
                                 {att.url ? (
-                                  guessIsImage(att) ? (
+                                  guessIsImage(att) &&
+                                  !failedAttachmentUrls.includes(att.url) &&
+                                  !(channel === 'instagram' && isInstagramCdnAsset(att.url)) ? (
                                     <Box
                                       component="img"
                                       src={att.url}
                                       alt={att.label ?? 'Adjunto'}
+                                      onError={() => markAttachmentFailed(att.url!)}
                                       sx={{
                                         width: '100%',
                                         maxHeight: 320,
@@ -546,16 +649,29 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
                                       }}
                                     />
                                   ) : (
-                                    <Typography
-                                      variant="body2"
-                                      component="a"
-                                      href={att.url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      sx={{ wordBreak: 'break-all', color: 'primary.main', textDecoration: 'none' }}
-                                    >
-                                      {att.url}
-                                    </Typography>
+                                    <Stack spacing={0.75}>
+                                      {guessIsImage(att) && (
+                                        <Alert severity="info" variant="outlined">
+                                          {channel === 'instagram' && isInstagramCdnAsset(att.url)
+                                            ? reviewMode
+                                              ? 'Instagram CDN preview is restricted (403). Open the asset in a new tab.'
+                                              : 'La vista previa del CDN de Instagram está restringida (403). Abre el archivo en una nueva pestaña.'
+                                            : reviewMode
+                                              ? 'Preview unavailable. Open the attachment in a new tab.'
+                                              : 'Vista previa no disponible. Abre el adjunto en una nueva pestaña.'}
+                                        </Alert>
+                                      )}
+                                      <Typography
+                                        variant="body2"
+                                        component="a"
+                                        href={att.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        sx={{ wordBreak: 'break-all', color: 'primary.main', textDecoration: 'none' }}
+                                      >
+                                        {att.url}
+                                      </Typography>
+                                    </Stack>
                                   )
                                 ) : (
                                   <Typography variant="body2" color="text.secondary">
@@ -579,8 +695,37 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
                     </Typography>
                     <Stack spacing={1} sx={{ mt: 0.5 }}>
                       {replyErrorValue && (
-                        <Alert severity="error">
-                          {reviewMode ? 'Last attempt failed:' : 'Último intento falló:'} {replyErrorValue}
+                        <Alert
+                          severity="error"
+                          action={
+                            <Button
+                              color="inherit"
+                              size="small"
+                              onClick={() => setShowReplyErrorDetails((prev) => !prev)}
+                            >
+                              {showReplyErrorDetails
+                                ? reviewMode
+                                  ? 'Hide details'
+                                  : 'Ocultar detalle'
+                                : reviewMode
+                                  ? 'Details'
+                                  : 'Detalle'}
+                            </Button>
+                          }
+                        >
+                          <Stack spacing={0.5}>
+                            <Typography variant="body2" fontWeight={700}>
+                              {replyErrorSummary?.headline ?? (reviewMode ? 'Last attempt failed.' : 'Último intento falló.')}
+                            </Typography>
+                            {replyErrorSummary?.guidance && (
+                              <Typography variant="body2">{replyErrorSummary.guidance}</Typography>
+                            )}
+                            {showReplyErrorDetails && (
+                              <Typography variant="caption" sx={{ wordBreak: 'break-word', opacity: 0.85 }}>
+                                {replyErrorSummary?.technical ?? replyErrorValue}
+                              </Typography>
+                            )}
+                          </Stack>
                         </Alert>
                       )}
                       {repliedAtValue && (
@@ -679,8 +824,38 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
                   </Alert>
                 )}
                 {error && (
-                  <Alert severity="error" onClose={() => setError(null)}>
-                    {error}
+                  <Alert
+                    severity="error"
+                    onClose={() => setError(null)}
+                    action={
+                      <Button
+                        color="inherit"
+                        size="small"
+                        onClick={() => setShowSendErrorDetails((prev) => !prev)}
+                      >
+                        {showSendErrorDetails
+                          ? reviewMode
+                            ? 'Hide details'
+                            : 'Ocultar detalle'
+                          : reviewMode
+                            ? 'Details'
+                            : 'Detalle'}
+                      </Button>
+                    }
+                  >
+                    <Stack spacing={0.5}>
+                      <Typography variant="body2" fontWeight={700}>
+                        {sendErrorSummary?.headline ?? error}
+                      </Typography>
+                      {sendErrorSummary?.guidance && (
+                        <Typography variant="body2">{sendErrorSummary.guidance}</Typography>
+                      )}
+                      {showSendErrorDetails && (
+                        <Typography variant="caption" sx={{ wordBreak: 'break-word', opacity: 0.85 }}>
+                          {sendErrorSummary?.technical ?? error}
+                        </Typography>
+                      )}
+                    </Stack>
                   </Alert>
                 )}
 
@@ -848,7 +1023,9 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, on
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                        {formatBody(msg.replyError ?? msg.replyText)}
+                        {msg.replyError
+                          ? (summarizeReplyError(msg.replyError, reviewMode)?.headline ?? formatBody(msg.replyError))
+                          : formatBody(msg.replyText)}
                       </Typography>
                     </TableCell>
                   </TableRow>
