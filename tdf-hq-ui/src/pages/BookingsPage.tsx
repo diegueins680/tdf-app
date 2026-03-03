@@ -31,7 +31,7 @@ import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
 import { Parties } from '../api/parties';
 import { Services } from '../api/services';
-import { useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -873,10 +873,8 @@ const openDialogForRange = (start: Date, end: Date) => {
             <Button
               variant="text"
               size="small"
-              component="a"
-              href="/estudio/live-sessions"
-              target="_blank"
-              rel="noopener noreferrer"
+              component={RouterLink}
+              to="/estudio/live-sessions"
             >
               Abrir gestión de cursos
             </Button>

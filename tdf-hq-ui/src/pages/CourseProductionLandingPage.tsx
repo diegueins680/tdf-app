@@ -33,7 +33,7 @@ import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
 import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
-import { useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 
 const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url) || /^data:image\//i.test(url);
 const normalizeCourseSlugs = (slugs: string[]) =>
@@ -819,7 +819,7 @@ function FormCard({
               >
                 Escríbenos por WhatsApp
               </Button>
-              <Button component="a" href="/" variant="outlined">
+              <Button component={RouterLink} to="/" variant="outlined">
                 Volver al inicio
               </Button>
             </Stack>
