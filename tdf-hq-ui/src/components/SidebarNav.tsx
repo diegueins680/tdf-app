@@ -347,6 +347,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   }, [filter, flatFilteredItems.length]);
 
   useEffect(() => {
+    if (!open) return;
     const handler = (event: KeyboardEvent) => {
       const activeTag = (event.target as HTMLElement | null)?.tagName?.toLowerCase();
       if (activeTag === 'input' || activeTag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable) {
@@ -359,7 +360,13 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) return;
+    setFilter('');
+    setHighlightIndex(-1);
+  }, [open]);
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) => {
@@ -424,6 +431,11 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                 navigate(target.path);
                 onNavigate?.();
               }
+            } else if (event.key === 'Escape') {
+              event.preventDefault();
+              setFilter('');
+              setHighlightIndex(-1);
+              searchRef.current?.blur();
             }
           }}
           size="small"

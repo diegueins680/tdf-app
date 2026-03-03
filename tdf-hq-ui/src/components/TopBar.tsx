@@ -226,6 +226,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
         event.preventDefault();
         openQuickNav();
       } else if (event.altKey && event.key.toLowerCase() === 'r') {
+        if (typeof window !== 'undefined' && window.innerWidth < 900) return;
         event.preventDefault();
         if (!resourcesButtonRef.current) return;
         setResourcesAnchor((prev) => (prev ? null : resourcesButtonRef.current));
@@ -238,6 +239,11 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
   useEffect(() => {
     setQuickHighlight(0);
   }, [quickQuery]);
+
+  useEffect(() => {
+    setResourcesAnchor(null);
+    setCartAnchor(null);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (quickNavOpen) {
