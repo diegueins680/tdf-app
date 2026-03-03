@@ -173,6 +173,10 @@ export default function UxOptionsPage() {
 
   const savingId = (updateMutation.variables as { optionId?: string } | undefined)?.optionId ?? null;
   const options = useMemo(() => optionsQuery.data ?? [], [optionsQuery.data]);
+  const activeCount = useMemo(
+    () => options.filter((option) => option.active).length,
+    [options],
+  );
 
   const handleCreate = () => {
     const cleanValue = newOption.value.trim();
@@ -273,38 +277,54 @@ export default function UxOptionsPage() {
       </Paper>
 
       <Paper sx={{ p: 2.5 }}>
-        <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-          Opciones en {category || '—'}
-        </Typography>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          justifyContent="space-between"
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          sx={{ mb: 1 }}
+        >
+          <Typography variant="subtitle1" fontWeight={700}>
+            Opciones en {category || '—'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {options.length} totales · {activeCount} activas
+          </Typography>
+        </Stack>
         {optionsQuery.isLoading ? (
           <Typography>Cargando opciones…</Typography>
         ) : options.length === 0 ? (
           <Alert severity="info">No hay opciones aún para esta categoría.</Alert>
         ) : (
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Valor</TableCell>
-                <TableCell>Etiqueta</TableCell>
-                <TableCell>Orden</TableCell>
-                <TableCell>Activo</TableCell>
-                <TableCell align="right">Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {options.map((opt) => (
-                <OptionRow
-                  key={opt.optionId}
-                  option={opt}
-                  saving={savingId === opt.optionId && updateMutation.isPending}
-                  onSave={async (optionId, payload) => {
-                    if (Object.keys(payload).length === 0) return;
-                    await updateMutation.mutateAsync({ optionId, payload });
-                  }}
-                />
-              ))}
-            </TableBody>
-          </Table>
+          <Box sx={{ overflowX: 'auto' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+              Desliza horizontalmente para editar todas las columnas en pantallas pequeñas.
+            </Typography>
+            <Table size="small" sx={{ minWidth: 900 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>Valor</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>Etiqueta</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>Orden</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>Activo</TableCell>
+                  <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {options.map((opt) => (
+                  <OptionRow
+                    key={opt.optionId}
+                    option={opt}
+                    saving={savingId === opt.optionId && updateMutation.isPending}
+                    onSave={async (optionId, payload) => {
+                      if (Object.keys(payload).length === 0) return;
+                      await updateMutation.mutateAsync({ optionId, payload });
+                    }}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </Box>
         )}
       </Paper>
     </Stack>
