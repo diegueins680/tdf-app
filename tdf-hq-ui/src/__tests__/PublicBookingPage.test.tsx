@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
 import { DateTime } from 'luxon';
+import { MemoryRouter } from 'react-router-dom';
 
 interface CreatePublicPayload {
   pbResourceIds?: string[] | null;
@@ -52,9 +53,11 @@ const renderPage = async (container: HTMLElement) => {
   let root: Root | null = createRoot(container);
   await act(async () => {
     root?.render(
-      <QueryClientProvider client={qc}>
-        <PublicBookingPage />
-      </QueryClientProvider>,
+      <MemoryRouter>
+        <QueryClientProvider client={qc}>
+          <PublicBookingPage />
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
     await flushPromises();
   });
