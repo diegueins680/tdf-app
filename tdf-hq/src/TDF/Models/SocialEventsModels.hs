@@ -145,4 +145,36 @@ EventTicket
     updatedAt UTCTime default=now()
     UniqueEventTicketCode code
     deriving Show Generic
+
+EventBudgetLine
+    eventId SocialEventId
+    code Text
+    name Text
+    lineType Text
+    category Text
+    plannedCents Int
+    notes Text Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniqueEventBudgetLineCode eventId code
+    deriving Show Generic
+
+EventFinanceEntry
+    eventId SocialEventId
+    budgetLineId EventBudgetLineId Maybe
+    direction Text
+    source Text
+    category Text
+    concept Text
+    amountCents Int
+    currency Text
+    status Text
+    externalRef Text Maybe
+    notes Text Maybe
+    metadata Text Maybe
+    occurredAt UTCTime
+    recordedByPartyId Text Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
 |]

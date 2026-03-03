@@ -10,6 +10,8 @@ module TDF.API.SocialEventsAPI
   , RsvpRoutes
   , InvitationsRoutes
   , TicketsRoutes
+  , BudgetRoutes
+  , FinanceRoutes
   , IdParam
   ) where
 
@@ -30,6 +32,9 @@ import TDF.DTO.SocialEventsDTO
   , TicketCheckInRequestDTO
   , TicketDTO
   , TicketOrderDTO
+  , EventBudgetLineDTO
+  , EventFinanceEntryDTO
+  , EventFinanceSummaryDTO
   )
 
 type IdParam = Capture "id" Text
@@ -38,6 +43,8 @@ type EventsRoutes =
        "events"
          :> QueryParam "city" Text
          :> QueryParam "start_after" Text
+         :> QueryParam "event_type" Text
+         :> QueryParam "event_status" Text
          :> QueryParam "artistId" Text
          :> QueryParam "venueId" Text
          :> QueryParam "limit" Int
@@ -90,9 +97,26 @@ type TicketsRoutes =
          :> Get '[JSON] [TicketDTO]
   :<|> "events" :> Capture "eventId" Text :> "tickets" :> "check-in" :> ReqBody '[JSON] TicketCheckInRequestDTO :> Post '[JSON] TicketDTO
 
+type BudgetRoutes =
+       "events" :> Capture "eventId" Text :> "budget-lines" :> Get '[JSON] [EventBudgetLineDTO]
+  :<|> "events" :> Capture "eventId" Text :> "budget-lines" :> ReqBody '[JSON] EventBudgetLineDTO :> Post '[JSON] EventBudgetLineDTO
+  :<|> "events" :> Capture "eventId" Text :> "budget-lines" :> Capture "lineId" Text :> ReqBody '[JSON] EventBudgetLineDTO :> Put '[JSON] EventBudgetLineDTO
+
+type FinanceRoutes =
+       "events" :> Capture "eventId" Text :> "finance-entries"
+         :> QueryParam "direction" Text
+         :> QueryParam "source" Text
+         :> QueryParam "status" Text
+         :> Get '[JSON] [EventFinanceEntryDTO]
+  :<|> "events" :> Capture "eventId" Text :> "finance-entries" :> ReqBody '[JSON] EventFinanceEntryDTO :> Post '[JSON] EventFinanceEntryDTO
+  :<|> "events" :> Capture "eventId" Text :> "finance-entries" :> Capture "entryId" Text :> ReqBody '[JSON] EventFinanceEntryDTO :> Put '[JSON] EventFinanceEntryDTO
+  :<|> "events" :> Capture "eventId" Text :> "finance-summary" :> Get '[JSON] EventFinanceSummaryDTO
+
 type SocialEventsAPI = EventsRoutes
                :<|> VenuesRoutes
                :<|> ArtistsRoutes
                :<|> RsvpRoutes
                :<|> InvitationsRoutes
                :<|> TicketsRoutes
+               :<|> BudgetRoutes
+               :<|> FinanceRoutes

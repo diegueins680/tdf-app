@@ -26,6 +26,13 @@ export interface SocialEventDTO {
   eventVenueId?: string | null;
   eventPriceCents?: number | null;
   eventCapacity?: number | null;
+  eventType?: string | null;
+  eventStatus?: string | null;
+  eventCurrency?: string | null;
+  eventBudgetCents?: number | null;
+  eventTicketUrl?: string | null;
+  eventImageUrl?: string | null;
+  eventIsPublic?: boolean | null;
   eventArtists: SocialArtistDTO[];
 }
 
@@ -104,6 +111,56 @@ export interface SocialTicketOrderDTO {
   ticketOrderTickets: SocialTicketDTO[];
 }
 
+export interface SocialEventBudgetLineDTO {
+  eblId?: string | null;
+  eblEventId?: string | null;
+  eblCode: string;
+  eblName: string;
+  eblType: 'income' | 'expense' | string;
+  eblCategory: string;
+  eblPlannedCents: number;
+  eblActualCents?: number | null;
+  eblNotes?: string | null;
+  eblCreatedAt?: string | null;
+  eblUpdatedAt?: string | null;
+}
+
+export interface SocialEventFinanceEntryDTO {
+  efeId?: string | null;
+  efeEventId?: string | null;
+  efeBudgetLineId?: string | null;
+  efeDirection: 'income' | 'expense' | string;
+  efeSource: string;
+  efeCategory: string;
+  efeConcept: string;
+  efeAmountCents: number;
+  efeCurrency: string;
+  efeStatus: 'draft' | 'posted' | 'void' | 'pending' | string;
+  efeExternalRef?: string | null;
+  efeNotes?: string | null;
+  efeOccurredAt: string;
+  efeRecordedByPartyId?: string | null;
+  efeCreatedAt?: string | null;
+  efeUpdatedAt?: string | null;
+}
+
+export interface SocialEventFinanceSummaryDTO {
+  efsEventId: string;
+  efsCurrency: string;
+  efsBudgetCents?: number | null;
+  efsPlannedIncomeCents: number;
+  efsPlannedExpenseCents: number;
+  efsActualIncomeCents: number;
+  efsActualExpenseCents: number;
+  efsNetCents: number;
+  efsTicketPaidRevenueCents: number;
+  efsTicketRefundedRevenueCents: number;
+  efsTicketPendingRevenueCents: number;
+  efsBudgetVarianceCents?: number | null;
+  efsBudgetUtilizationPct?: number | null;
+  efsGeneratedAt: string;
+}
+
 const buildQuery = (params: Record<string, string | number | null | undefined>) => {
   const entries = Object.entries(params).filter(([, v]) => v != null && v !== '');
   if (!entries.length) return '';
@@ -112,15 +169,23 @@ const buildQuery = (params: Record<string, string | number | null | undefined>) 
 };
 
 export const SocialEventsAPI = {
-  listEvents: (opts?: { city?: string; startAfter?: string; artistId?: string; venueId?: string }) => {
+  listEvents: (opts?: { city?: string; startAfter?: string; eventType?: string; eventStatus?: string; artistId?: string; venueId?: string }) => {
     const qs = buildQuery({
       city: opts?.city,
       start_after: opts?.startAfter,
+      event_type: opts?.eventType,
+      event_status: opts?.eventStatus,
       artistId: opts?.artistId,
       venueId: opts?.venueId,
     });
     return get<SocialEventDTO[]>(`/social-events/events${qs}`);
   },
+  createEvent: (payload: SocialEventDTO) =>
+    post<SocialEventDTO>('/social-events/events', payload),
+  updateEvent: (eventId: string, payload: SocialEventDTO) =>
+    put<SocialEventDTO>(`/social-events/events/${encodeURIComponent(eventId)}`, payload),
+  getEvent: (eventId: string) =>
+    get<SocialEventDTO>(`/social-events/events/${encodeURIComponent(eventId)}`),
   listVenues: (opts?: { city?: string }) => {
     const qs = buildQuery({ city: opts?.city });
     return get<SocialVenueDTO[]>(`/social-events/venues${qs}`);
@@ -161,6 +226,22 @@ export const SocialEventsAPI = {
   },
   checkInTicket: (eventId: string, payload: { ticketCheckInTicketId?: string | null; ticketCheckInTicketCode?: string | null }) =>
     post<SocialTicketDTO>(`/social-events/events/${encodeURIComponent(eventId)}/tickets/check-in`, payload),
+  listBudgetLines: (eventId: string) =>
+    get<SocialEventBudgetLineDTO[]>(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`),
+  createBudgetLine: (eventId: string, payload: SocialEventBudgetLineDTO) =>
+    post<SocialEventBudgetLineDTO>(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`, payload),
+  updateBudgetLine: (eventId: string, lineId: string, payload: SocialEventBudgetLineDTO) =>
+    put<SocialEventBudgetLineDTO>(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines/${encodeURIComponent(lineId)}`, payload),
+  listFinanceEntries: (eventId: string, opts?: { direction?: string; source?: string; status?: string }) => {
+    const qs = buildQuery({ direction: opts?.direction, source: opts?.source, status: opts?.status });
+    return get<SocialEventFinanceEntryDTO[]>(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries${qs}`);
+  },
+  createFinanceEntry: (eventId: string, payload: SocialEventFinanceEntryDTO) =>
+    post<SocialEventFinanceEntryDTO>(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries`, payload),
+  updateFinanceEntry: (eventId: string, entryId: string, payload: SocialEventFinanceEntryDTO) =>
+    put<SocialEventFinanceEntryDTO>(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries/${encodeURIComponent(entryId)}`, payload),
+  getFinanceSummary: (eventId: string) =>
+    get<SocialEventFinanceSummaryDTO>(`/social-events/events/${encodeURIComponent(eventId)}/finance-summary`),
   rsvp: (eventId: string, partyId: string, status: SocialRsvpDTO['rsvpStatus']) =>
     post<SocialRsvpDTO>(`/social-events/events/${encodeURIComponent(eventId)}/rsvps`, {
       rsvpEventId: eventId,

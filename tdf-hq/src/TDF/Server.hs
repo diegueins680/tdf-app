@@ -56,7 +56,7 @@ import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           Database.Persist
-import           Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
+import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
@@ -552,6 +552,7 @@ coursesPublicServer =
 coursesAdminServer :: AuthedUser -> ServerT Courses.CoursesAdminAPI AppM
 coursesAdminServer user =
        upsertCourseH
+  :<|> listCourseCohortsH
   :<|> listRegistrationsH
   :<|> getRegistrationH
   :<|> listEmailEventsH
@@ -563,6 +564,10 @@ coursesAdminServer user =
     upsertCourseH payload = do
       requireCourseAdmin
       saveCourse payload
+
+    listCourseCohortsH = do
+      requireCourseAdmin
+      listCourseCohorts
 
     listRegistrationsH mSlug mStatus mLimit = do
       requireCourseAdmin
@@ -2391,6 +2396,30 @@ saveCourse Courses.CourseUpsert{..} = do
         , Trials.courseSyllabusItemOrder = Just ordVal
         }
   loadCourseMetadata slugVal
+
+listCourseCohorts :: AppM [DTO.CourseCohortOptionDTO]
+listCourseCohorts = do
+  courses <- runDB $ selectList [] [Desc Trials.CourseUpdatedAt]
+  registrationSlugs <- runDB $
+    rawSql
+      "SELECT DISTINCT course_slug FROM course_registration WHERE course_slug IS NOT NULL AND course_slug <> '' ORDER BY course_slug"
+      []
+  let fromCourse (Entity _ course) =
+        DTO.CourseCohortOptionDTO
+          { DTO.ccSlug = Trials.courseSlug course
+          , DTO.ccTitle = Just (Trials.courseTitle course)
+          }
+      courseOptions = map fromCourse courses
+      knownSlugs = Set.fromList (map DTO.ccSlug courseOptions)
+      extraOptions =
+        [ DTO.CourseCohortOptionDTO
+            { DTO.ccSlug = slugVal
+            , DTO.ccTitle = Nothing
+            }
+        | Single slugVal <- registrationSlugs
+        , not (Set.member slugVal knownSlugs)
+        ]
+  pure (courseOptions <> extraOptions)
 
 listCourseRegistrations
   :: Maybe Text

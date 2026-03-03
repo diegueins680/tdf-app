@@ -317,6 +317,12 @@ data CourseEmailEventDTO = CourseEmailEventDTO
   } deriving (Show, Generic)
 instance ToJSON CourseEmailEventDTO
 
+data CourseCohortOptionDTO = CourseCohortOptionDTO
+  { ccSlug  :: Text
+  , ccTitle :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON CourseCohortOptionDTO
+
 -- Logs
 data LogEntryDTO = LogEntryDTO
   { logTimestamp :: UTCTime

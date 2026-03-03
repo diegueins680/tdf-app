@@ -26,6 +26,7 @@ import PendingIcon from '@mui/icons-material/HourglassBottom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Courses,
+  type CourseCohortOptionDTO,
   type CourseEmailEventDTO,
   type CourseRegistrationDTO,
 } from '../api/courses';
@@ -77,6 +78,13 @@ const eventTypeLabel = (eventType: string) =>
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (m) => m.toUpperCase());
 
+const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
+  const slug = cohort.ccSlug.trim();
+  const title = cohort.ccTitle?.trim();
+  if (!title) return slug;
+  return `${title} (${slug})`;
+};
+
 const actionButtons = (
   reg: CourseRegistrationDTO,
   onUpdate: (status: 'pending_payment' | 'paid' | 'cancelled') => void,
@@ -127,7 +135,7 @@ const actionButtons = (
 export default function CourseRegistrationsAdminPage() {
   const qc = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialSlug = searchParams.get('slug') ?? 'produccion-musical-abr-2026';
+  const initialSlug = searchParams.get('slug') ?? '';
   const initialStatus = parseStatusFilter(searchParams.get('status'));
   const initialLimit = parsePositiveLimit(searchParams.get('limit'));
   const [slug, setSlug] = useState(initialSlug);
@@ -136,6 +144,26 @@ export default function CourseRegistrationsAdminPage() {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [selectedRegForEmails, setSelectedRegForEmails] =
     useState<CourseRegistrationDTO | null>(null);
+
+  const cohortsQuery = useQuery({
+    queryKey: ['admin', 'course-cohorts'],
+    queryFn: () => Courses.listCohorts(),
+    staleTime: 60_000,
+  });
+
+  const cohortOptions = useMemo(() => {
+    const bySlug = new Map<string, string>();
+    for (const cohort of cohortsQuery.data ?? []) {
+      const cohortSlug = cohort.ccSlug.trim();
+      if (!cohortSlug || bySlug.has(cohortSlug)) continue;
+      bySlug.set(cohortSlug, cohortOptionLabel(cohort));
+    }
+    const selectedSlug = slug.trim();
+    if (selectedSlug && !bySlug.has(selectedSlug)) {
+      bySlug.set(selectedSlug, selectedSlug);
+    }
+    return Array.from(bySlug.entries()).map(([value, label]) => ({ value, label }));
+  }, [cohortsQuery.data, slug]);
 
   const queryKey = useMemo(
     () => ['admin', 'course-registrations', { slug, status, limit }],
@@ -179,8 +207,8 @@ export default function CourseRegistrationsAdminPage() {
   }, [regsQuery.data]);
 
   const updateStatusMutation = useMutation({
-    mutationFn: (args: { id: number; newStatus: Exclude<StatusFilter, 'all'> }) =>
-      Courses.updateStatus(slug, args.id, { status: args.newStatus }),
+    mutationFn: (args: { id: number; courseSlug: string; newStatus: Exclude<StatusFilter, 'all'> }) =>
+      Courses.updateStatus(args.courseSlug, args.id, { status: args.newStatus }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin', 'course-registrations'] });
     },
@@ -244,12 +272,28 @@ export default function CourseRegistrationsAdminPage() {
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <TextField
+              select
               label="Slug"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               fullWidth
               size="small"
-            />
+              error={cohortsQuery.isError}
+              helperText={
+                cohortsQuery.isError
+                  ? 'No se pudieron cargar cohortes.'
+                  : cohortsQuery.isLoading
+                    ? 'Cargando cohortes…'
+                    : undefined
+              }
+            >
+              <MenuItem value="">Todos</MenuItem>
+              {cohortOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
           </Grid>
           <Grid item xs={12} md={3}>
             <TextField
@@ -351,7 +395,16 @@ export default function CourseRegistrationsAdminPage() {
                   Ver correos
                 </Button>
                 <Box sx={{ flexGrow: 1 }} />
-                {actionButtons(reg, (newStatus) => updateStatusMutation.mutate({ id: reg.crId, newStatus }), updateStatusMutation.isPending)}
+                {actionButtons(
+                  reg,
+                  (newStatus) =>
+                    updateStatusMutation.mutate({
+                      id: reg.crId,
+                      courseSlug: reg.crCourseSlug,
+                      newStatus,
+                    }),
+                  updateStatusMutation.isPending,
+                )}
               </Box>
             ))}
           </Stack>

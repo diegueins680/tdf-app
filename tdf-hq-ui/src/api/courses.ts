@@ -78,10 +78,16 @@ export interface CourseEmailEventDTO {
   ceCreatedAt: string;
 }
 
+export interface CourseCohortOptionDTO {
+  ccSlug: string;
+  ccTitle?: string | null;
+}
+
 const courseBase = (slug: string) => `/public/courses/${slug}`;
 
 export const Courses = {
   upsert: (payload: CourseUpsert) => post<CourseMetadata>('/admin/courses', payload),
+  listCohorts: () => get<CourseCohortOptionDTO[]>('/admin/courses/cohorts'),
   getMetadata: (slug: string) => get<CourseMetadata>(courseBase(slug)),
   register: (slug: string, payload: CourseRegistrationRequest) =>
     post<CourseRegistrationResponse>(`${courseBase(slug)}/registrations`, payload),

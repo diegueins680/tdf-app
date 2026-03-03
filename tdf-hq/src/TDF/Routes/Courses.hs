@@ -159,6 +159,7 @@ type CoursesPublicAPI =
 
 type CoursesAdminAPI =
        "courses" :> ReqBody '[JSON] CourseUpsert :> Post '[JSON] CourseMetadata
+  :<|> "courses" :> "cohorts" :> Get '[JSON] [TDF.DTO.CourseCohortOptionDTO]
   :<|> "courses" :> "registrations" :>
          QueryParam "slug" Text :>
          QueryParam "status" Text :>

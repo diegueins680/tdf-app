@@ -21,7 +21,9 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isAlphaNum)
 import           Data.Int (Int64)
+import           Data.List (sortOn)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
+import           Data.Ord (Down(..))
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, getCurrentTime)
@@ -54,6 +56,9 @@ import           TDF.DTO.SocialEventsDTO
   , TicketCheckInRequestDTO(..)
   , TicketDTO(..)
   , TicketOrderDTO(..)
+  , EventBudgetLineDTO(..)
+  , EventFinanceEntryDTO(..)
+  , EventFinanceSummaryDTO(..)
   )
 import           TDF.DB (Env(..))
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
@@ -74,6 +79,10 @@ data EventMetadataDTO = EventMetadataDTO
   { emTicketUrl :: Maybe T.Text
   , emImageUrl :: Maybe T.Text
   , emIsPublic :: Maybe Bool
+  , emType :: Maybe T.Text
+  , emStatus :: Maybe T.Text
+  , emCurrency :: Maybe T.Text
+  , emBudgetCents :: Maybe Int
   }
 
 emptyEventMetadata :: EventMetadataDTO
@@ -81,6 +90,10 @@ emptyEventMetadata = EventMetadataDTO
   { emTicketUrl = Nothing
   , emImageUrl = Nothing
   , emIsPublic = Nothing
+  , emType = Nothing
+  , emStatus = Nothing
+  , emCurrency = Nothing
+  , emBudgetCents = Nothing
   }
 
 instance Aeson.ToJSON EventMetadataDTO where
@@ -88,6 +101,10 @@ instance Aeson.ToJSON EventMetadataDTO where
     [ "ticketUrl" Aeson..= emTicketUrl
     , "imageUrl" Aeson..= emImageUrl
     , "isPublic" Aeson..= emIsPublic
+    , "eventType" Aeson..= emType
+    , "eventStatus" Aeson..= emStatus
+    , "currency" Aeson..= emCurrency
+    , "budgetCents" Aeson..= emBudgetCents
     ]
 
 instance Aeson.FromJSON EventMetadataDTO where
@@ -96,6 +113,10 @@ instance Aeson.FromJSON EventMetadataDTO where
       <$> o Aeson..:? "ticketUrl"
       <*> o Aeson..:? "imageUrl"
       <*> o Aeson..:? "isPublic"
+      <*> o Aeson..:? "eventType"
+      <*> o Aeson..:? "eventStatus"
+      <*> o Aeson..:? "currency"
+      <*> o Aeson..:? "budgetCents"
 
 decodeEventMetadata :: Maybe T.Text -> EventMetadataDTO
 decodeEventMetadata mTxt = fromMaybe emptyEventMetadata $ do
@@ -104,7 +125,13 @@ decodeEventMetadata mTxt = fromMaybe emptyEventMetadata $ do
 
 encodeEventMetadata :: EventMetadataDTO -> Maybe T.Text
 encodeEventMetadata EventMetadataDTO{..}
-  | isNothing emTicketUrl && isNothing emImageUrl && isNothing emIsPublic = Nothing
+  | isNothing emTicketUrl
+    && isNothing emImageUrl
+    && isNothing emIsPublic
+    && isNothing emType
+    && isNothing emStatus
+    && isNothing emCurrency
+    && isNothing emBudgetCents = Nothing
   | otherwise =
       Just
         (TE.decodeUtf8 . BL.toStrict . Aeson.encode $
@@ -112,6 +139,10 @@ encodeEventMetadata EventMetadataDTO{..}
             { emTicketUrl = emTicketUrl
             , emImageUrl = emImageUrl
             , emIsPublic = emIsPublic
+            , emType = emType
+            , emStatus = emStatus
+            , emCurrency = emCurrency
+            , emBudgetCents = emBudgetCents
             })
 
 eventMetadataFromDTO :: EventDTO -> EventMetadataDTO
@@ -119,6 +150,10 @@ eventMetadataFromDTO dto = EventMetadataDTO
   { emTicketUrl = cleanMaybeText (eventTicketUrl dto)
   , emImageUrl = cleanMaybeText (eventImageUrl dto)
   , emIsPublic = eventIsPublic dto
+  , emType = normalizeEventType (eventType dto)
+  , emStatus = normalizeEventStatus (eventStatus dto)
+  , emCurrency = normalizeCurrencyMaybe (eventCurrency dto)
+  , emBudgetCents = normalizeBudgetCentsMaybe (eventBudgetCents dto)
   }
 
 mergeEventMetadata :: EventMetadataDTO -> EventMetadataDTO -> EventMetadataDTO
@@ -126,6 +161,10 @@ mergeEventMetadata incoming existing = EventMetadataDTO
   { emTicketUrl = emTicketUrl incoming <|> emTicketUrl existing
   , emImageUrl = emImageUrl incoming <|> emImageUrl existing
   , emIsPublic = emIsPublic incoming <|> emIsPublic existing
+  , emType = emType incoming <|> emType existing
+  , emStatus = emStatus incoming <|> emStatus existing
+  , emCurrency = emCurrency incoming <|> emCurrency existing
+  , emBudgetCents = emBudgetCents incoming <|> emBudgetCents existing
   }
 
 data VenueContactMetadata = VenueContactMetadata
@@ -214,6 +253,8 @@ socialEventsServer user = eventsServer
                :<|> rsvpsServer
                :<|> invitationsServer
                :<|> ticketsServer
+               :<|> budgetServer
+               :<|> financeServer
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
@@ -226,8 +267,8 @@ socialEventsServer user = eventsServer
                :<|> updateEvent
                :<|> deleteEvent
 
-    listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [EventDTO]
-    listEvents mCity mStartAfter mArtistId mVenueId mLimit mOffset = do
+    listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [EventDTO]
+    listEvents mCity mStartAfter mType mStatus mArtistId mVenueId mLimit mOffset = do
       Env{..} <- ask
       limit <- resolveLimit 200 500 mLimit
       offset <- resolveOffset mOffset
@@ -268,7 +309,14 @@ socialEventsServer user = eventsServer
             else pure [SocialEventId <-. eventIds]
       let filters = startFilter ++ cityFilter ++ venueFilter ++ artistFilter
       rows <- liftIO $ runSqlPool (selectList filters [Desc SocialEventStartTime, LimitTo limit, OffsetBy offset]) envPool
-      forM rows $ \(Entity eid eventRow) -> do
+      let typeNeedle = normalizeEventType mType
+          statusNeedle = normalizeEventStatus mStatus
+          matchesMeta eventRow =
+            let meta = decodeEventMetadata (socialEventMetadata eventRow)
+                typeOk = maybe True (\t -> emType meta == Just t) typeNeedle
+                statusOk = maybe True (\s -> emStatus meta == Just s) statusNeedle
+            in typeOk && statusOk
+      forM (filter (matchesMeta . entityVal) rows) $ \(Entity eid eventRow) -> do
         artists <- liftIO $ loadEventArtists envPool eid
         pure (eventEntityToDTO eid eventRow artists)
 
@@ -278,12 +326,17 @@ socialEventsServer user = eventsServer
       now <- liftIO getCurrentTime
       when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
+      when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
       let metadataVal =
             encodeEventMetadata
               EventMetadataDTO
                 { emTicketUrl = cleanMaybeText (eventTicketUrl dto)
                 , emImageUrl = cleanMaybeText (eventImageUrl dto)
                 , emIsPublic = eventIsPublic dto <|> Just True
+                , emType = normalizeEventType (eventType dto) <|> Just "party"
+                , emStatus = normalizeEventStatus (eventStatus dto) <|> Just "planning"
+                , emCurrency = normalizeCurrencyMaybe (eventCurrency dto) <|> Just "USD"
+                , emBudgetCents = normalizeBudgetCentsMaybe (eventBudgetCents dto)
                 }
           createdMetadata = decodeEventMetadata metadataVal
       mVenueKey <- case eventVenueId dto of
@@ -320,6 +373,10 @@ socialEventsServer user = eventsServer
         , eventTicketUrl = emTicketUrl createdMetadata
         , eventImageUrl = emImageUrl createdMetadata
         , eventIsPublic = emIsPublic createdMetadata
+        , eventType = emType createdMetadata
+        , eventStatus = emStatus createdMetadata
+        , eventCurrency = emCurrency createdMetadata
+        , eventBudgetCents = emBudgetCents createdMetadata
         , eventCreatedAt = Just now
         , eventUpdatedAt = Just now
         }
@@ -344,6 +401,7 @@ socialEventsServer user = eventsServer
       existing <- maybe (throwError err404 { errBody = "Event not found" }) pure mExisting
       when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
+      when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
       let existingMetadata = decodeEventMetadata (socialEventMetadata existing)
           requestedMetadata = eventMetadataFromDTO dto
           mergedMetadata =
@@ -383,6 +441,10 @@ socialEventsServer user = eventsServer
         , eventTicketUrl = emTicketUrl mergedMetadata
         , eventImageUrl = emImageUrl mergedMetadata
         , eventIsPublic = emIsPublic mergedMetadata
+        , eventType = emType mergedMetadata
+        , eventStatus = emStatus mergedMetadata
+        , eventCurrency = emCurrency mergedMetadata
+        , eventBudgetCents = emBudgetCents mergedMetadata
         , eventCreatedAt = Just (socialEventCreatedAt existing)
         , eventUpdatedAt = Just now
         })
@@ -401,6 +463,8 @@ socialEventsServer user = eventsServer
           deleteWhere [EventTicketEventId ==. eventKey]
           deleteWhere [EventTicketOrderEventId ==. eventKey]
           deleteWhere [EventTicketTierEventId ==. eventKey]
+          deleteWhere [EventFinanceEntryEventId ==. eventKey]
+          deleteWhere [EventBudgetLineEventId ==. eventKey]
           delete eventKey
         )
         envPool
@@ -1292,6 +1356,310 @@ socialEventsServer user = eventsServer
                 (pure . ticketEntityToDTO)
                 mUpdated
 
+    -- Budget
+    budgetServer :: ServerT BudgetRoutes AppM
+    budgetServer = listBudgetLines
+              :<|> createBudgetLine
+              :<|> updateBudgetLine
+
+    listBudgetLines :: T.Text -> AppM [EventBudgetLineDTO]
+    listBudgetLines eventIdStr = do
+      Env{..} <- ask
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      budgetRows <- liftIO $ runSqlPool
+        (selectList [EventBudgetLineEventId ==. eventKey] [Asc EventBudgetLineLineType, Asc EventBudgetLineCategory, Asc EventBudgetLineCode])
+        envPool
+      postedEntries <- liftIO $ runSqlPool
+        (selectList [EventFinanceEntryEventId ==. eventKey, EventFinanceEntryStatus ==. "posted"] [])
+        envPool
+      pure $
+        map
+          (\lineEnt@(Entity lineKey lineRec) ->
+            let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
+                actualCents = sum
+                  [ eventFinanceEntryAmountCents entry
+                  | Entity _ entry <- postedEntries
+                  , eventFinanceEntryBudgetLineId entry == Just lineKey
+                  , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                  ]
+            in budgetLineEntityToDTO eventKey (Just actualCents) lineEnt
+          )
+          budgetRows
+
+    createBudgetLine :: T.Text -> EventBudgetLineDTO -> AppM EventBudgetLineDTO
+    createBudgetLine eventIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      let lineName = T.strip (eblName dto)
+      when (T.null lineName) $ throwError err400 { errBody = "budget line name is required" }
+      when (eblPlannedCents dto < 0) $ throwError err400 { errBody = "planned cents must be >= 0" }
+      let codeVal = normalizeBudgetLineCode (fromMaybe lineName (cleanMaybeText (Just (eblCode dto))))
+          lineTypeVal = normalizeBudgetLineType (Just (eblType dto))
+          categoryVal = normalizeCategory (Just (eblCategory dto))
+      mInserted <- liftIO $ runSqlPool (insertUnique EventBudgetLine
+        { eventBudgetLineEventId = eventKey
+        , eventBudgetLineCode = codeVal
+        , eventBudgetLineName = lineName
+        , eventBudgetLineLineType = lineTypeVal
+        , eventBudgetLineCategory = categoryVal
+        , eventBudgetLinePlannedCents = eblPlannedCents dto
+        , eventBudgetLineNotes = cleanMaybeText (eblNotes dto)
+        , eventBudgetLineCreatedAt = now
+        , eventBudgetLineUpdatedAt = now
+        }) envPool
+      lineKey <- maybe (throwError err409 { errBody = "budget line code already exists for this event" }) pure mInserted
+      mLine <- liftIO $ runSqlPool (getEntity lineKey) envPool
+      maybe (throwError err500 { errBody = "Could not create budget line" })
+            (pure . budgetLineEntityToDTO eventKey (Just 0))
+            mLine
+
+    updateBudgetLine :: T.Text -> T.Text -> EventBudgetLineDTO -> AppM EventBudgetLineDTO
+    updateBudgetLine eventIdStr lineIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      lineKey <- parseKeyOr400 "budget line" lineIdStr
+      mLine <- liftIO $ runSqlPool (get lineKey) envPool
+      lineRec <- maybe (throwError err404 { errBody = "Budget line not found" }) pure mLine
+      when (eventBudgetLineEventId lineRec /= eventKey) $ throwError err400 { errBody = "Budget line does not belong to this event" }
+      let lineName = T.strip (eblName dto)
+      when (T.null lineName) $ throwError err400 { errBody = "budget line name is required" }
+      when (eblPlannedCents dto < 0) $ throwError err400 { errBody = "planned cents must be >= 0" }
+      let codeVal = normalizeBudgetLineCode (fromMaybe lineName (cleanMaybeText (Just (eblCode dto))))
+          lineTypeVal = normalizeBudgetLineType (Just (eblType dto))
+          categoryVal = normalizeCategory (Just (eblCategory dto))
+      mCodeOwner <- liftIO $ runSqlPool (getBy (UniqueEventBudgetLineCode eventKey codeVal)) envPool
+      case mCodeOwner of
+        Just (Entity existingKey _) | existingKey /= lineKey ->
+          throwError err409 { errBody = "budget line code already exists for this event" }
+        _ -> pure ()
+      liftIO $ runSqlPool (update lineKey
+        [ EventBudgetLineCode =. codeVal
+        , EventBudgetLineName =. lineName
+        , EventBudgetLineLineType =. lineTypeVal
+        , EventBudgetLineCategory =. categoryVal
+        , EventBudgetLinePlannedCents =. eblPlannedCents dto
+        , EventBudgetLineNotes =. cleanMaybeText (eblNotes dto)
+        , EventBudgetLineUpdatedAt =. now
+        ]) envPool
+      postedEntries <- liftIO $ runSqlPool
+        (selectList [ EventFinanceEntryEventId ==. eventKey
+                    , EventFinanceEntryBudgetLineId ==. Just lineKey
+                    , EventFinanceEntryStatus ==. "posted"
+                    ] [])
+        envPool
+      mUpdated <- liftIO $ runSqlPool (getEntity lineKey) envPool
+      let actualCents = sum
+            [ eventFinanceEntryAmountCents entry
+            | Entity _ entry <- postedEntries
+            , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+            ]
+      maybe (throwError err500 { errBody = "Could not update budget line" })
+            (pure . budgetLineEntityToDTO eventKey (Just actualCents))
+            mUpdated
+
+    -- Finance
+    financeServer :: ServerT FinanceRoutes AppM
+    financeServer = listFinanceEntries
+               :<|> createFinanceEntry
+               :<|> updateFinanceEntry
+               :<|> getFinanceSummary
+
+    listFinanceEntries :: T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> AppM [EventFinanceEntryDTO]
+    listFinanceEntries eventIdStr mDirection mSource mStatus = do
+      Env{..} <- ask
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      directionFilter <- normalizeFinanceDirectionFilter mDirection
+      sourceFilter <- normalizeFinanceSourceFilter mSource
+      statusFilter <- normalizeFinanceEntryStatusFilter mStatus
+      manualRows <- liftIO $ runSqlPool
+        (selectList [EventFinanceEntryEventId ==. eventKey] [Desc EventFinanceEntryOccurredAt, Desc EventFinanceEntryId])
+        envPool
+      ticketOrders <- liftIO $ runSqlPool
+        (selectList [EventTicketOrderEventId ==. eventKey] [Desc EventTicketOrderPurchasedAt, Desc EventTicketOrderId])
+        envPool
+      let manualDtos = map financeEntryEntityToDTO manualRows
+          ticketDtos = concatMap (ticketOrderAccountingEntries eventKey) ticketOrders
+          merged = manualDtos ++ ticketDtos
+          filtered = filter (matchesFinanceFilters directionFilter sourceFilter statusFilter) merged
+      pure (sortOn (Down . efeOccurredAt) filtered)
+
+    createFinanceEntry :: T.Text -> EventFinanceEntryDTO -> AppM EventFinanceEntryDTO
+    createFinanceEntry eventIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, eventRec) <- requireManagedEvent eventIdStr
+      directionVal <- normalizeFinanceDirectionInput (efeDirection dto)
+      sourceVal <- normalizeFinanceSourceInput (efeSource dto)
+      statusVal <- normalizeFinanceEntryStatusInput (efeStatus dto)
+      when (sourceVal `elem` ["ticket_sale", "ticket_refund"]) $
+        throwError err400 { errBody = "ticket_sale and ticket_refund entries are generated from ticket orders" }
+      let categoryVal = normalizeCategory (Just (efeCategory dto))
+          conceptVal = T.strip (efeConcept dto)
+          amountVal = efeAmountCents dto
+          defaultCurrency = eventCurrencyFromEvent eventRec
+          currencyVal = normalizeCurrency (fromMaybe defaultCurrency (cleanMaybeText (Just (efeCurrency dto))))
+      when (T.null conceptVal) $ throwError err400 { errBody = "concept is required" }
+      when (amountVal <= 0) $ throwError err400 { errBody = "amountCents must be greater than 0" }
+      budgetLineKey <- resolveBudgetLineKey envPool eventKey (efeBudgetLineId dto)
+      entryKey <- liftIO $ runSqlPool (insert EventFinanceEntry
+        { eventFinanceEntryEventId = eventKey
+        , eventFinanceEntryBudgetLineId = budgetLineKey
+        , eventFinanceEntryDirection = directionVal
+        , eventFinanceEntrySource = sourceVal
+        , eventFinanceEntryCategory = categoryVal
+        , eventFinanceEntryConcept = conceptVal
+        , eventFinanceEntryAmountCents = amountVal
+        , eventFinanceEntryCurrency = currencyVal
+        , eventFinanceEntryStatus = statusVal
+        , eventFinanceEntryExternalRef = cleanMaybeText (efeExternalRef dto)
+        , eventFinanceEntryNotes = cleanMaybeText (efeNotes dto)
+        , eventFinanceEntryMetadata = Nothing
+        , eventFinanceEntryOccurredAt = efeOccurredAt dto
+        , eventFinanceEntryRecordedByPartyId = Just currentPartyId
+        , eventFinanceEntryCreatedAt = now
+        , eventFinanceEntryUpdatedAt = now
+        }) envPool
+      mCreated <- liftIO $ runSqlPool (getEntity entryKey) envPool
+      maybe (throwError err500 { errBody = "Could not create finance entry" })
+            (pure . financeEntryEntityToDTO)
+            mCreated
+
+    updateFinanceEntry :: T.Text -> T.Text -> EventFinanceEntryDTO -> AppM EventFinanceEntryDTO
+    updateFinanceEntry eventIdStr entryIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, eventRec) <- requireManagedEvent eventIdStr
+      entryKey <- parseKeyOr400 "finance entry" entryIdStr
+      mExisting <- liftIO $ runSqlPool (get entryKey) envPool
+      existing <- maybe (throwError err404 { errBody = "Finance entry not found" }) pure mExisting
+      when (eventFinanceEntryEventId existing /= eventKey) $ throwError err400 { errBody = "Finance entry does not belong to this event" }
+      directionVal <- normalizeFinanceDirectionInput (efeDirection dto)
+      sourceVal <- normalizeFinanceSourceInput (efeSource dto)
+      statusVal <- normalizeFinanceEntryStatusInput (efeStatus dto)
+      when (sourceVal `elem` ["ticket_sale", "ticket_refund"]) $
+        throwError err400 { errBody = "ticket_sale and ticket_refund entries are generated from ticket orders" }
+      let categoryVal = normalizeCategory (Just (efeCategory dto))
+          conceptVal = T.strip (efeConcept dto)
+          amountVal = efeAmountCents dto
+          defaultCurrency = eventCurrencyFromEvent eventRec
+          currencyVal = normalizeCurrency (fromMaybe defaultCurrency (cleanMaybeText (Just (efeCurrency dto))))
+      when (T.null conceptVal) $ throwError err400 { errBody = "concept is required" }
+      when (amountVal <= 0) $ throwError err400 { errBody = "amountCents must be greater than 0" }
+      budgetLineKey <- resolveBudgetLineKey envPool eventKey (efeBudgetLineId dto)
+      liftIO $ runSqlPool (update entryKey
+        [ EventFinanceEntryBudgetLineId =. budgetLineKey
+        , EventFinanceEntryDirection =. directionVal
+        , EventFinanceEntrySource =. sourceVal
+        , EventFinanceEntryCategory =. categoryVal
+        , EventFinanceEntryConcept =. conceptVal
+        , EventFinanceEntryAmountCents =. amountVal
+        , EventFinanceEntryCurrency =. currencyVal
+        , EventFinanceEntryStatus =. statusVal
+        , EventFinanceEntryExternalRef =. cleanMaybeText (efeExternalRef dto)
+        , EventFinanceEntryNotes =. cleanMaybeText (efeNotes dto)
+        , EventFinanceEntryOccurredAt =. efeOccurredAt dto
+        , EventFinanceEntryRecordedByPartyId =. Just currentPartyId
+        , EventFinanceEntryUpdatedAt =. now
+        ]) envPool
+      mUpdated <- liftIO $ runSqlPool (getEntity entryKey) envPool
+      maybe (throwError err500 { errBody = "Could not update finance entry" })
+            (pure . financeEntryEntityToDTO)
+            mUpdated
+
+    getFinanceSummary :: T.Text -> AppM EventFinanceSummaryDTO
+    getFinanceSummary eventIdStr = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, eventRec) <- requireManagedEvent eventIdStr
+      let eventCurrencyVal = eventCurrencyFromEvent eventRec
+          budgetOverride = eventBudgetFromEvent eventRec
+      budgetRows <- liftIO $ runSqlPool (selectList [EventBudgetLineEventId ==. eventKey] []) envPool
+      financeRows <- liftIO $ runSqlPool
+        (selectList [EventFinanceEntryEventId ==. eventKey, EventFinanceEntryStatus ==. "posted"] [])
+        envPool
+      ticketOrders <- liftIO $ runSqlPool (selectList [EventTicketOrderEventId ==. eventKey] []) envPool
+
+      let plannedIncomeCents =
+            sum
+              [ eventBudgetLinePlannedCents lineRec
+              | Entity _ lineRec <- budgetRows
+              , normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec)) == "income"
+              ]
+          plannedExpenseCents =
+            sum
+              [ eventBudgetLinePlannedCents lineRec
+              | Entity _ lineRec <- budgetRows
+              , normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec)) == "expense"
+              ]
+          manualIncomeCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- financeRows
+              , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == "income"
+              ]
+          manualExpenseCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- financeRows
+              , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == "expense"
+              ]
+          ticketPaidRevenueCents =
+            sum
+              [ eventTicketOrderAmountCents orderRec
+              | Entity _ orderRec <- ticketOrders
+              , normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRec)) == "paid"
+              ]
+          ticketRefundedRevenueCents =
+            sum
+              [ eventTicketOrderAmountCents orderRec
+              | Entity _ orderRec <- ticketOrders
+              , normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRec)) == "refunded"
+              ]
+          ticketPendingRevenueCents =
+            sum
+              [ eventTicketOrderAmountCents orderRec
+              | Entity _ orderRec <- ticketOrders
+              , normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRec)) == "pending"
+              ]
+          actualIncomeCents = manualIncomeCents + ticketPaidRevenueCents
+          actualExpenseCents = manualExpenseCents + ticketRefundedRevenueCents
+          netCents = actualIncomeCents - actualExpenseCents
+          budgetCentsVal = budgetOverride <|> fallbackBudget plannedExpenseCents
+          budgetVarianceCents = fmap (\budgetCap -> budgetCap - actualExpenseCents) budgetCentsVal
+          budgetUtilizationPct =
+            case budgetCentsVal of
+              Just budgetCap | budgetCap > 0 ->
+                Just ((fromIntegral actualExpenseCents / fromIntegral budgetCap) * 100)
+              _ -> Nothing
+
+      pure EventFinanceSummaryDTO
+        { efsEventId = renderKeyText eventKey
+        , efsCurrency = eventCurrencyVal
+        , efsBudgetCents = budgetCentsVal
+        , efsPlannedIncomeCents = plannedIncomeCents
+        , efsPlannedExpenseCents = plannedExpenseCents
+        , efsActualIncomeCents = actualIncomeCents
+        , efsActualExpenseCents = actualExpenseCents
+        , efsNetCents = netCents
+        , efsTicketPaidRevenueCents = ticketPaidRevenueCents
+        , efsTicketRefundedRevenueCents = ticketRefundedRevenueCents
+        , efsTicketPendingRevenueCents = ticketPendingRevenueCents
+        , efsBudgetVarianceCents = budgetVarianceCents
+        , efsBudgetUtilizationPct = budgetUtilizationPct
+        , efsGeneratedAt = now
+        }
+
+    requireManagedEvent :: T.Text -> AppM (SocialEventId, SocialEvent)
+    requireManagedEvent rawEventId = do
+      Env{..} <- ask
+      eventKey <- parseKeyOr400 "event" rawEventId
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      claimed <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+      pure (eventKey, claimed)
+
     parseIds :: T.Text -> T.Text -> AppM (SocialEventId, EventInvitationId)
     parseIds eventIdStr invitationIdStr =
       case parseInvitationIdsEither eventIdStr invitationIdStr of
@@ -1348,6 +1716,156 @@ normalizeTicketStatus mStatus =
   case mStatus >>= parseTicketStatus of
     Nothing -> "issued"
     Just s -> s
+
+normalizeEventType :: Maybe T.Text -> Maybe T.Text
+normalizeEventType mType =
+  case fmap (T.toLower . T.strip) mType of
+    Nothing -> Nothing
+    Just "" -> Nothing
+    Just "party" -> Just "party"
+    Just "concert" -> Just "concert"
+    Just "festival" -> Just "festival"
+    Just "conference" -> Just "conference"
+    Just "showcase" -> Just "showcase"
+    Just "other" -> Just "other"
+    Just _ -> Nothing
+
+normalizeEventStatus :: Maybe T.Text -> Maybe T.Text
+normalizeEventStatus mStatus =
+  case fmap (T.toLower . T.strip) mStatus of
+    Nothing -> Nothing
+    Just "" -> Nothing
+    Just "planning" -> Just "planning"
+    Just "announced" -> Just "announced"
+    Just "on_sale" -> Just "on_sale"
+    Just "live" -> Just "live"
+    Just "completed" -> Just "completed"
+    Just "cancelled" -> Just "cancelled"
+    Just "canceled" -> Just "cancelled"
+    Just _ -> Nothing
+
+normalizeBudgetCentsMaybe :: Maybe Int -> Maybe Int
+normalizeBudgetCentsMaybe mBudget =
+  case mBudget of
+    Just n | n >= 0 -> Just n
+    _ -> Nothing
+
+normalizeCurrencyMaybe :: Maybe T.Text -> Maybe T.Text
+normalizeCurrencyMaybe mCurrency = normalizeCurrency <$> cleanMaybeText mCurrency
+
+normalizeBudgetLineType :: Maybe T.Text -> T.Text
+normalizeBudgetLineType mType =
+  case fmap (T.toLower . T.strip) mType of
+    Just "income" -> "income"
+    _ -> "expense"
+
+normalizeBudgetLineCode :: T.Text -> T.Text
+normalizeBudgetLineCode raw =
+  let upper = T.toUpper (T.strip raw)
+      withDash = T.map (\c -> if c == ' ' then '-' else c) upper
+      cleaned = T.filter (\c -> isAlphaNum c || c == '-' || c == '_') withDash
+      chunks = filter (not . T.null) (T.splitOn "-" cleaned)
+      normalized = T.intercalate "-" chunks
+  in if T.null normalized then "LINE" else normalized
+
+normalizeCategory :: Maybe T.Text -> T.Text
+normalizeCategory mCategory =
+  case fmap (T.toLower . T.strip) mCategory of
+    Nothing -> "general"
+    Just "" -> "general"
+    Just v -> v
+
+normalizeFinanceDirection :: Maybe T.Text -> T.Text
+normalizeFinanceDirection mDirection =
+  case fmap (T.toLower . T.strip) mDirection of
+    Just "income" -> "income"
+    _ -> "expense"
+
+normalizeFinanceSource :: Maybe T.Text -> T.Text
+normalizeFinanceSource mSource =
+  case fmap (T.toLower . T.strip) mSource of
+    Just "ticket_sale" -> "ticket_sale"
+    Just "ticket_refund" -> "ticket_refund"
+    Just "sponsorship" -> "sponsorship"
+    Just "vendor_payment" -> "vendor_payment"
+    Just "merchandise" -> "merchandise"
+    Just "operations" -> "operations"
+    Just "manual" -> "manual"
+    Just "other" -> "other"
+    _ -> "manual"
+
+normalizeFinanceEntryStatus :: Maybe T.Text -> T.Text
+normalizeFinanceEntryStatus mStatus =
+  case fmap (T.toLower . T.strip) mStatus of
+    Just "draft" -> "draft"
+    Just "posted" -> "posted"
+    Just "void" -> "void"
+    Just "pending" -> "pending"
+    _ -> "posted"
+
+normalizeFinanceDirectionInput :: T.Text -> AppM T.Text
+normalizeFinanceDirectionInput raw =
+  case T.toLower (T.strip raw) of
+    "income" -> pure "income"
+    "expense" -> pure "expense"
+    _ -> throwError err400 { errBody = "direction must be income or expense" }
+
+normalizeFinanceSourceInput :: T.Text -> AppM T.Text
+normalizeFinanceSourceInput raw =
+  case T.toLower (T.strip raw) of
+    "ticket_sale" -> pure "ticket_sale"
+    "ticket_refund" -> pure "ticket_refund"
+    "sponsorship" -> pure "sponsorship"
+    "vendor_payment" -> pure "vendor_payment"
+    "merchandise" -> pure "merchandise"
+    "operations" -> pure "operations"
+    "manual" -> pure "manual"
+    "other" -> pure "other"
+    _ -> throwError err400 { errBody = "Invalid finance source" }
+
+normalizeFinanceEntryStatusInput :: T.Text -> AppM T.Text
+normalizeFinanceEntryStatusInput raw =
+  case T.toLower (T.strip raw) of
+    "draft" -> pure "draft"
+    "posted" -> pure "posted"
+    "void" -> pure "void"
+    "pending" -> pure "pending"
+    _ -> throwError err400 { errBody = "Invalid finance status" }
+
+normalizeFinanceDirectionFilter :: Maybe T.Text -> AppM (Maybe T.Text)
+normalizeFinanceDirectionFilter Nothing = pure Nothing
+normalizeFinanceDirectionFilter (Just raw) =
+  case T.toLower (T.strip raw) of
+    "" -> pure Nothing
+    "income" -> pure (Just "income")
+    "expense" -> pure (Just "expense")
+    _ -> throwError err400 { errBody = "Invalid direction filter" }
+
+normalizeFinanceSourceFilter :: Maybe T.Text -> AppM (Maybe T.Text)
+normalizeFinanceSourceFilter Nothing = pure Nothing
+normalizeFinanceSourceFilter (Just raw) =
+  case T.toLower (T.strip raw) of
+    "" -> pure Nothing
+    "ticket_sale" -> pure (Just "ticket_sale")
+    "ticket_refund" -> pure (Just "ticket_refund")
+    "sponsorship" -> pure (Just "sponsorship")
+    "vendor_payment" -> pure (Just "vendor_payment")
+    "merchandise" -> pure (Just "merchandise")
+    "operations" -> pure (Just "operations")
+    "manual" -> pure (Just "manual")
+    "other" -> pure (Just "other")
+    _ -> throwError err400 { errBody = "Invalid source filter" }
+
+normalizeFinanceEntryStatusFilter :: Maybe T.Text -> AppM (Maybe T.Text)
+normalizeFinanceEntryStatusFilter Nothing = pure Nothing
+normalizeFinanceEntryStatusFilter (Just raw) =
+  case T.toLower (T.strip raw) of
+    "" -> pure Nothing
+    "draft" -> pure (Just "draft")
+    "posted" -> pure (Just "posted")
+    "void" -> pure (Just "void")
+    "pending" -> pure (Just "pending")
+    _ -> throwError err400 { errBody = "Invalid status filter" }
 
 parseTicketOrderStatus :: T.Text -> Maybe T.Text
 parseTicketOrderStatus raw =
@@ -1463,6 +1981,30 @@ cleanMaybeText mVal =
     Just txt | not (T.null txt) -> Just txt
     _ -> Nothing
 
+resolveBudgetLineKey :: ConnectionPool -> SocialEventId -> Maybe T.Text -> AppM (Maybe EventBudgetLineId)
+resolveBudgetLineKey _ _ Nothing = pure Nothing
+resolveBudgetLineKey _ _ (Just raw) | T.null (T.strip raw) = pure Nothing
+resolveBudgetLineKey pool eventKey (Just raw) = do
+  lineKey <- parseKeyOr400 "budget line" raw
+  mLine <- liftIO $ runSqlPool (get lineKey) pool
+  lineRec <- maybe (throwError err404 { errBody = "Budget line not found" }) pure mLine
+  when (eventBudgetLineEventId lineRec /= eventKey) $
+    throwError err400 { errBody = "Budget line does not belong to this event" }
+  pure (Just lineKey)
+
+eventCurrencyFromEvent :: SocialEvent -> T.Text
+eventCurrencyFromEvent eventRec =
+  fromMaybe "USD" (emCurrency (decodeEventMetadata (socialEventMetadata eventRec)))
+
+eventBudgetFromEvent :: SocialEvent -> Maybe Int
+eventBudgetFromEvent eventRec =
+  emBudgetCents (decodeEventMetadata (socialEventMetadata eventRec))
+
+fallbackBudget :: Int -> Maybe Int
+fallbackBudget plannedExpenseCents
+  | plannedExpenseCents > 0 = Just plannedExpenseCents
+  | otherwise = Nothing
+
 normalizeCurrency :: T.Text -> T.Text
 normalizeCurrency raw =
   let cleaned = T.toUpper (T.strip raw)
@@ -1501,7 +2043,7 @@ claimOrRequireEventManager :: T.Text -> ConnectionPool -> SocialEventId -> Socia
 claimOrRequireEventManager currentParty pool eventKey eventRow =
   case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
     Just owner | owner == currentParty -> pure eventRow
-    Just _ -> throwError err403 { errBody = "Only the event organizer can manage tickets" }
+    Just _ -> throwError err403 { errBody = "Only the event organizer can manage this event" }
     Nothing -> do
       now <- liftIO getCurrentTime
       liftIO $ runSqlPool
@@ -1555,6 +2097,10 @@ eventEntityToDTO eid eventRow artists =
       , eventTicketUrl = emTicketUrl metadata
       , eventImageUrl = emImageUrl metadata
       , eventIsPublic = emIsPublic metadata <|> Just True
+      , eventType = emType metadata <|> Just "party"
+      , eventStatus = emStatus metadata <|> Just "planning"
+      , eventCurrency = emCurrency metadata <|> Just "USD"
+      , eventBudgetCents = emBudgetCents metadata
       , eventCreatedAt = Just (socialEventCreatedAt eventRow)
       , eventUpdatedAt = Just (socialEventUpdatedAt eventRow)
       , eventArtists = artists
@@ -1609,6 +2155,84 @@ ticketOrderEntityToDTO (Entity orderKey orderRow) tickets = TicketOrderDTO
   , ticketOrderUpdatedAt = Just (eventTicketOrderUpdatedAt orderRow)
   , ticketOrderTickets = map ticketEntityToDTO tickets
   }
+
+budgetLineEntityToDTO :: SocialEventId -> Maybe Int -> Entity EventBudgetLine -> EventBudgetLineDTO
+budgetLineEntityToDTO eventKey mActualCents (Entity lineKey lineRec) = EventBudgetLineDTO
+  { eblId = Just (renderKeyText lineKey)
+  , eblEventId = Just (renderKeyText eventKey)
+  , eblCode = eventBudgetLineCode lineRec
+  , eblName = eventBudgetLineName lineRec
+  , eblType = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
+  , eblCategory = normalizeCategory (Just (eventBudgetLineCategory lineRec))
+  , eblPlannedCents = eventBudgetLinePlannedCents lineRec
+  , eblActualCents = mActualCents
+  , eblNotes = eventBudgetLineNotes lineRec
+  , eblCreatedAt = Just (eventBudgetLineCreatedAt lineRec)
+  , eblUpdatedAt = Just (eventBudgetLineUpdatedAt lineRec)
+  }
+
+financeEntryEntityToDTO :: Entity EventFinanceEntry -> EventFinanceEntryDTO
+financeEntryEntityToDTO (Entity entryKey entryRec) = EventFinanceEntryDTO
+  { efeId = Just (renderKeyText entryKey)
+  , efeEventId = Just (renderKeyText (eventFinanceEntryEventId entryRec))
+  , efeBudgetLineId = fmap renderKeyText (eventFinanceEntryBudgetLineId entryRec)
+  , efeDirection = normalizeFinanceDirection (Just (eventFinanceEntryDirection entryRec))
+  , efeSource = normalizeFinanceSource (Just (eventFinanceEntrySource entryRec))
+  , efeCategory = normalizeCategory (Just (eventFinanceEntryCategory entryRec))
+  , efeConcept = eventFinanceEntryConcept entryRec
+  , efeAmountCents = eventFinanceEntryAmountCents entryRec
+  , efeCurrency = normalizeCurrency (eventFinanceEntryCurrency entryRec)
+  , efeStatus = normalizeFinanceEntryStatus (Just (eventFinanceEntryStatus entryRec))
+  , efeExternalRef = eventFinanceEntryExternalRef entryRec
+  , efeNotes = eventFinanceEntryNotes entryRec
+  , efeOccurredAt = eventFinanceEntryOccurredAt entryRec
+  , efeRecordedByPartyId = eventFinanceEntryRecordedByPartyId entryRec
+  , efeCreatedAt = Just (eventFinanceEntryCreatedAt entryRec)
+  , efeUpdatedAt = Just (eventFinanceEntryUpdatedAt entryRec)
+  }
+
+ticketOrderAccountingEntries :: SocialEventId -> Entity EventTicketOrder -> [EventFinanceEntryDTO]
+ticketOrderAccountingEntries eventKey (Entity orderKey orderRec) =
+  case normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRec)) of
+    "paid" ->
+      [ mkEntry "paid" "income" "ticket_sale" "posted" "Ticket sale"
+      ]
+    "refunded" ->
+      [ mkEntry "refunded" "expense" "ticket_refund" "posted" "Ticket refund"
+      ]
+    "pending" ->
+      [ mkEntry "pending" "income" "ticket_sale" "pending" "Ticket sale pending"
+      ]
+    _ -> []
+  where
+    orderIdTxt = renderKeyText orderKey
+    mkEntry suffix direction source statusLabel conceptPrefix =
+      EventFinanceEntryDTO
+        { efeId = Just ("ticket-order-" <> orderIdTxt <> "-" <> suffix)
+        , efeEventId = Just (renderKeyText eventKey)
+        , efeBudgetLineId = Nothing
+        , efeDirection = direction
+        , efeSource = source
+        , efeCategory = "tickets"
+        , efeConcept = conceptPrefix <> " #" <> orderIdTxt
+        , efeAmountCents = eventTicketOrderAmountCents orderRec
+        , efeCurrency = normalizeCurrency (eventTicketOrderCurrency orderRec)
+        , efeStatus = statusLabel
+        , efeExternalRef = Just orderIdTxt
+        , efeNotes = Nothing
+        , efeOccurredAt = eventTicketOrderPurchasedAt orderRec
+        , efeRecordedByPartyId = eventTicketOrderBuyerPartyId orderRec
+        , efeCreatedAt = Just (eventTicketOrderCreatedAt orderRec)
+        , efeUpdatedAt = Just (eventTicketOrderUpdatedAt orderRec)
+        }
+
+matchesFinanceFilters :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> EventFinanceEntryDTO -> Bool
+matchesFinanceFilters mDirection mSource mStatus entry =
+  directionOk && sourceOk && statusOk
+  where
+    directionOk = maybe True (== efeDirection entry) mDirection
+    sourceOk = maybe True (== efeSource entry) mSource
+    statusOk = maybe True (== efeStatus entry) mStatus
 
 generateUniqueTicketCode :: MonadIO m => ReaderT SqlBackend m T.Text
 generateUniqueTicketCode = do

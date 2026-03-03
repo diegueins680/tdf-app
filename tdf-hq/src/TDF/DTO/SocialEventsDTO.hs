@@ -18,6 +18,9 @@ module TDF.DTO.SocialEventsDTO
   , TicketCheckInRequestDTO(..)
   , TicketDTO(..)
   , TicketOrderDTO(..)
+  , EventBudgetLineDTO(..)
+  , EventFinanceEntryDTO(..)
+  , EventFinanceSummaryDTO(..)
   ) where
 
 import           Data.Aeson (FromJSON, ToJSON, withObject, (.:), (.:?), (.=), object, toJSON, parseJSON)
@@ -157,6 +160,10 @@ data EventDTO = EventDTO
   , eventTicketUrl   :: Maybe Text
   , eventImageUrl    :: Maybe Text
   , eventIsPublic    :: Maybe Bool
+  , eventType        :: Maybe Text
+  , eventStatus      :: Maybe Text
+  , eventCurrency    :: Maybe Text
+  , eventBudgetCents :: Maybe Int
   , eventCreatedAt   :: Maybe UTCTime
   , eventUpdatedAt   :: Maybe UTCTime
   , eventArtists     :: [ArtistDTO]
@@ -263,3 +270,59 @@ data TicketOrderDTO = TicketOrderDTO
   } deriving (Show, Eq, Generic)
 instance ToJSON TicketOrderDTO
 instance FromJSON TicketOrderDTO
+
+data EventBudgetLineDTO = EventBudgetLineDTO
+  { eblId           :: Maybe Text
+  , eblEventId      :: Maybe Text
+  , eblCode         :: Text
+  , eblName         :: Text
+  , eblType         :: Text
+  , eblCategory     :: Text
+  , eblPlannedCents :: Int
+  , eblActualCents  :: Maybe Int
+  , eblNotes        :: Maybe Text
+  , eblCreatedAt    :: Maybe UTCTime
+  , eblUpdatedAt    :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventBudgetLineDTO
+instance FromJSON EventBudgetLineDTO
+
+data EventFinanceEntryDTO = EventFinanceEntryDTO
+  { efeId               :: Maybe Text
+  , efeEventId          :: Maybe Text
+  , efeBudgetLineId     :: Maybe Text
+  , efeDirection        :: Text
+  , efeSource           :: Text
+  , efeCategory         :: Text
+  , efeConcept          :: Text
+  , efeAmountCents      :: Int
+  , efeCurrency         :: Text
+  , efeStatus           :: Text
+  , efeExternalRef      :: Maybe Text
+  , efeNotes            :: Maybe Text
+  , efeOccurredAt       :: UTCTime
+  , efeRecordedByPartyId :: Maybe Text
+  , efeCreatedAt        :: Maybe UTCTime
+  , efeUpdatedAt        :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventFinanceEntryDTO
+instance FromJSON EventFinanceEntryDTO
+
+data EventFinanceSummaryDTO = EventFinanceSummaryDTO
+  { efsEventId                   :: Text
+  , efsCurrency                  :: Text
+  , efsBudgetCents               :: Maybe Int
+  , efsPlannedIncomeCents        :: Int
+  , efsPlannedExpenseCents       :: Int
+  , efsActualIncomeCents         :: Int
+  , efsActualExpenseCents        :: Int
+  , efsNetCents                  :: Int
+  , efsTicketPaidRevenueCents    :: Int
+  , efsTicketRefundedRevenueCents :: Int
+  , efsTicketPendingRevenueCents :: Int
+  , efsBudgetVarianceCents       :: Maybe Int
+  , efsBudgetUtilizationPct      :: Maybe Double
+  , efsGeneratedAt               :: UTCTime
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventFinanceSummaryDTO
+instance FromJSON EventFinanceSummaryDTO
