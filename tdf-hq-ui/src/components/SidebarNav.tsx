@@ -500,7 +500,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                         component={RouterLink}
                         to={item.path}
                         onClick={onNavigate}
-                        selected={hot}
+                        selected={hot || (!filter.trim() && active)}
+                        aria-current={active ? 'page' : undefined}
                         sx={{
                           borderRadius: 2,
                           mx: 1.5,

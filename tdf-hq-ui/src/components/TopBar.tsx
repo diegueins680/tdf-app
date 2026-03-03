@@ -287,7 +287,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
     >
       <Toolbar
         sx={{
-          minHeight: { xs: 96, md: 124 },
+          minHeight: { xs: 80, md: 92 },
           px: { xs: 2, md: 4 },
         }}
       >
@@ -316,7 +316,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
             variant="wordmark"
             size={55}
             sx={{
-              height: { xs: 35, sm: 50, md: 65 },
+              height: { xs: 32, sm: 44, md: 54 },
               filter: 'brightness(0) invert(1) drop-shadow(0 10px 26px rgba(0,0,0,0.45))',
             }}
           />

@@ -100,15 +100,30 @@ function Shell() {
     }
   }, [sidebarCollapsed]);
 
-  if (!session) {
-    return <Navigate to="/login" replace />;
-  }
-
   const handleNavigateFromSidebar = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       setSidebarCollapsed(true);
     }
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (sidebarCollapsed) return;
+    const handler = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (window.innerWidth < 1024) {
+        setSidebarCollapsed(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => {
+      window.removeEventListener('keydown', handler);
+    };
+  }, [sidebarCollapsed]);
+
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
 
   const handleToggleSidebar = () => setSidebarCollapsed((prev) => !prev);
 
