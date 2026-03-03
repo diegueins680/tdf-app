@@ -15,6 +15,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ScienceIcon from '@mui/icons-material/Science';
 import ShieldIcon from '@mui/icons-material/Shield';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { Link as RouterLink } from 'react-router-dom';
 import { Meta } from '../api/meta';
 import { API_BASE_URL } from '../api/client';
 
@@ -100,9 +101,8 @@ export default function AboutPage() {
               variant="contained"
               size="large"
               endIcon={<OpenInNewIcon />}
-              href="/docs"
-              target="_blank"
-              rel="noreferrer"
+              component={RouterLink}
+              to="/docs"
             >
               Abrir documentación
             </Button>
@@ -110,7 +110,8 @@ export default function AboutPage() {
               variant="outlined"
               size="large"
               endIcon={<ShieldIcon />}
-              href="/seguridad"
+              component={RouterLink}
+              to="/seguridad"
             >
               Reglas de seguridad
             </Button>
@@ -265,15 +266,25 @@ export default function AboutPage() {
                 justifyContent="space-between"
               >
                 <Typography variant="body1">{resource.label}</Typography>
-                <Button
-                  endIcon={<OpenInNewIcon />}
-                  component={Link}
-                  href={resource.href}
-                  target={resource.href.startsWith('http') ? '_blank' : undefined}
-                  rel="noreferrer"
-                >
-                  Abrir
-                </Button>
+                {resource.href.startsWith('/') && !resource.href.endsWith('.yaml') ? (
+                  <Button
+                    endIcon={<OpenInNewIcon />}
+                    component={RouterLink}
+                    to={resource.href}
+                  >
+                    Abrir
+                  </Button>
+                ) : (
+                  <Button
+                    endIcon={<OpenInNewIcon />}
+                    component={Link}
+                    href={resource.href}
+                    target={resource.href.startsWith('http') ? '_blank' : undefined}
+                    rel="noreferrer"
+                  >
+                    Abrir
+                  </Button>
+                )}
               </Stack>
             ))}
           </Stack>

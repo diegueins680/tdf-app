@@ -250,8 +250,8 @@ export default function SocialPage() {
           <Button
             variant="outlined"
             size="small"
-            component="a"
-            href="/social/eventos"
+            component={RouterLink}
+            to="/social/eventos"
           >
             Ir a eventos
           </Button>

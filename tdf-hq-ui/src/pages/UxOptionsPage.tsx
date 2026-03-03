@@ -131,12 +131,17 @@ export default function UxOptionsPage() {
   const [category, setCategory] = useState<string>(initialCategory);
   const [includeInactive, setIncludeInactive] = useState(false);
   const [newOption, setNewOption] = useState({ value: '', label: '', sortOrder: '', active: true });
+  const [optionFilter, setOptionFilter] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!requestedCategory) return;
     setCategory((prev) => (prev === requestedCategory ? prev : requestedCategory));
   }, [requestedCategory]);
+
+  useEffect(() => {
+    setOptionFilter('');
+  }, [category]);
 
   const optionsQuery = useQuery({
     queryKey: ['dropdowns', category, includeInactive],
@@ -176,6 +181,19 @@ export default function UxOptionsPage() {
   const activeCount = useMemo(
     () => options.filter((option) => option.active).length,
     [options],
+  );
+  const normalizedFilter = optionFilter.trim().toLowerCase();
+  const filteredOptions = useMemo(() => {
+    if (!normalizedFilter) return options;
+    return options.filter((option) => {
+      const value = option.value.toLowerCase();
+      const label = (option.label ?? '').toLowerCase();
+      return value.includes(normalizedFilter) || label.includes(normalizedFilter);
+    });
+  }, [normalizedFilter, options]);
+  const filteredActiveCount = useMemo(
+    () => filteredOptions.filter((option) => option.active).length,
+    [filteredOptions],
   );
 
   const handleCreate = () => {
@@ -288,13 +306,39 @@ export default function UxOptionsPage() {
             Opciones en {category || '—'}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {options.length} totales · {activeCount} activas
+            {filteredOptions.length !== options.length
+              ? `${filteredOptions.length} filtradas de ${options.length} · ${filteredActiveCount} activas`
+              : `${options.length} totales · ${activeCount} activas`}
           </Typography>
+        </Stack>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1 }}>
+          <TextField
+            label="Filtrar opciones"
+            placeholder="Busca por valor o etiqueta"
+            value={optionFilter}
+            onChange={(e) => setOptionFilter(e.target.value)}
+            size="small"
+            sx={{ minWidth: { xs: '100%', sm: 280 } }}
+          />
+          {optionFilter.trim() && (
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => setOptionFilter('')}
+              sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
+            >
+              Limpiar filtro
+            </Button>
+          )}
         </Stack>
         {optionsQuery.isLoading ? (
           <Typography>Cargando opciones…</Typography>
         ) : options.length === 0 ? (
           <Alert severity="info">No hay opciones aún para esta categoría.</Alert>
+        ) : filteredOptions.length === 0 ? (
+          <Alert severity="info">
+            No hay coincidencias para el filtro actual. Ajusta el texto para ver opciones.
+          </Alert>
         ) : (
           <Box sx={{ overflowX: 'auto' }}>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
@@ -311,7 +355,7 @@ export default function UxOptionsPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {options.map((opt) => (
+                {filteredOptions.map((opt) => (
                   <OptionRow
                     key={opt.optionId}
                     option={opt}
