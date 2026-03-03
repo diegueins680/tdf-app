@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Container, Stack } from '@mui/material';
+import { Box, Container, Stack } from '@mui/material';
 import { Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import TopBar from './components/TopBar';
 import PartiesPage from './pages/PartiesPage';
@@ -147,7 +147,7 @@ function Shell() {
             onClick={() => setSidebarCollapsed(true)}
           />
         )}
-        <TopBar onToggleSidebar={handleToggleSidebar} />
+        <TopBar onToggleSidebar={handleToggleSidebar} sidebarOpen={!sidebarCollapsed} />
         <Box
           component="main"
           sx={{
@@ -159,23 +159,7 @@ function Shell() {
             minHeight: 0,
           }}
         >
-          <Box sx={{ position: 'absolute', left: { xs: 16, md: 32 }, top: 16 }}>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleToggleSidebar}
-              sx={{
-                borderRadius: 999,
-                px: 3,
-                bgcolor: 'rgba(148,163,184,0.2)',
-                color: '#f8fafc',
-                backdropFilter: 'blur(12px)',
-              }}
-            >
-              {sidebarCollapsed ? 'Abrir menú' : 'Cerrar menú'}
-            </Button>
-          </Box>
-          <Container maxWidth="xl" sx={{ pt: 10, pb: 6 }}>
+          <Container maxWidth="xl" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
             <Outlet />
           </Container>
           <Box

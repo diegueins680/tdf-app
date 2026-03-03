@@ -1,4 +1,6 @@
 import MenuIcon from '@mui/icons-material/Menu';
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
+import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { AppBar, Box, Button, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider, Tooltip, Dialog, DialogTitle, DialogContent, TextField, InputAdornment, List, ListItemButton, ListItemText } from '@mui/material';
 import Menu from '@mui/material/Menu';
@@ -12,6 +14,7 @@ import { NAV_GROUPS, deriveModulesFromRoles, isSchoolStaffRole, pathRequiresModu
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
+  sidebarOpen?: boolean;
 }
 
 const CART_META_KEY = 'tdf-marketplace-cart-meta';
@@ -130,7 +133,7 @@ const readCartMeta = (): { cartId: string; count: number; preview: CartPreviewIt
   }
 };
 
-export default function TopBar({ onToggleSidebar }: TopBarProps) {
+export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarProps) {
   const { session, logout } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
@@ -288,21 +291,24 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
           px: { xs: 2, md: 4 },
         }}
       >
-        <IconButton
-          edge="start"
-          onClick={onToggleSidebar}
-          sx={{ display: { lg: 'none' }, color: '#f8fafc', mr: 1 }}
-        >
-          <MenuIcon />
-        </IconButton>
+        <Tooltip title={sidebarOpen ? 'Ocultar menú' : 'Mostrar menú'}>
+          <IconButton
+            edge="start"
+            onClick={onToggleSidebar}
+            sx={{ color: '#f8fafc', mr: 1 }}
+            aria-label={sidebarOpen ? 'Ocultar menú lateral' : 'Mostrar menú lateral'}
+          >
+            {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
+          </IconButton>
+        </Tooltip>
         <Box
           component={RouterLink}
           to="/inicio"
           sx={{
             display: 'inline-flex',
             alignItems: 'center',
-            flexGrow: { xs: 0, lg: 1 },
-            mr: { xs: 1.5, lg: 0 },
+            flexGrow: 1,
+            mr: 1.5,
           }}
           aria-label="Ir al inicio"
         >
@@ -331,17 +337,23 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               variant="outlined"
               onClick={openQuickNav}
               startIcon={<SearchIcon fontSize="small" />}
-              sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.4)' }}
+              sx={{
+                textTransform: 'none',
+                borderColor: 'rgba(148,163,184,0.4)',
+                minWidth: { xs: 40, sm: 'auto' },
+                px: { xs: 1.25, sm: 1.75 },
+              }}
               aria-keyshortcuts="Control+K Meta+K"
+              aria-label="Buscar sección"
             >
-              Ir a...
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Ir a...</Box>
             </Button>
           </Tooltip>
           <Tooltip title="Alt+R abre recursos">
             <Button
               color="inherit"
               onClick={(e) => setResourcesAnchor(e.currentTarget)}
-              sx={{ textTransform: 'none' }}
+              sx={{ textTransform: 'none', display: { xs: 'none', md: 'inline-flex' } }}
               aria-haspopup="true"
               aria-expanded={resourcesOpen ? 'true' : undefined}
               aria-label="Abrir recursos"
@@ -355,9 +367,10 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
             color="inherit"
             component={RouterLink}
             to="/marketplace"
-            sx={{ textTransform: 'none', position: 'relative' }}
+            sx={{ textTransform: 'none', position: 'relative', minWidth: { xs: 44, sm: 'auto' }, px: { xs: 1.25, sm: 2 } }}
             onMouseEnter={handleOpenCart}
             onClick={handleOpenCart}
+            aria-label="Abrir carrito"
           >
             <Badge
               color="secondary"
@@ -365,7 +378,12 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
               invisible={cartCount <= 0}
               sx={{ '& .MuiBadge-badge': { right: -6, top: 6 } }}
             >
-              Carrito
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                Carrito
+              </Box>
+              <Box component="span" sx={{ display: { xs: 'inline-flex', sm: 'none' }, alignItems: 'center' }}>
+                <ShoppingCartOutlinedIcon fontSize="small" />
+              </Box>
             </Badge>
           </Button>
 
@@ -381,28 +399,19 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
                 borderColor: 'rgba(59,130,246,0.35)',
                 color: '#93c5fd',
                 '&:hover': { borderColor: 'rgba(59,130,246,0.6)', bgcolor: 'rgba(59,130,246,0.08)' },
+                display: { xs: 'none', md: 'inline-flex' },
               }}
             >
-              ADMIN
+              Panel admin
             </Button>
           )}
           {session ? (
             <>
-              {hasAdmin && (
-                <Button
-                  variant="outlined"
-                  color="info"
-                  onClick={() => navigate('/configuracion/roles-permisos')}
-                  sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.4)', color: '#f8fafc' }}
-                >
-                  Panel
-                </Button>
-              )}
               <Button
                 variant="contained"
                 color="secondary"
                 onClick={handleLogout}
-                sx={{ textTransform: 'none', borderRadius: 999 }}
+                sx={{ textTransform: 'none', borderRadius: 999, display: { xs: 'none', sm: 'inline-flex' } }}
               >
                 Salir
               </Button>

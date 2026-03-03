@@ -17,6 +17,8 @@ import {
   FormControl,
   FormControlLabel,
   FormHelperText,
+  IconButton,
+  InputAdornment,
   InputLabel,
   Link,
   MenuItem,
@@ -37,6 +39,8 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Navigate, useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { Meta } from '../api/meta';
@@ -143,6 +147,8 @@ const parseGoogleIdToken = (token: string): { email?: string; name?: string } | 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -173,6 +179,7 @@ export default function LoginPage() {
   const googleClientId = import.meta.env['VITE_GOOGLE_CLIENT_ID'] ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
+  const identifierInputRef = useRef<HTMLInputElement | null>(null);
   const googleInitRef = useRef(false);
   const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
   const [googleStatus, setGoogleStatus] = useState<string | null>(null);
@@ -575,6 +582,13 @@ export default function LoginPage() {
     }
   }, [location.search]);
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      identifierInputRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   const openResetDialog = () => {
     setResetDialogOpen(true);
     setResetEmail(identifier.includes('@') ? identifier.trim() : '');
@@ -610,6 +624,7 @@ export default function LoginPage() {
   const openSignupDialog = (roles: SignupRole[] = []) => {
     setSignupDialogOpen(true);
     setSignupFeedback(null);
+    setShowSignupPassword(false);
     setSignupForm({
       firstName: '',
       lastName: '',
@@ -631,6 +646,7 @@ export default function LoginPage() {
   const closeSignupDialog = () => {
     setSignupDialogOpen(false);
     setSignupFeedback(null);
+    setShowSignupPassword(false);
     setSignupRoles([]);
     setFavoriteArtistIds([]);
     setClaimArtistId(null);
@@ -807,6 +823,7 @@ export default function LoginPage() {
                       type="text"
                       value={identifier}
                       onChange={(event) => setIdentifier(event.target.value)}
+                      inputRef={identifierInputRef}
                       fullWidth
                       autoComplete="username"
                       inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
@@ -816,12 +833,28 @@ export default function LoginPage() {
 
                     <TextField
                       label="Contraseña *"
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                       fullWidth
                       autoComplete="current-password"
                       inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              edge="end"
+                              size="small"
+                              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                              onClick={() => setShowPassword((prev) => !prev)}
+                              onMouseDown={(event) => event.preventDefault()}
+                              sx={{ color: 'rgba(248,250,252,0.78)' }}
+                            >
+                              {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
                       sx={textFieldSx}
                     />
                   </Stack>
@@ -993,7 +1026,7 @@ export default function LoginPage() {
                           <Button
                             variant="outlined"
                             size="small"
-                            onClick={() => navigate('/artist-onboarding')}
+                            onClick={() => navigate('/artista/crear')}
                             sx={{
                               alignSelf: 'flex-start',
                               textTransform: 'none',
@@ -1360,11 +1393,26 @@ export default function LoginPage() {
             )}
             <TextField
               label="Contraseña *"
-              type="password"
+              type={showSignupPassword ? 'text' : 'password'}
               value={signupForm.password}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
               fullWidth
               helperText={passwordHint}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      aria-label={showSignupPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      onClick={() => setShowSignupPassword((prev) => !prev)}
+                      onMouseDown={(event) => event.preventDefault()}
+                    >
+                      {showSignupPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
               sx={dialogFieldSx}
             />
             {signupFeedback && (
