@@ -280,6 +280,12 @@ interface ReplyErrorSummary {
   technical: string;
 }
 
+interface InboxErrorSummary {
+  headline: string;
+  guidance?: string;
+  technical: string;
+}
+
 const summarizeReplyError = (value: string | null | undefined, reviewMode: boolean): ReplyErrorSummary | null => {
   const technical = value?.replace(/\s+/g, ' ').trim();
   if (!technical) return null;
@@ -330,6 +336,54 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
   };
 };
 
+const summarizeInboxFetchError = (value: string | null | undefined, reviewMode: boolean): InboxErrorSummary | null => {
+  const technical = value?.replace(/\s+/g, ' ').trim();
+  if (!technical) return null;
+  const lower = technical.toLowerCase();
+
+  if (lower.includes('no se pudo contactar la api')) {
+    return {
+      headline: reviewMode
+        ? 'Cannot load channel messages: backend is unreachable.'
+        : 'No se pueden cargar mensajes del canal: backend no disponible.',
+      guidance: reviewMode
+        ? 'Check API availability, network/CORS, and current VITE_API_BASE.'
+        : 'Verifica disponibilidad de la API, red/CORS y VITE_API_BASE.',
+      technical,
+    };
+  }
+
+  if (lower.includes('403') || lower.includes('forbidden')) {
+    return {
+      headline: reviewMode
+        ? 'Cannot load messages: insufficient permissions (403).'
+        : 'No se pueden cargar mensajes: permisos insuficientes (403).',
+      guidance: reviewMode
+        ? 'Review channel credentials and app/page permissions.'
+        : 'Revisa credenciales del canal y permisos de app/página.',
+      technical,
+    };
+  }
+
+  if (lower.includes('401') || lower.includes('unauthorized')) {
+    return {
+      headline: reviewMode
+        ? 'Cannot load messages: session/token is invalid (401).'
+        : 'No se pueden cargar mensajes: sesión/token inválido (401).',
+      guidance: reviewMode
+        ? 'Re-authenticate the integration and refresh tokens.'
+        : 'Vuelve a autenticar la integración y renueva los tokens.',
+      technical,
+    };
+  }
+
+  return {
+    headline: reviewMode ? 'Unable to load channel messages.' : 'No se pudieron cargar mensajes del canal.',
+    guidance: reviewMode ? 'Review integration status and try refreshing.' : 'Revisa el estado de integración y vuelve a cargar.',
+    technical,
+  };
+};
+
 const channelToLabel = (channel: SocialChannel) => {
   switch (channel) {
     case 'instagram':
@@ -342,6 +396,9 @@ const channelToLabel = (channel: SocialChannel) => {
       return channel;
   }
 };
+
+const renderAssetField = (name: string, value?: string | null) =>
+  value ? `${name}=${value.length > 28 ? compactIdentifier(value) : value}` : null;
 
 const copyText = async (value: string) => {
   try {
@@ -743,10 +800,10 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
                         <Alert severity="info" variant="outlined">
                           {reviewMode ? 'Conversation asset metadata:' : 'Metadata del asset de conversación:'}{' '}
                           {[
-                            messageAsset.recipientId ? `recipient_id=${messageAsset.recipientId}` : null,
-                            messageAsset.entryId ? `entry_id=${messageAsset.entryId}` : null,
-                            messageAsset.sourceId ? `source_id=${messageAsset.sourceId}` : null,
-                            messageAsset.sourceType ? `source_type=${messageAsset.sourceType}` : null,
+                            renderAssetField('recipient_id', messageAsset.recipientId),
+                            renderAssetField('entry_id', messageAsset.entryId),
+                            renderAssetField('source_id', messageAsset.sourceId),
+                            renderAssetField('source_type', messageAsset.sourceType),
                           ]
                             .filter((value): value is string => Boolean(value))
                             .join(' · ')}
@@ -1045,6 +1102,7 @@ export default function SocialInboxPage() {
   const [limit, setLimit] = useState(100);
   const [selection, setSelection] = useState<SelectedMessage | null>(null);
   const [activeAsset, setActiveAsset] = useState<MetaReviewAssetSelection | null>(() => getMetaReviewAssetSelection());
+  const [expandedFetchErrorChannels, setExpandedFetchErrorChannels] = useState<SocialChannel[]>([]);
 
   useEffect(() => {
     if (!reviewMode) return;
@@ -1091,6 +1149,47 @@ export default function SocialInboxPage() {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
     void whatsappQuery.refetch();
+  };
+
+  const hasExpandedChannelError = (channel: SocialChannel) => expandedFetchErrorChannels.includes(channel);
+  const toggleExpandedChannelError = (channel: SocialChannel) => {
+    setExpandedFetchErrorChannels((prev) =>
+      prev.includes(channel) ? prev.filter((entry) => entry !== channel) : [...prev, channel],
+    );
+  };
+
+  const renderChannelLoadError = (channel: SocialChannel, rawError: unknown) => {
+    if (!rawError) return null;
+    const rawMessage =
+      rawError instanceof Error
+        ? rawError.message
+        : reviewMode
+          ? 'Unexpected error.'
+          : 'Error inesperado.';
+    const summary = summarizeInboxFetchError(rawMessage, reviewMode);
+    const expanded = hasExpandedChannelError(channel);
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button color="inherit" size="small" onClick={() => toggleExpandedChannelError(channel)}>
+            {expanded ? (reviewMode ? 'Hide details' : 'Ocultar detalle') : (reviewMode ? 'Details' : 'Detalle')}
+          </Button>
+        }
+      >
+        <Stack spacing={0.5}>
+          <Typography variant="body2" fontWeight={700}>
+            {channelToLabel(channel)}: {summary?.headline ?? rawMessage}
+          </Typography>
+          {summary?.guidance && <Typography variant="body2">{summary.guidance}</Typography>}
+          {expanded && (
+            <Typography variant="caption" sx={{ wordBreak: 'break-word', opacity: 0.85 }}>
+              {summary?.technical ?? rawMessage}
+            </Typography>
+          )}
+        </Stack>
+      </Alert>
+    );
   };
 
   return (
@@ -1197,36 +1296,9 @@ export default function SocialInboxPage() {
       </Paper>
       {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (
         <Stack spacing={1}>
-          {instagramQuery.isError && (
-            <Alert severity="error">
-              Instagram:{' '}
-              {instagramQuery.error instanceof Error
-                ? instagramQuery.error.message
-                : reviewMode
-                  ? 'Unexpected error.'
-                  : 'Error inesperado.'}
-            </Alert>
-          )}
-          {facebookQuery.isError && (
-            <Alert severity="error">
-              Facebook:{' '}
-              {facebookQuery.error instanceof Error
-                ? facebookQuery.error.message
-                : reviewMode
-                  ? 'Unexpected error.'
-                  : 'Error inesperado.'}
-            </Alert>
-          )}
-          {whatsappQuery.isError && (
-            <Alert severity="error">
-              WhatsApp:{' '}
-              {whatsappQuery.error instanceof Error
-                ? whatsappQuery.error.message
-                : reviewMode
-                  ? 'Unexpected error.'
-                  : 'Error inesperado.'}
-            </Alert>
-          )}
+          {instagramQuery.isError && renderChannelLoadError('instagram', instagramQuery.error)}
+          {facebookQuery.isError && renderChannelLoadError('facebook', facebookQuery.error)}
+          {whatsappQuery.isError && renderChannelLoadError('whatsapp', whatsappQuery.error)}
         </Stack>
       )}
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
