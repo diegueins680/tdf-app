@@ -56,7 +56,7 @@ import           TDF.DTO.SocialEventsDTO
   , TicketOrderDTO(..)
   )
 import           TDF.DB (Env(..))
-import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueName)
+import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 
 type AppM = ReaderT Env Handler
@@ -344,6 +344,8 @@ socialEventsServer user = eventsServer
         , venueLng = venueLongitude v
         , venueCapacity = SM.venueCapacity v
         , venueContact = SM.venueContact v
+        , venueCreatedAt = Just (SM.venueCreatedAt v)
+        , venueUpdatedAt = Just (SM.venueUpdatedAt v)
         }) rows
 
     createVenue :: VenueDTO -> AppM VenueDTO
@@ -362,7 +364,11 @@ socialEventsServer user = eventsServer
         , venueCreatedAt = now
         , venueUpdatedAt = now
         }) envPool
-      pure (dto { venueId = Just (renderKeyText key) })
+      pure (dto
+        { venueId = Just (renderKeyText key)
+        , venueCreatedAt = Just now
+        , venueUpdatedAt = Just now
+        })
 
     getVenue :: T.Text -> AppM VenueDTO
     getVenue rawId = do
@@ -381,6 +387,8 @@ socialEventsServer user = eventsServer
           , venueLng = venueLongitude v
           , venueCapacity = SM.venueCapacity v
           , venueContact = SM.venueContact v
+          , venueCreatedAt = Just (SM.venueCreatedAt v)
+          , venueUpdatedAt = Just (SM.venueUpdatedAt v)
           }
 
     updateVenue :: T.Text -> VenueDTO -> AppM VenueDTO
@@ -389,7 +397,7 @@ socialEventsServer user = eventsServer
       now <- liftIO getCurrentTime
       venueKey <- parseKeyOr400 "venue" rawId
       mExisting <- liftIO $ runSqlPool (get venueKey) envPool
-      when (isNothing mExisting) $ throwError err404 { errBody = "Venue not found" }
+      existing <- maybe (throwError err404 { errBody = "Venue not found" }) pure mExisting
       liftIO $ runSqlPool (update venueKey
         [ VenueName =. venueName dto
         , VenueAddress =. venueAddress dto
@@ -401,7 +409,11 @@ socialEventsServer user = eventsServer
         , VenueContact =. venueContact dto
         , VenueUpdatedAt =. now
         ]) envPool
-      pure (dto { venueId = Just rawId })
+      pure (dto
+        { venueId = Just rawId
+        , venueCreatedAt = Just (SM.venueCreatedAt existing)
+        , venueUpdatedAt = Just now
+        })
 
     -- Artists
     artistsServer :: ServerT ArtistsRoutes AppM
@@ -431,11 +443,14 @@ socialEventsServer user = eventsServer
         pure $ if nameMatches && genreMatches
           then Just ArtistDTO
             { artistId = Just (renderKeyText aid)
+            , artistPartyId = artistProfilePartyId a
             , artistName = artistProfileName a
             , artistGenres = genreList
             , artistBio = artistProfileBio a
             , artistAvatarUrl = artistProfileAvatarUrl a
             , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
+            , artistCreatedAt = Just (artistProfileCreatedAt a)
+            , artistUpdatedAt = Just (artistProfileUpdatedAt a)
             }
           else Nothing
       pure (catMaybes artists)
@@ -470,7 +485,7 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       now <- liftIO getCurrentTime
       key <- liftIO $ runSqlPool (insert ArtistProfile
-        { artistProfilePartyId = Nothing
+        { artistProfilePartyId = cleanMaybeText (artistPartyId dto)
         , artistProfileName = artistName dto
         , artistProfileBio = artistBio dto
         , artistProfileAvatarUrl = artistAvatarUrl dto
@@ -490,11 +505,14 @@ socialEventsServer user = eventsServer
         envPool
       pure ArtistDTO
         { artistId = Just (renderKeyText key)
+        , artistPartyId = cleanMaybeText (artistPartyId dto)
         , artistName = artistName dto
         , artistGenres = genreList
         , artistBio = artistBio dto
         , artistAvatarUrl = artistAvatarUrl dto
         , artistSocialLinks = artistSocialLinks dto
+        , artistCreatedAt = Just now
+        , artistUpdatedAt = Just now
         }
 
     getArtist :: T.Text -> AppM ArtistDTO
@@ -508,11 +526,14 @@ socialEventsServer user = eventsServer
           genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. artistKey] []) envPool
           pure ArtistDTO
             { artistId = Just (T.strip idStr)
+            , artistPartyId = artistProfilePartyId a
             , artistName = artistProfileName a
             , artistGenres = map (artistGenreGenre . entityVal) genres
             , artistBio = artistProfileBio a
             , artistAvatarUrl = artistProfileAvatarUrl a
             , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
+            , artistCreatedAt = Just (artistProfileCreatedAt a)
+            , artistUpdatedAt = Just (artistProfileUpdatedAt a)
             }
 
     updateArtist :: T.Text -> ArtistDTO -> AppM ArtistDTO
@@ -520,8 +541,12 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       artistKey <- parseArtistId idStr
       now <- liftIO getCurrentTime
+      mExisting <- liftIO $ runSqlPool (get artistKey) envPool
+      existing <- maybe (throwError err404 { errBody = "Artist not found" }) pure mExisting
+      let nextPartyId = cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
       liftIO $ runSqlPool (update artistKey
-        [ ArtistProfileName =. artistName dto
+        [ ArtistProfilePartyId =. nextPartyId
+        , ArtistProfileName =. artistName dto
         , ArtistProfileBio =. artistBio dto
         , ArtistProfileAvatarUrl =. artistAvatarUrl dto
         , ArtistProfileGenres =. Just (artistGenres dto)
@@ -537,7 +562,12 @@ socialEventsServer user = eventsServer
              }
         )
         envPool
-      pure dto { artistId = Just (T.strip idStr) }
+      pure dto
+        { artistId = Just (T.strip idStr)
+        , artistPartyId = nextPartyId
+        , artistCreatedAt = Just (artistProfileCreatedAt existing)
+        , artistUpdatedAt = Just now
+        }
 
     followArtist :: T.Text -> ArtistFollowRequest -> AppM ArtistFollowerDTO
     followArtist artistIdStr ArtistFollowRequest{..} = do
@@ -1239,19 +1269,25 @@ loadEventArtists pool eventKey = runSqlPool (do
     pure $ case mArtist of
       Nothing -> ArtistDTO
         { artistId = Nothing
+        , artistPartyId = Nothing
         , artistName = "(unknown)"
         , artistGenres = []
         , artistBio = Nothing
         , artistAvatarUrl = Nothing
         , artistSocialLinks = Nothing
+        , artistCreatedAt = Nothing
+        , artistUpdatedAt = Nothing
         }
       Just a -> ArtistDTO
         { artistId = Just (renderKeyText (eventArtistArtistId link))
+        , artistPartyId = artistProfilePartyId a
         , artistName = artistProfileName a
         , artistGenres = fromMaybe [] (artistProfileGenres a)
         , artistBio = artistProfileBio a
         , artistAvatarUrl = artistProfileAvatarUrl a
         , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
+        , artistCreatedAt = Just (artistProfileCreatedAt a)
+        , artistUpdatedAt = Just (artistProfileUpdatedAt a)
         }
   ) pool
 

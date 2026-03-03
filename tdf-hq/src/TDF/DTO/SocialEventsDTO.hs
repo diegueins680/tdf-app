@@ -53,11 +53,14 @@ instance FromJSON ArtistSocialLinksDTO where
 
 data ArtistDTO = ArtistDTO
   { artistId       :: Maybe Text
+  , artistPartyId  :: Maybe Text
   , artistName     :: Text
   , artistGenres   :: [Text]
   , artistBio      :: Maybe Text
   , artistAvatarUrl :: Maybe Text
   , artistSocialLinks :: Maybe ArtistSocialLinksDTO
+  , artistCreatedAt :: Maybe UTCTime
+  , artistUpdatedAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON ArtistDTO
 instance FromJSON ArtistDTO
@@ -109,6 +112,8 @@ data VenueDTO = VenueDTO
   , venueLng      :: Maybe Double
   , venueCapacity :: Maybe Int
   , venueContact  :: Maybe Text
+  , venueCreatedAt :: Maybe UTCTime
+  , venueUpdatedAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON VenueDTO
 instance FromJSON VenueDTO
