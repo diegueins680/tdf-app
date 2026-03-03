@@ -23,6 +23,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import PersonIcon from '@mui/icons-material/Person';
+import { Link as RouterLink } from 'react-router-dom';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import { API_BASE_URL } from '../api/client';
@@ -963,7 +964,12 @@ export default function PublicBookingPage() {
                 </Grid>
                 <Grid item xs={12}>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                    <Button variant="outlined" href="/login?redirect=/estudio/calendario" size="medium">
+                    <Button
+                      variant="outlined"
+                      component={RouterLink}
+                      to="/login?redirect=/estudio/calendario"
+                      size="medium"
+                    >
                       Ver mi reserva
                     </Button>
                     <Button variant="contained" size="medium" onClick={resetForm}>
@@ -1077,10 +1083,10 @@ export default function PublicBookingPage() {
                       </Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                      <Button size="small" variant="outlined" href="/login?redirect=/reservar">
+                      <Button size="small" variant="outlined" component={RouterLink} to="/login?redirect=/reservar">
                         Iniciar sesión
                       </Button>
-                      <Button size="small" variant="text" href="/login?signup=1&redirect=/reservar">
+                      <Button size="small" variant="text" component={RouterLink} to="/login?signup=1&redirect=/reservar">
                         Crear cuenta
                       </Button>
                       {session && (

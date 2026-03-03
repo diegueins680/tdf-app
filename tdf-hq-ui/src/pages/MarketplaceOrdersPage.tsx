@@ -44,6 +44,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { MarketplaceOrderDTO, MarketplaceOrderUpdatePayload } from '../api/types';
 import { Marketplace } from '../api/marketplace';
 import { DateTime } from 'luxon';
+import { Link as RouterLink } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 
 const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] }[] = [
@@ -552,9 +553,8 @@ export default function MarketplaceOrdersPage() {
                 <Button
                   size="small"
                   variant="outlined"
-                  href="/marketplace"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  component={RouterLink}
+                  to="/marketplace"
                 >
                   Ir al marketplace
                 </Button>

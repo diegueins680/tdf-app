@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -560,7 +560,8 @@ export default function CalendarSyncPage() {
                     Sincronizar ahora
                   </Button>
                   <Button
-                    href="/configuracion/logs"
+                    component={RouterLink}
+                    to="/configuracion/logs"
                     size="small"
                     startIcon={<LinkIcon />}
                     target="_blank"

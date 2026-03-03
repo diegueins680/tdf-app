@@ -39,6 +39,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link as RouterLink } from 'react-router-dom';
 import type {
   MarketplaceCartDTO,
   MarketplaceCartItemDTO,
@@ -1120,7 +1121,8 @@ export default function MarketplacePage() {
             o vuelve a intentar en unos minutos.{' '}
             <Button
               size="small"
-              href="/configuracion/estado"
+              component={RouterLink}
+              to="/configuracion/estado"
               sx={{ ml: 1 }}
               target="_blank"
               rel="noreferrer"

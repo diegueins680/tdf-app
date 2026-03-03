@@ -300,13 +300,20 @@ export default function LabelTracksPage() {
                 Crea tus primeras operaciones internas. Si no tienes perfil de artista, créalo o reclámalo para habilitar tus herramientas.
               </Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                <Button variant="contained" size="small" onClick={() => setShowShortcuts(false)} href="/mi-artista">
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => setShowShortcuts(false)}
+                  component={RouterLink}
+                  to="/mi-artista"
+                >
                   Crear/editar mi perfil
                 </Button>
                 <Button
                   variant="outlined"
                   size="small"
-                  href="/label/artistas"
+                  component={RouterLink}
+                  to="/label/artistas"
                   target="_blank"
                   rel="noreferrer"
                 >
