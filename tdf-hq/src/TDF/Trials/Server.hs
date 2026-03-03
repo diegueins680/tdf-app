@@ -305,7 +305,8 @@ publicTrialsServer =
     signupH :: SignupIn -> AppM SignupOut
     signupH SignupIn{..} = do
       now <- liftIO getCurrentTime
-      let partyIdKey = intKey 0 -- placeholder, until a full signup flow is implemented
+      let fullName = composeFullName firstName lastName
+      partyIdKey <- createOrFetchParty fullName (Just email) phone now
       _ <- insert $ LeadInterest
         { leadInterestPartyId   = partyIdKey
         , leadInterestInterestType = "signup"
@@ -325,7 +326,7 @@ publicTrialsServer =
     interestH :: InterestIn -> AppM InterestOut
     interestH InterestIn{..} = do
       now <- liftIO getCurrentTime
-      let partyIdKey = intKey 0
+      partyIdKey <- ensurePublicLeadParty now
       let subjectKey = maybeKey subjectId
       key <- insert LeadInterest
         { leadInterestPartyId   = partyIdKey
@@ -444,6 +445,35 @@ createOrFetchParty mName mEmail mPhone now = do
       , partyNotes           = Nothing
       , partyCreatedAt       = now
       }
+
+composeFullName :: Text -> Text -> Maybe Text
+composeFullName firstName lastName =
+  cleanOptional $
+    Just
+      (T.intercalate " " (filter (not . T.null) [T.strip firstName, T.strip lastName]))
+
+publicLeadFallbackEmail :: Text
+publicLeadFallbackEmail = "public-interest@tdf.local"
+
+ensurePublicLeadParty :: UTCTime -> AppM PartyId
+ensurePublicLeadParty now = do
+  mExisting <- selectFirst [Models.PartyPrimaryEmail ==. Just publicLeadFallbackEmail] []
+  case mExisting of
+    Just (Entity partyId _) -> pure partyId
+    Nothing ->
+      insert Party
+        { partyLegalName = Nothing
+        , partyDisplayName = "Public Trial Interest"
+        , partyIsOrg = False
+        , partyTaxId = Nothing
+        , partyPrimaryEmail = Just publicLeadFallbackEmail
+        , partyPrimaryPhone = Nothing
+        , partyWhatsapp = Nothing
+        , partyInstagram = Nothing
+        , partyEmergencyContact = Nothing
+        , partyNotes = Just "System fallback party for anonymous public trial interests."
+        , partyCreatedAt = now
+        }
 
 ensureUserAccountForParty :: PartyId -> Maybe Text -> Text -> AppM (Maybe (Text, Text))
 ensureUserAccountForParty partyId mName emailVal = do

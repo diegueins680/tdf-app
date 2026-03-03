@@ -219,6 +219,8 @@ test-suite tdf-hq-test
     TDF.ServerFeedback
     TDF.ServerRadio
     TDF.ServerSpec
+    TDF.Social.FollowHandlerSpec
+    TDF.Social.FollowSpec
     TDF.Services
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
@@ -227,6 +229,7 @@ test-suite tdf-hq-test
     TDF.Trials.DTO
     TDF.Trials.Models
     TDF.Trials.Server
+    TDF.Trials.PublicLeadSpec
     TDF.UUIDInstances
     TDF.Version
     TDF.LogBuffer

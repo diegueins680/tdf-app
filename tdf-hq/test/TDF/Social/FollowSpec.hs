@@ -2,46 +2,75 @@
 
 module TDF.Social.FollowSpec (spec) where
 
-import           Control.Monad.IO.Class      (liftIO)
-import           Control.Monad.Logger        (NoLoggingT)
-import           Control.Monad.Trans.Reader  (ReaderT)
-import           Control.Monad.Trans.Resource (ResourceT)
-import           Data.Maybe                  (isJust, isNothing)
-import           Data.Time.Clock             (getCurrentTime)
-import           Database.Persist            (insert, insertUnique)
-import           Database.Persist.Sql        (runMigration, runSqlite, SqlBackend)
-import           Test.Hspec
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Logger (NoLoggingT)
+import Control.Monad.Trans.Reader (ReaderT)
+import Control.Monad.Trans.Resource (ResourceT)
+import Data.Maybe (isJust, isNothing)
+import Data.Time.Clock (getCurrentTime)
+import Database.Persist (insert, insertUnique)
+import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute)
+import Database.Persist.Sqlite (runSqlite)
+import Test.Hspec
 
-import           TDF.Models.SocialEventsModels
+import TDF.Models.SocialEventsModels
 
 spec :: Spec
 spec = describe "ArtistFollow insertUnique" $ do
-  it "prevents duplicate follows (idempotent)" $ do
-    (createdOnce, secondWasIgnored) <- runInMemory $ do
-      now <- liftIO getCurrentTime
-      -- create an artist
-      artistId <- insert ArtistProfile
-        { artistProfilePartyId = Nothing
-        , artistProfileName = "Test Band"
-        , artistProfileBio = Nothing
-        , artistProfileAvatarUrl = Nothing
-        , artistProfileGenres = Nothing
-        , artistProfileSocialLinks = Nothing
-        , artistProfileCreatedAt = now
-        , artistProfileUpdatedAt = now
-        }
-      let follower = "carla"
-      m1 <- insertUnique ArtistFollow { artistFollowArtistId = artistId, artistFollowFollowerPartyId = follower, artistFollowCreatedAt = now }
-      m2 <- insertUnique ArtistFollow { artistFollowArtistId = artistId, artistFollowFollowerPartyId = follower, artistFollowCreatedAt = now }
-      pure (isJust m1, isNothing m2)
+    it "prevents duplicate follows (idempotent)" $ do
+        (createdOnce, secondWasIgnored) <- runInMemory $ do
+            now <- liftIO getCurrentTime
+            -- create an artist
+            artistId <-
+                insert
+                    ArtistProfile
+                        { artistProfilePartyId = Nothing
+                        , artistProfileName = "Test Band"
+                        , artistProfileBio = Nothing
+                        , artistProfileAvatarUrl = Nothing
+                        , artistProfileGenres = Nothing
+                        , artistProfileSocialLinks = Nothing
+                        , artistProfileCreatedAt = now
+                        , artistProfileUpdatedAt = now
+                        }
+            let follower = "carla"
+            m1 <- insertUnique ArtistFollow{artistFollowArtistId = artistId, artistFollowFollowerPartyId = follower, artistFollowCreatedAt = now}
+            m2 <- insertUnique ArtistFollow{artistFollowArtistId = artistId, artistFollowFollowerPartyId = follower, artistFollowCreatedAt = now}
+            pure (isJust m1, isNothing m2)
 
-    createdOnce `shouldBe` True
-    secondWasIgnored `shouldBe` True
+        createdOnce `shouldBe` True
+        secondWasIgnored `shouldBe` True
 
 -- Helpers
 
 runInMemory :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a
 runInMemory action =
-  runSqlite ":memory:" $ do
-    runMigration migrateSocialEvents
-    action
+    runSqlite ":memory:" $ do
+        initializeSocialSchema
+        action
+
+initializeSocialSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
+initializeSocialSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"social_artist_profile\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" VARCHAR NULL,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"bio\" VARCHAR NULL,\
+        \\"avatar_url\" VARCHAR NULL,\
+        \\"genres\" VARCHAR NULL,\
+        \\"social_links\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"artist_follow\" (\
+        \\"artist_id\" INTEGER NOT NULL,\
+        \\"follower_party_id\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \PRIMARY KEY (\"artist_id\", \"follower_party_id\"),\
+        \FOREIGN KEY(\"artist_id\") REFERENCES \"social_artist_profile\"(\"id\") ON DELETE CASCADE\
+        \)"
+        []
