@@ -108,8 +108,8 @@ isValidE164 t =
     _ -> False
 
 isValidEmail :: Text -> Bool
-isValidEmail email =
-  case T.split (== '@') email of
+isValidEmail candidate =
+  case T.split (== '@') candidate of
     [localPart, domain] ->
       not (T.null localPart) &&
       not (T.null domain) &&
