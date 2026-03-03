@@ -231,11 +231,12 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       limit <- resolveLimit 200 500 mLimit
       offset <- resolveOffset mOffset
-      let startFilter = case mStartAfter of
-            Nothing -> []
-            Just raw -> case iso8601ParseM (T.unpack raw) of
-              Just t  -> [SocialEventStartTime >=. t]
-              Nothing -> []
+      startFilter <- case mStartAfter of
+        Nothing -> pure []
+        Just raw ->
+          case iso8601ParseM (T.unpack raw) of
+            Just t  -> pure [SocialEventStartTime >=. t]
+            Nothing -> throwError err400 { errBody = "Invalid start_after value (expected ISO-8601 datetime)" }
       cityFilter <- case fmap (T.toCaseFold . T.strip) mCity of
         Nothing -> pure []
         Just "" -> pure []
