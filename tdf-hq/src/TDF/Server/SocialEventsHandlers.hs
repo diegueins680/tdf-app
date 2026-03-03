@@ -236,12 +236,16 @@ socialEventsServer user = eventsServer
             Just raw -> case iso8601ParseM (T.unpack raw) of
               Just t  -> [SocialEventStartTime >=. t]
               Nothing -> []
-      cityFilter <- case fmap T.strip mCity of
+      cityFilter <- case fmap (T.toCaseFold . T.strip) mCity of
         Nothing -> pure []
         Just "" -> pure []
-        Just cityTxt -> do
-          venueRows <- liftIO $ runSqlPool (selectList [VenueCity ==. Just cityTxt] []) envPool
-          let ids = map entityKey venueRows
+        Just cityNeedle -> do
+          venueRows <- liftIO $ runSqlPool (selectList [] [LimitTo 2000]) envPool
+          let ids =
+                [ entityKey venueRow
+                | venueRow@(Entity _ v) <- venueRows
+                , maybe False (\cityVal -> T.isInfixOf cityNeedle (T.toCaseFold cityVal)) (SM.venueCity v)
+                ]
           if null ids
             then pure [SocialEventId ==. toSqlKey 0] -- force empty result set
             else pure [SocialEventVenueId <-. map Just ids]
