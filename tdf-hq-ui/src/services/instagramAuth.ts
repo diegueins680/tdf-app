@@ -12,7 +12,8 @@ const INSTAGRAM_APP_ID =
   env.read('VITE_INSTAGRAM_APP_ID') ??
   '';
 const DEFAULT_FACEBOOK_SCOPES = 'instagram_basic,instagram_manage_messages,pages_show_list,pages_read_engagement';
-const DEFAULT_INSTAGRAM_SCOPES = 'instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages';
+const DEFAULT_INSTAGRAM_SCOPES = 'instagram_business_basic,instagram_business_manage_messages';
+const FACEBOOK_DEPENDENCY_SCOPES = ['pages_show_list', 'pages_read_engagement'];
 const STATE_KEY = 'tdf-instagram-oauth-state';
 const RESULT_KEY = 'tdf-instagram-oauth-result';
 const REVIEW_ASSET_KEY = 'tdf-instagram-review-asset';
@@ -50,7 +51,10 @@ const resolveScopes = (provider: InstagramOAuthProvider, scopes: string[]) => {
     if (businessScopes.length > 0) return businessScopes.join(',');
     return uniqueScopes(parseScopes(DEFAULT_INSTAGRAM_SCOPES)).join(',');
   }
-  const facebookScopes = uniqueScopes(scopes.filter((scope) => !scope.startsWith('instagram_business_')));
+  const facebookScopes = uniqueScopes([
+    ...scopes.filter((scope) => !scope.startsWith('instagram_business_')),
+    ...FACEBOOK_DEPENDENCY_SCOPES,
+  ]);
   return facebookScopes.join(',');
 };
 

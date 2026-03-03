@@ -6,6 +6,16 @@ This folder automates the **desktop** portion of the Meta App Review screencast:
 - Live send from app UI
 - Produces a browser recording (Playwright) you can post-process and stitch with the Android native-client clip.
 
+Permissions in scope:
+- `instagram_basic`
+- `instagram_manage_messages`
+- `instagram_business_basic`
+- `instagram_business_manage_messages`
+
+Provider mapping in this app:
+- `facebook` provider run: `instagram_basic`, `instagram_manage_messages`
+- `instagram` provider run: `instagram_business_basic`, `instagram_business_manage_messages`
+
 ## 1) Run the desktop screencast
 
 From repo root:
@@ -17,6 +27,7 @@ node screencast/meta-app-review/run.mjs
 Notes:
 - The script will **pause** and ask you to complete Meta login/consent if needed.
 - It will also pause to ensure an inbound message exists.
+- If App Review requires all four permissions, record two runs (one per provider config) and submit both clips or a stitched final video.
 
 Output video is saved under:
 

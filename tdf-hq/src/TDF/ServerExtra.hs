@@ -63,7 +63,7 @@ import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
 import           TDF.Config                 (AppConfig, assetsRootDir, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
-import           TDF.Services.InstagramMessaging (sendInstagramText)
+import           TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
@@ -1704,7 +1704,11 @@ instagramServer =
             IG.irExternalId req >>= (\raw -> let trimmed = T.strip raw in if T.null trimmed then Nothing else Just trimmed)
       when (T.null body) $
         throwError err400 { errBody = "Empty message" }
-      sendResult <- liftIO $ sendInstagramText envConfig recipient body
+      (mTargetAccountId, mTargetAccessToken) <-
+        liftIO $
+          flip runSqlPool envPool $
+            resolveInstagramReplyContext mExternalId
+      sendResult <- liftIO $ sendInstagramTextWithContext envConfig mTargetAccessToken mTargetAccountId recipient body
       liftIO $ flip runSqlPool envPool $ do
         insert_ (M.InstagramMessage (recipient <> "-out-" <> T.pack (show now))
                   recipient
@@ -1956,6 +1960,56 @@ extractSenderNameFromMetadata (Just raw) =
                         _ -> fail "contact profile missing"
                     _ -> fail "contact invalid"
                 _ -> fail "contacts missing"
+
+extractRecipientIdFromMetadata :: Maybe Text -> Maybe Text
+extractRecipientIdFromMetadata Nothing = Nothing
+extractRecipientIdFromMetadata (Just raw) =
+  case A.decodeStrict' (TE.encodeUtf8 raw) of
+    Nothing -> Nothing
+    Just payload -> parseMaybe parseRecipient payload >>= stripNonEmptyText . Just
+  where
+    parseRecipient = withObject "MetaMessageMetadata" $ \o -> do
+      mRecipient <- o .:? "recipient_id"
+      mSource <- o .:? "source_id"
+      case stripNonEmptyText mRecipient <|> stripNonEmptyText mSource of
+        Just recipientId -> pure recipientId
+        Nothing -> fail "recipient id missing"
+
+resolveInstagramReplyContext :: Maybe Text -> SqlPersistT IO (Maybe Text, Maybe Text)
+resolveInstagramReplyContext mExternalId = do
+  let mCleanExternalId = mExternalId >>= stripNonEmptyText
+  mPreferredAccountId <- case mCleanExternalId of
+    Nothing -> pure Nothing
+    Just extId -> do
+      mIncoming <- selectFirst
+        [ M.InstagramMessageExternalId ==. extId
+        , M.InstagramMessageDirection ==. "incoming"
+        ]
+        [Desc M.InstagramMessageCreatedAt]
+      pure (mIncoming >>= extractRecipientIdFromMetadata . M.instagramMessageMetadata . entityVal)
+  resolveInstagramDeliveryAccount mPreferredAccountId
+
+resolveInstagramDeliveryAccount :: Maybe Text -> SqlPersistT IO (Maybe Text, Maybe Text)
+resolveInstagramDeliveryAccount mPreferredAccountId = do
+  let baseFilters =
+        [ M.SocialSyncAccountPlatform ==. "instagram"
+        , M.SocialSyncAccountStatus ==. "connected"
+        , M.SocialSyncAccountAccessToken !=. Nothing
+        ]
+      ordering = [Desc M.SocialSyncAccountUpdatedAt, Desc M.SocialSyncAccountCreatedAt]
+      mCleanPreferred = mPreferredAccountId >>= stripNonEmptyText
+  mSelected <- case mCleanPreferred of
+    Just accountId -> do
+      mExact <- selectFirst (M.SocialSyncAccountExternalUserId ==. accountId : baseFilters) ordering
+      case mExact of
+        Just row -> pure (Just row)
+        Nothing -> selectFirst baseFilters ordering
+    Nothing ->
+      selectFirst baseFilters ordering
+  let selectedAccountId = mSelected >>= stripNonEmptyText . Just . M.socialSyncAccountExternalUserId . entityVal
+      selectedToken = mSelected >>= stripNonEmptyText . M.socialSyncAccountAccessToken . entityVal
+      accountId = selectedAccountId <|> mCleanPreferred
+  pure (accountId, selectedToken)
 
 metaProfileLabel :: MetaChannel -> MetaProfile -> Maybe Text
 metaProfileLabel MetaInstagram MetaProfile{..} =

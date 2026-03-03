@@ -283,7 +283,7 @@ VITE_GOOGLE_CLIENT_ID=your-google-client-id
 VITE_CHATKIT_WORKFLOW_ID=your-chatkit-workflow-id
 VITE_META_APP_ID=your-meta-app-id
 VITE_INSTAGRAM_OAUTH_PROVIDER=facebook
-VITE_INSTAGRAM_SCOPES=instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages
+VITE_INSTAGRAM_SCOPES=instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages,pages_show_list,pages_read_engagement
 ```
 
 Optional for demo mode:
@@ -339,7 +339,7 @@ VITE_GOOGLE_CLIENT_ID=your-google-client-id
 VITE_CHATKIT_WORKFLOW_ID=your-chatkit-workflow-id
 VITE_META_APP_ID=your-meta-app-id
 VITE_INSTAGRAM_OAUTH_PROVIDER=facebook
-VITE_INSTAGRAM_SCOPES=instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages
+VITE_INSTAGRAM_SCOPES=instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages,pages_show_list,pages_read_engagement
 ```
 
 #### 4. Deploy

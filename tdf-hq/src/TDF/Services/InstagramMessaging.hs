@@ -1,8 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Services.InstagramMessaging
   ( sendInstagramText
+  , sendInstagramTextWithContext
   ) where
 
+import           Control.Applicative ((<|>))
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
 import           Data.List (nub)
@@ -21,16 +23,23 @@ import           TDF.Config (AppConfig(..))
 
 sendInstagramText :: AppConfig -> Text -> Text -> IO (Either Text Text)
 sendInstagramText cfg recipientId body =
-  case instagramMessagingToken cfg >>= nonEmptyText of
+  sendInstagramTextWithContext cfg Nothing Nothing recipientId body
+
+sendInstagramTextWithContext :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> IO (Either Text Text)
+sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId body =
+  case (mTokenOverride >>= nonEmptyText) <|> (instagramMessagingToken cfg >>= nonEmptyText) of
     Nothing -> pure (Left "INSTAGRAM_MESSAGING_TOKEN no configurado")
     Just token -> do
       manager <- newManager tlsManagerSettings
       let base = T.dropWhileEnd (== '/') (instagramMessagingApiBase cfg)
-          targetUrls = nub (catMaybes
-            [ (\accountId -> base <> "/" <> accountId <> "/messages")
-                <$> (instagramMessagingAccountId cfg >>= nonEmptyText)
-            , Just (base <> "/me/messages")
+          accountIds = nub (catMaybes
+            [ mAccountIdOverride >>= nonEmptyText
+            , instagramMessagingAccountId cfg >>= nonEmptyText
             ])
+          targetUrls = nub (
+            map (\accountId -> base <> "/" <> accountId <> "/messages") accountIds
+              <> [base <> "/me/messages"]
+            )
       attempts <- mapM (sendToEndpoint manager token recipientId body) targetUrls
       pure (pickFirstSuccess targetUrls attempts)
 

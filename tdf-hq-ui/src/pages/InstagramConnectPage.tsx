@@ -28,17 +28,17 @@ import {
 } from '../services/instagramAuth';
 import type { InstagramOAuthExchangeResponse } from '../api/instagramOAuth';
 
-const META_REVIEW_REQUIRED_SCOPES_FACEBOOK = [
-  'instagram_basic',
-  'instagram_manage_messages',
-] as const;
+type MetaOAuthProvider = 'facebook' | 'instagram';
 
-const META_REVIEW_REQUIRED_SCOPES_INSTAGRAM = [
-  'instagram_business_basic',
-  'instagram_business_manage_messages',
+const META_REVIEW_PERMISSIONS: ReadonlyArray<{ scope: string; provider: MetaOAuthProvider }> = [
+  { scope: 'instagram_basic', provider: 'facebook' },
+  { scope: 'instagram_manage_messages', provider: 'facebook' },
+  { scope: 'instagram_business_basic', provider: 'instagram' },
+  { scope: 'instagram_business_manage_messages', provider: 'instagram' },
 ] as const;
 
 const scopeLabel = (scope: string) => scope.replace(/_/g, ' ');
+const providerLabel = (provider: MetaOAuthProvider) => (provider === 'instagram' ? 'Instagram Login' : 'Facebook Login');
 
 export default function InstagramConnectPage() {
   const { status, error, startAuth, resetAuth } = useInstagramAuth();
@@ -58,15 +58,15 @@ export default function InstagramConnectPage() {
   const connectedHandle = result?.instagramUsername?.trim();
   const connectedHandleLabel = connectedHandle && connectedHandle.length > 0 ? connectedHandle : null;
   const oauthProvider = useMemo(() => getInstagramOAuthProvider(), []);
-  const requiredReviewScopes = useMemo(
-    () => (oauthProvider === 'instagram' ? META_REVIEW_REQUIRED_SCOPES_INSTAGRAM : META_REVIEW_REQUIRED_SCOPES_FACEBOOK),
+  const activeProviderScopes = useMemo(
+    () => META_REVIEW_PERMISSIONS.filter((item) => item.provider === oauthProvider).map((item) => item.scope),
     [oauthProvider],
   );
   const requestedScopes = useMemo(() => getInstagramRequestedScopes(), []);
 
-  const missingReviewScopes = useMemo(
-    () => requiredReviewScopes.filter((scope) => !requestedScopes.includes(scope)),
-    [requiredReviewScopes, requestedScopes],
+  const missingActiveProviderScopes = useMemo(
+    () => activeProviderScopes.filter((scope) => !requestedScopes.includes(scope)),
+    [activeProviderScopes, requestedScopes],
   );
 
   useEffect(() => {
@@ -125,23 +125,31 @@ export default function InstagramConnectPage() {
               <Typography variant="body2" color="text.secondary">
                 Start recording before clicking Connect, keep the permissions dialog visible, and return to this page after consent.
               </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Active provider: {providerLabel(oauthProvider)}. This run requests {activeProviderScopes.join(', ')}.
+              </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap">
-                {requiredReviewScopes.map((scope) => {
+                {META_REVIEW_PERMISSIONS.map(({ scope, provider }) => {
                   const enabled = requestedScopes.includes(scope);
+                  const isActiveProvider = provider === oauthProvider;
                   return (
                     <Chip
-                      key={scope}
-                      label={`${scopeLabel(scope)}${enabled ? ' (requested)' : ' (missing)'}`}
-                      color={enabled ? 'success' : 'warning'}
-                      variant={enabled ? 'filled' : 'outlined'}
+                      key={`${provider}-${scope}`}
+                      label={
+                        isActiveProvider
+                          ? `${scopeLabel(scope)}${enabled ? ' (requested)' : ' (missing)'}`
+                          : `${scopeLabel(scope)} (via ${providerLabel(provider)})`
+                      }
+                      color={isActiveProvider ? (enabled ? 'success' : 'warning') : 'default'}
+                      variant={isActiveProvider ? (enabled ? 'filled' : 'outlined') : 'outlined'}
                       sx={{ mb: 1 }}
                     />
                   );
                 })}
               </Stack>
-              {missingReviewScopes.length > 0 && (
+              {missingActiveProviderScopes.length > 0 && (
                 <Alert severity="warning">
-                  Missing scopes in current config ({oauthProvider}): {missingReviewScopes.join(', ')}
+                  Missing scopes for {providerLabel(oauthProvider)}: {missingActiveProviderScopes.join(', ')}
                 </Alert>
               )}
             </Stack>

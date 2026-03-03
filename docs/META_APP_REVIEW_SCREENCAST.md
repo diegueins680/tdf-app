@@ -1,51 +1,79 @@
-# Meta App Review Screencast Guide
+# Meta App Review Screencast Guide (Instagram Messaging)
 
-Use this flow to re-record the App Review screencast for:
+Use this flow to record App Review evidence for:
 - `instagram_basic`
 - `instagram_manage_messages`
 - `instagram_business_basic`
 - `instagram_business_manage_messages`
 
-## Prerequisites
+## Permission Mapping In TDF
 
-1. Frontend env scopes must include at least:
+1. Facebook Login run (`VITE_INSTAGRAM_OAUTH_PROVIDER=facebook`):
    - `instagram_basic`
    - `instagram_manage_messages`
+   - plus `pages_show_list,pages_read_engagement` for asset discovery in `/instagram/oauth/exchange`.
+2. Instagram Login run (`VITE_INSTAGRAM_OAUTH_PROVIDER=instagram`):
    - `instagram_business_basic`
    - `instagram_business_manage_messages`
-2. Log in with a test user that can connect a Page with a professional Instagram account.
-3. Have a real inbound DM already present in `/social/inbox`.
-4. Keep app UI in English by using review mode routes below.
+
+If Meta asks for evidence for all four permissions, provide both runs (or one combined recording where you switch provider config and reconnect).
+
+## Meta Requirements Checklist (As Of March 3, 2026)
+
+1. The connected Instagram account must be a **professional account** linked to a Facebook Page for Facebook Login-based messaging flows.
+2. Messaging send endpoint constraints apply:
+   - Recipient must have messaged first within the last 7 days.
+   - Supported payload for this flow is text/link replies.
+3. `instagram_manage_messages` / `instagram_business_manage_messages` typically require **Advanced Access** for production use (non-owned/non-role accounts).
+4. In development/review environments, recipient/test accounts must have proper app role access (admin/developer/tester) when required by Meta.
+
+## Env Profiles
+
+Use one of these frontend profiles before recording:
+
+```env
+# Profile A (Facebook Login)
+VITE_INSTAGRAM_OAUTH_PROVIDER=facebook
+VITE_INSTAGRAM_SCOPES=instagram_basic,instagram_manage_messages,pages_show_list,pages_read_engagement
+```
+
+```env
+# Profile B (Instagram Login)
+VITE_INSTAGRAM_OAUTH_PROVIDER=instagram
+VITE_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_manage_messages
+```
 
 ## Recording Routes
 
-1. Instagram setup (Step 1): `/social/instagram?review=1`
-2. Message send flow (Step 2): `/social/inbox?review=1`
+1. Setup screen (Step 1): `/social/instagram?review=1`
+2. Messaging flow (Step 2): `/social/inbox?review=1`
 
 ## Exact Recording Script
 
-1. Start screen recording before clicking **Connect with Meta Login**.
-2. Show complete Meta login and permissions grant dialog.
+1. Start recording before clicking **Connect with Meta Login**.
+2. Show full Meta auth + consent dialog (permission grant visible).
 3. Return to `/social/instagram?review=1` and keep visible:
-   - Connection status
-   - Requested scopes chips
-   - Selected messaging asset with Page ID and IG User ID
+   - Provider + requested scope chips
+   - Connected status
+   - Selected messaging asset with Page ID / IG User ID
 4. Click **Continue to message send flow**.
 5. In `/social/inbox?review=1`, keep visible:
-   - Recording checklist panel
-   - Selected asset summary
+   - Checklist panel
+   - Active selected asset summary
 6. Open an inbound conversation.
-7. In the dialog, show:
-   - Sender and inbound message
-   - Reply field and send button
-8. Type a clear test sentence in the outgoing message field.
-9. Click **Send message**.
-10. Keep the success status visible in the app UI.
-11. Click **Open native client** (or switch manually), and show the same sent text delivered in Instagram/Messenger/WhatsApp.
-12. Return to app (optional) and end recording.
+7. In the reply dialog, show:
+   - Sender + inbound content
+   - Outgoing field + **Send message** button
+8. Send a clear test sentence.
+9. Keep success status visible in the app UI.
+10. Open native client and show the same delivered message in-thread.
 
 ## Submission Notes Template
 
-Use this text in App Review notes (adapt as needed):
+Use/adapt this for App Review notes:
 
-`This screencast shows: (1) complete Meta login flow, (2) explicit permission grant, (3) asset selection visible with Page/account IDs, (4) live send action from app UI, and (5) the same delivered message in the native client.`
+`This screencast demonstrates end-to-end Instagram messaging from TDF HQ: login and explicit permission grant, visible asset selection (Page ID + IG User ID), inbound conversation selection, live reply from app UI, and verification of the exact delivered message in the native client.`
+
+`For permissions: Facebook Login run covers instagram_basic + instagram_manage_messages; Instagram Login run covers instagram_business_basic + instagram_business_manage_messages.`
+
+`If delivery fails during review, verify Advanced Access status, app-role/tester access, recipient 7-day messaging window, and that the selected asset is the same one connected in Meta.`
