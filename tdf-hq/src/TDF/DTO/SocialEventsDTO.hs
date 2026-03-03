@@ -320,6 +320,14 @@ data EventFinanceSummaryDTO = EventFinanceSummaryDTO
   , efsTicketPaidRevenueCents    :: Int
   , efsTicketRefundedRevenueCents :: Int
   , efsTicketPendingRevenueCents :: Int
+  , efsAccountsPayableCents      :: Int
+  , efsAccountsReceivableCents   :: Int
+  , efsContractCommittedCents    :: Int
+  , efsContractPaidCents         :: Int
+  , efsProcurementCommittedCents :: Int
+  , efsProcurementPaidCents      :: Int
+  , efsAssetInvestmentCents      :: Int
+  , efsLiabilityBalanceCents     :: Int
   , efsBudgetVarianceCents       :: Maybe Int
   , efsBudgetUtilizationPct      :: Maybe Double
   , efsGeneratedAt               :: UTCTime

@@ -29,7 +29,6 @@ import {
   SocialEventsAPI,
   type SocialEventBudgetLineDTO,
   type SocialEventFinanceEntryDTO,
-  type SocialEventFinanceSummaryDTO,
   type SocialInvitationDTO,
   type SocialRsvpStatus,
   type SocialTicketOrderDTO,
@@ -74,10 +73,80 @@ interface FinanceEntryFormState {
   concept: string;
   amountCents: string;
   currency: string;
-  status: 'draft' | 'posted';
+  status: 'draft' | 'posted' | 'pending' | 'void';
+  externalRef: string;
   notes: string;
   occurredAt: string;
 }
+
+const BUDGET_CATEGORY_OPTIONS = [
+  'tickets',
+  'sponsorship',
+  'talent',
+  'production',
+  'marketing',
+  'operations',
+  'logistics',
+  'permits',
+  'security',
+  'hospitality',
+  'procurement',
+  'contracting',
+  'assets',
+  'liabilities',
+  'general',
+] as const;
+
+const FINANCE_SOURCE_OPTIONS: {
+  value: string;
+  label: string;
+  direction: 'income' | 'expense';
+  category: string;
+}[] = [
+  { value: 'ticket_sale', label: 'Venta de tickets', direction: 'income', category: 'tickets' },
+  { value: 'ticket_refund', label: 'Reembolso de tickets', direction: 'expense', category: 'tickets' },
+  { value: 'sponsorship', label: 'Patrocinio', direction: 'income', category: 'sponsorship' },
+  { value: 'contract_commitment', label: 'Contrato (compromiso)', direction: 'expense', category: 'contracting' },
+  { value: 'contract_payment', label: 'Contrato (pago)', direction: 'expense', category: 'contracting' },
+  { value: 'purchase_order', label: 'Compra (orden)', direction: 'expense', category: 'procurement' },
+  { value: 'purchase_payment', label: 'Compra (pago)', direction: 'expense', category: 'procurement' },
+  { value: 'asset_purchase', label: 'Activo (adquisición)', direction: 'expense', category: 'assets' },
+  { value: 'liability_loan', label: 'Pasivo (financiamiento)', direction: 'income', category: 'liabilities' },
+  { value: 'liability_payment', label: 'Pasivo (pago)', direction: 'expense', category: 'liabilities' },
+  { value: 'accounts_receivable', label: 'Cuenta por cobrar', direction: 'income', category: 'operations' },
+  { value: 'accounts_receivable_collection', label: 'Cobro de CxC', direction: 'income', category: 'operations' },
+  { value: 'vendor_payment', label: 'Pago a proveedor', direction: 'expense', category: 'operations' },
+  { value: 'merchandise', label: 'Merchandising', direction: 'income', category: 'operations' },
+  { value: 'operations', label: 'Operación', direction: 'expense', category: 'operations' },
+  { value: 'manual', label: 'Manual', direction: 'expense', category: 'general' },
+  { value: 'other', label: 'Otro', direction: 'expense', category: 'general' },
+];
+
+const FINANCE_STATUS_OPTIONS: {
+  value: FinanceEntryFormState['status'];
+  label: string;
+}[] = [
+  { value: 'posted', label: 'Publicado' },
+  { value: 'pending', label: 'Pendiente' },
+  { value: 'draft', label: 'Borrador' },
+  { value: 'void', label: 'Anulado' },
+];
+
+const PROJECT_BUDGET_TEMPLATE: {
+  code: string;
+  name: string;
+  type: 'income' | 'expense';
+  category: string;
+}[] = [
+  { code: 'INC-TICKETS', name: 'Venta de tickets', type: 'income', category: 'tickets' },
+  { code: 'INC-SPONSORS', name: 'Patrocinios', type: 'income', category: 'sponsorship' },
+  { code: 'EXP-TALENT', name: 'Contratación de talento', type: 'expense', category: 'contracting' },
+  { code: 'EXP-PROD', name: 'Producción técnica', type: 'expense', category: 'production' },
+  { code: 'EXP-MKT', name: 'Marketing y pauta', type: 'expense', category: 'marketing' },
+  { code: 'EXP-LOG', name: 'Logística y operación', type: 'expense', category: 'logistics' },
+  { code: 'EXP-PERMITS', name: 'Permisos y legales', type: 'expense', category: 'operations' },
+  { code: 'EXP-SECURITY', name: 'Seguridad', type: 'expense', category: 'security' },
+];
 
 const formatDate = (iso: string) =>
   DateTime.fromISO(iso).setLocale('es').toFormat('EEE d LLL, HH:mm');
@@ -95,6 +164,18 @@ const formatPercent = (value?: number | null) => {
 
 const tierAvailability = (tier: SocialTicketTierDTO) =>
   Math.max(0, tier.ticketTierQuantityTotal - tier.ticketTierQuantitySold);
+
+const toDateTimeInputValue = (iso?: string | null) => {
+  if (!iso) return DateTime.local().toFormat("yyyy-LL-dd'T'HH:mm");
+  const dt = DateTime.fromISO(iso);
+  if (!dt.isValid) return DateTime.local().toFormat("yyyy-LL-dd'T'HH:mm");
+  return dt.toLocal().toFormat("yyyy-LL-dd'T'HH:mm");
+};
+
+const toUtcIso = (dateTimeInput: string) => {
+  const dt = DateTime.fromISO(dateTimeInput, { zone: 'local' });
+  return dt.isValid ? (dt.toUTC().toISO() ?? new Date().toISOString()) : new Date().toISOString();
+};
 
 export default function SocialEventsPage() {
   const qc = useQueryClient();
@@ -406,6 +487,39 @@ export default function SocialEventsPage() {
     onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
 
+  const seedBudgetTemplateMutation = useMutation({
+    mutationFn: async ({ eventId, existingLines }: { eventId: string; existingLines: SocialEventBudgetLineDTO[] }) => {
+      const existingCodes = new Set(
+        existingLines.map((line) => String(line.eblCode ?? '').trim().toUpperCase()).filter(Boolean),
+      );
+      const missingLines = PROJECT_BUDGET_TEMPLATE.filter((line) => !existingCodes.has(line.code));
+      for (const line of missingLines) {
+        await SocialEventsAPI.createBudgetLine(eventId, {
+          eblCode: line.code,
+          eblName: line.name,
+          eblType: line.type,
+          eblCategory: line.category,
+          eblPlannedCents: 0,
+          eblActualCents: null,
+          eblNotes: 'Creado automáticamente desde plantilla PM.',
+        });
+      }
+      return missingLines.length;
+    },
+    onSuccess: (createdCount, { eventId }) => {
+      void qc.invalidateQueries({ queryKey: ['social-budget-lines', eventId] });
+      void qc.invalidateQueries({ queryKey: ['social-finance-summary', eventId] });
+      setFeedback({
+        kind: 'success',
+        message:
+          createdCount > 0
+            ? `Plantilla PM aplicada (${createdCount} líneas nuevas).`
+            : 'La plantilla PM ya estaba aplicada.',
+      });
+    },
+    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
+  });
+
   const createFinanceEntryMutation = useMutation({
     mutationFn: ({ eventId }: { eventId: string }) => {
       const draft = financeEntryForms[eventId] ?? {
@@ -417,8 +531,9 @@ export default function SocialEventsPage() {
         amountCents: '',
         currency: 'USD',
         status: 'posted',
+        externalRef: '',
         notes: '',
-        occurredAt: new Date().toISOString(),
+        occurredAt: toDateTimeInputValue(),
       };
       const amountCents = Number.parseInt(draft.amountCents, 10);
       if (!draft.concept.trim()) throw new Error('Concepto contable requerido.');
@@ -432,9 +547,9 @@ export default function SocialEventsPage() {
         efeAmountCents: amountCents,
         efeCurrency: draft.currency.trim().toUpperCase() || 'USD',
         efeStatus: draft.status,
-        efeExternalRef: null,
+        efeExternalRef: draft.externalRef.trim() || null,
         efeNotes: draft.notes.trim() || null,
-        efeOccurredAt: draft.occurredAt || new Date().toISOString(),
+        efeOccurredAt: toUtcIso(draft.occurredAt),
       };
       return SocialEventsAPI.createFinanceEntry(eventId, payload);
     },
@@ -450,8 +565,9 @@ export default function SocialEventsPage() {
           amountCents: '',
           currency: 'USD',
           status: 'posted',
+          externalRef: '',
           notes: '',
-          occurredAt: new Date().toISOString(),
+          occurredAt: toDateTimeInputValue(),
         },
       }));
       void qc.invalidateQueries({ queryKey: ['social-finance-entries', eventId] });
@@ -646,8 +762,9 @@ export default function SocialEventsPage() {
               amountCents: '',
               currency: ev.eventCurrency ?? 'USD',
               status: 'posted' as const,
+              externalRef: '',
               notes: '',
-              occurredAt: new Date().toISOString(),
+              occurredAt: toDateTimeInputValue(),
             };
             const checkInCode = checkInCodes[eventId] ?? '';
 
@@ -987,6 +1104,14 @@ export default function SocialEventsPage() {
                                 <Chip size="small" label={`Gastos: ${formatMoney(financeSummary.efsActualExpenseCents, financeSummary.efsCurrency)}`} color="warning" />
                                 <Chip size="small" label={`Neto: ${formatMoney(financeSummary.efsNetCents, financeSummary.efsCurrency)}`} />
                                 <Chip size="small" label={`Utilización: ${formatPercent(financeSummary.efsBudgetUtilizationPct)}`} variant="outlined" />
+                                <Chip size="small" label={`CxP: ${formatMoney(financeSummary.efsAccountsPayableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                <Chip size="small" label={`CxC: ${formatMoney(financeSummary.efsAccountsReceivableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                <Chip size="small" label={`Contratos comprometidos: ${formatMoney(financeSummary.efsContractCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                <Chip size="small" label={`Contratos pagados: ${formatMoney(financeSummary.efsContractPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                <Chip size="small" label={`Compras comprometidas: ${formatMoney(financeSummary.efsProcurementCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                <Chip size="small" label={`Compras pagadas: ${formatMoney(financeSummary.efsProcurementPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                <Chip size="small" label={`Activos: ${formatMoney(financeSummary.efsAssetInvestmentCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
+                                <Chip size="small" label={`Pasivo neto: ${formatMoney(financeSummary.efsLiabilityBalanceCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
                                 <Chip size="small" label={`Tickets pagados: ${formatMoney(financeSummary.efsTicketPaidRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
                                 <Chip size="small" label={`Tickets reembolsados: ${formatMoney(financeSummary.efsTicketRefundedRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
                               </Stack>
@@ -1047,6 +1172,7 @@ export default function SocialEventsPage() {
                               </TextField>
                               <TextField
                                 label="Categoría"
+                                select
                                 size="small"
                                 value={budgetDraft.category}
                                 onChange={(e) => setBudgetLineForms((prev) => ({
@@ -1054,7 +1180,13 @@ export default function SocialEventsPage() {
                                   [eventId]: { ...budgetDraft, category: e.target.value },
                                 }))}
                                 sx={{ width: 140 }}
-                              />
+                              >
+                                {BUDGET_CATEGORY_OPTIONS.map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
                               <TextField
                                 label="Plan (centavos)"
                                 size="small"
@@ -1074,6 +1206,14 @@ export default function SocialEventsPage() {
                               >
                                 Agregar línea
                               </Button>
+                              <Button
+                                variant="text"
+                                size="small"
+                                onClick={() => eventId && seedBudgetTemplateMutation.mutate({ eventId, existingLines: budgetLines })}
+                                disabled={seedBudgetTemplateMutation.isPending || !eventId}
+                              >
+                                Plantilla PM
+                              </Button>
                             </Stack>
 
                             <Typography variant="body2" fontWeight={700}>Asientos contables</Typography>
@@ -1088,6 +1228,7 @@ export default function SocialEventsPage() {
                                     <Chip size="small" label={`${entry.efeDirection} · ${entry.efeSource}`} variant="outlined" />
                                     <Typography variant="caption" color="text.secondary">
                                       {formatDate(entry.efeOccurredAt)} · {entry.efeConcept} · {formatMoney(entry.efeAmountCents, entry.efeCurrency)} · {entry.efeStatus}
+                                      {entry.efeExternalRef ? ` · Ref: ${entry.efeExternalRef}` : ''}
                                     </Typography>
                                   </Stack>
                                 ))}
@@ -1095,6 +1236,48 @@ export default function SocialEventsPage() {
                             )}
 
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <TextField
+                                select
+                                label="Línea presupuesto"
+                                size="small"
+                                value={financeDraft.budgetLineId}
+                                onChange={(e) => setFinanceEntryForms((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...financeDraft, budgetLineId: e.target.value },
+                                }))}
+                                sx={{ minWidth: 180 }}
+                              >
+                                <MenuItem value="">Sin línea</MenuItem>
+                                {budgetLines.map((line) => (
+                                  <MenuItem key={line.eblId ?? line.eblCode} value={line.eblId ?? ''}>
+                                    {line.eblCode} · {line.eblName}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                              <TextField
+                                select
+                                label="Fuente"
+                                size="small"
+                                value={financeDraft.source}
+                                onChange={(e) => setFinanceEntryForms((prev) => ({
+                                  ...prev,
+                                  [eventId]: {
+                                    ...financeDraft,
+                                    source: e.target.value,
+                                    direction:
+                                      FINANCE_SOURCE_OPTIONS.find((opt) => opt.value === e.target.value)?.direction ?? financeDraft.direction,
+                                    category:
+                                      FINANCE_SOURCE_OPTIONS.find((opt) => opt.value === e.target.value)?.category ?? financeDraft.category,
+                                  },
+                                }))}
+                                sx={{ minWidth: 210 }}
+                              >
+                                {FINANCE_SOURCE_OPTIONS.map((option) => (
+                                  <MenuItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
                               <TextField
                                 select
                                 label="Dirección"
@@ -1110,16 +1293,29 @@ export default function SocialEventsPage() {
                                 <MenuItem value="income">Ingreso</MenuItem>
                               </TextField>
                               <TextField
-                                label="Fuente"
+                                select
+                                label="Estado"
                                 size="small"
-                                value={financeDraft.source}
+                                value={financeDraft.status}
                                 onChange={(e) => setFinanceEntryForms((prev) => ({
                                   ...prev,
-                                  [eventId]: { ...financeDraft, source: e.target.value },
+                                  [eventId]: {
+                                    ...financeDraft,
+                                    status: e.target.value as FinanceEntryFormState['status'],
+                                  },
                                 }))}
                                 sx={{ width: 130 }}
-                              />
+                              >
+                                {FINANCE_STATUS_OPTIONS.map((option) => (
+                                  <MenuItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                            </Stack>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                               <TextField
+                                select
                                 label="Categoría"
                                 size="small"
                                 value={financeDraft.category}
@@ -1127,8 +1323,14 @@ export default function SocialEventsPage() {
                                   ...prev,
                                   [eventId]: { ...financeDraft, category: e.target.value },
                                 }))}
-                                sx={{ width: 130 }}
-                              />
+                                sx={{ minWidth: 150 }}
+                              >
+                                {BUDGET_CATEGORY_OPTIONS.map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
                               <TextField
                                 label="Concepto"
                                 size="small"
@@ -1140,6 +1342,18 @@ export default function SocialEventsPage() {
                                 sx={{ flex: 1 }}
                               />
                               <TextField
+                                label="Referencia externa"
+                                size="small"
+                                value={financeDraft.externalRef}
+                                onChange={(e) => setFinanceEntryForms((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...financeDraft, externalRef: e.target.value },
+                                }))}
+                                sx={{ flex: 1 }}
+                              />
+                            </Stack>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <TextField
                                 label="Monto (centavos)"
                                 size="small"
                                 type="number"
@@ -1149,6 +1363,38 @@ export default function SocialEventsPage() {
                                   [eventId]: { ...financeDraft, amountCents: e.target.value },
                                 }))}
                                 sx={{ width: 160 }}
+                              />
+                              <TextField
+                                label="Moneda"
+                                size="small"
+                                value={financeDraft.currency}
+                                onChange={(e) => setFinanceEntryForms((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...financeDraft, currency: e.target.value.toUpperCase() },
+                                }))}
+                                sx={{ width: 110 }}
+                              />
+                              <TextField
+                                label="Ocurrió en"
+                                size="small"
+                                type="datetime-local"
+                                value={financeDraft.occurredAt}
+                                onChange={(e) => setFinanceEntryForms((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...financeDraft, occurredAt: e.target.value },
+                                }))}
+                                InputLabelProps={{ shrink: true }}
+                                sx={{ minWidth: 210 }}
+                              />
+                              <TextField
+                                label="Notas"
+                                size="small"
+                                value={financeDraft.notes}
+                                onChange={(e) => setFinanceEntryForms((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...financeDraft, notes: e.target.value },
+                                }))}
+                                sx={{ flex: 1 }}
                               />
                               <Button
                                 variant="contained"

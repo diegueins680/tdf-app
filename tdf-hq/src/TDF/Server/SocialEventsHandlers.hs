@@ -1582,8 +1582,8 @@ socialEventsServer user = eventsServer
       let eventCurrencyVal = eventCurrencyFromEvent eventRec
           budgetOverride = eventBudgetFromEvent eventRec
       budgetRows <- liftIO $ runSqlPool (selectList [EventBudgetLineEventId ==. eventKey] []) envPool
-      financeRows <- liftIO $ runSqlPool
-        (selectList [EventFinanceEntryEventId ==. eventKey, EventFinanceEntryStatus ==. "posted"] [])
+      allFinanceRows <- liftIO $ runSqlPool
+        (selectList [EventFinanceEntryEventId ==. eventKey] [])
         envPool
       ticketOrders <- liftIO $ runSqlPool (selectList [EventTicketOrderEventId ==. eventKey] []) envPool
 
@@ -1599,17 +1599,27 @@ socialEventsServer user = eventsServer
               | Entity _ lineRec <- budgetRows
               , normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec)) == "expense"
               ]
+          entryStatus entry = normalizeFinanceEntryStatus (Just (eventFinanceEntryStatus entry))
+          entryDirection entry = normalizeFinanceDirection (Just (eventFinanceEntryDirection entry))
+          entrySource entry = normalizeFinanceSource (Just (eventFinanceEntrySource entry))
+          isPosted entry = entryStatus entry == "posted"
+          isPendingLike entry =
+            let statusVal = entryStatus entry
+            in statusVal == "pending" || statusVal == "draft"
+          isNonVoid entry = entryStatus entry /= "void"
           manualIncomeCents =
             sum
               [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- financeRows
-              , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == "income"
+              | Entity _ entry <- allFinanceRows
+              , isPosted entry
+              , entryDirection entry == "income"
               ]
           manualExpenseCents =
             sum
               [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- financeRows
-              , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == "expense"
+              | Entity _ entry <- allFinanceRows
+              , isPosted entry
+              , entryDirection entry == "expense"
               ]
           ticketPaidRevenueCents =
             sum
@@ -1629,6 +1639,73 @@ socialEventsServer user = eventsServer
               | Entity _ orderRec <- ticketOrders
               , normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRec)) == "pending"
               ]
+          accountsPayableCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- allFinanceRows
+              , isPendingLike entry
+              , entryDirection entry == "expense"
+              ]
+          accountsReceivableManualCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- allFinanceRows
+              , isPendingLike entry
+              , entryDirection entry == "income"
+              ]
+          accountsReceivableCents = accountsReceivableManualCents + ticketPendingRevenueCents
+          contractCommittedCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- allFinanceRows
+              , isNonVoid entry
+              , entrySource entry == "contract_commitment"
+              ]
+          contractPaidCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- allFinanceRows
+              , isPosted entry
+              , entrySource entry == "contract_payment"
+              ]
+          procurementCommittedCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- allFinanceRows
+              , isNonVoid entry
+              , entrySource entry == "purchase_order"
+              ]
+          procurementPaidCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- allFinanceRows
+              , isPosted entry
+              , entrySource entry == "purchase_payment"
+              ]
+          assetInvestmentCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- allFinanceRows
+              , isPosted entry
+              , entrySource entry == "asset_purchase"
+              ]
+          liabilityIncurredCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- allFinanceRows
+              , isPosted entry
+              , entrySource entry == "liability_loan"
+              , entryDirection entry == "income"
+              ]
+          liabilityPaidCents =
+            sum
+              [ eventFinanceEntryAmountCents entry
+              | Entity _ entry <- allFinanceRows
+              , isPosted entry
+              , entrySource entry == "liability_payment"
+              , entryDirection entry == "expense"
+              ]
+          liabilityBalanceCents = liabilityIncurredCents - liabilityPaidCents
           actualIncomeCents = manualIncomeCents + ticketPaidRevenueCents
           actualExpenseCents = manualExpenseCents + ticketRefundedRevenueCents
           netCents = actualIncomeCents - actualExpenseCents
@@ -1652,6 +1729,14 @@ socialEventsServer user = eventsServer
         , efsTicketPaidRevenueCents = ticketPaidRevenueCents
         , efsTicketRefundedRevenueCents = ticketRefundedRevenueCents
         , efsTicketPendingRevenueCents = ticketPendingRevenueCents
+        , efsAccountsPayableCents = accountsPayableCents
+        , efsAccountsReceivableCents = accountsReceivableCents
+        , efsContractCommittedCents = contractCommittedCents
+        , efsContractPaidCents = contractPaidCents
+        , efsProcurementCommittedCents = procurementCommittedCents
+        , efsProcurementPaidCents = procurementPaidCents
+        , efsAssetInvestmentCents = assetInvestmentCents
+        , efsLiabilityBalanceCents = liabilityBalanceCents
         , efsBudgetVarianceCents = budgetVarianceCents
         , efsBudgetUtilizationPct = budgetUtilizationPct
         , efsGeneratedAt = now
@@ -1789,16 +1874,32 @@ normalizeFinanceDirection mDirection =
 
 normalizeFinanceSource :: Maybe T.Text -> T.Text
 normalizeFinanceSource mSource =
-  case fmap (T.toLower . T.strip) mSource of
-    Just "ticket_sale" -> "ticket_sale"
-    Just "ticket_refund" -> "ticket_refund"
-    Just "sponsorship" -> "sponsorship"
-    Just "vendor_payment" -> "vendor_payment"
-    Just "merchandise" -> "merchandise"
-    Just "operations" -> "operations"
-    Just "manual" -> "manual"
-    Just "other" -> "other"
-    _ -> "manual"
+  case mSource >>= parseFinanceSource of
+    Just src -> src
+    Nothing -> "manual"
+
+parseFinanceSource :: T.Text -> Maybe T.Text
+parseFinanceSource raw =
+  case T.toLower (T.strip raw) of
+    "ticket_sale" -> Just "ticket_sale"
+    "ticket_refund" -> Just "ticket_refund"
+    "sponsorship" -> Just "sponsorship"
+    "vendor_payment" -> Just "vendor_payment"
+    "merchandise" -> Just "merchandise"
+    "operations" -> Just "operations"
+    "manual" -> Just "manual"
+    "other" -> Just "other"
+    "contract_commitment" -> Just "contract_commitment"
+    "contract_payment" -> Just "contract_payment"
+    "purchase_order" -> Just "purchase_order"
+    "purchase_payment" -> Just "purchase_payment"
+    "asset_purchase" -> Just "asset_purchase"
+    "liability_loan" -> Just "liability_loan"
+    "liability_payment" -> Just "liability_payment"
+    "accounts_receivable" -> Just "accounts_receivable"
+    "accounts_receivable_collection" -> Just "accounts_receivable_collection"
+    "accounts_receivable_settlement" -> Just "accounts_receivable_collection"
+    _ -> Nothing
 
 normalizeFinanceEntryStatus :: Maybe T.Text -> T.Text
 normalizeFinanceEntryStatus mStatus =
@@ -1818,16 +1919,9 @@ normalizeFinanceDirectionInput raw =
 
 normalizeFinanceSourceInput :: T.Text -> AppM T.Text
 normalizeFinanceSourceInput raw =
-  case T.toLower (T.strip raw) of
-    "ticket_sale" -> pure "ticket_sale"
-    "ticket_refund" -> pure "ticket_refund"
-    "sponsorship" -> pure "sponsorship"
-    "vendor_payment" -> pure "vendor_payment"
-    "merchandise" -> pure "merchandise"
-    "operations" -> pure "operations"
-    "manual" -> pure "manual"
-    "other" -> pure "other"
-    _ -> throwError err400 { errBody = "Invalid finance source" }
+  case parseFinanceSource raw of
+    Just sourceVal -> pure sourceVal
+    Nothing -> throwError err400 { errBody = "Invalid finance source" }
 
 normalizeFinanceEntryStatusInput :: T.Text -> AppM T.Text
 normalizeFinanceEntryStatusInput raw =
@@ -1850,17 +1944,12 @@ normalizeFinanceDirectionFilter (Just raw) =
 normalizeFinanceSourceFilter :: Maybe T.Text -> AppM (Maybe T.Text)
 normalizeFinanceSourceFilter Nothing = pure Nothing
 normalizeFinanceSourceFilter (Just raw) =
-  case T.toLower (T.strip raw) of
+  case T.strip raw of
     "" -> pure Nothing
-    "ticket_sale" -> pure (Just "ticket_sale")
-    "ticket_refund" -> pure (Just "ticket_refund")
-    "sponsorship" -> pure (Just "sponsorship")
-    "vendor_payment" -> pure (Just "vendor_payment")
-    "merchandise" -> pure (Just "merchandise")
-    "operations" -> pure (Just "operations")
-    "manual" -> pure (Just "manual")
-    "other" -> pure (Just "other")
-    _ -> throwError err400 { errBody = "Invalid source filter" }
+    nonEmpty ->
+      case parseFinanceSource nonEmpty of
+        Just sourceVal -> pure (Just sourceVal)
+        Nothing -> throwError err400 { errBody = "Invalid source filter" }
 
 normalizeFinanceEntryStatusFilter :: Maybe T.Text -> AppM (Maybe T.Text)
 normalizeFinanceEntryStatusFilter Nothing = pure Nothing
