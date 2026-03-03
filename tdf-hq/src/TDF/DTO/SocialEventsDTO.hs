@@ -170,6 +170,7 @@ data RsvpDTO = RsvpDTO
   , rsvpPartyId   :: Text
   , rsvpStatus    :: Text  -- "Accepted", "Declined", "Maybe"
   , rsvpCreatedAt :: Maybe UTCTime
+  , rsvpUpdatedAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON RsvpDTO
 instance FromJSON RsvpDTO

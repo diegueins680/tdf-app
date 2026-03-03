@@ -745,6 +745,8 @@ socialEventsServer user = eventsServer
     listRsvps eventIdStr = do
       Env{..} <- ask
       eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
       rsvpRows <- liftIO $ runSqlPool (selectList [EventRsvpEventId ==. eventKey] []) envPool
       pure $ map (\(Entity rid rsvp) -> RsvpDTO
         { rsvpId = Just (renderKeyText rid)
@@ -752,6 +754,7 @@ socialEventsServer user = eventsServer
         , rsvpPartyId = eventRsvpPartyId rsvp
         , rsvpStatus = eventRsvpStatus rsvp
         , rsvpCreatedAt = Just (eventRsvpCreatedAt rsvp)
+        , rsvpUpdatedAt = Just (eventRsvpUpdatedAt rsvp)
         }) rsvpRows
 
     createRsvp :: T.Text -> RsvpDTO -> AppM RsvpDTO
@@ -766,9 +769,9 @@ socialEventsServer user = eventsServer
         (selectList [EventRsvpEventId ==. eventKey, EventRsvpPartyId ==. rsvpPartyId dto] [])
         envPool
 
-      key <- case existingRsvps of
-        [] ->
-          liftIO $ runSqlPool (insert EventRsvp
+      case existingRsvps of
+        [] -> do
+          key <- liftIO $ runSqlPool (insert EventRsvp
             { eventRsvpEventId = eventKey
             , eventRsvpPartyId = rsvpPartyId dto
             , eventRsvpStatus = rsvpStatus dto
@@ -776,14 +779,21 @@ socialEventsServer user = eventsServer
             , eventRsvpCreatedAt = now
             , eventRsvpUpdatedAt = now
             }) envPool
-        (Entity existingKey _ : _) -> do
+          pure dto
+            { rsvpId = Just (renderKeyText key)
+            , rsvpCreatedAt = Just now
+            , rsvpUpdatedAt = Just now
+            }
+        (Entity existingKey existing : _) -> do
           liftIO $ runSqlPool (update existingKey
             [ EventRsvpStatus =. rsvpStatus dto
             , EventRsvpUpdatedAt =. now
             ]) envPool
-          pure existingKey
-
-      pure dto { rsvpId = Just (renderKeyText key) }
+          pure dto
+            { rsvpId = Just (renderKeyText existingKey)
+            , rsvpCreatedAt = Just (eventRsvpCreatedAt existing)
+            , rsvpUpdatedAt = Just now
+            }
 
     -- Invitations
     invitationsServer :: ServerT InvitationsRoutes AppM
