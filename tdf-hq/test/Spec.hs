@@ -15,6 +15,12 @@ import           TDF.Server.SocialEventsHandlers
   ( normalizeInvitationStatus
   , normalizeTicketOrderStatus
   , normalizeTicketStatus
+  , normalizeEventType
+  , normalizeEventStatus
+  , normalizeBudgetLineType
+  , normalizeFinanceDirection
+  , normalizeFinanceSource
+  , normalizeFinanceEntryStatus
   , parseInvitationIdsEither
   )
 
@@ -58,6 +64,23 @@ main = hspec $ do
     it "normalizes alternate ticket status spellings" $ do
       normalizeTicketStatus (Just "checkedin") `shouldBe` "checked_in"
       normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
+
+  describe "event finance normalizers" $ do
+    it "normalizes event type and status with safe fallbacks" $ do
+      normalizeEventType (Just " FESTIVAL ") `shouldBe` Just "festival"
+      normalizeEventType (Just "unknown-type") `shouldBe` Nothing
+      normalizeEventStatus (Just "canceled") `shouldBe` Just "cancelled"
+      normalizeEventStatus (Just "not-real") `shouldBe` Nothing
+
+    it "normalizes budget and accounting dimensions" $ do
+      normalizeBudgetLineType (Just "INCOME") `shouldBe` "income"
+      normalizeBudgetLineType (Just "whatever") `shouldBe` "expense"
+      normalizeFinanceDirection (Just "income") `shouldBe` "income"
+      normalizeFinanceDirection (Just "invalid") `shouldBe` "expense"
+      normalizeFinanceSource (Just "VENDOR_PAYMENT") `shouldBe` "vendor_payment"
+      normalizeFinanceSource (Just "nonsense") `shouldBe` "manual"
+      normalizeFinanceEntryStatus (Just "draft") `shouldBe` "draft"
+      normalizeFinanceEntryStatus (Just "bad") `shouldBe` "posted"
 
   describe "availabilityOverlaps" $ do
     let day = fromGregorian 2025 1 1

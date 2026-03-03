@@ -11,6 +11,12 @@ module TDF.Server.SocialEventsHandlers
   , followArtistDb
   , normalizeTicketOrderStatus
   , normalizeTicketStatus
+  , normalizeEventType
+  , normalizeEventStatus
+  , normalizeBudgetLineType
+  , normalizeFinanceDirection
+  , normalizeFinanceSource
+  , normalizeFinanceEntryStatus
   ) where
 
 import           Control.Applicative ((<|>))
