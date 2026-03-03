@@ -49,7 +49,7 @@ type EventsRoutes =
   :<|> "events" :> IdParam :> DeleteNoContent
 
 type VenuesRoutes =
-       "venues" :> QueryParam "city" Text :> QueryParam "near" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [VenueDTO]
+       "venues" :> QueryParam "city" Text :> QueryParam "near" Text :> QueryParam "q" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [VenueDTO]
   :<|> "venues" :> ReqBody '[JSON] VenueDTO :> Post '[JSON] VenueDTO
   :<|> "venues" :> IdParam :> Get '[JSON] VenueDTO
   :<|> "venues" :> IdParam :> ReqBody '[JSON] VenueDTO :> Put '[JSON] VenueDTO

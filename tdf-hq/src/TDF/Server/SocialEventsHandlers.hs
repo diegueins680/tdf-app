@@ -408,15 +408,25 @@ socialEventsServer user = eventsServer
                :<|> getVenue
                :<|> updateVenue
 
-    listVenues :: Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [VenueDTO]
-    listVenues mCity _mNear mLimit mOffset = do
+    listVenues :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [VenueDTO]
+    listVenues mCity _mNear mQuery mLimit mOffset = do
       Env{..} <- ask
       limit <- resolveLimit 200 500 mLimit
       offset <- resolveOffset mOffset
+      let searchNeedle = fmap (T.toCaseFold . T.strip) mQuery
       let filters = case mCity of
                       Just c | not (T.null (T.strip c)) -> [VenueCity ==. Just (T.strip c)]
                       _ -> []
-      rows <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo limit, OffsetBy offset]) envPool
+      rows <- case searchNeedle of
+        Just q | not (T.null q) -> do
+          seeded <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 1000]) envPool
+          let matches (Entity _ v) =
+                let nameVal = T.toCaseFold (SM.venueName v)
+                    cityVal = maybe "" T.toCaseFold (SM.venueCity v)
+                    addressVal = maybe "" T.toCaseFold (SM.venueAddress v)
+                in T.isInfixOf q nameVal || T.isInfixOf q cityVal || T.isInfixOf q addressVal
+          pure $ take limit (drop offset (filter matches seeded))
+        _ -> liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo limit, OffsetBy offset]) envPool
       pure $ map (\(Entity vid v) ->
         let contactMeta = decodeVenueContactMetadata (SM.venueContact v)
         in VenueDTO
