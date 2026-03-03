@@ -70,6 +70,64 @@ encodeSocialLinks :: Maybe ArtistSocialLinksDTO -> Maybe T.Text
 encodeSocialLinks mLinks =
   fmap (TE.decodeUtf8 . BL.toStrict . Aeson.encode) mLinks
 
+data EventMetadataDTO = EventMetadataDTO
+  { emTicketUrl :: Maybe T.Text
+  , emImageUrl :: Maybe T.Text
+  , emIsPublic :: Maybe Bool
+  }
+
+emptyEventMetadata :: EventMetadataDTO
+emptyEventMetadata = EventMetadataDTO
+  { emTicketUrl = Nothing
+  , emImageUrl = Nothing
+  , emIsPublic = Nothing
+  }
+
+instance Aeson.ToJSON EventMetadataDTO where
+  toJSON EventMetadataDTO{..} = Aeson.object
+    [ "ticketUrl" Aeson..= emTicketUrl
+    , "imageUrl" Aeson..= emImageUrl
+    , "isPublic" Aeson..= emIsPublic
+    ]
+
+instance Aeson.FromJSON EventMetadataDTO where
+  parseJSON = Aeson.withObject "EventMetadataDTO" $ \o ->
+    EventMetadataDTO
+      <$> o Aeson..:? "ticketUrl"
+      <*> o Aeson..:? "imageUrl"
+      <*> o Aeson..:? "isPublic"
+
+decodeEventMetadata :: Maybe T.Text -> EventMetadataDTO
+decodeEventMetadata mTxt = fromMaybe emptyEventMetadata $ do
+  txt <- mTxt
+  Aeson.decodeStrict (TE.encodeUtf8 txt)
+
+encodeEventMetadata :: EventMetadataDTO -> Maybe T.Text
+encodeEventMetadata EventMetadataDTO{..}
+  | isNothing emTicketUrl && isNothing emImageUrl && isNothing emIsPublic = Nothing
+  | otherwise =
+      Just
+        (TE.decodeUtf8 . BL.toStrict . Aeson.encode $
+          EventMetadataDTO
+            { emTicketUrl = emTicketUrl
+            , emImageUrl = emImageUrl
+            , emIsPublic = emIsPublic
+            })
+
+eventMetadataFromDTO :: EventDTO -> EventMetadataDTO
+eventMetadataFromDTO dto = EventMetadataDTO
+  { emTicketUrl = cleanMaybeText (eventTicketUrl dto)
+  , emImageUrl = cleanMaybeText (eventImageUrl dto)
+  , emIsPublic = eventIsPublic dto
+  }
+
+mergeEventMetadata :: EventMetadataDTO -> EventMetadataDTO -> EventMetadataDTO
+mergeEventMetadata incoming existing = EventMetadataDTO
+  { emTicketUrl = emTicketUrl incoming <|> emTicketUrl existing
+  , emImageUrl = emImageUrl incoming <|> emImageUrl existing
+  , emIsPublic = emIsPublic incoming <|> emIsPublic existing
+  }
+
 socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
 socialEventsServer user = eventsServer
                :<|> venuesServer
@@ -134,6 +192,14 @@ socialEventsServer user = eventsServer
       now <- liftIO getCurrentTime
       when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
+      let metadataVal =
+            encodeEventMetadata
+              EventMetadataDTO
+                { emTicketUrl = cleanMaybeText (eventTicketUrl dto)
+                , emImageUrl = cleanMaybeText (eventImageUrl dto)
+                , emIsPublic = eventIsPublic dto <|> Just True
+                }
+          createdMetadata = decodeEventMetadata metadataVal
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
         Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
@@ -148,7 +214,7 @@ socialEventsServer user = eventsServer
         , socialEventEndTime = eventEnd dto
         , socialEventPriceCents = eventPriceCents dto
         , socialEventCapacity = eventCapacity dto
-        , socialEventMetadata = Nothing
+        , socialEventMetadata = metadataVal
         , socialEventCreatedAt = now
         , socialEventUpdatedAt = now
         }) envPool
@@ -165,6 +231,11 @@ socialEventsServer user = eventsServer
       pure dto
         { eventId = Just (renderKeyText key)
         , eventOrganizerPartyId = Just currentPartyId
+        , eventTicketUrl = emTicketUrl createdMetadata
+        , eventImageUrl = emImageUrl createdMetadata
+        , eventIsPublic = emIsPublic createdMetadata
+        , eventCreatedAt = Just now
+        , eventUpdatedAt = Just now
         }
 
     getEvent :: T.Text -> AppM EventDTO
@@ -187,6 +258,12 @@ socialEventsServer user = eventsServer
       existing <- maybe (throwError err404 { errBody = "Event not found" }) pure mExisting
       when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
+      let existingMetadata = decodeEventMetadata (socialEventMetadata existing)
+          requestedMetadata = eventMetadataFromDTO dto
+          mergedMetadata =
+            mergeEventMetadata
+              requestedMetadata
+              existingMetadata
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
         Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
@@ -200,6 +277,7 @@ socialEventsServer user = eventsServer
         , SocialEventEndTime =. eventEnd dto
         , SocialEventPriceCents =. eventPriceCents dto
         , SocialEventCapacity =. eventCapacity dto
+        , SocialEventMetadata =. encodeEventMetadata mergedMetadata
         , SocialEventUpdatedAt =. now
         ]) envPool
       liftIO $ runSqlPool (deleteWhere [EventArtistEventId ==. eventKey]) envPool
@@ -213,7 +291,15 @@ socialEventsServer user = eventsServer
                Just anum -> insert_ (EventArtist eventKey (toSqlKey anum) Nothing)
         )
         envPool
-      pure (dto { eventId = Just rawId, eventOrganizerPartyId = socialEventOrganizerPartyId existing })
+      pure (dto
+        { eventId = Just rawId
+        , eventOrganizerPartyId = socialEventOrganizerPartyId existing
+        , eventTicketUrl = emTicketUrl mergedMetadata
+        , eventImageUrl = emImageUrl mergedMetadata
+        , eventIsPublic = emIsPublic mergedMetadata
+        , eventCreatedAt = Just (socialEventCreatedAt existing)
+        , eventUpdatedAt = Just now
+        })
 
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
@@ -1170,18 +1256,25 @@ loadEventArtists pool eventKey = runSqlPool (do
   ) pool
 
 eventEntityToDTO :: SocialEventId -> SocialEvent -> [ArtistDTO] -> EventDTO
-eventEntityToDTO eid eventRow artists = EventDTO
-  { eventId = Just (renderKeyText eid)
-  , eventOrganizerPartyId = socialEventOrganizerPartyId eventRow
-  , eventTitle = socialEventTitle eventRow
-  , eventDescription = socialEventDescription eventRow
-  , eventStart = socialEventStartTime eventRow
-  , eventEnd = socialEventEndTime eventRow
-  , eventVenueId = fmap renderKeyText (socialEventVenueId eventRow)
-  , eventPriceCents = socialEventPriceCents eventRow
-  , eventCapacity = socialEventCapacity eventRow
-  , eventArtists = artists
-  }
+eventEntityToDTO eid eventRow artists =
+  let metadata = decodeEventMetadata (socialEventMetadata eventRow)
+  in EventDTO
+      { eventId = Just (renderKeyText eid)
+      , eventOrganizerPartyId = socialEventOrganizerPartyId eventRow
+      , eventTitle = socialEventTitle eventRow
+      , eventDescription = socialEventDescription eventRow
+      , eventStart = socialEventStartTime eventRow
+      , eventEnd = socialEventEndTime eventRow
+      , eventVenueId = fmap renderKeyText (socialEventVenueId eventRow)
+      , eventPriceCents = socialEventPriceCents eventRow
+      , eventCapacity = socialEventCapacity eventRow
+      , eventTicketUrl = emTicketUrl metadata
+      , eventImageUrl = emImageUrl metadata
+      , eventIsPublic = emIsPublic metadata <|> Just True
+      , eventCreatedAt = Just (socialEventCreatedAt eventRow)
+      , eventUpdatedAt = Just (socialEventUpdatedAt eventRow)
+      , eventArtists = artists
+      }
 
 ticketTierEntityToDTO :: SocialEventId -> Entity EventTicketTier -> TicketTierDTO
 ticketTierEntityToDTO eventKey (Entity tierKey tier) = TicketTierDTO

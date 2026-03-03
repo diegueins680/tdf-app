@@ -123,6 +123,11 @@ data EventDTO = EventDTO
   , eventVenueId     :: Maybe Text
   , eventPriceCents  :: Maybe Int
   , eventCapacity    :: Maybe Int
+  , eventTicketUrl   :: Maybe Text
+  , eventImageUrl    :: Maybe Text
+  , eventIsPublic    :: Maybe Bool
+  , eventCreatedAt   :: Maybe UTCTime
+  , eventUpdatedAt   :: Maybe UTCTime
   , eventArtists     :: [ArtistDTO]
   } deriving (Show, Eq, Generic)
 instance ToJSON EventDTO
