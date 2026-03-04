@@ -17,15 +17,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { MarketplaceOrderDTO } from '../api/types';
 import { Marketplace } from '../api/marketplace';
-
-const statusColor = (value?: string | null): 'default' | 'success' | 'warning' | 'info' => {
-  if (!value) return 'default';
-  const lower = value.toLowerCase();
-  if (lower.includes('paid') || lower.includes('pag')) return 'success';
-  if (lower.includes('pending')) return 'warning';
-  if (lower.includes('contact')) return 'info';
-  return 'default';
-};
+import { getOrderStatusMeta } from '../utils/marketplace';
 
 export default function MarketplaceOrderTrackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -50,6 +42,7 @@ export default function MarketplaceOrderTrackingPage() {
   }, [orderId]);
 
   const timeline = useMemo(() => order?.moStatusHistory ?? [], [order]);
+  const currentStatusMeta = useMemo(() => getOrderStatusMeta(order?.moStatus ?? ''), [order?.moStatus]);
 
   const copyLink = () => {
     if (typeof window === 'undefined') return;
@@ -99,7 +92,7 @@ export default function MarketplaceOrderTrackingPage() {
                   <Typography variant="h6" fontWeight={700}>
                     Pedido {order.moOrderId}
                   </Typography>
-                  <Chip label={order.moStatus} color={statusColor(order.moStatus)} />
+                  <Chip label={currentStatusMeta.label} color={currentStatusMeta.color} />
                 </Stack>
                 <Typography variant="body2" color="text.secondary">
                   Total: {order.moTotalDisplay} · Creado: {new Date(order.moCreatedAt).toLocaleString()}
@@ -140,14 +133,17 @@ export default function MarketplaceOrderTrackingPage() {
                       Aún no hay cambios registrados.
                     </Typography>
                   )}
-                  {timeline.map(([st, ts]) => (
-                    <Stack key={`${st}-${ts}`} direction="row" spacing={1} alignItems="center">
-                      <Chip size="small" label={st} color={statusColor(st)} />
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date(ts).toLocaleString()}
-                      </Typography>
-                    </Stack>
-                  ))}
+                  {timeline.map(([st, ts]) => {
+                    const meta = getOrderStatusMeta(st);
+                    return (
+                      <Stack key={`${st}-${ts}`} direction="row" spacing={1} alignItems="center">
+                        <Chip size="small" label={meta.label} color={meta.color} />
+                        <Typography variant="body2" color="text.secondary">
+                          {new Date(ts).toLocaleString()}
+                        </Typography>
+                      </Stack>
+                    );
+                  })}
                 </Stack>
               </CardContent>
             </Card>

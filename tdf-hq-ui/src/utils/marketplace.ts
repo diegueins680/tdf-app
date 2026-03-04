@@ -11,17 +11,32 @@ const toTokenSet = (status: string): Set<string> => {
 
 // Map backend order status to badge copy and color.
 export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
-  const norm = status.toLowerCase();
+  const norm = status.trim().toLowerCase();
   const tokens = toTokenSet(norm);
   const hasToken = (...values: string[]) => values.some((value) => tokens.has(value));
   const hasFragment = (...values: string[]) => values.some((value) => norm.includes(value));
+  const hasPaid = () => hasToken('paid', 'success', 'successful', 'approved', 'complete', 'completed');
+  const hasRejected = () =>
+    hasToken('unpaid', 'fail', 'failed', 'reject', 'rejected', 'decline', 'declined', 'deny', 'denied', 'error', 'void', 'voided', 'expire', 'expired');
+  const hasCancelled = () => hasToken('cancel', 'cancelled', 'canceled') || hasFragment('cancel');
+  const hasRefunded = () => hasToken('refund', 'refunded', 'reversal', 'reversed', 'chargeback');
 
   if (hasToken('datafast') || hasFragment('datafast')) {
-    if (hasToken('fail', 'failed', 'reject', 'rejected', 'decline', 'declined', 'error')) {
+    if (hasRejected()) {
       return { label: 'Pago rechazado', color: 'default', desc: 'El pago con tarjeta fue rechazado.' };
     }
-    if (hasToken('paid', 'success', 'successful', 'approved', 'complete', 'completed')) {
+    if (hasCancelled()) {
+      return { label: 'Cancelado', color: 'default', desc: 'Pago con tarjeta cancelado.' };
+    }
+    if (hasPaid()) {
       return { label: 'Pagado', color: 'success', desc: 'Pago con tarjeta confirmado.' };
+    }
+    if (hasToken('init', 'created', 'new')) {
+      return {
+        label: 'Pago iniciado',
+        color: 'info',
+        desc: 'Se inició el pago con tarjeta. Falta confirmación del banco.',
+      };
     }
     return {
       label: 'Pago en revisión',
@@ -31,24 +46,41 @@ export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
   }
 
   if (hasToken('paypal') || hasFragment('paypal')) {
-    if (hasToken('pending', 'init', 'review', 'processing')) {
-      return { label: 'Pendiente', color: 'warning', desc: 'Pago PayPal en revisión.' };
+    if (hasRejected()) {
+      return { label: 'Pago rechazado', color: 'default', desc: 'El pago de PayPal fue rechazado.' };
     }
-    if (hasToken('paid', 'success', 'successful', 'approved', 'complete', 'completed')) {
+    if (hasCancelled()) {
+      return { label: 'Cancelado', color: 'default', desc: 'Pago de PayPal cancelado.' };
+    }
+    if (hasRefunded()) {
+      return { label: 'Reembolsado', color: 'default', desc: 'Pago de PayPal reembolsado.' };
+    }
+    if (hasPaid()) {
       return { label: 'Pagado', color: 'success', desc: 'Pago PayPal confirmado.' };
+    }
+    if (hasToken('pending', 'init', 'review', 'processing', 'incomplete', 'action', 'required', 'created')) {
+      return { label: 'Pendiente', color: 'warning', desc: 'Pago PayPal en revisión.' };
     }
     return { label: 'Pago en revisión', color: 'warning', desc: 'Pago PayPal en revisión.' };
   }
 
-  if (hasToken('unpaid', 'failed', 'rejected', 'declined', 'error')) {
+  if (hasRefunded()) {
+    return { label: 'Reembolsado', color: 'default', desc: 'Pago reembolsado.' };
+  }
+
+  if (hasRejected()) {
     return { label: 'Pago rechazado', color: 'default', desc: 'El pago no pudo completarse.' };
+  }
+
+  if (hasCancelled()) {
+    return { label: 'Cancelado', color: 'default', desc: 'Pedido cancelado.' };
   }
 
   if (hasToken('pending')) {
     return { label: 'Pendiente', color: 'warning', desc: 'Recibido, a la espera de confirmación.' };
   }
 
-  if (hasToken('paid', 'success', 'successful', 'approved', 'complete', 'completed')) {
+  if (hasPaid()) {
     return { label: 'Pagado', color: 'success', desc: 'Pago confirmado.' };
   }
 
@@ -60,16 +92,12 @@ export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
     return { label: 'Completado', color: 'success', desc: 'Pedido entregado.' };
   }
 
-  if (hasFragment('cancel')) {
-    return { label: 'Cancelado', color: 'default', desc: 'Pedido cancelado.' };
-  }
-
   return { label: status || 'Estado', color: 'default', desc: '' };
 };
 
 // Present human readable "last updated" text from a timestamp in ms.
 export const formatLastSavedTimestamp = (updatedAt?: number | null): string | null => {
-  if (!updatedAt) return null;
+  if (updatedAt == null || !Number.isFinite(updatedAt) || updatedAt <= 0) return null;
   const diffMs = Math.max(0, Date.now() - updatedAt);
   const minutes = Math.floor(diffMs / 60000);
   if (minutes < 1) return 'Actualizado hace <1 min';

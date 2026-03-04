@@ -15,8 +15,16 @@ describe('getOrderStatusMeta', () => {
   });
 
   it('handles datafast statuses', () => {
+    expect(getOrderStatusMeta('datafast_init').color).toBe('info');
+    expect(getOrderStatusMeta('datafast_init').label).toContain('iniciado');
     expect(getOrderStatusMeta('datafast_pending').color).toBe('warning');
     expect(getOrderStatusMeta('datafast_failed').label.toLowerCase()).toContain('rechazado');
+  });
+
+  it('classifies paypal failures and refunds correctly', () => {
+    expect(getOrderStatusMeta('paypal_failed').label.toLowerCase()).toContain('rechazado');
+    expect(getOrderStatusMeta('paypal_declined').label.toLowerCase()).toContain('rechazado');
+    expect(getOrderStatusMeta('paypal_refunded').label).toBe('Reembolsado');
   });
 
   it('does not classify unpaid as paid by substring match', () => {
@@ -53,5 +61,11 @@ describe('formatLastSavedTimestamp', () => {
   it('handles future timestamps without negative values', () => {
     const now = Date.now();
     expect(formatLastSavedTimestamp(now + 60_000)).toContain('<1 min');
+  });
+
+  it('ignores invalid/non-positive timestamp values', () => {
+    expect(formatLastSavedTimestamp(0)).toBeNull();
+    expect(formatLastSavedTimestamp(Number.NaN)).toBeNull();
+    expect(formatLastSavedTimestamp(Number.POSITIVE_INFINITY)).toBeNull();
   });
 });
