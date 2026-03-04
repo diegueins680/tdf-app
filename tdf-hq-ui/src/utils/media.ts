@@ -25,14 +25,17 @@ const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{6,64}$/;
 
 const isSpotifyLocaleSegment = (segment: string): boolean => /^intl-[a-z0-9-]+$/i.test(segment);
 
-const hasScheme = (value: string) => /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(value);
+const hasScheme = (value: string) => /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(value);
+const isHttpProtocol = (protocol: string) => protocol === 'http:' || protocol === 'https:';
 
 const parseUrl = (raw: string): URL | null => {
   const trimmed = raw.trim();
   if (!trimmed) return null;
   const candidate = hasScheme(trimmed) ? trimmed : `https://${trimmed}`;
   try {
-    return new URL(candidate);
+    const parsed = new URL(candidate);
+    if (!isHttpProtocol(parsed.protocol)) return null;
+    return parsed;
   } catch {
     return null;
   }
@@ -127,9 +130,13 @@ export const normalizeStreamingSource = (
   source: StreamingSource,
 ): NormalizedStreamingSource | null => {
   if (!source.url) return null;
-  const provider = source.provider ?? inferProviderFromUrl(source.url);
+  const rawUrl = source.url.trim();
+  if (!rawUrl) return null;
+  if (hasScheme(rawUrl) && !parseUrl(rawUrl)) return null;
+
+  const provider = source.provider ?? inferProviderFromUrl(rawUrl);
   if (provider === 'youtube') {
-    const embed = normalizeYoutubeEmbed(source.url);
+    const embed = normalizeYoutubeEmbed(rawUrl);
     if (!embed) return null;
     return {
       url: embed,
@@ -139,7 +146,7 @@ export const normalizeStreamingSource = (
     };
   }
   if (provider === 'spotify') {
-    const embed = normalizeSpotifyEmbed(source.url);
+    const embed = normalizeSpotifyEmbed(rawUrl);
     if (!embed) return null;
     return {
       url: embed,
@@ -149,7 +156,7 @@ export const normalizeStreamingSource = (
     };
   }
   return {
-    url: source.url,
+    url: rawUrl,
     provider,
     label: source.label ?? (provider === 'video' ? 'Video' : 'Audio'),
     mimeType: source.mimeType,

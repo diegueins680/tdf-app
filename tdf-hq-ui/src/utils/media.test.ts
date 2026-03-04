@@ -33,6 +33,11 @@ describe('normalizeYoutubeEmbed', () => {
     expect(normalizeYoutubeEmbed('https://youtu.be/abc123%2Fdef')).toBeNull();
     expect(normalizeYoutubeEmbed('https://www.youtube.com/embed/abc 123')).toBeNull();
   });
+
+  it('rejects non-http(s) schemes even when hostname looks like YouTube', () => {
+    expect(normalizeYoutubeEmbed('javascript://www.youtube.com/watch?v=abc123')).toBeNull();
+    expect(normalizeYoutubeEmbed('ftp://www.youtube.com/watch?v=abc123')).toBeNull();
+  });
 });
 
 describe('normalizeSpotifyEmbed', () => {
@@ -61,9 +66,11 @@ describe('normalizeSpotifyEmbed', () => {
     expect(normalizeSpotifyEmbed('http://open.spotify.com/track/123')).toBe(
       'https://open.spotify.com/embed/track/123',
     );
-    expect(normalizeSpotifyEmbed('javascript://open.spotify.com/track/123')).toBe(
-      'https://open.spotify.com/embed/track/123',
-    );
+  });
+
+  it('rejects non-http(s) schemes even when hostname looks like Spotify', () => {
+    expect(normalizeSpotifyEmbed('javascript://open.spotify.com/track/123')).toBeNull();
+    expect(normalizeSpotifyEmbed('ftp://open.spotify.com/track/123')).toBeNull();
   });
 
   it('rejects non-Spotify domains that contain spotify.com as a substring', () => {
@@ -141,5 +148,10 @@ describe('normalizeStreamingSource', () => {
       mimeType: undefined,
       posterUrl: undefined,
     });
+  });
+
+  it('rejects unsupported URL schemes for generic streams', () => {
+    expect(normalizeStreamingSource({ url: 'javascript:alert(1)' })).toBeNull();
+    expect(normalizeStreamingSource({ url: 'mailto:test@example.com' })).toBeNull();
   });
 });
