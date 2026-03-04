@@ -27,6 +27,12 @@ describe('normalizeYoutubeEmbed', () => {
     expect(normalizeYoutubeEmbed('https://www.youtube.com/@artist')).toBeNull();
     expect(normalizeYoutubeEmbed('https://www.youtube.com/watch')).toBeNull();
   });
+
+  it('rejects malformed YouTube video identifiers', () => {
+    expect(normalizeYoutubeEmbed('https://www.youtube.com/watch?v=abc123<script>')).toBeNull();
+    expect(normalizeYoutubeEmbed('https://youtu.be/abc123%2Fdef')).toBeNull();
+    expect(normalizeYoutubeEmbed('https://www.youtube.com/embed/abc 123')).toBeNull();
+  });
 });
 
 describe('normalizeSpotifyEmbed', () => {

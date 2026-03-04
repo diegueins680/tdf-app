@@ -21,6 +21,7 @@ export interface NormalizedStreamingSource {
 const videoExtensions = ['.mp4', '.mov', '.webm', '.mkv'];
 const audioExtensions = ['.mp3', '.aac', '.wav', '.ogg', '.m4a'];
 const spotifyResourceTypes = new Set(['track', 'album', 'playlist', 'artist', 'episode', 'show']);
+const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{6,64}$/;
 
 const isSpotifyLocaleSegment = (segment: string): boolean => /^intl-[a-z0-9-]+$/i.test(segment);
 
@@ -43,6 +44,7 @@ const hostMatches = (host: string, domain: string): boolean =>
 const normalizeYoutubeVideoId = (candidate: string | null | undefined): string | null => {
   const value = candidate?.trim();
   if (!value) return null;
+  if (!youtubeVideoIdPattern.test(value)) return null;
   return value;
 };
 

@@ -12,6 +12,7 @@ import {
 
 export type InstagramAuthStatus = 'idle' | 'authenticating' | 'ready' | 'error';
 const STATE_TTL_MS = 10 * 60 * 1000;
+const STATE_MAX_FUTURE_SKEW_MS = 60 * 1000;
 
 interface InstagramCallbackResult {
   ok: boolean;
@@ -26,8 +27,21 @@ interface ParsedInstagramState {
 
 const callbackFlowByQuery = new Map<string, Promise<InstagramCallbackResult>>();
 
-const buildCallbackKey = (code: string | null, error: string | null, rawState: string | null) =>
-  JSON.stringify([code, error, rawState]);
+const buildCallbackKey = (
+  code: string | null,
+  error: string | null,
+  rawState: string | null,
+  errorReason: string | null,
+  errorDescription: string | null,
+) => JSON.stringify([code, error, rawState, errorReason, errorDescription]);
+
+const firstNonEmpty = (...values: (string | null | undefined)[]): string | undefined => {
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (trimmed && trimmed.length > 0) return trimmed;
+  }
+  return undefined;
+};
 
 export function useInstagramAuth() {
   const [status, setStatus] = useState<InstagramAuthStatus>(() =>
@@ -43,10 +57,15 @@ export function useInstagramAuth() {
       setError(configIssue);
       return;
     }
-    setStatus('authenticating');
-    const state = returnTo ?? window.location.pathname + window.location.search;
-    const url = buildInstagramAuthUrl(state);
-    window.location.assign(url);
+    try {
+      setStatus('authenticating');
+      const state = returnTo ?? window.location.pathname + window.location.search;
+      const url = buildInstagramAuthUrl(state);
+      window.location.assign(url);
+    } catch (err) {
+      setStatus('error');
+      setError(err instanceof Error ? err.message : 'No se pudo iniciar la autorización de Instagram.');
+    }
   }, []);
 
   const resetAuth = useCallback(() => {
@@ -72,9 +91,13 @@ export function useInstagramCallback() {
     const search = new URLSearchParams(window.location.search);
     const code = search.get('code');
     const error = search.get('error');
+    const errorReason = search.get('error_reason');
+    const errorDescription = search.get('error_description');
     const rawState = search.get('state');
     const callbackKey =
-      code !== null || error !== null || rawState !== null ? buildCallbackKey(code, error, rawState) : null;
+      code !== null || error !== null || rawState !== null || errorReason !== null || errorDescription !== null
+        ? buildCallbackKey(code, error, rawState, errorReason, errorDescription)
+        : null;
 
     if (callbackKey) {
       const cached = callbackFlowByQuery.get(callbackKey);
@@ -104,12 +127,19 @@ export function useInstagramCallback() {
       }
 
       const issuedAt = storedState?.issuedAt ?? parsedIssuedAt;
-      if (typeof issuedAt !== 'number' || now - issuedAt > STATE_TTL_MS) {
+      if (
+        typeof issuedAt !== 'number' ||
+        !Number.isFinite(issuedAt) ||
+        issuedAt <= 0 ||
+        issuedAt > now + STATE_MAX_FUTURE_SKEW_MS ||
+        now - issuedAt > STATE_TTL_MS
+      ) {
         return { ok: false, message: 'Estado de OAuth expirado.', returnTo };
       }
 
-      if (error) {
-        return { ok: false, message: error, returnTo };
+      const oauthError = firstNonEmpty(errorDescription, errorReason, error);
+      if (oauthError) {
+        return { ok: false, message: oauthError, returnTo };
       }
       if (!code) {
         return { ok: false, message: 'No se recibió el código de autorización.', returnTo };

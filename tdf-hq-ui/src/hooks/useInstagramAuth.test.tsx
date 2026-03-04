@@ -3,12 +3,19 @@ import { StrictMode } from 'react';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
+interface InstagramAuthProbeState {
+  status: 'idle' | 'authenticating' | 'ready' | 'error';
+  error: string | null;
+}
+
 interface InstagramCallbackResult {
   ok: boolean;
   message?: string;
   returnTo?: string;
 }
 
+const buildInstagramAuthUrlMock = jest.fn<(state?: string) => string>(() => '');
+const clearInstagramResultMock = jest.fn<() => void>();
 const consumeInstagramStateMock = jest.fn<
   () => { state: string; returnTo?: string; issuedAt: number } | null
 >(() => null);
@@ -19,19 +26,33 @@ const exchangeInstagramCodeMock = jest.fn<(code: string) => Promise<Record<strin
   () => Promise.resolve({}),
 );
 const storeInstagramResultMock = jest.fn<(result: Record<string, unknown>) => void>();
+const getStoredInstagramResultMock = jest.fn<() => Record<string, unknown> | null>(() => null);
+const instagramConfigErrorMock = jest.fn<() => string | null>(() => null);
 
 jest.unstable_mockModule('../services/instagramAuth', () => ({
-  buildInstagramAuthUrl: jest.fn(() => ''),
-  clearInstagramResult: jest.fn(),
+  buildInstagramAuthUrl: buildInstagramAuthUrlMock,
+  clearInstagramResult: clearInstagramResultMock,
   consumeInstagramState: consumeInstagramStateMock,
   exchangeInstagramCode: exchangeInstagramCodeMock,
-  getStoredInstagramResult: jest.fn(() => null),
-  instagramConfigError: jest.fn(() => null),
+  getStoredInstagramResult: getStoredInstagramResultMock,
+  instagramConfigError: instagramConfigErrorMock,
   parseInstagramState: parseInstagramStateMock,
   storeInstagramResult: storeInstagramResultMock,
 }));
 
-const { useInstagramCallback } = await import('./useInstagramAuth');
+const { useInstagramAuth, useInstagramCallback } = await import('./useInstagramAuth');
+
+function AuthProbe({ returnTo }: { returnTo?: string }) {
+  const { status, error, startAuth } = useInstagramAuth();
+  return (
+    <>
+      <pre data-testid="auth-result">{JSON.stringify({ status, error })}</pre>
+      <button type="button" data-testid="start-auth" onClick={() => startAuth(returnTo)}>
+        Start auth
+      </button>
+    </>
+  );
+}
 
 function CallbackProbe() {
   const result = useInstagramCallback();
@@ -48,13 +69,13 @@ const flushAll = async (cycles = 3) => {
   }
 };
 
-const renderProbe = async (strictMode = false) => {
+const renderProbe = async (element: JSX.Element, strictMode = false) => {
   const container = document.createElement('div');
   document.body.appendChild(container);
   let root: Root | null = createRoot(container);
 
   await act(async () => {
-    root?.render(strictMode ? <StrictMode><CallbackProbe /></StrictMode> : <CallbackProbe />);
+    root?.render(strictMode ? <StrictMode>{element}</StrictMode> : element);
     await flushPromises();
   });
 
@@ -72,12 +93,29 @@ const renderProbe = async (strictMode = false) => {
   };
 };
 
-const readResult = (container: HTMLElement): InstagramCallbackResult => {
-  const node = container.querySelector('[data-testid="callback-result"]');
+function readJson<T>(container: HTMLElement, selector: string): T {
+  const node = container.querySelector(selector);
   if (!node) {
-    throw new Error('Callback result node not found');
+    throw new Error(`Node not found for selector: ${selector}`);
   }
-  return JSON.parse(node.textContent ?? '{}') as InstagramCallbackResult;
+  return JSON.parse(node.textContent ?? '{}') as T;
+}
+
+const readCallbackResult = (container: HTMLElement): InstagramCallbackResult =>
+  readJson<InstagramCallbackResult>(container, '[data-testid="callback-result"]');
+
+const readAuthResult = (container: HTMLElement): InstagramAuthProbeState =>
+  readJson<InstagramAuthProbeState>(container, '[data-testid="auth-result"]');
+
+const click = async (container: HTMLElement, selector: string) => {
+  const button = container.querySelector(selector);
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found for selector: ${selector}`);
+  }
+  await act(async () => {
+    button.click();
+    await flushPromises();
+  });
 };
 
 describe('useInstagramCallback', () => {
@@ -87,10 +125,14 @@ describe('useInstagramCallback', () => {
   });
 
   beforeEach(() => {
+    buildInstagramAuthUrlMock.mockReset().mockReturnValue('https://example.com/oauth');
+    clearInstagramResultMock.mockReset();
     consumeInstagramStateMock.mockReset();
     parseInstagramStateMock.mockReset();
     exchangeInstagramCodeMock.mockReset();
     storeInstagramResultMock.mockReset();
+    getStoredInstagramResultMock.mockReset().mockReturnValue(null);
+    instagramConfigErrorMock.mockReset().mockReturnValue(null);
   });
 
   it('accepts a valid parsed state when session storage was already consumed', async () => {
@@ -101,13 +143,13 @@ describe('useInstagramCallback', () => {
     parseInstagramStateMock.mockReturnValue({ returnTo: '/social/instagram', issuedAt });
     exchangeInstagramCodeMock.mockResolvedValue({ tokenType: 'bearer' });
 
-    const { container, cleanup } = await renderProbe();
+    const { container, cleanup } = await renderProbe(<CallbackProbe />);
     await flushAll();
 
     expect(exchangeInstagramCodeMock).toHaveBeenCalledTimes(1);
     expect(exchangeInstagramCodeMock).toHaveBeenCalledWith('abc123');
     expect(storeInstagramResultMock).toHaveBeenCalledTimes(1);
-    expect(readResult(container)).toEqual({ ok: true, returnTo: '/social/instagram' });
+    expect(readCallbackResult(container)).toEqual({ ok: true, returnTo: '/social/instagram' });
 
     await cleanup();
   });
@@ -122,12 +164,12 @@ describe('useInstagramCallback', () => {
     parseInstagramStateMock.mockReturnValue({ returnTo: '/social/instagram', issuedAt });
     exchangeInstagramCodeMock.mockResolvedValue({ tokenType: 'bearer' });
 
-    const { container, cleanup } = await renderProbe(true);
+    const { container, cleanup } = await renderProbe(<CallbackProbe />, true);
     await flushAll();
 
     expect(exchangeInstagramCodeMock).toHaveBeenCalledTimes(1);
     expect(storeInstagramResultMock).toHaveBeenCalledTimes(1);
-    expect(readResult(container)).toEqual({ ok: true, returnTo: '/social/instagram' });
+    expect(readCallbackResult(container)).toEqual({ ok: true, returnTo: '/social/instagram' });
 
     await cleanup();
   });
@@ -140,14 +182,88 @@ describe('useInstagramCallback', () => {
     parseInstagramStateMock.mockReturnValue({ returnTo: '/social/instagram', issuedAt });
     exchangeInstagramCodeMock.mockResolvedValue({ tokenType: 'bearer' });
 
-    const firstRender = await renderProbe();
+    const firstRender = await renderProbe(<CallbackProbe />);
     await flushAll();
     await firstRender.cleanup();
 
-    const secondRender = await renderProbe();
+    const secondRender = await renderProbe(<CallbackProbe />);
     await flushAll();
     await secondRender.cleanup();
 
     expect(exchangeInstagramCodeMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects parsed states that are too far in the future', async () => {
+    const issuedAt = Date.now() + 2 * 60 * 1000;
+    window.history.replaceState({}, '', '/oauth/instagram/callback?code=future123&state=future-state');
+
+    consumeInstagramStateMock.mockReturnValue(null);
+    parseInstagramStateMock.mockReturnValue({ returnTo: '/social/instagram', issuedAt });
+
+    const { container, cleanup } = await renderProbe(<CallbackProbe />);
+    await flushAll();
+
+    expect(exchangeInstagramCodeMock).not.toHaveBeenCalled();
+    expect(readCallbackResult(container)).toEqual({
+      ok: false,
+      message: 'Estado de OAuth expirado.',
+      returnTo: '/social/instagram',
+    });
+
+    await cleanup();
+  });
+
+  it('prefers detailed OAuth error messages from Meta callback params', async () => {
+    const issuedAt = Date.now();
+    window.history.replaceState(
+      {},
+      '',
+      '/oauth/instagram/callback?error=access_denied&error_reason=user_denied&error_description=El%20usuario%20cancel%C3%B3&state=meta-denied',
+    );
+
+    consumeInstagramStateMock.mockReturnValue({ state: 'meta-denied', returnTo: '/social/instagram', issuedAt });
+
+    const { container, cleanup } = await renderProbe(<CallbackProbe />);
+    await flushAll();
+
+    expect(exchangeInstagramCodeMock).not.toHaveBeenCalled();
+    expect(readCallbackResult(container)).toEqual({
+      ok: false,
+      message: 'El usuario canceló',
+      returnTo: '/social/instagram',
+    });
+
+    await cleanup();
+  });
+});
+
+describe('useInstagramAuth', () => {
+  beforeEach(() => {
+    buildInstagramAuthUrlMock.mockReset().mockReturnValue('https://example.com/oauth');
+    clearInstagramResultMock.mockReset();
+    consumeInstagramStateMock.mockReset();
+    parseInstagramStateMock.mockReset();
+    exchangeInstagramCodeMock.mockReset();
+    storeInstagramResultMock.mockReset();
+    getStoredInstagramResultMock.mockReset().mockReturnValue(null);
+    instagramConfigErrorMock.mockReset().mockReturnValue(null);
+  });
+
+  it('reports start-auth errors instead of keeping an invalid authenticating state', async () => {
+    buildInstagramAuthUrlMock.mockImplementation(() => {
+      throw new Error('OAuth init failed');
+    });
+
+    const { container, cleanup } = await renderProbe(<AuthProbe returnTo="/social/instagram" />);
+
+    await click(container, '[data-testid="start-auth"]');
+
+    expect(buildInstagramAuthUrlMock).toHaveBeenCalledWith('/social/instagram');
+    expect(readAuthResult(container)).toEqual({
+      status: 'error',
+      error: 'OAuth init failed',
+    });
+
+    await cleanup();
   });
 });
