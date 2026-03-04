@@ -13,6 +13,11 @@ describe('role normalization helpers', () => {
     expect(result).toEqual(['Fan', 'Intern', 'Artista', 'Promotor']);
   });
 
+  it('splits comma-separated role values even when query parsing returns an array', () => {
+    const result = normalizeSignupRoles([' fan,intern ', 'ARTISTA', 'promotor,bogus']);
+    expect(result).toEqual(['Fan', 'Intern', 'Artista', 'Promotor']);
+  });
+
   it('normalizes signup roles using the allowlist', () => {
     const result = normalizeSignupRoles(['Fan', 'Admin', 'Promotor', 'Bogus'] as string[]);
     // Fan/Promotor are allowed; Admin is filtered for self-signup; Bogus is dropped; duplicates removed.
@@ -63,6 +68,22 @@ describe('signup payload builder', () => {
     const form = { ...baseForm, internshipRequiredHours: '120' };
     const payload = buildSignupPayload(form, ['Intern'], []);
     expect(payload.internshipRequiredHours).toBe(120);
+  });
+
+  it('normalizes fan artist ids to unique positive safe integers', () => {
+    const payload = buildSignupPayload(baseForm, ['Fan'], [7, 7, 0, -3, 9.5, Number.NaN, 11]);
+    expect(payload.fanArtistIds).toEqual([7, 11]);
+  });
+
+  it('keeps claim artist id only when it is a positive safe integer', () => {
+    const accepted = buildSignupPayload(baseForm, ['Artista'], [], 42);
+    expect(accepted.claimArtistId).toBe(42);
+
+    const rejectedFraction = buildSignupPayload(baseForm, ['Artista'], [], 42.5);
+    expect(rejectedFraction.claimArtistId).toBeUndefined();
+
+    const rejectedUnsafe = buildSignupPayload(baseForm, ['Artista'], [], Number.MAX_SAFE_INTEGER + 1);
+    expect(rejectedUnsafe.claimArtistId).toBeUndefined();
   });
 });
 

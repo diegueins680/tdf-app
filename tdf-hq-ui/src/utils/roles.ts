@@ -5,7 +5,7 @@ export function normalizeRolesInput<T extends string>(
   value: string | string[],
   allowedRoles: readonly T[],
 ): T[] {
-  const entries = Array.isArray(value) ? value : value.split(',');
+  const entries = (Array.isArray(value) ? value : [value]).flatMap((entry) => entry.split(','));
   const allowedByLower = new Map<string, T>();
   allowedRoles.forEach((role) => {
     allowedByLower.set(role.toLowerCase(), role);
@@ -50,6 +50,32 @@ const parseOptionalInt = (value: string): number | undefined => {
   return Number.isNaN(parsed) ? undefined : parsed;
 };
 
+const parsePositiveSafeInt = (value: unknown): number | undefined => {
+  if (typeof value === 'number') {
+    if (!Number.isSafeInteger(value) || value <= 0) return undefined;
+    return value;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!/^\d+$/.test(trimmed)) return undefined;
+    const parsed = Number.parseInt(trimmed, 10);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : undefined;
+  }
+  return undefined;
+};
+
+const normalizePositiveSafeIntList = (values: readonly number[]): number[] => {
+  const seen = new Set<number>();
+  const unique: number[] = [];
+  values.forEach((value) => {
+    const normalized = parsePositiveSafeInt(value);
+    if (normalized === undefined || seen.has(normalized)) return;
+    seen.add(normalized);
+    unique.push(normalized);
+  });
+  return unique;
+};
+
 export function buildSignupPayload(
   form: SignupFormState,
   signupRoles: SignupRole[],
@@ -59,7 +85,10 @@ export function buildSignupPayload(
   const roles = normalizeSignupRoles(signupRoles);
   const wantsFanRole = roles.includes('Fan');
   const wantsInternRole = roles.includes('Intern');
-  const normalizedClaimId = claimArtistId && claimArtistId > 0 ? claimArtistId : undefined;
+  const normalizedClaimId = parsePositiveSafeInt(claimArtistId);
+  const normalizedFavoriteArtistIds = wantsFanRole
+    ? normalizePositiveSafeIntList(favoriteArtistIds)
+    : [];
   const requiredHours = wantsInternRole ? parseOptionalInt(form.internshipRequiredHours) : undefined;
 
   return {
@@ -74,7 +103,7 @@ export function buildSignupPayload(
     internshipSkills: wantsInternRole && form.internshipSkills.trim() ? form.internshipSkills.trim() : undefined,
     internshipAreas: wantsInternRole && form.internshipAreas.trim() ? form.internshipAreas.trim() : undefined,
     roles: roles.length ? roles : undefined,
-    fanArtistIds: wantsFanRole && favoriteArtistIds.length ? favoriteArtistIds : undefined,
+    fanArtistIds: normalizedFavoriteArtistIds.length ? normalizedFavoriteArtistIds : undefined,
     claimArtistId: normalizedClaimId,
   };
 }
