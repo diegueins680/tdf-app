@@ -9,6 +9,82 @@ type RoleInput = Role | (string & Record<never, never>);
 export type UserRoleUpdate = { roles: RoleInput[] };
 
 const API_BASE = env.read('VITE_API_BASE') ?? 'http://localhost:8080';
+const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
+
+const isJsonContentType = (contentType: string): boolean => /[/+]json(?:;|$)/i.test(contentType);
+
+const looksLikeJsonPayload = (value: string): boolean => {
+  const trimmed = value.trim();
+  return trimmed.startsWith('{') || trimmed.startsWith('[');
+};
+
+const joinRequestUrl = (base: string, endpoint: string): string => {
+  const normalizedBase = base.trim();
+  const normalizedEndpoint = endpoint.trim();
+  if (!normalizedEndpoint) return normalizedBase;
+  if (!normalizedBase || ABSOLUTE_URL_PATTERN.test(normalizedEndpoint)) return normalizedEndpoint;
+  const baseHasSlash = normalizedBase.endsWith('/');
+  const endpointHasSlash = normalizedEndpoint.startsWith('/');
+  const endpointIsQueryOrHash =
+    normalizedEndpoint.startsWith('?') || normalizedEndpoint.startsWith('#');
+  if (!baseHasSlash && !endpointHasSlash && !endpointIsQueryOrHash) {
+    return `${normalizedBase}/${normalizedEndpoint}`;
+  }
+  if (baseHasSlash && endpointHasSlash) return `${normalizedBase}${normalizedEndpoint.slice(1)}`;
+  return `${normalizedBase}${normalizedEndpoint}`;
+};
+
+const isFormData = (value: unknown): value is FormData =>
+  typeof FormData !== 'undefined' && value instanceof FormData;
+
+const buildRequestHeaders = (initHeaders: HeadersInit | undefined, authHeader: string | undefined): Headers => {
+  const headers = new Headers();
+  if (authHeader) headers.set('Authorization', authHeader);
+  if (initHeaders) {
+    const extraHeaders = new Headers(initHeaders);
+    extraHeaders.forEach((value, key) => headers.set(key, value));
+  }
+  return headers;
+};
+
+const shouldSetJsonContentType = (headers: Headers, body: BodyInit | null | undefined): boolean => {
+  if (headers.has('Content-Type')) return false;
+  if (body === undefined || body === null) return false;
+  if (isFormData(body)) return false;
+  return true;
+};
+
+const extractErrorDetails = (rawBody: string, contentType: string): string => {
+  const trimmedBody = rawBody.trim();
+  if (trimmedBody === '') return '';
+  if (!isJsonContentType(contentType) && !looksLikeJsonPayload(trimmedBody)) return trimmedBody;
+
+  try {
+    const parsed = JSON.parse(trimmedBody) as unknown;
+    if (typeof parsed === 'string') {
+      const parsedMessage = parsed.trim();
+      return parsedMessage === '' ? trimmedBody : parsedMessage;
+    }
+    if (parsed && typeof parsed === 'object') {
+      const payload = parsed as Record<string, unknown>;
+      const candidate =
+        typeof payload['message'] === 'string'
+          ? payload['message']
+          : typeof payload['error'] === 'string'
+            ? payload['error']
+            : typeof payload['detail'] === 'string'
+              ? payload['detail']
+              : typeof payload['title'] === 'string'
+                ? payload['title']
+                : null;
+      if (candidate && candidate.trim() !== '') return candidate.trim();
+    }
+  } catch {
+    return trimmedBody;
+  }
+
+  return trimmedBody;
+};
 
 export class ApiClient {
   private baseUrl: string;
@@ -21,17 +97,18 @@ export class ApiClient {
     endpoint: string,
     options?: RequestInit,
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
     const authHeader = buildAuthorizationHeader();
+    const headers = buildRequestHeaders(options?.headers, authHeader);
+    if (shouldSetJsonContentType(headers, options?.body)) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    const url = joinRequestUrl(this.baseUrl, endpoint);
     let response: Response;
     try {
       response = await fetch(url, {
         ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authHeader ? { Authorization: authHeader } : {}),
-          ...options?.headers,
-        },
+        headers,
       });
     } catch (err) {
       const wrapped = new Error('No se pudo contactar la API.');
@@ -42,23 +119,7 @@ export class ApiClient {
     if (!response.ok) {
       const contentType = response.headers.get('content-type') ?? '';
       const message = await response.text().catch(() => '');
-      let details = message.trim();
-      if (details !== '' && contentType.includes('application/json')) {
-        try {
-          const json = JSON.parse(details) as Record<string, unknown>;
-          const msg =
-            typeof json['message'] === 'string'
-              ? json['message']
-              : typeof json['error'] === 'string'
-                ? json['error']
-                : typeof json['detail'] === 'string'
-                  ? json['detail']
-                  : null;
-          if (msg && msg.trim()) details = msg.trim();
-        } catch {
-          // Keep original text when body is not valid JSON.
-        }
-      }
+      let details = extractErrorDetails(message, contentType);
       const trimmedStatus = response.statusText.trim();
       if (details === '') {
         details = trimmedStatus !== '' ? trimmedStatus : 'Request failed';
@@ -67,8 +128,13 @@ export class ApiClient {
     }
 
     const raw = await response.text().catch(() => '');
-    if (!raw || raw.trim() === '') {
+    const trimmedRaw = raw.trim();
+    if (!raw || trimmedRaw === '') {
       return undefined as T;
+    }
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!isJsonContentType(contentType) && !looksLikeJsonPayload(trimmedRaw)) {
+      return raw as T;
     }
     try {
       return JSON.parse(raw) as T;

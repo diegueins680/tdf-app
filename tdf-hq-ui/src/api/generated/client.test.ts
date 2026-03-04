@@ -55,6 +55,15 @@ describe('generated ApiClient', () => {
     expect(result as unknown).toBe('pong');
   });
 
+  it('keeps text/plain numeric payloads as text instead of coercing to JSON primitives', async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse({ contentType: 'text/plain', body: '123' }));
+
+    const client = new ApiClient('https://api.tdf.test');
+    const result = await client.getUsers();
+
+    expect(result as unknown).toBe('123');
+  });
+
   it('includes nested JSON error message in thrown errors', async () => {
     fetchMock.mockResolvedValueOnce(
       buildResponse({ ok: false, status: 400, statusText: 'Bad Request', body: '{"message":"payload inválido"}' })
@@ -63,6 +72,47 @@ describe('generated ApiClient', () => {
     const client = new ApiClient('https://api.tdf.test');
 
     await expect(client.getUsers()).rejects.toThrow('API error: 400 payload inválido');
+  });
+
+  it('extracts details from application/problem+json errors', async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse({
+        ok: false,
+        status: 422,
+        statusText: 'Unprocessable Entity',
+        contentType: 'application/problem+json',
+        body: '{"title":"Validation failed","detail":"roles inválidos"}',
+      }),
+    );
+
+    const client = new ApiClient('https://api.tdf.test');
+
+    await expect(client.getUsers()).rejects.toThrow('API error: 422 roles inválidos');
+  });
+
+  it('joins base URLs and endpoints without duplicate slashes', async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse({ body: '[]' }));
+
+    const client = new ApiClient('https://api.tdf.test/');
+    await client.getUsers();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.tdf.test/api/users',
+      expect.anything(),
+    );
+  });
+
+  it('avoids forcing content-type for bodyless requests', async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse({ body: '[]' }));
+
+    const client = new ApiClient('https://api.tdf.test');
+    await client.getUsers();
+
+    const call = fetchMock.mock.calls[0];
+    expect(call).toBeDefined();
+    const init = call?.[1] as RequestInit | undefined;
+    const headers = init?.headers as Headers | undefined;
+    expect(headers?.has('Content-Type')).toBe(false);
   });
 
   it('wraps network failures with a stable API error message', async () => {

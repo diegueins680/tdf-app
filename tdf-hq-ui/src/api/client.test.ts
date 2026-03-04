@@ -15,7 +15,7 @@ jest.unstable_mockModule('../utils/env', () => ({
   },
 }));
 
-const { get } = await import('./client');
+const { get, post } = await import('./client');
 
 interface MockResponseOptions {
   ok?: boolean;
@@ -84,14 +84,60 @@ describe('api client', () => {
 
     await get<{ ok: boolean }>('/auth-check');
 
+    const call = fetchMock.mock.calls[0];
+    expect(call?.[0]).toBe('https://api.tdf.test/auth-check');
+    const headers = new Headers(call?.[1]?.headers);
+    expect(headers.get('Authorization')).toBe('Bearer test-token');
+  });
+
+  it('adds the JSON content-type only when a request body is present', async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse({ body: '{"ok":true}' }));
+    await get<{ ok: boolean }>('/no-body');
+
+    const firstCall = fetchMock.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    const firstHeaders = new Headers(firstCall?.[1]?.headers);
+    expect(firstHeaders.has('Content-Type')).toBe(false);
+
+    fetchMock.mockResolvedValueOnce(buildResponse({ body: '{"ok":true}' }));
+    await post<{ ok: boolean }>('/with-body', { ok: true });
+
+    const secondCall = fetchMock.mock.calls[1];
+    expect(secondCall).toBeDefined();
+    const secondHeaders = new Headers(secondCall?.[1]?.headers);
+    expect(secondHeaders.get('Content-Type')).toBe('application/json');
+  });
+
+  it('joins API base and paths that omit the leading slash', async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse({ body: '{"ok":true}' }));
+
+    await get<{ ok: boolean }>('rooms');
+
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.tdf.test/auth-check',
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: 'Bearer test-token',
-          'Content-Type': 'application/json',
-        }),
-      })
+      'https://api.tdf.test/rooms',
+      expect.anything()
     );
+  });
+
+  it('keeps plain text numeric payloads as text when content-type is not JSON', async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse({ contentType: 'text/plain', body: '123' }));
+
+    const result = await get<string>('/text-id');
+
+    expect(result).toBe('123');
+  });
+
+  it('extracts message from application/problem+json errors', async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        contentType: 'application/problem+json',
+        body: '{"title":"Validation failed","detail":"Campo inválido"}',
+      }),
+    );
+
+    await expect(get('/problem-json')).rejects.toThrow('Campo inválido');
   });
 });
