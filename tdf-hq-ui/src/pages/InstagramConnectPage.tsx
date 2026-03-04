@@ -30,7 +30,7 @@ import type { InstagramOAuthExchangeResponse } from '../api/instagramOAuth';
 
 type MetaOAuthProvider = 'facebook' | 'instagram';
 
-const META_REVIEW_PERMISSIONS: ReadonlyArray<{ scope: string; provider: MetaOAuthProvider }> = [
+const META_REVIEW_PERMISSIONS: readonly { scope: string; provider: MetaOAuthProvider }[] = [
   { scope: 'instagram_basic', provider: 'facebook' },
   { scope: 'instagram_manage_messages', provider: 'facebook' },
   { scope: 'instagram_business_basic', provider: 'instagram' },

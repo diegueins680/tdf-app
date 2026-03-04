@@ -1,5 +1,5 @@
-import { getStoredSessionToken } from '../session/SessionContext';
 import { post, API_BASE_URL } from './client';
+import { buildAuthorizationHeader } from './authHeader';
 
 export interface ContractCreateRequest {
   kind: string;
@@ -24,12 +24,6 @@ export interface ContractSendResponse {
   id: string;
 }
 
-const buildAuthHeader = () => {
-  const token = getStoredSessionToken();
-  if (!token) return undefined;
-  return token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`;
-};
-
 const normalizeNetworkError = (err: unknown) => {
   const wrapped = new Error('No se pudo contactar la API de contratos.');
   (wrapped as Error & { cause?: unknown }).cause = err;
@@ -37,7 +31,7 @@ const normalizeNetworkError = (err: unknown) => {
 };
 
 async function getPdfBlob(contractId: string): Promise<Blob> {
-  const authHeader = buildAuthHeader();
+  const authHeader = buildAuthorizationHeader();
   let res: Response;
   try {
     res = await fetch(`${API_BASE_URL}/contracts/${encodeURIComponent(contractId)}/pdf`, {

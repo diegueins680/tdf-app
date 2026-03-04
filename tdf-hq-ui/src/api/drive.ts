@@ -1,12 +1,6 @@
-import { getStoredSessionToken } from '../session/SessionContext';
 import type { DriveUploadDTO } from './types';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
-
-const buildAuthHeader = () => {
-  const token = getStoredSessionToken();
-  if (!token) return undefined;
-  return token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`;
-};
+import { buildAuthorizationHeader } from './authHeader';
 
 export interface DriveUploadOptions {
   folderId?: string;
@@ -17,7 +11,7 @@ export interface DriveUploadOptions {
 
 export async function uploadToDrive(file: File, options: DriveUploadOptions = {}): Promise<DriveFileInfo> {
   const base = import.meta.env.VITE_API_BASE ?? '';
-  const authHeader = buildAuthHeader();
+  const authHeader = buildAuthorizationHeader();
 
   const form = new FormData();
   form.append('file', file);

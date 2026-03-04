@@ -1,6 +1,6 @@
 // API client for user role management
 import type { components } from './types';
-import { getStoredSessionToken } from '../../session/SessionContext';
+import { buildAuthorizationHeader } from '../authHeader';
 
 export type Role = components['schemas']['Role'];
 export type UserSummary = components['schemas']['UserRoleSummary'];
@@ -21,12 +21,12 @@ export class ApiClient {
     options?: RequestInit,
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const token = getStoredSessionToken();
+    const authHeader = buildAuthorizationHeader();
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}` } : {}),
+        ...(authHeader ? { Authorization: authHeader } : {}),
         ...options?.headers,
       },
     });

@@ -2,13 +2,27 @@ const normalizeService = (service: string) => service.trim().toLowerCase();
 
 const stripDiacritics = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
+const normalizeRoomToken = (value: string) => stripDiacritics(normalizeService(value));
+
 export const defaultRoomsForService = (service: string, roomOptions: string[]) => {
   const norm = normalizeService(service);
   const plain = stripDiacritics(norm);
   const hasAny = (...needles: string[]) => needles.some((needle) => plain.includes(needle));
   const pick = (needle: string) =>
-    roomOptions.find((room) => room.toLowerCase().includes(needle.toLowerCase()));
-  const picks = (...needles: string[]) => needles.map(pick).filter(Boolean) as string[];
+    roomOptions.find((room) => normalizeRoomToken(room).includes(normalizeRoomToken(needle)));
+  const picks = (...needles: string[]) => {
+    const seen = new Set<string>();
+    const selected: string[] = [];
+    for (const needle of needles) {
+      const room = pick(needle);
+      if (!room) continue;
+      const key = normalizeRoomToken(room);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      selected.push(room);
+    }
+    return selected;
+  };
 
   if (hasAny('grabacion audiovisual live', 'audiovisual live')) {
     const candidates = picks('live', 'control');
@@ -48,7 +62,7 @@ export const defaultRoomsForService = (service: string, roomOptions: string[]) =
 
 export const sameRooms = (a: string[], b: string[]) => {
   if (a.length !== b.length) return false;
-  const sort = (list: string[]) => [...list].map(normalizeService).sort();
+  const sort = (list: string[]) => [...list].map(normalizeRoomToken).sort();
   const [as, bs] = [sort(a), sort(b)];
   return as.every((val, idx) => val === bs[idx]);
 };

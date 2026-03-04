@@ -1,6 +1,6 @@
-import { getStoredSessionToken } from '../session/SessionContext';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { del, get, patch, post } from './client';
+import { buildAuthorizationHeader } from './authHeader';
 import type {
   AssetCheckoutDTO,
   AssetCreate,
@@ -27,12 +27,6 @@ function buildQuery(params?: AssetListParams): string {
   const suffix = qs.toString();
   return suffix ? `?${suffix}` : '';
 }
-
-const buildAuthHeader = () => {
-  const token = getStoredSessionToken();
-  if (!token) return undefined;
-  return token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`;
-};
 
 export interface AssetCheckoutRequest {
   coTargetKind?: string;
@@ -64,7 +58,7 @@ export async function uploadAssetPhoto(
   options: AssetUploadOptions = {},
 ): Promise<DriveFileInfo> {
   const base = import.meta.env.VITE_API_BASE ?? '';
-  const authHeader = buildAuthHeader();
+  const authHeader = buildAuthorizationHeader();
 
   const form = new FormData();
   form.append('file', file);

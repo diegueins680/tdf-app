@@ -53,7 +53,7 @@ const renderPage = async (container: HTMLElement) => {
   let root: Root | null = createRoot(container);
   await act(async () => {
     root?.render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <QueryClientProvider client={qc}>
           <PublicBookingPage />
         </QueryClientProvider>

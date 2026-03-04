@@ -1,4 +1,4 @@
-import { getStoredSessionToken } from '../session/SessionContext';
+import { buildAuthorizationHeader } from './authHeader';
 
 export interface LiveSessionMusicianInput {
   partyId: number;
@@ -45,7 +45,7 @@ export interface InputInventoryItem {
 
 export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload): Promise<void> {
   const base = import.meta.env.VITE_API_BASE ?? '';
-  const token = getStoredSessionToken();
+  const authHeader = buildAuthorizationHeader();
 
   const form = new FormData();
   form.append('bandName', payload.bandName);
@@ -69,7 +69,7 @@ export async function submitLiveSessionIntake(payload: LiveSessionIntakePayload)
   const res = await fetch(`${base}/live-sessions/intake`, {
     method: 'POST',
     body: form,
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    headers: authHeader ? { Authorization: authHeader } : undefined,
   });
 
   if (!res.ok) {

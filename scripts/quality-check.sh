@@ -21,9 +21,11 @@ fi
 
 if command -v stack >/dev/null 2>&1; then
   echo "▶ Running Haskell tests (stack test)"
+  STACK_ROOT_DIR="${STACK_ROOT:-$ROOT/.stack-root}"
+  mkdir -p "$STACK_ROOT_DIR"
   (
     cd "$ROOT/tdf-hq"
-    stack test
+    STACK_ROOT="$STACK_ROOT_DIR" stack test
   )
 elif [ "${REQUIRE_STACK:-0}" = "1" ]; then
   echo "✖ stack command not found. Install stack." >&2

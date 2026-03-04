@@ -1,4 +1,4 @@
-import { getStoredSessionToken } from '../session/SessionContext';
+import { buildAuthorizationHeader } from './authHeader';
 
 export interface FeedbackPayload {
   title: string;
@@ -12,7 +12,7 @@ export interface FeedbackPayload {
 
 export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
   const base = import.meta.env.VITE_API_BASE ?? '';
-  const token = getStoredSessionToken();
+  const authHeader = buildAuthorizationHeader();
 
   const form = new FormData();
   form.append('title', payload.title);
@@ -28,7 +28,7 @@ export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
   const res = await fetch(`${base}/feedback`, {
     method: 'POST',
     body: form,
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    headers: authHeader ? { Authorization: authHeader } : undefined,
   });
 
   if (!res.ok) {

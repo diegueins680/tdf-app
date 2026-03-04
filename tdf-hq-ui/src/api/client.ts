@@ -1,14 +1,8 @@
-import { getStoredSessionToken } from '../session/SessionContext';
+import { buildAuthorizationHeader } from './authHeader';
 import { env } from '../utils/env';
 
 const API_BASE = env.read('VITE_API_BASE') ?? '';
 export const API_BASE_URL = API_BASE;
-
-function buildAuthHeader(): string | undefined {
-  const token = getStoredSessionToken();
-  if (!token) return undefined;
-  return token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`;
-}
 
 const guessCrossOriginHint = () => {
   if (typeof window === 'undefined') return null;
@@ -39,7 +33,7 @@ const normalizeNetworkError = (err: unknown) => {
 };
 
 async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const authHeader = buildAuthHeader();
+  const authHeader = buildAuthorizationHeader();
   let res: Response;
   try {
     res = await fetch(`${API_BASE}${path}`, {
