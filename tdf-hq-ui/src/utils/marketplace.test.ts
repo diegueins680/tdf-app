@@ -27,6 +27,12 @@ describe('getOrderStatusMeta', () => {
     expect(getOrderStatusMeta('paypal_refunded').label).toBe('Reembolsado');
   });
 
+  it('classifies datafast refunds as refunded instead of in-review', () => {
+    const refunded = getOrderStatusMeta('datafast_refunded');
+    expect(refunded.label).toBe('Reembolsado');
+    expect(refunded.color).toBe('default');
+  });
+
   it('does not classify unpaid as paid by substring match', () => {
     const meta = getOrderStatusMeta('unpaid');
     expect(meta.label).toContain('rechazado');
@@ -43,6 +49,11 @@ describe('getOrderStatusMeta', () => {
     const meta = getOrderStatusMeta('custom_status');
     expect(meta.label).toBe('custom_status');
     expect(meta.color).toBe('default');
+  });
+
+  it('trims unknown status labels before using fallback text', () => {
+    const meta = getOrderStatusMeta('  custom_status  ');
+    expect(meta.label).toBe('custom_status');
   });
 });
 

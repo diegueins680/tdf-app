@@ -45,9 +45,10 @@ const parseOptionalInt = (value: string): number | undefined => {
   const trimmed = value.trim();
   if (trimmed === '') return undefined;
   if (!/^\d+$/.test(trimmed)) return undefined;
-  const parsed = Number.parseInt(trimmed, 10);
+  const parsed = Number(trimmed);
+  if (!Number.isSafeInteger(parsed)) return undefined;
   if (parsed < 0) return undefined;
-  return Number.isNaN(parsed) ? undefined : parsed;
+  return parsed;
 };
 
 const parsePositiveSafeInt = (value: unknown): number | undefined => {

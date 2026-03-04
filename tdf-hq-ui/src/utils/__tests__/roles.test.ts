@@ -70,6 +70,12 @@ describe('signup payload builder', () => {
     expect(payload.internshipRequiredHours).toBe(120);
   });
 
+  it('drops internship required hours when value is not a safe integer', () => {
+    const form = { ...baseForm, internshipRequiredHours: `${Number.MAX_SAFE_INTEGER + 1}` };
+    const payload = buildSignupPayload(form, ['Intern'], []);
+    expect(payload.internshipRequiredHours).toBeUndefined();
+  });
+
   it('normalizes fan artist ids to unique positive safe integers', () => {
     const payload = buildSignupPayload(baseForm, ['Fan'], [7, 7, 0, -3, 9.5, Number.NaN, 11]);
     expect(payload.fanArtistIds).toEqual([7, 11]);

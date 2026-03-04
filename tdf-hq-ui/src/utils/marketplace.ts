@@ -9,9 +9,12 @@ const toTokenSet = (status: string): Set<string> => {
   return new Set(normalized.split(/[^a-z0-9]+/).filter(Boolean));
 };
 
+const normalizeStatus = (status: string): string => status.trim();
+
 // Map backend order status to badge copy and color.
 export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
-  const norm = status.trim().toLowerCase();
+  const normalizedStatus = normalizeStatus(status);
+  const norm = normalizedStatus.toLowerCase();
   const tokens = toTokenSet(norm);
   const hasToken = (...values: string[]) => values.some((value) => tokens.has(value));
   const hasFragment = (...values: string[]) => values.some((value) => norm.includes(value));
@@ -22,6 +25,9 @@ export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
   const hasRefunded = () => hasToken('refund', 'refunded', 'reversal', 'reversed', 'chargeback');
 
   if (hasToken('datafast') || hasFragment('datafast')) {
+    if (hasRefunded()) {
+      return { label: 'Reembolsado', color: 'default', desc: 'Pago con tarjeta reembolsado.' };
+    }
     if (hasRejected()) {
       return { label: 'Pago rechazado', color: 'default', desc: 'El pago con tarjeta fue rechazado.' };
     }
@@ -92,7 +98,7 @@ export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
     return { label: 'Completado', color: 'success', desc: 'Pedido entregado.' };
   }
 
-  return { label: status || 'Estado', color: 'default', desc: '' };
+  return { label: normalizedStatus || 'Estado', color: 'default', desc: '' };
 };
 
 // Present human readable "last updated" text from a timestamp in ms.
