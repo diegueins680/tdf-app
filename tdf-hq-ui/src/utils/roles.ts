@@ -6,16 +6,19 @@ export function normalizeRolesInput<T extends string>(
   allowedRoles: readonly T[],
 ): T[] {
   const entries = Array.isArray(value) ? value : value.split(',');
-  const allowed = new Set<T>(allowedRoles as T[]);
+  const allowedByLower = new Map<string, T>();
+  allowedRoles.forEach((role) => {
+    allowedByLower.set(role.toLowerCase(), role);
+  });
   const unique: T[] = [];
 
   entries
     .map((entry) => entry.trim())
     .filter(Boolean)
     .forEach((role) => {
-      if (allowed.has(role as T) && !unique.includes(role as T)) {
-        unique.push(role as T);
-      }
+      const canonicalRole = allowedByLower.get(role.toLowerCase());
+      if (!canonicalRole || unique.includes(canonicalRole)) return;
+      unique.push(canonicalRole);
     });
 
   return unique;

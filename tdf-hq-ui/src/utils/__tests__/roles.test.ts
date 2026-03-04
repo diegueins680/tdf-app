@@ -2,10 +2,15 @@ import { buildSignupPayload, deriveEffectiveRoles, normalizeRolesInput, normaliz
 import { SELF_SIGNUP_ROLES } from '../../constants/roles';
 
 describe('role normalization helpers', () => {
-  it('normalizes roles with trimming, de-dup, and filtering', () => {
+  it('normalizes roles with trimming, case-insensitive de-dup, and filtering', () => {
     const allowed = ['Fan', 'Admin'] as const;
-    const result = normalizeRolesInput([' Fan ', 'fan', 'Admin', 'Unknown'], allowed);
+    const result = normalizeRolesInput([' Fan ', 'fan', 'ADMIN', 'Unknown'], allowed);
     expect(result).toEqual(['Fan', 'Admin']);
+  });
+
+  it('normalizes signup role query values regardless of casing', () => {
+    const result = normalizeSignupRoles('fan,intern,ARTISTA,promotor,bogus');
+    expect(result).toEqual(['Fan', 'Intern', 'Artista', 'Promotor']);
   });
 
   it('normalizes signup roles using the allowlist', () => {

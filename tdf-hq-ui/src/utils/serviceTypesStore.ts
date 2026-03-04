@@ -112,9 +112,10 @@ export const mergeServiceTypes = (
   items?: ServiceCatalogDTO[] | null,
   opts: { includeInactive?: boolean; sort?: boolean } = {},
 ): ServiceType[] => {
-  if (!items || items.length === 0) return cloneDefaultServiceTypes();
+  if (!items) return cloneDefaultServiceTypes();
+  if (items.length === 0) return cloneDefaultServiceTypes();
   const filtered = opts.includeInactive ? items : items.filter((svc) => svc.scActive);
-  if (filtered.length === 0) return cloneDefaultServiceTypes();
+  if (filtered.length === 0) return [];
   const mapped = filtered.map(mapServiceCatalogDto);
   if (opts.sort === false) return mapped;
   return mapped.sort((a, b) => a.name.localeCompare(b.name));

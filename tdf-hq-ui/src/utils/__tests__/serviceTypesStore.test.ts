@@ -77,4 +77,37 @@ describe('serviceTypesStore', () => {
     const withInactive = mergeServiceTypes(items, { includeInactive: true });
     expect(withInactive.some((svc) => svc.name === 'Inactivo')).toBe(true);
   });
+
+  it('returns an empty list when API data exists but every service is inactive', () => {
+    const items: ServiceCatalogDTO[] = [
+      {
+        scId: 1,
+        scName: 'Inactivo A',
+        scKind: 'Recording',
+        scPricingModel: 'Hourly',
+        scRateCents: 1000,
+        scCurrency: 'USD',
+        scBillingUnit: 'hora',
+        scTaxBps: 1200,
+        scActive: false,
+      },
+      {
+        scId: 2,
+        scName: 'Inactivo B',
+        scKind: 'Mixing',
+        scPricingModel: 'PerSong',
+        scRateCents: 2000,
+        scCurrency: 'USD',
+        scBillingUnit: 'canción',
+        scTaxBps: 1200,
+        scActive: false,
+      },
+    ];
+
+    expect(mergeServiceTypes(items)).toEqual([]);
+    expect(mergeServiceTypes(items, { includeInactive: true }).map((svc) => svc.name)).toEqual([
+      'Inactivo A',
+      'Inactivo B',
+    ]);
+  });
 });

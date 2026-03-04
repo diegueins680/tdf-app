@@ -3,9 +3,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "▶ Linting and type-checking tdf-hq-ui"
+echo "▶ Linting, type-checking and testing tdf-hq-ui"
 npm run lint --workspace=tdf-hq-ui --prefix "$ROOT"
 npm run typecheck --workspace=tdf-hq-ui --prefix "$ROOT"
+npm run test --workspace=tdf-hq-ui --prefix "$ROOT"
 
 if [ -f "$ROOT/tdf-mobile/package.json" ]; then
   echo "▶ Linting, type-checking and testing tdf-mobile"
