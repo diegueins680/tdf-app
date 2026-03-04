@@ -34,43 +34,58 @@ export const DEFAULT_DEMO_TOKEN = inferredDemoToken;
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
-const parseStoredSession = (raw: string): SessionUser | null => {
+const normalizeNonEmptyString = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+};
+
+const normalizeStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  value.forEach((entry) => {
+    if (typeof entry !== 'string') return;
+    const trimmed = entry.trim();
+    if (trimmed === '' || seen.has(trimmed)) return;
+    seen.add(trimmed);
+    normalized.push(trimmed);
+  });
+  return normalized;
+};
+
+const normalizePositivePartyId = (value: unknown): number | undefined => {
+  if (typeof value === 'number') {
+    return Number.isSafeInteger(value) && value > 0 ? value : undefined;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!/^\d+$/.test(trimmed)) return undefined;
+    const parsed = Number.parseInt(trimmed, 10);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : undefined;
+  }
+  return undefined;
+};
+
+export const parseStoredSession = (raw: string): SessionUser | null => {
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== 'object') return null;
     const value = parsed as Record<string, unknown>;
-    const username = value['username'];
-    if (typeof username !== 'string') return null;
-    const rolesRaw = value['roles'];
-    const roles = Array.isArray(rolesRaw)
-      ? rolesRaw.filter((role): role is string => typeof role === 'string')
-      : [];
-    const modulesRaw = value['modules'];
-    const modules = Array.isArray(modulesRaw)
-      ? modulesRaw.filter((module): module is string => typeof module === 'string')
-      : undefined;
-    const apiTokenRaw = value['apiToken'];
-    const apiToken =
-      typeof apiTokenRaw === 'string'
-        ? apiTokenRaw.trim() || null
-        : apiTokenRaw == null
-          ? undefined
-          : null;
-    const partyIdRaw = value['partyId'];
-    const displayNameRaw = value['displayName'];
-    const partyId =
-      typeof partyIdRaw === 'number' && Number.isFinite(partyIdRaw)
-        ? partyIdRaw
-        : typeof partyIdRaw === 'string' && /^\d+$/.test(partyIdRaw.trim())
-          ? Number.parseInt(partyIdRaw.trim(), 10)
-          : undefined;
+    const username = normalizeNonEmptyString(value['username']);
+    if (!username) return null;
+    const roles = normalizeStringArray(value['roles']);
+    const modules = normalizeStringArray(value['modules']);
+    const apiToken = normalizeNonEmptyString(value['apiToken']) ?? undefined;
+    const partyId = normalizePositivePartyId(value['partyId']);
+    const displayName = normalizeNonEmptyString(value['displayName']) ?? username;
 
     return {
       username,
-      displayName: typeof displayNameRaw === 'string' && displayNameRaw.trim() ? displayNameRaw : username,
+      displayName,
       roles,
-      ...(apiToken !== undefined ? { apiToken } : {}),
-      ...(modules ? { modules } : {}),
+      ...(apiToken ? { apiToken } : {}),
+      ...(modules.length > 0 ? { modules } : {}),
       ...(partyId !== undefined ? { partyId } : {}),
     };
   } catch {

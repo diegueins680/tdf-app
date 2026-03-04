@@ -9,14 +9,38 @@ const ENGINEERS_CACHE_KEY = 'tdf-engineers-cache-v1';
 
 const hasBrowserStorage = () => typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 
-const normalizeEngineers = (rows: PublicEngineer[]): PublicEngineer[] => {
+const normalizeNonEmptyString = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+};
+
+const normalizePositiveEngineerId = (value: unknown): number | null => {
+  if (typeof value === 'number') {
+    return Number.isSafeInteger(value) && value > 0 ? value : null;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!/^\d+$/.test(trimmed)) return null;
+    const parsed = Number.parseInt(trimmed, 10);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+  }
+  return null;
+};
+
+const normalizeEngineers = (rows: unknown): PublicEngineer[] => {
+  if (!Array.isArray(rows)) return [];
   const map = new Map<string, PublicEngineer>();
   rows.forEach((row) => {
-    const name = row.peName?.trim();
-    if (!name) return;
-    const key = name.toLowerCase();
+    if (!row || typeof row !== 'object') return;
+    const item = row as Record<string, unknown>;
+    const peId = normalizePositiveEngineerId(item['peId']);
+    const peName = normalizeNonEmptyString(item['peName']);
+    if (peId === null || !peName) return;
+
+    const key = peName.toLowerCase();
     if (!map.has(key)) {
-      map.set(key, { peId: row.peId, peName: name });
+      map.set(key, { peId, peName });
     }
   });
   return Array.from(map.values()).sort((a, b) => a.peName.localeCompare(b.peName));
@@ -28,16 +52,7 @@ const readCachedEngineers = (): PublicEngineer[] => {
     const raw = window.localStorage.getItem(ENGINEERS_CACHE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    const rows: PublicEngineer[] = parsed.flatMap((item) => {
-      if (!item || typeof item !== 'object') return [];
-      const obj = item as Record<string, unknown>;
-      const peId = typeof obj['peId'] === 'number' ? obj['peId'] : Number(obj['peId']);
-      const peName = typeof obj['peName'] === 'string' ? obj['peName'] : '';
-      if (!Number.isFinite(peId) || !peName.trim()) return [];
-      return [{ peId, peName }];
-    });
-    return normalizeEngineers(rows);
+    return normalizeEngineers(parsed);
   } catch {
     return [];
   }
