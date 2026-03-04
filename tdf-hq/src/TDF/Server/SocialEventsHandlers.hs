@@ -1986,17 +1986,19 @@ parseTicketStatus raw =
 -- | Parse event and invitation ids, returning a typed pair or an HTTP 400 error.
 parseInvitationIdsEither :: T.Text -> T.Text -> Either ServerError (SocialEventId, EventInvitationId)
 parseInvitationIdsEither eventIdStr invitationIdStr =
-  case ( readMaybe (T.unpack (T.strip eventIdStr)) :: Maybe Int64
-       , readMaybe (T.unpack (T.strip invitationIdStr)) :: Maybe Int64
-       ) of
-    (Just eventNum, Just invitationNum) -> Right (toSqlKey eventNum, toSqlKey invitationNum)
+  case (parseInt64Either "event" eventIdStr, parseInt64Either "invitation" invitationIdStr) of
+    (Right eventNum, Right invitationNum) -> Right (toSqlKey eventNum, toSqlKey invitationNum)
     _ -> Left err400 { errBody = "Invalid event or invitation id" }
 
 parseInt64Either :: T.Text -> T.Text -> Either ServerError Int64
 parseInt64Either label raw =
   case readMaybe (T.unpack (T.strip raw)) :: Maybe Int64 of
-    Just n -> Right n
+    Just n | n > 0 -> Right n
     Nothing ->
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
+        }
+    _ ->
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
         }

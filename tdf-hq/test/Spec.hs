@@ -53,6 +53,11 @@ main = hspec $ do
                 Left err -> BL.unpack (errBody err) `shouldContain` "Invalid event or invitation id"
                 Right _ -> expectationFailure "Expected an error for invalid ids"
 
+        it "rejects non-positive ids" $ do
+            case parseInvitationIdsEither "0" "-3" of
+                Left err -> BL.unpack (errBody err) `shouldContain` "Invalid event or invitation id"
+                Right _ -> expectationFailure "Expected an error for non-positive ids"
+
     describe "normalizeTicketOrderStatus" $ do
         it "defaults to pending for empty/unknown values" $ do
             normalizeTicketOrderStatus Nothing `shouldBe` "pending"
