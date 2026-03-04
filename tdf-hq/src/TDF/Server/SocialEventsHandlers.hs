@@ -1994,10 +1994,6 @@ parseInt64Either :: T.Text -> T.Text -> Either ServerError Int64
 parseInt64Either label raw =
   case readMaybe (T.unpack (T.strip raw)) :: Maybe Int64 of
     Just n | n > 0 -> Right n
-    Nothing ->
-      Left err400
-        { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
-        }
     _ ->
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
