@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -70,6 +70,12 @@ export default function ReportsPage() {
   const [bookingStatusFilter, setBookingStatusFilter] = useState<string>('all');
   const [classStatusFilter, setClassStatusFilter] = useState<string>('all');
   const [teacherFilter, setTeacherFilter] = useState<number | 'all'>('all');
+  const [clockTs, setClockTs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockTs(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const fromDate = useMemo(() => inputToDate(fromInput), [fromInput]);
   const toDate = useMemo(() => inputToDate(toInput), [toInput]);
@@ -151,12 +157,12 @@ export default function ReportsPage() {
     [classes, classStatusFilter, inRange, teacherFilter],
   );
 
-  const now = useMemo(() => new Date(), []);
+  const now = useMemo(() => new Date(clockTs), [clockTs]);
   const sevenDaysOut = useMemo(() => {
-    const d = new Date();
+    const d = new Date(clockTs);
     d.setDate(d.getDate() + 7);
     return d;
-  }, []);
+  }, [clockTs]);
 
   const kpis = useMemo(() => {
     const upcomingBookings = filteredBookings.filter((b) => {
