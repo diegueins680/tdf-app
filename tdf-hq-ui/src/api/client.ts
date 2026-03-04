@@ -76,8 +76,14 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     throw new Error(details);
   }
 
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+  if (res.status === 204 || res.status === 205) return undefined as T;
+  const raw = await res.text().catch(() => '');
+  if (raw.trim() === '') return undefined as T;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return raw as unknown as T;
+  }
 }
 
 export const get = <T>(p: string) => api<T>(p, { method: 'GET' });

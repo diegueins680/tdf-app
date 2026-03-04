@@ -76,16 +76,29 @@ export function buildSignupPayload(
   };
 }
 
+const normalizeRoleTokens = (roles: readonly string[]): string[] => {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  roles.forEach((role) => {
+    const clean = role.trim().toLowerCase();
+    if (!clean || seen.has(clean)) return;
+    seen.add(clean);
+    normalized.push(clean);
+  });
+  return normalized;
+};
+
 export function deriveEffectiveRoles(
   apiRoles: string[] | undefined,
   selectedRoles: SignupRole[],
   defaultRole = 'fan',
 ): string[] {
-  const apiNormalized = (apiRoles ?? []).map((role) => role.toLowerCase()).filter(Boolean);
+  const apiNormalized = normalizeRoleTokens(apiRoles ?? []);
   if (apiNormalized.length) return apiNormalized;
 
-  const selectedNormalized = normalizeSignupRoles(selectedRoles).map((role) => role.toLowerCase());
+  const selectedNormalized = normalizeRoleTokens(normalizeSignupRoles(selectedRoles));
   if (selectedNormalized.length) return selectedNormalized;
 
-  return [defaultRole];
+  const fallbackRole = defaultRole.trim().toLowerCase();
+  return [fallbackRole || 'fan'];
 }

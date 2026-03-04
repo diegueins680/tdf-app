@@ -67,6 +67,11 @@ describe('deriveEffectiveRoles', () => {
     expect(roles).toEqual(['admin', 'fan']);
   });
 
+  it('trims and de-duplicates API roles before returning them', () => {
+    const roles = deriveEffectiveRoles(['  Fan ', 'fan', ' ADMIN  ', ''], ['Artista']);
+    expect(roles).toEqual(['fan', 'admin']);
+  });
+
   it('falls back to selected roles when API returns none', () => {
     const roles = deriveEffectiveRoles([], ['Fan', 'Artista']);
     expect(roles).toEqual(['fan', 'artista']);
@@ -74,6 +79,11 @@ describe('deriveEffectiveRoles', () => {
 
   it('falls back to default when both API and selections are empty', () => {
     const roles = deriveEffectiveRoles(undefined, []);
+    expect(roles).toEqual(['fan']);
+  });
+
+  it('uses fan fallback when default role is blank', () => {
+    const roles = deriveEffectiveRoles(undefined, [], '   ');
     expect(roles).toEqual(['fan']);
   });
 });
