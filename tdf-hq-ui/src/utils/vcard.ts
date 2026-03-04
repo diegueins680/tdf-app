@@ -7,6 +7,24 @@ export interface VCardPayload {
   ts?: number;
 }
 
+const normalizeTextField = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+};
+
+const parsePositivePartyId = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isInteger(value) && value > 0) return value;
+  if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
+    const parsed = Number.parseInt(value.trim(), 10);
+    return parsed > 0 ? parsed : null;
+  }
+  return null;
+};
+
+const normalizeTimestamp = (value: unknown): number | undefined =>
+  typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+
 export function buildVCardSharePayload(input: {
   name?: string | null;
   email?: string | null;
@@ -23,7 +41,7 @@ export function buildVCardSharePayload(input: {
     name: normalize(input.name),
     email: normalize(input.email),
     phone: normalize(input.phone),
-    partyId: typeof input.partyId === 'number' && input.partyId > 0 ? input.partyId : undefined,
+    partyId: parsePositivePartyId(input.partyId),
     ts: Date.now(),
   };
   return JSON.stringify(payload);
@@ -34,14 +52,13 @@ export function parseVCardPayload(raw: string): VCardPayload | null {
   try {
     const parsed = JSON.parse(raw) as Partial<VCardPayload>;
     if (parsed?.kind !== 'vcard-exchange') return null;
-    const partyId = typeof parsed.partyId === 'number' && parsed.partyId > 0 ? parsed.partyId : null;
     return {
       kind: 'vcard-exchange',
-      name: parsed.name ?? null,
-      email: parsed.email ?? null,
-      phone: parsed.phone ?? null,
-      partyId,
-      ts: parsed.ts,
+      name: normalizeTextField(parsed.name),
+      email: normalizeTextField(parsed.email),
+      phone: normalizeTextField(parsed.phone),
+      partyId: parsePositivePartyId(parsed.partyId),
+      ts: normalizeTimestamp(parsed.ts),
     };
   } catch {
     return null;

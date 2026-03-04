@@ -7,6 +7,19 @@ describe('serviceTypesStore', () => {
     expect(mergeServiceTypes([])).toEqual(defaultServiceTypes);
   });
 
+  it('returns cloned defaults to avoid accidental global mutation', () => {
+    const first = mergeServiceTypes();
+    expect(first).not.toBe(defaultServiceTypes);
+    const firstItem = first[0];
+    const defaultFirstItem = defaultServiceTypes[0];
+    expect(firstItem).toBeDefined();
+    expect(defaultFirstItem).toBeDefined();
+    if (!firstItem || !defaultFirstItem) return;
+    firstItem.name = 'Mutado accidentalmente';
+    const second = mergeServiceTypes();
+    expect(second[0]?.name).toBe(defaultFirstItem.name);
+  });
+
   it('maps service catalog DTOs to service types', () => {
     const dto: ServiceCatalogDTO = {
       scId: 1,
