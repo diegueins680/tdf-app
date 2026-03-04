@@ -45,8 +45,12 @@ export const Marketplace = {
   listOrders: (params?: { status?: string; limit?: number; offset?: number }) => {
     const qs = new URLSearchParams();
     if (params?.status) qs.set('status', params.status);
-    if (params?.limit) qs.set('limit', String(params.limit));
-    if (params?.offset) qs.set('offset', String(params.offset));
+    if (typeof params?.limit === 'number' && Number.isFinite(params.limit) && params.limit > 0) {
+      qs.set('limit', String(Math.trunc(params.limit)));
+    }
+    if (typeof params?.offset === 'number' && Number.isFinite(params.offset) && params.offset >= 0) {
+      qs.set('offset', String(Math.trunc(params.offset)));
+    }
     const query = qs.toString();
     const suffix = query ? `?${query}` : '';
     return get<MarketplaceOrderDTO[]>(`/marketplace/orders${suffix}`);
