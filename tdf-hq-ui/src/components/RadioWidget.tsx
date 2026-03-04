@@ -49,6 +49,7 @@ import StopCircleIcon from '@mui/icons-material/StopCircle';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Countries } from '../api/countries';
+import { toLocalDateInputValue } from '../utils/dateOnly';
 
 interface Prompt {
   text: string;
@@ -1549,7 +1550,7 @@ export default function RadioWidget() {
     const newPrompt: Prompt = {
       text: value,
       author: 'Tú',
-      createdAt: new Date().toISOString().slice(0, 10),
+      createdAt: toLocalDateInputValue(),
       code: generateTidalCode(value, activeStation.mood).code,
     };
     setPromptState((prev) => ({

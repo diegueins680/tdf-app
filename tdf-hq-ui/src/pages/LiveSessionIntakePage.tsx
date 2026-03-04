@@ -25,6 +25,7 @@ import type { Role } from '../api/generated/client';
 import { submitLiveSessionIntake } from '../api/liveSessions';
 import { getStoredSessionToken } from '../session/SessionContext';
 import { Bands } from '../api/bands';
+import { toLocalDateInputValue } from '../utils/dateOnly';
 
 interface MusicianEntry {
   id: string;
@@ -104,7 +105,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const [primaryGenre, setPrimaryGenre] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
-  const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [sessionDate, setSessionDate] = useState(() => toLocalDateInputValue());
   const [availableDates, setAvailableDates] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [musicians, setMusicians] = useState<MusicianEntry[]>([emptyMusician()]);
@@ -135,7 +136,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       setPrimaryGenre(parsed.primaryGenre ?? '');
       setContactEmail(parsed.contactEmail ?? '');
       setContactPhone(parsed.contactPhone ?? '');
-      setSessionDate(parsed.sessionDate ?? new Date().toISOString().slice(0, 10));
+      setSessionDate(parsed.sessionDate ?? toLocalDateInputValue());
       setAvailableDates(parsed.availableDates ?? '');
       if (Array.isArray(parsed.musicians) && parsed.musicians.length > 0) {
         setMusicians(parsed.musicians);

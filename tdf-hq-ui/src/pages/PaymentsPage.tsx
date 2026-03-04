@@ -30,6 +30,7 @@ import { Payments } from '../api/payments';
 import { Parties } from '../api/parties';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { DriveFileInfo } from '../services/googleDrive';
+import { toLocalDateInputValue } from '../utils/dateOnly';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'COP'];
@@ -52,7 +53,7 @@ const partyFilterOptions = createFilterOptions<PartyDTO>({
 
 const toPeriod = (isoDate: string) => {
   const raw = isoDate.trim();
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(raw);
   if (!match) return '';
   const [, yearRaw, monthRaw, dayRaw] = match;
   if (!yearRaw || !monthRaw || !dayRaw) return '';
@@ -97,13 +98,13 @@ function PaymentForm({
   const qc = useQueryClient();
   const [selectedParty, setSelectedParty] = useState<PartyDTO | null>(defaultParty ?? null);
   const [partyInput, setPartyInput] = useState<string>('');
-  const [paidAt, setPaidAt] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [paidAt, setPaidAt] = useState<string>(() => toLocalDateInputValue());
   const [amount, setAmount] = useState<string>('');
   const [currency, setCurrency] = useState<string>('USD');
   const [method, setMethod] = useState<string>('Produbanco');
   const [reference, setReference] = useState<string>('N/A');
   const [concept, setConcept] = useState<string>('Honorarios');
-  const [period, setPeriod] = useState<string>(toPeriod(new Date().toISOString()));
+  const [period, setPeriod] = useState<string>(() => toPeriod(toLocalDateInputValue()));
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
   const [attachmentName, setAttachmentName] = useState<string>('');
   const [invoiceId, setInvoiceId] = useState<string>('');
