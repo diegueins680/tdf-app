@@ -7,6 +7,8 @@ echo "▶ Linting, type-checking and testing tdf-hq-ui"
 npm run lint --workspace=tdf-hq-ui --prefix "$ROOT"
 npm run typecheck --workspace=tdf-hq-ui --prefix "$ROOT"
 npm run test --workspace=tdf-hq-ui --prefix "$ROOT"
+echo "▶ Building tdf-hq-ui"
+npm run build --workspace=tdf-hq-ui --prefix "$ROOT"
 
 if [ -f "$ROOT/tdf-mobile/package.json" ]; then
   echo "▶ Linting, type-checking and testing tdf-mobile"
@@ -20,19 +22,21 @@ else
   echo "▶ Skipping tdf-mobile checks: tdf-mobile/package.json not found"
 fi
 
-if command -v stack >/dev/null 2>&1; then
+BACKEND_DIR="$ROOT/tdf-hq"
+
+if [ -d "$BACKEND_DIR" ] && [ -f "$BACKEND_DIR/stack.yaml" ] && command -v stack >/dev/null 2>&1; then
   echo "▶ Running Haskell tests (stack test)"
   STACK_ROOT_DIR="${STACK_ROOT:-$ROOT/.stack-root}"
   mkdir -p "$STACK_ROOT_DIR"
   (
-    cd "$ROOT/tdf-hq"
+    cd "$BACKEND_DIR"
     STACK_ROOT="$STACK_ROOT_DIR" stack test
   )
 elif [ "${REQUIRE_STACK:-0}" = "1" ]; then
-  echo "✖ stack command not found. Install stack." >&2
+  echo "✖ Missing stack or backend project. Install stack and ensure tdf-hq/stack.yaml exists." >&2
   exit 1
 else
-  echo "▶ Skipping Haskell tests: stack command not found"
+  echo "▶ Skipping Haskell tests: stack unavailable or backend project missing"
 fi
 
 echo "✅ Quality checks completed"
