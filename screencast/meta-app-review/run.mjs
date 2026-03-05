@@ -6,6 +6,9 @@ const INBOX_URL = process.env.TDF_REVIEW_INBOX_URL ?? 'https://tdf-app.pages.dev
 const OUT_DIR = process.env.TDF_SCREENCAST_OUT_DIR ?? 'screencast/meta-app-review/output';
 const REVIEW_USER = process.env.TDF_REVIEW_USERNAME ?? 'admin';
 const REVIEW_PASS = process.env.TDF_REVIEW_PASSWORD ?? 'password123';
+const ENABLE_SPOTLIGHT = process.env.TDF_REVIEW_SPOTLIGHT !== '0';
+const SPOTLIGHT_MS_RAW = Number.parseInt(process.env.TDF_REVIEW_SPOTLIGHT_MS ?? '1200', 10);
+const SPOTLIGHT_MS = Number.isFinite(SPOTLIGHT_MS_RAW) && SPOTLIGHT_MS_RAW > 0 ? SPOTLIGHT_MS_RAW : 1200;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const setupHeadingMatcher = /Meta App Review:\s*Instagram Setup/i;
@@ -22,6 +25,86 @@ async function pauseForHuman(page, message) {
   console.log('Press ENTER in this terminal to continue...');
   await page.bringToFront();
   await new Promise((resolve) => process.stdin.once('data', resolve));
+}
+
+async function spotlight(page, locator, label, durationMs = SPOTLIGHT_MS) {
+  if (!ENABLE_SPOTLIGHT) {
+    return;
+  }
+  const target = locator.first();
+  const visible = await target.isVisible({ timeout: 3000 }).catch(() => false);
+  if (!visible) {
+    return;
+  }
+  await target.scrollIntoViewIfNeeded().catch(() => {});
+  const handle = await target.elementHandle();
+  if (!handle) {
+    return;
+  }
+
+  await handle
+    .evaluate(
+      (el, payload) => {
+        const rect = el.getBoundingClientRect();
+        if (!rect || rect.width <= 0 || rect.height <= 0) {
+          return;
+        }
+
+        const existing = document.getElementById('tdf-review-spotlight-overlay');
+        if (existing) {
+          existing.remove();
+        }
+
+        const overlay = document.createElement('div');
+        overlay.id = 'tdf-review-spotlight-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.left = `${Math.max(0, rect.left - 8)}px`;
+        overlay.style.top = `${Math.max(0, rect.top - 8)}px`;
+        overlay.style.width = `${Math.min(window.innerWidth, rect.width + 16)}px`;
+        overlay.style.height = `${Math.min(window.innerHeight, rect.height + 16)}px`;
+        overlay.style.border = '3px solid #00d4ff';
+        overlay.style.borderRadius = '12px';
+        overlay.style.boxShadow = '0 0 0 9999px rgba(5,12,30,0.18), 0 0 22px rgba(0,212,255,0.75)';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '2147483647';
+        overlay.style.opacity = '1';
+        overlay.style.transition = 'transform 150ms ease-out, opacity 220ms ease-out';
+        overlay.style.transform = 'scale(1)';
+
+        if (payload.labelText) {
+          const chip = document.createElement('div');
+          chip.textContent = payload.labelText;
+          chip.style.position = 'absolute';
+          chip.style.left = '8px';
+          chip.style.top = '-34px';
+          chip.style.padding = '6px 10px';
+          chip.style.borderRadius = '999px';
+          chip.style.background = 'rgba(0, 22, 33, 0.9)';
+          chip.style.color = '#d6f7ff';
+          chip.style.fontFamily = 'Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+          chip.style.fontSize = '12px';
+          chip.style.fontWeight = '600';
+          chip.style.whiteSpace = 'nowrap';
+          chip.style.letterSpacing = '0.02em';
+          overlay.appendChild(chip);
+        }
+
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => {
+          overlay.style.transform = 'scale(1.02)';
+        });
+        setTimeout(() => {
+          overlay.style.opacity = '0';
+          overlay.style.transform = 'scale(1.03)';
+          setTimeout(() => overlay.remove(), 260);
+        }, Math.max(250, payload.durationMs));
+      },
+      { labelText: label, durationMs }
+    )
+    .catch(() => {});
+
+  await sleep(durationMs + 180);
+  await handle.dispose().catch(() => {});
 }
 
 const iso = () => new Date().toISOString().replace(/[:.]/g, '-');
@@ -102,6 +185,7 @@ const main = async () => {
 
   if (!continueAlreadyVisible && hasConnectBtn) {
     await page.getByRole('heading', { name: /Connection status/i }).scrollIntoViewIfNeeded().catch(() => {});
+    await spotlight(page, connectBtn, 'Connect with Meta');
     await connectBtn.first().click();
     console.log('Connect/Re-authorize clicked. Waiting for manual Meta consent step.');
 
@@ -136,6 +220,7 @@ const main = async () => {
   }
   const continueVisibleAfterPrompt = await continueBtn.first().isVisible({ timeout: 5_000 }).catch(() => false);
   if (continueVisibleAfterPrompt) {
+    await spotlight(page, continueBtn, 'Continue to Inbox Flow');
     await continueBtn.click();
     console.log('Navigating to messaging inbox flow via Continue button.');
   } else {
@@ -159,20 +244,37 @@ const main = async () => {
   if ((await firstRow.count()) === 0) {
     throw new Error('No inbound conversation rows found in the inbox table.');
   }
+  await spotlight(page, firstRow, 'Open inbound conversation');
   await firstRow.click();
 
   // Dialog opens: type reply, send
   const outgoing = page.getByLabel(/Outgoing message/i);
   await outgoing.waitFor();
+  await spotlight(page, outgoing, 'Compose outgoing message');
   const unique = `Meta review test message ${iso()} - sent from TDF HQ UI`;
   console.log(`Prepared outbound verification message: ${unique}`);
   await outgoing.fill(unique);
 
   const sendBtn = page.getByRole('button', { name: /^Send message$/i });
+  await spotlight(page, sendBtn, 'Send message');
   await sendBtn.click();
+  console.log('Send message clicked. Checking confirmation UI...');
 
-  // Confirmation panel: show exact text to verify in native client
-  await page.getByText(/Step 3 of 3:/i).waitFor();
+  // Confirmation UI can vary by locale/version; try a few known signals.
+  let sendConfirmationDetected = false;
+  try {
+    await Promise.race([
+      page.getByText(/Step 3 of 3:|Paso 3 de 3:/i).first().waitFor({ timeout: 20_000 }),
+      page
+        .getByText(/sent successfully|message sent|mensaje enviado|delivery confirmation/i)
+        .first()
+        .waitFor({ timeout: 20_000 }),
+    ]);
+    sendConfirmationDetected = true;
+  } catch {
+    // Fall through to manual verification prompt.
+  }
+  console.log(`Send confirmation detected in UI: ${sendConfirmationDetected}`);
 
   await pauseForHuman(
     page,

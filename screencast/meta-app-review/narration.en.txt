@@ -1,0 +1,5 @@
+This video demonstrates the Instagram messaging flow used for Meta App Review.
+First, we connect the app with Meta Login and grant the requested permissions.
+Next, we open an inbound conversation from Instagram and compose a reply in TDF HQ.
+Then we send the message and confirm delivery.
+Finally, we verify the same message in the Instagram native client.

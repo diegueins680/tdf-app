@@ -4,6 +4,7 @@ This folder automates the **desktop** portion of the Meta App Review screencast:
 - Meta login + consent (human-in-the-loop)
 - Visible asset selection
 - Live send from app UI
+- Automatic spotlight highlights on key UI actions (connect, continue, compose, send)
 - Produces a browser recording (Playwright) you can post-process and stitch with the Android native-client clip.
 
 Permissions in scope:
@@ -28,6 +29,8 @@ Notes:
 - The script will **pause** and ask you to complete Meta login/consent if needed.
 - It will also pause to ensure an inbound message exists.
 - If App Review requires all four permissions, record two runs (one per provider config) and submit both clips or a stitched final video.
+- Set `TDF_REVIEW_SPOTLIGHT=0` to disable on-screen highlights.
+- Set `TDF_REVIEW_SPOTLIGHT_MS=1500` to control highlight duration in milliseconds.
 
 Output video is saved under:
 
@@ -47,12 +50,25 @@ Record a short clip showing:
 ./screencast/meta-app-review/render.sh \
   --desktop screencast/meta-app-review/output/<desktop>.webm \
   --phone /path/to/android.mp4 \
+  --captions /path/to/review-captions.srt \
+  --narration-text /path/to/narration.en.txt \
+  --voice Samantha \
   --out screencast/meta-app-review/output/final.mp4
 ```
 
 If you don't have the phone clip yet, omit `--phone`.
+If you already recorded narration audio, use `--narration-audio /path/to/voiceover.wav` instead of `--narration-text`.
+If you want automatic captions (Whisper CLI), use `--autocaptions` instead of `--captions`.
 
-## TODO (next iteration)
-- Add TTS narration generation (English)
-- Add captions burn-in (SRT via Whisper)
-- Add automatic zoom/highlight around key UI elements
+## 4) Quick Narration File (optional)
+
+Create a plain text file (English), for example:
+
+```text
+This video demonstrates the Instagram messaging flow used for Meta App Review.
+First, we connect the app with Meta Login and grant permissions.
+Then we open an inbound thread and send a reply from the TDF HQ interface.
+Finally, we verify the exact same message in the Instagram native client.
+```
+
+Then pass it with `--narration-text`.
