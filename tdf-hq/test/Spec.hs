@@ -21,6 +21,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeFinanceDirection,
     normalizeFinanceEntryStatus,
     normalizeFinanceSource,
+    normalizeArtistGenres,
     normalizeInvitationStatus,
     normalizeTicketOrderStatus,
     normalizeTicketStatus,
@@ -42,6 +43,10 @@ main = hspec $ do
 
         it "treats blank strings as pending" $ do
             normalizeInvitationStatus (Just "   ") `shouldBe` "pending"
+
+    describe "normalizeArtistGenres" $ do
+        it "trims genres, drops blanks, and deduplicates case-insensitively" $ do
+            normalizeArtistGenres ["  Salsa ", "", "salsa", " Rock ", "ROCK", "Pop"] `shouldBe` ["Salsa", "Rock", "Pop"]
 
     describe "parseInvitationIdsEither" $ do
         it "parses numeric ids into typed keys" $ do

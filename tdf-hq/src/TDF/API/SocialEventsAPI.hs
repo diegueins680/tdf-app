@@ -1,4 +1,6 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -13,10 +15,16 @@ module TDF.API.SocialEventsAPI
   , BudgetRoutes
   , FinanceRoutes
   , IdParam
+  , EventImageUploadForm(..)
+  , EventImageUploadDTO(..)
   ) where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Servant
 import Data.Text (Text)
+import qualified Data.Text as T
+import GHC.Generics (Generic)
+import Servant.Multipart (FileData, FromMultipart(..), MultipartForm, Tmp, lookupFile, lookupInput)
 
 import TDF.DTO.SocialEventsDTO
   ( EventDTO
@@ -39,6 +47,36 @@ import TDF.DTO.SocialEventsDTO
 
 type IdParam = Capture "id" Text
 
+data EventImageUploadForm = EventImageUploadForm
+  { eiuFile :: FileData Tmp
+  , eiuName :: Maybe Text
+  }
+
+instance FromMultipart Tmp EventImageUploadForm where
+  fromMultipart multipart = do
+    file <- lookupFile "file" multipart
+    let mName =
+          case lookupInput "name" multipart of
+            Right v ->
+              let trimmed = T.strip v
+              in if T.null trimmed then Nothing else Just trimmed
+            _ -> Nothing
+    pure EventImageUploadForm
+      { eiuFile = file
+      , eiuName = mName
+      }
+
+data EventImageUploadDTO = EventImageUploadDTO
+  { eiuEventId   :: Text
+  , eiuFileName  :: Text
+  , eiuPath      :: Text
+  , eiuPublicUrl :: Text
+  , eiuImageUrl  :: Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON EventImageUploadDTO
+instance FromJSON EventImageUploadDTO
+
 type EventsRoutes =
        "events"
          :> QueryParam "city" Text
@@ -53,6 +91,7 @@ type EventsRoutes =
   :<|> "events" :> ReqBody '[JSON] EventDTO :> Post '[JSON] EventDTO
   :<|> "events" :> IdParam :> Get '[JSON] EventDTO
   :<|> "events" :> IdParam :> ReqBody '[JSON] EventDTO :> Put '[JSON] EventDTO
+  :<|> "events" :> IdParam :> "image" :> MultipartForm Tmp EventImageUploadForm :> Post '[JSON] EventImageUploadDTO
   :<|> "events" :> IdParam :> DeleteNoContent
 
 type VenuesRoutes =

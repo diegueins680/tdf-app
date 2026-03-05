@@ -1,4 +1,4 @@
-import { get, post, put } from './client';
+import { get, post, postForm, put } from './client';
 
 export interface SocialArtistDTO {
   artistId?: string | null;
@@ -34,6 +34,14 @@ export interface SocialEventDTO {
   eventImageUrl?: string | null;
   eventIsPublic?: boolean | null;
   eventArtists: SocialArtistDTO[];
+}
+
+export interface SocialEventImageUploadDTO {
+  eiuEventId: string;
+  eiuFileName: string;
+  eiuPath: string;
+  eiuPublicUrl: string;
+  eiuImageUrl: string;
 }
 
 export interface SocialInvitationDTO {
@@ -192,6 +200,13 @@ export const SocialEventsAPI = {
     post<SocialEventDTO>('/social-events/events', payload),
   updateEvent: (eventId: string, payload: SocialEventDTO) =>
     put<SocialEventDTO>(`/social-events/events/${encodeURIComponent(eventId)}`, payload),
+  uploadEventImage: (eventId: string, file: File, name?: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    const trimmed = name?.trim() ?? '';
+    if (trimmed) form.append('name', trimmed);
+    return postForm<SocialEventImageUploadDTO>(`/social-events/events/${encodeURIComponent(eventId)}/image`, form);
+  },
   getEvent: (eventId: string) =>
     get<SocialEventDTO>(`/social-events/events/${encodeURIComponent(eventId)}`),
   listVenues: (opts?: { city?: string }) => {

@@ -1,9 +1,14 @@
+import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const URL = process.env.TDF_REVIEW_URL ?? 'https://tdf-app.pages.dev/social/instagram?review=1';
 const OUT_DIR = process.env.TDF_SCREENCAST_OUT_DIR ?? 'screencast/meta-app-review/output';
+const REVIEW_USER = process.env.TDF_REVIEW_USERNAME ?? 'admin';
+const REVIEW_PASS = process.env.TDF_REVIEW_PASSWORD ?? 'password123';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const setupHeadingMatcher = /Meta App Review:\s*Instagram Setup/i;
+const inboxHeadingMatcher = /Meta App Review:\s*Messaging Inbox/i;
 
 /**
  * Human-in-the-loop pauses:
@@ -20,7 +25,33 @@ async function pauseForHuman(page, message) {
 
 const iso = () => new Date().toISOString().replace(/[:.]/g, '-');
 
+async function ensureLoggedIn(page) {
+  const onLoginPath = /\/login(?:\?|$)/.test(page.url());
+  const loginHeading = page.getByRole('heading', { name: /Iniciar sesi[oó]n|Sign in|Login/i });
+  const onLoginScreen = onLoginPath || (await loginHeading.count()) > 0;
+
+  if (!onLoginScreen) {
+    return;
+  }
+
+  console.log('Login page detected. Signing in with review credentials...');
+
+  const username = page.getByRole('textbox', { name: /Usuario o correo|Username|Email/i }).first();
+  const password = page.getByRole('textbox', { name: /Contrase[nñ]a|Password/i }).first();
+  const submit = page.getByRole('button', { name: /Ingresar|Log in|Sign in/i }).first();
+
+  await username.waitFor();
+  await username.fill(REVIEW_USER);
+  await password.fill(REVIEW_PASS);
+  await submit.click();
+
+  await page.waitForURL((u) => !/\/login(?:\?|$)/.test(u.pathname), { timeout: 90_000 });
+  await page.waitForLoadState('networkidle').catch(() => {});
+}
+
 const main = async () => {
+  await mkdir(OUT_DIR, { recursive: true });
+
   const context = await chromium.launchPersistentContext('', {
     headless: false,
     locale: 'en-US',
@@ -31,13 +62,18 @@ const main = async () => {
   });
 
   const page = await context.newPage();
-  page.setDefaultTimeout(45_000);
+  page.setDefaultTimeout(90_000);
 
   console.log(`Opening: ${URL}`);
   await page.goto(URL, { waitUntil: 'networkidle' });
+  await ensureLoggedIn(page);
+
+  // After login we may land elsewhere; always return to review setup page.
+  await page.goto(URL, { waitUntil: 'networkidle' });
+  await ensureLoggedIn(page);
 
   // Step 1: Instagram setup screen (review mode)
-  await page.getByRole('heading', { name: /Meta App Review: Instagram Setup/i }).waitFor();
+  await page.getByRole('heading', { name: setupHeadingMatcher }).waitFor();
 
   // Ensure the Asset selection panel is visible (Meta reviewer requirement)
   await page.getByRole('heading', { name: /Asset selection/i }).scrollIntoViewIfNeeded().catch(() => {});
@@ -55,9 +91,10 @@ const main = async () => {
         '- Finish consent and return to the app tab.\n'
     );
 
-    // After human completes auth, return to setup page (the app often redirects back automatically).
+    // After human completes auth, return to setup page.
     await page.goto(URL, { waitUntil: 'networkidle' }).catch(() => {});
-    await page.getByRole('heading', { name: /Meta App Review: Instagram Setup/i }).waitFor();
+    await ensureLoggedIn(page);
+    await page.getByRole('heading', { name: setupHeadingMatcher }).waitFor();
   }
 
   // Make sure the Messaging asset dropdown is visible and has a selected value
@@ -68,7 +105,7 @@ const main = async () => {
   const continueBtn = page.getByRole('button', { name: /Continue to message send flow/i });
   await continueBtn.click();
 
-  await page.getByRole('heading', { name: /Meta App Review: Messaging Inbox/i }).waitFor();
+  await page.getByRole('heading', { name: inboxHeadingMatcher }).waitFor();
 
   // We need an inbound message to reply to. If none, operator should send one to the connected asset.
   await pauseForHuman(
@@ -77,15 +114,17 @@ const main = async () => {
       'If none, open Instagram and send a message to the business account so it appears here.\n'
   );
 
-  // Open first message row by clicking a sender cell (best-effort)
+  // Open first message row by clicking a sender cell.
   const firstRow = page.locator('table tbody tr').first();
-  await firstRow.waitFor();
+  if ((await firstRow.count()) === 0) {
+    throw new Error('No inbound conversation rows found in the inbox table.');
+  }
   await firstRow.click();
 
   // Dialog opens: type reply, send
   const outgoing = page.getByLabel(/Outgoing message/i);
   await outgoing.waitFor();
-  const unique = `Meta review test message ${iso()} — sent from TDF HQ UI`;
+  const unique = `Meta review test message ${iso()} - sent from TDF HQ UI`;
   await outgoing.fill(unique);
 
   const sendBtn = page.getByRole('button', { name: /^Send message$/i });
@@ -106,6 +145,7 @@ const main = async () => {
 
   await context.close();
   console.log('Done. Video saved under:', OUT_DIR);
+  console.log('Verification message:', unique);
 };
 
 main().catch((err) => {

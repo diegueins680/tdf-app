@@ -15,7 +15,7 @@ jest.unstable_mockModule('../utils/env', () => ({
   },
 }));
 
-const { get, post } = await import('./client');
+const { get, post, postForm } = await import('./client');
 
 interface MockResponseOptions {
   ok?: boolean;
@@ -106,6 +106,20 @@ describe('api client', () => {
     expect(secondCall).toBeDefined();
     const secondHeaders = new Headers(secondCall?.[1]?.headers);
     expect(secondHeaders.get('Content-Type')).toBe('application/json');
+  });
+
+  it('keeps FormData requests as multipart bodies without forcing JSON content-type', async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse({ body: '{"ok":true}' }));
+    const form = new FormData();
+    form.append('file', new Blob(['image-bytes'], { type: 'image/png' }), 'cover.png');
+
+    await postForm<{ ok: boolean }>('/upload', form);
+
+    const call = fetchMock.mock.calls[0];
+    expect(call).toBeDefined();
+    expect(call?.[1]?.body).toBe(form);
+    const headers = new Headers(call?.[1]?.headers);
+    expect(headers.get('Content-Type')).toBeNull();
   });
 
   it('joins API base and paths that omit the leading slash', async () => {

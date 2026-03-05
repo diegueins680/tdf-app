@@ -7,6 +7,7 @@
 module TDF.Server.SocialEventsHandlers
   ( socialEventsServer
   , normalizeInvitationStatus
+  , normalizeArtistGenres
   , parseInvitationIdsEither
   , followArtistDb
   , normalizeTicketOrderStatus
@@ -20,25 +21,29 @@ module TDF.Server.SocialEventsHandlers
   ) where
 
 import           Control.Applicative ((<|>))
-import           Control.Monad (forM, forM_, replicateM, when)
+import           Control.Monad (forM, forM_, replicateM, unless, when)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isAlphaNum)
+import           Data.Char (isAlphaNum, isAscii)
 import           Data.Int (Int64)
-import           Data.List (sortOn)
+import           Data.List (foldl', sortOn)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
 import           Data.Ord (Down(..))
+import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, getCurrentTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
+import           System.Directory (copyFile, createDirectoryIfMissing)
+import           System.FilePath ((</>), takeExtension, takeFileName)
 import           Text.Read (readMaybe)
 
 import           Servant
+import           Servant.Multipart (FileData(..))
 
 -- Pull in full Persistent surface so TH-generated field constructors
 -- (EventRsvpEventId, SocialEventStartTime, etc.) are available.
@@ -47,6 +52,7 @@ import           Database.Persist.Sql (ConnectionPool, SqlBackend, fromSqlKey, r
 
 import           TDF.API.SocialEventsAPI
 import           TDF.Auth (AuthedUser(..))
+import           TDF.Config (assetsRootDir, resolveConfiguredAssetsBase)
 import           TDF.DTO.SocialEventsDTO
   ( EventDTO(..)
   , VenueDTO(..)
@@ -271,6 +277,7 @@ socialEventsServer user = eventsServer
                :<|> createEvent
                :<|> getEvent
                :<|> updateEvent
+               :<|> uploadEventImage
                :<|> deleteEvent
 
     listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [EventDTO]
@@ -454,6 +461,45 @@ socialEventsServer user = eventsServer
         , eventCreatedAt = Just (socialEventCreatedAt existing)
         , eventUpdatedAt = Just now
         })
+
+    uploadEventImage :: T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
+    uploadEventImage rawId EventImageUploadForm{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, eventRow) <- requireManagedEvent rawId
+      let mimeTypeVal = T.toLower (T.strip (fdFileCType eiuFile))
+          fallbackName = nonEmptyText (fdFileName eiuFile)
+          requestedName = eiuName >>= nonEmptyText
+          nameWithExt = applyUploadExtension (requestedName <|> fallbackName) fallbackName
+          safeName = sanitizeUploadFileName nameWithExt
+      unless (isImageUpload mimeTypeVal safeName) $
+        throwError err400 { errBody = "Only image uploads are allowed" }
+
+      uuid <- liftIO UUIDV4.nextRandom
+      let eventIdTxt = renderKeyText eventKey
+          storedName = UUID.toText uuid <> "-" <> safeName
+          relPath = T.intercalate "/" ["social-events", "events", eventIdTxt, storedName]
+          targetDir = assetsRootDir envConfig </> "social-events" </> "events" </> T.unpack eventIdTxt
+          targetPath = targetDir </> T.unpack storedName
+          assetsBase = resolveConfiguredAssetsBase envConfig
+          publicUrl = buildUploadAssetUrl assetsBase relPath
+          existingMeta = decodeEventMetadata (socialEventMetadata eventRow)
+          updatedMeta = existingMeta { emImageUrl = Just publicUrl }
+      liftIO $ createDirectoryIfMissing True targetDir
+      liftIO $ copyFile (fdPayload eiuFile) targetPath
+      liftIO $ runSqlPool
+        (update eventKey
+          [ SocialEventMetadata =. encodeEventMetadata updatedMeta
+          , SocialEventUpdatedAt =. now
+          ])
+        envPool
+      pure EventImageUploadDTO
+        { eiuEventId = eventIdTxt
+        , eiuFileName = storedName
+        , eiuPath = relPath
+        , eiuPublicUrl = publicUrl
+        , eiuImageUrl = publicUrl
+        }
 
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
@@ -661,7 +707,7 @@ socialEventsServer user = eventsServer
         envPool
       artists <- forM rows $ \(Entity aid a) -> do
         genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. aid] []) envPool
-        let genreList = map (artistGenreGenre . entityVal) genres
+        let genreList = artistGenresFromRowsAndFallback genres (artistProfileGenres a)
         let nameMatches = case nameFilter of
               Nothing -> True
               Just name -> T.isInfixOf name (T.toCaseFold (artistProfileName a))
@@ -734,17 +780,19 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       now <- liftIO getCurrentTime
       when (T.null (T.strip (artistName dto))) $ throwError err400 { errBody = "artist name is required" }
+      let genreList = normalizeArtistGenres (artistGenres dto)
       key <- liftIO $ runSqlPool (insert ArtistProfile
         { artistProfilePartyId = cleanMaybeText (artistPartyId dto)
         , artistProfileName = artistName dto
         , artistProfileBio = artistBio dto
         , artistProfileAvatarUrl = artistAvatarUrl dto
-        , artistProfileGenres = Just (artistGenres dto)
+        -- Keep this nullable for compatibility with deployments where the
+        -- legacy column type is TEXT instead of TEXT[].
+        , artistProfileGenres = Nothing
         , artistProfileSocialLinks = encodeSocialLinks (artistSocialLinks dto)
         , artistProfileCreatedAt = now
         , artistProfileUpdatedAt = now
         }) envPool
-      let genreList = artistGenres dto
       liftIO $ runSqlPool
         (forM_ genreList $ \g ->
            insert_ ArtistGenre
@@ -774,11 +822,12 @@ socialEventsServer user = eventsServer
         Nothing -> throwError err404 { errBody = "Artist not found" }
         Just a -> do
           genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. artistKey] []) envPool
+          let genreList = artistGenresFromRowsAndFallback genres (artistProfileGenres a)
           pure ArtistDTO
             { artistId = Just (T.strip idStr)
             , artistPartyId = artistProfilePartyId a
             , artistName = artistProfileName a
-            , artistGenres = map (artistGenreGenre . entityVal) genres
+            , artistGenres = genreList
             , artistBio = artistProfileBio a
             , artistAvatarUrl = artistProfileAvatarUrl a
             , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
@@ -794,19 +843,19 @@ socialEventsServer user = eventsServer
       when (T.null (T.strip (artistName dto))) $ throwError err400 { errBody = "artist name is required" }
       mExisting <- liftIO $ runSqlPool (get artistKey) envPool
       existing <- maybe (throwError err404 { errBody = "Artist not found" }) pure mExisting
+      let genreList = normalizeArtistGenres (artistGenres dto)
       let nextPartyId = cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
       liftIO $ runSqlPool (update artistKey
         [ ArtistProfilePartyId =. nextPartyId
         , ArtistProfileName =. artistName dto
         , ArtistProfileBio =. artistBio dto
         , ArtistProfileAvatarUrl =. artistAvatarUrl dto
-        , ArtistProfileGenres =. Just (artistGenres dto)
         , ArtistProfileSocialLinks =. encodeSocialLinks (artistSocialLinks dto)
         , ArtistProfileUpdatedAt =. now
         ]) envPool
       liftIO $ runSqlPool (deleteWhere [ArtistGenreArtistId ==. artistKey]) envPool
       liftIO $ runSqlPool
-        (forM_ (artistGenres dto) $ \g ->
+        (forM_ genreList $ \g ->
            insert_ ArtistGenre
              { artistGenreArtistId = artistKey
              , artistGenreGenre = g
@@ -815,6 +864,7 @@ socialEventsServer user = eventsServer
         envPool
       pure dto
         { artistId = Just (T.strip idStr)
+        , artistGenres = genreList
         , artistPartyId = nextPartyId
         , artistCreatedAt = Just (artistProfileCreatedAt existing)
         , artistUpdatedAt = Just now
@@ -1758,10 +1808,7 @@ socialEventsServer user = eventsServer
         Left e -> throwError e
 
     parseArtistId :: T.Text -> AppM ArtistProfileId
-    parseArtistId artistIdStr =
-      case readMaybe (T.unpack (T.strip artistIdStr)) :: Maybe Int64 of
-        Nothing -> throwError err400 { errBody = "Invalid artist id" }
-        Just num -> pure (toSqlKey num)
+    parseArtistId = parseKeyOr400 "artist"
 
 -- | Stable, human-friendly identifier for a follow (artistId + follower id).
 renderFollowId :: ArtistProfileId -> T.Text -> T.Text
@@ -2074,6 +2121,28 @@ cleanMaybeText mVal =
     Just txt | not (T.null txt) -> Just txt
     _ -> Nothing
 
+normalizeArtistGenres :: [T.Text] -> [T.Text]
+normalizeArtistGenres rawGenres =
+  reverse normalizedRev
+  where
+    (_, normalizedRev) = foldl' step (Set.empty, []) rawGenres
+
+    step :: (Set.Set T.Text, [T.Text]) -> T.Text -> (Set.Set T.Text, [T.Text])
+    step (seen, acc) rawGenre =
+      case nonEmptyText rawGenre of
+        Nothing -> (seen, acc)
+        Just genreVal ->
+          let dedupeKey = T.toCaseFold genreVal
+          in if Set.member dedupeKey seen
+              then (seen, acc)
+              else (Set.insert dedupeKey seen, genreVal : acc)
+
+artistGenresFromRowsAndFallback :: [Entity ArtistGenre] -> Maybe [T.Text] -> [T.Text]
+artistGenresFromRowsAndFallback genreRows fallbackGenres =
+  let normalizedFromRows = normalizeArtistGenres (map (artistGenreGenre . entityVal) genreRows)
+      normalizedFallback = normalizeArtistGenres (fromMaybe [] fallbackGenres)
+  in if null normalizedFromRows then normalizedFallback else normalizedFromRows
+
 resolveBudgetLineKey :: ConnectionPool -> SocialEventId -> Maybe T.Text -> AppM (Maybe EventBudgetLineId)
 resolveBudgetLineKey _ _ Nothing = pure Nothing
 resolveBudgetLineKey _ _ (Just raw) | T.null (T.strip raw) = pure Nothing
@@ -2102,6 +2171,53 @@ normalizeCurrency :: T.Text -> T.Text
 normalizeCurrency raw =
   let cleaned = T.toUpper (T.strip raw)
   in if T.null cleaned then "USD" else cleaned
+
+nonEmptyText :: T.Text -> Maybe T.Text
+nonEmptyText txt =
+  let trimmed = T.strip txt
+  in if T.null trimmed then Nothing else Just trimmed
+
+applyUploadExtension :: Maybe T.Text -> Maybe T.Text -> T.Text
+applyUploadExtension name fallback =
+  let resolved = fromMaybe "upload" name
+      extFromFallback =
+        case fallback of
+          Nothing -> ""
+          Just raw -> T.pack (takeExtension (T.unpack raw))
+      extFromName = T.pack (takeExtension (T.unpack resolved))
+  in if T.null extFromName && not (T.null extFromFallback)
+      then resolved <> extFromFallback
+      else resolved
+
+sanitizeUploadFileName :: T.Text -> T.Text
+sanitizeUploadFileName raw =
+  let trimmed = T.strip raw
+      baseName = T.pack (takeFileName (T.unpack trimmed))
+      cleaned = T.map normalizeUploadChar baseName
+      stripped = T.dropWhile (== '-') (T.dropWhileEnd (== '-') cleaned)
+  in if T.null stripped || stripped == "." || stripped == ".."
+      then "upload"
+      else stripped
+
+normalizeUploadChar :: Char -> Char
+normalizeUploadChar ch
+  | isAscii ch && isAlphaNum ch = ch
+  | ch == '.' || ch == '-' || ch == '_' = ch
+  | ch == ' ' = '-'
+  | otherwise = '-'
+
+buildUploadAssetUrl :: T.Text -> T.Text -> T.Text
+buildUploadAssetUrl assetsBase relPath =
+  let base = T.dropWhileEnd (== '/') assetsBase
+      path = T.dropWhile (== '/') relPath
+  in base <> "/" <> path
+
+isImageUpload :: T.Text -> T.Text -> Bool
+isImageUpload mimeType fileName =
+  let mimeOk = "image/" `T.isPrefixOf` mimeType
+      ext = T.toLower (T.pack (takeExtension (T.unpack fileName)))
+      extOk = ext `elem` [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg"]
+  in mimeOk || extOk
 
 normalizeTicketTierCode :: T.Text -> T.Text
 normalizeTicketTierCode raw =
@@ -2149,29 +2265,33 @@ loadEventArtists pool eventKey = runSqlPool (do
   artistLinks <- selectList [EventArtistEventId ==. eventKey] []
   forM artistLinks $ \(Entity _ link) -> do
     mArtist <- get (eventArtistArtistId link)
-    pure $ case mArtist of
-      Nothing -> ArtistDTO
-        { artistId = Nothing
-        , artistPartyId = Nothing
-        , artistName = "(unknown)"
-        , artistGenres = []
-        , artistBio = Nothing
-        , artistAvatarUrl = Nothing
-        , artistSocialLinks = Nothing
-        , artistCreatedAt = Nothing
-        , artistUpdatedAt = Nothing
-        }
-      Just a -> ArtistDTO
-        { artistId = Just (renderKeyText (eventArtistArtistId link))
-        , artistPartyId = artistProfilePartyId a
-        , artistName = artistProfileName a
-        , artistGenres = fromMaybe [] (artistProfileGenres a)
-        , artistBio = artistProfileBio a
-        , artistAvatarUrl = artistProfileAvatarUrl a
-        , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
-        , artistCreatedAt = Just (artistProfileCreatedAt a)
-        , artistUpdatedAt = Just (artistProfileUpdatedAt a)
-        }
+    case mArtist of
+      Nothing ->
+        pure ArtistDTO
+          { artistId = Nothing
+          , artistPartyId = Nothing
+          , artistName = "(unknown)"
+          , artistGenres = []
+          , artistBio = Nothing
+          , artistAvatarUrl = Nothing
+          , artistSocialLinks = Nothing
+          , artistCreatedAt = Nothing
+          , artistUpdatedAt = Nothing
+          }
+      Just a -> do
+        genres <- selectList [ArtistGenreArtistId ==. eventArtistArtistId link] []
+        let genreList = artistGenresFromRowsAndFallback genres (artistProfileGenres a)
+        pure ArtistDTO
+          { artistId = Just (renderKeyText (eventArtistArtistId link))
+          , artistPartyId = artistProfilePartyId a
+          , artistName = artistProfileName a
+          , artistGenres = genreList
+          , artistBio = artistProfileBio a
+          , artistAvatarUrl = artistProfileAvatarUrl a
+          , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
+          , artistCreatedAt = Just (artistProfileCreatedAt a)
+          , artistUpdatedAt = Just (artistProfileUpdatedAt a)
+          }
   ) pool
 
 eventEntityToDTO :: SocialEventId -> SocialEvent -> [ArtistDTO] -> EventDTO
