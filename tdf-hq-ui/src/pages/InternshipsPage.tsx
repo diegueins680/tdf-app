@@ -188,8 +188,8 @@ const normalizeOptionalInt = (value?: string | null) => {
   if (trimmed === '') return null;
   if (!/^\d+$/.test(trimmed)) return undefined;
   const parsed = Number.parseInt(trimmed, 10);
-  if (parsed < 0) return undefined;
-  return Number.isNaN(parsed) ? undefined : parsed;
+  if (!Number.isSafeInteger(parsed) || parsed < 0) return undefined;
+  return parsed;
 };
 
 export default function InternshipsPage() {
@@ -303,7 +303,9 @@ export default function InternshipsPage() {
   const profileRequiredHoursError = useMemo(() => {
     const trimmed = profileForm.requiredHours.trim();
     if (trimmed === '') return null;
-    return /^\d+$/.test(trimmed) ? null : 'Ingresa un número entero positivo.';
+    return normalizeOptionalInt(trimmed) !== undefined
+      ? null
+      : 'Ingresa un número entero no negativo.';
   }, [profileForm.requiredHours]);
 
   const createProjectMutation = useMutation({

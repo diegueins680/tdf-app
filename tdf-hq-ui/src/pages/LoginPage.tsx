@@ -144,6 +144,15 @@ const parseGoogleIdToken = (token: string): { email?: string; name?: string } | 
   }
 };
 
+const parseNonNegativeSafeInt = (value: string): number | undefined => {
+  const trimmed = value.trim();
+  if (trimmed === '') return undefined;
+  if (!/^\d+$/.test(trimmed)) return undefined;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) return undefined;
+  return parsed;
+};
+
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -359,7 +368,9 @@ export default function LoginPage() {
     if (!wantsInternRole) return null;
     const trimmed = signupForm.internshipRequiredHours.trim();
     if (trimmed === '') return null;
-    return /^\d+$/.test(trimmed) ? null : 'Ingresa un número entero positivo.';
+    return parseNonNegativeSafeInt(trimmed) !== undefined
+      ? null
+      : 'Ingresa un número entero no negativo.';
   }, [signupForm.internshipRequiredHours, wantsInternRole]);
   const signupGuide = useMemo(() => {
     const normalizedRoles = signupRoles.map((role) => role.toLowerCase());

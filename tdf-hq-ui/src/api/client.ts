@@ -12,6 +12,41 @@ const looksLikeJsonPayload = (value: string): boolean => {
   return trimmed.startsWith('{') || trimmed.startsWith('[');
 };
 
+const normalizeErrorMessage = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+};
+
+const extractErrorCandidate = (value: unknown): string | null => {
+  const direct = normalizeErrorMessage(value);
+  if (direct) return direct;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const candidate = extractErrorCandidate(item);
+      if (candidate) return candidate;
+    }
+    return null;
+  }
+
+  if (!value || typeof value !== 'object') return null;
+
+  const payload = value as Record<string, unknown>;
+  const priorityKeys = ['message', 'error', 'detail', 'title', 'reason', 'description', 'errors'];
+  for (const key of priorityKeys) {
+    const candidate = extractErrorCandidate(payload[key]);
+    if (candidate) return candidate;
+  }
+
+  for (const candidateValue of Object.values(payload)) {
+    const candidate = extractErrorCandidate(candidateValue);
+    if (candidate) return candidate;
+  }
+
+  return null;
+};
+
 const joinRequestUrl = (base: string, path: string): string => {
   const normalizedBase = base.trim();
   const normalizedPath = path.trim();
@@ -52,24 +87,8 @@ const extractErrorDetails = (rawBody: string, contentType: string): string => {
 
   try {
     const parsed = JSON.parse(trimmedBody) as unknown;
-    if (typeof parsed === 'string') {
-      const parsedMessage = parsed.trim();
-      return parsedMessage === '' ? trimmedBody : parsedMessage;
-    }
-    if (parsed && typeof parsed === 'object') {
-      const payload = parsed as Record<string, unknown>;
-      const candidate =
-        typeof payload['message'] === 'string'
-          ? payload['message']
-          : typeof payload['error'] === 'string'
-            ? payload['error']
-            : typeof payload['detail'] === 'string'
-              ? payload['detail']
-              : typeof payload['title'] === 'string'
-                ? payload['title']
-                : null;
-      if (candidate && candidate.trim() !== '') return candidate.trim();
-    }
+    const candidate = extractErrorCandidate(parsed);
+    if (candidate) return candidate;
   } catch {
     return trimmedBody;
   }

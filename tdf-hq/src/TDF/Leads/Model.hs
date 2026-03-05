@@ -11,7 +11,12 @@ genToken :: IO Text
 genToken = T.pack <$> mapM (const rand) ([1..20] :: [Int])
   where
     alphabet = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9']
-    rand = (alphabet !!) <$> randomRIO (0, length alphabet - 1)
+    alphabetLength = length alphabet
+    rand = do
+      idx <- randomRIO (0, alphabetLength - 1)
+      case drop idx alphabet of
+        (ch:_) -> pure ch
+        [] -> throwIO (userError "Lead token alphabet is empty")
 
 ensureLead :: Connection -> Text -> Int -> IO (Int, Text)
 ensureLead conn phone ceId = do

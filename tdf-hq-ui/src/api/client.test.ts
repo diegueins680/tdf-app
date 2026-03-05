@@ -140,4 +140,32 @@ describe('api client', () => {
 
     await expect(get('/problem-json')).rejects.toThrow('Campo inválido');
   });
+
+  it('extracts nested error messages from JSON error objects', async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        contentType: 'application/json',
+        body: '{"error":{"message":"Token inválido"}}',
+      }),
+    );
+
+    await expect(get('/nested-error')).rejects.toThrow('Token inválido');
+  });
+
+  it('extracts the first readable message from JSON errors arrays', async () => {
+    fetchMock.mockResolvedValueOnce(
+      buildResponse({
+        ok: false,
+        status: 422,
+        statusText: 'Unprocessable Entity',
+        contentType: 'application/json',
+        body: '{"errors":["",{"detail":"Campo requerido"}]}',
+      }),
+    );
+
+    await expect(get('/errors-array')).rejects.toThrow('Campo requerido');
+  });
 });
