@@ -40,7 +40,7 @@ const parsePositiveInt = (raw: string | null): number | null => {
   const trimmed = raw?.trim() ?? '';
   if (!/^\d+$/.test(trimmed)) return null;
   const parsed = Number(trimmed);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
 export default function BookingsPage() {

@@ -273,7 +273,7 @@ export default function RadioWidget() {
   const autoStopOptions = [0, 30, 60, 90, 120, 180] as const;
   const parseAutoStopMinutes = (raw: string): number => {
     const parsed = Number(raw);
-    if (!Number.isInteger(parsed)) return 120;
+    if (!Number.isSafeInteger(parsed)) return 120;
     return autoStopOptions.some((opt) => opt === parsed) ? parsed : 120;
   };
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);

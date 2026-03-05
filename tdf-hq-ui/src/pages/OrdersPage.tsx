@@ -66,7 +66,7 @@ const ROWS_PER_PAGE_OPTIONS = [5, 10, 25] as const;
 
 const parseRowsPerPage = (value: string, fallback = 10): number => {
   const parsed = Number(value);
-  if (!Number.isInteger(parsed)) return fallback;
+  if (!Number.isSafeInteger(parsed)) return fallback;
   return ROWS_PER_PAGE_OPTIONS.some((option) => option === parsed) ? parsed : fallback;
 };
 

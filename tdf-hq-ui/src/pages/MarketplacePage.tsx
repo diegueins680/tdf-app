@@ -130,7 +130,7 @@ const FILTERS_KEY = 'tdf-marketplace-filters';
 
 const parseCartQuantity = (value: string, fallback = 0): number => {
   const parsed = Number(value);
-  if (!Number.isInteger(parsed)) return fallback;
+  if (!Number.isSafeInteger(parsed)) return fallback;
   return Math.min(99, Math.max(0, parsed));
 };
 
