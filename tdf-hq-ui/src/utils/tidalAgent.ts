@@ -3,10 +3,17 @@ import { env } from './env';
 
 const safePrefixes = ['d1', 'd2', 'd3', 'd4', 'hush', 'bps', 'cps', 'setcps', 'once', 'solo', 'unsolo', 'all', 'xfade', 'xfadeIn'];
 
+const hasSafePrefixBoundary = (line: string, prefix: string): boolean => {
+  if (!line.startsWith(prefix)) return false;
+  if (line.length === prefix.length) return true;
+  const nextChar = line.charAt(prefix.length);
+  return nextChar === ' ' || nextChar === '$' || nextChar === '(';
+};
+
 const allowedLine = (line: string) => {
   const trimmed = line.trim();
   if (!trimmed) return false;
-  return safePrefixes.some((p) => trimmed.startsWith(p));
+  return safePrefixes.some((p) => hasSafePrefixBoundary(trimmed, p));
 };
 
 export const extractTidalCode = (text: string): string | null => {
