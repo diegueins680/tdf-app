@@ -102,6 +102,20 @@ const setInputValue = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
+const clickButtonByText = (container: HTMLElement, label: string) => {
+  const button = Array.from(container.querySelectorAll('button')).find(
+    (candidate) => candidate.textContent?.trim() === label,
+  );
+  if (!button) throw new Error(`Button not found: ${label}`);
+  button.click();
+};
+
+const submitBookingForm = (container: HTMLElement) => {
+  const form = container.querySelector('form');
+  if (!form) throw new Error('Form not found');
+  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+};
+
 const clickCheckboxNearText = (container: HTMLElement, text: string) => {
   const textEl = Array.from(container.querySelectorAll<HTMLElement>('*')).find((el) => {
     if (el.children.length > 0) return false;
@@ -159,11 +173,7 @@ describe('PublicBookingPage', () => {
     await act(async () => {
       setInputValue(getInputByLabel(container, 'Nombre completo'), 'Test User');
       setInputValue(getInputByLabel(container, 'Correo'), 'test@example.com');
-      const continueButton = Array.from(container.querySelectorAll('button')).find(
-        (button) => button.textContent?.trim() === 'Continuar',
-      );
-      if (!continueButton) throw new Error('Continue button not found');
-      continueButton.click();
+      clickButtonByText(container, 'Continuar');
       await flushPromises();
     });
 
@@ -186,11 +196,7 @@ describe('PublicBookingPage', () => {
     });
 
     await act(async () => {
-      const reviewButton = Array.from(container.querySelectorAll('button')).find(
-        (button) => button.textContent?.trim() === 'Revisar reserva',
-      );
-      if (!reviewButton) throw new Error('Review button not found');
-      reviewButton.click();
+      clickButtonByText(container, 'Revisar reserva');
       await flushPromises();
     });
 
@@ -204,6 +210,69 @@ describe('PublicBookingPage', () => {
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
     expect(payload?.pbResourceIds).toEqual(['Live Room', 'Control Room']);
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('prevents moving to schedule step with invalid email', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Nombre completo'), 'Test User');
+      setInputValue(getInputByLabel(container, 'Correo'), 'correo-invalido');
+      clickButtonByText(container, 'Continuar');
+      await flushPromises();
+    });
+
+    expect(container.textContent).toContain('Ingresa un correo válido para enviarte la confirmación.');
+    const dateLabel = Array.from(container.querySelectorAll('label')).find(
+      (label) => (label.textContent ?? '').replace('*', '').trim() === 'Fecha y hora',
+    );
+    expect(dateLabel).toBeUndefined();
+    expect(createPublicMock).not.toHaveBeenCalled();
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('advances by step on form submit before sending booking', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Nombre completo'), 'Test User');
+      setInputValue(getInputByLabel(container, 'Correo'), 'test@example.com');
+      submitBookingForm(container);
+      await flushPromises();
+    });
+    expect(getInputByLabel(container, 'Fecha y hora')).toBeInstanceOf(HTMLInputElement);
+    expect(createPublicMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+      const desiredStudio = DateTime.fromObject(
+        { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
+        { zone: 'America/Guayaquil' },
+      );
+      const desiredUser = desiredStudio.setZone(userZone);
+      const dateInput = getInputByLabel(container, 'Fecha y hora');
+      setInputValue(dateInput, desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
+      clickCheckboxNearText(container, 'Asignar ingeniero después');
+      submitBookingForm(container);
+      await flushPromises();
+    });
+    expect(container.textContent).toContain('Resumen rápido');
+    expect(createPublicMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      submitBookingForm(container);
+      await flushPromises();
+    });
+    expect(createPublicMock).toHaveBeenCalledTimes(1);
 
     await cleanup();
     document.body.removeChild(container);

@@ -112,10 +112,13 @@ const loadGoogleScript = () => {
     }
     const existing = document.querySelector<HTMLScriptElement>(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
     if (existing) {
-      existing.addEventListener('load', () => resolve(), { once: true });
-      if (existing.dataset['loaded'] === 'true') {
+      if (existing.dataset['loaded'] === 'true' || Boolean(window.google?.accounts?.id)) {
+        existing.dataset['loaded'] = 'true';
         resolve();
+        return;
       }
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('No se pudo cargar Google Sign-In.')), { once: true });
       return;
     }
     const script = document.createElement('script');

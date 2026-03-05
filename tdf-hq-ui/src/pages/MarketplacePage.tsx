@@ -475,7 +475,7 @@ export default function MarketplacePage() {
     },
     onSuccess: (order) => {
       setLastOrder(order);
-      void qc.invalidateQueries({ queryKey: ['marketplace-cart', cartId] });
+      void qc.invalidateQueries({ queryKey: ['marketplace-cart'] });
       localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartId ?? '', count: 0, preview: [], updatedAt: Date.now() }));
       setToast(
         `Pedido enviado. Te contactaremos por ${
@@ -539,7 +539,7 @@ export default function MarketplacePage() {
       setLastOrder(order);
       setPaypalDialogOpen(false);
       setPaypalOrder(null);
-      void qc.invalidateQueries({ queryKey: ['marketplace-cart', cartId] });
+      void qc.invalidateQueries({ queryKey: ['marketplace-cart'] });
       localStorage.setItem(
         CART_META_KEY,
         JSON.stringify({ cartId: cartId ?? '', count: 0, preview: [], updatedAt: Date.now() }),

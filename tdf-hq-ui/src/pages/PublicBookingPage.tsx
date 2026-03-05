@@ -78,6 +78,7 @@ const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const ROOM_FALLBACKS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
+const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
 const zoneLabel = (zone: string) => {
   try {
@@ -468,7 +469,11 @@ export default function PublicBookingPage() {
 
   const validateContactStep = () => {
     if (!form.fullName.trim()) return 'Agrega tu nombre para continuar.';
-    if (!form.email.trim()) return 'Necesitamos un correo para confirmarte la reserva.';
+    const trimmedEmail = form.email.trim();
+    if (!trimmedEmail) return 'Necesitamos un correo para confirmarte la reserva.';
+    if (!EMAIL_PATTERN.test(trimmedEmail)) {
+      return 'Ingresa un correo válido para enviarte la confirmación.';
+    }
     return null;
   };
 
@@ -523,8 +528,7 @@ export default function PublicBookingPage() {
     setActiveStep(2);
   };
 
-  const handleSubmit = async (evt: React.FormEvent) => {
-    evt.preventDefault();
+  const handleSubmit = async () => {
     setError(null);
     setSuccess(null);
 
@@ -575,6 +579,20 @@ export default function PublicBookingPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (formDisabled) return;
+    if (activeStep === 0) {
+      goToScheduleStep();
+      return;
+    }
+    if (activeStep === 1) {
+      goToConfirmStep();
+      return;
+    }
+    void handleSubmit();
   };
 
   const bookingWindow = useMemo(() => {
@@ -1185,11 +1203,7 @@ export default function PublicBookingPage() {
               </Grid>
 
               <Grid item xs={12} md={8}>
-                <form
-                  onSubmit={(event) => {
-                    void handleSubmit(event);
-                  }}
-                >
+                <form onSubmit={handleFormSubmit}>
                   <Stack spacing={2.5}>
                     <Stepper activeStep={activeStep} alternativeLabel>
                       {BOOKING_STEPS.map((label) => (
