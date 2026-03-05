@@ -85,6 +85,18 @@ export interface CourseCohortOptionDTO {
 
 const courseBase = (slug: string) => `/public/courses/${slug}`;
 
+const requirePositiveInteger = (value: number, field: string): number => {
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${field} debe ser un entero positivo.`);
+  }
+  return value;
+};
+
+const setTrimmedParam = (search: URLSearchParams, key: string, value?: string): void => {
+  const trimmed = value?.trim();
+  if (trimmed) search.set(key, trimmed);
+};
+
 export const Courses = {
   upsert: (payload: CourseUpsert) => post<CourseMetadata>('/admin/courses', payload),
   listCohorts: () => get<CourseCohortOptionDTO[]>('/admin/courses/cohorts'),
@@ -92,17 +104,24 @@ export const Courses = {
   register: (slug: string, payload: CourseRegistrationRequest) =>
     post<CourseRegistrationResponse>(`${courseBase(slug)}/registrations`, payload),
   updateStatus: (slug: string, registrationId: number, payload: CourseRegistrationStatusUpdate) =>
-    patch<CourseRegistrationResponse>(`/admin/courses/${slug}/registrations/${registrationId}/status`, payload),
-  listRegistrations: (params: { slug?: string; status?: string; limit?: number }) => {
+    patch<CourseRegistrationResponse>(
+      `/admin/courses/${slug}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}/status`,
+      payload,
+    ),
+  listRegistrations: (params?: { slug?: string; status?: string; limit?: number }) => {
     const search = new URLSearchParams();
-    if (params.slug) search.set('slug', params.slug);
-    if (params.status) search.set('status', params.status);
-    if (params.limit) search.set('limit', String(params.limit));
+    setTrimmedParam(search, 'slug', params?.slug);
+    setTrimmedParam(search, 'status', params?.status);
+    if (params?.limit != null) search.set('limit', String(requirePositiveInteger(params.limit, 'limit')));
     const qs = search.toString();
     return get<CourseRegistrationDTO[]>(`/admin/courses/registrations${qs ? `?${qs}` : ''}`);
   },
   listRegistrationEmails: (registrationId: number, limit = 100) =>
-    get<CourseEmailEventDTO[]>(`/admin/courses/registrations/${registrationId}/emails?limit=${limit}`),
+    get<CourseEmailEventDTO[]>(
+      `/admin/courses/registrations/${requirePositiveInteger(registrationId, 'registrationId')}/emails?limit=${requirePositiveInteger(limit, 'limit')}`,
+    ),
   getRegistration: (slug: string, registrationId: number) =>
-    get<CourseRegistrationDTO>(`/admin/courses/${slug}/registrations/${registrationId}`),
+    get<CourseRegistrationDTO>(
+      `/admin/courses/${slug}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}`,
+    ),
 };

@@ -1,6 +1,30 @@
 import { get, post, put } from './client';
 import type { BookingDTO } from './types';
 
+const requirePositiveInteger = (value: number, field: string): number => {
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${field} debe ser un entero positivo.`);
+  }
+  return value;
+};
+
+const normalizeOptionalPositiveInteger = (
+  value: number | null | undefined,
+  field: string,
+): number | null | undefined => {
+  if (value == null) return value;
+  return requirePositiveInteger(value, field);
+};
+
+const setOptionalPositiveIntParam = (
+  search: URLSearchParams,
+  key: string,
+  value?: number,
+): void => {
+  if (value == null) return;
+  search.set(key, String(requirePositiveInteger(value, key)));
+};
+
 export interface BookingUpdatePayload {
   ubTitle?: string;
   ubServiceType?: string;
@@ -17,9 +41,9 @@ export interface BookingUpdatePayload {
 export const Bookings = {
   list: (params?: { bookingId?: number; partyId?: number; engineerPartyId?: number }) => {
     const search = new URLSearchParams();
-    if (params?.bookingId != null) search.set('bookingId', String(params.bookingId));
-    if (params?.partyId != null) search.set('partyId', String(params.partyId));
-    if (params?.engineerPartyId != null) search.set('engineerPartyId', String(params.engineerPartyId));
+    setOptionalPositiveIntParam(search, 'bookingId', params?.bookingId);
+    setOptionalPositiveIntParam(search, 'partyId', params?.partyId);
+    setOptionalPositiveIntParam(search, 'engineerPartyId', params?.engineerPartyId);
     const qs = search.toString();
     return get<BookingDTO[]>(`/bookings${qs ? `?${qs}` : ''}`);
   },
@@ -34,9 +58,14 @@ export const Bookings = {
     cbResourceIds?: string[] | null;
     cbEngineerPartyId?: number | null;
     cbEngineerName?: string | null;
-  }) => post<BookingDTO>('/bookings', body),
+  }) =>
+    post<BookingDTO>('/bookings', {
+      ...body,
+      cbPartyId: normalizeOptionalPositiveInteger(body.cbPartyId, 'cbPartyId'),
+      cbEngineerPartyId: normalizeOptionalPositiveInteger(body.cbEngineerPartyId, 'cbEngineerPartyId'),
+    }),
   update: (bookingId: number, body: BookingUpdatePayload) =>
-    put<BookingDTO>(`/bookings/${bookingId}`, body),
+    put<BookingDTO>(`/bookings/${requirePositiveInteger(bookingId, 'bookingId')}`, body),
   createPublic: (body: {
     pbFullName: string;
     pbEmail: string;
@@ -48,5 +77,9 @@ export const Bookings = {
     pbEngineerPartyId?: number | null;
     pbEngineerName?: string | null;
     pbResourceIds?: string[] | null;
-  }) => post<BookingDTO>('/bookings/public', body),
+  }) =>
+    post<BookingDTO>('/bookings/public', {
+      ...body,
+      pbEngineerPartyId: normalizeOptionalPositiveInteger(body.pbEngineerPartyId, 'pbEngineerPartyId'),
+    }),
 };

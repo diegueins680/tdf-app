@@ -19,6 +19,8 @@ const { Parties } = await import('./parties');
 const { Internships } = await import('./internships');
 const { RadioAPI } = await import('./radio');
 const { Trials } = await import('./trials');
+const { Bookings } = await import('./bookings');
+const { Courses } = await import('./courses');
 
 describe('API query/id validation', () => {
   beforeEach(() => {
@@ -148,5 +150,104 @@ describe('API query/id validation', () => {
     ).toThrow('studentId debe ser un entero positivo.');
 
     expect(() => Trials.addTeacherStudent(7, { studentId: 0 })).toThrow('studentId debe ser un entero positivo.');
+  });
+
+  it('normalizes booking filters and validates booking ids', async () => {
+    await Bookings.list();
+    expect(getMock).toHaveBeenCalledWith('/bookings');
+
+    await Bookings.list({ bookingId: 11, partyId: 22, engineerPartyId: 33 });
+    expect(getMock).toHaveBeenCalledWith('/bookings?bookingId=11&partyId=22&engineerPartyId=33');
+
+    await Bookings.update(4, { ubTitle: 'Sesion actualizada' });
+    expect(putMock).toHaveBeenCalledWith('/bookings/4', { ubTitle: 'Sesion actualizada' });
+
+    expect(() => Bookings.list({ bookingId: 0 })).toThrow('bookingId debe ser un entero positivo.');
+    expect(() => Bookings.list({ partyId: -1 })).toThrow('partyId debe ser un entero positivo.');
+    expect(() => Bookings.list({ engineerPartyId: 1.5 })).toThrow('engineerPartyId debe ser un entero positivo.');
+    expect(() => Bookings.update(0, {})).toThrow('bookingId debe ser un entero positivo.');
+  });
+
+  it('validates optional booking payload party references', async () => {
+    await Bookings.create({
+      cbTitle: 'Grabacion de demo',
+      cbStartsAt: '2026-03-01T10:00:00Z',
+      cbEndsAt: '2026-03-01T12:00:00Z',
+      cbStatus: 'Confirmed',
+      cbPartyId: 7,
+      cbEngineerPartyId: 9,
+    });
+    expect(postMock).toHaveBeenCalledWith('/bookings', {
+      cbTitle: 'Grabacion de demo',
+      cbStartsAt: '2026-03-01T10:00:00Z',
+      cbEndsAt: '2026-03-01T12:00:00Z',
+      cbStatus: 'Confirmed',
+      cbPartyId: 7,
+      cbEngineerPartyId: 9,
+    });
+
+    await Bookings.createPublic({
+      pbFullName: 'Ana Perez',
+      pbEmail: 'ana@example.com',
+      pbServiceType: 'Mixing',
+      pbStartsAt: '2026-03-01T10:00:00Z',
+      pbEngineerPartyId: 10,
+    });
+    expect(postMock).toHaveBeenCalledWith('/bookings/public', {
+      pbFullName: 'Ana Perez',
+      pbEmail: 'ana@example.com',
+      pbServiceType: 'Mixing',
+      pbStartsAt: '2026-03-01T10:00:00Z',
+      pbEngineerPartyId: 10,
+    });
+
+    expect(() =>
+      Bookings.create({
+        cbTitle: 'Grabacion de demo',
+        cbStartsAt: '2026-03-01T10:00:00Z',
+        cbEndsAt: '2026-03-01T12:00:00Z',
+        cbStatus: 'Confirmed',
+        cbPartyId: 0,
+      }),
+    ).toThrow('cbPartyId debe ser un entero positivo.');
+
+    expect(() =>
+      Bookings.createPublic({
+        pbFullName: 'Ana Perez',
+        pbEmail: 'ana@example.com',
+        pbServiceType: 'Mixing',
+        pbStartsAt: '2026-03-01T10:00:00Z',
+        pbEngineerPartyId: -3,
+      }),
+    ).toThrow('pbEngineerPartyId debe ser un entero positivo.');
+  });
+
+  it('normalizes course registration params and validates registration ids', async () => {
+    await Courses.listRegistrations({
+      slug: ' cohort-1 ',
+      status: ' active ',
+      limit: 20,
+    });
+    expect(getMock).toHaveBeenCalledWith('/admin/courses/registrations?slug=cohort-1&status=active&limit=20');
+
+    await Courses.listRegistrations({ slug: '   ', status: '   ' });
+    expect(getMock).toHaveBeenCalledWith('/admin/courses/registrations');
+
+    await Courses.listRegistrationEmails(6, 25);
+    expect(getMock).toHaveBeenCalledWith('/admin/courses/registrations/6/emails?limit=25');
+
+    await Courses.getRegistration('cohort-1', 8);
+    expect(getMock).toHaveBeenCalledWith('/admin/courses/cohort-1/registrations/8');
+
+    await Courses.updateStatus('cohort-1', 9, { status: 'confirmed' } as never);
+    expect(patchMock).toHaveBeenCalledWith('/admin/courses/cohort-1/registrations/9/status', { status: 'confirmed' });
+
+    expect(() => Courses.listRegistrations({ limit: 0 })).toThrow('limit debe ser un entero positivo.');
+    expect(() => Courses.listRegistrationEmails(0)).toThrow('registrationId debe ser un entero positivo.');
+    expect(() => Courses.listRegistrationEmails(6, 0)).toThrow('limit debe ser un entero positivo.');
+    expect(() => Courses.getRegistration('cohort-1', 0)).toThrow('registrationId debe ser un entero positivo.');
+    expect(() => Courses.updateStatus('cohort-1', 0, { status: 'confirmed' } as never)).toThrow(
+      'registrationId debe ser un entero positivo.',
+    );
   });
 });
