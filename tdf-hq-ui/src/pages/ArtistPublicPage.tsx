@@ -23,8 +23,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
-
-const isNumericSegment = (value: string) => /^\d+$/.test(value);
+import { parsePositiveSafeInt } from '../utils/ids';
 
 export default function ArtistPublicPage() {
   const { slugOrId } = useParams();
@@ -34,7 +33,7 @@ export default function ArtistPublicPage() {
   const hasToken = Boolean(session?.apiToken);
 
   const segment = (slugOrId ?? '').trim();
-  const numericId = useMemo(() => (isNumericSegment(segment) ? Number.parseInt(segment, 10) : null), [segment]);
+  const numericId = useMemo(() => parsePositiveSafeInt(segment), [segment]);
 
   const artistsQuery = useQuery({
     queryKey: ['fan-artists'],
@@ -386,4 +385,3 @@ export default function ArtistPublicPage() {
     </Box>
   );
 }
-

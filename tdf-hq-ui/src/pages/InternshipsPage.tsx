@@ -35,6 +35,7 @@ import type {
   InternPermissionUpdate,
 } from '../api/types';
 import { useSession } from '../session/SessionContext';
+import { parseDateForDisplay } from '../utils/dateOnly';
 
 const TASK_STATUS_OPTIONS = [
   { value: 'todo', label: 'Pendiente' },
@@ -154,8 +155,8 @@ const PERSONAL_CHECKLIST_TODOS = [
 
 const formatDate = (value?: string | null) => {
   if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+  const date = parseDateForDisplay(value);
+  if (!date) return value;
   return new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(date);
 };
 

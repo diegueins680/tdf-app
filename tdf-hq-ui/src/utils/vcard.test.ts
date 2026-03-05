@@ -17,6 +17,15 @@ describe('vcard payload utils', () => {
     expect(typeof parsed['ts']).toBe('number');
   });
 
+  it('buildVCardSharePayload rejects unsafe integer party ids', () => {
+    const raw = buildVCardSharePayload({
+      name: 'Diego',
+      partyId: Number.MAX_SAFE_INTEGER + 1,
+    });
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['partyId']).toBeNull();
+  });
+
   it('parseVCardPayload accepts numeric party id strings and sanitizes fields', () => {
     const parsed = parseVCardPayload(
       JSON.stringify({
@@ -58,6 +67,25 @@ describe('vcard payload utils', () => {
       phone: null,
       partyId: null,
       ts: undefined,
+    });
+  });
+
+  it('parseVCardPayload rejects unsafe integer party id strings', () => {
+    const parsed = parseVCardPayload(
+      JSON.stringify({
+        kind: 'vcard-exchange',
+        name: 'Nombre',
+        partyId: '9007199254740992',
+        ts: 1_700_000_000_000,
+      }),
+    );
+    expect(parsed).toEqual({
+      kind: 'vcard-exchange',
+      name: 'Nombre',
+      email: null,
+      phone: null,
+      partyId: null,
+      ts: 1_700_000_000_000,
     });
   });
 });

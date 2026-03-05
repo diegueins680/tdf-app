@@ -1,3 +1,5 @@
+import { parsePositiveSafeInt } from './ids';
+
 export interface VCardPayload {
   kind: 'vcard-exchange';
   name?: string | null;
@@ -14,12 +16,7 @@ const normalizeTextField = (value: unknown): string | null => {
 };
 
 const parsePositivePartyId = (value: unknown): number | null => {
-  if (typeof value === 'number' && Number.isInteger(value) && value > 0) return value;
-  if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
-    const parsed = Number.parseInt(value.trim(), 10);
-    return parsed > 0 ? parsed : null;
-  }
-  return null;
+  return parsePositiveSafeInt(value);
 };
 
 const normalizeTimestamp = (value: unknown): number | undefined =>

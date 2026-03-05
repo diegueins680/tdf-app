@@ -50,6 +50,7 @@ import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
 import { Fans } from '../api/fans';
 import type { ArtistProfileDTO } from '../api/types';
 import { buildSignupPayload, deriveEffectiveRoles, normalizeSignupRoles } from '../utils/roles';
+import { parsePositiveSafeInt } from '../utils/ids';
 
 const pickLandingPath = (roles: string[], modules?: string[]) => {
   const lowerRoles = roles.map((r) => r.toLowerCase());
@@ -270,7 +271,7 @@ export default function LoginPage() {
     const rolesRaw = params.getAll('roles');
     const parsedRoles = rolesRaw.length > 0 ? normalizeSignupRoles(rolesRaw) : normalizeSignupRoles(params.get('roles') ?? '');
     const claimRaw = params.get('claimArtistId') ?? params.get('claim');
-    const claimArtistId = claimRaw && /^\d+$/.test(claimRaw) ? Number.parseInt(claimRaw, 10) : null;
+    const claimArtistId = parsePositiveSafeInt(claimRaw);
 
     const baseRoles: SignupRole[] =
       parsedRoles.length > 0

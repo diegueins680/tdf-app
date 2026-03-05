@@ -6,14 +6,16 @@ import BoltIcon from '@mui/icons-material/Bolt';
 import { useMemo } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
+import { parsePositiveSafeInt } from '../utils/ids';
 
 const buildArtistSignupLink = (claimArtistId: number | null) => {
   const params = new URLSearchParams();
   params.set('redirect', '/mi-artista');
   params.set('signup', '1');
   params.set('intent', 'artist');
-  if (claimArtistId && claimArtistId > 0) {
-    params.set('claimArtistId', String(claimArtistId));
+  const normalizedClaimArtistId = parsePositiveSafeInt(claimArtistId);
+  if (normalizedClaimArtistId !== null) {
+    params.set('claimArtistId', String(normalizedClaimArtistId));
   }
   return `/login?${params.toString()}`;
 };
@@ -30,9 +32,7 @@ export default function ArtistOnboardingPage() {
 
   const claimArtistId = useMemo(() => {
     const raw = searchParams.get('claimArtistId') ?? searchParams.get('claim');
-    if (!raw || !/^\d+$/.test(raw)) return null;
-    const parsed = Number.parseInt(raw, 10);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    return parsePositiveSafeInt(raw);
   }, [searchParams]);
 
   const hasArtistRole = useMemo(() => {
@@ -188,4 +188,3 @@ export default function ArtistOnboardingPage() {
     </Box>
   );
 }
-
