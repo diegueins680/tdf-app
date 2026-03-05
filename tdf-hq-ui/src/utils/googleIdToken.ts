@@ -32,15 +32,18 @@ const normalizeClaim = (value: unknown): string | undefined => {
 };
 
 export const parseGoogleIdToken = (token: string): GoogleIdTokenClaims | null => {
-  const [, payload] = token.split('.');
-  if (!payload) return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  const [header, payload] = parts;
+  if (!header || !payload) return null;
 
   const decodedPayload = decodeBase64UrlUtf8(payload);
   if (!decodedPayload) return null;
 
   try {
     const parsed = JSON.parse(decodedPayload) as Record<string, unknown>;
-    if (!parsed || typeof parsed !== 'object') return null;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     return {
       email: normalizeClaim(parsed['email']),
       name: normalizeClaim(parsed['name']),

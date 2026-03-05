@@ -5,6 +5,18 @@ export const CHAT_READ_STATE_EVENT = 'tdf-chat-read-state';
 
 export type ChatReadMap = Record<string, string>;
 
+const parsePositiveSafeThreadId = (value: unknown): number | null => {
+  if (typeof value !== 'number') return null;
+  if (!Number.isSafeInteger(value) || value <= 0) return null;
+  return value;
+};
+
+const normalizeThreadIdKey = (value: string): string | null => {
+  if (!/^\d+$/.test(value)) return null;
+  const parsed = Number.parseInt(value, 10);
+  return parsePositiveSafeThreadId(parsed) === null ? null : String(parsed);
+};
+
 const parseDateMs = (value: string | null | undefined): number | null => {
   if (!value) return null;
   const parsed = new Date(value);
@@ -22,9 +34,10 @@ const readStorage = (): ChatReadMap => {
     const next: ChatReadMap = {};
     Object.entries(parsed as Record<string, unknown>).forEach(([key, value]) => {
       if (typeof value !== 'string') return;
-      if (!key || !/^\d+$/.test(key)) return;
+      const normalizedKey = normalizeThreadIdKey(key);
+      if (!normalizedKey) return;
       if (parseDateMs(value) === null) return;
-      next[key] = value;
+      next[normalizedKey] = value;
     });
     return next;
   } catch {
@@ -44,15 +57,18 @@ const writeStorage = (map: ChatReadMap) => {
 export const loadChatReadMap = (): ChatReadMap => readStorage();
 
 export const getThreadLastSeenAt = (map: ChatReadMap, threadId: number): string | null => {
-  return map[String(threadId)] ?? null;
+  const normalizedThreadId = parsePositiveSafeThreadId(threadId);
+  if (normalizedThreadId === null) return null;
+  return map[String(normalizedThreadId)] ?? null;
 };
 
 export const markThreadSeen = (threadId: number, lastSeenAt: string) => {
   if (typeof window === 'undefined') return;
-  if (threadId <= 0) return;
+  const normalizedThreadId = parsePositiveSafeThreadId(threadId);
+  if (normalizedThreadId === null) return;
   if (parseDateMs(lastSeenAt) === null) return;
   const map = readStorage();
-  const key = String(threadId);
+  const key = String(normalizedThreadId);
   const prevMs = parseDateMs(map[key]);
   const nextMs = parseDateMs(lastSeenAt);
   if (nextMs === null) return;
@@ -63,9 +79,11 @@ export const markThreadSeen = (threadId: number, lastSeenAt: string) => {
 };
 
 export const isThreadUnread = (thread: ChatThreadDTO, map: ChatReadMap): boolean => {
+  const threadId = parsePositiveSafeThreadId(thread.ctThreadId);
+  if (threadId === null) return false;
   const lastMessageAtMs = parseDateMs(thread.ctLastMessageAt);
   if (lastMessageAtMs === null) return false;
-  const lastSeenAt = getThreadLastSeenAt(map, thread.ctThreadId);
+  const lastSeenAt = getThreadLastSeenAt(map, threadId);
   const lastSeenAtMs = parseDateMs(lastSeenAt);
   if (lastSeenAtMs === null) return true;
   return lastMessageAtMs > lastSeenAtMs;

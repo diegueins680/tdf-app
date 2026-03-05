@@ -27,6 +27,14 @@ describe('parseGoogleIdToken', () => {
     expect(parseGoogleIdToken('header.invalid-base64.signature')).toBeNull();
   });
 
+  it('requires a strict three-part JWT structure', () => {
+    const header = encodeBase64UrlUtf8(JSON.stringify({ alg: 'none', typ: 'JWT' }));
+    const payload = encodeBase64UrlUtf8(JSON.stringify({ email: 'ana@tdf.com' }));
+
+    expect(parseGoogleIdToken(`${header}.${payload}`)).toBeNull();
+    expect(parseGoogleIdToken(`${header}.${payload}.sig.extra`)).toBeNull();
+  });
+
   it('trims claims and drops blank strings', () => {
     const token = buildGoogleIdToken({ email: '  ana@tdf.com ', name: '   ' });
     expect(parseGoogleIdToken(token)).toEqual({ email: 'ana@tdf.com', name: undefined });
