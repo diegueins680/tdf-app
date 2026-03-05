@@ -250,4 +250,27 @@ describe('API query/id validation', () => {
       'registrationId debe ser un entero positivo.',
     );
   });
+
+  it('normalizes and validates course slugs used in path segments', async () => {
+    await Courses.getMetadata(' cohort 2026 ');
+    expect(getMock).toHaveBeenCalledWith('/public/courses/cohort%202026');
+
+    await Courses.register(
+      ' cohort/2026 ',
+      {
+        fullName: 'Ana Perez',
+        email: 'ana@example.com',
+      } as never,
+    );
+    expect(postMock).toHaveBeenCalledWith(
+      '/public/courses/cohort%2F2026/registrations',
+      {
+        fullName: 'Ana Perez',
+        email: 'ana@example.com',
+      },
+    );
+
+    expect(() => Courses.getMetadata('   ')).toThrow('slug no puede estar vacío.');
+    expect(() => Courses.getRegistration('', 8)).toThrow('slug no puede estar vacío.');
+  });
 });

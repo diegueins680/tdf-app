@@ -92,6 +92,14 @@ const requirePositiveInteger = (value: number, field: string): number => {
   return value;
 };
 
+const normalizeCourseSlug = (slug: string): string => {
+  const trimmed = slug.trim();
+  if (trimmed === '') {
+    throw new Error('slug no puede estar vacío.');
+  }
+  return encodeURIComponent(trimmed);
+};
+
 const setTrimmedParam = (search: URLSearchParams, key: string, value?: string): void => {
   const trimmed = value?.trim();
   if (trimmed) search.set(key, trimmed);
@@ -100,12 +108,12 @@ const setTrimmedParam = (search: URLSearchParams, key: string, value?: string): 
 export const Courses = {
   upsert: (payload: CourseUpsert) => post<CourseMetadata>('/admin/courses', payload),
   listCohorts: () => get<CourseCohortOptionDTO[]>('/admin/courses/cohorts'),
-  getMetadata: (slug: string) => get<CourseMetadata>(courseBase(slug)),
+  getMetadata: (slug: string) => get<CourseMetadata>(courseBase(normalizeCourseSlug(slug))),
   register: (slug: string, payload: CourseRegistrationRequest) =>
-    post<CourseRegistrationResponse>(`${courseBase(slug)}/registrations`, payload),
+    post<CourseRegistrationResponse>(`${courseBase(normalizeCourseSlug(slug))}/registrations`, payload),
   updateStatus: (slug: string, registrationId: number, payload: CourseRegistrationStatusUpdate) =>
     patch<CourseRegistrationResponse>(
-      `/admin/courses/${slug}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}/status`,
+      `/admin/courses/${normalizeCourseSlug(slug)}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}/status`,
       payload,
     ),
   listRegistrations: (params?: { slug?: string; status?: string; limit?: number }) => {
@@ -122,6 +130,6 @@ export const Courses = {
     ),
   getRegistration: (slug: string, registrationId: number) =>
     get<CourseRegistrationDTO>(
-      `/admin/courses/${slug}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}`,
+      `/admin/courses/${normalizeCourseSlug(slug)}/registrations/${requirePositiveInteger(registrationId, 'registrationId')}`,
     ),
 };
