@@ -51,8 +51,11 @@ const resolveScopes = (provider: InstagramOAuthProvider, scopes: string[]) => {
     if (businessScopes.length > 0) return businessScopes.join(',');
     return uniqueScopes(parseScopes(DEFAULT_INSTAGRAM_SCOPES)).join(',');
   }
+  const nonBusinessScopes = scopes.filter((scope) => !scope.startsWith('instagram_business_'));
+  const baseFacebookScopes =
+    nonBusinessScopes.length > 0 ? nonBusinessScopes : parseScopes(DEFAULT_FACEBOOK_SCOPES);
   const facebookScopes = uniqueScopes([
-    ...scopes.filter((scope) => !scope.startsWith('instagram_business_')),
+    ...baseFacebookScopes,
     ...FACEBOOK_DEPENDENCY_SCOPES,
   ]);
   return facebookScopes.join(',');
@@ -157,15 +160,31 @@ export const resolveInstagramReturnTo = (value?: string | null) => {
   return safe !== '' ? safe : DEFAULT_RETURN_TO;
 };
 
-const createNonce = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
-    const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes)
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
+const fallbackNonce = () => {
+  let nonce = '';
+  while (nonce.length < 32) {
+    const block = Math.floor(Math.random() * 0x1_0000_0000)
+      .toString(16)
+      .padStart(8, '0');
+    nonce += block;
   }
-  return Math.random().toString(16).slice(2);
+  return nonce.slice(0, 32);
+};
+
+const createNonce = () => {
+  if (typeof crypto !== 'undefined') {
+    if (typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID().replace(/-/g, '').toLowerCase();
+    }
+    if (typeof crypto.getRandomValues === 'function') {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+  }
+  return fallbackNonce();
 };
 
 export const instagramConfigError = () => {

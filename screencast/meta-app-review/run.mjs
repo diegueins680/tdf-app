@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const URL = process.env.TDF_REVIEW_URL ?? 'https://tdf-app.pages.dev/social/instagram?review=1';
+const INBOX_URL = process.env.TDF_REVIEW_INBOX_URL ?? 'https://tdf-app.pages.dev/social/inbox?review=1';
 const OUT_DIR = process.env.TDF_SCREENCAST_OUT_DIR ?? 'screencast/meta-app-review/output';
 const REVIEW_USER = process.env.TDF_REVIEW_USERNAME ?? 'admin';
 const REVIEW_PASS = process.env.TDF_REVIEW_PASSWORD ?? 'password123';
@@ -45,7 +46,15 @@ async function ensureLoggedIn(page) {
   await password.fill(REVIEW_PASS);
   await submit.click();
 
-  await page.waitForURL((u) => !/\/login(?:\?|$)/.test(u.pathname), { timeout: 90_000 });
+  await Promise.race([
+    page.waitForURL((u) => !/\/login(?:\?|$)/.test(u.pathname), { timeout: 90_000 }),
+    page.getByRole('button', { name: /Salir|Logout|Log out/i }).first().waitFor({ timeout: 90_000 }),
+  ]);
+
+  if (/\/login(?:\?|$)/.test(page.url())) {
+    throw new Error(`Login did not leave /login. Current URL: ${page.url()}`);
+  }
+
   await page.waitForLoadState('networkidle').catch(() => {});
 }
 
@@ -74,15 +83,27 @@ const main = async () => {
 
   // Step 1: Instagram setup screen (review mode)
   await page.getByRole('heading', { name: setupHeadingMatcher }).waitFor();
+  console.log('Reached review setup screen.');
 
   // Ensure the Asset selection panel is visible (Meta reviewer requirement)
-  await page.getByRole('heading', { name: /Asset selection/i }).scrollIntoViewIfNeeded().catch(() => {});
+  await page
+    .getByRole('heading', { name: /Asset selection/i })
+    .scrollIntoViewIfNeeded({ timeout: 5_000 })
+    .catch(() => {});
+
+  const continueBtn = page.getByRole('button', { name: /Continue to message send flow/i });
+  const continueAlreadyVisible = await continueBtn.first().isVisible({ timeout: 3_000 }).catch(() => false);
+  console.log(`Continue button visible before auth step: ${continueAlreadyVisible}`);
 
   // Click connect / re-authorize to show Meta login + permissions modal
   const connectBtn = page.getByRole('button', { name: /Connect with Meta Login|Re-authorize/i });
-  if (await connectBtn.count()) {
+  const hasConnectBtn = await connectBtn.first().isVisible({ timeout: 5_000 }).catch(() => false);
+  console.log(`Connect button visible: ${hasConnectBtn}`);
+
+  if (!continueAlreadyVisible && hasConnectBtn) {
     await page.getByRole('heading', { name: /Connection status/i }).scrollIntoViewIfNeeded().catch(() => {});
     await connectBtn.first().click();
+    console.log('Connect/Re-authorize clicked. Waiting for manual Meta consent step.');
 
     await pauseForHuman(
       page,
@@ -95,6 +116,7 @@ const main = async () => {
     await page.goto(URL, { waitUntil: 'networkidle' }).catch(() => {});
     await ensureLoggedIn(page);
     await page.getByRole('heading', { name: setupHeadingMatcher }).waitFor();
+    console.log('Returned from Meta consent to setup page.');
   }
 
   // Make sure the Messaging asset dropdown is visible and has a selected value
@@ -102,10 +124,28 @@ const main = async () => {
   await assetSelect.scrollIntoViewIfNeeded().catch(() => {});
 
   // Step 2: Proceed to inbox review mode
-  const continueBtn = page.getByRole('button', { name: /Continue to message send flow/i });
-  await continueBtn.click();
+  const hasContinueBtn = await continueBtn.first().isVisible({ timeout: 8_000 }).catch(() => false);
+  if (!hasContinueBtn) {
+    await pauseForHuman(
+      page,
+      'The Continue button is not visible yet.\n' +
+        '- Confirm Meta connection completed successfully.\n' +
+        '- Select a Messaging asset (Page + IG account) if required.\n' +
+        '- Ensure "Continue to message send flow" is visible.\n'
+    );
+  }
+  const continueVisibleAfterPrompt = await continueBtn.first().isVisible({ timeout: 5_000 }).catch(() => false);
+  if (continueVisibleAfterPrompt) {
+    await continueBtn.click();
+    console.log('Navigating to messaging inbox flow via Continue button.');
+  } else {
+    console.log('Continue button still not visible; navigating directly to inbox review URL.');
+    await page.goto(INBOX_URL, { waitUntil: 'networkidle' });
+    await ensureLoggedIn(page);
+  }
 
   await page.getByRole('heading', { name: inboxHeadingMatcher }).waitFor();
+  console.log('Reached review messaging inbox screen.');
 
   // We need an inbound message to reply to. If none, operator should send one to the connected asset.
   await pauseForHuman(
@@ -125,6 +165,7 @@ const main = async () => {
   const outgoing = page.getByLabel(/Outgoing message/i);
   await outgoing.waitFor();
   const unique = `Meta review test message ${iso()} - sent from TDF HQ UI`;
+  console.log(`Prepared outbound verification message: ${unique}`);
   await outgoing.fill(unique);
 
   const sendBtn = page.getByRole('button', { name: /^Send message$/i });
