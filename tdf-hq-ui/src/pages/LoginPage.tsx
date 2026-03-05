@@ -51,6 +51,7 @@ import { Fans } from '../api/fans';
 import type { ArtistProfileDTO } from '../api/types';
 import { buildSignupPayload, deriveEffectiveRoles, normalizeSignupRoles } from '../utils/roles';
 import { parsePositiveSafeInt } from '../utils/ids';
+import { parseGoogleIdToken } from '../utils/googleIdToken';
 
 const pickLandingPath = (roles: string[], modules?: string[]) => {
   const lowerRoles = roles.map((r) => r.toLowerCase());
@@ -129,20 +130,6 @@ const loadGoogleScript = () => {
     document.head.appendChild(script);
   });
   return googleScriptPromise;
-};
-
-const parseGoogleIdToken = (token: string): { email?: string; name?: string } | null => {
-  try {
-    const [, payload] = token.split('.');
-    if (!payload) return null;
-    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    const decoded = atob(padded);
-    return JSON.parse(decoded) as { email?: string; name?: string };
-  } catch (error) {
-    console.warn('Failed to parse Google ID token', error);
-    return null;
-  }
 };
 
 const parseNonNegativeSafeInt = (value: string): number | undefined => {
