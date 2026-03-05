@@ -159,6 +159,15 @@ describe('PublicBookingPage', () => {
     await act(async () => {
       setInputValue(getInputByLabel(container, 'Nombre completo'), 'Test User');
       setInputValue(getInputByLabel(container, 'Correo'), 'test@example.com');
+      const continueButton = Array.from(container.querySelectorAll('button')).find(
+        (button) => button.textContent?.trim() === 'Continuar',
+      );
+      if (!continueButton) throw new Error('Continue button not found');
+      continueButton.click();
+      await flushPromises();
+    });
+
+    await act(async () => {
       const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
       const desiredStudio = DateTime.fromObject(
         { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
@@ -173,6 +182,15 @@ describe('PublicBookingPage', () => {
     await act(async () => {
       const checkbox = clickCheckboxNearText(container, 'Asignar ingeniero después');
       expect(checkbox?.checked).toBe(true);
+      await flushPromises();
+    });
+
+    await act(async () => {
+      const reviewButton = Array.from(container.querySelectorAll('button')).find(
+        (button) => button.textContent?.trim() === 'Revisar reserva',
+      );
+      if (!reviewButton) throw new Error('Review button not found');
+      reviewButton.click();
       await flushPromises();
     });
 

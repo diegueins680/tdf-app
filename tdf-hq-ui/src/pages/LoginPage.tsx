@@ -6,6 +6,7 @@ import {
   Button,
   Checkbox,
   Chip,
+  Collapse,
   CircularProgress,
   Container,
   Dialog,
@@ -13,7 +14,6 @@ import {
   DialogContent,
   DialogTitle,
   Fade,
-  Fab,
   FormControl,
   FormControlLabel,
   FormHelperText,
@@ -82,7 +82,7 @@ const LANDING_LABELS: Record<string, string> = {
   '/label/artistas': 'Label - Artistas',
   '/operacion/inventario': 'Inventario',
   '/finanzas/pagos': 'Finanzas',
-  '/practicas': 'Practicas',
+  '/practicas': 'Prácticas',
   '/inicio': 'Inicio',
 };
 
@@ -182,6 +182,7 @@ export default function LoginPage() {
   const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
   const [googleStatus, setGoogleStatus] = useState<string | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
+  const [showOnboardingCards, setShowOnboardingCards] = useState(false);
   const textFieldSx = useMemo(
     () => ({
       '& .MuiInputLabel-root': {
@@ -374,12 +375,12 @@ export default function LoginPage() {
 
     if (hasArtist) {
       title = 'Ruta para artistas';
-      steps.push('Completa tu bio, generos y links principales.');
+      steps.push('Completa tu bio, géneros y links principales.');
       steps.push('Publica portada y video destacado.');
-      steps.push('Comparte tu URL publica con tu audiencia.');
+      steps.push('Comparte tu URL pública con tu audiencia.');
     } else if (hasIntern) {
-      title = 'Ruta para practicas';
-      steps.push('Completa fechas, horas y areas de interes.');
+      title = 'Ruta para prácticas';
+      steps.push('Completa fechas, horas y áreas de interés.');
       steps.push('Revisa tu plan de rotaciones con el equipo.');
       steps.push('Comparte tus avances y objetivos.');
     } else if (hasFan) {
@@ -389,11 +390,11 @@ export default function LoginPage() {
       steps.push('Reserva sesiones o streams cuando quieras.');
     } else if (hasRoles) {
       steps.push('Accede al panel principal y configura tu perfil.');
-      steps.push('Explora los modulos disponibles para tu rol.');
+      steps.push('Explora los módulos disponibles para tu rol.');
     } else {
       title = 'Elige tu ruta';
       steps.push('Selecciona un rol para personalizar tu panel.');
-      steps.push('Puedes ajustar tus roles mas adelante.');
+      steps.push('Puedes ajustar tus roles más adelante.');
       note = 'Sin roles: Fan';
     }
 
@@ -783,19 +784,32 @@ export default function LoginPage() {
             >
               <Stack spacing={isMobile ? 2.5 : 3}>
                 <Stack spacing={1} alignItems="flex-start">
-                  <Chip
-                    label="TDF Records"
-                    size="small"
-                    sx={{
-                      bgcolor: 'rgba(148,163,184,0.16)',
-                      color: '#e2e8f0',
-                      borderColor: 'rgba(148,163,184,0.45)',
-                      letterSpacing: 0.8,
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                    }}
-                    variant="outlined"
-                  />
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                    <Chip
+                      label="TDF Records"
+                      size="small"
+                      sx={{
+                        bgcolor: 'rgba(148,163,184,0.16)',
+                        color: '#e2e8f0',
+                        borderColor: 'rgba(148,163,184,0.45)',
+                        letterSpacing: 0.8,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                      }}
+                      variant="outlined"
+                    />
+                    <Tooltip title={mode === 'light' ? 'Usar tema oscuro' : 'Usar tema claro'}>
+                      <IconButton
+                        size="small"
+                        onClick={toggleMode}
+                        aria-label="Cambiar tema"
+                        sx={{ color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.35)' }}
+                      >
+                        {mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
+                      </IconButton>
+                    </Tooltip>
+                    <Chip label={apiStatus.label} color={apiStatus.color} size="small" variant="outlined" />
+                  </Stack>
                   <Typography variant="h5" fontWeight={700}>
                     Iniciar sesión
                   </Typography>
@@ -925,18 +939,6 @@ export default function LoginPage() {
                     </Link>
                   </Typography>
                   <Typography variant="body2">
-                    ¿No tienes cuenta?{' '}
-                    <Link
-                      component="button"
-                      type="button"
-                      underline="hover"
-                      onClick={() => openSignupDialog()}
-                      sx={{ cursor: 'pointer', p: 0 }}
-                    >
-                      Crear cuenta
-                    </Link>
-                  </Typography>
-                  <Typography variant="body2">
                     ¿Buscas una clase de prueba?{' '}
                     <Link component={RouterLink} to="/trials" underline="hover">
                       Solicitar trial
@@ -950,204 +952,212 @@ export default function LoginPage() {
                   </Typography>
                   {!googleClientId && (
                     <Typography variant="caption" color="text.secondary">
-                      Login con Google no disponible en este entorno.
+                      El inicio con Google no está disponible en este entorno.
                     </Typography>
                   )}
                 </Stack>
               </Stack>
             </Paper>
           </Box>
-          <Fade in timeout={700}>
-            <Box sx={{ width: '100%', maxWidth: 440 }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  width: '100%',
-                  p: { xs: 2.5, sm: 3 },
-                  borderRadius: { xs: 3, sm: 4 },
-                  background: 'linear-gradient(160deg, rgba(15,23,42,0.94), rgba(15,23,42,0.78))',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: '#e2e8f0',
-                }}
-              >
-                <Stack spacing={2}>
-                  <Stack spacing={0.75}>
-                    <Chip
-                      label="Onboarding rapido"
-                      size="small"
-                      sx={{
-                        width: 'fit-content',
-                        bgcolor: 'rgba(56,189,248,0.18)',
-                        color: '#e2e8f0',
-                        borderColor: 'rgba(56,189,248,0.35)',
-                        fontWeight: 700,
-                      }}
-                      variant="outlined"
-                    />
-                    <Typography variant="h6" fontWeight={800}>
-                      Empieza en minutos
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.78)' }}>
-                      Elige la ruta que mejor encaja contigo y te llevamos al panel ideal.
-                    </Typography>
-                  </Stack>
-                  <Stack spacing={1.5}>
-                    <Paper
-                      variant="outlined"
-                      sx={{
-                        p: 2,
-                        borderRadius: 3,
-                        borderColor: 'rgba(148,163,184,0.24)',
-                        bgcolor: 'rgba(15,23,42,0.65)',
-                      }}
-                    >
-                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                        <Box
-                          sx={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 2,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            bgcolor: 'rgba(56,189,248,0.18)',
-                            color: '#38bdf8',
-                          }}
-                        >
-                          <MusicNoteIcon />
-                        </Box>
-                        <Stack spacing={0.5} sx={{ flex: 1 }}>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            Soy artista
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                            Crea tu perfil, comparte tu link y presenta tu musica.
-                          </Typography>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => navigate('/artista/crear')}
+          <Box sx={{ width: '100%', maxWidth: 440 }}>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => setShowOnboardingCards((prev) => !prev)}
+              sx={{ textTransform: 'none', color: 'rgba(226,232,240,0.88)' }}
+            >
+              {showOnboardingCards ? 'Ocultar rutas rápidas' : 'Soy nuevo: ver rutas rápidas'}
+            </Button>
+            <Collapse in={showOnboardingCards} unmountOnExit>
+              <Fade in={showOnboardingCards} timeout={350}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    mt: 1,
+                    width: '100%',
+                    p: { xs: 2.5, sm: 3 },
+                    borderRadius: { xs: 3, sm: 4 },
+                    background: 'linear-gradient(160deg, rgba(15,23,42,0.94), rgba(15,23,42,0.78))',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: '#e2e8f0',
+                  }}
+                >
+                  <Stack spacing={2}>
+                    <Stack spacing={0.75}>
+                      <Chip
+                        label="Onboarding rápido"
+                        size="small"
+                        sx={{
+                          width: 'fit-content',
+                          bgcolor: 'rgba(56,189,248,0.18)',
+                          color: '#e2e8f0',
+                          borderColor: 'rgba(56,189,248,0.35)',
+                          fontWeight: 700,
+                        }}
+                        variant="outlined"
+                      />
+                      <Typography variant="h6" fontWeight={800}>
+                        Empieza en minutos
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.78)' }}>
+                        Elige la ruta que mejor encaja contigo y te llevamos al panel ideal.
+                      </Typography>
+                    </Stack>
+                    <Stack spacing={1.5}>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 2,
+                          borderRadius: 3,
+                          borderColor: 'rgba(148,163,184,0.24)',
+                          bgcolor: 'rgba(15,23,42,0.65)',
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                          <Box
                             sx={{
-                              alignSelf: 'flex-start',
-                              textTransform: 'none',
-                              borderColor: 'rgba(148,163,184,0.4)',
-                              color: '#e2e8f0',
+                              width: 44,
+                              height: 44,
+                              borderRadius: 2,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: 'rgba(56,189,248,0.18)',
+                              color: '#38bdf8',
                             }}
                           >
-                            Crear perfil
-                          </Button>
+                            <MusicNoteIcon />
+                          </Box>
+                          <Stack spacing={0.5} sx={{ flex: 1 }}>
+                            <Typography variant="subtitle1" fontWeight={700}>
+                              Soy artista
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+                              Crea tu perfil, comparte tu link y presenta tu música.
+                            </Typography>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => navigate('/artista/crear')}
+                              sx={{
+                                alignSelf: 'flex-start',
+                                textTransform: 'none',
+                                borderColor: 'rgba(148,163,184,0.4)',
+                                color: '#e2e8f0',
+                              }}
+                            >
+                              Crear perfil
+                            </Button>
+                          </Stack>
                         </Stack>
-                      </Stack>
-                    </Paper>
-                    <Paper
-                      variant="outlined"
-                      sx={{
-                        p: 2,
-                        borderRadius: 3,
-                        borderColor: 'rgba(148,163,184,0.24)',
-                        bgcolor: 'rgba(15,23,42,0.65)',
-                      }}
-                    >
-                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                        <Box
-                          sx={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 2,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            bgcolor: 'rgba(244,114,182,0.18)',
-                            color: '#f472b6',
-                          }}
-                        >
-                          <FavoriteBorderIcon />
-                        </Box>
-                        <Stack spacing={0.5} sx={{ flex: 1 }}>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            Soy fan
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                            Sigue artistas, recibe lanzamientos y reserva experiencias.
-                          </Typography>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => openSignupDialog(['Fan'])}
+                      </Paper>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 2,
+                          borderRadius: 3,
+                          borderColor: 'rgba(148,163,184,0.24)',
+                          bgcolor: 'rgba(15,23,42,0.65)',
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                          <Box
                             sx={{
-                              alignSelf: 'flex-start',
-                              textTransform: 'none',
-                              borderColor: 'rgba(148,163,184,0.4)',
-                              color: '#e2e8f0',
+                              width: 44,
+                              height: 44,
+                              borderRadius: 2,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: 'rgba(244,114,182,0.18)',
+                              color: '#f472b6',
                             }}
                           >
-                            Crear cuenta fan
-                          </Button>
+                            <FavoriteBorderIcon />
+                          </Box>
+                          <Stack spacing={0.5} sx={{ flex: 1 }}>
+                            <Typography variant="subtitle1" fontWeight={700}>
+                              Soy fan
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+                              Sigue artistas, recibe lanzamientos y reserva experiencias.
+                            </Typography>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => openSignupDialog(['Fan'])}
+                              sx={{
+                                alignSelf: 'flex-start',
+                                textTransform: 'none',
+                                borderColor: 'rgba(148,163,184,0.4)',
+                                color: '#e2e8f0',
+                              }}
+                            >
+                              Crear cuenta fan
+                            </Button>
+                          </Stack>
                         </Stack>
-                      </Stack>
-                    </Paper>
-                    <Paper
-                      variant="outlined"
-                      sx={{
-                        p: 2,
-                        borderRadius: 3,
-                        borderColor: 'rgba(148,163,184,0.24)',
-                        bgcolor: 'rgba(15,23,42,0.65)',
-                      }}
-                    >
-                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                        <Box
-                          sx={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 2,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            bgcolor: 'rgba(52,211,153,0.18)',
-                            color: '#34d399',
-                          }}
-                        >
-                          <SchoolOutlinedIcon />
-                        </Box>
-                        <Stack spacing={0.5} sx={{ flex: 1 }}>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            Busco practicas
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                            Postula, define tu plan y organiza tus rotaciones.
-                          </Typography>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => openSignupDialog(['Intern'])}
+                      </Paper>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 2,
+                          borderRadius: 3,
+                          borderColor: 'rgba(148,163,184,0.24)',
+                          bgcolor: 'rgba(15,23,42,0.65)',
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                          <Box
                             sx={{
-                              alignSelf: 'flex-start',
-                              textTransform: 'none',
-                              borderColor: 'rgba(148,163,184,0.4)',
-                              color: '#e2e8f0',
+                              width: 44,
+                              height: 44,
+                              borderRadius: 2,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: 'rgba(52,211,153,0.18)',
+                              color: '#34d399',
                             }}
                           >
-                            Postular practicas
-                          </Button>
+                            <SchoolOutlinedIcon />
+                          </Box>
+                          <Stack spacing={0.5} sx={{ flex: 1 }}>
+                            <Typography variant="subtitle1" fontWeight={700}>
+                              Busco prácticas
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
+                              Postula, define tu plan y organiza tus rotaciones.
+                            </Typography>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => openSignupDialog(['Intern'])}
+                              sx={{
+                                alignSelf: 'flex-start',
+                                textTransform: 'none',
+                                borderColor: 'rgba(148,163,184,0.4)',
+                                color: '#e2e8f0',
+                              }}
+                            >
+                              Postular prácticas
+                            </Button>
+                          </Stack>
                         </Stack>
-                      </Stack>
-                    </Paper>
+                      </Paper>
+                    </Stack>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      <Chip label="Menos de 3 minutos" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                      <Chip label="Roles editables" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                      <Chip label="Acceso inmediato" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                    </Stack>
                   </Stack>
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    <Chip label="Menos de 3 minutos" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                    <Chip label="Roles editables" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                    <Chip label="Acceso inmediato" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                  </Stack>
-                </Stack>
-              </Paper>
-            </Box>
-          </Fade>
+                </Paper>
+              </Fade>
+            </Collapse>
+          </Box>
         </Stack>
       </Container>
-      <Box sx={{ mt: { xs: 2.5, sm: 3 }, display: 'flex', justifyContent: 'center', width: '100%' }}>
-        <Box id="login-radio-mini-slot" sx={{ width: '100%', maxWidth: 440 }} />
-      </Box>
       <Dialog open={resetDialogOpen} onClose={closeResetDialog} fullWidth maxWidth="xs">
         <DialogTitle>Recuperar acceso</DialogTitle>
         <DialogContent>
@@ -1469,28 +1479,6 @@ export default function LoginPage() {
         </DialogActions>
       </Dialog>
 
-      <Box
-        sx={(theme) => ({
-          position: 'fixed',
-          right: { xs: 12, sm: 24 },
-          bottom: `calc(${theme.spacing(10)} + env(safe-area-inset-bottom, 0px))`,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          gap: 0.75,
-          zIndex: theme.zIndex.snackbar,
-        })}
-      >
-        <Fab
-          color="primary"
-          size="medium"
-          onClick={toggleMode}
-          aria-label="Cambiar tema"
-        >
-          {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
-        </Fab>
-        <Chip label={apiStatus.label} color={apiStatus.color} size="small" />
-      </Box>
     </Box>
   );
 }

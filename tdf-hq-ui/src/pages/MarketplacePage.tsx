@@ -1112,13 +1112,12 @@ export default function MarketplacePage() {
           <Alert
             severity="warning"
             action={
-              <Button size="small" onClick={() => void listingsQuery.refetch()}>
+            <Button size="small" onClick={() => void listingsQuery.refetch()}>
                 Reintentar
               </Button>
             }
           >
-            No pudimos cargar el marketplace. Puede ser un bloqueo de red/CORS o el servicio está caído. Intenta recargar
-            o vuelve a intentar en unos minutos.{' '}
+            No pudimos cargar el marketplace en este momento. Intenta recargar o vuelve a intentar en unos minutos.{' '}
             <Button
               size="small"
               component={RouterLink}
@@ -1676,219 +1675,223 @@ export default function MarketplacePage() {
                   </CardContent>
                 </Card>
 
-                <Card variant="outlined">
-                  <CardHeader title="Checkout" />
-                  <CardContent>
-                    <Stack spacing={1.5}>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Chip label="Paso 1: contacto" size="small" color="primary" />
-                        <Chip label="Paso 2: pago" size="small" color="secondary" variant="outlined" />
-                      </Stack>
-                      {!isValidName || !isValidEmail ? (
+                {!hasCartItems ? (
+                  <Card variant="outlined">
+                    <CardHeader title="Checkout" />
+                    <CardContent>
+                      <Stack spacing={1.25}>
                         <Alert severity="info" variant="outlined">
-                          Completa nombre y correo antes de elegir tarjeta o PayPal. Si prefieres coordinar por WhatsApp, elige
-                          “Correo/WhatsApp”.
+                          Agrega al menos un producto para continuar al checkout.
                         </Alert>
-                      ) : null}
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Button
-                          size="small"
-                          variant="text"
-                          disabled={!savedBuyerSnapshot}
-                          onClick={handleRestoreBuyer}
-                        >
-                          Usar datos guardados
-                        </Button>
-                        <Button size="small" variant="text" color="inherit" onClick={handleClearBuyer}>
-                          Limpiar datos
+                        <Button size="small" variant="text" onClick={scrollToListings} sx={{ alignSelf: 'flex-start' }}>
+                          Explorar catálogo
                         </Button>
                       </Stack>
-                      <TextField
-                        label="Nombre completo"
-                        value={buyerName}
-                        onChange={(e) => setBuyerName(e.target.value)}
-                        fullWidth
-                        error={Boolean(buyerName) && !isValidName}
-                        helperText={Boolean(buyerName) && !isValidName ? 'Ingresa tu nombre' : undefined}
-                      />
-                      <TextField
-                        label="Email"
-                        value={buyerEmail}
-                        onChange={(e) => setBuyerEmail(e.target.value)}
-                        type="email"
-                        fullWidth
-                        error={Boolean(buyerEmail) && !isValidEmail}
-                        helperText={Boolean(buyerEmail) && !isValidEmail ? 'Correo no válido' : undefined}
-                      />
-                      <TextField
-                        label="Teléfono (opcional)"
-                        value={buyerPhone}
-                        onChange={(e) => setBuyerPhone(e.target.value)}
-                        fullWidth
-                      />
-                      <Stack spacing={0.5}>
-                        <Typography variant="caption" color="text.secondary">
-                          Preferencia de contacto
-                        </Typography>
-                        <Stack direction="row" spacing={1}>
-                          <Chip
-                            label="Email"
-                            color={contactPref === 'email' ? 'primary' : 'default'}
-                            size="small"
-                            variant={contactPref === 'email' ? 'filled' : 'outlined'}
-                            onClick={() => setContactPref('email')}
-                          />
-                          <Chip
-                            label="Teléfono / WhatsApp"
-                            color={contactPref === 'phone' ? 'primary' : 'default'}
-                            size="small"
-                            variant={contactPref === 'phone' ? 'filled' : 'outlined'}
-                            onClick={() => setContactPref('phone')}
-                          />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card variant="outlined">
+                    <CardHeader title="Checkout" />
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Chip label="Paso 1: contacto" size="small" color="primary" />
+                          <Chip label="Paso 2: pago" size="small" color="secondary" variant="outlined" />
                         </Stack>
-                        <Typography variant="caption" color="text.secondary">
-                          Te contactaremos por {contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'} en menos de 24 h para coordinar pago y entrega.
-                        </Typography>
-                        {contactPref === 'phone' && !isValidPhone && (
-                          <Typography variant="caption" color="warning.main">
-                            Agrega un número de teléfono para coordinar por WhatsApp.
+                        {!isValidName || !isValidEmail ? (
+                          <Alert severity="info" variant="outlined">
+                            Completa nombre y correo antes de elegir tarjeta o PayPal. Si prefieres coordinar por WhatsApp, elige
+                            “Correo/WhatsApp”.
+                          </Alert>
+                        ) : null}
+                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                          <Button
+                            size="small"
+                            variant="text"
+                            disabled={!savedBuyerSnapshot}
+                            onClick={handleRestoreBuyer}
+                          >
+                            Usar datos guardados
+                          </Button>
+                          <Button size="small" variant="text" color="inherit" onClick={handleClearBuyer}>
+                            Limpiar datos
+                          </Button>
+                        </Stack>
+                        <TextField
+                          label="Nombre completo"
+                          value={buyerName}
+                          onChange={(e) => setBuyerName(e.target.value)}
+                          fullWidth
+                          error={Boolean(buyerName) && !isValidName}
+                          helperText={Boolean(buyerName) && !isValidName ? 'Ingresa tu nombre' : undefined}
+                        />
+                        <TextField
+                          label="Email"
+                          value={buyerEmail}
+                          onChange={(e) => setBuyerEmail(e.target.value)}
+                          type="email"
+                          fullWidth
+                          error={Boolean(buyerEmail) && !isValidEmail}
+                          helperText={Boolean(buyerEmail) && !isValidEmail ? 'Correo no válido' : undefined}
+                        />
+                        <TextField
+                          label="Teléfono (opcional)"
+                          value={buyerPhone}
+                          onChange={(e) => setBuyerPhone(e.target.value)}
+                          fullWidth
+                        />
+                        <Stack spacing={0.5}>
+                          <Typography variant="caption" color="text.secondary">
+                            Preferencia de contacto
                           </Typography>
+                          <Stack direction="row" spacing={1}>
+                            <Chip
+                              label="Email"
+                              color={contactPref === 'email' ? 'primary' : 'default'}
+                              size="small"
+                              variant={contactPref === 'email' ? 'filled' : 'outlined'}
+                              onClick={() => setContactPref('email')}
+                            />
+                            <Chip
+                              label="Teléfono / WhatsApp"
+                              color={contactPref === 'phone' ? 'primary' : 'default'}
+                              size="small"
+                              variant={contactPref === 'phone' ? 'filled' : 'outlined'}
+                              onClick={() => setContactPref('phone')}
+                            />
+                          </Stack>
+                          <Typography variant="caption" color="text.secondary">
+                            Te contactaremos por {contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'} en menos de 24 h para coordinar pago y entrega.
+                          </Typography>
+                          {contactPref === 'phone' && !isValidPhone && (
+                            <Typography variant="caption" color="warning.main">
+                              Agrega un número de teléfono para coordinar por WhatsApp.
+                            </Typography>
+                          )}
+                        </Stack>
+                        <Stack spacing={1}>
+                          <Typography variant="caption" color="text.secondary">
+                            Elige cómo pagar
+                          </Typography>
+                          <Stack direction="row" spacing={1} flexWrap="wrap">
+                            <Chip
+                              label="Coordinar por correo/WhatsApp"
+                              color={paymentMethod === 'contact' ? 'primary' : 'default'}
+                              variant={paymentMethod === 'contact' ? 'filled' : 'outlined'}
+                              onClick={() => setPaymentMethod('contact')}
+                              size="small"
+                            />
+                            {showDatafastOption && (
+                              <Chip
+                                label="Tarjeta (Datafast)"
+                                color={paymentMethod === 'card' ? 'primary' : 'default'}
+                                variant={paymentMethod === 'card' ? 'filled' : 'outlined'}
+                                onClick={() => setPaymentMethod('card')}
+                                size="small"
+                              />
+                            )}
+                            {showPaypalOption && (
+                              <Chip
+                                label="PayPal"
+                                color={paymentMethod === 'paypal' ? 'primary' : 'default'}
+                                variant={paymentMethod === 'paypal' ? 'filled' : 'outlined'}
+                                onClick={() => setPaymentMethod('paypal')}
+                                size="small"
+                              />
+                            )}
+                          </Stack>
+                          {paymentMethod === 'card' && (
+                            <Stack direction="row" spacing={0.5} alignItems="center">
+                              <CreditCardIcon fontSize="small" color="primary" />
+                              <Typography variant="caption" color="text.secondary">
+                                Aceptamos Visa, Mastercard, Diners, Discover y Amex.
+                              </Typography>
+                            </Stack>
+                          )}
+                          <Button
+                            variant="contained"
+                            onClick={openReview}
+                            disabled={Boolean(checkoutDisabledReason)}
+                          >
+                            {paymentMethod === 'paypal'
+                              ? 'Continuar con PayPal'
+                              : paymentMethod === 'card'
+                                ? 'Continuar con tarjeta'
+                                : 'Confirmar pedido'}
+                          </Button>
+                          {checkoutDisabledReason && (
+                            <Alert severity="info" variant="outlined">
+                              {checkoutDisabledReason} Completa los datos de contacto en esta sección.
+                            </Alert>
+                          )}
+                        </Stack>
+                        {checkoutMutation.isError && (
+                          <Alert severity="error">No pudimos crear el pedido. Revisa tus datos.</Alert>
+                        )}
+                        {datafastError && (
+                          <Alert
+                            severity="warning"
+                            onClose={() => setDatafastError(null)}
+                            action={
+                              <Stack direction="row" spacing={1}>
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  onClick={() => {
+                                    setDatafastError(null);
+                                    handleDatafastCheckout();
+                                  }}
+                                >
+                                  Reintentar pago
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  component="a"
+                                  href="mailto:dev@tdfrecords.com"
+                                >
+                                  Necesito ayuda
+                                </Button>
+                              </Stack>
+                            }
+                          >
+                            {datafastError} · Verifica tu banco o prueba nuevamente.
+                          </Alert>
+                        )}
+                        {paypalError && (
+                          <Alert
+                            severity="warning"
+                            onClose={() => setPaypalError(null)}
+                            action={
+                              <Stack direction="row" spacing={1}>
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  onClick={() => {
+                                    setPaypalError(null);
+                                    handlePaypalCheckout();
+                                  }}
+                                >
+                                  Reintentar PayPal
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  component="a"
+                                  href="mailto:dev@tdfrecords.com"
+                                >
+                                  Necesito ayuda
+                                </Button>
+                              </Stack>
+                            }
+                          >
+                            {paypalError} · Revisa tu sesión o intenta otra vez.
+                          </Alert>
                         )}
                       </Stack>
-                      <Stack spacing={1}>
-                        <Typography variant="caption" color="text.secondary">
-                          Elige cómo pagar
-                        </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap">
-                          <Chip
-                            label="Coordinar por correo/WhatsApp"
-                            color={paymentMethod === 'contact' ? 'primary' : 'default'}
-                            variant={paymentMethod === 'contact' ? 'filled' : 'outlined'}
-                            onClick={() => setPaymentMethod('contact')}
-                            size="small"
-                          />
-                          {showDatafastOption && (
-                            <Chip
-                              label="Tarjeta (Datafast)"
-                              color={paymentMethod === 'card' ? 'primary' : 'default'}
-                              variant={paymentMethod === 'card' ? 'filled' : 'outlined'}
-                              onClick={() => setPaymentMethod('card')}
-                              size="small"
-                            />
-                          )}
-                          {showPaypalOption && (
-                            <Chip
-                              label="PayPal"
-                              color={paymentMethod === 'paypal' ? 'primary' : 'default'}
-                              variant={paymentMethod === 'paypal' ? 'filled' : 'outlined'}
-                              onClick={() => setPaymentMethod('paypal')}
-                              size="small"
-                            />
-                          )}
-                        </Stack>
-                      {paymentMethod === 'card' && (
-                        <Stack direction="row" spacing={0.5} alignItems="center">
-                          <CreditCardIcon fontSize="small" color="primary" />
-                          <Typography variant="caption" color="text.secondary">
-                            Aceptamos Visa, Mastercard, Diners, Discover y Amex.
-                          </Typography>
-                        </Stack>
-                      )}
-                      <Button
-                        variant="contained"
-                        onClick={openReview}
-                        disabled={Boolean(checkoutDisabledReason)}
-                      >
-                        {paymentMethod === 'paypal'
-                          ? 'Continuar con PayPal'
-                          : paymentMethod === 'card'
-                            ? 'Continuar con tarjeta'
-                            : 'Confirmar pedido'}
-                      </Button>
-                      {checkoutDisabledReason && (
-                        <Typography variant="caption" color="text.secondary">
-                          {checkoutDisabledReason} Completa los datos de contacto en esta sección.
-                        </Typography>
-                      )}
-                      {checkoutDisabledReason && (
-                        <Stack spacing={0.5}>
-                          <Alert severity="info" variant="outlined">
-                            {checkoutDisabledReason}
-                          </Alert>
-                          {!hasCartItems && (
-                            <Button size="small" variant="text" onClick={scrollToListings} sx={{ alignSelf: 'flex-start' }}>
-                              Volver al catálogo
-                            </Button>
-                          )}
-                        </Stack>
-                      )}
-                    </Stack>
-                    {checkoutMutation.isError && (
-                      <Alert severity="error">No pudimos crear el pedido. Revisa tus datos.</Alert>
-                    )}
-                    {datafastError && (
-                      <Alert
-                        severity="warning"
-                        onClose={() => setDatafastError(null)}
-                        action={
-                          <Stack direction="row" spacing={1}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              onClick={() => {
-                                setDatafastError(null);
-                                handleDatafastCheckout();
-                              }}
-                            >
-                              Reintentar pago
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="text"
-                              component="a"
-                              href="mailto:dev@tdfrecords.com"
-                            >
-                              Necesito ayuda
-                            </Button>
-                          </Stack>
-                        }
-                      >
-                        {datafastError} · Verifica tu banco o prueba nuevamente.
-                      </Alert>
-                    )}
-                    {paypalError && (
-                      <Alert
-                        severity="warning"
-                        onClose={() => setPaypalError(null)}
-                        action={
-                          <Stack direction="row" spacing={1}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              onClick={() => {
-                                setPaypalError(null);
-                                handlePaypalCheckout();
-                              }}
-                            >
-                              Reintentar PayPal
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="text"
-                              component="a"
-                              href="mailto:dev@tdfrecords.com"
-                            >
-                              Necesito ayuda
-                            </Button>
-                          </Stack>
-                        }
-                      >
-                        {paypalError} · Revisa tu sesión o intenta otra vez.
-                      </Alert>
-                    )}
-                  </Stack>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {orderSummary}
               </Stack>

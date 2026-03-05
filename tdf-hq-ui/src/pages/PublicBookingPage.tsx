@@ -13,6 +13,9 @@ import {
   CircularProgress,
   Grid,
   MenuItem,
+  Step,
+  StepLabel,
+  Stepper,
   Tooltip,
   Snackbar,
   Stack,
@@ -74,6 +77,7 @@ const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const ROOM_FALLBACKS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
+const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 
 const zoneLabel = (zone: string) => {
   try {
@@ -196,6 +200,25 @@ const buildIcsDataUrl = (title: string, startIso: string, durationMinutes: numbe
   return `data:text/calendar;charset=utf8,${encodeURIComponent(ics)}`;
 };
 
+const toFriendlyBookingError = (error: unknown): string => {
+  if (!(error instanceof Error)) return 'No pudimos crear la reserva. Intenta nuevamente.';
+  const message = error.message.trim();
+  if (message === '') return 'No pudimos crear la reserva. Intenta nuevamente.';
+  const lowered = message.toLowerCase();
+  if (
+    lowered.includes('cors')
+    || lowered.includes('v i t e')
+    || lowered.includes('vite_api_base')
+    || lowered.includes('origen app')
+    || lowered.includes('network')
+    || lowered.includes('fetch')
+    || lowered.includes('conectar con el servicio')
+  ) {
+    return 'No pudimos conectar con el sistema de reservas. Intenta nuevamente en unos minutos.';
+  }
+  return message;
+};
+
 export default function PublicBookingPage() {
   const healthQuery = useQuery({
     queryKey: ['health'],
@@ -257,6 +280,7 @@ export default function PublicBookingPage() {
   const [availabilityNote, setAvailabilityNote] = useState<string | null>(null);
   const [assignEngineerLater, setAssignEngineerLater] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({ open: false, message: '' });
+  const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     if (!services.length) return;
@@ -385,6 +409,7 @@ export default function PublicBookingPage() {
     setSuccess(null);
     setError(null);
     setSubmitting(false);
+    setActiveStep(0);
     setForm(buildInitialForm(defaultService, roomOptions));
     setAssignEngineerLater(false);
   }, [defaultService, roomOptions]);
@@ -441,33 +466,19 @@ export default function PublicBookingPage() {
     };
   }, [availabilityNonce, form.durationMinutes, form.startsAt, userTimeZone]);
 
-  const handleSubmit = async (evt: React.FormEvent) => {
-    evt.preventDefault();
-    setError(null);
-    setSuccess(null);
+  const validateContactStep = () => {
+    if (!form.fullName.trim()) return 'Agrega tu nombre para continuar.';
+    if (!form.email.trim()) return 'Necesitamos un correo para confirmarte la reserva.';
+    return null;
+  };
 
-    if (!form.fullName.trim()) {
-      setError('Agrega tu nombre para continuar.');
-      return;
-    }
-    if (!form.email.trim()) {
-      setError('Necesitamos un correo para confirmarte la reserva.');
-      return;
-    }
-    if (!form.serviceType.trim()) {
-      setError('Selecciona un tipo de servicio.');
-      return;
-    }
-
+  const validateScheduleStep = () => {
+    if (!form.serviceType.trim()) return 'Selecciona un tipo de servicio.';
     const parsedStartLocal = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
-    if (!parsedStartLocal.isValid) {
-      setError('Selecciona una fecha y hora válida.');
-      return;
-    }
+    if (!parsedStartLocal.isValid) return 'Selecciona una fecha y hora válida.';
     const now = DateTime.now().setZone(userTimeZone);
     if (parsedStartLocal < now.plus({ minutes: 15 })) {
-      setError('Elige un horario al menos 15 minutos en el futuro.');
-      return;
+      return 'Elige un horario al menos 15 minutos en el futuro.';
     }
     const durationMinutes = normalizeDurationMinutes(form.durationMinutes);
     const startStudio = parsedStartLocal.setZone(studioTimeZone);
@@ -477,24 +488,61 @@ export default function PublicBookingPage() {
     const openUser = openStudio.setZone(userTimeZone);
     const closeUser = closeStudio.setZone(userTimeZone);
     if (startStudio < openStudio) {
-      setError(
-        `Nuestro horario es ${openStudio.toFormat('HH:mm')} - ${closeStudio.toFormat('HH:mm')} (${studioZoneLabel}). En tu zona (${userZoneLabel}) eso es ${openUser.toFormat('HH:mm')} - ${closeUser.toFormat('HH:mm')}.`,
-      );
-      return;
+      return `Nuestro horario es ${openStudio.toFormat('HH:mm')} - ${closeStudio.toFormat('HH:mm')} (${studioZoneLabel}). En tu zona (${userZoneLabel}) eso es ${openUser.toFormat('HH:mm')} - ${closeUser.toFormat('HH:mm')}.`;
     }
     if (proposedEndStudio > closeStudio) {
       const remaining = Math.max(0, Math.floor(closeStudio.diff(startStudio, 'minutes').minutes));
-      setError(
-        `La cita debe terminar antes de las ${closeStudio.toFormat('HH:mm')} (${studioZoneLabel}). Con esa hora, el máximo es ${remaining} min.`,
-      );
-      return;
+      return `La cita debe terminar antes de las ${closeStudio.toFormat('HH:mm')} (${studioZoneLabel}). Con esa hora, el máximo es ${remaining} min.`;
     }
     if (requiresEngineer(form.serviceType) && !assignEngineerLater && !form.engineerId && !form.engineerName.trim()) {
-      setError('Selecciona un ingeniero para grabación/mezcla/mastering.');
-      return;
+      return 'Selecciona un ingeniero para grabación/mezcla/mastering.';
     }
     if (availabilityStatus === 'unavailable') {
-      setError(availabilityNote ?? 'Ese horario ya está ocupado. Elige otro.');
+      return availabilityNote ?? 'Ese horario ya está ocupado. Elige otro.';
+    }
+    return null;
+  };
+
+  const goToScheduleStep = () => {
+    setError(null);
+    const message = validateContactStep();
+    if (message) {
+      setError(message);
+      return;
+    }
+    setActiveStep(1);
+  };
+
+  const goToConfirmStep = () => {
+    setError(null);
+    const message = validateScheduleStep();
+    if (message) {
+      setError(message);
+      return;
+    }
+    setActiveStep(2);
+  };
+
+  const handleSubmit = async (evt: React.FormEvent) => {
+    evt.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    const contactError = validateContactStep();
+    if (contactError) {
+      setError(contactError);
+      return;
+    }
+    const scheduleError = validateScheduleStep();
+    if (scheduleError) {
+      setError(scheduleError);
+      return;
+    }
+
+    const parsedStartLocal = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
+    const durationMinutes = normalizeDurationMinutes(form.durationMinutes);
+    if (!parsedStartLocal.isValid) {
+      setError('Selecciona una fecha y hora válida.');
       return;
     }
 
@@ -523,8 +571,7 @@ export default function PublicBookingPage() {
       });
       setSuccess(dto);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No pudimos crear la reserva.';
-      setError(message);
+      setError(toFriendlyBookingError(err));
     } finally {
       setSubmitting(false);
     }
@@ -1143,477 +1190,466 @@ export default function PublicBookingPage() {
                     void handleSubmit(event);
                   }}
                 >
-                  <Grid container spacing={2.5}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        label="Nombre completo"
-                        value={form.fullName}
-                        onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
-                        fullWidth
-                        required
-                        disabled={formDisabled}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        label="Correo"
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                        fullWidth
-                        required
-                        disabled={formDisabled}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        label="WhatsApp / Teléfono"
-                        value={form.phone}
-                        onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-                        fullWidth
-                        disabled={formDisabled}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        label="Servicio"
-                        select
-                        value={form.serviceType}
-                        onChange={(e) => {
-                          const nextService = e.target.value;
-                          setForm((prev) => ({
-                            ...prev,
-                            serviceType: nextService,
-                            resourceLabels: defaultRoomsForService(nextService, roomOptions),
-                          }));
-                        }}
-                        fullWidth
-                        required
-                        disabled={formDisabled}
-                        helperText={
-                          estimatePriceLabel
-                            ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
-                            : `Moneda: ${studioCurrency}`
-                        }
-                      >
-                        {services.map((svc) => (
-                          <MenuItem key={svc.id} value={svc.name}>
-                            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
-                              <Typography>{svc.name}</Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {servicePriceLookup.get(svc.name)}
-                              </Typography>
-                            </Stack>
-                          </MenuItem>
-                        ))}
-                        {services.length === 0 && <MenuItem value={defaultService}>{defaultService}</MenuItem>}
-                      </TextField>
-                    </Grid>
-                    <Grid item xs={12} sm={7}>
-                      <TextField
-                        label="Fecha y hora"
-                        type="datetime-local"
-                        value={form.startsAt}
-                        onChange={(e) => {
-                          setDurationNotice(null);
-                          const next = DateTime.fromISO(e.target.value, { zone: userTimeZone });
-                          const duration = normalizeDurationMinutes(form.durationMinutes);
-                          if (!next.isValid) {
-                            setForm((prev) => ({ ...prev, startsAt: e.target.value }));
-                            return;
-                          }
-                          const safe = sanitizeStart(next, duration);
-                          setForm((prev) => ({ ...prev, startsAt: toLocalInputValue(safe.toJSDate()) }));
-                        }}
-                        fullWidth
-                        InputLabelProps={{ shrink: true }}
-                        inputProps={{ min: minStartValueForInput, step: START_STEP_MINUTES * 60 }}
-                        required
-                        helperText={availabilityHelperText}
-                        disabled={formDisabled}
-                      />
-                      <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          disabled={formDisabled}
-                          onClick={() =>
-                            setForm((prev) => ({
-                              ...prev,
-                              startsAt: toLocalInputValue(firstAvailable(0)),
-                            }))
-                          }
-                        >
-                          Primer horario hoy
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="text"
-                          disabled={formDisabled}
-                          onClick={() =>
-                            setForm((prev) => ({
-                              ...prev,
-                              startsAt: toLocalInputValue(firstAvailable(1)),
-                            }))
-                          }
-                        >
-                          Mañana
-                        </Button>
-                        {availabilityStatus === 'checking' && (
-                          <Chip label="Verificando…" color="default" size="small" variant="outlined" />
-                        )}
-                        {(availabilityStatus === 'unknown' || availabilityStatus === 'unavailable') && (
-                          <Button
-                            size="small"
-                            variant="text"
-                            disabled={formDisabled}
-                            onClick={() => setAvailabilityNonce((v) => v + 1)}
-                          >
-                            Reintentar
-                          </Button>
-                        )}
-                        {availabilityStatus !== 'available' && (
-                          <Button
-                            size="small"
-                            variant="text"
-                            disabled={formDisabled}
-                            href={STUDIO_WHATSAPP_URL}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            WhatsApp
-                          </Button>
-                        )}
-                        {availabilityStatus === 'unavailable' && (
-                          <Chip
-                            label={availabilityNote ?? 'Horario ocupado'}
-                            color="warning"
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                        {availabilityStatus === 'available' && (
-                          <Chip label="Disponible" color="success" size="small" variant="outlined" />
-                        )}
-                        {availabilityStatus === 'unknown' && availabilityNote && (
-                          <Chip label={availabilityNote} color="default" size="small" variant="outlined" />
-                        )}
-                      </Stack>
-                  {timeWarnings.length > 0 && (
-                    <Alert severity="info" sx={{ mt: 1 }}>
-                      {timeWarnings.map((msg, idx) => (
-                        <Typography key={idx} variant="caption" display="block">
-                          • {msg}
-                        </Typography>
+                  <Stack spacing={2.5}>
+                    <Stepper activeStep={activeStep} alternativeLabel>
+                      {BOOKING_STEPS.map((label) => (
+                        <Step key={label}>
+                          <StepLabel>{label}</StepLabel>
+                        </Step>
                       ))}
-                    </Alert>
-                  )}
-                </Grid>
-                    <Grid item xs={12} sm={5}>
-                      <Stack spacing={1}>
-                        <TextField
-                        label="Duración (min)"
-                        type="number"
-                        value={form.durationMinutes}
-                        onChange={(e) => {
-                          setDurationNotice(null);
-                          setForm((prev) => ({
-                            ...prev,
-                            durationMinutes: normalizeDurationMinutes(Number(e.target.value), prev.durationMinutes),
-                          }));
-                        }}
-                        fullWidth
-                        disabled={formDisabled}
-                        inputProps={{
-                          min: 30,
-                          step: 15,
-                          max: maxDurationUntilClose != null && maxDurationUntilClose > 0 ? maxDurationUntilClose : undefined,
-                        }}
-                        helperText={outOfHours ?? durationLimitLabel ?? `Precios en ${studioCurrency}`}
-                      />
-                      {estimatePriceLabel && (
-                        <Typography variant="body2" color="text.secondary">
-                          Estimado con duración actual: {estimatePriceLabel}
-                        </Typography>
-                      )}
-                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                        {[30, 60, 90, 120].map((value) => {
-                          const disabled =
-                            formDisabled ||
-                            Boolean(
-                              maxDurationUntilClose !== null &&
-                                maxDurationUntilClose > 0 &&
-                                value > maxDurationUntilClose,
-                            );
-                          const tooltip =
-                            disabled && maxDurationUntilClose
-                              ? `Máximo ${maxDurationUntilClose} min con este horario`
-                              : '';
-                          return (
-                            <Tooltip key={value} title={tooltip} disableInteractive>
-                              <span>
-                                <Chip
-                                  label={`${value} min`}
-                                  size="small"
-                                  color={form.durationMinutes === value ? 'primary' : 'default'}
-                                  onClick={() => setForm((prev) => ({ ...prev, durationMinutes: value }))}
-                                  disabled={disabled}
-                                  sx={{ borderRadius: 999, opacity: disabled ? 0.5 : 1 }}
-                                />
-                              </span>
-                            </Tooltip>
-                          );
-                        })}
-                        </Stack>
-                        {durationNotice && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                            {durationNotice}
-                          </Typography>
-                        )}
-                        {priceBanner && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                            {priceBanner}
-                          </Typography>
-                        )}
-                      </Stack>
-                    </Grid>
-                    {suggestedSlots.length > 0 && (
-                      <Grid item xs={12}>
-                        <Stack spacing={0.5}>
-                          <Typography variant="body2" color="text.secondary">
-                            Sugerencias rápidas
-                          </Typography>
-                          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                            {suggestedSlots.map((slot) => (
-                              <Tooltip key={slot.value} title={slot.helper}>
-                                <Chip
-                                  label={slot.label}
-                                  onClick={() => {
-                                    setDurationNotice(null);
-                                    setForm((prev) => {
-                                      const adjusted = clampDurationForStart(slot.value, prev.durationMinutes);
-                                      if (adjusted < prev.durationMinutes) {
-                                        setDurationNotice(`Ajustamos a ${adjusted} min para terminar antes del cierre.`);
-                                      }
-                                      return { ...prev, startsAt: slot.value, durationMinutes: adjusted };
-                                    });
-                                  }}
-                                  variant="outlined"
-                                  color="primary"
-                                  sx={{ borderRadius: 999 }}
-                                  disabled={formDisabled}
-                                />
-                              </Tooltip>
-                            ))}
-                          </Stack>
-                        </Stack>
-                      </Grid>
-                    )}
-                    {outOfHours && (
-                      <Grid item xs={12}>
-                        <Alert severity="warning">{outOfHours}</Alert>
-                      </Grid>
-                    )}
-                    {requiresEngineer(form.serviceType) && (
-                      <Grid item xs={12}>
-                        <Stack spacing={1}>
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <Checkbox
-                              checked={assignEngineerLater}
-                              onChange={(e) => {
-                                const checked = e.target.checked;
-                                setAssignEngineerLater(checked);
-                                if (checked) {
-                                  setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
-                                }
-                              }}
-                              size="small"
+                    </Stepper>
+                    <Grid container spacing={2.5}>
+                      {activeStep === 0 && (
+                        <>
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="Nombre completo"
+                              value={form.fullName}
+                              onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                              fullWidth
+                              required
                               disabled={formDisabled}
                             />
-                            <Typography variant="body2" color="text.secondary">
-                              Asignar ingeniero después
-                            </Typography>
-                          </Stack>
-                          {!assignEngineerLater && (
-                            <Autocomplete<string | PublicEngineer, false, false, true>
-                              options={engineers}
-                              getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
-                              loading={engineersLoading}
-                              freeSolo
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <TextField
+                              label="Correo"
+                              type="email"
+                              value={form.email}
+                              onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                              fullWidth
+                              required
                               disabled={formDisabled}
-                              value={engineerValue}
-                              onChange={(_evt, value) => {
-                                if (!value) {
-                                  setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
+                            />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <TextField
+                              label="WhatsApp / Teléfono"
+                              value={form.phone}
+                              onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+                              fullWidth
+                              disabled={formDisabled}
+                            />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                              <Checkbox
+                                checked={rememberProfile}
+                                onChange={(e) => setRememberProfile(e.target.checked)}
+                                size="small"
+                                disabled={formDisabled}
+                              />
+                              <Typography variant="body2" color="text.secondary">
+                                Recordar mis datos en este navegador para la próxima vez.
+                              </Typography>
+                              <Button
+                                size="small"
+                                variant="text"
+                                onClick={clearSavedProfile}
+                                sx={{ ml: 'auto' }}
+                                disabled={formDisabled}
+                              >
+                                Limpiar datos guardados
+                              </Button>
+                            </Stack>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Stack direction="row" justifyContent="flex-end">
+                              <Button variant="contained" onClick={goToScheduleStep} disabled={formDisabled}>
+                                Continuar
+                              </Button>
+                            </Stack>
+                          </Grid>
+                        </>
+                      )}
+
+                      {activeStep === 1 && (
+                        <>
+                          <Grid item xs={12}>
+                            <TextField
+                              label="Servicio"
+                              select
+                              value={form.serviceType}
+                              onChange={(e) => {
+                                const nextService = e.target.value;
+                                setForm((prev) => ({
+                                  ...prev,
+                                  serviceType: nextService,
+                                  resourceLabels: defaultRoomsForService(nextService, roomOptions),
+                                }));
+                              }}
+                              fullWidth
+                              required
+                              disabled={formDisabled}
+                              helperText={
+                                estimatePriceLabel
+                                  ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
+                                  : `Moneda: ${studioCurrency}`
+                              }
+                            >
+                              {services.map((svc) => (
+                                <MenuItem key={svc.id} value={svc.name}>
+                                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+                                    <Typography>{svc.name}</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      {servicePriceLookup.get(svc.name)}
+                                    </Typography>
+                                  </Stack>
+                                </MenuItem>
+                              ))}
+                              {services.length === 0 && <MenuItem value={defaultService}>{defaultService}</MenuItem>}
+                            </TextField>
+                          </Grid>
+                          <Grid item xs={12} sm={7}>
+                            <TextField
+                              label="Fecha y hora"
+                              type="datetime-local"
+                              value={form.startsAt}
+                              onChange={(e) => {
+                                setDurationNotice(null);
+                                const next = DateTime.fromISO(e.target.value, { zone: userTimeZone });
+                                const duration = normalizeDurationMinutes(form.durationMinutes);
+                                if (!next.isValid) {
+                                  setForm((prev) => ({ ...prev, startsAt: e.target.value }));
                                   return;
                                 }
-                                const id = typeof value === 'string' ? null : value.peId;
-                                const name = typeof value === 'string' ? value : value.peName;
-                                setForm((prev) => ({ ...prev, engineerId: id, engineerName: name }));
+                                const safe = sanitizeStart(next, duration);
+                                setForm((prev) => ({ ...prev, startsAt: toLocalInputValue(safe.toJSDate()) }));
                               }}
-                              inputValue={form.engineerName}
-                              onInputChange={(_evt, value, reason) => {
-                                if (reason === 'reset') return;
-                                setForm((prev) => {
-                                  const normalized = value.trim().toLowerCase();
-                                  const exact = engineers.find((opt) => opt.peName.trim().toLowerCase() === normalized);
-                                  return {
-                                    ...prev,
-                                    engineerName: value,
-                                    engineerId: exact?.peId ?? null,
-                                  };
-                                });
-                              }}
-                              renderInput={(params) => (
-                                <TextField
-                                  {...params}
-                                  label="Ingeniero asignado"
-                                  placeholder="Elige quién llevará la sesión"
-                                  required
-                                  InputProps={{
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                      <>
-                                        {engineersLoading ? <CircularProgress size={16} /> : null}
-                                        {params.InputProps.endAdornment}
-                                      </>
-                                    ),
-                                  }}
-                                  helperText={
-                                    engineersError ??
-                                    (engineers.length === 0 && !engineersLoading
-                                      ? 'Escribe el nombre del ingeniero (catálogo no disponible).'
-                                      : 'Selecciona o escribe el ingeniero asignado.')
-                                  }
-                                />
-                              )}
+                              fullWidth
+                              InputLabelProps={{ shrink: true }}
+                              inputProps={{ min: minStartValueForInput, step: START_STEP_MINUTES * 60 }}
+                              required
+                              helperText={availabilityHelperText}
+                              disabled={formDisabled}
                             />
-                          )}
-                        </Stack>
-                        <Typography variant="caption" color="text.secondary">
-                          Requerido para grabación, mezcla o mastering. Si no encuentras a tu ingeniero, escríbenos en notas.
-                        </Typography>
-                      </Grid>
-                    )}
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Notas para el equipo"
-                        value={form.notes}
-                        onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-                        fullWidth
-                        multiline
-                        minRows={3}
-                        placeholder="Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)"
-                        disabled={formDisabled}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Checkbox
-                          checked={rememberProfile}
-                          onChange={(e) => setRememberProfile(e.target.checked)}
-                          size="small"
-                          disabled={formDisabled}
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          Recordar mis datos en este navegador para la próxima vez.
-                        </Typography>
-                        <Button
-                          size="small"
-                          variant="text"
-                          onClick={clearSavedProfile}
-                          sx={{ ml: 'auto' }}
-                          disabled={formDisabled}
-                        >
-                          Limpiar datos guardados
-                        </Button>
-                      </Stack>
-                    </Grid>
-                    {error && (
-                      <Grid item xs={12}>
-                        <Alert severity="error">{error}</Alert>
-                      </Grid>
-                    )}
-                    <Grid item xs={12}>
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          bgcolor: 'rgba(255,255,255,0.02)',
-                          borderColor: 'rgba(255,255,255,0.08)',
-                        }}
-                      >
-                        <CardContent>
-                          <Stack spacing={1}>
-                            <Typography variant="subtitle2" color="text.secondary">
-                              Resumen rápido
-                            </Typography>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                              <Chip
-                                label={form.serviceType || 'Servicio'}
+                            <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
+                              <Button
                                 size="small"
-                                color="primary"
                                 variant="outlined"
-                              />
-                              {form.resourceLabels.length > 0 && (
-                                <Chip
-                                  label={`Salas: ${form.resourceLabels.join(' + ')}`}
+                                disabled={formDisabled}
+                                onClick={() =>
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    startsAt: toLocalInputValue(firstAvailable(0)),
+                                  }))
+                                }
+                              >
+                                Primer horario hoy
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="text"
+                                disabled={formDisabled}
+                                onClick={() =>
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    startsAt: toLocalInputValue(firstAvailable(1)),
+                                  }))
+                                }
+                              >
+                                Mañana
+                              </Button>
+                              {(availabilityStatus === 'unknown' || availabilityStatus === 'unavailable') && (
+                                <Button
                                   size="small"
-                                  variant="outlined"
-                                />
+                                  variant="text"
+                                  disabled={formDisabled}
+                                  onClick={() => setAvailabilityNonce((v) => v + 1)}
+                                >
+                                  Reintentar
+                                </Button>
                               )}
-                              <Chip
-                                label={formattedStart ? `Inicio: ${formattedStart}` : 'Elige fecha y hora'}
-                                size="small"
-                                variant="outlined"
-                              />
-                              <Chip
-                                label={`Duración: ${normalizeDurationMinutes(form.durationMinutes)} min`}
-                                size="small"
-                                variant="outlined"
-                              />
-                              <Chip
-                                label={selectedPrice ? `Referencia: ${selectedPrice}` : 'Precio se confirma contigo'}
-                                size="small"
-                                variant="outlined"
-                              />
-                              <Chip
-                                label={`Zona: Estudio ${studioZoneLabel} · Tú ${userZoneLabel}`}
-                                size="small"
-                                variant="outlined"
-                              />
-                              {requiresEngineer(form.serviceType) && (
-                                <Chip
-                                  label={
-                                    form.engineerName.trim()
-                                      ? `Ingeniero: ${form.engineerName}`
-                                      : 'Selecciona ingeniero'
-                                  }
+                              {availabilityStatus !== 'available' && (
+                                <Button
                                   size="small"
-                                  color={form.engineerName.trim() ? 'primary' : 'default'}
-                                  variant="outlined"
-                                />
+                                  variant="text"
+                                  disabled={formDisabled}
+                                  href={STUDIO_WHATSAPP_URL}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  WhatsApp
+                                </Button>
                               )}
                             </Stack>
-                            <Divider sx={{ my: 1 }} />
-                            <Typography variant="body2" color="text.secondary">
-                              Te enviaremos la confirmación por correo y coordinaremos cualquier ajuste de horario o salas
-                              contigo.
-                            </Typography>
-                            {estimatePriceLabel && (
-                              <Typography variant="subtitle2" sx={{ mt: 1 }}>
-                                Estimado: {estimatePriceLabel}
-                              </Typography>
+                            {timeWarnings.length > 0 && (
+                              <Alert severity="info" sx={{ mt: 1 }}>
+                                {timeWarnings.map((msg, idx) => (
+                                  <Typography key={idx} variant="caption" display="block">
+                                    • {msg}
+                                  </Typography>
+                                ))}
+                              </Alert>
                             )}
-                          </Stack>
-                        </CardContent>
-                      </Card>
+                          </Grid>
+                          <Grid item xs={12} sm={5}>
+                            <Stack spacing={1}>
+                              <TextField
+                                label="Duración (min)"
+                                type="number"
+                                value={form.durationMinutes}
+                                onChange={(e) => {
+                                  setDurationNotice(null);
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    durationMinutes: normalizeDurationMinutes(Number(e.target.value), prev.durationMinutes),
+                                  }));
+                                }}
+                                fullWidth
+                                disabled={formDisabled}
+                                inputProps={{
+                                  min: 30,
+                                  step: 15,
+                                  max: maxDurationUntilClose != null && maxDurationUntilClose > 0 ? maxDurationUntilClose : undefined,
+                                }}
+                                helperText={outOfHours ?? durationLimitLabel ?? `Precios en ${studioCurrency}`}
+                              />
+                              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                {[30, 60, 90, 120].map((value) => (
+                                  <Chip
+                                    key={value}
+                                    label={`${value} min`}
+                                    size="small"
+                                    color={form.durationMinutes === value ? 'primary' : 'default'}
+                                    onClick={() => setForm((prev) => ({ ...prev, durationMinutes: value }))}
+                                    sx={{ borderRadius: 999 }}
+                                    disabled={formDisabled}
+                                  />
+                                ))}
+                              </Stack>
+                              {durationNotice && (
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                  {durationNotice}
+                                </Typography>
+                              )}
+                            </Stack>
+                          </Grid>
+                          {suggestedSlots.length > 0 && (
+                            <Grid item xs={12}>
+                              <Stack spacing={0.5}>
+                                <Typography variant="body2" color="text.secondary">
+                                  Sugerencias rápidas
+                                </Typography>
+                                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                                  {suggestedSlots.map((slot) => (
+                                    <Tooltip key={slot.value} title={slot.helper}>
+                                      <Chip
+                                        label={slot.label}
+                                        onClick={() => {
+                                          setDurationNotice(null);
+                                          setForm((prev) => {
+                                            const adjusted = clampDurationForStart(slot.value, prev.durationMinutes);
+                                            if (adjusted < prev.durationMinutes) {
+                                              setDurationNotice(`Ajustamos a ${adjusted} min para terminar antes del cierre.`);
+                                            }
+                                            return { ...prev, startsAt: slot.value, durationMinutes: adjusted };
+                                          });
+                                        }}
+                                        variant="outlined"
+                                        color="primary"
+                                        sx={{ borderRadius: 999 }}
+                                        disabled={formDisabled}
+                                      />
+                                    </Tooltip>
+                                  ))}
+                                </Stack>
+                              </Stack>
+                            </Grid>
+                          )}
+                          {requiresEngineer(form.serviceType) && (
+                            <Grid item xs={12}>
+                              <Stack spacing={1}>
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                  <Checkbox
+                                    checked={assignEngineerLater}
+                                    onChange={(e) => {
+                                      const checked = e.target.checked;
+                                      setAssignEngineerLater(checked);
+                                      if (checked) {
+                                        setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
+                                      }
+                                    }}
+                                    size="small"
+                                    disabled={formDisabled}
+                                  />
+                                  <Typography variant="body2" color="text.secondary">
+                                    Asignar ingeniero después
+                                  </Typography>
+                                </Stack>
+                                {!assignEngineerLater && (
+                                  <Autocomplete<string | PublicEngineer, false, false, true>
+                                    options={engineers}
+                                    getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
+                                    loading={engineersLoading}
+                                    freeSolo
+                                    disabled={formDisabled}
+                                    value={engineerValue}
+                                    onChange={(_evt, value) => {
+                                      if (!value) {
+                                        setForm((prev) => ({ ...prev, engineerId: null, engineerName: '' }));
+                                        return;
+                                      }
+                                      const id = typeof value === 'string' ? null : value.peId;
+                                      const name = typeof value === 'string' ? value : value.peName;
+                                      setForm((prev) => ({ ...prev, engineerId: id, engineerName: name }));
+                                    }}
+                                    inputValue={form.engineerName}
+                                    onInputChange={(_evt, value, reason) => {
+                                      if (reason === 'reset') return;
+                                      setForm((prev) => {
+                                        const normalized = value.trim().toLowerCase();
+                                        const exact = engineers.find((opt) => opt.peName.trim().toLowerCase() === normalized);
+                                        return {
+                                          ...prev,
+                                          engineerName: value,
+                                          engineerId: exact?.peId ?? null,
+                                        };
+                                      });
+                                    }}
+                                    renderInput={(params) => (
+                                      <TextField
+                                        {...params}
+                                        label="Ingeniero asignado"
+                                        placeholder="Elige quién llevará la sesión"
+                                        required
+                                        InputProps={{
+                                          ...params.InputProps,
+                                          endAdornment: (
+                                            <>
+                                              {engineersLoading ? <CircularProgress size={16} /> : null}
+                                              {params.InputProps.endAdornment}
+                                            </>
+                                          ),
+                                        }}
+                                        helperText={
+                                          engineersError ??
+                                          (engineers.length === 0 && !engineersLoading
+                                            ? 'Escribe el nombre del ingeniero (catálogo no disponible).'
+                                            : 'Selecciona o escribe el ingeniero asignado.')
+                                        }
+                                      />
+                                    )}
+                                  />
+                                )}
+                              </Stack>
+                            </Grid>
+                          )}
+                          <Grid item xs={12}>
+                            <TextField
+                              label="Notas para el equipo"
+                              value={form.notes}
+                              onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+                              fullWidth
+                              multiline
+                              minRows={3}
+                              placeholder="Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)"
+                              disabled={formDisabled}
+                            />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Stack direction="row" justifyContent="space-between">
+                              <Button variant="text" onClick={() => setActiveStep(0)} disabled={formDisabled}>
+                                Volver
+                              </Button>
+                              <Button variant="contained" onClick={goToConfirmStep} disabled={formDisabled}>
+                                Revisar reserva
+                              </Button>
+                            </Stack>
+                          </Grid>
+                        </>
+                      )}
+
+                      {activeStep === 2 && (
+                        <>
+                          <Grid item xs={12}>
+                            <Card
+                              variant="outlined"
+                              sx={{
+                                bgcolor: 'rgba(255,255,255,0.02)',
+                                borderColor: 'rgba(255,255,255,0.08)',
+                              }}
+                            >
+                              <CardContent>
+                                <Stack spacing={1}>
+                                  <Typography variant="subtitle2" color="text.secondary">
+                                    Resumen rápido
+                                  </Typography>
+                                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                                    <Chip label={form.serviceType || 'Servicio'} size="small" color="primary" variant="outlined" />
+                                    {form.resourceLabels.length > 0 && (
+                                      <Chip
+                                        label={`Salas: ${form.resourceLabels.join(' + ')}`}
+                                        size="small"
+                                        variant="outlined"
+                                      />
+                                    )}
+                                    <Chip
+                                      label={formattedStart ? `Inicio: ${formattedStart}` : 'Elige fecha y hora'}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                    <Chip
+                                      label={`Duración: ${normalizeDurationMinutes(form.durationMinutes)} min`}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                    <Chip
+                                      label={selectedPrice ? `Referencia: ${selectedPrice}` : 'Precio se confirma contigo'}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                    <Chip
+                                      label={`Zona: Estudio ${studioZoneLabel} · Tú ${userZoneLabel}`}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                    {requiresEngineer(form.serviceType) && (
+                                      <Chip
+                                        label={
+                                          form.engineerName.trim()
+                                            ? `Ingeniero: ${form.engineerName}`
+                                            : 'Selecciona ingeniero'
+                                        }
+                                        size="small"
+                                        color={form.engineerName.trim() ? 'primary' : 'default'}
+                                        variant="outlined"
+                                      />
+                                    )}
+                                  </Stack>
+                                  <Divider sx={{ my: 1 }} />
+                                  <Typography variant="body2" color="text.secondary">
+                                    Te enviaremos la confirmación por correo y coordinaremos cualquier ajuste de horario o salas contigo.
+                                  </Typography>
+                                  {estimatePriceLabel && (
+                                    <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                                      Estimado: {estimatePriceLabel}
+                                    </Typography>
+                                  )}
+                                </Stack>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Stack direction="row" justifyContent="space-between" spacing={1}>
+                              <Button variant="text" onClick={() => setActiveStep(1)} disabled={formDisabled}>
+                                Volver
+                              </Button>
+                              <Button type="submit" variant="contained" size="large" disabled={formDisabled}>
+                                {success ? 'Reserva enviada' : submitting ? 'Enviando…' : 'Confirmar reserva'}
+                              </Button>
+                            </Stack>
+                          </Grid>
+                        </>
+                      )}
+
+                      {error && (
+                        <Grid item xs={12}>
+                          <Alert severity="error">{error}</Alert>
+                        </Grid>
+                      )}
                     </Grid>
-                    <Grid item xs={12}>
-                      <Button type="submit" variant="contained" size="large" disabled={formDisabled} fullWidth>
-                        {success ? 'Reserva enviada' : submitting ? 'Enviando…' : 'Confirmar reserva'}
-                      </Button>
-                    </Grid>
-                  </Grid>
+                  </Stack>
                 </form>
               </Grid>
             </Grid>

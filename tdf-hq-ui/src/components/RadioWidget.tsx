@@ -134,6 +134,15 @@ const RADIO_COUNTRIES = [
   'VE',
 ];
 
+const HIDDEN_RADIO_PATH_PREFIXES = [
+  '/login',
+  '/reservar',
+  '/marketplace',
+  '/inscripcion',
+  '/whatsapp/consentimiento',
+  '/whatsapp/ok',
+];
+
 function PromptList({ prompts }: { prompts: Prompt[] }) {
   if (prompts.length === 0) {
     return (
@@ -196,7 +205,7 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 export default function RadioWidget() {
   const navigate = useNavigate();
   const location = useLocation();
-  const isLoginPage = location.pathname.startsWith('/login');
+  const hideRadioForRoute = HIDDEN_RADIO_PATH_PREFIXES.some((prefix) => location.pathname.startsWith(prefix));
   const LAST_AUDIO_INPUT_KEY = 'radio-last-audio-input';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
@@ -1586,7 +1595,7 @@ export default function RadioWidget() {
   useEffect(() => {
     // We now keep the player docked globally; skip inline mounting on login.
     setLoginMiniBarHost(null);
-  }, [isLoginPage, location.pathname]);
+  }, [location.pathname]);
 
   useEffect(
     () => () => {
@@ -1721,6 +1730,10 @@ export default function RadioWidget() {
   );
   const miniBarContent =
     shouldInlineMiniBar && loginMiniBarHost ? createPortal(miniBarNode, loginMiniBarHost) : miniBarNode;
+
+  if (hideRadioForRoute) {
+    return null;
+  }
 
   return (
     <>

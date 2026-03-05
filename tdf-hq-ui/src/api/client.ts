@@ -113,12 +113,10 @@ const guessCrossOriginHint = () => {
 
 const normalizeNetworkError = (err: unknown) => {
   const hint = guessCrossOriginHint();
-  const message = [
-    'No se pudo contactar la API. Verifica conexión, VITE_API_BASE y que el backend permita este origen.',
-    hint ?? '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  if (hint) {
+    console.warn('API network hint:', hint);
+  }
+  const message = 'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.';
   const wrapped = new Error(message);
   (wrapped as Error & { cause?: unknown }).cause = err;
   return wrapped;

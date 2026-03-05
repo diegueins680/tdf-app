@@ -12,11 +12,11 @@ const STORAGE_KEY = 'tdf-hq-ui/theme-mode';
 
 function readStoredMode(): PaletteMode {
   if (typeof window === 'undefined') {
-    return 'dark';
+    return 'light';
   }
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === 'light' || stored === 'dark') return stored;
-  return 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 interface AppThemeProviderProps {

@@ -125,7 +125,7 @@ export default function PublicBranding({
                 to="/whatsapp/ok"
                 sx={{ textTransform: 'none' }}
               >
-                Confirmacion WhatsApp
+                Confirmación WhatsApp
               </Button>
             </Stack>
           </Stack>

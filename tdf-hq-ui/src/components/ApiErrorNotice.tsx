@@ -25,7 +25,8 @@ const buildCorsHint = (showCorsHint?: boolean) => {
     const apiUrl = new URL(API_BASE_URL, window.location.origin);
     const appOrigin = window.location.origin;
     if (apiUrl.origin !== appOrigin) {
-      return `API: ${apiUrl.origin} · App: ${appOrigin}. Asegura CORS y que VITE_API_BASE apunte al host correcto.`;
+      console.warn('Cross-origin API request detected', { apiOrigin: apiUrl.origin, appOrigin });
+      return 'No pudimos conectar con el servicio en este momento. Intenta nuevamente en unos minutos.';
     }
   } catch {
     return null;

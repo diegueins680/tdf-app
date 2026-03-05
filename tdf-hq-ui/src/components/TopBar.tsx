@@ -1,6 +1,8 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { AppBar, Box, Button, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider, Tooltip, Dialog, DialogTitle, DialogContent, TextField, InputAdornment, List, ListItemButton, ListItemText } from '@mui/material';
 import Menu from '@mui/material/Menu';
@@ -19,6 +21,9 @@ interface TopBarProps {
 
 const CART_META_KEY = 'tdf-marketplace-cart-meta';
 const CART_EVENT = 'tdf-cart-updated';
+const QUICK_FAVORITES_KEY = 'tdf-quick-nav-favorites';
+const QUICK_RECENTS_KEY = 'tdf-quick-nav-recents';
+const MAX_QUICK_RECENTS = 10;
 
 const FRIENDLY_SEGMENTS: Record<string, string> = {
   inicio: 'Inicio',
@@ -133,6 +138,18 @@ const readCartMeta = (): { cartId: string; count: number; preview: CartPreviewIt
   }
 };
 
+const readStoredStringList = (storageKey: string): string[] => {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+  } catch {
+    return [];
+  }
+};
+
 export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarProps) {
   const { session, logout } = useSession();
   const navigate = useNavigate();
@@ -140,12 +157,35 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
   const [quickNavOpen, setQuickNavOpen] = useState(false);
   const [quickQuery, setQuickQuery] = useState('');
   const [quickHighlight, setQuickHighlight] = useState(0);
+  const [quickFavorites, setQuickFavorites] = useState<string[]>([]);
+  const [quickRecents, setQuickRecents] = useState<string[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [cartPreview, setCartPreview] = useState<{ title: string; subtotal: string }[]>([]);
   const [cartAnchor, setCartAnchor] = useState<HTMLElement | null>(null);
   const [resourcesAnchor, setResourcesAnchor] = useState<null | HTMLElement>(null);
   const quickInputRef = useRef<HTMLInputElement | null>(null);
   const resourcesButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    setQuickFavorites(readStoredStringList(QUICK_FAVORITES_KEY));
+    setQuickRecents(readStoredStringList(QUICK_RECENTS_KEY));
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(QUICK_FAVORITES_KEY, JSON.stringify(quickFavorites));
+    } catch {
+      // ignore persistence issues
+    }
+  }, [quickFavorites]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(QUICK_RECENTS_KEY, JSON.stringify(quickRecents));
+    } catch {
+      // ignore persistence issues
+    }
+  }, [quickRecents]);
 
   useEffect(() => {
     const meta = readCartMeta();
@@ -199,13 +239,45 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
     );
   }, [isSchoolStaff, modules]);
 
+  const favoritePaths = useMemo(() => new Set(quickFavorites), [quickFavorites]);
+  const recentPathIndex = useMemo(
+    () => new Map(quickRecents.map((path, index) => [path, index])),
+    [quickRecents],
+  );
+
   const filteredQuickItems = useMemo(() => {
     const query = quickQuery.trim().toLowerCase();
-    if (!query) return quickNavItems;
-    return quickNavItems.filter(
-      (item) => item.label.toLowerCase().includes(query) || item.path.toLowerCase().includes(query),
-    );
-  }, [quickNavItems, quickQuery]);
+    const rankItem = (item: { label: string; path: string }) => {
+      const label = item.label.toLowerCase();
+      let score = 0;
+      if (favoritePaths.has(item.path)) score += 60;
+      const recentIndex = recentPathIndex.get(item.path);
+      if (recentIndex !== undefined) {
+        score += Math.max(0, 25 - recentIndex);
+      }
+      if (location.pathname === item.path) score += 80;
+      if (query) {
+        if (label.startsWith(query)) score += 45;
+        else if (label.includes(query)) score += 25;
+        if (item.path.toLowerCase().includes(query)) score += 10;
+      }
+      return score;
+    };
+    const filtered = query
+      ? quickNavItems.filter(
+          (item) => item.label.toLowerCase().includes(query) || item.path.toLowerCase().includes(query),
+        )
+      : quickNavItems;
+    return [...filtered].sort((a, b) => rankItem(b) - rankItem(a) || a.label.localeCompare(b.label));
+  }, [favoritePaths, location.pathname, quickNavItems, quickQuery, recentPathIndex]);
+
+  const registerQuickRecent = useCallback((path: string) => {
+    setQuickRecents((prev) => [path, ...prev.filter((existing) => existing !== path)].slice(0, MAX_QUICK_RECENTS));
+  }, []);
+
+  const toggleQuickFavorite = useCallback((path: string) => {
+    setQuickFavorites((prev) => (prev.includes(path) ? prev.filter((existing) => existing !== path) : [path, ...prev]));
+  }, []);
 
   const openQuickNav = useCallback(() => {
     setQuickNavOpen(true);
@@ -254,9 +326,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
   const handleSelectQuick = (idx: number) => {
     const target = filteredQuickItems[idx];
     if (!target) return;
+    registerQuickRecent(target.path);
     navigate(target.path);
     closeQuickNav();
   };
+
+  const showQuickPathHints = quickQuery.trim().includes('/');
 
   const handleOpenCart = (event: React.MouseEvent<HTMLElement>) => {
     setCartAnchor(event.currentTarget);
@@ -492,17 +567,17 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
       >
         <DialogTitle>Ir a otra sección</DialogTitle>
         <DialogContent>
-            <TextField
-              fullWidth
-              placeholder="Escribe para buscar (ej: inventario, leads, marketplace)"
-              value={quickQuery}
-              onChange={(e) => setQuickQuery(e.target.value)}
-              inputRef={quickInputRef}
-              onKeyDown={(event) => {
-                if (event.key === 'ArrowDown') {
-                  event.preventDefault();
-                  setQuickHighlight((prev) => (prev + 1) % Math.max(filteredQuickItems.length, 1));
-                } else if (event.key === 'ArrowUp') {
+          <TextField
+            fullWidth
+            placeholder="Escribe para buscar (ej: inventario, leads, marketplace)"
+            value={quickQuery}
+            onChange={(e) => setQuickQuery(e.target.value)}
+            inputRef={quickInputRef}
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                setQuickHighlight((prev) => (prev + 1) % Math.max(filteredQuickItems.length, 1));
+              } else if (event.key === 'ArrowUp') {
                 event.preventDefault();
                 setQuickHighlight((prev) => {
                   if (filteredQuickItems.length === 0) return 0;
@@ -522,8 +597,13 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
                 </InputAdornment>
               ),
             }}
-            sx={{ mb: 2 }}
+            sx={{ mb: 1.25 }}
           />
+          {!quickQuery.trim() && (quickFavorites.length > 0 || quickRecents.length > 0) && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+              Mostrando primero tus favoritos y secciones recientes.
+            </Typography>
+          )}
           {filteredQuickItems.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               Sin coincidencias. Prueba con otra palabra clave.
@@ -538,12 +618,33 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
                 >
                   <ListItemText
                     primary={item.label}
-                    secondary={item.group}
+                    secondary={`${item.group}${recentPathIndex.has(item.path) ? ' · Reciente' : ''}`}
                     primaryTypographyProps={{ fontWeight: idx === quickHighlight ? 700 : 500 }}
                   />
-                  <Typography variant="caption" color="text.secondary">
-                    {item.path}
-                  </Typography>
+                  <Stack direction="row" spacing={0.25} alignItems="center">
+                    {showQuickPathHints && (
+                      <Typography variant="caption" color="text.secondary">
+                        {item.path}
+                      </Typography>
+                    )}
+                    <Tooltip title={favoritePaths.has(item.path) ? 'Quitar de favoritos' : 'Agregar a favoritos'}>
+                      <IconButton
+                        size="small"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          toggleQuickFavorite(item.path);
+                        }}
+                        aria-label={favoritePaths.has(item.path) ? 'Quitar favorito' : 'Marcar favorito'}
+                      >
+                        {favoritePaths.has(item.path) ? (
+                          <StarIcon fontSize="small" color="warning" />
+                        ) : (
+                          <StarBorderIcon fontSize="small" />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                 </ListItemButton>
               ))}
             </List>

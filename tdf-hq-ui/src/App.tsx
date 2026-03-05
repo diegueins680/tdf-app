@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, Container, Stack } from '@mui/material';
-import { Route, Routes, Navigate, Outlet } from 'react-router-dom';
+import { Route, Routes, Navigate, Outlet, useLocation } from 'react-router-dom';
 import TopBar from './components/TopBar';
 import PartiesPage from './pages/PartiesPage';
 import BookingsPage from './pages/BookingsPage';
@@ -84,6 +84,7 @@ import PublicWhatsAppConsentSuccessPage from './pages/PublicWhatsAppConsentSucce
 
 function Shell() {
   const { session } = useSession();
+  const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === 'undefined') return true;
     const saved = window.localStorage.getItem('sidebar-collapsed');
@@ -124,6 +125,15 @@ function Shell() {
   if (!session) {
     return <Navigate to="/login" replace />;
   }
+
+  const hideFloatingAssistants =
+    location.pathname.startsWith('/marketplace')
+    || location.pathname.startsWith('/configuracion/cursos')
+    || location.pathname.startsWith('/configuracion/cms')
+    || location.pathname.startsWith('/configuracion/roles-permisos')
+    || location.pathname.startsWith('/escuela/clases')
+    || location.pathname.startsWith('/escuela/profesores')
+    || location.pathname.startsWith('/escuela/trial-lessons');
 
   const handleToggleSidebar = () => setSidebarCollapsed((prev) => !prev);
 
@@ -177,19 +187,22 @@ function Shell() {
           <Container maxWidth="xl" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
             <Outlet />
           </Container>
-          <Box
-            sx={(theme) => ({
-              position: 'fixed',
-              right: { xs: 16, md: 32 },
-              bottom: `calc(${theme.spacing(10)} + env(safe-area-inset-bottom, 0px))`,
-              zIndex: theme.zIndex.tooltip,
-            })}
-          >
-            <Stack spacing={1.5} alignItems="flex-end">
-              <ApiStatusChip />
-              <ChatKitLauncher />
-            </Stack>
-          </Box>
+          {!hideFloatingAssistants && (
+            <Box
+              sx={(theme) => ({
+                position: 'fixed',
+                right: { xs: 16, md: 32 },
+                bottom: `calc(${theme.spacing(10)} + env(safe-area-inset-bottom, 0px))`,
+                zIndex: theme.zIndex.tooltip,
+                display: { xs: 'none', md: 'block' },
+              })}
+            >
+              <Stack spacing={1.5} alignItems="flex-end">
+                <ApiStatusChip />
+                <ChatKitLauncher />
+              </Stack>
+            </Box>
+          )}
         </Box>
       </Box>
     </Box>
