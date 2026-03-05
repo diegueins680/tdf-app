@@ -15,6 +15,7 @@ jest.unstable_mockModule('./client', () => ({
 }));
 
 const { Payments } = await import('./payments');
+const { Parties } = await import('./parties');
 const { Internships } = await import('./internships');
 const { RadioAPI } = await import('./radio');
 const { Trials } = await import('./trials');
@@ -48,6 +49,29 @@ describe('API query/id validation', () => {
 
     expect(() => Payments.list(0)).toThrow('partyId debe ser un entero positivo.');
     expect(() => Internships.listTimeEntries(-2)).toThrow('partyId debe ser un entero positivo.');
+  });
+
+  it('rejects invalid ids before payment and party resource requests', async () => {
+    await Payments.getOne(10);
+    expect(getMock).toHaveBeenCalledWith('/payments/10');
+
+    await Parties.getOne(7);
+    expect(getMock).toHaveBeenCalledWith('/parties/7');
+
+    await Parties.related(7);
+    expect(getMock).toHaveBeenCalledWith('/parties/7/related');
+
+    await Parties.update(8, { uDisplayName: 'Nombre actualizado' });
+    expect(putMock).toHaveBeenCalledWith('/parties/8', { uDisplayName: 'Nombre actualizado' });
+
+    await Parties.addRole(9, 'teacher');
+    expect(postMock).toHaveBeenCalledWith('/parties/9/roles', 'teacher');
+
+    expect(() => Payments.getOne(0)).toThrow('id debe ser un entero positivo.');
+    expect(() => Parties.getOne(0)).toThrow('id debe ser un entero positivo.');
+    expect(() => Parties.related(-3)).toThrow('id debe ser un entero positivo.');
+    expect(() => Parties.update(0, {})).toThrow('id debe ser un entero positivo.');
+    expect(() => Parties.addRole(0, 'teacher')).toThrow('id debe ser un entero positivo.');
   });
 
   it('routes radio presence correctly and rejects invalid ids', async () => {

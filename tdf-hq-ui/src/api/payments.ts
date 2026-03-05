@@ -14,5 +14,5 @@ export const Payments = {
     return get<PaymentDTO[]>(`/payments${query}`);
   },
   create: (body: PaymentCreate) => post<PaymentDTO>('/payments', body),
-  getOne: (id: number) => get<PaymentDTO>(`/payments/${id}`),
+  getOne: (id: number) => get<PaymentDTO>(`/payments/${requirePositiveInteger(id, 'id')}`),
 };
