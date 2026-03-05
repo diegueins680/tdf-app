@@ -1,6 +1,13 @@
 import { del, get, post } from './client';
 import type { RadioPresenceDTO, RadioPresenceUpsert } from './types';
 
+const requirePositiveInteger = (value: number, field: string): number => {
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${field} debe ser un entero positivo.`);
+  }
+  return value;
+};
+
 export interface RadioStreamDTO {
   rsId: number;
   rsName?: string | null;
@@ -67,8 +74,13 @@ export const RadioAPI = {
   upsertActive: (payload: RadioStreamUpsert) => post<RadioStreamDTO>('/radio/streams/active', payload),
   importSources: (payload: RadioImportRequest) => post<RadioImportResult>('/radio/streams/import', payload),
   nowPlaying: (payload: RadioNowPlayingRequest) => post<RadioNowPlayingResult>('/radio/streams/now-playing', payload),
-  getPresence: (partyId?: number) =>
-    partyId ? get<RadioPresenceDTO | null>(`/radio/presence/${partyId}`) : get<RadioPresenceDTO | null>('/radio/presence'),
+  getPresence: (partyId?: number) => {
+    if (partyId == null) {
+      return get<RadioPresenceDTO | null>('/radio/presence');
+    }
+    const normalizedPartyId = requirePositiveInteger(partyId, 'partyId');
+    return get<RadioPresenceDTO | null>(`/radio/presence/${normalizedPartyId}`);
+  },
   setPresence: (payload: RadioPresenceUpsert) => post<RadioPresenceDTO>('/radio/presence', payload),
   clearPresence: () => del<void>('/radio/presence'),
   createTransmission: (payload: RadioTransmissionRequest) =>

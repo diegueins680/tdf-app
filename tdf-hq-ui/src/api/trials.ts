@@ -150,59 +150,94 @@ export interface TrialAvailabilityUpsert {
 
 const base = '/trials/v1';
 
+const requirePositiveInteger = (value: number, field: string): number => {
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${field} debe ser un entero positivo.`);
+  }
+  return value;
+};
+
+const setPositiveIntParam = (search: URLSearchParams, key: string, value?: number): void => {
+  if (value == null) return;
+  search.set(key, String(requirePositiveInteger(value, key)));
+};
+
+const setTrimmedParam = (search: URLSearchParams, key: string, value?: string): void => {
+  const trimmed = value?.trim();
+  if (trimmed) search.set(key, trimmed);
+};
+
 export const Trials = {
   listSubjects: () => get<TrialSubject[]>(`${base}/subjects`),
   listSlots: (subjectId?: number) => {
-    const qs = subjectId ? `?subjectId=${subjectId}` : '';
+    const qs = subjectId == null ? '' : `?subjectId=${requirePositiveInteger(subjectId, 'subjectId')}`;
     return get<TrialSlot[]>(`${base}/trial-slots${qs}`);
   },
   createRequest: (payload: TrialRequestPayload) =>
     post<TrialRequestResponse>(`${base}/trial-requests`, payload),
   listTeachers: () => get<TeacherDTO[]>(`${base}/teachers`),
   listTeacherClasses: (teacherId: number, params?: { subjectId?: number; from?: string; to?: string }) => {
+    const normalizedTeacherId = requirePositiveInteger(teacherId, 'teacherId');
     const search = new URLSearchParams();
-    if (params?.subjectId) search.set('subjectId', String(params.subjectId));
-    if (params?.from) search.set('from', params.from);
-    if (params?.to) search.set('to', params.to);
+    setPositiveIntParam(search, 'subjectId', params?.subjectId);
+    setTrimmedParam(search, 'from', params?.from);
+    setTrimmedParam(search, 'to', params?.to);
     const qs = search.toString();
-    return get<ClassSessionDTO[]>(`${base}/teachers/${teacherId}/classes${qs ? `?${qs}` : ''}`);
+    return get<ClassSessionDTO[]>(`${base}/teachers/${normalizedTeacherId}/classes${qs ? `?${qs}` : ''}`);
   },
   updateTeacherSubjects: (teacherId: number, payload: TeacherSubjectsUpdate) =>
-    put<TeacherDTO>(`${base}/teachers/${teacherId}/subjects`, payload),
+    put<TeacherDTO>(`${base}/teachers/${requirePositiveInteger(teacherId, 'teacherId')}/subjects`, payload),
   listClassSessions: (params?: { subjectId?: number; teacherId?: number; studentId?: number; from?: string; to?: string; status?: string }) => {
     const search = new URLSearchParams();
-    if (params?.subjectId) search.set('subjectId', String(params.subjectId));
-    if (params?.teacherId) search.set('teacherId', String(params.teacherId));
-    if (params?.studentId) search.set('studentId', String(params.studentId));
-    if (params?.from) search.set('from', params.from);
-    if (params?.to) search.set('to', params.to);
-    if (params?.status) search.set('status', params.status);
+    setPositiveIntParam(search, 'subjectId', params?.subjectId);
+    setPositiveIntParam(search, 'teacherId', params?.teacherId);
+    setPositiveIntParam(search, 'studentId', params?.studentId);
+    setTrimmedParam(search, 'from', params?.from);
+    setTrimmedParam(search, 'to', params?.to);
+    setTrimmedParam(search, 'status', params?.status);
     const qs = search.toString();
     return get<ClassSessionDTO[]>(`${base}/class-sessions${qs ? `?${qs}` : ''}`);
   },
   createClassSession: (payload: ClassSessionCreate) =>
-    post<ClassSessionOut>(`${base}/class-sessions`, payload),
+    post<ClassSessionOut>(`${base}/class-sessions`, {
+      ...payload,
+      studentId: requirePositiveInteger(payload.studentId, 'studentId'),
+      teacherId: requirePositiveInteger(payload.teacherId, 'teacherId'),
+      subjectId: requirePositiveInteger(payload.subjectId, 'subjectId'),
+      roomId: requirePositiveInteger(payload.roomId, 'roomId'),
+    }),
   updateClassSession: (classId: number, payload: ClassSessionUpdate) =>
-    patch<ClassSessionDTO>(`${base}/class-sessions/${classId}`, payload),
+    patch<ClassSessionDTO>(`${base}/class-sessions/${requirePositiveInteger(classId, 'classId')}`, payload),
   attendClassSession: (classId: number, payload: ClassSessionAttend) =>
-    post<ClassSessionOut>(`${base}/class-sessions/${classId}/attend`, payload),
+    post<ClassSessionOut>(`${base}/class-sessions/${requirePositiveInteger(classId, 'classId')}/attend`, payload),
   listStudents: () => get<StudentDTO[]>(`${base}/students`),
   createStudent: (payload: StudentCreate) => post<StudentDTO>(`${base}/students`, payload),
-  updateStudent: (studentId: number, payload: StudentUpdate) => patch<StudentDTO>(`${base}/students/${studentId}`, payload),
-  listTeacherStudents: (teacherId: number) => get<StudentDTO[]>(`${base}/teachers/${teacherId}/students`),
+  updateStudent: (studentId: number, payload: StudentUpdate) =>
+    patch<StudentDTO>(`${base}/students/${requirePositiveInteger(studentId, 'studentId')}`, payload),
+  listTeacherStudents: (teacherId: number) =>
+    get<StudentDTO[]>(`${base}/teachers/${requirePositiveInteger(teacherId, 'teacherId')}/students`),
   addTeacherStudent: (teacherId: number, payload: TeacherStudentLinkIn) =>
-    post<void>(`${base}/teachers/${teacherId}/students`, payload),
+    post<void>(`${base}/teachers/${requirePositiveInteger(teacherId, 'teacherId')}/students`, {
+      studentId: requirePositiveInteger(payload.studentId, 'studentId'),
+    }),
   removeTeacherStudent: (teacherId: number, studentId: number) =>
-    del<void>(`${base}/teachers/${teacherId}/students/${studentId}`),
+    del<void>(
+      `${base}/teachers/${requirePositiveInteger(teacherId, 'teacherId')}/students/${requirePositiveInteger(studentId, 'studentId')}`,
+    ),
   listAvailabilitySlots: (params?: { subjectId?: number; from?: string; to?: string }) => {
     const search = new URLSearchParams();
-    if (params?.subjectId) search.set('subjectId', String(params.subjectId));
-    if (params?.from) search.set('from', params.from);
-    if (params?.to) search.set('to', params.to);
+    setPositiveIntParam(search, 'subjectId', params?.subjectId);
+    setTrimmedParam(search, 'from', params?.from);
+    setTrimmedParam(search, 'to', params?.to);
     const qs = search.toString();
     return get<TrialAvailabilitySlotDTO[]>(`${base}/trial-availability/slots${qs ? `?${qs}` : ''}`);
   },
   upsertAvailabilitySlot: (payload: TrialAvailabilityUpsert) =>
-    post<TrialAvailabilitySlotDTO>(`${base}/trial-availability`, payload),
-  deleteAvailabilitySlot: (availabilityId: number) => del<void>(`${base}/trial-availability/${availabilityId}`),
+    post<TrialAvailabilitySlotDTO>(`${base}/trial-availability`, {
+      ...payload,
+      subjectId: requirePositiveInteger(payload.subjectId, 'subjectId'),
+      teacherId: payload.teacherId == null ? payload.teacherId : requirePositiveInteger(payload.teacherId, 'teacherId'),
+    }),
+  deleteAvailabilitySlot: (availabilityId: number) =>
+    del<void>(`${base}/trial-availability/${requirePositiveInteger(availabilityId, 'availabilityId')}`),
 };

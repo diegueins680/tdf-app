@@ -20,6 +20,13 @@ import type {
   InternTodoUpdate,
 } from './types';
 
+const requirePositiveInteger = (value: number, field: string): number => {
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${field} debe ser un entero positivo.`);
+  }
+  return value;
+};
+
 export const Internships = {
   listInterns: () => get<InternSummaryDTO[]>('/internships/interns'),
   getProfile: () => get<InternProfileDTO>('/internships/profile'),
@@ -43,7 +50,7 @@ export const Internships = {
   deleteTodo: (todoId: string) =>
     del<void>(`/internships/todos/${todoId}`),
   listTimeEntries: (partyId?: number | null) => {
-    const qs = partyId ? `?partyId=${partyId}` : '';
+    const qs = partyId == null ? '' : `?partyId=${requirePositiveInteger(partyId, 'partyId')}`;
     return get<InternTimeEntryDTO[]>(`/internships/time-entries${qs}`);
   },
   clockIn: (payload: ClockInRequest) =>
