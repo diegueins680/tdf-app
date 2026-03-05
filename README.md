@@ -190,13 +190,13 @@ npm run test:ui
 cd tdf-hq && stack test
 ```
 
-### Quality Gate (lint + typecheck + backend tests)
+### Quality Gate (lint + typecheck + backend build/tests)
 
 ```bash
 npm run quality
 ```
 
-> Runs ESLint, `tsc --noEmit`, and `stack test` sequentially so regressions across TypeScript + Haskell are caught locally before pushing. Configure Stack/DB access first if you run it on a fresh machine.
+> Runs ESLint + TypeScript checks for UI/mobile, builds the Haskell executable (`stack build tdf-hq:exe:tdf-hq-exe`), and then runs `stack test` so regressions across TypeScript + Haskell are caught locally before pushing. Configure Stack/DB access first if you run it on a fresh machine.
 
 ### Build for Production
 
