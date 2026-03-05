@@ -27,6 +27,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import type { TrialSlot, TrialSubject, TeacherDTO, ClassSessionDTO } from '../api/trials';
 import { Trials } from '../api/trials';
 import { Parties } from '../api/parties';
+import { resolveTeacherClasses } from './teachersPageLogic';
 
 type ClassStatus = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
 const CLASS_STATUS_OPTIONS: readonly ClassStatus[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
@@ -89,104 +90,6 @@ const statusMeta: Record<ClassStatus, { label: string; color: string; bg: string
     border: 'rgba(139,92,246,0.35)',
     icon: <EventAvailableIcon fontSize="small" />,
   },
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const buildDemoClasses = (): ClassRow[] => {
-  const base = new Date();
-  const dateAt = (daysFromNow: number, hour: number, minute: number, durationMinutes: number) => {
-    const start = new Date(base);
-    start.setDate(base.getDate() + daysFromNow);
-    start.setHours(hour, minute, 0, 0);
-    const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
-    return { startAt: start.toISOString(), endAt: end.toISOString() };
-  };
-
-  return [
-    {
-      id: 'demo-1',
-      teacherId: 101,
-      subjectId: 1,
-      title: 'Beatmaking intro',
-      student: 'Ana Torres',
-      ...dateAt(0, 15, 0, 75),
-      status: 'programada',
-      location: 'Sala A',
-      notes: 'Traer proyecto de Ableton.',
-    },
-    {
-      id: 'demo-2',
-      teacherId: 101,
-      subjectId: 5,
-      title: 'Live set review',
-      student: 'Josué Pérez',
-      ...dateAt(2, 18, 30, 60),
-      status: 'por-confirmar',
-      location: 'Cabina Domo',
-    },
-    {
-      id: 'demo-3',
-      teacherId: 102,
-      subjectId: 3,
-      title: 'Afinación y respiración',
-      student: 'Valeria Ruiz',
-      ...dateAt(-1, 11, 0, 60),
-      status: 'realizada',
-      location: 'Sala B',
-    },
-    {
-      id: 'demo-4',
-      teacherId: 102,
-      subjectId: 4,
-      title: 'Armonía aplicada',
-      student: 'Camila Ortega',
-      ...dateAt(3, 9, 30, 60),
-      status: 'programada',
-      location: 'Aula 2',
-    },
-    {
-      id: 'demo-5',
-      teacherId: 103,
-      subjectId: 2,
-      title: 'Timing y groove',
-      student: 'Diego Jara',
-      ...dateAt(1, 14, 0, 60),
-      status: 'reprogramada',
-      location: 'Sala C',
-      notes: 'Mover a viernes si se libera espacio.',
-    },
-    {
-      id: 'demo-6',
-      teacherId: 103,
-      subjectId: 5,
-      title: 'Preparación showcase',
-      student: 'Banda Ventana',
-      ...dateAt(-3, 17, 0, 90),
-      status: 'cancelada',
-      location: 'Escenario',
-      notes: 'Alumno canceló por viaje.',
-    },
-    {
-      id: 'demo-7',
-      teacherId: 104,
-      subjectId: 4,
-      title: 'Lectura a primera vista',
-      student: 'María Molina',
-      ...dateAt(4, 16, 0, 60),
-      status: 'programada',
-      location: 'Piano room',
-    },
-    {
-      id: 'demo-8',
-      teacherId: 104,
-      subjectId: 4,
-      title: 'Interpretación pieza pop',
-      student: 'Grupo coral',
-      ...dateAt(-5, 10, 30, 60),
-      status: 'realizada',
-      location: 'Aula 1',
-    },
-  ];
 };
 
 const formatDate = (iso: string) => {
@@ -389,7 +292,7 @@ export default function TeachersPage() {
     () => buildClassesFromDTO(teacherClassesQuery.data ?? []),
     [teacherClassesQuery.data],
   );
-  const classes = classesFromApi.length ? classesFromApi : classesFromSlots;
+  const classes = resolveTeacherClasses(teacherClassesQuery.data, classesFromApi, classesFromSlots);
 
   const selectedTeacher = filteredTeachers.find((t) => t.id === selectedTeacherId) ?? null;
   useEffect(() => {
