@@ -97,7 +97,8 @@ export const subscribeToChatReadState = (onChange: () => void): (() => void) => 
   if (typeof window === 'undefined') return () => undefined;
   const handle = () => onChange();
   const handleStorage = (event: StorageEvent) => {
-    if (event.key === CHAT_READ_STATE_STORAGE_KEY) onChange();
+    // `localStorage.clear()` dispatches a storage event with `key === null`.
+    if (event.key === null || event.key === CHAT_READ_STATE_STORAGE_KEY) onChange();
   };
   window.addEventListener(CHAT_READ_STATE_EVENT, handle);
   window.addEventListener('storage', handleStorage);

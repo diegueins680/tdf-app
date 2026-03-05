@@ -1,9 +1,12 @@
 import type { ChatThreadDTO } from '../api/types';
+import { jest } from '@jest/globals';
 import {
+  CHAT_READ_STATE_EVENT,
   CHAT_READ_STATE_STORAGE_KEY,
   isThreadUnread,
   loadChatReadMap,
   markThreadSeen,
+  subscribeToChatReadState,
 } from './chatReadState';
 
 const VALID_TIMESTAMP = '2026-03-05T14:00:00.000Z';
@@ -58,5 +61,45 @@ describe('chatReadState', () => {
     const thread = buildThread({ ctThreadId: Number.NaN });
 
     expect(isThreadUnread(thread, {})).toBe(false);
+  });
+
+  it('notifies subscribers for custom chat read-state events', () => {
+    const onChange = jest.fn();
+    const unsubscribe = subscribeToChatReadState(onChange);
+
+    window.dispatchEvent(new Event(CHAT_READ_STATE_EVENT));
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    unsubscribe();
+  });
+
+  it('notifies subscribers for storage updates on chat read-state key', () => {
+    const onChange = jest.fn();
+    const unsubscribe = subscribeToChatReadState(onChange);
+
+    window.dispatchEvent(new StorageEvent('storage', { key: CHAT_READ_STATE_STORAGE_KEY }));
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    unsubscribe();
+  });
+
+  it('notifies subscribers for storage clear events (null storage key)', () => {
+    const onChange = jest.fn();
+    const unsubscribe = subscribeToChatReadState(onChange);
+
+    window.dispatchEvent(new StorageEvent('storage', { key: null }));
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    unsubscribe();
+  });
+
+  it('ignores storage events for unrelated keys', () => {
+    const onChange = jest.fn();
+    const unsubscribe = subscribeToChatReadState(onChange);
+
+    window.dispatchEvent(new StorageEvent('storage', { key: 'another-key' }));
+
+    expect(onChange).not.toHaveBeenCalled();
+    unsubscribe();
   });
 });
