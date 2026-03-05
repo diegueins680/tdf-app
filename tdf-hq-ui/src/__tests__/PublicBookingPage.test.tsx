@@ -8,10 +8,22 @@ import { MemoryRouter } from 'react-router-dom';
 interface CreatePublicPayload {
   pbResourceIds?: string[] | null;
 }
+
+interface PublicServiceCatalogItem {
+  id: string;
+  name: string;
+  priceCents: number | null;
+  currency: string;
+  billingUnit?: string | null;
+}
+
 const createPublicMock = jest.fn<(payload: CreatePublicPayload) => Promise<{ bookingId: number }>>(
   () => Promise.resolve({ bookingId: 123 }),
 );
 const logoutMock = jest.fn();
+const listPublicServicesMock = jest.fn<() => Promise<PublicServiceCatalogItem[]>>(
+  () => Promise.resolve([]),
+);
 
 jest.unstable_mockModule('../api/bookings', () => ({
   Bookings: {
@@ -21,7 +33,7 @@ jest.unstable_mockModule('../api/bookings', () => ({
 
 jest.unstable_mockModule('../api/services', () => ({
   Services: {
-    listPublic: () => Promise.resolve([]),
+    listPublic: () => listPublicServicesMock(),
   },
 }));
 
@@ -143,6 +155,9 @@ describe('PublicBookingPage', () => {
 
   beforeEach(() => {
     createPublicMock.mockClear();
+    listPublicServicesMock.mockReset();
+    listPublicServicesMock.mockResolvedValue([]);
+    window.localStorage.clear();
     globalThis.fetch = jest.fn(() =>
       Promise.resolve({
         ok: true,
@@ -233,6 +248,56 @@ describe('PublicBookingPage', () => {
     );
     expect(dateLabel).toBeUndefined();
     expect(createPublicMock).not.toHaveBeenCalled();
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('does not overwrite in-progress contact edits after services load', async () => {
+    let resolveServices: ((value: PublicServiceCatalogItem[]) => void) | null = null;
+    listPublicServicesMock.mockReturnValueOnce(
+      new Promise<PublicServiceCatalogItem[]>((resolve) => {
+        resolveServices = resolve;
+      }),
+    );
+    window.localStorage.setItem(
+      'tdf-public-booking-profile',
+      JSON.stringify({
+        fullName: 'Nombre Guardado',
+        email: 'guardado@tdf.com',
+        phone: '+593000000000',
+        serviceType: 'Grabación de banda',
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    const fullNameInput = getInputByLabel(container, 'Nombre completo');
+    expect(fullNameInput.value).toBe('Nombre Guardado');
+
+    await act(async () => {
+      setInputValue(fullNameInput, 'Nombre Editado');
+      await flushPromises();
+    });
+    expect(fullNameInput.value).toBe('Nombre Editado');
+
+    await act(async () => {
+      if (!resolveServices) throw new Error('Service resolver was not initialized');
+      resolveServices([
+        {
+          id: 'svc-band-recording',
+          name: 'Grabación de banda',
+          priceCents: 10000,
+          currency: 'USD',
+          billingUnit: 'hora',
+        },
+      ]);
+      await flushPromises();
+    });
+
+    expect(getInputByLabel(container, 'Nombre completo').value).toBe('Nombre Editado');
 
     await cleanup();
     document.body.removeChild(container);

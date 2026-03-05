@@ -249,6 +249,7 @@ export default function PublicBookingPage() {
   const defaultService = services[0]?.name ?? 'Reserva';
   const { session, logout } = useSession();
   const appliedServiceQuery = useRef(false);
+  const appliedStoredProfile = useRef(false);
   const userTimeZone = useMemo(() => {
     if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'UTC';
     return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
@@ -295,14 +296,17 @@ export default function PublicBookingPage() {
   }, [services, roomOptions]);
 
   useEffect(() => {
+    if (appliedStoredProfile.current) return;
     if (typeof window === 'undefined') return;
+    appliedStoredProfile.current = true;
     try {
       const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
       if (!raw) return;
       const stored = JSON.parse(raw) as Partial<FormState>;
       const allowedServices = new Set(services.map((s) => s.name));
       const storedService = stored.serviceType ?? defaultService;
-      const nextService = allowedServices.has(storedService) ? storedService : defaultService;
+      const nextService =
+        services.length === 0 || allowedServices.has(storedService) ? storedService : defaultService;
       setForm((prev) => ({
         ...prev,
         fullName: stored.fullName ?? prev.fullName,
