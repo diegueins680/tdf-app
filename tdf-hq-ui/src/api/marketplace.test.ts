@@ -30,4 +30,12 @@ describe('Marketplace.listOrders', () => {
 
     expect(getMock).toHaveBeenCalledWith('/marketplace/orders');
   });
+
+  it('drops limits that truncate to zero and trims status text', async () => {
+    getMock.mockResolvedValueOnce([]);
+
+    await Marketplace.listOrders({ status: '  pending  ', limit: 0.7, offset: 1.9 });
+
+    expect(getMock).toHaveBeenCalledWith('/marketplace/orders?status=pending&offset=1');
+  });
 });
