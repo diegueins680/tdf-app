@@ -10,6 +10,7 @@ import Servant (ServerError (..))
 import Test.Hspec
 
 import qualified TDF.APITypesSpec as APITypesSpec
+import TDF.Cron (Directive (..), parseDirective)
 import TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
@@ -126,6 +127,18 @@ main = hspec $ do
 
         it "rejects unknown embedding models" $ do
             validateEmbeddingModelDimensions "mystery-embedder" `shouldSatisfy` isLeft
+
+    describe "parseDirective" $ do
+        it "parses SEND/HOLD directives regardless of casing" $ do
+            parseDirective "send: Hola!" `shouldBe` Right (Send "Hola!")
+            parseDirective "hold: Confirma nombre\nneed: email" `shouldBe` Right (Hold "Confirma nombre" (Just "email"))
+
+        it "allows leading blank lines in HOLD body and keeps NEED optional" $ do
+            parseDirective "HOLD:\n\nFalta el teléfono\nNEED:   telefono  " `shouldBe` Right (Hold "Falta el teléfono" (Just "telefono"))
+            parseDirective "HOLD: Falta confirmar datos\nNEED:   " `shouldBe` Right (Hold "Falta confirmar datos" Nothing)
+
+        it "requires HOLD reason even when NEED exists" $ do
+            parseDirective "HOLD:\nNEED: email" `shouldBe` Left "HOLD directive empty"
 
     APITypesSpec.spec
     ArtistSpec.spec

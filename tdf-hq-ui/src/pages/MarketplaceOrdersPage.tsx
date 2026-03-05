@@ -119,7 +119,7 @@ export default function MarketplaceOrdersPage() {
 
   const orders = useMemo(() => ordersQuery.data ?? [], [ordersQuery.data]);
   const sortedOrders = useMemo(
-    () => [...orders].sort((a, b) => (a.moCreatedAt > b.moCreatedAt ? -1 : 1)),
+    () => [...orders].sort((a, b) => b.moCreatedAt.localeCompare(a.moCreatedAt)),
     [orders],
   );
   const selectedOrder = useMemo(

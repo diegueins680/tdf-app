@@ -5,6 +5,8 @@ module TDF.Cron
   ( startCoursePaymentReminderJob
   , startInstagramSyncJob
   , startSocialAutoReplyJob
+  , Directive(..)
+  , parseDirective
   ) where
 
 import           Control.Concurrent      (forkIO, threadDelay)
@@ -83,19 +85,33 @@ data Directive = Send Text | Hold Text (Maybe Text) deriving (Show, Eq)
 parseDirective :: Text -> Either Text Directive
 parseDirective raw0 =
   let raw = T.strip raw0
-      stripPrefixCI p t = T.strip <$> T.stripPrefix p (T.strip t)
+      stripPrefixCI prefix text =
+        let stripped = T.strip text
+            prefixLen = T.length prefix
+            (candidate, rest) = T.splitAt prefixLen stripped
+        in if T.toCaseFold candidate == T.toCaseFold prefix
+             then Just (T.strip rest)
+             else Nothing
+      parseNeedLine line = do
+        value <- stripPrefixCI "NEED:" line
+        let cleaned = T.strip value
+        if T.null cleaned then Nothing else Just cleaned
+      isNeedLine line =
+        let cleaned = T.strip line
+        in T.toCaseFold "NEED:" `T.isPrefixOf` T.toCaseFold cleaned
+      parseHoldBody body =
+        let lines0 = filter (not . T.null) (map T.strip (T.lines body))
+            needTxt = listToMaybe [need | line <- lines0, Just need <- [parseNeedLine line]]
+            reason = listToMaybe [line | line <- lines0, not (isNeedLine line)]
+        in case reason of
+             Nothing -> Left "HOLD directive empty"
+             Just value -> Right (Hold value needTxt)
   in case () of
       _ | Just rest <- stripPrefixCI "SEND:" raw ->
             let msg = T.strip rest
             in if T.null msg then Left "SEND directive empty" else Right (Send msg)
         | Just rest <- stripPrefixCI "HOLD:" raw ->
-            let parts = T.splitOn "\n" rest
-                reason = T.strip (head parts)
-                needLine = listToMaybe [T.strip (T.drop 5 ln) | ln <- parts, "NEED:" `T.isPrefixOf` T.strip ln]
-                needTxt = case needLine of
-                  Nothing -> Nothing
-                  Just v -> let vv = T.strip v in if T.null vv then Nothing else Just vv
-            in if T.null reason then Left "HOLD directive empty" else Right (Hold reason needTxt)
+            parseHoldBody rest
         | otherwise -> Left "Invalid directive: expected SEND: or HOLD:"
 
 uniq :: Ord a => [a] -> [a]
