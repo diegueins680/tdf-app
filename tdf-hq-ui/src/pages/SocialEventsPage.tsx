@@ -42,6 +42,7 @@ import {
 } from '../api/socialEvents';
 import { ContractsAPI } from '../api/contracts';
 import { useSession } from '../session/SessionContext';
+import { parseUnsignedSafeInt } from '../utils/ids';
 
 interface InvitationState {
   partyId: string;
@@ -207,6 +208,12 @@ const toDateTimeInputValue = (iso?: string | null) => {
 const toUtcIso = (dateTimeInput: string) => {
   const dt = DateTime.fromISO(dateTimeInput, { zone: 'local' });
   return dt.isValid ? (dt.toUTC().toISO() ?? new Date().toISOString()) : new Date().toISOString();
+};
+
+const parseOptionalUnsignedInt = (value: string): number | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return parseUnsignedSafeInt(trimmed);
 };
 
 const dateKeyFromIso = (iso: string) => DateTime.fromISO(iso).toISODate() ?? '';
@@ -593,12 +600,14 @@ export default function SocialEventsPage() {
       if (!startAt.isValid || !endAt.isValid || startAt >= endAt) {
         throw new Error('La fecha de fin debe ser posterior al inicio.');
       }
-      const priceCents = eventDraft.priceCents.trim() ? Number.parseInt(eventDraft.priceCents, 10) : null;
-      if (eventDraft.priceCents.trim() && (!Number.isFinite(priceCents) || (priceCents ?? 0) < 0)) {
+      const priceRaw = eventDraft.priceCents.trim();
+      const priceCents = parseOptionalUnsignedInt(priceRaw);
+      if (priceRaw !== '' && priceCents === null) {
         throw new Error('Precio inválido (usa centavos).');
       }
-      const capacity = eventDraft.capacity.trim() ? Number.parseInt(eventDraft.capacity, 10) : null;
-      if (eventDraft.capacity.trim() && (!Number.isFinite(capacity) || (capacity ?? 0) < 0)) {
+      const capacityRaw = eventDraft.capacity.trim();
+      const capacity = parseOptionalUnsignedInt(capacityRaw);
+      if (capacityRaw !== '' && capacity === null) {
         throw new Error('Capacidad inválida.');
       }
       const payload: SocialEventDTO = {
@@ -688,9 +697,9 @@ export default function SocialEventsPage() {
         buyerName: '',
         buyerEmail: '',
       };
-      const quantity = Number.parseInt(draft.quantity, 10);
+      const quantity = parseOptionalUnsignedInt(draft.quantity);
       if (!draft.tierId) throw new Error('Selecciona un tipo de ticket.');
-      if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('Cantidad inválida.');
+      if (quantity === null || quantity <= 0) throw new Error('Cantidad inválida.');
       return SocialEventsAPI.buyTickets(eventId, {
         ticketPurchaseTierId: draft.tierId,
         ticketPurchaseQuantity: quantity,
@@ -719,11 +728,11 @@ export default function SocialEventsPage() {
         quantity: '',
         currency: 'USD',
       };
-      const priceCents = Number.parseInt(draft.price, 10);
-      const quantity = Number.parseInt(draft.quantity, 10);
+      const priceCents = parseOptionalUnsignedInt(draft.price);
+      const quantity = parseOptionalUnsignedInt(draft.quantity);
       if (!draft.name.trim()) throw new Error('Nombre del ticket requerido.');
-      if (!Number.isFinite(priceCents) || priceCents < 0) throw new Error('Precio inválido (usa centavos).');
-      if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('Cantidad inválida.');
+      if (priceCents === null) throw new Error('Precio inválido (usa centavos).');
+      if (quantity === null || quantity <= 0) throw new Error('Cantidad inválida.');
       const payload: SocialTicketTierDTO = {
         ticketTierCode: draft.code.trim() || draft.name,
         ticketTierName: draft.name.trim(),
@@ -796,9 +805,9 @@ export default function SocialEventsPage() {
         plannedCents: '',
         notes: '',
       };
-      const plannedCents = Number.parseInt(draft.plannedCents, 10);
+      const plannedCents = parseOptionalUnsignedInt(draft.plannedCents);
       if (!draft.name.trim()) throw new Error('Nombre de línea presupuestaria requerido.');
-      if (!Number.isFinite(plannedCents) || plannedCents < 0) throw new Error('Presupuesto inválido (usa centavos).');
+      if (plannedCents === null) throw new Error('Presupuesto inválido (usa centavos).');
       const payload: SocialEventBudgetLineDTO = {
         eblCode: draft.code.trim() || draft.name,
         eblName: draft.name.trim(),
@@ -866,9 +875,9 @@ export default function SocialEventsPage() {
         status: 'pending' as const,
         notes: '',
       };
-      const amountCents = Number.parseInt(draft.amountCents, 10);
+      const amountCents = parseOptionalUnsignedInt(draft.amountCents);
       if (!draft.concept.trim()) throw new Error('Concepto de contrato requerido.');
-      if (!Number.isFinite(amountCents) || amountCents <= 0) throw new Error('Monto de contrato inválido (usa centavos).');
+      if (amountCents === null || amountCents <= 0) throw new Error('Monto de contrato inválido (usa centavos).');
       const currency = draft.currency.trim().toUpperCase() || 'USD';
       const contractResponse = await ContractsAPI.create({
         kind: draft.kind.trim() || 'event_vendor_contract',
@@ -952,9 +961,9 @@ export default function SocialEventsPage() {
         notes: '',
         occurredAt: toDateTimeInputValue(),
       };
-      const amountCents = Number.parseInt(draft.amountCents, 10);
+      const amountCents = parseOptionalUnsignedInt(draft.amountCents);
       if (!draft.concept.trim()) throw new Error('Concepto contable requerido.');
-      if (!Number.isFinite(amountCents) || amountCents <= 0) throw new Error('Monto inválido (usa centavos).');
+      if (amountCents === null || amountCents <= 0) throw new Error('Monto inválido (usa centavos).');
       const payload: SocialEventFinanceEntryDTO = {
         efeBudgetLineId: draft.budgetLineId.trim() || null,
         efeDirection: draft.direction,
