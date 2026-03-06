@@ -119,7 +119,7 @@ export default function LiveSessionPublicPage() {
       <Container maxWidth="lg">
         <Stack spacing={3}>
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <PublicBrandBar tagline="Live Sessions · Intake" compact />
+            <PublicBrandBar tagline="Sesiones en vivo · Formulario" compact />
           </Box>
           <Paper
             elevation={0}
@@ -134,7 +134,7 @@ export default function LiveSessionPublicPage() {
             <Stack spacing={2}>
               <Stack spacing={1}>
                 <Chip
-                  label="Aplicación banda"
+                  label="Postulación de banda"
                   sx={{
                     bgcolor: 'rgba(255,255,255,0.08)',
                     color: '#cbd5f5',
@@ -144,7 +144,7 @@ export default function LiveSessionPublicPage() {
                   size="small"
                 />
                 <Typography variant="h4" fontWeight={800}>
-                  Sube tu banda a las TDF Live Sessions
+                  Postula tu banda a las sesiones en vivo de TDF
                 </Typography>
                 <Typography variant="body1" color="rgba(226,232,240,0.85)">
                   Comparte quiénes tocan, tus redes y la disponibilidad tentativa. Si ya trabajamos juntos, busca los nombres para autocompletar los datos.

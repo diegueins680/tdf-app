@@ -76,7 +76,7 @@ const LANDING_LABELS: Record<string, string> = {
   '/configuracion/roles-permisos': 'Roles y permisos',
   '/mi-artista': 'Mi artista',
   '/mi-profesor': 'Mi profesor',
-  '/fans': 'Fan Hub',
+  '/fans': 'Comunidad',
   '/estudio/calendario': 'Calendario',
   '/crm/contactos': 'CRM',
   '/label/artistas': 'Label - Artistas',
@@ -957,7 +957,7 @@ export default function LoginPage() {
                   <Typography variant="body2">
                     ¿Quieres explorar la música?{' '}
                     <Link component={RouterLink} to="/fans" underline="hover">
-                      Ir al Fan Hub
+                      Ir a la comunidad
                     </Link>
                   </Typography>
                 </Stack>
@@ -1403,7 +1403,7 @@ export default function LoginPage() {
                 />
                 {fanArtistsQuery.isError && (
                   <Alert severity="warning">
-                    No pudimos cargar la lista de artistas en este momento. Puedes seguirlos después desde el Fan Hub.
+                    No pudimos cargar la lista de artistas en este momento. Puedes seguirlos después desde la comunidad.
                   </Alert>
                 )}
               </Stack>

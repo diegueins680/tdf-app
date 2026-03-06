@@ -7,10 +7,10 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 
 const PUBLIC_NAV_ITEMS = [
-  { label: 'Fan Hub', to: '/fans' },
-  { label: 'Marketplace', to: '/marketplace' },
+  { label: 'Comunidad', to: '/fans' },
+  { label: 'Tienda', to: '/marketplace' },
   { label: 'Reservar', to: '/reservar' },
-  { label: 'Records', to: '/records' },
+  { label: 'Lanzamientos', to: '/records' },
 ] as const;
 
 type FooterAction = {
@@ -36,7 +36,7 @@ export default function PublicBranding({
       return { label: 'WhatsApp reservas', kind: 'external', value: STUDIO_WHATSAPP_URL };
     }
     if (location.pathname.startsWith('/fans')) {
-      return { label: 'Ver releases', kind: 'route', value: '/records' };
+      return { label: 'Ver lanzamientos', kind: 'route', value: '/records' };
     }
     if (location.pathname.startsWith('/records')) {
       return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
@@ -44,7 +44,7 @@ export default function PublicBranding({
     if (location.pathname.startsWith('/marketplace')) {
       return { label: 'Necesito ayuda', kind: 'route', value: '/feedback' };
     }
-    return { label: 'Ir al Fan Hub', kind: 'route', value: '/fans' };
+    return { label: 'Ir a la comunidad', kind: 'route', value: '/fans' };
   }, [location.pathname]);
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
@@ -54,7 +54,7 @@ export default function PublicBranding({
       return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/records')) {
-      return { label: 'Abrir Fan Hub', kind: 'route', value: '/fans' };
+      return { label: 'Abrir comunidad', kind: 'route', value: '/fans' };
     }
     if (location.pathname.startsWith('/marketplace')) {
       return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
@@ -143,7 +143,7 @@ export default function PublicBranding({
                     Donar
                   </MenuItem>
                   <MenuItem component={RouterLink} to="/feedback" onClick={() => setMenuAnchor(null)}>
-                    Enviar feedback
+                    Enviar sugerencia
                   </MenuItem>
                 </Menu>
               </Stack>
@@ -256,7 +256,7 @@ export default function PublicBranding({
             </Stack>
             <Stack spacing={0.75}>
               <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.35 }}>
-                Gestion de mensajes
+                Gestión de mensajes
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button

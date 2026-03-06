@@ -52,7 +52,7 @@ export function PublicBrandBar({ tagline, compact, href = '/records', target }: 
           />
           <Chip
             size="small"
-            label="Records · Studio · Sessions"
+            label="Lanzamientos · Estudio · Sesiones"
             sx={{
               bgcolor: 'rgba(124,58,237,0.18)',
               color: '#e5e7eb',

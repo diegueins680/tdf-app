@@ -914,7 +914,7 @@ export default function RecordsPublicPage() {
     return mapped.length > 0 ? mapped : defaultRecordings;
   }, [recordingsQuery.data]);
 
-  const heroTitle = 'Historias desde el estudio, releases y TDF Sessions en un solo lugar.';
+  const heroTitle = 'Historias desde el estudio, lanzamientos y TDF Sessions en un solo lugar.';
   const heroSubtitle =
     'Mantén al día la página pública de TDF Records con fotos, lanzamientos y videos curados desde el CMS.';
   const heroCta = 'Reservar sesión';
@@ -942,11 +942,11 @@ export default function RecordsPublicPage() {
         <BookingRequestDialog open={dialogOpen} onClose={() => setDialogOpen(false)} hasToken={hasBookingToken} />
         <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-            <PublicBrandBar tagline="TDF Records · Estudio · Label · Sessions" />
+            <PublicBrandBar tagline="TDF Records · Estudio · Lanzamientos · Sesiones" />
           </Box>
           <Stack spacing={3} maxWidth="md">
             <Chip
-              label="TDF Records — Public CMS"
+              label="TDF Records — CMS público"
               sx={{
                 width: 'fit-content',
                 bgcolor: 'rgba(255,255,255,0.08)',
@@ -968,7 +968,7 @@ export default function RecordsPublicPage() {
                     Gestionar CMS
                   </Button>
                 </Tooltip>
-                <Tooltip title="Ir a CRUD de releases">
+                <Tooltip title="Ir a CRUD de lanzamientos">
                   <Button
                     component={RouterLink}
                     to="/label/releases"
@@ -976,7 +976,7 @@ export default function RecordsPublicPage() {
                     size="small"
                     sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
                   >
-                    Releases (CRUD)
+                    Lanzamientos (CRUD)
                   </Button>
                 </Tooltip>
               </Stack>
@@ -1022,7 +1022,7 @@ export default function RecordsPublicPage() {
                 size="large"
                 sx={{ color: '#e5e7eb', textTransform: 'none' }}
               >
-                Fan Hub
+                Comunidad
               </Button>
               {!hasBookingToken && (
                 <Typography variant="body2" color="rgba(226,232,240,0.8)">
@@ -1107,11 +1107,11 @@ export default function RecordsPublicPage() {
               </Stack>
             </GradientCard>
             <GradientCard
-              title="Releases"
+              title="Lanzamientos"
               actions={
                 canMaintainCms ? (
                   <Stack direction="row" spacing={0.5}>
-                    <Tooltip title="Editar releases (CMS records-release-*)">
+                    <Tooltip title="Editar lanzamientos (CMS records-release-*)">
                       <IconButton
                         component={RouterLink}
                         to="/configuracion/cms?slug=records-release-"
@@ -1121,7 +1121,7 @@ export default function RecordsPublicPage() {
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Ir a CRUD de releases">
+                    <Tooltip title="Ir a CRUD de lanzamientos">
                       <IconButton
                         component={RouterLink}
                         to="/label/releases"
@@ -1210,14 +1210,14 @@ export default function RecordsPublicPage() {
                     size="small"
                     variant="outlined"
                   >
-                    CRUD releases
+                    CRUD lanzamientos
                   </Button>
                 </Stack>
               )
             }
           />
           <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
-            Cada release incluye los links oficiales. Edita los enlaces a plataformas en el CMS.
+            Cada lanzamiento incluye los links oficiales. Edita los enlaces a plataformas en el CMS.
           </Typography>
           <ReleasesGrid items={releases} />
         </Box>

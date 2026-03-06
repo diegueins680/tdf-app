@@ -90,10 +90,10 @@ const FAN_HUB_RECOVERY_CARDS: CatalogRecoveryCard[] = [
     title: featuredReleases[0]?.title ?? 'Luna Baja',
     description:
       featuredReleases[0]?.blurb ??
-      'Explora los releases mas recientes del label mientras reconectamos el catalogo completo.',
+      'Explora los lanzamientos mas recientes del label mientras reconectamos el catalogo completo.',
     image: featuredReleases[0]?.cover ?? recordings[0]?.image ?? '',
     to: '/records',
-    action: 'Ver releases',
+    action: 'Ver lanzamientos',
   },
   {
     eyebrow: recordings[0]?.artist ?? 'La Bruma',
@@ -663,10 +663,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const homeManagerActions = useMemo(
     () => [
       {
-        title: 'Releases',
+        title: 'Lanzamientos',
         description: 'Publica, corrige streams y revisa pendientes del label.',
         to: '/label/releases',
-        label: 'Abrir releases',
+        label: 'Abrir lanzamientos',
       },
       {
         title: 'Artistas',
@@ -739,11 +739,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
         <Stack spacing={1}>
           <Typography variant="h3" fontWeight={700}>
-            {isHomeManagerView ? 'Inicio — Gestión del hub' : cmsPayload?.heroTitle ?? 'Fan Hub — Conecta con tus artistas'}
+            {isHomeManagerView ? 'Inicio — Gestión del hub' : cmsPayload?.heroTitle ?? 'Comunidad — Conecta con tus artistas'}
           </Typography>
           <Typography variant="body1" color="text.secondary">
             {isHomeManagerView
-              ? 'Prioriza releases, artistas, CMS y perfil público desde un solo lugar sin entrar a cada módulo por separado.'
+              ? 'Prioriza lanzamientos, artistas, CMS y perfil público desde un solo lugar sin entrar a cada módulo por separado.'
               : cmsPayload?.heroSubtitle ?? 'Sigue a tus artistas favoritos, recibe lanzamientos y escucha sus playlists oficiales en Spotify y YouTube.'}
           </Typography>
           {!isAuthenticated && (
@@ -772,7 +772,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               <Stack spacing={1}>
                 <Typography variant="body2">Atajos rápidos para operar el hub desde este inicio:</Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Chip label="Gestionar releases" component={RouterLink} to="/label/releases" clickable />
+                  <Chip label="Gestionar lanzamientos" component={RouterLink} to="/label/releases" clickable />
                   <Chip label="Editar artistas" component={RouterLink} to="/label/artistas" clickable />
                   <Chip label="Editar CMS" component={RouterLink} to="/configuracion/cms" clickable variant="outlined" />
                   <Chip
@@ -855,16 +855,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   </Button>
                 ) : hasArtistCatalogError ? (
                   <Button size="small" component={RouterLink} to="/records">
-                    Ver releases
+                    Ver lanzamientos
                   </Button>
                 ) : null}
               </Stack>
             }
           >
             {isHomeManagerView
-              ? 'No pudimos refrescar el catálogo del hub. Sigue trabajando desde Releases, Artistas o CMS mientras vuelve la conexión.'
+              ? 'No pudimos refrescar el catálogo del hub. Sigue trabajando desde Lanzamientos, Artistas o CMS mientras vuelve la conexión.'
               : hasArtistCatalogError
-                ? 'No pudimos cargar el catalogo completo ahora mismo. Mientras vuelve, aun puedes explorar releases, sesiones y reservas.'
+                ? 'No pudimos cargar el catalogo completo ahora mismo. Mientras vuelve, aun puedes explorar lanzamientos, sesiones y reservas.'
                 : 'Tuvimos un problema cargando tu informacion. Revisa tu conexion o intenta de nuevo.'}
           </Alert>
         )}
@@ -885,14 +885,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <PlayArrowIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={700}>Releases activos</Typography>
+                      <Typography variant="subtitle1" fontWeight={700}>Lanzamientos activos</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Publica, corrige links de streaming y revisa qué drops ya están listos para salir al hub.
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button component={RouterLink} to="/label/releases" variant="contained" size="small">
-                        Abrir releases
+                        Abrir lanzamientos
                       </Button>
                       <Button component={RouterLink} to="/records" variant="text" size="small">
                         Ver catálogo público
@@ -953,7 +953,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         Editar CMS
                       </Button>
                       <Button component={RouterLink} to="/fans" variant="text" size="small">
-                        Vista fan
+                        Vista comunidad
                       </Button>
                     </Stack>
                   </Stack>
@@ -982,7 +982,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         Abrir reservas
                       </Button>
                       <Button component={RouterLink} to={radioTargetPath} variant="text" size="small">
-                        Radio y live
+                        Radio y en vivo
                       </Button>
                     </Stack>
                   </Stack>
@@ -1007,14 +1007,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       <Typography variant="subtitle1" fontWeight={700}>Experiencias y reservas</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
-                      Agenda sesiones privadas, listening parties o streams con tus artistas favoritos.
+                      Agenda sesiones privadas, escuchas guiadas o transmisiones con tus artistas favoritos.
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button component={RouterLink} to="/reservar" variant="contained" size="small">
                         Reservar ahora
                       </Button>
                       <Button component={RouterLink} to="/live-sessions/registro" variant="text" size="small">
-                        Streaming en vivo
+                        Sesión en vivo
                       </Button>
                     </Stack>
                   </Stack>
@@ -1033,10 +1033,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <WorkspacePremiumIcon color="success" />
-                      <Typography variant="subtitle1" fontWeight={700}>Membresías y tiers</Typography>
+                      <Typography variant="subtitle1" fontWeight={700}>Membresías y niveles</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
-                      Accede a beneficios, drops anticipados y contenido exclusivo por artista.
+                      Accede a beneficios, lanzamientos anticipados y contenido exclusivo por artista.
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button component={RouterLink} to="/marketplace?category=packages" variant="contained" color="success" size="small">
@@ -1048,7 +1048,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         variant="text"
                         size="small"
                       >
-                        {canManageReleases ? 'Gestionar releases' : 'Explorar catálogo'}
+                        {canManageReleases ? 'Gestionar lanzamientos' : 'Explorar catálogo'}
                       </Button>
                     </Stack>
                   </Stack>
@@ -1067,17 +1067,17 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <StorefrontIcon color="info" />
-                      <Typography variant="subtitle1" fontWeight={700}>Marketplace</Typography>
+                      <Typography variant="subtitle1" fontWeight={700}>Tienda</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
-                      Compra merch, bundles digitales y ediciones limitadas directo del artista/label.
+                      Compra merch, paquetes digitales y ediciones limitadas directo del artista o del label.
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button component={RouterLink} to="/marketplace" variant="contained" color="info" size="small">
-                        Abrir marketplace
+                        Abrir tienda
                       </Button>
                       <Button component={RouterLink} to="/records" variant="text" size="small">
-                        Releases del label
+                        Lanzamientos del label
                       </Button>
                     </Stack>
                   </Stack>
@@ -1099,7 +1099,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       <Typography variant="subtitle1" fontWeight={700}>Streaming y radio</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
-                      Únete a rooms de streaming o escucha el radio curado mientras sigues artistas.
+                      Únete a transmisiones en vivo o escucha la radio curada mientras sigues artistas.
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button component={RouterLink} to={radioTargetPath} variant="contained" color="secondary" size="small">
@@ -1127,7 +1127,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               </Stack>
               <Typography variant="body2" color="text.secondary">
                 {isHomeManagerView
-                  ? 'Revisa qué lanzamientos ya tienen enlaces válidos y usa este bloque como control rápido antes de ir al módulo de releases.'
+                  ? 'Revisa qué lanzamientos ya tienen enlaces válidos y usa este bloque como control rápido antes de ir al módulo de lanzamientos.'
                   : 'Reproduce lanzamientos sin salir del hub: si hay enlaces de Spotify o YouTube los cargamos en el reproductor embebido.'}
               </Typography>
               {!isAuthenticated && (
@@ -1171,7 +1171,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   }
                 >
                   {canManageReleases
-                    ? 'Tu cuenta puede gestionar releases, pero aún no hay artistas disponibles para cargar este feed.'
+                    ? 'Tu cuenta puede gestionar lanzamientos, pero aún no hay artistas disponibles para cargar este feed.'
                     : 'Activa tu rol Fan para recibir lanzamientos personalizados en este hub.'}
                 </Alert>
               )}
@@ -1187,14 +1187,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       ? isFan
                         ? hasFollows
                           ? 'No hay lanzamientos recientes de los artistas que sigues. Vuelve pronto o revisa los perfiles.'
-                          : 'Sigue al menos un artista para ver drops recientes aquí.'
+                          : 'Sigue al menos un artista para ver novedades recientes aquí.'
                         : isHomeManagerView
-                          ? 'Todavía no hay releases visibles en el hub. Crea uno o completa los links de streaming para que aparezca aquí.'
-                          : 'No hay lanzamientos aún. Adjunta streams o crea un release para verlo aquí.'
+                          ? 'Todavía no hay lanzamientos visibles en el hub. Crea uno o completa los links de streaming para que aparezca aquí.'
+                          : 'No hay lanzamientos aún. Adjunta streams o crea un lanzamiento para verlo aquí.'
                       : isFan
-                        ? 'Sigue al menos un artista para ver drops recientes aquí.'
+                        ? 'Sigue al menos un artista para ver novedades recientes aquí.'
                         : isHomeManagerView
-                          ? 'Todavía no hay releases o artistas visibles para este hub.'
+                          ? 'Todavía no hay lanzamientos o artistas visibles para este hub.'
                           : 'No hay artistas disponibles para mostrar lanzamientos.'}
                   </Box>
                   {canManageReleases && (
@@ -1204,7 +1204,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       size="small"
                       variant="outlined"
                     >
-                      Crear release
+                      Crear lanzamiento
                     </Button>
                   )}
                 </Alert>
@@ -1428,13 +1428,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               <Card sx={{ p: 3 }}>
                 <Stack spacing={1.5}>
                   <Typography variant="h6">
-                    {!isAuthenticated ? 'Empieza aquí' : canManageReleases ? 'Panel label' : 'Panel rápido'}
+                    {!isAuthenticated ? 'Empieza aquí' : canManageReleases ? 'Panel del label' : 'Panel rápido'}
                   </Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     {isHomeManagerView ? (
                       <>
                         <StatPill label="Artistas en hub" value={artists.length} />
-                        <StatPill label="Releases visibles" value={releaseFeed.length} />
+                        <StatPill label="Lanzamientos visibles" value={releaseFeed.length} />
                         {artistProfileQuery.data && (
                           <StatPill label="Fans de tu perfil" value={artistProfileQuery.data.apFollowerCount} />
                         )}
@@ -1452,7 +1452,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     {!isAuthenticated
                       ? 'Explora artistas, guarda favoritos al crear tu cuenta y vuelve para seguir sus lanzamientos.'
                       : canManageReleases
-                        ? 'Revisa releases, perfiles y activos del hub desde un solo lugar.'
+                        ? 'Revisa lanzamientos, perfiles y activos del hub desde un solo lugar.'
                         : isFan
                           ? 'Actualiza tu perfil fan y sigue artistas para ordenar mejor tu feed.'
                           : 'Activa tu rol Fan para guardar artistas y recibir novedades personalizadas.'}
@@ -1464,12 +1464,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   )}
                   {isAuthenticated && canManageReleases && (
                     <Button component={RouterLink} to="/label/releases" variant="outlined">
-                      Gestionar releases
+                      Gestionar lanzamientos
                     </Button>
                   )}
                   {isAuthenticated && !canManageReleases && (
                     <Button component={RouterLink} to="/records" variant="outlined">
-                      Ver Sessions y releases
+                      Ver sesiones y lanzamientos
                     </Button>
                   )}
                 </Stack>
@@ -1511,7 +1511,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       {suggestedArtists.length === 0 && (
                         <Typography variant="body2" color="text.secondary">
                           {!isAuthenticated
-                            ? 'Inicia sesión para guardar favoritos y recibir nuevos releases aquí.'
+                            ? 'Inicia sesión para guardar favoritos y recibir nuevos lanzamientos aquí.'
                             : 'Ya sigues a todos los artistas activos en el hub.'}
                         </Typography>
                       )}
@@ -1797,7 +1797,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       Ir a artistas
                     </Button>
                     <Button component={RouterLink} to="/label/releases" variant="outlined">
-                      Abrir releases
+                      Abrir lanzamientos
                     </Button>
                   </Stack>
                 </Stack>
@@ -2029,7 +2029,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 Estamos trayendo perfiles, generos y lanzamientos para este hub.
               </Typography>
               <Button component={RouterLink} to="/records" size="small">
-                Ver releases mientras tanto
+                Ver lanzamientos mientras tanto
               </Button>
             </Stack>
           </Card>
@@ -2042,7 +2042,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 <Typography variant="h6">Mientras reconectamos el catalogo</Typography>
                 <Typography variant="body2" color="text.secondary">
                   {hasArtistCatalogError
-                    ? 'No pudimos cargar la lista completa de artistas en este momento. Aun puedes seguir explorando releases, sesiones y experiencias desde aqui.'
+                    ? 'No pudimos cargar la lista completa de artistas en este momento. Aun puedes seguir explorando lanzamientos, sesiones y experiencias desde aqui.'
                     : 'Estamos renovando el catalogo del hub. Mientras tanto, aqui tienes tres rutas utiles para seguir descubriendo TDF.'}
                 </Typography>
               </Stack>
@@ -2274,7 +2274,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              Último release
+                              Último lanzamiento
                             </Button>
                           )}
                         </Stack>

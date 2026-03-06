@@ -317,7 +317,7 @@ export default function LabelArtistsPage() {
         <Stack spacing={0.5}>
           <Typography variant="h4" fontWeight={700}>Label / Artistas</Typography>
           <Typography variant="body1" color="text.secondary">
-            Administra los perfiles que alimentan el Fan Hub y los lanzamientos del label.
+            Administra los perfiles que alimentan la comunidad y los lanzamientos del label.
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center">

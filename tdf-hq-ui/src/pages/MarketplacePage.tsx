@@ -1077,7 +1077,7 @@ export default function MarketplacePage() {
       <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
         <Stack spacing={1}>
           <Typography variant="h4" fontWeight={800}>
-            Marketplace de Inventario
+            Tienda de inventario
           </Typography>
           <Typography variant="body2" color="text.secondary">
             1) Elige equipos, 2) Ingresa contacto, 3) Selecciona cómo pagar. Guarda tu carrito y retoma cuando quieras.
