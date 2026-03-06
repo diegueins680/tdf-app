@@ -2,12 +2,18 @@ const normalizeService = (service: string) => service.trim().toLowerCase();
 
 const stripDiacritics = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 
-const normalizeRoomToken = (value: string) => stripDiacritics(normalizeService(value));
+const normalizeToken = (value: string) =>
+  stripDiacritics(normalizeService(value))
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+
+const normalizeRoomToken = (value: string) => normalizeToken(value);
 
 export const defaultRoomsForService = (service: string, roomOptions: string[]) => {
-  const norm = normalizeService(service);
-  const plain = stripDiacritics(norm);
-  const hasAny = (...needles: string[]) => needles.some((needle) => plain.includes(needle));
+  const plain = normalizeToken(service);
+  const hasAny = (...needles: string[]) =>
+    needles.some((needle) => plain.includes(normalizeToken(needle)));
   const pick = (needle: string) =>
     roomOptions.find((room) => normalizeRoomToken(room).includes(normalizeRoomToken(needle)));
   const picks = (...needles: string[]) => {

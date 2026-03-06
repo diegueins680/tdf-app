@@ -20,6 +20,14 @@ describe('public booking room rules', () => {
     ]);
   });
 
+  it('matches audiovisual-live services with punctuation and ignores room ordering fallback', () => {
+    const mixedOrderRooms = ['Vocal Booth', 'DJ Booth', 'Live Room', 'Control Room'];
+    expect(defaultRoomsForService('Grabación Audiovisual (Live Session)', mixedOrderRooms)).toEqual([
+      'Live Room',
+      'Control Room',
+    ]);
+  });
+
   it('suggests live + vocal for vocal recording (diacritics/case insensitive)', () => {
     expect(defaultRoomsForService('GRABACIÓN DE VOZ', rooms)).toEqual(['Live Room', 'Vocal Booth']);
   });
@@ -51,5 +59,9 @@ describe('public booking room rules', () => {
 
   it('compares room sets ignoring diacritics', () => {
     expect(sameRooms(['Lívé Room', 'Bóóth Vócal'], ['live room', 'booth vocal'])).toBe(true);
+  });
+
+  it('compares room sets ignoring punctuation differences', () => {
+    expect(sameRooms(['Control-Room'], ['control room'])).toBe(true);
   });
 });
