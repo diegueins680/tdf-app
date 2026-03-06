@@ -94,6 +94,15 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   'token-admin': 'Token API',
 };
 
+const formatFriendlyPath = (path: string) => {
+  const parts = path.split('/').filter(Boolean);
+  if (parts.length === 0) return 'Inicio';
+  return parts
+    .map((part) => FRIENDLY_SEGMENTS[part] ?? part.replace(/-/g, ' '))
+    .map((part) => (part.length > 0 ? part.charAt(0).toUpperCase() + part.slice(1) : part))
+    .join(' / ');
+};
+
 interface CartPreviewItem {
   title: string;
   subtotal: string;
@@ -332,6 +341,45 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
   };
 
   const showQuickPathHints = quickQuery.trim().includes('/');
+  const currentSectionLabel = useMemo(() => formatFriendlyPath(location.pathname), [location.pathname]);
+  const contextualDefaultPaths = useMemo(() => {
+    if (location.pathname.startsWith('/crm') || location.pathname.startsWith('/social')) {
+      return ['/crm/contactos', '/crm/leads', '/social/inbox'];
+    }
+    if (location.pathname.startsWith('/estudio')) {
+      return ['/estudio/calendario', '/estudio/ordenes', '/estudio/salas'];
+    }
+    if (location.pathname.startsWith('/escuela') || location.pathname.startsWith('/mi-profesor')) {
+      return ['/escuela/clases', '/escuela/profesores', '/mi-profesor'];
+    }
+    if (location.pathname.startsWith('/label')) {
+      return ['/label/artistas', '/label/releases', '/label/assets'];
+    }
+    if (location.pathname.startsWith('/operacion')) {
+      return ['/operacion/inventario', '/operacion/ordenes-marketplace', '/operacion/reservas-equipo'];
+    }
+    if (location.pathname.startsWith('/configuracion') || location.pathname.startsWith('/admin')) {
+      return ['/configuracion/estado', '/configuracion/cms', '/configuracion/preferencias'];
+    }
+    if (location.pathname.startsWith('/finanzas')) {
+      return ['/finanzas/pagos'];
+    }
+    return ['/crm/contactos', '/label/releases', '/estudio/calendario', '/operacion/inventario'];
+  }, [location.pathname]);
+  const shortcutStripItems = useMemo(() => {
+    const preferredPaths = [...contextualDefaultPaths, ...quickFavorites, ...quickRecents];
+    const seen = new Set<string>();
+    return preferredPaths
+      .filter((path) => {
+        if (!path || path === location.pathname) return false;
+        if (seen.has(path)) return false;
+        seen.add(path);
+        return true;
+      })
+      .map((path) => quickNavItems.find((item) => item.path === path))
+      .filter((item): item is (typeof quickNavItems)[number] => Boolean(item))
+      .slice(0, 5);
+  }, [contextualDefaultPaths, location.pathname, quickFavorites, quickNavItems, quickRecents]);
 
   const handleOpenCart = (event: React.MouseEvent<HTMLElement>) => {
     setCartAnchor(event.currentTarget);
@@ -339,23 +387,6 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
   const handleCloseCart = () => setCartAnchor(null);
   const cartOpen = Boolean(cartAnchor);
   const resourcesOpen = Boolean(resourcesAnchor);
-
-  const renderBreadcrumb = () => {
-    const parts = location.pathname.split('/').filter(Boolean);
-    if (parts.length === 0) return null;
-    const label = parts
-      .map((p) => FRIENDLY_SEGMENTS[p] ?? p.replace(/-/g, ' '))
-      .map((p) => (p.length > 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p))
-      .join(' / ');
-    return (
-      <Typography
-        variant="caption"
-        sx={{ color: '#cbd5e1', letterSpacing: 0.3, textTransform: 'uppercase' }}
-      >
-        {label}
-      </Typography>
-    );
-  };
 
   return (
     <AppBar
@@ -402,9 +433,6 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
             }}
           />
         </Box>
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'column', ml: 2 }}>
-          {renderBreadcrumb()}
-        </Box>
 
         <Stack
           direction="row"
@@ -427,7 +455,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
               aria-keyshortcuts="Control+K Meta+K"
               aria-label="Buscar sección"
             >
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Ir a...</Box>
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Buscar sección</Box>
             </Button>
           </Tooltip>
           <Tooltip title="Alt+R abre recursos">
@@ -505,6 +533,75 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
           )}
         </Stack>
       </Toolbar>
+      <Box
+        sx={{
+          px: { xs: 2, md: 4 },
+          pb: 1.25,
+          pt: 0.25,
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          bgcolor: 'rgba(15,17,24,0.94)',
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', lg: 'row' }}
+          spacing={1}
+          justifyContent="space-between"
+          alignItems={{ xs: 'flex-start', lg: 'center' }}
+          useFlexGap
+        >
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+            <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.35 }}>
+              Ahora
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#f8fafc', fontWeight: 700 }}>
+              {currentSectionLabel}
+            </Typography>
+          </Stack>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{
+              width: '100%',
+              maxWidth: { xs: '100%', lg: 'auto' },
+              overflowX: { xs: 'auto', lg: 'visible' },
+              pb: { xs: 0.25, lg: 0 },
+              '&::-webkit-scrollbar': { display: 'none' },
+            }}
+          >
+            {shortcutStripItems.map((item) => {
+              const favorite = favoritePaths.has(item.path);
+              return (
+                <Button
+                  key={item.path}
+                  size="small"
+                  component={RouterLink}
+                  to={item.path}
+                  onClick={() => registerQuickRecent(item.path)}
+                  variant={favorite ? 'contained' : 'outlined'}
+                  color={favorite ? 'secondary' : 'inherit'}
+                  sx={{
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap',
+                    borderColor: favorite ? undefined : 'rgba(148,163,184,0.35)',
+                  }}
+                >
+                  {item.label}
+                </Button>
+              );
+            })}
+            <Button
+              size="small"
+              color="inherit"
+              variant="text"
+              onClick={openQuickNav}
+              sx={{ textTransform: 'none', whiteSpace: 'nowrap' }}
+            >
+              Más secciones
+            </Button>
+          </Stack>
+        </Stack>
+      </Box>
       <Popover
         open={cartOpen}
         anchorEl={cartAnchor}

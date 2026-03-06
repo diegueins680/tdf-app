@@ -1,9 +1,10 @@
 import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 
 const PUBLIC_NAV_ITEMS = [
   { label: 'Fan Hub', to: '/fans' },
@@ -11,6 +12,12 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'Reservar', to: '/reservar' },
   { label: 'Records', to: '/records' },
 ] as const;
+
+type FooterAction = {
+  label: string;
+  kind: 'route' | 'external';
+  value: string;
+};
 
 export default function PublicBranding({
   children,
@@ -22,7 +29,38 @@ export default function PublicBranding({
   showLoginButton?: boolean;
 }) {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const location = useLocation();
   const open = Boolean(menuAnchor);
+  const footerPrimaryAction = useMemo<FooterAction>(() => {
+    if (location.pathname.startsWith('/reservar')) {
+      return { label: 'WhatsApp reservas', kind: 'external', value: STUDIO_WHATSAPP_URL };
+    }
+    if (location.pathname.startsWith('/fans')) {
+      return { label: 'Ver releases', kind: 'route', value: '/records' };
+    }
+    if (location.pathname.startsWith('/records')) {
+      return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
+    }
+    if (location.pathname.startsWith('/marketplace')) {
+      return { label: 'Necesito ayuda', kind: 'route', value: '/feedback' };
+    }
+    return { label: 'Ir al Fan Hub', kind: 'route', value: '/fans' };
+  }, [location.pathname]);
+  const footerSecondaryAction = useMemo<FooterAction>(() => {
+    if (location.pathname.startsWith('/reservar')) {
+      return { label: 'Ingresar y autocompletar', kind: 'route', value: '/login?redirect=/reservar' };
+    }
+    if (location.pathname.startsWith('/fans')) {
+      return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
+    }
+    if (location.pathname.startsWith('/records')) {
+      return { label: 'Abrir Fan Hub', kind: 'route', value: '/fans' };
+    }
+    if (location.pathname.startsWith('/marketplace')) {
+      return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
+    }
+    return { label: 'WhatsApp', kind: 'external', value: STUDIO_WHATSAPP_URL };
+  }, [location.pathname]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -126,34 +164,134 @@ export default function PublicBranding({
       >
         <Container maxWidth="xl">
           <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={1.5}
-            alignItems={{ xs: 'flex-start', md: 'center' }}
+            direction={{ xs: 'column', xl: 'row' }}
+            spacing={3}
+            alignItems={{ xs: 'flex-start', xl: 'center' }}
             justifyContent="space-between"
           >
-            <Typography variant="body2" color="text.secondary">
-              TDF Records
-            </Typography>
-            <Stack direction="row" spacing={2} flexWrap="wrap">
-              <Button
-                size="small"
-                color="inherit"
-                component={RouterLink}
-                to="/whatsapp/consentimiento"
-                sx={{ textTransform: 'none' }}
-              >
-                Consentimiento WhatsApp
-              </Button>
-              <Button
-                size="small"
-                color="inherit"
-                component={RouterLink}
-                to="/whatsapp/ok"
-                sx={{ textTransform: 'none' }}
-              >
-                Confirmación WhatsApp
-              </Button>
+            <Stack spacing={1} sx={{ maxWidth: 460 }}>
+              <Typography variant="subtitle2" sx={{ color: '#f8fafc', letterSpacing: 0.2 }}>
+                TDF Records
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Si te atoras, te dejamos una salida clara desde esta pagina para que sigas avanzando.
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {footerPrimaryAction.kind === 'external' ? (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="secondary"
+                    component="a"
+                    href={footerPrimaryAction.value}
+                    target="_blank"
+                    rel="noreferrer"
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {footerPrimaryAction.label}
+                  </Button>
+                ) : (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="secondary"
+                    component={RouterLink}
+                    to={footerPrimaryAction.value}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {footerPrimaryAction.label}
+                  </Button>
+                )}
+                {footerSecondaryAction.kind === 'external' ? (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    component="a"
+                    href={footerSecondaryAction.value}
+                    target="_blank"
+                    rel="noreferrer"
+                    sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.35)' }}
+                  >
+                    {footerSecondaryAction.label}
+                  </Button>
+                ) : (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    component={RouterLink}
+                    to={footerSecondaryAction.value}
+                    sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.35)' }}
+                  >
+                    {footerSecondaryAction.label}
+                  </Button>
+                )}
+              </Stack>
             </Stack>
+            <Stack spacing={0.75}>
+              <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.35 }}>
+                Explorar
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {PUBLIC_NAV_ITEMS.map((item) => (
+                  <Button
+                    key={item.to}
+                    size="small"
+                    color="inherit"
+                    component={RouterLink}
+                    to={item.to}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+                <Button size="small" color="inherit" component={RouterLink} to="/feedback" sx={{ textTransform: 'none' }}>
+                  Sugerencias
+                </Button>
+                <Button size="small" color="inherit" component={RouterLink} to="/donar" sx={{ textTransform: 'none' }}>
+                  Donar
+                </Button>
+              </Stack>
+            </Stack>
+            <Stack spacing={0.75}>
+              <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.35 }}>
+                Gestion de mensajes
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Button
+                  size="small"
+                  color="inherit"
+                  component={RouterLink}
+                  to="/whatsapp/consentimiento"
+                  sx={{ textTransform: 'none' }}
+                >
+                  Consentimiento WhatsApp
+                </Button>
+                <Button
+                  size="small"
+                  color="inherit"
+                  component={RouterLink}
+                  to="/whatsapp/ok"
+                  sx={{ textTransform: 'none' }}
+                >
+                  Confirmacion WhatsApp
+                </Button>
+              </Stack>
+            </Stack>
+            {showLoginButton && (
+              <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                <Button
+                  size="small"
+                  color="inherit"
+                  component={RouterLink}
+                  to="/login"
+                  sx={{ textTransform: 'none' }}
+                >
+                  Ir a login
+                </Button>
+              </Stack>
+            )}
           </Stack>
         </Container>
       </Box>
