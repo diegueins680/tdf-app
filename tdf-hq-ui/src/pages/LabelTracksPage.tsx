@@ -27,15 +27,12 @@ import { Label } from '../api/label';
 import type { LabelTrackDTO } from '../api/types';
 import { SessionGate } from '../components/SessionGate';
 import { useSession } from '../session/SessionContext';
+import { parsePositiveSafeInt } from '../utils/ids';
 
 export default function LabelTracksPage() {
   const location = useLocation();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const ownerIdOverride = useMemo(() => {
-    const raw = searchParams.get('ownerId');
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  }, [searchParams]);
+  const ownerIdOverride = useMemo(() => parsePositiveSafeInt(searchParams.get('ownerId')), [searchParams]);
   const trackIdOverride = useMemo(() => {
     const trimmed = searchParams.get('trackId')?.trim() ?? '';
     return trimmed.length ? trimmed : null;

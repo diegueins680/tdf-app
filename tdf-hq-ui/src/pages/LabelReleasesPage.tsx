@@ -31,6 +31,7 @@ import type { ArtistProfileDTO, ArtistReleaseDTO, ArtistReleaseUpsert } from '..
 import StreamingPlayer from '../components/StreamingPlayer';
 import { SessionGate } from '../components/SessionGate';
 import { buildReleaseStreamingSources } from '../utils/media';
+import { compareReleaseDateValues, formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
 
 type ReleaseRow = ArtistReleaseDTO & {
   artistName: string;
@@ -64,22 +65,6 @@ const isValidSpotify = (url?: string | null) => {
 const isValidYoutube = (url?: string | null) => {
   if (!url) return false;
   return /youtube\.com|youtu\.be/i.test(url);
-};
-
-const parseDate = (value?: string | null) => {
-  if (!value) return 0;
-  const iso = value.length === 10 ? `${value}T00:00:00Z` : value;
-  const ts = Date.parse(iso);
-  return Number.isNaN(ts) ? 0 : ts;
-};
-
-const formatDate = (value?: string | null) => {
-  if (!value) return 'Sin fecha';
-  const ts = parseDate(value);
-  if (!ts) return 'Sin fecha';
-  return new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }).format(
-    new Date(ts),
-  );
 };
 
 export default function LabelReleasesPage() {
@@ -134,7 +119,7 @@ export default function LabelReleasesPage() {
         }),
       );
       const flat = releasesPerArtist.flat() as ReleaseRow[];
-      return flat.sort((a, b) => parseDate(b.arReleaseDate) - parseDate(a.arReleaseDate));
+      return flat.sort((a, b) => compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'desc'));
     },
   });
 
@@ -167,7 +152,8 @@ export default function LabelReleasesPage() {
     const filtered = releases.filter((release) => {
       if (filterArtistId && release.arArtistId !== filterArtistId) return false;
       if (filterWindow !== 'all') {
-        const ts = parseDate(release.arReleaseDate);
+        const ts = parseReleaseTimestamp(release.arReleaseDate);
+        if (ts === null) return false;
         if (filterWindow === 'upcoming' && ts < now) return false;
         if (filterWindow === 'past' && ts >= now) return false;
       }
@@ -185,8 +171,8 @@ export default function LabelReleasesPage() {
     });
     return [...filtered].sort((a, b) => {
       if (sortOrder === 'artist') return a.artistName.localeCompare(b.artistName);
-      if (sortOrder === 'oldest') return parseDate(a.arReleaseDate) - parseDate(b.arReleaseDate);
-      return parseDate(b.arReleaseDate) - parseDate(a.arReleaseDate);
+      if (sortOrder === 'oldest') return compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'asc');
+      return compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'desc');
     });
   }, [filterArtistId, filterWindow, releases, search, sortOrder]);
 
@@ -242,7 +228,11 @@ export default function LabelReleasesPage() {
 
   const totalReleases = releases.length;
   const totalArtistsWithReleases = new Set(releases.map((r) => r.artistName)).size;
-  const upcomingOrRecent = releases.filter((r) => parseDate(r.arReleaseDate) >= Date.now() - 30 * 24 * 60 * 60 * 1000).length;
+  const recentThreshold = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const upcomingOrRecent = releases.filter((r) => {
+    const ts = parseReleaseTimestamp(r.arReleaseDate);
+    return ts !== null && ts >= recentThreshold;
+  }).length;
 
   const alertMessage = error ?? banner;
 
@@ -605,7 +595,14 @@ export default function LabelReleasesPage() {
                               <Typography variant="h6" noWrap>
                                 {release.arTitle}
                               </Typography>
-                              <Chip label={formatDate(release.arReleaseDate)} size="small" />
+                              <Chip
+                                label={formatReleaseDateLabel(release.arReleaseDate, {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                                size="small"
+                              />
                             </Stack>
                             <Typography variant="body2" color="text.secondary">
                               {release.artistName}

@@ -47,6 +47,7 @@ import { useCmsContent } from '../hooks/useCmsContent';
 import { SessionGate } from '../components/SessionGate';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
+import { compareReleaseDateValues, formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
 import { slugify } from '../utils/slug';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
 
@@ -387,12 +388,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           }));
         }),
       );
-      const parseDate = (value?: string | null) => {
-        const ts = value ? Date.parse(value) : Number.NaN;
-        return Number.isNaN(ts) ? 0 : ts;
-      };
       const flat = perArtist.flat() as ReleaseFeedItem[];
-      return flat.sort((a, b) => parseDate(b.arReleaseDate) - parseDate(a.arReleaseDate));
+      return flat.sort((a, b) => compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'desc'));
     },
   });
 
@@ -401,9 +398,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     const map = new Map<number, ReleaseFeedItem>();
     releaseFeed.forEach((r) => {
       const current = map.get(r.arArtistId);
-      const ts = r.arReleaseDate ? Date.parse(r.arReleaseDate) : 0;
-      const tsCurrent = current?.arReleaseDate ? Date.parse(current.arReleaseDate) : 0;
-      if (!current || ts > tsCurrent) {
+      const ts = parseReleaseTimestamp(r.arReleaseDate);
+      const tsCurrent = parseReleaseTimestamp(current?.arReleaseDate);
+      if (!current || (ts !== null && (tsCurrent === null || ts > tsCurrent))) {
         map.set(r.arArtistId, r);
       }
     });
@@ -612,10 +609,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const isLoading = artistsQuery.isLoading;
   const hasError = artistsQuery.error;
   const formatReleaseDate = (value?: string | null) => {
-    if (!value) return 'Sin fecha';
-    const parsed = Date.parse(value);
-    if (Number.isNaN(parsed)) return 'Sin fecha';
-    return new Intl.DateTimeFormat('es-CO', { month: 'short', day: 'numeric' }).format(new Date(parsed));
+    return formatReleaseDateLabel(value, { month: 'short', day: 'numeric' });
   };
 
   return (
