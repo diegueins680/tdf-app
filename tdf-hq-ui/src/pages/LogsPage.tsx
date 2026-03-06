@@ -20,6 +20,7 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Admin } from '../api/admin';
+import { formatTimestampForDisplay } from '../utils/dateTime';
 
 interface LogEntry {
   logTimestamp: string;
@@ -60,15 +61,6 @@ export default function LogsPage() {
         return 'info';
       default:
         return 'default';
-    }
-  };
-
-  const formatTimestamp = (timestamp: string) => {
-    try {
-      const date = new Date(timestamp);
-      return date.toLocaleString();
-    } catch {
-      return timestamp;
     }
   };
 
@@ -154,7 +146,7 @@ export default function LogsPage() {
                 <TableRow key={idx} hover>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-                      {formatTimestamp(log.logTimestamp)}
+                      {formatTimestampForDisplay(log.logTimestamp)}
                     </Typography>
                   </TableCell>
                   <TableCell>

@@ -32,6 +32,7 @@ import {
 } from '../api/courses';
 import { useSearchParams } from 'react-router-dom';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { formatTimestampForDisplay } from '../utils/dateTime';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 const statusFilters: readonly StatusFilter[] = ['all', 'pending_payment', 'paid', 'cancelled'];
@@ -51,7 +52,7 @@ const parsePositiveLimit = (value: string | null, fallback = 200): number => {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-const formatDate = (iso: string) => new Date(iso).toLocaleString();
+const formatDate = (iso: string) => formatTimestampForDisplay(iso, '-');
 
 const statusChip = (status: string) => {
   const normalized = status.toLowerCase();
