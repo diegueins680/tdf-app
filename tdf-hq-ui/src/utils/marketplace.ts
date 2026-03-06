@@ -4,9 +4,13 @@ export interface OrderStatusMeta {
   desc: string;
 }
 
-const toTokenSet = (status: string): Set<string> => {
+const toTokenList = (status: string): string[] => {
   const normalized = status.toLowerCase();
-  return new Set(normalized.split(/[^a-z0-9]+/).filter(Boolean));
+  return normalized.split(/[^a-z0-9]+/).filter(Boolean);
+};
+
+const toTokenSet = (status: string): Set<string> => {
+  return new Set(toTokenList(status));
 };
 
 const normalizeStatus = (status: string): string => status.trim();
@@ -15,12 +19,21 @@ const normalizeStatus = (status: string): string => status.trim();
 export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
   const normalizedStatus = normalizeStatus(status);
   const norm = normalizedStatus.toLowerCase();
+  const tokenList = toTokenList(norm);
   const tokens = toTokenSet(norm);
   const hasToken = (...values: string[]) => values.some((value) => tokens.has(value));
   const hasFragment = (...values: string[]) => values.some((value) => norm.includes(value));
+  const hasTokenPair = (left: string, right: string) =>
+    tokenList.some((value, idx) => value === left && tokenList[idx + 1] === right);
   const hasPaid = () => hasToken('paid', 'success', 'successful', 'approved', 'complete', 'completed');
+  const hasExplicitNotPaid = () =>
+    hasToken('unpaid') ||
+    hasFragment('not_paid', 'not-paid', 'not paid', 'unpaid') ||
+    hasTokenPair('not', 'paid') ||
+    hasTokenPair('un', 'paid');
   const hasRejected = () =>
-    hasToken('unpaid', 'fail', 'failed', 'reject', 'rejected', 'decline', 'declined', 'deny', 'denied', 'error', 'void', 'voided', 'expire', 'expired');
+    hasExplicitNotPaid() ||
+    hasToken('fail', 'failed', 'reject', 'rejected', 'decline', 'declined', 'deny', 'denied', 'error', 'void', 'voided', 'expire', 'expired');
   const hasCancelled = () => hasToken('cancel', 'cancelled', 'canceled') || hasFragment('cancel');
   const hasRefunded = () => hasToken('refund', 'refunded', 'reversal', 'reversed', 'chargeback');
 

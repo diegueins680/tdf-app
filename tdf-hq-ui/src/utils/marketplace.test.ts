@@ -39,6 +39,12 @@ describe('getOrderStatusMeta', () => {
     expect(meta.color).toBe('default');
   });
 
+  it('treats not-paid variants as rejected instead of paid', () => {
+    expect(getOrderStatusMeta('not_paid').label.toLowerCase()).toContain('rechazado');
+    expect(getOrderStatusMeta('un-paid').label.toLowerCase()).toContain('rechazado');
+    expect(getOrderStatusMeta('paypal_not_paid').label.toLowerCase()).toContain('rechazado');
+  });
+
   it('falls back to process/cancel/delivered mapping', () => {
     expect(getOrderStatusMeta('processing').color).toBe('info');
     expect(getOrderStatusMeta('cancelled').color).toBe('default');
