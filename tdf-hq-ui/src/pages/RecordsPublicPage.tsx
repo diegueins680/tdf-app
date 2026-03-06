@@ -42,15 +42,18 @@ import EditIcon from '@mui/icons-material/Edit';
 
 const BOOKING_ZONE = 'America/Bogota';
 const DEFAULT_DURATION = 120;
-const SERVICE_OPTIONS = [
-  'Vocal recording',
-  'Band recording',
-  'Band rehearsal',
-  'DJ booth rental',
-  'Podcast / Voiceover',
-  'Producción musical',
-  'Mezcla / Post',
-];
+const FALLBACK_SERVICE_OPTIONS = [
+  { value: 'Vocal recording', label: 'Grabación vocal' },
+  { value: 'Band recording', label: 'Grabación de banda' },
+  { value: 'Band rehearsal', label: 'Ensayo de banda' },
+  { value: 'DJ booth rental', label: 'Cabina DJ' },
+  { value: 'Podcast / Voiceover', label: 'Podcast / Locución' },
+  { value: 'Producción musical', label: 'Producción musical' },
+  { value: 'Mezcla / Post', label: 'Mezcla / Post' },
+] as const;
+const FALLBACK_SERVICE_LABELS = Object.fromEntries(
+  FALLBACK_SERVICE_OPTIONS.map((option) => [option.value, option.label]),
+) as Record<string, string>;
 
 const parseDurationMinutes = (raw: string, fallback: number): number => {
   const parsed = Number(raw);
@@ -101,9 +104,10 @@ function BookingRequestDialog({
     const names = (serviceCatalogQuery.data ?? [])
       .filter((svc) => svc.scActive !== false)
       .map((svc) => svc.scName);
-    return names.length > 0 ? names : SERVICE_OPTIONS;
+    return names.length > 0 ? names : FALLBACK_SERVICE_OPTIONS.map((option) => option.value);
   }, [serviceCatalogQuery.data]);
-  const defaultServiceType = serviceOptions[0] ?? SERVICE_OPTIONS[0] ?? 'Recording';
+  const defaultServiceType = serviceOptions[0] ?? FALLBACK_SERVICE_OPTIONS[0]?.value ?? 'Recording';
+  const selectedServiceLabel = FALLBACK_SERVICE_LABELS[serviceType] ?? serviceType;
   useEffect(() => {
     if (!serviceType && defaultServiceType) {
       setServiceType(defaultServiceType);
@@ -261,8 +265,8 @@ function BookingRequestDialog({
         cPrimaryPhone: phone.trim() || null,
       });
       const augmentedNotes = [
-        `Solicitud web (Records CMS)`,
-        `Servicio: ${serviceType}`,
+        'Solicitud web (Lanzamientos)',
+        `Servicio: ${selectedServiceLabel}`,
         selectedRoom?.rName ? `Sala: ${selectedRoom.rName}` : null,
         engineerName.trim() ? `Ingeniero solicitado: ${engineerName.trim()}` : null,
         phone ? `Teléfono: ${phone}` : null,
@@ -287,7 +291,7 @@ function BookingRequestDialog({
       const endIso = parsedEnd.toUTC().toISO();
 
       return Bookings.create({
-        cbTitle: `${serviceType} - ${contactName}`,
+        cbTitle: `${selectedServiceLabel} - ${contactName}`,
         cbStartsAt: startIso ?? '',
         cbEndsAt: endIso ?? '',
         cbStatus: 'Tentative',
@@ -312,7 +316,7 @@ function BookingRequestDialog({
   const handleSubmit = (evt: React.FormEvent) => {
     evt.preventDefault();
     if (!hasToken) {
-      setFormError('No hay token de API configurado para procesar reservas.');
+      setFormError('La reserva en línea no está disponible ahora. Escríbenos y te confirmamos manualmente.');
       return;
     }
     if (!parsedStart.isValid || !parsedEnd.isValid || parsedEnd <= parsedStart) {
@@ -370,7 +374,7 @@ function BookingRequestDialog({
           <Stack spacing={2}>
             {!hasToken && (
               <Alert severity="warning">
-                Configura VITE_PUBLIC_BOOKING_TOKEN o VITE_API_DEMO_TOKEN para habilitar la reserva directa.
+                La reserva directa no está habilitada en este momento. Puedes revisar lanzamientos y escribirnos para coordinar tu sesión.
               </Alert>
             )}
             {successMessage && <Alert severity="success">{successMessage}</Alert>}
@@ -414,11 +418,11 @@ function BookingRequestDialog({
                 value={serviceType}
                 onChange={(e) => setServiceType(e.target.value)}
                 fullWidth
-                helperText="Usa nombres predefinidos para reservar cabinas por defecto."
+                helperText="Elige la opción que mejor describe tu sesión para prepararla mejor."
               >
                 {serviceOptions.map((opt) => (
                   <MenuItem key={opt} value={opt}>
-                    {opt}
+                    {FALLBACK_SERVICE_LABELS[opt] ?? opt}
                   </MenuItem>
                 ))}
               </TextField>
@@ -676,7 +680,7 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
             />
             <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Chip label="Release" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
+                <Chip label="Lanzamiento" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   {release.releasedOn}
                 </Typography>
@@ -767,7 +771,7 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
             </Box>
             <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Chip label="TDF Session" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
+                <Chip label="Sesión en vivo" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   {video.duration}
                 </Typography>
@@ -844,7 +848,7 @@ export default function RecordsPublicPage() {
           const url = toNonEmptyText(payload['url']) ?? `https://www.youtube.com/watch?v=${youtubeId}`;
           return {
             youtubeId,
-            title: toNonEmptyText(payload['title']) ?? toNonEmptyText(entry.ccdTitle) ?? 'TDF Session',
+            title: toNonEmptyText(payload['title']) ?? toNonEmptyText(entry.ccdTitle) ?? 'Sesión en vivo TDF',
             duration: toText(payload['duration']) ?? '',
             guests: toText(payload['guests']) ?? '',
             description: toText(payload['description']) ?? '',
@@ -871,7 +875,7 @@ export default function RecordsPublicPage() {
             const url = toNonEmptyText(link['url']);
             if (!url) return [];
             return [{
-              platform: toNonEmptyText(link['platform']) ?? 'Link',
+              platform: toNonEmptyText(link['platform']) ?? 'Enlace',
               url,
               accent: toNonEmptyText(link['accent']) ?? '#a5b4fc',
             }];
@@ -905,7 +909,7 @@ export default function RecordsPublicPage() {
             title,
             artist: toText(payload['artist']) ?? '',
             recordedAt: toText(payload['recordedAt']) ?? toText(payload['date']) ?? '',
-            vibe: toText(payload['vibe']) ?? toText(payload['tag']) ?? 'Live',
+            vibe: toText(payload['vibe']) ?? toText(payload['tag']) ?? 'En vivo',
             description: toText(payload['description']) ?? '',
             image,
           };
@@ -914,9 +918,9 @@ export default function RecordsPublicPage() {
     return mapped.length > 0 ? mapped : defaultRecordings;
   }, [recordingsQuery.data]);
 
-  const heroTitle = 'Historias desde el estudio, lanzamientos y TDF Sessions en un solo lugar.';
+  const heroTitle = 'Historias desde el estudio, lanzamientos y sesiones en vivo de TDF en un solo lugar.';
   const heroSubtitle =
-    'Mantén al día la página pública de TDF Records con fotos, lanzamientos y videos curados desde el CMS.';
+    'Mantén al día la vitrina pública de TDF Records con fotos, lanzamientos y videos curados desde el CMS.';
   const heroCta = 'Reservar sesión';
   const heroSecondaryCta = 'Ver lanzamientos';
 
@@ -976,7 +980,7 @@ export default function RecordsPublicPage() {
                     size="small"
                     sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
                   >
-                    Lanzamientos (CRUD)
+                    Gestionar lanzamientos
                   </Button>
                 </Tooltip>
               </Stack>
@@ -1068,7 +1072,7 @@ export default function RecordsPublicPage() {
               </Stack>
             </GradientCard>
             <GradientCard
-              title="TDF Sessions"
+              title="Sesiones en vivo TDF"
               actions={
                 canMaintainCms ? (
                   <Tooltip title="Editar sesiones (CMS records-session-*)">
@@ -1191,7 +1195,7 @@ export default function RecordsPublicPage() {
         <Box id="releases" sx={{ mb: 6 }}>
           <SectionTitle
             title="Lanzamientos TDF Records"
-            kicker="Label"
+            kicker="Sello"
             actions={
               canMaintainCms && (
                 <Stack direction="row" spacing={1}>
@@ -1210,21 +1214,21 @@ export default function RecordsPublicPage() {
                     size="small"
                     variant="outlined"
                   >
-                    CRUD lanzamientos
+                    Gestionar lanzamientos
                   </Button>
                 </Stack>
               )
             }
           />
           <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
-            Cada lanzamiento incluye los links oficiales. Edita los enlaces a plataformas en el CMS.
+            Cada lanzamiento incluye sus enlaces oficiales a plataformas. Edita los enlaces desde el CMS.
           </Typography>
           <ReleasesGrid items={releases} />
         </Box>
 
         <Box sx={{ mb: 6 }}>
           <SectionTitle
-            title="TDF Sessions"
+            title="Sesiones en vivo TDF"
             kicker="YouTube"
             actions={
               canMaintainCms && (

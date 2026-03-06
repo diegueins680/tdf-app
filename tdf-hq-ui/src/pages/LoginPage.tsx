@@ -30,7 +30,6 @@ import {
   Tooltip,
   Typography,
   useMediaQuery,
-  type ChipProps,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -44,7 +43,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Navigate, useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
-import { Meta } from '../api/meta';
 import { useThemeMode } from '../theme/AppThemeProvider';
 import { googleLoginRequest, loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
 import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
@@ -79,7 +77,7 @@ const LANDING_LABELS: Record<string, string> = {
   '/fans': 'Comunidad',
   '/estudio/calendario': 'Calendario',
   '/crm/contactos': 'CRM',
-  '/label/artistas': 'Label - Artistas',
+  '/label/artistas': 'Sello / Artistas',
   '/operacion/inventario': 'Inventario',
   '/finanzas/pagos': 'Finanzas',
   '/practicas': 'Prácticas',
@@ -316,33 +314,6 @@ export default function LoginPage() {
     signupMutation.reset();
   }, [location.search, signupPreset.claimArtistId, signupPreset.openSignup, signupPreset.roles, signupMutation]);
 
-  const {
-    data: health,
-    isFetching: healthLoading,
-    error: healthError,
-  } = useQuery({
-    queryKey: ['meta', 'health'],
-    queryFn: Meta.health,
-    retry: false,
-    refetchInterval: 30000,
-    refetchOnWindowFocus: false,
-  });
-
-  const apiStatus = useMemo<{ label: string; color: ChipProps['color'] }>(() => {
-    if (healthLoading) {
-      return { label: 'API: verificando...', color: 'default' };
-    }
-    if (health) {
-      const healthy = (health.status ?? '').toLowerCase() === 'ok';
-      return { label: `API: ${health.status}`, color: healthy ? 'success' : 'warning' };
-    }
-    if (healthError) {
-      return { label: 'API: offline', color: 'error' };
-    }
-    return { label: 'API: offline', color: 'error' };
-  }, [health, healthError, healthLoading]);
-  const showApiStatusChip = healthLoading || Boolean(health);
-
   const fanArtistsQuery = useQuery({
     queryKey: ['signup', 'artists'],
     queryFn: Fans.listArtists,
@@ -383,7 +354,7 @@ export default function LoginPage() {
 
     if (hasArtist) {
       title = 'Ruta para artistas';
-      steps.push('Completa tu bio, géneros y links principales.');
+      steps.push('Completa tu bio, géneros y enlaces principales.');
       steps.push('Publica portada y video destacado.');
       steps.push('Comparte tu URL pública con tu audiencia.');
     } else if (hasIntern) {
@@ -395,7 +366,7 @@ export default function LoginPage() {
       title = 'Ruta para fans';
       steps.push('Sigue a tus artistas favoritos.');
       steps.push('Activa alertas de lanzamientos y eventos.');
-      steps.push('Reserva sesiones o streams cuando quieras.');
+      steps.push('Reserva sesiones o transmisiones cuando quieras.');
     } else if (hasRoles) {
       steps.push('Accede al panel principal y configura tu perfil.');
       steps.push('Explora los módulos disponibles para tu rol.');
@@ -816,9 +787,6 @@ export default function LoginPage() {
                         {mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
                       </IconButton>
                     </Tooltip>
-                    {showApiStatusChip && (
-                      <Chip label={apiStatus.label} color={apiStatus.color} size="small" variant="outlined" />
-                    )}
                   </Stack>
                   <Typography variant="h5" fontWeight={700}>
                     Iniciar sesión
@@ -951,7 +919,7 @@ export default function LoginPage() {
                   <Typography variant="body2">
                     ¿Buscas una clase de prueba?{' '}
                     <Link component={RouterLink} to="/trials" underline="hover">
-                      Solicitar trial
+                      Solicitar clase de prueba
                     </Link>
                   </Typography>
                   <Typography variant="body2">
@@ -1040,7 +1008,7 @@ export default function LoginPage() {
                               Soy artista
                             </Typography>
                             <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                              Crea tu perfil, comparte tu link y presenta tu música.
+                              Crea tu perfil, comparte tu enlace y presenta tu música.
                             </Typography>
                             <Button
                               variant="outlined"
@@ -1314,7 +1282,7 @@ export default function LoginPage() {
                   />
                 </Stack>
                 <TextField
-                  label="Habilidades / skills"
+                  label="Habilidades"
                   value={signupForm.internshipSkills}
                   onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipSkills: event.target.value }))}
                   fullWidth

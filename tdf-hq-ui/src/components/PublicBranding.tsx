@@ -174,7 +174,7 @@ export default function PublicBranding({
                 TDF Records
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Si te atoras, te dejamos una salida clara desde esta pagina para que sigas avanzando.
+                Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {footerPrimaryAction.kind === 'external' ? (
@@ -275,7 +275,7 @@ export default function PublicBranding({
                   to="/whatsapp/ok"
                   sx={{ textTransform: 'none' }}
                 >
-                  Confirmacion WhatsApp
+                  Confirmación WhatsApp
                 </Button>
               </Stack>
             </Stack>

@@ -78,7 +78,7 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'LABEL',
+    title: 'SELLO',
     items: [
       { label: 'Artistas', path: '/label/artistas' },
       { label: 'Proyectos', path: '/label/proyectos' },

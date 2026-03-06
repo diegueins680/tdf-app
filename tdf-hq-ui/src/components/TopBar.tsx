@@ -47,7 +47,7 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   clases: 'Clases',
   'trial-lessons': 'Clases de prueba',
   'trial-queue': 'Solicitudes de prueba',
-  label: 'Label',
+  label: 'Sello',
   artistas: 'Artistas',
   proyectos: 'Proyectos',
   releases: 'Lanzamientos',
@@ -760,7 +760,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
           Manual
         </MenuItem>
         <MenuItem component={RouterLink} to="/docs" onClick={() => setResourcesAnchor(null)}>
-          Docs
+          Documentación
         </MenuItem>
         <MenuItem component={RouterLink} to="/acerca" onClick={() => setResourcesAnchor(null)}>
           Acerca de
@@ -775,7 +775,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
           ChatKit
         </MenuItem>
         <MenuItem component={RouterLink} to="/herramientas/tidal-agent" onClick={() => setResourcesAnchor(null)}>
-          Tidal Agent
+          Agente Tidal
         </MenuItem>
         <MenuItem component={RouterLink} to="/herramientas/creador-musical" onClick={() => setResourcesAnchor(null)}>
           Creador musical
