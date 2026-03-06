@@ -49,6 +49,7 @@ import { buildReleaseStreamingSources } from '../utils/media';
 import { compareReleaseDateValues, formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
 import { slugify } from '../utils/slug';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
+import { recordings, releases as featuredReleases, sessionVideos } from '../constants/recordsContent';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 
@@ -73,6 +74,48 @@ function StatPill({ label, value }: { label: string; value: number }) {
     </Box>
   );
 }
+
+interface CatalogRecoveryCard {
+  eyebrow: string;
+  title: string;
+  description: string;
+  image: string;
+  to: string;
+  action: string;
+}
+
+const FAN_HUB_RECOVERY_CARDS: CatalogRecoveryCard[] = [
+  {
+    eyebrow: featuredReleases[0]?.artist ?? 'Sofia Marquez',
+    title: featuredReleases[0]?.title ?? 'Luna Baja',
+    description:
+      featuredReleases[0]?.blurb ??
+      'Explora los releases mas recientes del label mientras reconectamos el catalogo completo.',
+    image: featuredReleases[0]?.cover ?? recordings[0]?.image ?? '',
+    to: '/records',
+    action: 'Ver releases',
+  },
+  {
+    eyebrow: recordings[0]?.artist ?? 'La Bruma',
+    title: recordings[0]?.title ?? 'Late Night Brass',
+    description:
+      recordings[0]?.description ??
+      'Descubre sesiones destacadas del estudio y agenda tu propia experiencia cuando estes listo.',
+    image: recordings[0]?.image ?? featuredReleases[0]?.cover ?? '',
+    to: '/reservar',
+    action: 'Reservar estudio',
+  },
+  {
+    eyebrow: sessionVideos[0]?.guests ?? 'TDF Sessions',
+    title: sessionVideos[0]?.title ?? 'TDF Sessions',
+    description:
+      sessionVideos[0]?.description ??
+      'Sumate a la proxima sesion en vivo y sigue descubriendo el universo TDF mientras vuelve el hub.',
+    image: recordings[1]?.image ?? recordings[0]?.image ?? featuredReleases[0]?.cover ?? '',
+    to: '/live-sessions/registro',
+    action: 'Ver sesiones',
+  },
+];
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session, login } = useSession();
@@ -602,13 +645,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       .slice(0, 3);
   }, [artists, follows]);
 
-  const errorMessage =
-    artistsQuery.error instanceof Error
-      ? artistsQuery.error.message
-      : 'No se pudo cargar la información de artistas.';
-
   const isLoading = artistsQuery.isLoading;
-  const hasError = artistsQuery.error;
+  const hasArtistCatalogError = artistsQuery.isError;
+  const showCatalogFallback = !isLoading && (hasArtistCatalogError || artists.length === 0);
+  const showCatalogFilters = !showCatalogFallback && artists.length > 0;
+  const emptyArtistMessage = genreFilter
+    ? `No encontramos artistas en "${genreFilter}". Prueba otro genero o limpia el filtro.`
+    : 'Pronto encontraras artistas disponibles para seguir.';
   const formatReleaseDate = (value?: string | null) => {
     return formatReleaseDateLabel(value, { month: 'short', day: 'numeric' });
   };
@@ -687,23 +730,32 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         )}
         {(artistsQuery.isError || profileQuery.isError || followsQuery.isError || artistProfileQuery.isError) && (
           <Alert
-            severity="warning"
+            severity={hasArtistCatalogError ? 'info' : 'warning'}
             action={
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => {
-                  void artistsQuery.refetch();
-                  void profileQuery.refetch();
-                  void followsQuery.refetch();
-                  void artistProfileQuery.refetch();
-                }}
-              >
-                Reintentar
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    void artistsQuery.refetch();
+                    void profileQuery.refetch();
+                    void followsQuery.refetch();
+                    void artistProfileQuery.refetch();
+                  }}
+                >
+                  Reintentar
+                </Button>
+                {hasArtistCatalogError && (
+                  <Button size="small" component={RouterLink} to="/records">
+                    Ver releases
+                  </Button>
+                )}
+              </Stack>
             }
           >
-            Tuvimos un problema cargando tu información. Revisa tu conexión o intenta de nuevo.
+            {hasArtistCatalogError
+              ? 'No pudimos cargar el catalogo completo ahora mismo. Mientras vuelve, aun puedes explorar releases, sesiones y reservas.'
+              : 'Tuvimos un problema cargando tu informacion. Revisa tu conexion o intenta de nuevo.'}
           </Alert>
         )}
 
@@ -1614,18 +1666,69 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Card>
         )}
 
-        {hasError && <Alert severity="error">{errorMessage}</Alert>}
         {isLoading && (
-          <Box display="flex" justifyContent="center" py={6}>
-            <CircularProgress />
-          </Box>
+          <Card sx={{ p: 3, borderRadius: 3 }}>
+            <Stack spacing={1.5} alignItems="center" textAlign="center">
+              <CircularProgress size={22} />
+              <Typography variant="subtitle1" fontWeight={700}>
+                Cargando catalogo de artistas
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Estamos trayendo perfiles, generos y lanzamientos para este hub.
+              </Typography>
+              <Button component={RouterLink} to="/records" size="small">
+                Ver releases mientras tanto
+              </Button>
+            </Stack>
+          </Card>
         )}
 
-        {!isLoading && filteredArtists.length === 0 && (
-          <Alert severity="info">Pronto encontrarás artistas disponibles para seguir.</Alert>
+        {showCatalogFallback && (
+          <Card sx={{ p: 3, borderRadius: 3 }}>
+            <Stack spacing={2}>
+              <Stack spacing={0.5}>
+                <Typography variant="h6">Mientras reconectamos el catalogo</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {hasArtistCatalogError
+                    ? 'No pudimos cargar la lista completa de artistas en este momento. Aun puedes seguir explorando releases, sesiones y experiencias desde aqui.'
+                    : 'Estamos renovando el catalogo del hub. Mientras tanto, aqui tienes tres rutas utiles para seguir descubriendo TDF.'}
+                </Typography>
+              </Stack>
+              <Grid container spacing={2}>
+                {FAN_HUB_RECOVERY_CARDS.map((card) => (
+                  <Grid item xs={12} md={4} key={card.title}>
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        height: '100%',
+                        borderRadius: 3,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
+                    >
+                      {card.image && <CardMedia component="img" height="180" image={card.image} alt={card.title} />}
+                      <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                        <Typography variant="overline" color="text.secondary">
+                          {card.eyebrow}
+                        </Typography>
+                        <Typography variant="h6">{card.title}</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
+                          {card.description}
+                        </Typography>
+                        <Button component={RouterLink} to={card.to} variant="contained" size="small" sx={{ alignSelf: 'flex-start' }}>
+                          {card.action}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Stack>
+          </Card>
         )}
 
-        {!hasFollows && suggestedArtists.length > 0 && (
+        {!showCatalogFallback && !hasFollows && suggestedArtists.length > 0 && (
           <Card sx={{ p: 2, mb: 2 }}>
             <Typography variant="h6" gutterBottom>Recomendados para ti</Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -1644,40 +1747,47 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Card>
         )}
 
-        <Stack spacing={1} sx={{ mb: 2 }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-            <TextField
-              size="small"
-              placeholder="Buscar géneros"
-              value={genreSearch}
-              onChange={(e) => setGenreSearch(e.target.value)}
-              sx={{ minWidth: 200, maxWidth: 320 }}
-            />
-            <Button
-              size="small"
-              variant="text"
-              onClick={() => setShowAllGenres((v) => !v)}
-              disabled={filteredGenreOptions.length <= 14}
-            >
-              {showAllGenres ? 'Ver menos' : 'Ver todos'}
-            </Button>
-          </Stack>
-          <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-            <Chip label="Todos los géneros" onClick={() => setGenreFilter('')} color={genreFilter ? 'default' : 'primary'} />
-            {visibleGenreOptions.map((g) => (
-              <Chip
-                key={g}
-                label={g}
-                onClick={() => setGenreFilter(g)}
-                color={genreFilter === g ? 'primary' : 'default'}
-                variant={genreFilter === g ? 'filled' : 'outlined'}
+        {showCatalogFilters && (
+          <Stack spacing={1} sx={{ mb: 2 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
+              <TextField
+                size="small"
+                placeholder="Buscar géneros"
+                value={genreSearch}
+                onChange={(e) => setGenreSearch(e.target.value)}
+                sx={{ minWidth: 200, maxWidth: 320 }}
               />
-            ))}
+              <Button
+                size="small"
+                variant="text"
+                onClick={() => setShowAllGenres((v) => !v)}
+                disabled={filteredGenreOptions.length <= 14}
+              >
+                {showAllGenres ? 'Ver menos' : 'Ver todos'}
+              </Button>
+            </Stack>
+            <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+              <Chip label="Todos los géneros" onClick={() => setGenreFilter('')} color={genreFilter ? 'default' : 'primary'} />
+              {visibleGenreOptions.map((g) => (
+                <Chip
+                  key={g}
+                  label={g}
+                  onClick={() => setGenreFilter(g)}
+                  color={genreFilter === g ? 'primary' : 'default'}
+                  variant={genreFilter === g ? 'filled' : 'outlined'}
+                />
+              ))}
+            </Stack>
           </Stack>
-        </Stack>
+        )}
 
-        <Grid container spacing={3} id="artist-list">
-          {filteredArtists.map((artist) => {
+        {!showCatalogFallback && filteredArtists.length === 0 && (
+          <Alert severity="info">{emptyArtistMessage}</Alert>
+        )}
+
+        {showCatalogFilters && (
+          <Grid container spacing={3} id="artist-list">
+            {filteredArtists.map((artist) => {
             const spotifyUrl = artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
             const youtubeUrl =
               artist.apFeaturedVideoUrl ??
@@ -1890,9 +2000,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </CardContent>
               </Card>
             </Grid>
-            );
-          })}
-        </Grid>
+              );
+            })}
+          </Grid>
+        )}
       </Stack>
       </Box>
       <Dialog open={loginPromptOpen} onClose={() => setLoginPromptOpen(false)}>

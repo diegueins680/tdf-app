@@ -263,13 +263,34 @@ export default function PublicBookingPage() {
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
   const studioCurrency = useMemo(() => services[0]?.currency ?? 'USD', [services]);
-  const healthChip = useMemo(() => {
-    if (healthQuery.isLoading) return <Chip label="API…" size="small" variant="outlined" />;
-    if (healthQuery.isError) return <Chip label="API offline" size="small" color="error" variant="outlined" />;
-    const status = healthQuery.data?.status ?? 'unknown';
-    if (status === 'ok') return <Chip label="API online" size="small" color="success" variant="outlined" />;
-    return <Chip label="API degradada" size="small" color="warning" variant="outlined" />;
-  }, [healthQuery.data?.status, healthQuery.isError, healthQuery.isLoading]);
+  const usingFallbackServices =
+    serviceCatalogQuery.isFetched && (serviceCatalogQuery.isError || (serviceCatalogQuery.data?.length ?? 0) === 0);
+  const usingFallbackRooms =
+    roomsQuery.isFetched && (roomsQuery.isError || (roomsQuery.data?.length ?? 0) === 0);
+  const requiresManualConfirmation =
+    usingFallbackServices ||
+    usingFallbackRooms ||
+    healthQuery.isError ||
+    (Boolean(healthQuery.data?.status) && String(healthQuery.data?.status).toLowerCase() !== 'ok');
+  const bookingStatusChip = useMemo(() => {
+    if (requiresManualConfirmation) {
+      return <Chip label="Te confirmamos por email" size="small" color="warning" variant="outlined" />;
+    }
+    if (healthQuery.isLoading && !healthQuery.data) {
+      return <Chip label="Preparando agenda" size="small" variant="outlined" />;
+    }
+    if (String(healthQuery.data?.status ?? '').toLowerCase() === 'ok') {
+      return <Chip label="Reserva en línea" size="small" color="success" variant="outlined" />;
+    }
+    return <Chip label="Reserva guiada" size="small" variant="outlined" />;
+  }, [healthQuery.data, healthQuery.isLoading, requiresManualConfirmation]);
+  const bookingReadinessNote = useMemo(() => {
+    if (!requiresManualConfirmation) return null;
+    if (usingFallbackServices || usingFallbackRooms) {
+      return 'Estamos mostrando la agenda base mientras reconectamos el estudio. Si no ves el servicio exacto o la sala final, envía la solicitud igual y confirmamos los detalles contigo por correo o WhatsApp.';
+    }
+    return 'Puedes dejar la solicitud ahora mismo. Confirmaremos disponibilidad y recursos contigo por correo o WhatsApp antes de bloquear la sesión.';
+  }, [requiresManualConfirmation, usingFallbackRooms, usingFallbackServices]);
   const [form, setForm] = useState<FormState>(() => buildInitialForm(defaultService, roomOptions));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1108,7 +1129,7 @@ export default function PublicBookingPage() {
                 <Typography variant="h4" fontWeight={800}>
                   Reserva un servicio con TDF
                 </Typography>
-                {healthChip}
+                {bookingStatusChip}
               </Stack>
               <Typography variant="body1" color="text.secondary">
                 Completa tus datos y agenda el horario que prefieras. Confirmaremos la reserva por correo y, si aún no
@@ -1123,6 +1144,11 @@ export default function PublicBookingPage() {
               {priceBanner && (
                 <Alert severity="info" variant="outlined">
                   {priceBanner}
+                </Alert>
+              )}
+              {bookingReadinessNote && (
+                <Alert severity="info" variant="outlined">
+                  {bookingReadinessNote}
                 </Alert>
               )}
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
