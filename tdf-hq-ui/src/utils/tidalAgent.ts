@@ -76,9 +76,9 @@ const deriveTags = (prompt: string, mood?: string) => {
 };
 
 export const generateTidalCode = (prompt: string, mood?: string): { code: string; tempo: number; tags: string[] } => {
-  const base = prompt.toLowerCase();
-  const isTechno = base.includes('techno') || (mood ?? '').toLowerCase().includes('club');
-  const isAmbient = base.includes('ambient') || base.includes('drone') || (mood ?? '').toLowerCase().includes('ambient');
+  const context = `${prompt} ${mood ?? ''}`.toLowerCase();
+  const isTechno = context.includes('techno') || context.includes('club') || context.includes('rave');
+  const isAmbient = context.includes('ambient') || context.includes('drone');
   const tempo = deriveTempo(prompt, mood);
   const tags = deriveTags(prompt, mood);
   if (isAmbient) {

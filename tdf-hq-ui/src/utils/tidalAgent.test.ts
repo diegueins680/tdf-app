@@ -1,4 +1,4 @@
-import { extractTidalCode } from './tidalAgent';
+import { extractTidalCode, generateTidalCode } from './tidalAgent';
 
 describe('extractTidalCode', () => {
   it('keeps valid whitelisted commands', () => {
@@ -17,5 +17,21 @@ describe('extractTidalCode', () => {
     const result = extractTidalCode('hush');
 
     expect(result).toBe('hush');
+  });
+});
+
+describe('generateTidalCode', () => {
+  it('selects the techno pattern for club prompts', () => {
+    const result = generateTidalCode('Club groove for the night');
+
+    expect(result.code).toContain('sound "bd*4"');
+    expect(result.tempo).toBe(132);
+  });
+
+  it('selects the ambient pattern when mood is drone', () => {
+    const result = generateTidalCode('Slow atmosphere', 'drone');
+
+    expect(result.code).toContain('sound "pad*2 mist"');
+    expect(result.tempo).toBe(78);
   });
 });
