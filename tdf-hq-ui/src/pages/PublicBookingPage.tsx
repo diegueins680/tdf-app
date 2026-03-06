@@ -21,6 +21,7 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
@@ -248,6 +249,7 @@ export default function PublicBookingPage() {
   }, [roomsQuery.data]);
   const defaultService = services[0]?.name ?? 'Reserva';
   const { session, logout } = useSession();
+  const isMobile = useMediaQuery('(max-width:600px)');
   const appliedServiceQuery = useRef(false);
   const appliedStoredProfile = useRef(false);
   const userTimeZone = useMemo(() => {
@@ -1209,13 +1211,37 @@ export default function PublicBookingPage() {
               <Grid item xs={12} md={8}>
                 <form onSubmit={handleFormSubmit}>
                   <Stack spacing={2.5}>
-                    <Stepper activeStep={activeStep} alternativeLabel>
-                      {BOOKING_STEPS.map((label) => (
-                        <Step key={label}>
-                          <StepLabel>{label}</StepLabel>
-                        </Step>
-                      ))}
-                    </Stepper>
+                    {isMobile ? (
+                      <Stack spacing={1}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                          <Typography variant="body2" color="text.secondary">
+                            Paso {activeStep + 1} de {BOOKING_STEPS.length}
+                          </Typography>
+                          <Chip label={BOOKING_STEPS[activeStep]} size="small" color="primary" variant="outlined" />
+                        </Stack>
+                        <Stack direction="row" spacing={1}>
+                          {BOOKING_STEPS.map((label, index) => (
+                            <Box
+                              key={label}
+                              sx={(theme) => ({
+                                flex: 1,
+                                height: 6,
+                                borderRadius: 999,
+                                bgcolor: index <= activeStep ? 'primary.main' : theme.palette.action.disabledBackground,
+                              })}
+                            />
+                          ))}
+                        </Stack>
+                      </Stack>
+                    ) : (
+                      <Stepper activeStep={activeStep} alternativeLabel>
+                        {BOOKING_STEPS.map((label) => (
+                          <Step key={label}>
+                            <StepLabel>{label}</StepLabel>
+                          </Step>
+                        ))}
+                      </Stepper>
+                    )}
                     <Grid container spacing={2.5}>
                       {activeStep === 0 && (
                         <>
@@ -1272,8 +1298,17 @@ export default function PublicBookingPage() {
                             </Stack>
                           </Grid>
                           <Grid item xs={12}>
-                            <Stack direction="row" justifyContent="flex-end">
-                              <Button variant="contained" onClick={goToScheduleStep} disabled={formDisabled}>
+                            <Stack
+                              direction={{ xs: 'column', sm: 'row' }}
+                              justifyContent="flex-end"
+                              alignItems={{ xs: 'stretch', sm: 'center' }}
+                            >
+                              <Button
+                                variant="contained"
+                                onClick={goToScheduleStep}
+                                disabled={formDisabled}
+                                fullWidth={isMobile}
+                              >
                                 Continuar
                               </Button>
                             </Stack>
@@ -1566,11 +1601,25 @@ export default function PublicBookingPage() {
                             />
                           </Grid>
                           <Grid item xs={12}>
-                            <Stack direction="row" justifyContent="space-between">
-                              <Button variant="text" onClick={() => setActiveStep(0)} disabled={formDisabled}>
+                            <Stack
+                              direction={{ xs: 'column', sm: 'row' }}
+                              justifyContent="space-between"
+                              spacing={1}
+                            >
+                              <Button
+                                variant="text"
+                                onClick={() => setActiveStep(0)}
+                                disabled={formDisabled}
+                                fullWidth={isMobile}
+                              >
                                 Volver
                               </Button>
-                              <Button variant="contained" onClick={goToConfirmStep} disabled={formDisabled}>
+                              <Button
+                                variant="contained"
+                                onClick={goToConfirmStep}
+                                disabled={formDisabled}
+                                fullWidth={isMobile}
+                              >
                                 Revisar reserva
                               </Button>
                             </Stack>
@@ -1649,11 +1698,26 @@ export default function PublicBookingPage() {
                             </Card>
                           </Grid>
                           <Grid item xs={12}>
-                            <Stack direction="row" justifyContent="space-between" spacing={1}>
-                              <Button variant="text" onClick={() => setActiveStep(1)} disabled={formDisabled}>
+                            <Stack
+                              direction={{ xs: 'column', sm: 'row' }}
+                              justifyContent="space-between"
+                              spacing={1}
+                            >
+                              <Button
+                                variant="text"
+                                onClick={() => setActiveStep(1)}
+                                disabled={formDisabled}
+                                fullWidth={isMobile}
+                              >
                                 Volver
                               </Button>
-                              <Button type="submit" variant="contained" size="large" disabled={formDisabled}>
+                              <Button
+                                type="submit"
+                                variant="contained"
+                                size="large"
+                                disabled={formDisabled}
+                                fullWidth={isMobile}
+                              >
                                 {success ? 'Reserva enviada' : submitting ? 'Enviando…' : 'Confirmar reserva'}
                               </Button>
                             </Stack>

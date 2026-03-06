@@ -143,6 +143,12 @@ const HIDDEN_RADIO_PATH_PREFIXES = [
   '/whatsapp/ok',
 ];
 
+const RADIO_ON_DEMAND_PATH_PREFIXES = [
+  '/inicio',
+  '/fans',
+  '/records',
+];
+
 function PromptList({ prompts }: { prompts: Prompt[] }) {
   if (prompts.length === 0) {
     return (
@@ -205,7 +211,14 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 export default function RadioWidget() {
   const navigate = useNavigate();
   const location = useLocation();
-  const hideRadioForRoute = HIDDEN_RADIO_PATH_PREFIXES.some((prefix) => location.pathname.startsWith(prefix));
+  const requestedRadioView = location.hash === '#radio';
+  const hideRadioForRoute =
+    HIDDEN_RADIO_PATH_PREFIXES.some((prefix) => location.pathname.startsWith(prefix))
+    || (
+      RADIO_ON_DEMAND_PATH_PREFIXES.some((prefix) => location.pathname.startsWith(prefix))
+      && !requestedRadioView
+    );
+  const radioEnabled = !hideRadioForRoute;
   const LAST_AUDIO_INPUT_KEY = 'radio-last-audio-input';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
@@ -382,6 +395,7 @@ export default function RadioWidget() {
     staleTime: 12 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
     retry: false,
+    enabled: radioEnabled,
   });
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -500,6 +514,7 @@ export default function RadioWidget() {
     staleTime: 60_000,
     gcTime: 5 * 60_000,
     retry: false,
+    enabled: radioEnabled,
   });
   const refetchStreams = radioSearch.refetch;
   const streamsFetching = radioSearch.isFetching;
@@ -936,6 +951,7 @@ export default function RadioWidget() {
 
   // Publish presence so other perfiles can see current stream.
   useEffect(() => {
+    if (!radioEnabled) return undefined;
     if (!isPlaying || !activeStation.streamUrl) {
       void RadioAPI.clearPresence().catch(() => undefined);
       return undefined;
@@ -952,7 +968,7 @@ export default function RadioWidget() {
     return () => {
       clearTimeout(timer);
     };
-  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isPlaying]);
+  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isPlaying, radioEnabled]);
 
   const fetchNowPlaying = useCallback(async () => {
     if (!activeStation.streamUrl) {
@@ -972,6 +988,10 @@ export default function RadioWidget() {
   }, [activeStation.streamUrl]);
 
   useEffect(() => {
+    if (!radioEnabled) {
+      setNowPlayingTitle(null);
+      return;
+    }
     if (!isPlaying || !activeStation.streamUrl) {
       setNowPlayingTitle(null);
       return;
@@ -982,7 +1002,7 @@ export default function RadioWidget() {
       void fetchNowPlaying();
     }, 30000);
     return () => window.clearInterval(interval);
-  }, [activeStation.streamUrl, fetchNowPlaying, isPlaying]);
+  }, [activeStation.streamUrl, fetchNowPlaying, isPlaying, radioEnabled]);
 
   useEffect(() => {
     const handleLoadStream = (event: Event) => {

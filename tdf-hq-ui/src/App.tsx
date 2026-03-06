@@ -82,18 +82,24 @@ import WhatsAppConsentPage from './pages/WhatsAppConsentPage';
 import PublicWhatsAppConsentPage from './pages/PublicWhatsAppConsentPage';
 import PublicWhatsAppConsentSuccessPage from './pages/PublicWhatsAppConsentSuccessPage';
 
+const DESKTOP_NAV_MIN_WIDTH = 1024;
+
+const readStoredSidebarCollapsed = () => {
+  if (typeof window === 'undefined') return false;
+  if (window.innerWidth < DESKTOP_NAV_MIN_WIDTH) return true;
+  const saved = window.localStorage.getItem('sidebar-collapsed');
+  if (saved !== null) return saved === '1';
+  return false;
+};
+
 function Shell() {
   const { session } = useSession();
   const location = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const saved = window.localStorage.getItem('sidebar-collapsed');
-    if (saved !== null) return saved === '1';
-    return window.innerWidth < 1024;
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(readStoredSidebarCollapsed);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (window.innerWidth < DESKTOP_NAV_MIN_WIDTH) return;
     try {
       window.localStorage.setItem('sidebar-collapsed', sidebarCollapsed ? '1' : '0');
     } catch {
@@ -101,8 +107,27 @@ function Shell() {
     }
   }, [sidebarCollapsed]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let wasDesktop = window.innerWidth >= DESKTOP_NAV_MIN_WIDTH;
+    const handleResize = () => {
+      const isDesktop = window.innerWidth >= DESKTOP_NAV_MIN_WIDTH;
+      if (isDesktop === wasDesktop) return;
+      wasDesktop = isDesktop;
+      if (!isDesktop) {
+        setSidebarCollapsed(true);
+        return;
+      }
+      setSidebarCollapsed(readStoredSidebarCollapsed());
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   const handleNavigateFromSidebar = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+    if (typeof window !== 'undefined' && window.innerWidth < DESKTOP_NAV_MIN_WIDTH) {
       setSidebarCollapsed(true);
     }
   };
@@ -112,7 +137,7 @@ function Shell() {
     if (sidebarCollapsed) return;
     const handler = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      if (window.innerWidth < 1024) {
+      if (window.innerWidth < DESKTOP_NAV_MIN_WIDTH) {
         setSidebarCollapsed(true);
       }
     };
@@ -127,7 +152,9 @@ function Shell() {
   }
 
   const hideFloatingAssistants =
-    location.pathname.startsWith('/marketplace')
+    location.pathname === '/inicio'
+    || location.pathname.startsWith('/records')
+    || location.pathname.startsWith('/marketplace')
     || location.pathname.startsWith('/configuracion/cursos')
     || location.pathname.startsWith('/configuracion/cms')
     || location.pathname.startsWith('/configuracion/roles-permisos')

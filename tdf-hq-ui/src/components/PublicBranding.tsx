@@ -5,6 +5,13 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
+const PUBLIC_NAV_ITEMS = [
+  { label: 'Fan Hub', to: '/fans' },
+  { label: 'Marketplace', to: '/marketplace' },
+  { label: 'Reservar', to: '/reservar' },
+  { label: 'Records', to: '/records' },
+] as const;
+
 export default function PublicBranding({
   children,
   showHeader = true,
@@ -43,6 +50,23 @@ export default function PublicBranding({
                     sx={{ filter: 'brightness(0) invert(1)' }}
                   />
                 </Box>
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  sx={{ display: { xs: 'none', md: 'flex' }, flexWrap: 'wrap' }}
+                >
+                  {PUBLIC_NAV_ITEMS.map((item) => (
+                    <Button
+                      key={item.to}
+                      color="inherit"
+                      component={RouterLink}
+                      to={item.to}
+                      sx={{ textTransform: 'none', color: '#cbd5e1' }}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+                </Stack>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1.5}>
                 {showLoginButton && (
@@ -72,9 +96,11 @@ export default function PublicBranding({
                   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 >
-                  <MenuItem component={RouterLink} to="/reservar" onClick={() => setMenuAnchor(null)}>
-                    Reservar
-                  </MenuItem>
+                  {PUBLIC_NAV_ITEMS.map((item) => (
+                    <MenuItem key={item.to} component={RouterLink} to={item.to} onClick={() => setMenuAnchor(null)}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
                   <MenuItem component={RouterLink} to="/donar" onClick={() => setMenuAnchor(null)}>
                     Donar
                   </MenuItem>

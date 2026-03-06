@@ -42,9 +42,8 @@ import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
 import { useSession } from '../session/SessionContext';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
-import { SessionGate } from '../components/SessionGate';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
 import { compareReleaseDateValues, formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
@@ -78,6 +77,7 @@ function StatPill({ label, value }: { label: string; value: number }) {
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session, login } = useSession();
   const navigate = useNavigate();
+  const location = useLocation();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -110,7 +110,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
   const artistSlugTouchedRef = useRef(false);
   const hasAuthToken = Boolean(session?.apiToken);
-  const isAuthenticated = Boolean(hasAuthToken && viewerId);
+  const isAuthenticated = Boolean(session);
+  const radioTargetPath = `${location.pathname}#radio`;
   const GENRE_FILTER_KEY = 'fan-hub:genre-filter';
   const [genreFilter, setGenreFilter] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
@@ -671,13 +672,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   to="/reservar"
                   clickable
                 />
-                <Chip
-                  label="Editar CMS"
-                  component={RouterLink}
-                  to="/configuracion/cms"
-                  clickable
-                  variant="outlined"
-                />
+                {canManageReleases && (
+                  <Chip
+                    label="Editar CMS"
+                    component={RouterLink}
+                    to="/configuracion/cms"
+                    clickable
+                    variant="outlined"
+                  />
+                )}
               </Stack>
             </Stack>
           </Alert>
@@ -758,11 +761,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   </Button>
                   <Button
                     component={RouterLink}
-                    to="/marketplace"
+                    to={canManageReleases ? '/label/releases' : '/marketplace'}
                     variant="text"
                     size="small"
                   >
-                    Publicar (label)
+                    {canManageReleases ? 'Gestionar releases' : 'Explorar catálogo'}
                   </Button>
                 </Stack>
               </Stack>
@@ -816,7 +819,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   Únete a rooms de streaming o escucha el radio curado mientras sigues artistas.
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <Button component={RouterLink} to="/inicio#radio" variant="contained" color="secondary" size="small">
+                  <Button component={RouterLink} to={radioTargetPath} variant="contained" color="secondary" size="small">
                     Abrir radio
                   </Button>
                   {session?.partyId && (
@@ -832,7 +835,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
-            <SessionGate requireToken message="Inicia sesión para ver lanzamientos personalizados.">
             <Card sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="h6">Novedades de tus artistas</Typography>
@@ -854,8 +856,38 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   Ingresa con tu cuenta para ver lanzamientos personalizados y seguir artistas.
                 </Alert>
               )}
-              {!canSeeReleaseFeed && (
-                <Alert severity="info">Inicia sesión con rol Fan/Customer para ver lanzamientos personalizados.</Alert>
+              {isAuthenticated && !hasAuthToken && (
+                <Alert
+                  severity="info"
+                  action={
+                    <Button component={RouterLink} to="/login" size="small" variant="contained">
+                      Reingresar
+                    </Button>
+                  }
+                >
+                  Necesitamos renovar tu sesión para cargar tu feed personalizado.
+                </Alert>
+              )}
+              {isAuthenticated && hasAuthToken && !canSeeReleaseFeed && (
+                <Alert
+                  severity="info"
+                  action={
+                    !isFan && !canManageReleases ? (
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => enableFanRoleMutation.mutate()}
+                        disabled={enableFanRoleMutation.isPending}
+                      >
+                        {enableFanRoleMutation.isPending ? 'Activando…' : 'Activar Fan'}
+                      </Button>
+                    ) : undefined
+                  }
+                >
+                  {canManageReleases
+                    ? 'Tu cuenta puede gestionar releases, pero aún no hay artistas disponibles para cargar este feed.'
+                    : 'Activa tu rol Fan para recibir lanzamientos personalizados en este hub.'}
+                </Alert>
               )}
               {canSeeReleaseFeed && releaseFeedQuery.isLoading && (
                 <Box display="flex" justifyContent="center" py={3}>
@@ -1100,13 +1132,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </Stack>
               )}
             </Card>
-            </SessionGate>
           </Grid>
           <Grid item xs={12} md={4}>
             <Stack spacing={2} height="100%">
               <Card sx={{ p: 3 }}>
                 <Stack spacing={1.5}>
-                  <Typography variant="h6">Panel rápido</Typography>
+                  <Typography variant="h6">
+                    {!isAuthenticated ? 'Empieza aquí' : canManageReleases ? 'Panel label' : 'Panel rápido'}
+                  </Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     <StatPill label="Artistas que sigues" value={follows.length} />
                     {artistProfileQuery.data && (
@@ -1114,19 +1147,41 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     )}
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
-                    Actualiza tu bio y enlaces para subir la tasa de follow. ¿Tienes un nuevo clip? Añádelo como video destacado.
+                    {!isAuthenticated
+                      ? 'Explora artistas, guarda favoritos al crear tu cuenta y vuelve para seguir sus lanzamientos.'
+                      : canManageReleases
+                        ? 'Revisa releases, perfiles y activos del hub desde un solo lugar.'
+                        : isFan
+                          ? 'Actualiza tu perfil fan y sigue artistas para ordenar mejor tu feed.'
+                          : 'Activa tu rol Fan para guardar artistas y recibir novedades personalizadas.'}
                   </Typography>
-                  <Button component={RouterLink} to="/records" variant="outlined">
-                    Ver Sessions y releases
-                  </Button>
+                  {!isAuthenticated && (
+                    <Button component={RouterLink} to="/login?signup=1&roles=Fan&redirect=/fans" variant="outlined">
+                      Crear cuenta fan
+                    </Button>
+                  )}
+                  {isAuthenticated && canManageReleases && (
+                    <Button component={RouterLink} to="/label/releases" variant="outlined">
+                      Gestionar releases
+                    </Button>
+                  )}
+                  {isAuthenticated && !canManageReleases && (
+                    <Button component={RouterLink} to="/records" variant="outlined">
+                      Ver Sessions y releases
+                    </Button>
+                  )}
                 </Stack>
               </Card>
               <Card sx={{ p: 3 }}>
                 <Stack spacing={1.5}>
-                  <Typography variant="h6">Sugerencias para seguir</Typography>
+                  <Typography variant="h6">
+                    {!isAuthenticated ? 'Artistas destacados' : 'Sugerencias para seguir'}
+                  </Typography>
                   {suggestedArtists.length === 0 && (
                     <Typography variant="body2" color="text.secondary">
-                      Ya sigues a todos los artistas activos en el hub.
+                      {!isAuthenticated
+                        ? 'Inicia sesión para guardar favoritos y recibir nuevos releases aquí.'
+                        : 'Ya sigues a todos los artistas activos en el hub.'}
                     </Typography>
                   )}
                   {suggestedArtists.length > 0 && (

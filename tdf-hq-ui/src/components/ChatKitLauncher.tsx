@@ -18,10 +18,12 @@ import { createChatKitClientSecretFetcher } from '../utils/chatkit';
 export default function ChatKitLauncher() {
   const [open, setOpen] = useState(false);
   const workflowId = env.read('VITE_CHATKIT_WORKFLOW_ID') ?? '';
+  const supportsChatKit = typeof window !== 'undefined' && typeof window.crypto?.randomUUID === 'function';
 
   useEffect(() => {
+    if (!supportsChatKit) return;
     reportMissingEnv(['VITE_CHATKIT_WORKFLOW_ID']);
-  }, []);
+  }, [supportsChatKit]);
 
   const getClientSecret = useMemo(
     () => createChatKitClientSecretFetcher(workflowId),
@@ -31,6 +33,10 @@ export default function ChatKitLauncher() {
   const chatkit = useChatKit({
     api: { getClientSecret },
   });
+
+  if (!workflowId || !supportsChatKit) {
+    return null;
+  }
 
   return (
     <>

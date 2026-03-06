@@ -185,7 +185,10 @@ export default function LoginPage() {
   const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
   const [googleStatus, setGoogleStatus] = useState<string | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
-  const [showOnboardingCards, setShowOnboardingCards] = useState(false);
+  const [showOnboardingCards, setShowOnboardingCards] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 900;
+  });
   const textFieldSx = useMemo(
     () => ({
       '& .MuiInputLabel-root': {
@@ -232,6 +235,7 @@ export default function LoginPage() {
 
   const { mode, toggleMode } = useThemeMode();
   const isMobile = useMediaQuery('(max-width:600px)');
+  const isWideLayout = useMediaQuery('(min-width:900px)');
   const loginMutation = useMutation({
     mutationFn: (payload: { username: string; password: string }) => loginRequest(payload),
   });
@@ -337,6 +341,7 @@ export default function LoginPage() {
     }
     return { label: 'API: offline', color: 'error' };
   }, [health, healthError, healthLoading]);
+  const showApiStatusChip = healthLoading || Boolean(health);
 
   const fanArtistsQuery = useQuery({
     queryKey: ['signup', 'artists'],
@@ -811,7 +816,9 @@ export default function LoginPage() {
                         {mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
                       </IconButton>
                     </Tooltip>
-                    <Chip label={apiStatus.label} color={apiStatus.color} size="small" variant="outlined" />
+                    {showApiStatusChip && (
+                      <Chip label={apiStatus.label} color={apiStatus.color} size="small" variant="outlined" />
+                    )}
                   </Stack>
                   <Typography variant="h5" fontWeight={700}>
                     Iniciar sesión
@@ -953,26 +960,23 @@ export default function LoginPage() {
                       Ir al Fan Hub
                     </Link>
                   </Typography>
-                  {!googleClientId && (
-                    <Typography variant="caption" color="text.secondary">
-                      El inicio con Google no está disponible en este entorno.
-                    </Typography>
-                  )}
                 </Stack>
               </Stack>
             </Paper>
           </Box>
           <Box sx={{ width: '100%', maxWidth: 440 }}>
-            <Button
-              fullWidth
-              variant="text"
-              onClick={() => setShowOnboardingCards((prev) => !prev)}
-              sx={{ textTransform: 'none', color: 'rgba(226,232,240,0.88)' }}
-            >
-              {showOnboardingCards ? 'Ocultar rutas rápidas' : 'Soy nuevo: ver rutas rápidas'}
-            </Button>
-            <Collapse in={showOnboardingCards} unmountOnExit>
-              <Fade in={showOnboardingCards} timeout={350}>
+            {!isWideLayout && (
+              <Button
+                fullWidth
+                variant="text"
+                onClick={() => setShowOnboardingCards((prev) => !prev)}
+                sx={{ textTransform: 'none', color: 'rgba(226,232,240,0.88)' }}
+              >
+                {showOnboardingCards ? 'Ocultar rutas rápidas' : 'Soy nuevo: ver rutas rápidas'}
+              </Button>
+            )}
+            <Collapse in={isWideLayout || showOnboardingCards} unmountOnExit={!isWideLayout}>
+              <Fade in={isWideLayout || showOnboardingCards} timeout={350}>
                 <Paper
                   elevation={0}
                   sx={{
