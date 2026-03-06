@@ -40,16 +40,28 @@ const normalizeNonEmptyString = (value: unknown): string | null => {
   return trimmed === '' ? null : trimmed;
 };
 
-const normalizeStringArray = (value: unknown): string[] => {
+interface NormalizeStringArrayOptions {
+  lowerCase?: boolean;
+  dedupeCaseInsensitive?: boolean;
+}
+
+const normalizeStringArray = (
+  value: unknown,
+  options: NormalizeStringArrayOptions = {},
+): string[] => {
+  const { lowerCase = false, dedupeCaseInsensitive = false } = options;
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
   const normalized: string[] = [];
   value.forEach((entry) => {
     if (typeof entry !== 'string') return;
     const trimmed = entry.trim();
-    if (trimmed === '' || seen.has(trimmed)) return;
-    seen.add(trimmed);
-    normalized.push(trimmed);
+    if (trimmed === '') return;
+    const normalizedEntry = lowerCase ? trimmed.toLowerCase() : trimmed;
+    const dedupeKey = dedupeCaseInsensitive ? normalizedEntry.toLowerCase() : normalizedEntry;
+    if (seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
+    normalized.push(normalizedEntry);
   });
   return normalized;
 };
@@ -74,8 +86,11 @@ export const parseStoredSession = (raw: string): SessionUser | null => {
     const value = parsed as Record<string, unknown>;
     const username = normalizeNonEmptyString(value['username']);
     if (!username) return null;
-    const roles = normalizeStringArray(value['roles']);
-    const modules = normalizeStringArray(value['modules']);
+    const roles = normalizeStringArray(value['roles'], { dedupeCaseInsensitive: true });
+    const modules = normalizeStringArray(value['modules'], {
+      lowerCase: true,
+      dedupeCaseInsensitive: true,
+    });
     const apiToken = normalizeNonEmptyString(value['apiToken']) ?? undefined;
     const partyId = normalizePositivePartyId(value['partyId']);
     const displayName = normalizeNonEmptyString(value['displayName']) ?? username;

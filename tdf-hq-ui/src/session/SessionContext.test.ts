@@ -17,8 +17,8 @@ describe('parseStoredSession', () => {
       JSON.stringify({
         username: '  alice  ',
         displayName: '  Alice Doe ',
-        roles: [' Admin ', '', 'Admin', 'fan', ' fan '],
-        modules: [' bookings ', '', 'bookings', 'reports', 9],
+        roles: [' Admin ', '', 'Admin', 'admin', 'fan', ' Fan '],
+        modules: [' bookings ', '', 'bookings', 'Reports', 'reports', 9],
         apiToken: '  token-123  ',
         partyId: '42',
       }),
