@@ -43,6 +43,10 @@ describe('public booking room rules', () => {
     expect(defaultRoomsForService('Mastering', rooms)).toEqual(['Control Room']);
   });
 
+  it('does not classify "masterclass" as mastering', () => {
+    expect(defaultRoomsForService('Masterclass', rooms)).toEqual(['Live Room', 'Control Room']);
+  });
+
   it('suggests live for rehearsal/ensayo', () => {
     expect(defaultRoomsForService('Ensayo', rooms)).toEqual(['Live Room']);
     expect(defaultRoomsForService('Rehearsal', rooms)).toEqual(['Live Room']);

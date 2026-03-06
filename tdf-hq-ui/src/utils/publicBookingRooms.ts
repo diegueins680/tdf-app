@@ -46,7 +46,8 @@ export const defaultRoomsForService = (service: string, roomOptions: string[]) =
     const candidates = picks('control');
     if (candidates.length) return candidates;
   }
-  if (hasAny('master')) {
+  // Treat mastering as a whole-word concept so labels like "masterclass" don't misclassify.
+  if (/\bmaster(?:ing|izacion)?\b/.test(plain)) {
     const candidates = picks('control');
     if (candidates.length) return candidates;
   }
