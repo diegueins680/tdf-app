@@ -177,10 +177,33 @@ export interface SocialEventFinanceSummaryDTO {
   efsGeneratedAt: string;
 }
 
+const normalizeComparableId = (value: string | null | undefined): string => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) return '';
+
+  if (/^-?\d+$/.test(trimmed)) {
+    const parsed = Number.parseInt(trimmed, 10);
+    if (Number.isSafeInteger(parsed)) return String(parsed);
+  }
+
+  return trimmed;
+};
+
 const buildQuery = (params: Record<string, string | number | null | undefined>) => {
-  const entries = Object.entries(params).filter(([, v]) => v != null && v !== '');
+  const entries = Object.entries(params)
+    .map((entry): [string, string | number] | null => {
+      const [key, value] = entry;
+      if (value == null) return null;
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+        return [key, trimmed];
+      }
+      return [key, value];
+    })
+    .filter((entry): entry is [string, string | number] => entry !== null);
   if (!entries.length) return '';
-  const qs = entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v ?? ''))}`).join('&');
+  const qs = entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&');
   return `?${qs}`;
 };
 
@@ -222,11 +245,33 @@ export const SocialEventsAPI = {
       invitationMessage: payload.invitationMessage ?? null,
       invitationStatus: 'Pending',
     }),
-  respondInvitation: (eventId: string, invitationId: string, status: string, message?: string | null) =>
-    put<SocialInvitationDTO>(`/social-events/events/${encodeURIComponent(eventId)}/invitations/${encodeURIComponent(invitationId)}`, {
-      invitationStatus: status,
-      invitationMessage: message ?? null,
-    }),
+  respondInvitation: async (eventId: string, invitationId: string, status: string, message?: string | null) => {
+    const normalizedEventId = eventId.trim();
+    const normalizedInvitationId = invitationId.trim();
+    const invitations = await get<SocialInvitationDTO[]>(
+      `/social-events/events/${encodeURIComponent(normalizedEventId)}/invitations`,
+    );
+    const invitationKey = normalizeComparableId(normalizedInvitationId);
+    const invitation = invitations.find(
+      (candidate) => normalizeComparableId(candidate.invitationId) === invitationKey,
+    );
+    if (!invitation) {
+      throw new Error(`Invitation ${normalizedInvitationId} not found for event ${normalizedEventId}.`);
+    }
+    const invitationToPartyId = invitation.invitationToPartyId.trim();
+    if (!invitationToPartyId) {
+      throw new Error(`Invitation ${normalizedInvitationId} is missing invitationToPartyId.`);
+    }
+
+    return put<SocialInvitationDTO>(
+      `/social-events/events/${encodeURIComponent(normalizedEventId)}/invitations/${encodeURIComponent(normalizedInvitationId)}`,
+      {
+        invitationToPartyId,
+        invitationStatus: status,
+        invitationMessage: message ?? null,
+      },
+    );
+  },
   listTicketTiers: (eventId: string) =>
     get<SocialTicketTierDTO[]>(`/social-events/events/${encodeURIComponent(eventId)}/ticket-tiers`),
   createTicketTier: (eventId: string, payload: SocialTicketTierDTO) =>
