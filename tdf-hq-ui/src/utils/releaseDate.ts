@@ -1,3 +1,5 @@
+import { hasImpossibleIsoCalendarDate } from './isoDate';
+
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 const parseDateOnly = (value: string): number | null => {
@@ -29,6 +31,7 @@ const parseDateOnly = (value: string): number | null => {
 export const parseReleaseTimestamp = (value?: string | null): number | null => {
   const trimmed = value?.trim();
   if (!trimmed) return null;
+  if (hasImpossibleIsoCalendarDate(trimmed)) return null;
 
   if (DATE_ONLY_PATTERN.test(trimmed)) {
     return parseDateOnly(trimmed);

@@ -25,6 +25,11 @@ describe('parseReleaseTimestamp', () => {
     expect(parseReleaseTimestamp('2026-02-30')).toBeNull();
   });
 
+  it('rejects impossible ISO timestamps instead of auto-correcting', () => {
+    expect(parseReleaseTimestamp('2026-02-30T10:00:00.000Z')).toBeNull();
+    expect(parseReleaseTimestamp('2025-13-01T00:00:00Z')).toBeNull();
+  });
+
   it('parses full ISO timestamps', () => {
     const parsed = parseReleaseTimestamp('2026-03-05T18:30:00.000Z');
     expect(parsed).toBe(Date.parse('2026-03-05T18:30:00.000Z'));
