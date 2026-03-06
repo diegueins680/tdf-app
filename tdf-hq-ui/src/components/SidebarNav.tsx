@@ -21,6 +21,10 @@ export interface NavGroup {
 }
 
 type NavGroupView = NavGroup & { restricted?: boolean; requiredModule?: string | null };
+type NavShortcutItem = NavItem & { group: string };
+
+const QUICK_RECENTS_KEY = 'tdf-quick-nav-recents';
+const MAX_SHORTCUT_RECENTS = 6;
 
 export const NAV_GROUPS: NavGroup[] = [
   {
@@ -223,12 +227,26 @@ export const pathRequiresModule = (path: string): string | null => {
   return null;
 };
 
+const readStoredPathList = (storageKey: string): string[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+  } catch {
+    return [];
+  }
+};
+
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
   const { session } = useSession();
   const navigate = useNavigate();
   const [filter, setFilter] = useState('');
   const [highlightIndex, setHighlightIndex] = useState<number>(-1);
+  const [recentPaths, setRecentPaths] = useState<string[]>(() => readStoredPathList(QUICK_RECENTS_KEY));
   const searchRef = useRef<HTMLInputElement | null>(null);
   const isSchoolStaff = useMemo(() => isSchoolStaffRole(session?.roles), [session?.roles]);
   const { unreadCount: chatUnreadCount } = useChatUnreadCount({ enabled: open });
@@ -307,6 +325,39 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     () => filteredNavGroups.flatMap((group) => group.items),
     [filteredNavGroups],
   );
+  const flatAllowedItems = useMemo<NavShortcutItem[]>(
+    () => allowedNavGroups.flatMap((group) => group.items.map((item) => ({ ...item, group: group.title }))),
+    [allowedNavGroups],
+  );
+  const recentPathSet = useMemo(() => new Set(recentPaths), [recentPaths]);
+  const shortcutItems = useMemo<NavShortcutItem[]>(() => {
+    const itemByPath = new Map(flatAllowedItems.map((item) => [item.path, item]));
+    const moduleShortcutCandidates = [
+      '/inicio',
+      modules.has('crm') ? '/crm/contactos' : null,
+      modules.has('scheduling') ? '/estudio/calendario' : null,
+      modules.has('school') ? (isSchoolStaff ? '/escuela/clases' : '/mi-profesor') : null,
+      modules.has('label') ? '/label/artistas' : null,
+      modules.has('ops') ? '/operacion/inventario' : null,
+      modules.has('invoicing') ? '/finanzas/pagos' : null,
+      modules.has('internships') ? '/practicas' : null,
+    ].filter((path): path is string => Boolean(path));
+    const preferredPaths = [
+      location.pathname,
+      ...recentPaths,
+      ...moduleShortcutCandidates,
+    ];
+    const seen = new Set<string>();
+    return preferredPaths
+      .map((path) => itemByPath.get(path))
+      .filter((item): item is NavShortcutItem => item != null)
+      .filter((item) => {
+        if (seen.has(item.path)) return false;
+        seen.add(item.path);
+        return true;
+      })
+      .slice(0, 6);
+  }, [flatAllowedItems, isSchoolStaff, location.pathname, modules, recentPaths]);
 
   const ensureExpandedDefaults = (groups: NavGroupView[]) => {
     const next = new Set<string>();
@@ -368,6 +419,26 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     setHighlightIndex(-1);
   }, [open]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(QUICK_RECENTS_KEY, JSON.stringify(recentPaths));
+    } catch {
+      // ignore persistence issues
+    }
+  }, [recentPaths]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleStorage = () => {
+      setRecentPaths(readStoredPathList(QUICK_RECENTS_KEY));
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
@@ -378,6 +449,10 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       }
       return next;
     });
+  };
+
+  const registerRecentPath = (path: string) => {
+    setRecentPaths((prev) => [path, ...prev.filter((existing) => existing !== path)].slice(0, MAX_SHORTCUT_RECENTS));
   };
 
   return (
@@ -463,6 +538,58 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         />
       </Stack>
       <List disablePadding sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
+        {!filter.trim() && shortcutItems.length > 0 && (
+          <Box sx={{ px: 1, pb: 1.5 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
+              <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.55)', letterSpacing: 1 }}>
+                ATAJOS
+              </Typography>
+            </Stack>
+            <List disablePadding>
+              {shortcutItems.map((item, index) => {
+                const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+                const unreadBadge = item.path === '/chat' ? chatUnreadCount : 0;
+                return (
+                  <ListItemButton
+                    key={`shortcut-${item.path}`}
+                    component={RouterLink}
+                    to={item.path}
+                    onClick={() => {
+                      registerRecentPath(item.path);
+                      onNavigate?.();
+                    }}
+                    selected={active}
+                    aria-current={active ? 'page' : undefined}
+                    sx={{
+                      borderRadius: 2,
+                      mx: 1.5,
+                      mb: index === shortcutItems.length - 1 ? 0 : 0.5,
+                      bgcolor: active ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.03)',
+                      color: active ? '#ffffff' : 'rgba(248,250,252,0.88)',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
+                    }}
+                  >
+                    <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5 }} />
+                    <ListItemText
+                      primary={unreadBadge > 0 ? (
+                        <Badge
+                          color="error"
+                          badgeContent={unreadBadge > 99 ? '99+' : unreadBadge}
+                          sx={{ '& .MuiBadge-badge': { fontSize: 11, height: 18, minWidth: 18 } }}
+                        >
+                          <span>{item.label}</span>
+                        </Badge>
+                      ) : item.label}
+                      secondary={recentPathSet.has(item.path) ? `Reciente · ${item.group}` : item.group}
+                      primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
+                      secondaryTypographyProps={{ fontSize: 11, color: 'rgba(226,232,240,0.72)' }}
+                    />
+                  </ListItemButton>
+                );
+              })}
+            </List>
+          </Box>
+        )}
         {filteredNavGroups.length === 0 && (
           <Typography variant="body2" sx={{ px: 3, py: 1.5, color: 'rgba(248,250,252,0.6)' }}>
             Sin coincidencias.
@@ -511,7 +638,10 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                         key={`${groupIdx}-${itemIdx}-${item.path}`}
                         component={RouterLink}
                         to={item.path}
-                        onClick={onNavigate}
+                        onClick={() => {
+                          registerRecentPath(item.path);
+                          onNavigate?.();
+                        }}
                         selected={hot || (!filter.trim() && active)}
                         aria-current={active ? 'page' : undefined}
                         sx={{
