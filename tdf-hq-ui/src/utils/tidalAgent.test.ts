@@ -34,4 +34,11 @@ describe('generateTidalCode', () => {
     expect(result.code).toContain('sound "pad*2 mist"');
     expect(result.tempo).toBe(78);
   });
+
+  it('keeps rave prompts consistent between tempo and tags', () => {
+    const result = generateTidalCode('Peak-time rave energy');
+
+    expect(result.tempo).toBe(132);
+    expect(result.tags).toContain('techno');
+  });
 });

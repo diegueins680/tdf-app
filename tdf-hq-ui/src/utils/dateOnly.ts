@@ -1,3 +1,5 @@
+import { hasImpossibleIsoCalendarDate } from './isoDate';
+
 const pad2 = (value: number): string => String(value).padStart(2, '0');
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -31,6 +33,7 @@ export const parseDateForDisplay = (value: string): Date | null => {
     return parsed;
   }
 
+  if (hasImpossibleIsoCalendarDate(trimmed)) return null;
   const parsed = new Date(trimmed);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };

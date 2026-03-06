@@ -34,4 +34,8 @@ describe('parseDateForDisplay', () => {
     expect(parsed).not.toBeNull();
     expect(parsed?.toISOString()).toBe('2026-03-04T18:30:00.000Z');
   });
+
+  it('rejects impossible full timestamp values', () => {
+    expect(parseDateForDisplay('2026-02-30T18:30:00Z')).toBeNull();
+  });
 });

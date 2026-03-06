@@ -12,6 +12,10 @@ describe('parseTimestamp', () => {
     expect(parseTimestamp('not-a-date')).toBeNull();
   });
 
+  it('returns null for impossible ISO calendar dates', () => {
+    expect(parseTimestamp('2026-02-30T18:30:00Z')).toBeNull();
+  });
+
   it('parses valid timestamps', () => {
     const parsed = parseTimestamp('2026-03-04T18:30:00.000Z');
     expect(parsed?.toISOString()).toBe('2026-03-04T18:30:00.000Z');
@@ -26,6 +30,10 @@ describe('formatTimestampForDisplay', () => {
 
   it('returns original value when timestamp is invalid', () => {
     expect(formatTimestampForDisplay('not-a-date')).toBe('not-a-date');
+  });
+
+  it('returns original value for impossible ISO calendar dates', () => {
+    expect(formatTimestampForDisplay('2026-02-30T18:30:00Z')).toBe('2026-02-30T18:30:00Z');
   });
 
   it('formats valid timestamps using local datetime formatting', () => {

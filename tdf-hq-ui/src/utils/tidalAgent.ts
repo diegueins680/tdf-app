@@ -65,7 +65,7 @@ const deriveTags = (prompt: string, mood?: string) => {
   const text = `${prompt} ${mood ?? ''}`.toLowerCase();
   const tags: string[] = [];
   if (text.includes('ambient') || text.includes('drone')) tags.push('ambient');
-  if (text.includes('techno') || text.includes('club')) tags.push('techno');
+  if (text.includes('techno') || text.includes('club') || text.includes('rave')) tags.push('techno');
   if (text.includes('house')) tags.push('house');
   if (text.includes('reggaeton') || text.includes('dembow')) tags.push('latin');
   if (text.includes('trap') || text.includes('hip hop')) tags.push('trap');
