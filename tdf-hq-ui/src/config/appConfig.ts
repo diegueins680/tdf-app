@@ -44,11 +44,35 @@ const demoTokenEnv = envString('VITE_API_DEMO_TOKEN')?.trim() ?? '';
 const demoTokenHostsEnv = parseList(envString('VITE_DEMO_TOKEN_HOSTS'));
 const demoTokenHosts = demoTokenHostsEnv.length
   ? demoTokenHostsEnv
-  : ['localhost', '127.0.0.1', 'tdf-app.pages.dev'];
+  : ['localhost', '127.0.0.1', '::1', 'tdf-app.pages.dev'];
 const demoTokenValue =
   envString('VITE_DEFAULT_DEMO_TOKEN')?.trim() ?? 'admin-token';
 
-const normalizeHost = (host: string) => (host.split(':')[0] ?? host).toLowerCase();
+const URL_SCHEME_PATTERN = /^[a-z][a-z\d+\-.]*:\/\//i;
+
+const stripIpv6Brackets = (host: string): string => {
+  if (host.startsWith('[') && host.endsWith(']')) return host.slice(1, -1);
+  return host;
+};
+
+const extractHostname = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const normalizedUrl = URL_SCHEME_PATTERN.test(trimmed) ? trimmed : `http://${trimmed}`;
+  try {
+    return new URL(normalizedUrl).hostname;
+  } catch {
+    return null;
+  }
+};
+
+const normalizeHost = (host: string): string => {
+  const trimmed = host.trim();
+  if (!trimmed) return '';
+  const parsedHost = extractHostname(trimmed);
+  return stripIpv6Brackets(parsedHost ?? trimmed).toLowerCase();
+};
+
 export const inferDemoToken = (host?: string): string => {
   if (demoTokenEnv) return demoTokenEnv;
   if (!host) return '';
