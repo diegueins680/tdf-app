@@ -1,4 +1,5 @@
 import type { ChatThreadDTO } from '../api/types';
+import { hasImpossibleIsoCalendarDate } from './isoDate';
 
 export const CHAT_READ_STATE_STORAGE_KEY = 'tdf-chat-last-seen-v1';
 export const CHAT_READ_STATE_EVENT = 'tdf-chat-read-state';
@@ -18,8 +19,10 @@ const normalizeThreadIdKey = (value: string): string | null => {
 };
 
 const parseDateMs = (value: string | null | undefined): number | null => {
-  if (!value) return null;
-  const parsed = new Date(value);
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (hasImpossibleIsoCalendarDate(trimmed)) return null;
+  const parsed = new Date(trimmed);
   const ms = parsed.getTime();
   return Number.isNaN(ms) ? null : ms;
 };

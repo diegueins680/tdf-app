@@ -57,8 +57,33 @@ describe('chatReadState', () => {
     expect(loadChatReadMap()).toEqual({ '11': VALID_TIMESTAMP });
   });
 
+  it('rejects impossible ISO calendar dates from persisted storage', () => {
+    window.localStorage.setItem(
+      CHAT_READ_STATE_STORAGE_KEY,
+      JSON.stringify({
+        '11': '2026-02-30T09:00:00.000Z',
+        '12': VALID_TIMESTAMP,
+      }),
+    );
+
+    expect(loadChatReadMap()).toEqual({ '12': VALID_TIMESTAMP });
+  });
+
+  it('ignores impossible timestamps when marking read state', () => {
+    markThreadSeen(42, '2026-02-30T09:00:00.000Z');
+
+    expect(window.localStorage.getItem(CHAT_READ_STATE_STORAGE_KEY)).toBeNull();
+    expect(loadChatReadMap()).toEqual({});
+  });
+
   it('treats threads with invalid ids as read-safe (not unread)', () => {
     const thread = buildThread({ ctThreadId: Number.NaN });
+
+    expect(isThreadUnread(thread, {})).toBe(false);
+  });
+
+  it('treats impossible message timestamps as read-safe (not unread)', () => {
+    const thread = buildThread({ ctLastMessageAt: '2026-02-30T09:00:00.000Z' });
 
     expect(isThreadUnread(thread, {})).toBe(false);
   });
