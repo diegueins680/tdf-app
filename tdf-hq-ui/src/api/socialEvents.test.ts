@@ -60,6 +60,25 @@ describe('SocialEventsAPI', () => {
     );
   });
 
+  it('respondInvitation updates with the canonical matched invitation id', async () => {
+    getMock.mockResolvedValueOnce([
+      {
+        invitationId: '12',
+        invitationToPartyId: '99',
+      },
+    ]);
+
+    await SocialEventsAPI.respondInvitation('7', '0012', 'Accepted');
+
+    expect(putMock).toHaveBeenCalledWith(
+      '/social-events/events/7/invitations/12',
+      expect.objectContaining({
+        invitationToPartyId: '99',
+        invitationStatus: 'Accepted',
+      }),
+    );
+  });
+
   it('respondInvitation throws when invitation is not found', async () => {
     getMock.mockResolvedValueOnce([]);
 

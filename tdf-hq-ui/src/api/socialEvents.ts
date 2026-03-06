@@ -269,9 +269,10 @@ export const SocialEventsAPI = {
     if (!invitationToPartyId) {
       throw new Error(`Invitation ${normalizedInvitationId} is missing invitationToPartyId.`);
     }
+    const invitationPathId = normalizeComparableId(invitation.invitationId) || invitationKey;
 
     return put<SocialInvitationDTO>(
-      `/social-events/events/${encodeURIComponent(normalizedEventId)}/invitations/${encodeURIComponent(normalizedInvitationId)}`,
+      `/social-events/events/${encodeURIComponent(normalizedEventId)}/invitations/${encodeURIComponent(invitationPathId)}`,
       {
         invitationToPartyId,
         invitationStatus: status,
