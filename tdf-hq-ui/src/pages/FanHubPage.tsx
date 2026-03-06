@@ -154,6 +154,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const artistSlugTouchedRef = useRef(false);
   const hasAuthToken = Boolean(session?.apiToken);
   const isAuthenticated = Boolean(session);
+  const canManageReleases = useMemo(() => {
+    const roles = session?.roles?.map((r) => r.toLowerCase()) ?? [];
+    return roles.some((role) => role.includes('admin') || role.includes('manager') || role.includes('label'));
+  }, [session?.roles]);
+  const isHomeManagerView = location.pathname === '/inicio' && isAuthenticated && canManageReleases;
   const radioTargetPath = `${location.pathname}#radio`;
   const GENRE_FILTER_KEY = 'fan-hub:genre-filter';
   const [genreFilter, setGenreFilter] = useState<string>(() => {
@@ -209,13 +214,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const profileQuery = useQuery({
     queryKey: ['fan-profile', viewerId],
     queryFn: Fans.getProfile,
-    enabled: Boolean(viewerId && isFan && hasAuthToken),
+    enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
   });
 
   const followsQuery = useQuery({
     queryKey: ['fan-follows', viewerId],
     queryFn: Fans.listFollows,
-    enabled: Boolean(viewerId && isFan && hasAuthToken),
+    enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
   });
   const artistProfileQuery = useQuery({
     queryKey: ['artist-profile', viewerId],
@@ -359,12 +364,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const follows = useMemo(() => followsQuery.data ?? [], [followsQuery.data]);
   const hasFollows = follows.length > 0;
-  const canManageReleases = useMemo(() => {
-    const roles = session?.roles?.map((r) => r.toLowerCase()) ?? [];
-    return roles.some((role) => role.includes('admin') || role.includes('manager') || role.includes('label'));
-  }, [session?.roles]);
   const canSeeReleaseFeed = (isFan || canManageReleases) && hasAuthToken;
-  const isHomeManagerView = location.pathname === '/inicio' && isAuthenticated && canManageReleases;
   const [releaseAudioMap, setReleaseAudioMap] = useState<Record<number, string>>({});
   const audioFileInputRef = useRef<HTMLInputElement | null>(null);
   const [pendingUploadRelease, setPendingUploadRelease] = useState<ReleaseFeedItem | null>(null);
@@ -714,6 +714,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const hasArtistCatalogError = artistsQuery.isError;
   const showCatalogFallback = !isLoading && (hasArtistCatalogError || artists.length === 0);
   const showCatalogFilters = !showCatalogFallback && artists.length > 0;
+  const showHubDataAlert = isHomeManagerView
+    ? hasArtistCatalogError
+    : artistsQuery.isError || profileQuery.isError || followsQuery.isError || artistProfileQuery.isError;
   const emptyArtistMessage = genreFilter
     ? `No encontramos artistas en "${genreFilter}". Prueba otro genero o limpia el filtro.`
     : 'Pronto encontraras artistas disponibles para seguir.';
@@ -825,7 +828,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             )}
           </Alert>
         )}
-        {(artistsQuery.isError || profileQuery.isError || followsQuery.isError || artistProfileQuery.isError) && (
+        {showHubDataAlert && (
           <Alert
             severity={hasArtistCatalogError ? 'info' : 'warning'}
             action={
@@ -835,24 +838,34 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   variant="outlined"
                   onClick={() => {
                     void artistsQuery.refetch();
-                    void profileQuery.refetch();
-                    void followsQuery.refetch();
-                    void artistProfileQuery.refetch();
+                    if (!isHomeManagerView) {
+                      void profileQuery.refetch();
+                      void followsQuery.refetch();
+                    }
+                    if (canEditArtist) {
+                      void artistProfileQuery.refetch();
+                    }
                   }}
                 >
                   Reintentar
                 </Button>
-                {hasArtistCatalogError && (
+                {isHomeManagerView ? (
+                  <Button size="small" component={RouterLink} to="/label/artistas">
+                    Abrir artistas
+                  </Button>
+                ) : hasArtistCatalogError ? (
                   <Button size="small" component={RouterLink} to="/records">
                     Ver releases
                   </Button>
-                )}
+                ) : null}
               </Stack>
             }
           >
-            {hasArtistCatalogError
-              ? 'No pudimos cargar el catalogo completo ahora mismo. Mientras vuelve, aun puedes explorar releases, sesiones y reservas.'
-              : 'Tuvimos un problema cargando tu informacion. Revisa tu conexion o intenta de nuevo.'}
+            {isHomeManagerView
+              ? 'No pudimos refrescar el catálogo del hub. Sigue trabajando desde Releases, Artistas o CMS mientras vuelve la conexión.'
+              : hasArtistCatalogError
+                ? 'No pudimos cargar el catalogo completo ahora mismo. Mientras vuelve, aun puedes explorar releases, sesiones y reservas.'
+                : 'Tuvimos un problema cargando tu informacion. Revisa tu conexion o intenta de nuevo.'}
           </Alert>
         )}
 
