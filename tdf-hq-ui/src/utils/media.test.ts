@@ -6,19 +6,21 @@ import {
 
 describe('normalizeYoutubeEmbed', () => {
   it('normalizes valid YouTube URLs', () => {
-    expect(normalizeYoutubeEmbed('https://www.youtube.com/watch?v=abc123')).toBe(
-      'https://www.youtube.com/embed/abc123',
+    expect(normalizeYoutubeEmbed('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(
+      'https://www.youtube.com/embed/dQw4w9WgXcQ',
     );
-    expect(normalizeYoutubeEmbed('youtu.be/xyz789')).toBe('https://www.youtube.com/embed/xyz789');
-    expect(normalizeYoutubeEmbed('https://youtu.be/xyz789/')).toBe('https://www.youtube.com/embed/xyz789');
-    expect(normalizeYoutubeEmbed('https://youtu.be/xyz789/extra-segment')).toBe(
-      'https://www.youtube.com/embed/xyz789',
+    expect(normalizeYoutubeEmbed('youtu.be/M7lc1UVf-VE')).toBe('https://www.youtube.com/embed/M7lc1UVf-VE');
+    expect(normalizeYoutubeEmbed('https://youtu.be/M7lc1UVf-VE/')).toBe(
+      'https://www.youtube.com/embed/M7lc1UVf-VE',
+    );
+    expect(normalizeYoutubeEmbed('https://youtu.be/M7lc1UVf-VE/extra-segment')).toBe(
+      'https://www.youtube.com/embed/M7lc1UVf-VE',
     );
   });
 
   it('rejects non-YouTube domains that contain youtube.com as a substring', () => {
-    expect(normalizeYoutubeEmbed('https://notyoutube.com/watch?v=abc123')).toBeNull();
-    expect(normalizeYoutubeEmbed('https://youtube.com.evil.example/watch?v=abc123')).toBeNull();
+    expect(normalizeYoutubeEmbed('https://notyoutube.com/watch?v=dQw4w9WgXcQ')).toBeNull();
+    expect(normalizeYoutubeEmbed('https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ')).toBeNull();
   });
 
   it('rejects YouTube pages that are not directly embeddable videos', () => {
@@ -29,14 +31,15 @@ describe('normalizeYoutubeEmbed', () => {
   });
 
   it('rejects malformed YouTube video identifiers', () => {
-    expect(normalizeYoutubeEmbed('https://www.youtube.com/watch?v=abc123<script>')).toBeNull();
-    expect(normalizeYoutubeEmbed('https://youtu.be/abc123%2Fdef')).toBeNull();
-    expect(normalizeYoutubeEmbed('https://www.youtube.com/embed/abc 123')).toBeNull();
+    expect(normalizeYoutubeEmbed('https://www.youtube.com/watch?v=dQw4w9WgXcQ<script>')).toBeNull();
+    expect(normalizeYoutubeEmbed('https://youtu.be/dQw4w9WgXcQ%2Fdef')).toBeNull();
+    expect(normalizeYoutubeEmbed('https://www.youtube.com/embed/dQw4w9WgXcQ%20bad')).toBeNull();
+    expect(normalizeYoutubeEmbed('https://www.youtube.com/watch?v=short123')).toBeNull();
   });
 
   it('rejects non-http(s) schemes even when hostname looks like YouTube', () => {
-    expect(normalizeYoutubeEmbed('javascript://www.youtube.com/watch?v=abc123')).toBeNull();
-    expect(normalizeYoutubeEmbed('ftp://www.youtube.com/watch?v=abc123')).toBeNull();
+    expect(normalizeYoutubeEmbed('javascript://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBeNull();
+    expect(normalizeYoutubeEmbed('ftp://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBeNull();
   });
 });
 
@@ -89,8 +92,8 @@ describe('normalizeSpotifyEmbed', () => {
 
 describe('normalizeStreamingSource', () => {
   it('does not infer youtube/spotify provider from unrelated hostnames', () => {
-    expect(normalizeStreamingSource({ url: 'https://notyoutube.com/watch?v=abc123' })).toEqual({
-      url: 'https://notyoutube.com/watch?v=abc123',
+    expect(normalizeStreamingSource({ url: 'https://notyoutube.com/watch?v=dQw4w9WgXcQ' })).toEqual({
+      url: 'https://notyoutube.com/watch?v=dQw4w9WgXcQ',
       provider: 'audio',
       label: 'Audio',
       mimeType: undefined,

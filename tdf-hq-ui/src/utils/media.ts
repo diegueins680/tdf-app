@@ -21,7 +21,8 @@ export interface NormalizedStreamingSource {
 const videoExtensions = ['.mp4', '.mov', '.webm', '.mkv'];
 const audioExtensions = ['.mp3', '.aac', '.wav', '.ogg', '.m4a'];
 const spotifyResourceTypes = new Set(['track', 'album', 'playlist', 'artist', 'episode', 'show']);
-const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{6,64}$/;
+// YouTube watch/shorts/live video identifiers are 11 URL-safe characters.
+const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/;
 
 const isSpotifyLocaleSegment = (segment: string): boolean => /^intl-[a-z0-9-]+$/i.test(segment);
 
