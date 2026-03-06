@@ -248,6 +248,13 @@ export const SocialEventsAPI = {
   respondInvitation: async (eventId: string, invitationId: string, status: string, message?: string | null) => {
     const normalizedEventId = eventId.trim();
     const normalizedInvitationId = invitationId.trim();
+    if (!normalizedEventId) {
+      throw new Error('eventId is required to respond to an invitation.');
+    }
+    if (!normalizedInvitationId) {
+      throw new Error('invitationId is required to respond to an invitation.');
+    }
+
     const invitations = await get<SocialInvitationDTO[]>(
       `/social-events/events/${encodeURIComponent(normalizedEventId)}/invitations`,
     );
@@ -258,7 +265,7 @@ export const SocialEventsAPI = {
     if (!invitation) {
       throw new Error(`Invitation ${normalizedInvitationId} not found for event ${normalizedEventId}.`);
     }
-    const invitationToPartyId = invitation.invitationToPartyId.trim();
+    const invitationToPartyId = invitation.invitationToPartyId?.trim() ?? '';
     if (!invitationToPartyId) {
       throw new Error(`Invitation ${normalizedInvitationId} is missing invitationToPartyId.`);
     }

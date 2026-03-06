@@ -82,4 +82,29 @@ describe('SocialEventsAPI', () => {
     );
     expect(putMock).not.toHaveBeenCalled();
   });
+
+  it('respondInvitation throws when invitationToPartyId is missing', async () => {
+    getMock.mockResolvedValueOnce([
+      {
+        invitationId: '88',
+      },
+    ]);
+
+    await expect(SocialEventsAPI.respondInvitation('7', '88', 'Accepted')).rejects.toThrow(
+      'Invitation 88 is missing invitationToPartyId.',
+    );
+    expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('respondInvitation validates required identifiers before requesting data', async () => {
+    await expect(SocialEventsAPI.respondInvitation('   ', '88', 'Accepted')).rejects.toThrow(
+      'eventId is required to respond to an invitation.',
+    );
+    await expect(SocialEventsAPI.respondInvitation('7', '   ', 'Accepted')).rejects.toThrow(
+      'invitationId is required to respond to an invitation.',
+    );
+
+    expect(getMock).not.toHaveBeenCalled();
+    expect(putMock).not.toHaveBeenCalled();
+  });
 });
