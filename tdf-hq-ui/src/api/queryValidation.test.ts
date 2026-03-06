@@ -20,6 +20,8 @@ const { Internships } = await import('./internships');
 const { RadioAPI } = await import('./radio');
 const { Trials } = await import('./trials');
 const { Bookings } = await import('./bookings');
+const { ChatAPI } = await import('./chat');
+const { Label } = await import('./label');
 const { Courses } = await import('./courses');
 
 describe('API query/id validation', () => {
@@ -220,6 +222,57 @@ describe('API query/id validation', () => {
         pbEngineerPartyId: -3,
       }),
     ).toThrow('pbEngineerPartyId debe ser un entero positivo.');
+  });
+
+  it('validates chat ids and sanitizes optional list query params', async () => {
+    await ChatAPI.getOrCreateDmThread(12);
+    expect(postMock).toHaveBeenCalledWith('/chat/threads/dm/12', {});
+
+    await ChatAPI.listMessages(7, {
+      limit: 20,
+      beforeId: 30,
+      afterId: 10,
+    });
+    expect(getMock).toHaveBeenCalledWith('/chat/threads/7/messages?limit=20&beforeId=30&afterId=10');
+
+    await ChatAPI.listMessages(7, {
+      limit: 0,
+      beforeId: -1,
+      afterId: Number.NaN,
+    });
+    expect(getMock).toHaveBeenCalledWith('/chat/threads/7/messages');
+
+    await ChatAPI.sendMessage(7, '  hola equipo  ');
+    expect(postMock).toHaveBeenCalledWith('/chat/threads/7/messages', { csmBody: 'hola equipo' });
+
+    expect(() => ChatAPI.getOrCreateDmThread(0)).toThrow('otherPartyId debe ser un entero positivo.');
+    expect(() => ChatAPI.listMessages(Number.NaN)).toThrow('threadId debe ser un entero positivo.');
+    expect(() => ChatAPI.sendMessage(7, '   ')).toThrow('El mensaje no puede estar vacío.');
+  });
+
+  it('validates label owner ids and normalizes path track ids', async () => {
+    await Label.listTracks();
+    expect(getMock).toHaveBeenCalledWith('/label/tracks');
+
+    await Label.listTracks(8);
+    expect(getMock).toHaveBeenCalledWith('/label/tracks?ownerId=8');
+
+    await Label.createTrack({ ltcTitle: 'Pendiente' }, 8);
+    expect(postMock).toHaveBeenCalledWith('/label/tracks', {
+      ltcTitle: 'Pendiente',
+      ltcOwnerId: 8,
+    });
+
+    await Label.updateTrack(' track/alpha ', { ltuStatus: 'done' });
+    expect(patchMock).toHaveBeenCalledWith('/label/tracks/track%2Falpha', { ltuStatus: 'done' });
+
+    await Label.deleteTrack(' track alpha ');
+    expect(delMock).toHaveBeenCalledWith('/label/tracks/track%20alpha');
+
+    expect(() => Label.listTracks(0)).toThrow('ownerId debe ser un entero positivo.');
+    expect(() => Label.createTrack({ ltcTitle: 'Pendiente' }, -2)).toThrow('ownerId debe ser un entero positivo.');
+    expect(() => Label.updateTrack('   ', { ltuStatus: 'open' })).toThrow('id no puede estar vacío.');
+    expect(() => Label.deleteTrack('')).toThrow('id no puede estar vacío.');
   });
 
   it('normalizes course registration params and validates registration ids', async () => {
