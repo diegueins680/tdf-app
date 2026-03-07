@@ -157,7 +157,6 @@ export default function LoginPage() {
   const { session, login } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
-  const lastSession = session;
   const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
   const googleClientId = import.meta.env['VITE_GOOGLE_CLIENT_ID'] ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
@@ -777,18 +776,6 @@ export default function LoginPage() {
                       ? 'Usa tus credenciales para entrar al panel. Si es tu primera vez, elige una ruta rápida en la tarjeta de al lado.'
                       : 'Usa tus credenciales para entrar al panel. Si es tu primera vez, abre las rutas rápidas para crear tu cuenta.'}
                   </Typography>
-                  {lastSession && (
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Chip
-                        label={`Continuar como ${lastSession.displayName}`}
-                        color="primary"
-                        onClick={() => {
-                          const landing = redirectPath ?? pickLandingPath(lastSession.roles ?? [], lastSession.modules);
-                          navigate(landing, { replace: true });
-                        }}
-                      />
-                    </Stack>
-                  )}
                 </Stack>
 
                 <Stack spacing={2.25}>

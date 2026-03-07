@@ -9,6 +9,12 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { useChatUnreadCount } from '../hooks/useChatUnreadCount';
+import {
+  buildAccessibleModuleSet,
+  isSchoolStaffRole,
+  pathRequiresModule,
+  pathRequiresSchoolStaff,
+} from '../utils/accessControl';
 
 export interface NavItem {
   label: string;
@@ -141,92 +147,6 @@ interface SidebarNavProps {
   onNavigate?: () => void;
 }
 
-const SCHOOL_STAFF_ROLE_KEYS = ['admin', 'manager', 'studiomanager', 'reception'] as const;
-
-export const isSchoolStaffRole = (roles: string[] | undefined): boolean => {
-  if (!roles || roles.length === 0) return false;
-  const lowerRoles = roles.map((r) => r.toLowerCase());
-  return SCHOOL_STAFF_ROLE_KEYS.some((needle) => lowerRoles.includes(needle));
-};
-
-export const pathRequiresSchoolStaff = (path: string): boolean => {
-  if (path.startsWith('/escuela/profesores')) return true;
-  if (path.startsWith('/escuela/clases')) return true;
-  if (path.startsWith('/escuela/trial-lessons')) return true;
-  if (path.startsWith('/escuela/trial-queue')) return true;
-  return false;
-};
-
-export const deriveModulesFromRoles = (roles: string[] | undefined): string[] => {
-  if (!roles || roles.length === 0) return [];
-  const lowerRoles = roles.map((r) => r.toLowerCase());
-  const moduleSet = new Set<string>();
-  lowerRoles.forEach((role) => {
-    if (role.includes('admin')) {
-      moduleSet.add('admin');
-      moduleSet.add('crm');
-      moduleSet.add('scheduling');
-      moduleSet.add('school');
-      moduleSet.add('invoicing');
-      moduleSet.add('packages');
-      moduleSet.add('ops');
-      moduleSet.add('label');
-      moduleSet.add('internships');
-    } else if (role.includes('manager')) {
-      moduleSet.add('crm');
-      moduleSet.add('scheduling');
-      moduleSet.add('school');
-      moduleSet.add('invoicing');
-      moduleSet.add('packages');
-      moduleSet.add('ops');
-      moduleSet.add('internships');
-    } else if (role.includes('reception')) {
-      moduleSet.add('crm');
-      moduleSet.add('scheduling');
-      moduleSet.add('school');
-    } else if (role.includes('accounting')) {
-      moduleSet.add('invoicing');
-    } else if (role.includes('engineer') || role.includes('scheduling')) {
-      moduleSet.add('scheduling');
-    } else if (role.includes('teacher')) {
-      moduleSet.add('scheduling');
-      moduleSet.add('school');
-    } else if (role.includes('intern')) {
-      moduleSet.add('internships');
-    } else if (role.includes('packages') || role.includes('package')) {
-      moduleSet.add('packages');
-    } else if (role.includes('maintenance')) {
-      moduleSet.add('packages');
-      moduleSet.add('scheduling');
-      moduleSet.add('ops');
-    } else if (role.includes('label')) {
-      moduleSet.add('label');
-    } else if (role.includes('inventory') || role.includes('operacion') || role.includes('operation') || role.includes('ops')) {
-      moduleSet.add('ops');
-    } else if (role.includes('finance') || role.includes('billing')) {
-      moduleSet.add('invoicing');
-    }
-  });
-  return Array.from(moduleSet);
-};
-
-export const pathRequiresModule = (path: string): string | null => {
-  if (path.startsWith('/crm')) return 'crm';
-  if (path.startsWith('/social')) return 'crm';
-  if (path.startsWith('/estudio')) return 'scheduling';
-  if (path.startsWith('/finanzas')) return 'invoicing';
-  if (path.startsWith('/configuracion')) return 'admin';
-  if (path.startsWith('/admin')) return 'admin';
-  if (path.startsWith('/herramientas/token-admin')) return 'admin';
-  if (path.startsWith('/operacion')) return 'ops';
-  if (path.startsWith('/label')) return 'label';
-  if (path.startsWith('/escuela')) return 'school';
-  if (path.startsWith('/mi-profesor')) return 'school';
-  if (path.startsWith('/practicas')) return 'internships';
-  if (path.startsWith('/eventos')) return 'scheduling';
-  return null;
-};
-
 const readStoredPathList = (storageKey: string): string[] => {
   if (typeof window === 'undefined') return [];
   try {
@@ -248,7 +168,10 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const [highlightIndex, setHighlightIndex] = useState<number>(-1);
   const [recentPaths, setRecentPaths] = useState<string[]>(() => readStoredPathList(QUICK_RECENTS_KEY));
   const searchRef = useRef<HTMLInputElement | null>(null);
-  const isSchoolStaff = useMemo(() => isSchoolStaffRole(session?.roles), [session?.roles]);
+  const isSchoolStaff = useMemo(
+    () => isSchoolStaffRole(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
   const { unreadCount: chatUnreadCount } = useChatUnreadCount({ enabled: open });
 
   const buildAccessMailto = useCallback(
@@ -267,20 +190,10 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     [session],
   );
 
-  const modules = useMemo(() => {
-    const provided = session?.modules ?? [];
-    const fromRoles = deriveModulesFromRoles(session?.roles);
-    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
-    // Backward-compatible aliases so legacy "packages" access still unlocks Ops/Label.
-    if (baseSet.has('packages')) {
-      baseSet.add('ops');
-      baseSet.add('label');
-    }
-    if (baseSet.has('ops')) {
-      baseSet.add('packages');
-    }
-    return baseSet;
-  }, [session?.modules, session?.roles]);
+  const modules = useMemo(
+    () => buildAccessibleModuleSet(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
 
   const allowedNavGroups = useMemo<NavGroupView[]>(() => {
     return NAV_GROUPS.map((group) => {

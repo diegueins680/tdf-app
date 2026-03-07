@@ -22,6 +22,13 @@ describe('pickLandingPath', () => {
   it('honors legacy packages access as label/ops access', () => {
     expect(pickLandingPath([], ['packages'])).toBe('/label/artistas');
   });
+
+  it('does not route public music-industry roles into staff panels without explicit modules', () => {
+    expect(pickLandingPath(['Manager'])).toBe('/inicio');
+    expect(pickLandingPath(['TourManager'])).toBe('/inicio');
+    expect(pickLandingPath(['LabelRep'])).toBe('/inicio');
+    expect(pickLandingPath(['Manager'], ['crm'])).toBe('/crm/contactos');
+  });
 });
 
 describe('redirect helpers', () => {

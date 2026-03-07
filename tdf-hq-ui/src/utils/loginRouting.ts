@@ -1,3 +1,5 @@
+import { buildAccessibleModuleSet } from './accessControl';
+
 const LOGIN_ROUTE = '/login';
 const URL_BASE = 'https://tdf.local';
 
@@ -19,116 +21,11 @@ const normalizeTokens = (values: readonly string[] | undefined, { lowerCase = fa
   return normalized;
 };
 
-const deriveModulesFromRoles = (roles: readonly string[]): string[] => {
-  const moduleSet = new Set<string>();
-
-  roles.forEach((role) => {
-    if (role.includes('admin')) {
-      moduleSet.add('admin');
-      moduleSet.add('crm');
-      moduleSet.add('scheduling');
-      moduleSet.add('school');
-      moduleSet.add('invoicing');
-      moduleSet.add('packages');
-      moduleSet.add('ops');
-      moduleSet.add('label');
-      moduleSet.add('internships');
-      return;
-    }
-
-    if (role.includes('manager')) {
-      moduleSet.add('crm');
-      moduleSet.add('scheduling');
-      moduleSet.add('school');
-      moduleSet.add('invoicing');
-      moduleSet.add('packages');
-      moduleSet.add('ops');
-      moduleSet.add('internships');
-      return;
-    }
-
-    if (role.includes('reception')) {
-      moduleSet.add('crm');
-      moduleSet.add('scheduling');
-      moduleSet.add('school');
-      return;
-    }
-
-    if (role.includes('accounting')) {
-      moduleSet.add('invoicing');
-      return;
-    }
-
-    if (role.includes('engineer') || role.includes('scheduling')) {
-      moduleSet.add('scheduling');
-      return;
-    }
-
-    if (role.includes('teacher')) {
-      moduleSet.add('scheduling');
-      moduleSet.add('school');
-      return;
-    }
-
-    if (role.includes('intern')) {
-      moduleSet.add('internships');
-      return;
-    }
-
-    if (role.includes('packages') || role.includes('package')) {
-      moduleSet.add('packages');
-      return;
-    }
-
-    if (role.includes('maintenance')) {
-      moduleSet.add('packages');
-      moduleSet.add('scheduling');
-      moduleSet.add('ops');
-      return;
-    }
-
-    if (role.includes('label')) {
-      moduleSet.add('label');
-      return;
-    }
-
-    if (
-      role.includes('inventory')
-      || role.includes('operacion')
-      || role.includes('operation')
-      || role.includes('ops')
-    ) {
-      moduleSet.add('ops');
-      return;
-    }
-
-    if (role.includes('finance') || role.includes('billing')) {
-      moduleSet.add('invoicing');
-    }
-  });
-
-  return Array.from(moduleSet);
-};
-
-const buildModuleSet = (roles: readonly string[], modules: readonly string[] | undefined): Set<string> => {
-  const normalizedModules = normalizeTokens(modules, { lowerCase: true });
-  const derivedModules = deriveModulesFromRoles(roles);
-  const moduleSet = new Set([...normalizedModules, ...derivedModules]);
-
-  // Keep the login landing logic aligned with the nav access aliases.
-  if (moduleSet.has('packages')) {
-    moduleSet.add('ops');
-    moduleSet.add('label');
-  }
-
-  return moduleSet;
-};
-
 export function pickLandingPath(roles: readonly string[], modules?: readonly string[]): string {
   const normalizedRoles = normalizeTokens(roles, { lowerCase: true });
-  const moduleSet = buildModuleSet(normalizedRoles, modules);
+  const moduleSet = buildAccessibleModuleSet(normalizedRoles, modules);
   const hasRole = (...needles: string[]) =>
-    needles.some((needle) => normalizedRoles.some((role) => role.includes(needle)));
+    needles.some((needle) => normalizedRoles.includes(needle));
   const hasModule = (needle: string) => moduleSet.has(needle);
 
   if (hasRole('admin') || hasModule('admin')) return '/configuracion/roles-permisos';

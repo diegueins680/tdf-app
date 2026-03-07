@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Alert, Box, Card, CardContent, Chip, Link, Stack, Typography } from '@mui/material';
 import LaunchIcon from '@mui/icons-material/Launch';
 import { useSession } from '../session/SessionContext';
-import { deriveModulesFromRoles } from '../components/SidebarNav';
+import { buildAccessibleModuleSet } from '../utils/accessControl';
 
 interface ManualItem {
   title: string;
@@ -54,19 +54,10 @@ const sectionsByModule: Record<string, ManualItem[]> = {
 
 export default function ManualPage() {
   const { session } = useSession();
-  const modules = useMemo(() => {
-    const provided = session?.modules ?? [];
-    const fromRoles = deriveModulesFromRoles(session?.roles);
-    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
-    if (baseSet.has('packages')) {
-      baseSet.add('ops');
-      baseSet.add('label');
-    }
-    if (baseSet.has('ops')) {
-      baseSet.add('packages');
-    }
-    return Array.from(baseSet);
-  }, [session?.modules, session?.roles]);
+  const modules = useMemo(
+    () => Array.from(buildAccessibleModuleSet(session?.roles, session?.modules)),
+    [session?.modules, session?.roles],
+  );
 
   const items = useMemo(() => {
     const merged: ManualItem[] = [];

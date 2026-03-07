@@ -19,7 +19,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Link as RouterLink } from 'react-router-dom';
 import { loginRequest } from '../api/auth';
 import { useSession } from '../session/SessionContext';
-import { deriveModulesFromRoles } from '../components/SidebarNav';
+import { buildAccessibleModuleSet } from '../utils/accessControl';
 
 interface TokenDetails {
   username: string;
@@ -46,19 +46,10 @@ export default function AdminTokenPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const modules = useMemo(() => {
-    const provided = session?.modules ?? [];
-    const fromRoles = deriveModulesFromRoles(session?.roles);
-    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
-    if (baseSet.has('packages')) {
-      baseSet.add('ops');
-      baseSet.add('label');
-    }
-    if (baseSet.has('ops')) {
-      baseSet.add('packages');
-    }
-    return baseSet;
-  }, [session?.modules, session?.roles]);
+  const modules = useMemo(
+    () => buildAccessibleModuleSet(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
   const hasAdmin = modules.has('admin');
   const apiBase = useMemo(resolveApiBase, []);
 
