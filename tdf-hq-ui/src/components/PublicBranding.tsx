@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
+import { buildLoginRedirectPath } from '../utils/loginRouting';
 
 const PUBLIC_NAV_ITEMS = [
   { label: 'Comunidad', to: '/fans' },
@@ -13,11 +14,11 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'Lanzamientos', to: '/records' },
 ] as const;
 
-type FooterAction = {
+interface FooterAction {
   label: string;
   kind: 'route' | 'external';
   value: string;
-};
+}
 
 export default function PublicBranding({
   children,
@@ -31,6 +32,10 @@ export default function PublicBranding({
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const location = useLocation();
   const open = Boolean(menuAnchor);
+  const contextualLoginPath = useMemo(
+    () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
+    [location.hash, location.pathname, location.search],
+  );
   const footerPrimaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
       return { label: 'WhatsApp reservas', kind: 'external', value: STUDIO_WHATSAPP_URL };
@@ -48,7 +53,7 @@ export default function PublicBranding({
   }, [location.pathname]);
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
-      return { label: 'Ingresar y autocompletar', kind: 'route', value: '/login?redirect=/reservar' };
+      return { label: 'Ingresar y autocompletar', kind: 'route', value: contextualLoginPath };
     }
     if (location.pathname.startsWith('/fans')) {
       return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
@@ -60,7 +65,7 @@ export default function PublicBranding({
       return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };
     }
     return { label: 'WhatsApp', kind: 'external', value: STUDIO_WHATSAPP_URL };
-  }, [location.pathname]);
+  }, [contextualLoginPath, location.pathname]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -112,7 +117,7 @@ export default function PublicBranding({
                     variant="contained"
                     color="secondary"
                     component={RouterLink}
-                    to="/login"
+                    to={contextualLoginPath}
                     sx={{ textTransform: 'none' }}
                   >
                     Ingresar
@@ -285,7 +290,7 @@ export default function PublicBranding({
                   size="small"
                   color="inherit"
                   component={RouterLink}
-                  to="/login"
+                  to={contextualLoginPath}
                   sx={{ textTransform: 'none' }}
                 >
                   Ir a login

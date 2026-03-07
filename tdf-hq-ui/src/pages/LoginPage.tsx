@@ -51,24 +51,7 @@ import type { ArtistProfileDTO } from '../api/types';
 import { buildSignupPayload, deriveEffectiveRoles, normalizeSignupRoles } from '../utils/roles';
 import { parsePositiveSafeInt } from '../utils/ids';
 import { parseGoogleIdToken } from '../utils/googleIdToken';
-
-const pickLandingPath = (roles: string[], modules?: string[]) => {
-  const lowerRoles = roles.map((r) => r.toLowerCase());
-  const lowerModules = (modules ?? []).map((m) => m.toLowerCase());
-  const hasRole = (...needles: string[]) => needles.some((needle) => lowerRoles.some((role) => role.includes(needle)));
-  const hasModule = (needle: string) => lowerModules.includes(needle);
-
-  if (hasRole('admin') || hasModule('admin')) return '/configuracion/roles-permisos';
-  if (hasRole('artist', 'artista')) return '/mi-artista';
-  if (hasRole('teacher')) return '/mi-profesor';
-  if (hasRole('fan', 'customer') && !hasModule('crm') && !hasModule('scheduling')) return '/fans';
-  if (hasModule('scheduling')) return '/estudio/calendario';
-  if (hasModule('crm')) return '/crm/contactos';
-  if (hasModule('label')) return '/label/artistas';
-  if (hasModule('ops')) return '/operacion/inventario';
-  if (hasModule('invoicing')) return '/finanzas/pagos';
-  return '/inicio';
-};
+import { pickLandingPath, readSafeRedirectPath } from '../utils/loginRouting';
 
 const LANDING_LABELS: Record<string, string> = {
   '/configuracion/roles-permisos': 'Roles y permisos',
@@ -77,6 +60,7 @@ const LANDING_LABELS: Record<string, string> = {
   '/fans': 'Comunidad',
   '/estudio/calendario': 'Calendario',
   '/crm/contactos': 'CRM',
+  '/escuela/clases': 'Escuela',
   '/label/artistas': 'Sello / Artistas',
   '/operacion/inventario': 'Inventario',
   '/finanzas/pagos': 'Finanzas',
@@ -247,10 +231,7 @@ export default function LoginPage() {
     mutationFn: signupRequest,
   });
   const redirectPath = useMemo(() => {
-    const params = new URLSearchParams(location.search);
-    const raw = params.get('redirect');
-    if (raw?.startsWith('/')) return raw;
-    return null;
+    return readSafeRedirectPath(location.search);
   }, [location.search]);
 
   const signupPreset = useMemo(() => {
@@ -792,7 +773,9 @@ export default function LoginPage() {
                     Iniciar sesión
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
-                    Usa tus credenciales para acceder al panel.
+                    {isWideLayout
+                      ? 'Usa tus credenciales para entrar al panel. Si es tu primera vez, elige una ruta rápida en la tarjeta de al lado.'
+                      : 'Usa tus credenciales para entrar al panel. Si es tu primera vez, abre las rutas rápidas para crear tu cuenta.'}
                   </Typography>
                   {lastSession && (
                     <Stack direction="row" spacing={1} alignItems="center">
@@ -889,18 +872,47 @@ export default function LoginPage() {
 
                 {formError && <Alert severity="warning">{formError}</Alert>}
 
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-                  <Button variant="contained" type="submit" size="large" disabled={loginMutation.isPending}>
-                    {loginMutation.isPending ? 'Ingresando…' : 'Ingresar'}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    onClick={() => openSignupDialog()}
-                    sx={{ minWidth: 180 }}
-                  >
-                    Crear cuenta
-                  </Button>
+                <Stack spacing={1}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
+                    <Button
+                      variant="contained"
+                      type="submit"
+                      size="large"
+                      disabled={loginMutation.isPending}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      {loginMutation.isPending ? 'Ingresando…' : 'Ingresar'}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      onClick={() => openSignupDialog()}
+                      sx={{ minWidth: 180, textTransform: 'none' }}
+                    >
+                      Crear cuenta general
+                    </Button>
+                  </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button
+                      component={RouterLink}
+                      to="/fans"
+                      variant="text"
+                      size="small"
+                      sx={{ textTransform: 'none', alignSelf: 'flex-start', px: 0 }}
+                    >
+                      Explorar sin cuenta
+                    </Button>
+                    {!isWideLayout && (
+                      <Button
+                        variant="text"
+                        size="small"
+                        onClick={() => setShowOnboardingCards(true)}
+                        sx={{ textTransform: 'none', alignSelf: 'flex-start', px: 0 }}
+                      >
+                        Ver rutas rápidas
+                      </Button>
+                    )}
+                  </Stack>
                 </Stack>
 
                 <Stack spacing={0.5} textAlign="center">
