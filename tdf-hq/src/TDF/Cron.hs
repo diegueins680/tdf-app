@@ -50,8 +50,6 @@ import           Database.Persist        ( (!=.)
 import           Database.Persist.Sql    (SqlPersistT, runSqlPool)
 import           System.Random           (randomRIO)
 import           System.IO               (hPutStrLn, stderr)
-import           Network.HTTP.Client     (newManager)
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
 
 import           TDF.DB                  (Env(..), ConnectionPool)
 import qualified TDF.Email.Service       as EmailSvc
@@ -66,8 +64,6 @@ import           TDF.Server              ( buildLandingUrl
                                          , loadAdExamples
                                          , runRagChatWithStatus
                                          , courseMetadataFor
-                                         , loadWhatsAppEnv
-                                         , WhatsAppEnv(..)
                                          , toCourseMetadata
                                          , normalizeSlug
                                          , productionCourseSlug
@@ -77,7 +73,9 @@ import           TDF.Server              ( buildLandingUrl
 import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials
 import           TDF.Config              (AppConfig, instagramAppToken)
-import           TDF.WhatsApp.Client     (sendText)
+import           TDF.WhatsApp.Client     (SendTextResult)
+import           TDF.WhatsApp.History    (OutgoingWhatsAppRecord(..), recordOutgoingWhatsAppMessage)
+import           TDF.WhatsApp.Transport  (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
 
 -- Auto-reply directive parsing
 data Directive = Send Text | Hold Text (Maybe Text) deriving (Show, Eq)
@@ -468,15 +466,8 @@ processWhatsAppReplies Env{envPool, envConfig} = do
   let senderIds = uniq (map (ME.whatsAppMessageSenderId . entityVal) pending)
   foldM (replyWhatsAppConversation envConfig envPool waEnv) 0 senderIds
 
-sendWhatsAppAutoReply :: WhatsAppEnv -> Text -> Text -> IO (Either Text ())
-sendWhatsAppAutoReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVersion = mVersion} phone reply = do
-  manager <- newManager tlsManagerSettings
-  let version = fromMaybe "v20.0" mVersion
-  res <- sendText manager version tok pid phone reply
-  pure $ case res of
-    Left err -> Left (T.pack err)
-    Right _ -> Right ()
-sendWhatsAppAutoReply _ _ _ = pure (Left "WhatsApp config not available")
+sendWhatsAppAutoReply :: WhatsAppEnv -> Text -> Text -> IO (Either Text SendTextResult)
+sendWhatsAppAutoReply = sendWhatsAppTextIO
 
 -- | Instagram sync: schedule one fetch per handle per day at a random time.
 startInstagramSyncJob :: Env -> IO ()
@@ -1024,47 +1015,28 @@ replyWhatsAppConversation cfg pool waEnv acc senderId = do
               pure acc
             Right (Send reply) -> do
               sendResult <- sendWhatsAppAutoReply waEnv senderId reply
+              runSqlPool
+                (do
+                  _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+                    { owrRecipientPhone = senderId
+                    , owrRecipientPartyId = ME.whatsAppMessagePartyId msg
+                    , owrRecipientName = ME.whatsAppMessageSenderName msg
+                    , owrRecipientEmail = ME.whatsAppMessageContactEmail msg
+                    , owrActorPartyId = Nothing
+                    , owrBody = reply
+                    , owrSource = Just "cron_auto_reply"
+                    , owrReplyToMessageId = Just key
+                    , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId msg)
+                    , owrResendOfMessageId = Nothing
+                    , owrMetadata = Nothing
+                    }
+                    sendResult
+                  update key
+                    [ ME.WhatsAppMessageAdName =. acAdName adContext
+                    , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
+                    ]
+                )
+                pool
               case sendResult of
-                Left err -> do
-                  runSqlPool
-                    (update key
-                      [ ME.WhatsAppMessageReplyStatus =. "error"
-                      , ME.WhatsAppMessageReplyError =. Just err
-                      , ME.WhatsAppMessageAdName =. acAdName adContext
-                      , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
-                      ])
-                    pool
-                  pure acc
-                Right _ -> do
-                  runSqlPool
-                    (do
-                      update key
-                        [ ME.WhatsAppMessageReplyStatus =. "sent"
-                        , ME.WhatsAppMessageRepliedAt =. Just now
-                        , ME.WhatsAppMessageReplyText =. Just reply
-                        , ME.WhatsAppMessageReplyError =. Nothing
-                        , ME.WhatsAppMessageAdName =. acAdName adContext
-                        , ME.WhatsAppMessageCampaignName =. acCampaignName adContext
-                        ]
-                      insert_ (ME.WhatsAppMessage (ME.whatsAppMessageExternalId msg <> "-out-" <> T.pack (show now))
-                                senderId
-                                (ME.whatsAppMessageSenderName msg)
-                                (Just reply)
-                                "outgoing"
-                                (ME.whatsAppMessageAdExternalId msg)
-                                (acAdName adContext)
-                                (ME.whatsAppMessageCampaignExternalId msg)
-                                (acCampaignName adContext)
-                                Nothing
-                                "sent"
-                                Nothing
-                                Nothing
-                                (Just now)
-                                1
-                                Nothing
-                                Nothing
-                                Nothing
-                                now)
-                    )
-                    pool
-                  pure (acc + 1)
+                Left _ -> pure acc
+                Right _ -> pure (acc + 1)

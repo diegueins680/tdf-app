@@ -111,6 +111,10 @@ WhatsAppMessage
     externalId         Text
     senderId           Text
     senderName         Text Maybe
+    partyId            PartyId Maybe
+    actorPartyId       PartyId Maybe
+    phoneE164          Text Maybe
+    contactEmail       Text Maybe
     text               Text Maybe
     direction          Text
     adExternalId       Text Maybe
@@ -126,8 +130,17 @@ WhatsAppMessage
     repliedAt          UTCTime Maybe
     replyText          Text Maybe
     replyError         Text Maybe
+    deliveryStatus     Text default='pending'
+    deliveryUpdatedAt  UTCTime Maybe
+    deliveryError      Text Maybe
+    transportPayload   Text Maybe
+    statusPayload      Text Maybe
+    source             Text Maybe
+    resendOfMessageId  WhatsAppMessageId Maybe
     createdAt          UTCTime
     UniqueWhatsAppMessage externalId
+    IndexWhatsAppMessageParty partyId createdAt !force
+    IndexWhatsAppMessagePhone phoneE164 createdAt !force
     deriving Show Generic
 
 FacebookMessage

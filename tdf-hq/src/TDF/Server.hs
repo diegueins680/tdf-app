@@ -23,7 +23,7 @@ import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, isPrefixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
-import           Data.Char (isDigit, isSpace, isAlphaNum, toLower)
+import           Data.Char (isDigit, isAlphaNum, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), encode, genericParseJSON, genericToJSON)
@@ -136,7 +136,16 @@ import           TDF.WhatsApp.Types ( WAMetaWebhook(..)
                                     , WAValue(..)
                                     )
 import qualified TDF.WhatsApp.Types as WA
-import           TDF.WhatsApp.Client (sendText)
+import           TDF.WhatsApp.Client (SendTextResult)
+import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
+                                      , OutgoingWhatsAppRecord(..)
+                                      , WhatsAppDeliveryUpdate(..)
+                                      , applyWhatsAppDeliveryUpdate
+                                      , normalizeWhatsAppPhone
+                                      , recordIncomingWhatsAppMessage
+                                      , recordOutgoingWhatsAppMessage
+                                      )
+import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
 import           TDF.RagStore        (retrieveRagContext)
 import           Network.HTTP.Client (Manager, RequestBody(..), Response, newManager, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
@@ -633,42 +642,34 @@ whatsappWebhookServer =
       cfg <- liftIO loadWhatsAppEnv
       Env{envConfig, envPool} <- ask
       now <- liftIO getCurrentTime
+      let deliveryUpdates = extractWhatsAppDeliveryUpdates payload
       let inbound = extractWhatsAppInbound payload
-      for_ inbound $ \WAInbound{..} -> do
-        let externalId =
-              if T.null waInboundExternalId
-                then waInboundSenderId <> "-" <> T.pack (show now)
-                else waInboundExternalId
-        liftIO $ flip runSqlPool envPool $ do
-          _ <- upsert (ME.WhatsAppMessage externalId
-                         waInboundSenderId
-                         Nothing
-                         (Just waInboundText)
-                         "incoming"
-                         waInboundAdExternalId
-                         waInboundAdName
-                         waInboundCampaignExternalId
-                         waInboundCampaignName
-                         waInboundMetadata
-                         "pending"
-                         Nothing
-                         Nothing
-                         Nothing
-                         0
-                         Nothing
-                         Nothing
-                         Nothing
-                         now)
-               [ ME.WhatsAppMessageText =. Just waInboundText
-               , ME.WhatsAppMessageDirection =. "incoming"
-               , ME.WhatsAppMessageReplyStatus =. "pending"
-               , ME.WhatsAppMessageAdExternalId =. waInboundAdExternalId
-               , ME.WhatsAppMessageAdName =. waInboundAdName
-               , ME.WhatsAppMessageCampaignExternalId =. waInboundCampaignExternalId
-               , ME.WhatsAppMessageCampaignName =. waInboundCampaignName
-               , ME.WhatsAppMessageMetadata =. waInboundMetadata
-               ]
+      liftIO $ flip runSqlPool envPool $
+        for_ deliveryUpdates $ \WADeliveryStatus{..} -> do
+          _ <- applyWhatsAppDeliveryUpdate now WhatsAppDeliveryUpdate
+            { wduExternalId = waDeliveryExternalId
+            , wduStatus = waDeliveryStatus
+            , wduRecipientId = waDeliveryRecipientId
+            , wduOccurredAt = waDeliveryOccurredAt
+            , wduDeliveryError = waDeliveryError
+            , wduStatusPayload = waDeliveryPayload
+            }
           pure ()
+      for_ inbound $ \WAInbound{..} -> do
+        incomingEntity <- liftIO $ flip runSqlPool envPool $
+          recordIncomingWhatsAppMessage now IncomingWhatsAppRecord
+            { iwrExternalId = waInboundExternalId
+            , iwrSenderId = waInboundSenderId
+            , iwrSenderName = waInboundSenderName
+            , iwrText = waInboundText
+            , iwrAdExternalId = waInboundAdExternalId
+            , iwrAdName = waInboundAdName
+            , iwrCampaignExternalId = waInboundCampaignExternalId
+            , iwrCampaignName = waInboundCampaignName
+            , iwrMetadata = waInboundMetadata
+            , iwrTransportPayload = Nothing
+            , iwrSource = Just "whatsapp_webhook"
+            }
         let lowerBody = T.toLower (T.strip waInboundText)
         when ("inscribirme" `T.isInfixOf` lowerBody) $ do
           case normalizePhone waInboundSenderId of
@@ -682,39 +683,24 @@ whatsappWebhookServer =
                 , howHeard = Just "whatsapp"
                 , utm = Nothing
                 }
-              replyRes <- sendWhatsappReply cfg phone
-              case replyRes of
-                Left err -> liftIO $ flip runSqlPool envPool $
-                  updateWhere
-                    [ ME.WhatsAppMessageExternalId ==. externalId ]
-                    [ ME.WhatsAppMessageReplyError =. Just err ]
-                Right replyTxt -> liftIO $ flip runSqlPool envPool $ do
-                  updateWhere
-                    [ ME.WhatsAppMessageExternalId ==. externalId ]
-                    [ ME.WhatsAppMessageRepliedAt =. Just now
-                    , ME.WhatsAppMessageReplyText =. Just replyTxt
-                    , ME.WhatsAppMessageReplyError =. Nothing
-                    ]
-                  _ <- insert_ (ME.WhatsAppMessage (externalId <> "-out-" <> T.pack (show now))
-                                  waInboundSenderId
-                                  Nothing
-                                  (Just replyTxt)
-                                  "outgoing"
-                                  waInboundAdExternalId
-                                  waInboundAdName
-                                  waInboundCampaignExternalId
-                                  waInboundCampaignName
-                                  Nothing
-                                  "sent"
-                                  Nothing
-                                  Nothing
-                                  (Just now)
-                                  1
-                                  Nothing
-                                  Nothing
-                                  Nothing
-                                  now)
-                  pure ()
+              let incomingMsg = entityVal incomingEntity
+              (replyTxt, replyRes) <- sendWhatsappReply cfg phone
+              liftIO $ flip runSqlPool envPool $ do
+                _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+                  { owrRecipientPhone = phone
+                  , owrRecipientPartyId = ME.whatsAppMessagePartyId incomingMsg
+                  , owrRecipientName = waInboundSenderName <|> ME.whatsAppMessageSenderName incomingMsg
+                  , owrRecipientEmail = ME.whatsAppMessageContactEmail incomingMsg
+                  , owrActorPartyId = Nothing
+                  , owrBody = replyTxt
+                  , owrSource = Just "course_enrollment_auto_reply"
+                  , owrReplyToMessageId = Just (entityKey incomingEntity)
+                  , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId incomingMsg)
+                  , owrResendOfMessageId = Nothing
+                  , owrMetadata = Nothing
+                  }
+                  replyRes
+                pure ()
       pure NoContent
 
 whatsappHooksServer :: ServerT WhatsAppHooksAPI AppM
@@ -732,22 +718,33 @@ whatsappMessagesServer _ mLimit mDirection mRepliedOnly = do
           ]
   rows <- runDB $
     selectList filters [Desc ME.WhatsAppMessageCreatedAt, LimitTo limit]
-  let toObj (Entity _ m) = object
-        [ "externalId" .= ME.whatsAppMessageExternalId m
+  let toObj (Entity msgKey m) = object
+        [ "id" .= fromSqlKey msgKey
+        , "externalId" .= ME.whatsAppMessageExternalId m
+        , "partyId"    .= fmap fromSqlKey (ME.whatsAppMessagePartyId m)
+        , "actorPartyId" .= fmap fromSqlKey (ME.whatsAppMessageActorPartyId m)
         , "senderId"   .= ME.whatsAppMessageSenderId m
         , "senderName" .= ME.whatsAppMessageSenderName m
+        , "phoneE164"  .= ME.whatsAppMessagePhoneE164 m
+        , "contactEmail" .= ME.whatsAppMessageContactEmail m
         , "text"       .= ME.whatsAppMessageText m
         , "metadata"   .= ME.whatsAppMessageMetadata m
         , "direction"  .= ME.whatsAppMessageDirection m
+        , "replyStatus" .= ME.whatsAppMessageReplyStatus m
         , "repliedAt"  .= ME.whatsAppMessageRepliedAt m
         , "replyText"  .= ME.whatsAppMessageReplyText m
         , "replyError" .= ME.whatsAppMessageReplyError m
+        , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus m
+        , "deliveryUpdatedAt" .= ME.whatsAppMessageDeliveryUpdatedAt m
+        , "deliveryError" .= ME.whatsAppMessageDeliveryError m
+        , "source" .= ME.whatsAppMessageSource m
+        , "resendOfMessageId" .= fmap fromSqlKey (ME.whatsAppMessageResendOfMessageId m)
         , "createdAt"  .= ME.whatsAppMessageCreatedAt m
         ]
   pure (toJSON (map toObj rows))
 
 whatsappReplyServer :: AuthedUser -> ServerT Api.WhatsAppReplyAPI AppM
-whatsappReplyServer _ WhatsAppReplyReq{..} = do
+whatsappReplyServer user WhatsAppReplyReq{..} = do
   now <- liftIO getCurrentTime
   waEnv <- liftIO loadWhatsAppEnv
   let recipient = T.strip wrSenderId
@@ -756,48 +753,39 @@ whatsappReplyServer _ WhatsAppReplyReq{..} = do
   when (T.null recipient) $ throwBadRequest "Remitente requerido"
   when (T.null body) $ throwBadRequest "Mensaje vacío"
   sendResult <- sendWhatsAppText waEnv recipient body
-  runDB $ do
-    insert_ (ME.WhatsAppMessage (recipient <> "-out-" <> T.pack (show now))
-              recipient
-              Nothing
-              (Just body)
-              "outgoing"
-              Nothing
-              Nothing
-              Nothing
-              Nothing
-              Nothing
-              "sent"
-              Nothing
-              Nothing
-              (Just now)
-              1
-              Nothing
-              Nothing
-              (either Just (const Nothing) sendResult)
-              now)
-    for_ mExternalId $ \extId -> do
-      let baseFilters =
-            [ ME.WhatsAppMessageExternalId ==. extId
-            , ME.WhatsAppMessageDirection ==. "incoming"
-            , ME.WhatsAppMessageRepliedAt ==. Nothing
-            ]
-      case sendResult of
-        Left err ->
-          updateWhere baseFilters
-            [ ME.WhatsAppMessageReplyError =. Just err
-            ]
-        Right _ ->
-          updateWhere baseFilters
-            [ ME.WhatsAppMessageRepliedAt =. Just now
-            , ME.WhatsAppMessageReplyText =. Just body
-            , ME.WhatsAppMessageReplyError =. Nothing
-            ]
+  mReplyTarget <- case mExternalId of
+    Nothing -> pure Nothing
+    Just extId -> runDB $ getBy (ME.UniqueWhatsAppMessage extId)
+  sentEntity <- runDB $
+    recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+      { owrRecipientPhone = recipient
+      , owrRecipientPartyId = mReplyTarget >>= (ME.whatsAppMessagePartyId . entityVal)
+      , owrRecipientName = mReplyTarget >>= (ME.whatsAppMessageSenderName . entityVal)
+      , owrRecipientEmail = mReplyTarget >>= (ME.whatsAppMessageContactEmail . entityVal)
+      , owrActorPartyId = Just (auPartyId user)
+      , owrBody = body
+      , owrSource = Just "manual_reply"
+      , owrReplyToMessageId = entityKey <$> mReplyTarget
+      , owrReplyToExternalId = mExternalId
+      , owrResendOfMessageId = Nothing
+      , owrMetadata = Nothing
+      }
+      sendResult
   case sendResult of
     Left err ->
-      pure (object ["status" .= ("error" :: Text), "message" .= err])
-    Right responseBody ->
-      pure (object ["status" .= ("ok" :: Text), "message" .= ("sent" :: Text), "response" .= responseBody])
+      pure (object
+        [ "status" .= ("error" :: Text)
+        , "message" .= err
+        , "messageId" .= fromSqlKey (entityKey sentEntity)
+        , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
+        ])
+    Right _ ->
+      pure (object
+        [ "status" .= ("ok" :: Text)
+        , "message" .= ("sent" :: Text)
+        , "messageId" .= fromSqlKey (entityKey sentEntity)
+        , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
+        ])
 
 whatsappConsentServer :: AuthedUser -> ServerT Api.WhatsAppConsentAPI AppM
 whatsappConsentServer user =
@@ -894,13 +882,15 @@ whatsappConsentRoutes defaultSource requireGate =
           msg = greeting <>
             "Gracias por aceptar recibir mensajes de TDF Records por WhatsApp. " <>
             "Responde STOP si deseas dejar de recibir mensajes."
-      sendWhatsAppText waEnv phoneVal msg
+      result <- sendWhatsAppText waEnv phoneVal msg
+      pure (msg, result)
 
     sendOptOutMessage phoneVal = do
       waEnv <- liftIO loadWhatsAppEnv
       let msg = "Listo. No recibirás más mensajes de TDF Records por WhatsApp. " <>
                 "Si fue un error, escríbenos y lo reactivamos."
-      sendWhatsAppText waEnv phoneVal msg
+      result <- sendWhatsAppText waEnv phoneVal msg
+      pure (msg, result)
 
     createConsent WhatsAppConsentRequest{..} = do
       requireGate
@@ -914,10 +904,25 @@ whatsappConsentRoutes defaultSource requireGate =
       _ <- persistConsent phoneVal nameClean sourceClean noteClean now
       (sent, msgText) <- if shouldSend
         then do
-          res <- sendConsentMessage phoneVal nameClean
+          (msg, res) <- sendConsentMessage phoneVal nameClean
+          _ <- runDB $
+            recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+              { owrRecipientPhone = phoneVal
+              , owrRecipientPartyId = Nothing
+              , owrRecipientName = nameClean
+              , owrRecipientEmail = Nothing
+              , owrActorPartyId = Nothing
+              , owrBody = msg
+              , owrSource = Just "consent_confirmation"
+              , owrReplyToMessageId = Nothing
+              , owrReplyToExternalId = Nothing
+              , owrResendOfMessageId = Nothing
+              , owrMetadata = Nothing
+              }
+              res
           pure $ case res of
             Left err -> (False, Just err)
-            Right msg -> (True, Just msg)
+            Right _ -> (True, Just msg)
         else pure (False, Nothing)
       status <- runDB $ getBy (ME.UniqueWhatsAppConsent phoneVal)
       pure WhatsAppConsentResponse
@@ -935,10 +940,25 @@ whatsappConsentRoutes defaultSource requireGate =
       _ <- persistOptOut phoneVal reasonClean now
       (sent, msgText) <- if shouldSend
         then do
-          res <- sendOptOutMessage phoneVal
+          (msg, res) <- sendOptOutMessage phoneVal
+          _ <- runDB $
+            recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+              { owrRecipientPhone = phoneVal
+              , owrRecipientPartyId = Nothing
+              , owrRecipientName = Nothing
+              , owrRecipientEmail = Nothing
+              , owrActorPartyId = Nothing
+              , owrBody = msg
+              , owrSource = Just "opt_out_confirmation"
+              , owrReplyToMessageId = Nothing
+              , owrReplyToExternalId = Nothing
+              , owrResendOfMessageId = Nothing
+              , owrMetadata = Nothing
+              }
+              res
           pure $ case res of
             Left err -> (False, Just err)
-            Right msg -> (True, Just msg)
+            Right _ -> (True, Just msg)
         else pure (False, Nothing)
       status <- runDB $ getBy (ME.UniqueWhatsAppConsent phoneVal)
       pure WhatsAppConsentResponse
@@ -2147,39 +2167,6 @@ courseMetadataFor cfg mWaContact slugVal =
         , landingUrl = buildLandingUrl cfg
         }
 
-data WhatsAppEnv = WhatsAppEnv
-  { waToken        :: Maybe Text
-  , waPhoneId      :: Maybe Text
-  , waVerifyToken  :: Maybe Text
-  , waContactNumber :: Maybe Text
-  , waApiVersion   :: Maybe Text
-  }
-
-loadWhatsAppEnv :: IO WhatsAppEnv
-loadWhatsAppEnv = do
-  token   <- firstNonEmptyText ["WHATSAPP_TOKEN", "WA_TOKEN"]
-  phoneId <- firstNonEmptyText ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
-  verify  <- firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
-  contact <- firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
-  apiVersion <- firstNonEmptyText ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
-  pure WhatsAppEnv
-    { waToken = token
-    , waPhoneId = phoneId
-    , waVerifyToken = verify
-    , waContactNumber = contact
-    , waApiVersion = apiVersion
-    }
-
-firstNonEmptyText :: [String] -> IO (Maybe Text)
-firstNonEmptyText names = go names
-  where
-    go [] = pure Nothing
-    go (n:ns) = do
-      val <- lookupEnv n
-      case fmap (T.strip . T.pack) val of
-        Just txt | not (T.null txt) -> pure (Just txt)
-        _                           -> go ns
-
 loadCourseMetadata :: Text -> AppM CourseMetadata
 loadCourseMetadata rawSlug = do
   Env{..} <- ask
@@ -2761,6 +2748,7 @@ extractTextMessages payload =
 data WAInbound = WAInbound
   { waInboundExternalId :: Text
   , waInboundSenderId   :: Text
+  , waInboundSenderName :: Maybe Text
   , waInboundText       :: Text
   , waInboundAdExternalId :: Maybe Text
   , waInboundAdName     :: Maybe Text
@@ -2771,25 +2759,36 @@ data WAInbound = WAInbound
 
 extractWhatsAppInbound :: WAMetaWebhook -> [WAInbound]
 extractWhatsAppInbound WAMetaWebhook{entry} =
-  [ WAInbound
-      { waInboundExternalId = fromMaybe (WA.from msg <> "-" <> fromMaybe "0" (waTimestamp msg)) (waId msg)
-      , waInboundSenderId = WA.from msg
-      , waInboundText = body
-      , waInboundAdExternalId = adExt
-      , waInboundAdName = adName
-      , waInboundCampaignExternalId = Nothing
-      , waInboundCampaignName = Nothing
-      , waInboundMetadata = metaTxt
-      }
-  | WAEntry{changes} <- entry
-  , WAChange{value=WAValue{messages=Just msgs}} <- changes
-  , msg@WAMessage{waType, text=Just txtBody} <- msgs
-  , waType == "text"
-  , let body = WA.body txtBody
-        referral = waReferral msg <|> (waContext msg >>= waContextReferral)
-        (adExt, adName, metaTxt) = waReferralMeta referral
-  ]
+  concatMap extractEntry entry
   where
+    extractEntry WAEntry{changes} = concatMap extractChange changes
+
+    extractChange WAChange{value=WAValue{messages=Just msgs, contacts=mContacts}} =
+      let contactMap = Map.fromList
+            [ (waIdVal, cleanOptional (WA.name =<< WA.waIdProfile contact))
+            | contact <- fromMaybe [] mContacts
+            , Just waIdVal <- [cleanOptional (WA.waIdValue contact)]
+            ]
+      in
+        [ WAInbound
+            { waInboundExternalId = fromMaybe (WA.from msg <> "-" <> fromMaybe "0" (waTimestamp msg)) (waId msg)
+            , waInboundSenderId = WA.from msg
+            , waInboundSenderName = join (Map.lookup (WA.from msg) contactMap)
+            , waInboundText = body
+            , waInboundAdExternalId = adExt
+            , waInboundAdName = adName
+            , waInboundCampaignExternalId = Nothing
+            , waInboundCampaignName = Nothing
+            , waInboundMetadata = metaTxt
+            }
+        | msg@WAMessage{waType, text=Just txtBody} <- msgs
+        , waType == "text"
+        , let body = WA.body txtBody
+              referral = waReferral msg <|> (waContext msg >>= waContextReferral)
+              (adExt, adName, metaTxt) = waReferralMeta referral
+        ]
+    extractChange _ = []
+
     waReferralMeta Nothing = (Nothing, Nothing, Nothing)
     waReferralMeta (Just WAReferral{sourceId, headline, waBody, sourceType, sourceUrl}) =
       let adName = headline <|> waBody
@@ -2803,8 +2802,54 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
           metaTxt = Just (TE.decodeUtf8 (BL.toStrict (encode metaObj)))
       in (sourceId, adName, metaTxt)
 
-sendWhatsappReply :: WhatsAppEnv -> Text -> AppM (Either Text Text)
-sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVersion = mVersion} phone = do
+data WADeliveryStatus = WADeliveryStatus
+  { waDeliveryExternalId :: Text
+  , waDeliveryStatus     :: Text
+  , waDeliveryRecipientId :: Maybe Text
+  , waDeliveryOccurredAt :: Maybe UTCTime
+  , waDeliveryError      :: Maybe Text
+  , waDeliveryPayload    :: Maybe Text
+  } deriving (Show)
+
+extractWhatsAppDeliveryUpdates :: WAMetaWebhook -> [WADeliveryStatus]
+extractWhatsAppDeliveryUpdates WAMetaWebhook{entry} =
+  concatMap extractEntry entry
+  where
+    extractEntry WAEntry{changes} = concatMap extractChange changes
+
+    extractChange WAChange{value=WAValue{statuses=Just rows}} =
+      [ WADeliveryStatus
+          { waDeliveryExternalId = externalId
+          , waDeliveryStatus = fromMaybe "unknown" (cleanOptional (WA.waStatus statusRow))
+          , waDeliveryRecipientId = cleanOptional (WA.waRecipientId statusRow)
+          , waDeliveryOccurredAt = WA.waStatusTimestamp statusRow >>= parseWhatsAppEpoch
+          , waDeliveryError = foldMap summarizeErrors (WA.waStatusErrors statusRow)
+          , waDeliveryPayload = Just (TE.decodeUtf8 (BL.toStrict (encode payload)))
+          }
+      | statusRow <- rows
+      , let externalId = fromMaybe "" (cleanOptional (WA.waStatusId statusRow))
+            payload = object
+              [ "id" .= WA.waStatusId statusRow
+              , "status" .= WA.waStatus statusRow
+              , "recipient_id" .= WA.waRecipientId statusRow
+              , "timestamp" .= WA.waStatusTimestamp statusRow
+              , "errors" .= WA.waStatusErrors statusRow
+              ]
+      , not (T.null externalId)
+      ]
+    extractChange _ = []
+
+    summarizeErrors errs =
+      let rendered = TE.decodeUtf8 (BL.toStrict (encode errs))
+      in cleanOptional (Just rendered)
+
+    parseWhatsAppEpoch raw = do
+      value <- cleanOptional (Just raw)
+      seconds <- readMaybe (T.unpack value) :: Maybe Integer
+      pure (addUTCTime (fromInteger seconds) (UTCTime (fromGregorian 1970 1 1) 0))
+
+sendWhatsappReply :: WhatsAppEnv -> Text -> AppM (Text, Either Text SendTextResult)
+sendWhatsappReply waEnv phone = do
   Env{envConfig} <- ask
   let slugVal = productionCourseSlug envConfig
   metaRaw <- loadCourseMetadata slugVal
@@ -2812,33 +2857,16 @@ sendWhatsappReply WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVer
                             , Courses.capacity = metaCapacity
                             , Courses.landingUrl = metaLanding
                             } = metaRaw
-  manager <- liftIO $ newManager tlsManagerSettings
   let msg = "¡Gracias por tu interés en " <> metaTitle <> "! Aquí tienes el link de inscripción: "
             <> metaLanding <> ". Cupos limitados (" <> T.pack (show metaCapacity) <> ")."
-      version = fromMaybe "v20.0" mVersion
-  res <- liftIO $ sendText manager version tok pid phone msg
-  pure $ case res of
-    Left err -> Left (T.pack err)
-    Right _ -> Right msg
-sendWhatsappReply _ _ = pure (Left "WhatsApp config not available")
+  res <- liftIO $ sendWhatsAppTextIO waEnv phone msg
+  pure (msg, res)
 
-sendWhatsAppText :: WhatsAppEnv -> Text -> Text -> AppM (Either Text Text)
-sendWhatsAppText WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVersion = mVersion} phone msg = do
-  manager <- liftIO $ newManager tlsManagerSettings
-  let version = fromMaybe "v20.0" mVersion
-  res <- liftIO $ sendText manager version tok pid phone msg
-  pure $ case res of
-    Left err -> Left (T.pack err)
-    Right _ -> Right msg
-sendWhatsAppText _ _ _ = pure (Left "WhatsApp config not available")
+sendWhatsAppText :: WhatsAppEnv -> Text -> Text -> AppM (Either Text SendTextResult)
+sendWhatsAppText waEnv phone msg = liftIO $ sendWhatsAppTextIO waEnv phone msg
 
 normalizePhone :: Text -> Maybe Text
-normalizePhone raw =
-  let trimmed = T.filter (not . isSpace) (T.strip raw)
-      digits = T.filter (\c -> isDigit c || c == '+') trimmed
-      withoutPlus = T.dropWhile (== '+') digits
-      onlyDigits = T.filter isDigit withoutPlus
-  in if T.null onlyDigits then Nothing else Just ("+" <> onlyDigits)
+normalizePhone = normalizeWhatsAppPhone
 
 normalizeSlug :: Text -> Text
 normalizeSlug = T.toLower . T.strip
@@ -5522,7 +5550,7 @@ adsInquiryPublic inquiry = do
       , Trials.leadInterestCreatedAt = now
       })
     pure rid
-  channels <- liftIO $ sendAutoReplies (envConfig env) inquiry courseLabel
+  channels <- liftIO $ sendAutoReplies (envPool env) partyId (envConfig env) inquiry courseLabel
   pure AdsInquiryOut
     { aioOk = True
     , aioInquiryId = entityKeyInt inquiryId
@@ -6222,10 +6250,10 @@ resolveSubject mCourse =
       | "sint" `T.isInfixOf` txt = "Síntesis Modular"
       | otherwise = txt
 
-sendAutoReplies :: AppConfig -> AdsInquiry -> Maybe Text -> IO [Text]
-sendAutoReplies cfg AdsInquiry{..} mCourse = do
-  mgr <- newManager tlsManagerSettings
+sendAutoReplies :: ConnectionPool -> PartyId -> AppConfig -> AdsInquiry -> Maybe Text -> IO [Text]
+sendAutoReplies pool partyId cfg AdsInquiry{..} mCourse = do
   wa <- loadWhatsAppEnv
+  now <- getCurrentTime
   let ctaBase = resolveConfiguredAppBase cfg
       cta = ctaBase <> "/trials"
       courseLanding = buildLandingUrl cfg
@@ -6239,10 +6267,26 @@ sendAutoReplies cfg AdsInquiry{..} mCourse = do
         , "Confírmame tu disponibilidad y ciudad. Agendamos aquí: " <> cta
         ]
   channels <- fmap catMaybes . sequence $
-    [ case (waToken wa, waPhoneId wa, aiPhone >>= normalizePhone) of
-        (Just tok, Just pid, Just ph) ->
-          do res <- sendText mgr (fromMaybe "v20.0" (waApiVersion wa)) tok pid ph body
-             pure (either (const Nothing) (const (Just "whatsapp")) res)
+    [ case aiPhone >>= normalizePhone of
+        Just ph -> do
+          res <- sendWhatsAppTextIO wa ph body
+          _ <- runSqlPool
+            (recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+              { owrRecipientPhone = ph
+              , owrRecipientPartyId = Just partyId
+              , owrRecipientName = aiName
+              , owrRecipientEmail = aiEmail
+              , owrActorPartyId = Nothing
+              , owrBody = body
+              , owrSource = Just "ads_auto_reply"
+              , owrReplyToMessageId = Nothing
+              , owrReplyToExternalId = Nothing
+              , owrResendOfMessageId = Nothing
+              , owrMetadata = Nothing
+              }
+              res)
+            pool
+          pure (either (const Nothing) (const (Just "whatsapp")) res)
         _ -> pure Nothing
     , case aiEmail of
         Just e -> do

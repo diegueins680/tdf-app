@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Checkbox,
@@ -11,13 +12,16 @@ import {
   Tooltip,
   IconButton,
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Admin, type AdminUser } from '../api/admin';
+import AdminUserCommunicationDialog from '../components/AdminUserCommunicationDialog';
 
 export default function AdminUsersPage() {
   const qc = useQueryClient();
   const [includeInactive, setIncludeInactive] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
   const usersQuery = useQuery({
     queryKey: ['admin', 'users', includeInactive],
@@ -29,7 +33,8 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <Stack spacing={3}>
+    <>
+      <Stack spacing={3}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography variant="h4" fontWeight={700}>Usuarios (admin API)</Typography>
         <Stack direction="row" spacing={1} alignItems="center">
@@ -62,17 +67,25 @@ export default function AdminUsersPage() {
           {usersQuery.data?.length ? (
             <Stack spacing={1.5}>
               {usersQuery.data.map((u) => (
-                <UserRow key={u.userId} user={u} />
+                <UserRow key={u.userId} user={u} onOpenCommunications={() => setSelectedUser(u)} />
               ))}
             </Stack>
           ) : null}
         </CardContent>
       </Card>
-    </Stack>
+      </Stack>
+      <AdminUserCommunicationDialog
+        open={Boolean(selectedUser)}
+        user={selectedUser}
+        onClose={() => setSelectedUser(null)}
+      />
+    </>
   );
 }
 
-function UserRow({ user }: { user: AdminUser }) {
+function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommunications: () => void }) {
+  const hasContactInfo = Boolean(user.whatsapp ?? user.primaryPhone ?? user.primaryEmail);
+
   return (
     <Box
       sx={{
@@ -90,6 +103,11 @@ function UserRow({ user }: { user: AdminUser }) {
         <Typography variant="body2" color="text.secondary">
           {user.partyName} · ID {user.partyId}
         </Typography>
+        {hasContactInfo && (
+          <Typography variant="body2" color="text.secondary">
+            {user.whatsapp ?? user.primaryPhone ?? 'Sin teléfono'} · {user.primaryEmail ?? 'Sin correo'}
+          </Typography>
+        )}
       </Box>
       <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />
       <Stack direction="row" spacing={0.5} flexWrap="wrap">
@@ -101,6 +119,14 @@ function UserRow({ user }: { user: AdminUser }) {
         {user.modules.map((m) => (
           <Chip key={m} label={m} size="small" color="info" variant="outlined" />
         ))}
+      </Stack>
+      <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
+        <Button component={RouterLink} to={`/perfil/${user.partyId}`} size="small" variant="outlined">
+          Perfil
+        </Button>
+        <Button size="small" variant="contained" onClick={onOpenCommunications}>
+          Comunicación
+        </Button>
       </Stack>
     </Box>
   );

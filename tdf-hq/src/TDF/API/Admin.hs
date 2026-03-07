@@ -17,8 +17,9 @@ import           TDF.API.Types ( DropdownOptionCreate
                                 , UserAccountDTO
                                 , UserAccountUpdate
                                 )
-import           Data.Aeson (FromJSON(..), ToJSON, Value(..), withObject, (.:?))
+import           Data.Aeson (FromJSON(..), ToJSON(..), Value(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, withObject, (.:?))
 import           Data.Aeson.Types (Parser)
+import           Data.Char      (toLower)
 import           GHC.Generics (Generic)
 import           Data.Int      (Int64)
 import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert, LogEntryDTO)
@@ -35,6 +36,17 @@ type UsersAPI =
         ( Get '[JSON] UserAccountDTO
      :<|> ReqBody '[JSON] UserAccountUpdate :> Patch '[JSON] UserAccountDTO
         )
+
+type UserCommunicationsAPI =
+       "users" :> Capture "userId" Int64 :> "communications"
+         :> QueryParam "limit" Int
+         :> Get '[JSON] UserCommunicationHistoryDTO
+  :<|> "users" :> Capture "userId" Int64 :> "communications" :> "whatsapp"
+         :> ReqBody '[JSON] AdminWhatsAppSendRequest
+         :> Post '[JSON] AdminWhatsAppSendResponse
+  :<|> "communications" :> "whatsapp" :> Capture "messageId" Int64 :> "resend"
+         :> ReqBody '[JSON] AdminWhatsAppResendRequest
+         :> Post '[JSON] AdminWhatsAppSendResponse
 
 type RolesAPI = Get '[JSON] [RoleDetailDTO]
 
@@ -76,6 +88,7 @@ type AdminAPI =
        "seed" :> Post '[JSON] NoContent
   :<|> "dropdowns" :> Capture "category" Text :> DropdownCategoryAPI
   :<|> "users" :> UsersAPI
+  :<|> UserCommunicationsAPI
   :<|> "roles" :> RolesAPI
   :<|> "artists" :> ArtistAdminAPI
   :<|> "logs" :> LogsAPI
@@ -94,6 +107,74 @@ data SocialUnholdRequest = SocialUnholdRequest
   } deriving (Show, Generic)
 
 instance FromJSON SocialUnholdRequest
+
+data AdminWhatsAppSendRequest = AdminWhatsAppSendRequest
+  { awsrMessage          :: Text
+  , awsrMode             :: Text
+  , awsrReplyToMessageId :: Maybe Int64
+  } deriving (Show, Generic)
+
+instance FromJSON AdminWhatsAppSendRequest where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+
+data AdminWhatsAppResendRequest = AdminWhatsAppResendRequest
+  { awrrMessage :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON AdminWhatsAppResendRequest where
+  parseJSON = withObject "AdminWhatsAppResendRequest" $ \o -> do
+    mMessage <- o .:? "message"
+    pure AdminWhatsAppResendRequest { awrrMessage = mMessage }
+
+data WhatsAppMessageAdminDTO = WhatsAppMessageAdminDTO
+  { wmdId                :: Int64
+  , wmdExternalId        :: Text
+  , wmdPartyId           :: Maybe Int64
+  , wmdActorPartyId      :: Maybe Int64
+  , wmdSenderId          :: Text
+  , wmdSenderName        :: Maybe Text
+  , wmdPhoneE164         :: Maybe Text
+  , wmdContactEmail      :: Maybe Text
+  , wmdText              :: Maybe Text
+  , wmdDirection         :: Text
+  , wmdReplyStatus       :: Text
+  , wmdReplyError        :: Maybe Text
+  , wmdRepliedAt         :: Maybe UTCTime
+  , wmdReplyText         :: Maybe Text
+  , wmdDeliveryStatus    :: Text
+  , wmdDeliveryUpdatedAt :: Maybe UTCTime
+  , wmdDeliveryError     :: Maybe Text
+  , wmdSource            :: Maybe Text
+  , wmdResendOfMessageId :: Maybe Int64
+  , wmdCreatedAt         :: UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON WhatsAppMessageAdminDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data UserCommunicationHistoryDTO = UserCommunicationHistoryDTO
+  { uchUserId       :: Int64
+  , uchPartyId      :: Int64
+  , uchPartyName    :: Text
+  , uchUsername     :: Text
+  , uchPrimaryEmail :: Maybe Text
+  , uchPrimaryPhone :: Maybe Text
+  , uchWhatsapp     :: Maybe Text
+  , uchMessages     :: [WhatsAppMessageAdminDTO]
+  } deriving (Show, Generic)
+
+instance ToJSON UserCommunicationHistoryDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data AdminWhatsAppSendResponse = AdminWhatsAppSendResponse
+  { awspStatus         :: Text
+  , awspMessageId      :: Maybe Int64
+  , awspDeliveryStatus :: Text
+  , awspMessage        :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON AdminWhatsAppSendResponse where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
 
 
 data EmailTestRequest = EmailTestRequest
@@ -169,3 +250,8 @@ data RagRefreshResponse = RagRefreshResponse
   , rrrChunks :: Int
   } deriving (Show, Generic)
 instance ToJSON RagRefreshResponse
+
+camelDrop :: Int -> String -> String
+camelDrop n xs = case drop n xs of
+  (c:cs) -> toLower c : cs
+  []     -> []
