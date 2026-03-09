@@ -8,6 +8,9 @@ module TDF.WhatsApp.History
   , OutgoingWhatsAppRecord(..)
   , WhatsAppDeliveryUpdate(..)
   , normalizeWhatsAppPhone
+  , phoneLookupAliases
+  , resolvePartyPhones
+  , messageBelongsToParty
   , resolveWhatsAppContactSnapshot
   , recordIncomingWhatsAppMessage
   , recordOutgoingWhatsAppMessage
@@ -402,6 +405,19 @@ phoneLookupAliases phoneVal =
     [ phoneVal
     , T.dropWhile (== '+') phoneVal
     ]
+
+resolvePartyPhones :: Party -> [Text]
+resolvePartyPhones party =
+  nub (catMaybes
+    [ partyWhatsapp party >>= normalizeWhatsAppPhone
+    , partyPrimaryPhone party >>= normalizeWhatsAppPhone
+    ])
+
+messageBelongsToParty :: PartyId -> [Text] -> ME.WhatsAppMessage -> Bool
+messageBelongsToParty partyKey phones msg =
+  ME.whatsAppMessagePartyId msg == Just partyKey
+    || maybe False (`elem` phones) (ME.whatsAppMessagePhoneE164 msg)
+    || ME.whatsAppMessageSenderId msg `elem` concatMap phoneLookupAliases phones
 
 cleanMaybeText :: Maybe Text -> Maybe Text
 cleanMaybeText Nothing = Nothing

@@ -87,7 +87,13 @@ import           TDF.Config             (ragRefreshHours)
 import           TDF.Models
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
-import           TDF.WhatsApp.History   (OutgoingWhatsAppRecord(..), normalizeWhatsAppPhone, recordOutgoingWhatsAppMessage)
+import           TDF.WhatsApp.History   ( OutgoingWhatsAppRecord(..)
+                                        , messageBelongsToParty
+                                        , normalizeWhatsAppPhone
+                                        , phoneLookupAliases
+                                        , recordOutgoingWhatsAppMessage
+                                        , resolvePartyPhones
+                                        )
 import           TDF.WhatsApp.Transport (loadWhatsAppEnv, sendWhatsAppTextIO)
 import           Data.Aeson (object, (.=))
 import           TDF.Seed               (seedAll)
@@ -950,23 +956,6 @@ buildSendResponse sendResult (Entity msgKey msg) =
     , awspDeliveryStatus = ME.whatsAppMessageDeliveryStatus msg
     , awspMessage = either Just (const (Just "sent")) sendResult
     }
-
-resolvePartyPhones :: Party -> [Text]
-resolvePartyPhones party =
-  nub (catMaybes
-    [ partyWhatsapp party >>= normalizeWhatsAppPhone
-    , partyPrimaryPhone party >>= normalizeWhatsAppPhone
-    ])
-
-phoneLookupAliases :: Text -> [Text]
-phoneLookupAliases phoneVal =
-  nub [phoneVal, T.dropWhile (== '+') phoneVal]
-
-messageBelongsToParty :: PartyId -> [Text] -> ME.WhatsAppMessage -> Bool
-messageBelongsToParty partyKey phones msg =
-  ME.whatsAppMessagePartyId msg == Just partyKey
-    || maybe False (`elem` phones) (ME.whatsAppMessagePhoneE164 msg)
-    || ME.whatsAppMessageSenderId msg `elem` concatMap phoneLookupAliases phones
 
 normalizeOptionalText :: Maybe Text -> Maybe Text
 normalizeOptionalText Nothing = Nothing
