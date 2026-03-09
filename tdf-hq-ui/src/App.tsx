@@ -81,6 +81,8 @@ import InternshipsPage from './pages/InternshipsPage';
 import WhatsAppConsentPage from './pages/WhatsAppConsentPage';
 import PublicWhatsAppConsentPage from './pages/PublicWhatsAppConsentPage';
 import PublicWhatsAppConsentSuccessPage from './pages/PublicWhatsAppConsentSuccessPage';
+import { canAccessPath } from './utils/accessControl';
+import { buildLoginRedirectPath, pickLandingPath } from './utils/loginRouting';
 
 const DESKTOP_NAV_MIN_WIDTH = 1024;
 
@@ -148,7 +150,17 @@ function Shell() {
   }, [sidebarCollapsed]);
 
   if (!session) {
-    return <Navigate to="/login" replace />;
+    const loginPath = buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`);
+    return <Navigate to={loginPath} replace />;
+  }
+
+  if (!canAccessPath(location.pathname, session.roles ?? [], session.modules)) {
+    const landingPath = pickLandingPath(session.roles ?? [], session.modules);
+    const fallbackPath =
+      landingPath !== location.pathname && canAccessPath(landingPath, session.roles ?? [], session.modules)
+        ? landingPath
+        : '/inicio';
+    return <Navigate to={fallbackPath} replace />;
   }
 
   const hideFloatingAssistants =

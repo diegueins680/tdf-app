@@ -27,15 +27,81 @@ export interface AdminUser {
   partyId: number;
   partyName: string;
   username: string;
+  primaryEmail?: string | null;
+  primaryPhone?: string | null;
+  whatsapp?: string | null;
   active: boolean;
   roles: string[];
   modules: string[];
+}
+
+export interface WhatsAppMessageAdmin {
+  id: number;
+  externalId: string;
+  partyId?: number | null;
+  actorPartyId?: number | null;
+  senderId: string;
+  senderName?: string | null;
+  phoneE164?: string | null;
+  contactEmail?: string | null;
+  text?: string | null;
+  direction: string;
+  replyStatus: string;
+  replyError?: string | null;
+  repliedAt?: string | null;
+  replyText?: string | null;
+  deliveryStatus: string;
+  deliveryUpdatedAt?: string | null;
+  deliveryError?: string | null;
+  source?: string | null;
+  resendOfMessageId?: number | null;
+  createdAt: string;
+}
+
+export interface UserCommunicationHistory {
+  userId: number;
+  partyId: number;
+  partyName: string;
+  username: string;
+  primaryEmail?: string | null;
+  primaryPhone?: string | null;
+  whatsapp?: string | null;
+  messages: WhatsAppMessageAdmin[];
+}
+
+export interface AdminWhatsAppSendPayload {
+  message: string;
+  mode: 'reply' | 'notify';
+  replyToMessageId?: number | null;
+}
+
+export interface AdminWhatsAppResendPayload {
+  message?: string | null;
+}
+
+export interface AdminWhatsAppSendResponse {
+  status: string;
+  messageId?: number | null;
+  deliveryStatus: string;
+  message?: string | null;
 }
 
 export const Admin = {
   listUsers: (includeInactive?: boolean) =>
     get<AdminUser[]>(`/admin/users${includeInactive ? '?includeInactive=true' : ''}`),
   getUser: (userId: number) => get<AdminUser>(`/admin/users/${userId}`),
+  getUserCommunicationHistory: (userId: number, limit = 150) =>
+    get<UserCommunicationHistory>(`/admin/users/${userId}/communications?limit=${limit}`),
+  sendUserWhatsApp: (userId: number, payload: AdminWhatsAppSendPayload) =>
+    post<AdminWhatsAppSendResponse>(`/admin/users/${userId}/communications/whatsapp`, {
+      message: payload.message,
+      mode: payload.mode,
+      ...(payload.replyToMessageId ? { replyToMessageId: payload.replyToMessageId } : {}),
+    }),
+  resendWhatsAppMessage: (messageId: number, payload: AdminWhatsAppResendPayload = {}) =>
+    post<AdminWhatsAppSendResponse>(`/admin/communications/whatsapp/${messageId}/resend`, {
+      ...(payload.message ? { message: payload.message } : {}),
+    }),
   createUser: (payload: CreateUserPayload) =>
     post('/admin/users', {
       uacPartyId: payload.partyId,

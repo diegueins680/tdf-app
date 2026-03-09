@@ -76,6 +76,9 @@ data UserAccountDTO = UserAccountDTO
   , partyId   :: Int64
   , partyName :: Text
   , username  :: Text
+  , primaryEmail :: Maybe Text
+  , primaryPhone :: Maybe Text
+  , whatsapp :: Maybe Text
   , active    :: Bool
   , roles     :: [RoleEnum]
   , modules   :: [Text]

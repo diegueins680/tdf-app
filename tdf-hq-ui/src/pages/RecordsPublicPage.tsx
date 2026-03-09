@@ -37,7 +37,7 @@ import { Admin } from '../api/admin';
 import { Services } from '../api/services';
 import { Engineers } from '../api/engineers';
 import { useSession } from '../session/SessionContext';
-import { deriveModulesFromRoles } from '../components/SidebarNav';
+import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -840,11 +840,10 @@ export default function RecordsPublicPage() {
   const bookingToken = envVars['VITE_PUBLIC_BOOKING_TOKEN'] ?? envVars['VITE_API_DEMO_TOKEN'] ?? '';
   const hasBookingToken = Boolean(bookingToken);
   const { session, login, setApiToken } = useSession();
-  const modules = useMemo(() => {
-    const provided = session?.modules ?? [];
-    const fromRoles = deriveModulesFromRoles(session?.roles);
-    return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
-  }, [session?.modules, session?.roles]);
+  const modules = useMemo(
+    () => buildAccessibleModuleSet(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
   const canMaintainCms = modules.has('admin') || modules.has('cms');
 
   useEffect(() => {

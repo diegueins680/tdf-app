@@ -52,9 +52,9 @@ import { formatLastSavedTimestamp, getOrderStatusMeta } from '../utils/marketpla
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import { Inventory } from '../api/inventory';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
-import { deriveModulesFromRoles } from '../components/SidebarNav';
 import { useSession } from '../session/SessionContext';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
+import { buildAccessibleModuleSet } from '../utils/accessControl';
 
 const API_BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
   ? import.meta.env.VITE_API_BASE
@@ -188,18 +188,10 @@ const fireCartMetaEvent = () => {
 export default function MarketplacePage() {
   const qc = useQueryClient();
   const { session } = useSession();
-  const modules = useMemo(() => {
-    const provided = session?.modules ?? [];
-    const fromRoles = deriveModulesFromRoles(session?.roles);
-    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
-    if (baseSet.has('packages')) {
-      baseSet.add('ops');
-    }
-    if (baseSet.has('ops')) {
-      baseSet.add('packages');
-    }
-    return baseSet;
-  }, [session?.modules, session?.roles]);
+  const modules = useMemo(
+    () => buildAccessibleModuleSet(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
   const canManagePhotos = modules.has('ops') || modules.has('admin');
   const paypalClientId = useMemo<string>(() => {
     const baked = String(import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();

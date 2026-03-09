@@ -9,6 +9,7 @@ module TDF.ServerAdmin
   ) where
 
 import           Control.Exception      (SomeException, try)
+import           Control.Applicative    ((<|>))
 import           Control.Monad          (unless, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
@@ -16,14 +17,16 @@ import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
 import           Data.Char              (isAlphaNum)
-import           Data.Maybe             (catMaybes, fromMaybe, isJust)
+import           Data.List              (nub)
+import           Data.Maybe             (catMaybes, fromMaybe, isJust, listToMaybe)
+import           Data.Int               (Int64)
 import qualified Data.Set               as Set
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Time              (diffUTCTime, getCurrentTime)
-import           Database.Persist       ( (==.), (!=.)
+import           Database.Persist       ( (==.), (!=.), (<-.), (||.)
                                         , (=.)
                                         , count
                                         , updateWhere
@@ -46,6 +49,9 @@ import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
 import           TDF.API.Admin          ( AdminAPI
+                                        , AdminWhatsAppResendRequest(..)
+                                        , AdminWhatsAppSendRequest(..)
+                                        , AdminWhatsAppSendResponse(..)
                                         , BrainEntryCreate(..)
                                         , BrainEntryDTO(..)
                                         , BrainEntryUpdate(..)
@@ -54,6 +60,8 @@ import           TDF.API.Admin          ( AdminAPI
                                         , RagIndexStatus(..)
                                         , RagRefreshResponse(..)
                                         , SocialUnholdRequest(..)
+                                        , UserCommunicationHistoryDTO(..)
+                                        , WhatsAppMessageAdminDTO(..)
                                         )
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
@@ -69,6 +77,7 @@ import           TDF.DTO                ( ArtistProfileUpsert(..)
                                         )
 import           TDF.Auth               ( AuthedUser
                                         , ModuleAccess(..)
+                                        , auPartyId
                                         , hasModuleAccess
                                         , moduleName
                                         , modulesForRoles
@@ -78,6 +87,8 @@ import           TDF.Config             (ragRefreshHours)
 import           TDF.Models
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
+import           TDF.WhatsApp.History   (OutgoingWhatsAppRecord(..), normalizeWhatsAppPhone, recordOutgoingWhatsAppMessage)
+import           TDF.WhatsApp.Transport (loadWhatsAppEnv, sendWhatsAppTextIO)
 import           Data.Aeson (object, (.=))
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
@@ -101,6 +112,7 @@ adminServer user =
        seedHandler
   :<|> dropdownRouter
   :<|> usersRouter
+  :<|> userCommunicationsRouter
   :<|> rolesHandler
   :<|> artistsRouter
   :<|> logsRouter
@@ -123,6 +135,11 @@ adminServer user =
            listUsers
       :<|> createUser
       :<|> userById
+
+    userCommunicationsRouter =
+           userCommunicationHistoryHandler
+      :<|> userCommunicationSendHandler
+      :<|> userCommunicationResendHandler
 
     userById userId =
            getUser userId
@@ -710,6 +727,95 @@ adminServer user =
             fresh <- getJustEntity credKey
             loadUserAccount fresh
 
+    userCommunicationHistoryHandler userId mLimit = do
+      ensureModule ModuleAdmin user
+      let limit = max 1 (min 300 (fromMaybe 150 mLimit))
+      mContext <- withPool (loadUserCommunicationContext userId)
+      case mContext of
+        Nothing -> throwError err404
+        Just context -> withPool (buildUserCommunicationHistory context limit)
+
+    userCommunicationSendHandler userId AdminWhatsAppSendRequest{..} = do
+      ensureModule ModuleAdmin user
+      let mode = T.toLower (T.strip awsrMode)
+          body = T.strip awsrMessage
+      when (T.null body) $
+        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje vacío") }
+      when (mode /= "reply" && mode /= "notify") $
+        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
+      when (mode == "reply" && awsrReplyToMessageId == Nothing) $
+        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId requerido para responder") }
+      mContext <- withPool (loadUserCommunicationContext userId)
+      (_, partyEnt) <- maybe (throwError err404) pure mContext
+      let partyKey = entityKey partyEnt
+          partyVal = entityVal partyEnt
+          candidatePhones = resolvePartyPhones partyVal
+      phone <- maybe (throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario no tiene WhatsApp o teléfono configurado") }) pure (listToMaybe candidatePhones)
+      replyTarget <- case (mode, awsrReplyToMessageId) of
+        ("reply", Just replyId) -> do
+          let msgKey = toSqlKey replyId :: ME.WhatsAppMessageId
+          mMsg <- withPool (getEntity msgKey)
+          case mMsg of
+            Nothing -> throwError err404 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje de referencia no encontrado") }
+            Just msgEnt ->
+              if messageBelongsToParty partyKey candidatePhones (entityVal msgEnt)
+                then pure (Just msgEnt)
+                else throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El mensaje no pertenece a este usuario") }
+        _ -> pure Nothing
+      now <- liftIO getCurrentTime
+      waEnv <- liftIO loadWhatsAppEnv
+      sendResult <- liftIO $ sendWhatsAppTextIO waEnv phone body
+      sentEntity <- withPool $
+        recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+          { owrRecipientPhone = phone
+          , owrRecipientPartyId = Just partyKey
+          , owrRecipientName = Just (partyDisplayName partyVal)
+          , owrRecipientEmail = partyPrimaryEmail partyVal
+          , owrActorPartyId = Just (auPartyId user)
+          , owrBody = body
+          , owrSource = Just (if mode == "reply" then "admin_reply" else "admin_notify")
+          , owrReplyToMessageId = entityKey <$> replyTarget
+          , owrReplyToExternalId = fmap (ME.whatsAppMessageExternalId . entityVal) replyTarget
+          , owrResendOfMessageId = Nothing
+          , owrMetadata = Nothing
+          }
+          sendResult
+      pure (buildSendResponse sendResult sentEntity)
+
+    userCommunicationResendHandler messageId AdminWhatsAppResendRequest{..} = do
+      ensureModule ModuleAdmin user
+      let msgKey = toSqlKey messageId :: ME.WhatsAppMessageId
+      msgEnt <- withPool (getEntity msgKey) >>= maybe (throwError err404) pure
+      let msg = entityVal msgEnt
+      when (ME.whatsAppMessageDirection msg /= "outgoing") $
+        throwError err400 { errBody = "Solo se pueden reenviar mensajes salientes" }
+      originalBody <- maybe
+        (throwError err400 { errBody = "El mensaje original no tiene contenido de texto" })
+        pure
+        (normalizeOptionalText (ME.whatsAppMessageText msg))
+      let resendBody = fromMaybe originalBody (normalizeOptionalText awrrMessage)
+          phone = ME.whatsAppMessagePhoneE164 msg <|> normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
+      targetPhone <- maybe (throwError err400 { errBody = "No se pudo determinar el número destino" }) pure phone
+      now <- liftIO getCurrentTime
+      waEnv <- liftIO loadWhatsAppEnv
+      sendResult <- liftIO $ sendWhatsAppTextIO waEnv targetPhone resendBody
+      sentEntity <- withPool $
+        recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+          { owrRecipientPhone = targetPhone
+          , owrRecipientPartyId = ME.whatsAppMessagePartyId msg
+          , owrRecipientName = ME.whatsAppMessageSenderName msg
+          , owrRecipientEmail = ME.whatsAppMessageContactEmail msg
+          , owrActorPartyId = Just (auPartyId user)
+          , owrBody = resendBody
+          , owrSource = Just "admin_resend"
+          , owrReplyToMessageId = Nothing
+          , owrReplyToExternalId = Nothing
+          , owrResendOfMessageId = Just (entityKey msgEnt)
+          , owrMetadata = Nothing
+          }
+          sendResult
+      pure (buildSendResponse sendResult sentEntity)
+
 withPool
   :: (MonadReader Env m, MonadIO m)
   => SqlPersistT IO a
@@ -760,10 +866,113 @@ loadUserAccount (Entity credId cred) = do
     , partyId   = fromSqlKey (entityKey party)
     , partyName = partyDisplayName (entityVal party)
     , username  = userCredentialUsername cred
+    , primaryEmail = partyPrimaryEmail (entityVal party)
+    , primaryPhone = partyPrimaryPhone (entityVal party)
+    , whatsapp = partyWhatsapp (entityVal party)
     , active    = userCredentialActive cred
     , roles     = roleList
     , modules   = map moduleName (Set.toList (modulesForRoles roleList))
     }
+
+loadUserCommunicationContext
+  :: Int64
+  -> SqlPersistT IO (Maybe (Entity UserCredential, Entity Party))
+loadUserCommunicationContext userId = do
+  let credKey = toSqlKey userId :: UserCredentialId
+  mCred <- getEntity credKey
+  case mCred of
+    Nothing -> pure Nothing
+    Just credEnt -> do
+      partyEnt <- getJustEntity (userCredentialPartyId (entityVal credEnt))
+      pure (Just (credEnt, partyEnt))
+
+buildUserCommunicationHistory
+  :: (Entity UserCredential, Entity Party)
+  -> Int
+  -> SqlPersistT IO UserCommunicationHistoryDTO
+buildUserCommunicationHistory (Entity credId cred, Entity partyKey party) limit = do
+  let phones = resolvePartyPhones party
+      senderAliases = nub (concatMap phoneLookupAliases phones)
+      linkedFilters = [ME.WhatsAppMessagePartyId ==. Just partyKey]
+      phoneFilters = if null phones then [] else [ME.WhatsAppMessagePhoneE164 <-. map Just phones]
+      senderFilters = if null senderAliases then [] else [ME.WhatsAppMessageSenderId <-. senderAliases]
+      filters =
+        case (null phoneFilters, null senderFilters) of
+          (True, True) -> linkedFilters
+          (False, True) -> linkedFilters ||. phoneFilters
+          (True, False) -> linkedFilters ||. senderFilters
+          (False, False) -> (linkedFilters ||. phoneFilters) ||. senderFilters
+  rows <- selectList filters [Desc ME.WhatsAppMessageCreatedAt, LimitTo limit]
+  pure UserCommunicationHistoryDTO
+    { uchUserId = fromSqlKey credId
+    , uchPartyId = fromSqlKey partyKey
+    , uchPartyName = partyDisplayName party
+    , uchUsername = userCredentialUsername cred
+    , uchPrimaryEmail = partyPrimaryEmail party
+    , uchPrimaryPhone = partyPrimaryPhone party
+    , uchWhatsapp = partyWhatsapp party
+    , uchMessages = map toWhatsAppMessageAdminDTO rows
+    }
+
+toWhatsAppMessageAdminDTO :: Entity ME.WhatsAppMessage -> WhatsAppMessageAdminDTO
+toWhatsAppMessageAdminDTO (Entity msgKey msg) =
+  WhatsAppMessageAdminDTO
+    { wmdId = fromSqlKey msgKey
+    , wmdExternalId = ME.whatsAppMessageExternalId msg
+    , wmdPartyId = fmap fromSqlKey (ME.whatsAppMessagePartyId msg)
+    , wmdActorPartyId = fmap fromSqlKey (ME.whatsAppMessageActorPartyId msg)
+    , wmdSenderId = ME.whatsAppMessageSenderId msg
+    , wmdSenderName = ME.whatsAppMessageSenderName msg
+    , wmdPhoneE164 = ME.whatsAppMessagePhoneE164 msg
+    , wmdContactEmail = ME.whatsAppMessageContactEmail msg
+    , wmdText = ME.whatsAppMessageText msg
+    , wmdDirection = ME.whatsAppMessageDirection msg
+    , wmdReplyStatus = ME.whatsAppMessageReplyStatus msg
+    , wmdReplyError = ME.whatsAppMessageReplyError msg
+    , wmdRepliedAt = ME.whatsAppMessageRepliedAt msg
+    , wmdReplyText = ME.whatsAppMessageReplyText msg
+    , wmdDeliveryStatus = ME.whatsAppMessageDeliveryStatus msg
+    , wmdDeliveryUpdatedAt = ME.whatsAppMessageDeliveryUpdatedAt msg
+    , wmdDeliveryError = ME.whatsAppMessageDeliveryError msg
+    , wmdSource = ME.whatsAppMessageSource msg
+    , wmdResendOfMessageId = fmap fromSqlKey (ME.whatsAppMessageResendOfMessageId msg)
+    , wmdCreatedAt = ME.whatsAppMessageCreatedAt msg
+    }
+
+buildSendResponse
+  :: Either Text sendResult
+  -> Entity ME.WhatsAppMessage
+  -> AdminWhatsAppSendResponse
+buildSendResponse sendResult (Entity msgKey msg) =
+  AdminWhatsAppSendResponse
+    { awspStatus = either (const "error") (const "ok") sendResult
+    , awspMessageId = Just (fromSqlKey msgKey)
+    , awspDeliveryStatus = ME.whatsAppMessageDeliveryStatus msg
+    , awspMessage = either Just (const (Just "sent")) sendResult
+    }
+
+resolvePartyPhones :: Party -> [Text]
+resolvePartyPhones party =
+  nub (catMaybes
+    [ partyWhatsapp party >>= normalizeWhatsAppPhone
+    , partyPrimaryPhone party >>= normalizeWhatsAppPhone
+    ])
+
+phoneLookupAliases :: Text -> [Text]
+phoneLookupAliases phoneVal =
+  nub [phoneVal, T.dropWhile (== '+') phoneVal]
+
+messageBelongsToParty :: PartyId -> [Text] -> ME.WhatsAppMessage -> Bool
+messageBelongsToParty partyKey phones msg =
+  ME.whatsAppMessagePartyId msg == Just partyKey
+    || maybe False (`elem` phones) (ME.whatsAppMessagePhoneE164 msg)
+    || ME.whatsAppMessageSenderId msg `elem` concatMap phoneLookupAliases phones
+
+normalizeOptionalText :: Maybe Text -> Maybe Text
+normalizeOptionalText Nothing = Nothing
+normalizeOptionalText (Just raw) =
+  let trimmed = T.strip raw
+  in if T.null trimmed then Nothing else Just trimmed
 
 setPartyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
 setPartyRoles partyKey rolesList = do
@@ -830,4 +1039,3 @@ levelToText :: LogLevel -> Text
 levelToText LogInfo = "info"
 levelToText LogWarning = "warning"
 levelToText LogError = "error"
-

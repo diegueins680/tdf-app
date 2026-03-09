@@ -88,7 +88,9 @@ executable tdf-hq-exe
     TDF.CMS.Models
     TDF.Version
     TDF.WhatsApp.Client
+    TDF.WhatsApp.History
     TDF.WhatsApp.Types
+    TDF.WhatsApp.Transport
     TDF.WhatsApp.Service
     TDF.Profiles.Artist
     Paths_tdf_hq
@@ -235,7 +237,9 @@ test-suite tdf-hq-test
     TDF.LogBuffer
     TDF.WhatsApp.Types
     TDF.WhatsApp.Client
+    TDF.WhatsApp.History
     TDF.WhatsApp.Service
+    TDF.WhatsApp.Transport
   ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
   default-language:  Haskell2010
   build-depends:

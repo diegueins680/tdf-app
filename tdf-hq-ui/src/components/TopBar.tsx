@@ -12,7 +12,13 @@ import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import BrandLogo from './BrandLogo';
 import SearchIcon from '@mui/icons-material/Search';
-import { NAV_GROUPS, deriveModulesFromRoles, isSchoolStaffRole, pathRequiresModule, pathRequiresSchoolStaff } from './SidebarNav';
+import { NAV_GROUPS } from './SidebarNav';
+import {
+  buildAccessibleModuleSet,
+  isSchoolStaffRole,
+  pathRequiresModule,
+  pathRequiresSchoolStaff,
+} from '../utils/accessControl';
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
@@ -218,22 +224,16 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
     navigate('/login', { replace: true });
   };
 
-  const modules = useMemo(() => {
-    const provided = session?.modules ?? [];
-    const fromRoles = deriveModulesFromRoles(session?.roles);
-    const baseSet = new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
-    if (baseSet.has('packages')) {
-      baseSet.add('ops');
-      baseSet.add('label');
-    }
-    if (baseSet.has('ops')) {
-      baseSet.add('packages');
-    }
-    return baseSet;
-  }, [session?.modules, session?.roles]);
+  const modules = useMemo(
+    () => buildAccessibleModuleSet(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
 
   const hasAdmin = modules.has('admin');
-  const isSchoolStaff = useMemo(() => isSchoolStaffRole(session?.roles), [session?.roles]);
+  const isSchoolStaff = useMemo(
+    () => isSchoolStaffRole(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
 
   const quickNavItems = useMemo(() => {
     return NAV_GROUPS.flatMap((group) =>

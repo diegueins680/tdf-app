@@ -12,6 +12,11 @@ module TDF.Routes.Courses
   , CourseRegistrationRequest(..)
   , CourseRegistrationResponse(..)
   , CourseRegistrationStatusUpdate(..)
+  , CourseRegistrationNotesUpdate(..)
+  , CourseRegistrationReceiptCreate(..)
+  , CourseRegistrationReceiptUpdate(..)
+  , CourseRegistrationFollowUpCreate(..)
+  , CourseRegistrationFollowUpUpdate(..)
   , CourseUpsert(..)
   , CourseSessionIn(..)
   , CourseSyllabusIn(..)
@@ -111,6 +116,57 @@ data CourseRegistrationStatusUpdate = CourseRegistrationStatusUpdate
 instance FromJSON CourseRegistrationStatusUpdate
 instance ToJSON CourseRegistrationStatusUpdate
 
+data CourseRegistrationNotesUpdate = CourseRegistrationNotesUpdate
+  { notes :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON CourseRegistrationNotesUpdate
+instance ToJSON CourseRegistrationNotesUpdate
+
+data CourseRegistrationReceiptCreate = CourseRegistrationReceiptCreate
+  { fileUrl  :: Text
+  , fileName :: Maybe Text
+  , mimeType :: Maybe Text
+  , notes    :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON CourseRegistrationReceiptCreate
+instance ToJSON CourseRegistrationReceiptCreate
+
+data CourseRegistrationReceiptUpdate = CourseRegistrationReceiptUpdate
+  { fileUrl  :: Maybe Text
+  , fileName :: Maybe Text
+  , mimeType :: Maybe Text
+  , notes    :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON CourseRegistrationReceiptUpdate
+instance ToJSON CourseRegistrationReceiptUpdate
+
+data CourseRegistrationFollowUpCreate = CourseRegistrationFollowUpCreate
+  { entryType      :: Maybe Text
+  , subject        :: Maybe Text
+  , notes          :: Text
+  , attachmentUrl  :: Maybe Text
+  , attachmentName :: Maybe Text
+  , nextFollowUpAt :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON CourseRegistrationFollowUpCreate
+instance ToJSON CourseRegistrationFollowUpCreate
+
+data CourseRegistrationFollowUpUpdate = CourseRegistrationFollowUpUpdate
+  { entryType      :: Maybe Text
+  , subject        :: Maybe Text
+  , notes          :: Maybe Text
+  , attachmentUrl  :: Maybe Text
+  , attachmentName :: Maybe Text
+  , nextFollowUpAt :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON CourseRegistrationFollowUpUpdate
+instance ToJSON CourseRegistrationFollowUpUpdate
+
 data CourseSessionIn = CourseSessionIn
   { label :: Text
   , date  :: Day
@@ -166,8 +222,16 @@ type CoursesAdminAPI =
          QueryParam "limit" Int :>
          Get '[JSON] [TDF.DTO.CourseRegistrationDTO]
   :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> Get '[JSON] TDF.DTO.CourseRegistrationDTO
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "dossier" :> Get '[JSON] TDF.DTO.CourseRegistrationDossierDTO
   :<|> "courses" :> "registrations" :> Capture "registrationId" Int64 :> "emails" :> QueryParam "limit" Int :> Get '[JSON] [TDF.DTO.CourseEmailEventDTO]
   :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "status" :> ReqBody '[JSON] CourseRegistrationStatusUpdate :> Patch '[JSON] CourseRegistrationResponse
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "notes" :> ReqBody '[JSON] CourseRegistrationNotesUpdate :> Patch '[JSON] TDF.DTO.CourseRegistrationDTO
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "receipts" :> ReqBody '[JSON] CourseRegistrationReceiptCreate :> PostCreated '[JSON] TDF.DTO.CourseRegistrationReceiptDTO
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "receipts" :> Capture "receiptId" Int64 :> ReqBody '[JSON] CourseRegistrationReceiptUpdate :> Patch '[JSON] TDF.DTO.CourseRegistrationReceiptDTO
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "receipts" :> Capture "receiptId" Int64 :> Delete '[JSON] NoContent
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "follow-ups" :> ReqBody '[JSON] CourseRegistrationFollowUpCreate :> PostCreated '[JSON] TDF.DTO.CourseRegistrationFollowUpDTO
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "follow-ups" :> Capture "followUpId" Int64 :> ReqBody '[JSON] CourseRegistrationFollowUpUpdate :> Patch '[JSON] TDF.DTO.CourseRegistrationFollowUpDTO
+  :<|> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "follow-ups" :> Capture "followUpId" Int64 :> Delete '[JSON] NoContent
 
 type WhatsAppWebhookAPI =
        "webhooks" :> "whatsapp" :> QueryParam "hub.mode" Text :> QueryParam "hub.verify_token" Text :> QueryParam "hub.challenge" Text :> Get '[PlainText] Text

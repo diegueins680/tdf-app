@@ -39,11 +39,11 @@ import { Admin } from '../api/admin';
 import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest, type AssetQrDTO } from '../api/inventory';
 import { Rooms } from '../api/rooms';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
-import { deriveModulesFromRoles } from '../components/SidebarNav';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import { buildPublicContentUrl } from '../services/googleDrive';
 import { useSession } from '../session/SessionContext';
+import { buildAccessibleModuleSet } from '../utils/accessControl';
 
 interface AssetFormState {
   name: string;
@@ -139,11 +139,10 @@ const STATUS_OPTIONS = [
 export default function LabelAssetsPage() {
   const qc = useQueryClient();
   const { session } = useSession();
-  const modules = useMemo(() => {
-    const provided = session?.modules ?? [];
-    const fromRoles = deriveModulesFromRoles(session?.roles);
-    return new Set([...provided, ...fromRoles].map((m) => m.toLowerCase()));
-  }, [session?.modules, session?.roles]);
+  const modules = useMemo(
+    () => buildAccessibleModuleSet(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
   const canManageCategories = modules.has('admin');
   const assetsQuery = useQuery({
     queryKey: ['assets'],

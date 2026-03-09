@@ -289,11 +289,13 @@ instance FromJSON VCardExchangeRequest
 data CourseRegistrationDTO = CourseRegistrationDTO
   { crId          :: Int64
   , crCourseSlug  :: Text
+  , crPartyId     :: Maybe Int64
   , crFullName    :: Maybe Text
   , crEmail       :: Maybe Text
   , crPhoneE164   :: Maybe Text
   , crSource      :: Text
   , crStatus      :: Text
+  , crAdminNotes  :: Maybe Text
   , crHowHeard    :: Maybe Text
   , crUtmSource   :: Maybe Text
   , crUtmMedium   :: Maybe Text
@@ -303,6 +305,44 @@ data CourseRegistrationDTO = CourseRegistrationDTO
   , crUpdatedAt   :: UTCTime
   } deriving (Show, Generic)
 instance ToJSON CourseRegistrationDTO
+
+data CourseRegistrationReceiptDTO = CourseRegistrationReceiptDTO
+  { crrId             :: Int64
+  , crrRegistrationId :: Int64
+  , crrPartyId        :: Maybe Int64
+  , crrFileUrl        :: Text
+  , crrFileName       :: Maybe Text
+  , crrMimeType       :: Maybe Text
+  , crrNotes          :: Maybe Text
+  , crrUploadedBy     :: Maybe Int64
+  , crrCreatedAt      :: UTCTime
+  , crrUpdatedAt      :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON CourseRegistrationReceiptDTO
+
+data CourseRegistrationFollowUpDTO = CourseRegistrationFollowUpDTO
+  { crfId             :: Int64
+  , crfRegistrationId :: Int64
+  , crfPartyId        :: Maybe Int64
+  , crfEntryType      :: Text
+  , crfSubject        :: Maybe Text
+  , crfNotes          :: Text
+  , crfAttachmentUrl  :: Maybe Text
+  , crfAttachmentName :: Maybe Text
+  , crfNextFollowUpAt :: Maybe UTCTime
+  , crfCreatedBy      :: Maybe Int64
+  , crfCreatedAt      :: UTCTime
+  , crfUpdatedAt      :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON CourseRegistrationFollowUpDTO
+
+data CourseRegistrationDossierDTO = CourseRegistrationDossierDTO
+  { crdRegistration :: CourseRegistrationDTO
+  , crdReceipts     :: [CourseRegistrationReceiptDTO]
+  , crdFollowUps    :: [CourseRegistrationFollowUpDTO]
+  , crdCanMarkPaid  :: Bool
+  } deriving (Show, Generic)
+instance ToJSON CourseRegistrationDossierDTO
 
 data CourseEmailEventDTO = CourseEmailEventDTO
   { ceId             :: Int64

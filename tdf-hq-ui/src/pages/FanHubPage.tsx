@@ -48,6 +48,8 @@ import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
 import { compareReleaseDateValues, formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
 import { slugify } from '../utils/slug';
+import { buildLoginRedirectPath } from '../utils/loginRouting';
+import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
 import { recordings, releases as featuredReleases, sessionVideos } from '../constants/recordsContent';
 
@@ -122,6 +124,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const qc = useQueryClient();
+  const accessModules = useMemo(
+    () => buildAccessibleModuleSet(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
   const viewerId = session?.partyId ?? null;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const isFan = useMemo(() => {
@@ -155,11 +161,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const hasAuthToken = Boolean(session?.apiToken);
   const isAuthenticated = Boolean(session);
   const canManageReleases = useMemo(() => {
-    const roles = session?.roles?.map((r) => r.toLowerCase()) ?? [];
-    return roles.some((role) => role.includes('admin') || role.includes('manager') || role.includes('label'));
-  }, [session?.roles]);
+    const roles = session?.roles?.map((role) => role.trim().toLowerCase()) ?? [];
+    const isStaffManager = roles.includes('manager') && accessModules.size > 0;
+    return accessModules.has('admin') || accessModules.has('label') || isStaffManager;
+  }, [accessModules, session?.roles]);
   const isHomeManagerView = location.pathname === '/inicio' && isAuthenticated && canManageReleases;
   const radioTargetPath = `${location.pathname}#radio`;
+  const loginPath = useMemo(
+    () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
+    [location.hash, location.pathname, location.search],
+  );
   const GENRE_FILTER_KEY = 'fan-hub:genre-filter';
   const [genreFilter, setGenreFilter] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
@@ -714,9 +725,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const hasArtistCatalogError = artistsQuery.isError;
   const showCatalogFallback = !isLoading && (hasArtistCatalogError || artists.length === 0);
   const showCatalogFilters = !showCatalogFallback && artists.length > 0;
+  const hasPersonalizationError = profileQuery.isError || followsQuery.isError || artistProfileQuery.isError;
   const showHubDataAlert = isHomeManagerView
     ? hasArtistCatalogError
-    : artistsQuery.isError || profileQuery.isError || followsQuery.isError || artistProfileQuery.isError;
+    : !showCatalogFallback && hasPersonalizationError;
   const emptyArtistMessage = genreFilter
     ? `No encontramos artistas en "${genreFilter}". Prueba otro genero o limpia el filtro.`
     : 'Pronto encontrarás artistas disponibles para seguir.';
@@ -749,7 +761,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           {!isAuthenticated && (
             <Typography variant="body2">
               ¿Quieres guardar tus artistas?{' '}
-              <Link component={RouterLink} to="/login" underline="hover">
+              <Link component={RouterLink} to={loginPath} underline="hover">
                 Inicia sesión o crea una cuenta
               </Link>
               .
@@ -1134,9 +1146,26 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 <Alert
                   severity="info"
                   action={
-                    <Button component={RouterLink} to="/login" size="small" variant="contained">
-                      Inicia sesión
-                    </Button>
+                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                      <Button
+                        component={RouterLink}
+                        to={loginPath}
+                        size="small"
+                        variant="contained"
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Inicia sesión
+                      </Button>
+                      <Button
+                        component={RouterLink}
+                        to="/login?signup=1&roles=Fan&redirect=/fans"
+                        size="small"
+                        variant="outlined"
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Crear cuenta fan
+                      </Button>
+                    </Stack>
                   }
                 >
                   Ingresa con tu cuenta para ver lanzamientos personalizados y seguir artistas.
@@ -1146,7 +1175,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 <Alert
                   severity="info"
                   action={
-                    <Button component={RouterLink} to="/login" size="small" variant="contained">
+                    <Button component={RouterLink} to={loginPath} size="small" variant="contained">
                       Reingresar
                     </Button>
                   }
@@ -1458,9 +1487,19 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           : 'Activa tu rol Fan para guardar artistas y recibir novedades personalizadas.'}
                   </Typography>
                   {!isAuthenticated && (
-                    <Button component={RouterLink} to="/login?signup=1&roles=Fan&redirect=/fans" variant="outlined">
-                      Crear cuenta fan
-                    </Button>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                      <Button
+                        component={RouterLink}
+                        to="/login?signup=1&roles=Fan&redirect=/fans"
+                        variant="outlined"
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Crear cuenta fan
+                      </Button>
+                      <Button component={RouterLink} to="/records" variant="text" sx={{ textTransform: 'none' }}>
+                        Ver lanzamientos
+                      </Button>
+                    </Stack>
                   )}
                   {isAuthenticated && canManageReleases && (
                     <Button component={RouterLink} to="/label/releases" variant="outlined">
