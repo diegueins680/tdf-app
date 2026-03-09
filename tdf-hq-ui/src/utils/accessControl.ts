@@ -33,6 +33,8 @@ const normalizeTokens = (
   return normalized;
 };
 
+export { normalizeTokens };
+
 const hasAnyModule = (moduleSet: ReadonlySet<string>, needles: readonly string[]): boolean =>
   needles.some((needle) => moduleSet.has(needle));
 
