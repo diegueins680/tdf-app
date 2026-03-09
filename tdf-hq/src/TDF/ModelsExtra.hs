@@ -181,11 +181,13 @@ WhatsAppConsent
 
 CourseRegistration
     courseSlug   Text
+    partyId      PartyId Maybe
     fullName     Text Maybe
     email        Text Maybe
     phoneE164    Text Maybe
     source       Text
     status       Text
+    adminNotes   Text Maybe
     howHeard     Text Maybe
     utmSource    Text Maybe
     utmMedium    Text Maybe
@@ -193,6 +195,38 @@ CourseRegistration
     utmContent   Text Maybe
     createdAt    UTCTime default=now()
     updatedAt    UTCTime default=now()
+    IndexCourseRegistrationParty partyId createdAt !force
+    deriving Show Generic
+
+CourseRegistrationReceipt
+    registrationId CourseRegistrationId
+    partyId        PartyId Maybe
+    fileUrl        Text
+    fileName       Text Maybe
+    mimeType       Text Maybe
+    notes          Text Maybe
+    uploadedBy     PartyId Maybe
+    createdAt      UTCTime default=now()
+    updatedAt      UTCTime default=now()
+    IndexCourseRegistrationReceiptRegistration registrationId createdAt !force
+    IndexCourseRegistrationReceiptParty partyId createdAt !force
+    deriving Show Generic
+
+CourseRegistrationFollowUp
+    registrationId CourseRegistrationId
+    partyId        PartyId Maybe
+    entryType      Text
+    subject        Text Maybe
+    notes          Text
+    attachmentUrl  Text Maybe
+    attachmentName Text Maybe
+    nextFollowUpAt UTCTime Maybe
+    createdBy      PartyId Maybe
+    createdAt      UTCTime default=now()
+    updatedAt      UTCTime default=now()
+    IndexCourseRegistrationFollowUpRegistration registrationId createdAt !force
+    IndexCourseRegistrationFollowUpParty partyId createdAt !force
+    IndexCourseRegistrationFollowUpNext nextFollowUpAt !force
     deriving Show Generic
 
 CourseEmailEvent

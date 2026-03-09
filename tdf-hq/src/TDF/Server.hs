@@ -121,6 +121,11 @@ import           TDF.Routes.Courses ( CoursesPublicAPI
                                     , CourseRegistrationRequest(..)
                                     , CourseRegistrationResponse(..)
                                     , CourseRegistrationStatusUpdate(..)
+                                    , CourseRegistrationNotesUpdate(..)
+                                    , CourseRegistrationReceiptCreate(..)
+                                    , CourseRegistrationReceiptUpdate(..)
+                                    , CourseRegistrationFollowUpCreate(..)
+                                    , CourseRegistrationFollowUpUpdate(..)
                                     , UTMTags(..)
                                     , CourseUpsert(..)
                                     , CourseSessionIn(..)
@@ -564,8 +569,16 @@ coursesAdminServer user =
   :<|> listCourseCohortsH
   :<|> listRegistrationsH
   :<|> getRegistrationH
+  :<|> getRegistrationDossierH
   :<|> listEmailEventsH
   :<|> updateStatusH
+  :<|> updateNotesH
+  :<|> createReceiptH
+  :<|> updateReceiptH
+  :<|> deleteReceiptH
+  :<|> createFollowUpH
+  :<|> updateFollowUpH
+  :<|> deleteFollowUpH
   where
     requireCourseAdmin = unless (hasModuleAccess ModuleAdmin user) $
       throwError err403
@@ -586,13 +599,45 @@ coursesAdminServer user =
       requireCourseAdmin
       fetchCourseRegistration slug regId
 
+    getRegistrationDossierH slug regId = do
+      requireCourseAdmin
+      fetchCourseRegistrationDossier slug regId
+
     listEmailEventsH regId mLimit = do
       requireCourseAdmin
       listCourseRegistrationEmailEvents regId mLimit
 
     updateStatusH slug regId statusPayload = do
       requireCourseAdmin
-      updateCourseRegistrationStatus slug regId statusPayload
+      updateCourseRegistrationStatus user slug regId statusPayload
+
+    updateNotesH slug regId payload = do
+      requireCourseAdmin
+      updateCourseRegistrationNotes slug regId payload
+
+    createReceiptH slug regId payload = do
+      requireCourseAdmin
+      createCourseRegistrationReceipt user slug regId payload
+
+    updateReceiptH slug regId receiptId payload = do
+      requireCourseAdmin
+      updateCourseRegistrationReceipt user slug regId receiptId payload
+
+    deleteReceiptH slug regId receiptId = do
+      requireCourseAdmin
+      deleteCourseRegistrationReceipt user slug regId receiptId
+
+    createFollowUpH slug regId payload = do
+      requireCourseAdmin
+      createCourseRegistrationFollowUp user slug regId payload
+
+    updateFollowUpH slug regId followUpId payload = do
+      requireCourseAdmin
+      updateCourseRegistrationFollowUp user slug regId followUpId payload
+
+    deleteFollowUpH slug regId followUpId = do
+      requireCourseAdmin
+      deleteCourseRegistrationFollowUp user slug regId followUpId
 
 radioPresencePublicServer :: Int64 -> AppM (Maybe RadioPresenceDTO)
 radioPresencePublicServer partyId = do
@@ -2422,8 +2467,8 @@ listCourseRegistrations mSlug mStatus mLimit = do
   rows <- runDB $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo capped]
   pure (map toCourseRegistrationDTO rows)
 
-fetchCourseRegistration :: Text -> Int64 -> AppM DTO.CourseRegistrationDTO
-fetchCourseRegistration rawSlug regId = do
+fetchCourseRegistrationEntity :: Text -> Int64 -> AppM (Entity ME.CourseRegistration)
+fetchCourseRegistrationEntity rawSlug regId = do
   let slugVal = normalizeSlug rawSlug
       key = toSqlKey regId
   mRow <- runDB $ getEntity key
@@ -2431,31 +2476,449 @@ fetchCourseRegistration rawSlug regId = do
     Nothing -> throwNotFound "Registro no encontrado"
     Just ent@(Entity _ reg)
       | ME.courseRegistrationCourseSlug reg /= slugVal -> throwNotFound "Registro no encontrado"
-      | otherwise -> pure (toCourseRegistrationDTO ent)
+      | otherwise -> pure ent
+
+fetchCourseRegistration :: Text -> Int64 -> AppM DTO.CourseRegistrationDTO
+fetchCourseRegistration rawSlug regId =
+  toCourseRegistrationDTO <$> fetchCourseRegistrationEntity rawSlug regId
+
+ensureCourseRegistrationPartyRoles :: PartyId -> SqlPersistT IO ()
+ensureCourseRegistrationPartyRoles pid = do
+  void $ upsert (PartyRole pid Student True) [PartyRoleActive =. True]
+  void $ upsert (PartyRole pid Customer True) [PartyRoleActive =. True]
+
+ensurePartyForCourseRegistrationDb
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> UTCTime
+  -> SqlPersistT IO PartyId
+ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do
+  let display = fromMaybe "Alumno / cliente" (cleanOptional mName <|> mEmail <|> mPhone)
+  mExisting <- case mEmail of
+    Just addr -> selectFirst [PartyPrimaryEmail ==. Just addr] []
+    Nothing -> case mPhone of
+      Just phone -> selectFirst [PartyPrimaryPhone ==. Just phone] []
+      Nothing -> pure Nothing
+  pid <- case mExisting of
+    Just (Entity partyId party) -> do
+      let updates = catMaybes
+            [ if isJust (partyPrimaryEmail party) || isNothing mEmail then Nothing else Just (PartyPrimaryEmail =. mEmail)
+            , if isJust (partyPrimaryPhone party) || isNothing mPhone then Nothing else Just (PartyPrimaryPhone =. mPhone)
+            , if isJust (partyWhatsapp party) || isNothing mPhone then Nothing else Just (PartyWhatsapp =. mPhone)
+            , if T.null (partyDisplayName party) then Just (PartyDisplayName =. display) else Nothing
+            ]
+      unless (null updates) $
+        update partyId updates
+      pure partyId
+    Nothing -> insert Party
+      { partyLegalName = Nothing
+      , partyDisplayName = display
+      , partyIsOrg = False
+      , partyTaxId = Nothing
+      , partyPrimaryEmail = mEmail
+      , partyPrimaryPhone = mPhone
+      , partyWhatsapp = mPhone
+      , partyInstagram = Nothing
+      , partyEmergencyContact = Nothing
+      , partyNotes = Nothing
+      , partyCreatedAt = now
+      }
+  ensureCourseRegistrationPartyRoles pid
+  pure pid
+
+ensureCourseRegistrationParty
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> UTCTime
+  -> AppM (Maybe PartyId, Maybe (Text, Text))
+ensureCourseRegistrationParty mName mEmail mPhone now =
+  case mEmail of
+    Just emailAddr -> do
+      (partyId, mNewUser) <- ensurePartyWithAccount mName emailAddr mPhone
+      runDB $ ensureCourseRegistrationPartyRoles partyId
+      pure (Just partyId, mNewUser)
+    Nothing -> case mPhone of
+      Nothing -> pure (Nothing, Nothing)
+      Just _ -> do
+        partyId <- runDB $ ensurePartyForCourseRegistrationDb mName Nothing mPhone now
+        pure (Just partyId, Nothing)
+
+ensureCourseRegistrationPartyLink
+  :: Entity ME.CourseRegistration
+  -> AppM (Entity ME.CourseRegistration)
+ensureCourseRegistrationPartyLink ent@(Entity regId reg) =
+  case ME.courseRegistrationPartyId reg of
+    Just _ -> pure ent
+    Nothing -> do
+      now <- liftIO getCurrentTime
+      (mPartyId, _) <- ensureCourseRegistrationParty
+        (ME.courseRegistrationFullName reg)
+        (ME.courseRegistrationEmail reg)
+        (ME.courseRegistrationPhoneE164 reg)
+        now
+      case mPartyId of
+        Nothing -> pure ent
+        Just partyId -> do
+          runDB $ update regId
+            [ ME.CourseRegistrationPartyId =. Just partyId
+            , ME.CourseRegistrationUpdatedAt =. now
+            ]
+          pure (Entity regId reg
+            { ME.courseRegistrationPartyId = Just partyId
+            , ME.courseRegistrationUpdatedAt = now
+            })
+
+parseOptionalUtcText :: Text -> Maybe Text -> AppM (Maybe UTCTime)
+parseOptionalUtcText fieldName mValue =
+  case cleanOptional mValue of
+    Nothing -> pure Nothing
+    Just value ->
+      case iso8601ParseM (T.unpack value) of
+        Just ts -> pure (Just ts)
+        Nothing -> throwBadRequest (fieldName <> " inválido")
+
+normalizeCourseFollowUpType :: Maybe Text -> Text
+normalizeCourseFollowUpType =
+  fromMaybe "note" . fmap (T.toLower . T.strip) . cleanOptional
+
+registrationHasReceipts :: Key ME.CourseRegistration -> AppM Bool
+registrationHasReceipts regKey = do
+  mReceipt <- runDB $ selectFirst
+    [ME.CourseRegistrationReceiptRegistrationId ==. regKey]
+    [Desc ME.CourseRegistrationReceiptCreatedAt]
+  pure (isJust mReceipt)
+
+insertCourseRegistrationFollowUp
+  :: Key ME.CourseRegistration
+  -> Maybe PartyId
+  -> Maybe PartyId
+  -> Text
+  -> Maybe Text
+  -> Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe UTCTime
+  -> UTCTime
+  -> SqlPersistT IO (Entity ME.CourseRegistrationFollowUp)
+insertCourseRegistrationFollowUp regKey mPartyId mCreatedBy rawEntryType mSubject rawNotes mAttachmentUrl mAttachmentName mNextFollowUpAt now = do
+  let notesVal = T.strip rawNotes
+      subjectVal = cleanOptional mSubject
+      attachmentUrlVal = cleanOptional mAttachmentUrl
+      attachmentNameVal = cleanOptional mAttachmentName
+      entryTypeVal = normalizeCourseFollowUpType (Just rawEntryType)
+  followUpId <- insert ME.CourseRegistrationFollowUp
+    { ME.courseRegistrationFollowUpRegistrationId = regKey
+    , ME.courseRegistrationFollowUpPartyId = mPartyId
+    , ME.courseRegistrationFollowUpEntryType = entryTypeVal
+    , ME.courseRegistrationFollowUpSubject = subjectVal
+    , ME.courseRegistrationFollowUpNotes = notesVal
+    , ME.courseRegistrationFollowUpAttachmentUrl = attachmentUrlVal
+    , ME.courseRegistrationFollowUpAttachmentName = attachmentNameVal
+    , ME.courseRegistrationFollowUpNextFollowUpAt = mNextFollowUpAt
+    , ME.courseRegistrationFollowUpCreatedBy = mCreatedBy
+    , ME.courseRegistrationFollowUpCreatedAt = now
+    , ME.courseRegistrationFollowUpUpdatedAt = now
+    }
+  pure $ Entity followUpId ME.CourseRegistrationFollowUp
+    { ME.courseRegistrationFollowUpRegistrationId = regKey
+    , ME.courseRegistrationFollowUpPartyId = mPartyId
+    , ME.courseRegistrationFollowUpEntryType = entryTypeVal
+    , ME.courseRegistrationFollowUpSubject = subjectVal
+    , ME.courseRegistrationFollowUpNotes = notesVal
+    , ME.courseRegistrationFollowUpAttachmentUrl = attachmentUrlVal
+    , ME.courseRegistrationFollowUpAttachmentName = attachmentNameVal
+    , ME.courseRegistrationFollowUpNextFollowUpAt = mNextFollowUpAt
+    , ME.courseRegistrationFollowUpCreatedBy = mCreatedBy
+    , ME.courseRegistrationFollowUpCreatedAt = now
+    , ME.courseRegistrationFollowUpUpdatedAt = now
+    }
+
+recordCourseRegistrationStatusChange
+  :: AuthedUser
+  -> Entity ME.CourseRegistration
+  -> Text
+  -> Text
+  -> UTCTime
+  -> AppM ()
+recordCourseRegistrationStatusChange user (Entity regId reg) oldStatus newStatus now = do
+  let oldLabel = T.toLower (T.strip oldStatus)
+      newLabel = T.toLower (T.strip newStatus)
+  unless (oldLabel == newLabel) $
+    void $ runDB $ insertCourseRegistrationFollowUp
+      regId
+      (ME.courseRegistrationPartyId reg)
+      (Just (auPartyId user))
+      "status_change"
+      (Just ("Estado: " <> newLabel))
+      ("Cambio de estado automático de " <> oldLabel <> " a " <> newLabel <> ".")
+      Nothing
+      Nothing
+      Nothing
+      now
+
+fetchCourseRegistrationDossier :: Text -> Int64 -> AppM DTO.CourseRegistrationDossierDTO
+fetchCourseRegistrationDossier rawSlug regId = do
+  ent <- fetchCourseRegistrationEntity rawSlug regId >>= ensureCourseRegistrationPartyLink
+  let regKey = entityKey ent
+  receipts <- runDB $ selectList
+    [ME.CourseRegistrationReceiptRegistrationId ==. regKey]
+    [Desc ME.CourseRegistrationReceiptCreatedAt]
+  followUps <- runDB $ selectList
+    [ME.CourseRegistrationFollowUpRegistrationId ==. regKey]
+    [Desc ME.CourseRegistrationFollowUpCreatedAt]
+  pure DTO.CourseRegistrationDossierDTO
+    { DTO.crdRegistration = toCourseRegistrationDTO ent
+    , DTO.crdReceipts = map toCourseRegistrationReceiptDTO receipts
+    , DTO.crdFollowUps = map toCourseRegistrationFollowUpDTO followUps
+    , DTO.crdCanMarkPaid = not (null receipts)
+    }
 
 updateCourseRegistrationStatus
-  :: Text
+  :: AuthedUser
+  -> Text
   -> Int64
   -> CourseRegistrationStatusUpdate
   -> AppM CourseRegistrationResponse
-updateCourseRegistrationStatus rawSlug regId CourseRegistrationStatusUpdate{..} = do
-  let slugVal = normalizeSlug rawSlug
-      newStatus = T.toLower (T.strip status)
-      key = toSqlKey regId
+updateCourseRegistrationStatus user rawSlug regId CourseRegistrationStatusUpdate{..} = do
+  let newStatus = T.toLower (T.strip status)
   when (T.null newStatus) $
     throwBadRequest "status requerido"
+  ent <- fetchCourseRegistrationEntity rawSlug regId >>= ensureCourseRegistrationPartyLink
+  let regKey = entityKey ent
+      reg = entityVal ent
+  when (newStatus == "paid") $ do
+    hasReceipt <- registrationHasReceipts regKey
+    unless hasReceipt $
+      throwBadRequest "Debes subir un comprobante de pago antes de marcar esta inscripción como pagada."
   now <- liftIO getCurrentTime
-  mRow <- runDB $ getEntity key
-  case mRow of
-    Nothing -> throwNotFound "Registro no encontrado"
-    Just (Entity _ reg)
-      | ME.courseRegistrationCourseSlug reg /= slugVal -> throwNotFound "Registro no encontrado"
-      | otherwise -> do
-          runDB $ update key
-            [ ME.CourseRegistrationStatus =. newStatus
-            , ME.CourseRegistrationUpdatedAt =. now
-            ]
-          pure CourseRegistrationResponse { id = regId, status = newStatus }
+  runDB $ update regKey
+    [ ME.CourseRegistrationStatus =. newStatus
+    , ME.CourseRegistrationUpdatedAt =. now
+    ]
+  recordCourseRegistrationStatusChange user ent (ME.courseRegistrationStatus reg) newStatus now
+  pure CourseRegistrationResponse { id = regId, status = newStatus }
+
+updateCourseRegistrationNotes
+  :: Text
+  -> Int64
+  -> CourseRegistrationNotesUpdate
+  -> AppM DTO.CourseRegistrationDTO
+updateCourseRegistrationNotes rawSlug regId CourseRegistrationNotesUpdate{..} = do
+  ent <- fetchCourseRegistrationEntity rawSlug regId
+  now <- liftIO getCurrentTime
+  let regKey = entityKey ent
+      reg = entityVal ent
+      notesVal = cleanOptional notes
+      updated = reg
+        { ME.courseRegistrationAdminNotes = notesVal
+        , ME.courseRegistrationUpdatedAt = now
+        }
+  runDB $ update regKey
+    [ ME.CourseRegistrationAdminNotes =. notesVal
+    , ME.CourseRegistrationUpdatedAt =. now
+    ]
+  pure (toCourseRegistrationDTO (Entity regKey updated))
+
+createCourseRegistrationReceipt
+  :: AuthedUser
+  -> Text
+  -> Int64
+  -> CourseRegistrationReceiptCreate
+  -> AppM DTO.CourseRegistrationReceiptDTO
+createCourseRegistrationReceipt user rawSlug regId CourseRegistrationReceiptCreate{..} = do
+  ent <- fetchCourseRegistrationEntity rawSlug regId >>= ensureCourseRegistrationPartyLink
+  fileUrlVal <- maybe (throwBadRequest "fileUrl requerido") pure (cleanOptional (Just fileUrl))
+  now <- liftIO getCurrentTime
+  let regKey = entityKey ent
+      reg = entityVal ent
+      receipt = ME.CourseRegistrationReceipt
+        { ME.courseRegistrationReceiptRegistrationId = regKey
+        , ME.courseRegistrationReceiptPartyId = ME.courseRegistrationPartyId reg
+        , ME.courseRegistrationReceiptFileUrl = fileUrlVal
+        , ME.courseRegistrationReceiptFileName = cleanOptional fileName
+        , ME.courseRegistrationReceiptMimeType = cleanOptional mimeType
+        , ME.courseRegistrationReceiptNotes = cleanOptional notes
+        , ME.courseRegistrationReceiptUploadedBy = Just (auPartyId user)
+        , ME.courseRegistrationReceiptCreatedAt = now
+        , ME.courseRegistrationReceiptUpdatedAt = now
+        }
+  receiptId <- runDB $ insert receipt
+  void $ runDB $ insertCourseRegistrationFollowUp
+    regKey
+    (ME.courseRegistrationPartyId reg)
+    (Just (auPartyId user))
+    "payment_receipt"
+    (Just "Comprobante de pago agregado")
+    (fromMaybe "Se agregó un comprobante de pago." (cleanOptional notes <|> cleanOptional fileName))
+    (Just fileUrlVal)
+    (cleanOptional fileName)
+    Nothing
+    now
+  pure (toCourseRegistrationReceiptDTO (Entity receiptId receipt))
+
+fetchCourseRegistrationReceiptEntity
+  :: Text
+  -> Int64
+  -> Int64
+  -> AppM (Entity ME.CourseRegistration, Entity ME.CourseRegistrationReceipt)
+fetchCourseRegistrationReceiptEntity rawSlug regId receiptId = do
+  ent <- fetchCourseRegistrationEntity rawSlug regId
+  let regKey = entityKey ent
+      receiptKey = toSqlKey receiptId
+  mReceipt <- runDB $ getEntity receiptKey
+  case mReceipt of
+    Nothing -> throwNotFound "Comprobante no encontrado"
+    Just receiptEnt@(Entity _ receipt)
+      | ME.courseRegistrationReceiptRegistrationId receipt /= regKey -> throwNotFound "Comprobante no encontrado"
+      | otherwise -> pure (ent, receiptEnt)
+
+updateCourseRegistrationReceipt
+  :: AuthedUser
+  -> Text
+  -> Int64
+  -> Int64
+  -> CourseRegistrationReceiptUpdate
+  -> AppM DTO.CourseRegistrationReceiptDTO
+updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationReceiptUpdate{..} = do
+  (ent, Entity receiptKey receipt) <- fetchCourseRegistrationReceiptEntity rawSlug regId receiptId
+  now <- liftIO getCurrentTime
+  let fileUrlVal = maybe (ME.courseRegistrationReceiptFileUrl receipt) T.strip fileUrl
+  when (T.null fileUrlVal) $
+    throwBadRequest "fileUrl requerido"
+  let updated =
+        receipt
+          { ME.courseRegistrationReceiptPartyId = ME.courseRegistrationPartyId (entityVal ent)
+          , ME.courseRegistrationReceiptFileUrl = fileUrlVal
+          , ME.courseRegistrationReceiptFileName =
+              maybe (ME.courseRegistrationReceiptFileName receipt) cleanOptional fileName
+          , ME.courseRegistrationReceiptMimeType =
+              maybe (ME.courseRegistrationReceiptMimeType receipt) cleanOptional mimeType
+          , ME.courseRegistrationReceiptNotes =
+              maybe (ME.courseRegistrationReceiptNotes receipt) cleanOptional notes
+          , ME.courseRegistrationReceiptUpdatedAt = now
+          }
+  runDB $ update receiptKey
+    [ ME.CourseRegistrationReceiptPartyId =. ME.courseRegistrationReceiptPartyId updated
+    , ME.CourseRegistrationReceiptFileUrl =. ME.courseRegistrationReceiptFileUrl updated
+    , ME.CourseRegistrationReceiptFileName =. ME.courseRegistrationReceiptFileName updated
+    , ME.CourseRegistrationReceiptMimeType =. ME.courseRegistrationReceiptMimeType updated
+    , ME.CourseRegistrationReceiptNotes =. ME.courseRegistrationReceiptNotes updated
+    , ME.CourseRegistrationReceiptUpdatedAt =. now
+    ]
+  pure (toCourseRegistrationReceiptDTO (Entity receiptKey updated))
+
+deleteCourseRegistrationReceipt
+  :: AuthedUser
+  -> Text
+  -> Int64
+  -> Int64
+  -> AppM NoContent
+deleteCourseRegistrationReceipt _ rawSlug regId receiptId = do
+  (_, Entity receiptKey _) <- fetchCourseRegistrationReceiptEntity rawSlug regId receiptId
+  runDB $ delete receiptKey
+  pure NoContent
+
+fetchCourseRegistrationFollowUpEntity
+  :: Text
+  -> Int64
+  -> Int64
+  -> AppM (Entity ME.CourseRegistration, Entity ME.CourseRegistrationFollowUp)
+fetchCourseRegistrationFollowUpEntity rawSlug regId followUpId = do
+  ent <- fetchCourseRegistrationEntity rawSlug regId
+  let regKey = entityKey ent
+      followUpKey = toSqlKey followUpId
+  mFollowUp <- runDB $ getEntity followUpKey
+  case mFollowUp of
+    Nothing -> throwNotFound "Seguimiento no encontrado"
+    Just followUpEnt@(Entity _ followUp)
+      | ME.courseRegistrationFollowUpRegistrationId followUp /= regKey -> throwNotFound "Seguimiento no encontrado"
+      | otherwise -> pure (ent, followUpEnt)
+
+createCourseRegistrationFollowUp
+  :: AuthedUser
+  -> Text
+  -> Int64
+  -> CourseRegistrationFollowUpCreate
+  -> AppM DTO.CourseRegistrationFollowUpDTO
+createCourseRegistrationFollowUp user rawSlug regId CourseRegistrationFollowUpCreate{..} = do
+  ent <- fetchCourseRegistrationEntity rawSlug regId >>= ensureCourseRegistrationPartyLink
+  let notesVal = T.strip notes
+  when (T.null notesVal) $
+    throwBadRequest "notes requerido"
+  mNextFollowUpAt <- parseOptionalUtcText "nextFollowUpAt" nextFollowUpAt
+  now <- liftIO getCurrentTime
+  followUp <- runDB $ insertCourseRegistrationFollowUp
+    (entityKey ent)
+    (ME.courseRegistrationPartyId (entityVal ent))
+    (Just (auPartyId user))
+    (normalizeCourseFollowUpType entryType)
+    subject
+    notesVal
+    attachmentUrl
+    attachmentName
+    mNextFollowUpAt
+    now
+  pure (toCourseRegistrationFollowUpDTO followUp)
+
+updateCourseRegistrationFollowUp
+  :: AuthedUser
+  -> Text
+  -> Int64
+  -> Int64
+  -> CourseRegistrationFollowUpUpdate
+  -> AppM DTO.CourseRegistrationFollowUpDTO
+updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFollowUpUpdate{..} = do
+  (ent, Entity followUpKey followUp) <- fetchCourseRegistrationFollowUpEntity rawSlug regId followUpId
+  notesVal <- case notes of
+    Nothing -> pure (ME.courseRegistrationFollowUpNotes followUp)
+    Just raw ->
+      let trimmed = T.strip raw
+      in if T.null trimmed
+        then throwBadRequest "notes requerido"
+        else pure trimmed
+  mNextFollowUpAt <- case nextFollowUpAt of
+    Nothing -> pure (ME.courseRegistrationFollowUpNextFollowUpAt followUp)
+    Just raw -> parseOptionalUtcText "nextFollowUpAt" (Just raw)
+  now <- liftIO getCurrentTime
+  let updated =
+        followUp
+          { ME.courseRegistrationFollowUpPartyId = ME.courseRegistrationPartyId (entityVal ent)
+          , ME.courseRegistrationFollowUpEntryType =
+              maybe (ME.courseRegistrationFollowUpEntryType followUp) (T.toLower . T.strip) (cleanOptional entryType)
+          , ME.courseRegistrationFollowUpSubject =
+              maybe (ME.courseRegistrationFollowUpSubject followUp) cleanOptional subject
+          , ME.courseRegistrationFollowUpNotes = notesVal
+          , ME.courseRegistrationFollowUpAttachmentUrl =
+              maybe (ME.courseRegistrationFollowUpAttachmentUrl followUp) cleanOptional attachmentUrl
+          , ME.courseRegistrationFollowUpAttachmentName =
+              maybe (ME.courseRegistrationFollowUpAttachmentName followUp) cleanOptional attachmentName
+          , ME.courseRegistrationFollowUpNextFollowUpAt = mNextFollowUpAt
+          , ME.courseRegistrationFollowUpUpdatedAt = now
+          }
+  runDB $ update followUpKey
+    [ ME.CourseRegistrationFollowUpPartyId =. ME.courseRegistrationFollowUpPartyId updated
+    , ME.CourseRegistrationFollowUpEntryType =. ME.courseRegistrationFollowUpEntryType updated
+    , ME.CourseRegistrationFollowUpSubject =. ME.courseRegistrationFollowUpSubject updated
+    , ME.CourseRegistrationFollowUpNotes =. ME.courseRegistrationFollowUpNotes updated
+    , ME.CourseRegistrationFollowUpAttachmentUrl =. ME.courseRegistrationFollowUpAttachmentUrl updated
+    , ME.CourseRegistrationFollowUpAttachmentName =. ME.courseRegistrationFollowUpAttachmentName updated
+    , ME.CourseRegistrationFollowUpNextFollowUpAt =. ME.courseRegistrationFollowUpNextFollowUpAt updated
+    , ME.CourseRegistrationFollowUpUpdatedAt =. now
+    ]
+  pure (toCourseRegistrationFollowUpDTO (Entity followUpKey updated))
+
+deleteCourseRegistrationFollowUp
+  :: AuthedUser
+  -> Text
+  -> Int64
+  -> Int64
+  -> AppM NoContent
+deleteCourseRegistrationFollowUp _ rawSlug regId followUpId = do
+  (_, Entity followUpKey _) <- fetchCourseRegistrationFollowUpEntity rawSlug regId followUpId
+  runDB $ delete followUpKey
+  pure NoContent
 
 listCourseRegistrationEmailEvents
   :: Int64
@@ -2493,11 +2956,13 @@ toCourseRegistrationDTO (Entity rid reg) =
   DTO.CourseRegistrationDTO
     { DTO.crId = fromSqlKey rid
     , DTO.crCourseSlug = ME.courseRegistrationCourseSlug reg
+    , DTO.crPartyId = fromSqlKey <$> ME.courseRegistrationPartyId reg
     , DTO.crFullName = ME.courseRegistrationFullName reg
     , DTO.crEmail = ME.courseRegistrationEmail reg
     , DTO.crPhoneE164 = ME.courseRegistrationPhoneE164 reg
     , DTO.crSource = ME.courseRegistrationSource reg
     , DTO.crStatus = ME.courseRegistrationStatus reg
+    , DTO.crAdminNotes = ME.courseRegistrationAdminNotes reg
     , DTO.crHowHeard = ME.courseRegistrationHowHeard reg
     , DTO.crUtmSource = ME.courseRegistrationUtmSource reg
     , DTO.crUtmMedium = ME.courseRegistrationUtmMedium reg
@@ -2505,6 +2970,38 @@ toCourseRegistrationDTO (Entity rid reg) =
     , DTO.crUtmContent = ME.courseRegistrationUtmContent reg
     , DTO.crCreatedAt = ME.courseRegistrationCreatedAt reg
     , DTO.crUpdatedAt = ME.courseRegistrationUpdatedAt reg
+    }
+
+toCourseRegistrationReceiptDTO :: Entity ME.CourseRegistrationReceipt -> DTO.CourseRegistrationReceiptDTO
+toCourseRegistrationReceiptDTO (Entity receiptId receipt) =
+  DTO.CourseRegistrationReceiptDTO
+    { DTO.crrId = fromSqlKey receiptId
+    , DTO.crrRegistrationId = fromSqlKey (ME.courseRegistrationReceiptRegistrationId receipt)
+    , DTO.crrPartyId = fromSqlKey <$> ME.courseRegistrationReceiptPartyId receipt
+    , DTO.crrFileUrl = ME.courseRegistrationReceiptFileUrl receipt
+    , DTO.crrFileName = ME.courseRegistrationReceiptFileName receipt
+    , DTO.crrMimeType = ME.courseRegistrationReceiptMimeType receipt
+    , DTO.crrNotes = ME.courseRegistrationReceiptNotes receipt
+    , DTO.crrUploadedBy = fromSqlKey <$> ME.courseRegistrationReceiptUploadedBy receipt
+    , DTO.crrCreatedAt = ME.courseRegistrationReceiptCreatedAt receipt
+    , DTO.crrUpdatedAt = ME.courseRegistrationReceiptUpdatedAt receipt
+    }
+
+toCourseRegistrationFollowUpDTO :: Entity ME.CourseRegistrationFollowUp -> DTO.CourseRegistrationFollowUpDTO
+toCourseRegistrationFollowUpDTO (Entity followUpId followUp) =
+  DTO.CourseRegistrationFollowUpDTO
+    { DTO.crfId = fromSqlKey followUpId
+    , DTO.crfRegistrationId = fromSqlKey (ME.courseRegistrationFollowUpRegistrationId followUp)
+    , DTO.crfPartyId = fromSqlKey <$> ME.courseRegistrationFollowUpPartyId followUp
+    , DTO.crfEntryType = ME.courseRegistrationFollowUpEntryType followUp
+    , DTO.crfSubject = ME.courseRegistrationFollowUpSubject followUp
+    , DTO.crfNotes = ME.courseRegistrationFollowUpNotes followUp
+    , DTO.crfAttachmentUrl = ME.courseRegistrationFollowUpAttachmentUrl followUp
+    , DTO.crfAttachmentName = ME.courseRegistrationFollowUpAttachmentName followUp
+    , DTO.crfNextFollowUpAt = ME.courseRegistrationFollowUpNextFollowUpAt followUp
+    , DTO.crfCreatedBy = fromSqlKey <$> ME.courseRegistrationFollowUpCreatedBy followUp
+    , DTO.crfCreatedAt = ME.courseRegistrationFollowUpCreatedAt followUp
+    , DTO.crfUpdatedAt = ME.courseRegistrationFollowUpUpdatedAt followUp
     }
 
 toCourseEmailEventDTO :: Entity ME.CourseEmailEvent -> DTO.CourseEmailEventDTO
@@ -2580,21 +3077,21 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
   normalizedEmail <- case cleanOptional email of
     Nothing -> pure Nothing
     Just e  -> Just <$> requireEmail e
-  mNewUser <- case normalizedEmail of
-    Nothing -> pure Nothing
-    Just addr -> ensureUserAccount nameClean addr
   when (sourceClean == "landing" && isNothing nameClean) $
     throwBadRequest "nombre requerido"
   when (sourceClean == "landing" && isNothing normalizedEmail) $
     throwBadRequest "email requerido"
+  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now
   existing <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean
   case existing of
     -- Update in-place only when the existing row is still pending; otherwise create a fresh row.
     Just (Entity regId reg) | ME.courseRegistrationStatus reg == pendingStatus -> do
+      let resolvedPartyId = ME.courseRegistrationPartyId reg <|> mPartyId
       runDB $ update regId
         [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)
         , ME.CourseRegistrationEmail =. (normalizedEmail <|> ME.courseRegistrationEmail reg)
         , ME.CourseRegistrationPhoneE164 =. (phoneClean <|> ME.courseRegistrationPhoneE164 reg)
+        , ME.CourseRegistrationPartyId =. resolvedPartyId
         , ME.CourseRegistrationSource =. sourceClean
         , ME.CourseRegistrationStatus =. pendingStatus
         , ME.CourseRegistrationHowHeard =. (howHeardClean <|> ME.courseRegistrationHowHeard reg)
@@ -2609,11 +3106,13 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
     _ -> do
       regId <- runDB $ insert ME.CourseRegistration
         { ME.courseRegistrationCourseSlug = slugVal
+        , ME.courseRegistrationPartyId = mPartyId
         , ME.courseRegistrationFullName = nameClean
         , ME.courseRegistrationEmail = normalizedEmail
         , ME.courseRegistrationPhoneE164 = phoneClean
         , ME.courseRegistrationSource = sourceClean
         , ME.courseRegistrationStatus = pendingStatus
+        , ME.courseRegistrationAdminNotes = Nothing
         , ME.courseRegistrationHowHeard = howHeardClean
         , ME.courseRegistrationUtmSource = utmSourceVal
         , ME.courseRegistrationUtmMedium = utmMediumVal
@@ -2622,6 +3121,17 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.courseRegistrationCreatedAt = now
         , ME.courseRegistrationUpdatedAt = now
         }
+      void $ runDB $ insertCourseRegistrationFollowUp
+        regId
+        mPartyId
+        Nothing
+        "registration"
+        (Just "Inscripción recibida")
+        ("Nueva inscripción capturada desde " <> sourceClean <> ".")
+        Nothing
+        Nothing
+        Nothing
+        now
       sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
       pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
   where
