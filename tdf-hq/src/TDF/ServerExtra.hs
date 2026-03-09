@@ -20,7 +20,7 @@ import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
-import           Data.Char                  (isAlphaNum, isAscii, ord)
+import           Data.Char                  (isAlphaNum, isAscii, isSpace, ord)
 import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -1769,7 +1769,7 @@ instagramServer =
       let missing =
             [ (key, M.instagramMessageSenderId m)
             | Entity key m <- rows
-            , isNothing (stripNonEmptyText (M.instagramMessageSenderName m) <|> extractSenderNameFromMetadata (M.instagramMessageMetadata m))
+            , isNothing (normalizeSenderLabelText (M.instagramMessageSenderName m) <|> extractSenderNameFromMetadata (M.instagramMessageMetadata m))
             ]
       resolved <- liftIO $ resolveMetaSenderLabels envConfig MetaInstagram (map snd missing)
       liftIO $ flip runSqlPool envPool $
@@ -1779,7 +1779,7 @@ instagramServer =
       let toObj (Entity _ m) =
             let sid = M.instagramMessageSenderId m
                 senderName =
-                  stripNonEmptyText (M.instagramMessageSenderName m)
+                  normalizeSenderLabelText (M.instagramMessageSenderName m)
                     <|> extractSenderNameFromMetadata (M.instagramMessageMetadata m)
                     <|> Map.lookup (T.strip sid) resolved
             in object
@@ -1875,7 +1875,7 @@ facebookServer =
       let missing =
             [ (key, ME.facebookMessageSenderId m)
             | Entity key m <- rows
-            , isNothing (stripNonEmptyText (ME.facebookMessageSenderName m) <|> extractSenderNameFromMetadata (ME.facebookMessageMetadata m))
+            , isNothing (normalizeSenderLabelText (ME.facebookMessageSenderName m) <|> extractSenderNameFromMetadata (ME.facebookMessageMetadata m))
             ]
       resolved <- liftIO $ resolveMetaSenderLabels envConfig MetaFacebook (map snd missing)
       liftIO $ flip runSqlPool envPool $
@@ -1885,7 +1885,7 @@ facebookServer =
       let toObj (Entity _ m) =
             let sid = ME.facebookMessageSenderId m
                 senderName =
-                  stripNonEmptyText (ME.facebookMessageSenderName m)
+                  normalizeSenderLabelText (ME.facebookMessageSenderName m)
                     <|> extractSenderNameFromMetadata (ME.facebookMessageMetadata m)
                     <|> Map.lookup (T.strip sid) resolved
             in object
@@ -1923,16 +1923,32 @@ stripNonEmptyText (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
+looksLikeOpaqueSenderLabel :: Text -> Bool
+looksLikeOpaqueSenderLabel raw =
+  let trimmed = T.strip raw
+      hasOpaqueShape =
+        T.length trimmed >= 48
+          && T.all (\c -> isAscii c && (isAlphaNum c || c `elem` ("#+/:=_-." :: String))) trimmed
+      isVeryLongToken = T.length trimmed > 70 && not (T.any isSpace trimmed)
+  in hasOpaqueShape || isVeryLongToken
+
+normalizeSenderLabelText :: Maybe Text -> Maybe Text
+normalizeSenderLabelText mRaw =
+  stripNonEmptyText mRaw >>= \trimmed ->
+    if looksLikeOpaqueSenderLabel trimmed
+      then Nothing
+      else Just trimmed
+
 extractSenderNameFromMetadata :: Maybe Text -> Maybe Text
 extractSenderNameFromMetadata Nothing = Nothing
 extractSenderNameFromMetadata (Just raw) =
   case A.decodeStrict' (TE.encodeUtf8 raw) of
     Nothing -> Nothing
-    Just payload -> parseMaybe parseSender payload >>= stripNonEmptyText . Just
+    Just payload -> parseMaybe parseSender payload
   where
     parseSender = withObject "MetaMessageMetadata" $ \o -> do
       mDirect <- o .:? "sender_name"
-      case mDirect >>= stripNonEmptyText of
+      case normalizeSenderLabelText mDirect of
         Just label -> pure label
         Nothing -> do
           mFrom <- o .:? "from"
@@ -1940,7 +1956,7 @@ extractSenderNameFromMetadata (Just raw) =
             Just (A.Object fromObj) -> do
               fromName <- fromObj .:? "name"
               fromUsername <- fromObj .:? "username"
-              pure (stripNonEmptyText fromName <|> stripNonEmptyText fromUsername)
+              pure (normalizeSenderLabelText fromName <|> normalizeSenderLabelText fromUsername)
             _ -> pure Nothing
           case fromLabel of
             Just label -> pure label
@@ -1954,7 +1970,7 @@ extractSenderNameFromMetadata (Just raw) =
                       case mProfile of
                         Just (A.Object profileObj) -> do
                           profileName <- profileObj .:? "name"
-                          case stripNonEmptyText profileName of
+                          case normalizeSenderLabelText profileName of
                             Just label -> pure label
                             Nothing -> fail "contact profile name missing"
                         _ -> fail "contact profile missing"
@@ -2013,7 +2029,7 @@ resolveInstagramDeliveryAccount mPreferredAccountId = do
 
 metaProfileLabel :: MetaChannel -> MetaProfile -> Maybe Text
 metaProfileLabel MetaInstagram MetaProfile{..} =
-  stripNonEmptyText (mpUsername <|> mpName)
+  normalizeSenderLabelText (mpUsername <|> mpName)
 metaProfileLabel MetaFacebook MetaProfile{..} =
   let first = stripNonEmptyText mpFirstName
       lastN = stripNonEmptyText mpLastName
@@ -2023,7 +2039,7 @@ metaProfileLabel MetaFacebook MetaProfile{..} =
           (Just f, Nothing) -> Just f
           (Nothing, Just l) -> Just l
           _ -> Nothing
-  in fullName <|> stripNonEmptyText mpName
+  in normalizeSenderLabelText fullName <|> normalizeSenderLabelText mpName
 
 fetchMetaProfileLabel :: Manager -> Text -> Text -> MetaChannel -> Text -> IO (Maybe Text)
 fetchMetaProfileLabel manager base token channel senderId = do

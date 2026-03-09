@@ -12,7 +12,7 @@ const INTERNAL_MANAGER_MODULE_KEYS = [
 
 const EXPLICIT_SCHOOL_STAFF_ROLE_KEYS = ['admin', 'reception', 'studiomanager'] as const;
 
-const normalizeTokens = (
+export const normalizeTokens = (
   values: readonly string[] | undefined,
   { lowerCase = false }: { lowerCase?: boolean } = {},
 ): string[] => {

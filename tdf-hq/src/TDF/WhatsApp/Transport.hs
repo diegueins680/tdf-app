@@ -10,29 +10,32 @@ module TDF.WhatsApp.Transport
 import           Data.Maybe (fromMaybe)
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Network.HTTP.Client (newManager)
+import           Network.HTTP.Client (Manager, newManager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           System.Environment (lookupEnv)
 
 import           TDF.WhatsApp.Client (SendTextResult, sendText)
 
 data WhatsAppEnv = WhatsAppEnv
-  { waToken         :: Maybe Text
+  { waManager       :: Manager
+  , waToken         :: Maybe Text
   , waPhoneId       :: Maybe Text
   , waVerifyToken   :: Maybe Text
   , waContactNumber :: Maybe Text
   , waApiVersion    :: Maybe Text
-  } deriving (Show)
+  }
 
 loadWhatsAppEnv :: IO WhatsAppEnv
 loadWhatsAppEnv = do
+  manager <- newManager tlsManagerSettings
   token <- firstNonEmptyText ["WHATSAPP_TOKEN", "WA_TOKEN"]
   phoneId <- firstNonEmptyText ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
   verify <- firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
   contact <- firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
   apiVersion <- firstNonEmptyText ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
   pure WhatsAppEnv
-    { waToken = token
+    { waManager = manager
+    , waToken = token
     , waPhoneId = phoneId
     , waVerifyToken = verify
     , waContactNumber = contact
@@ -40,25 +43,34 @@ loadWhatsAppEnv = do
     }
 
 sendWhatsAppTextIO :: WhatsAppEnv -> Text -> Text -> IO (Either Text SendTextResult)
-sendWhatsAppTextIO WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVersion = mVersion} phone msg = do
-  manager <- newManager tlsManagerSettings
-  let version = fromMaybe "v20.0" mVersion
-  result <- sendText manager version tok pid phone msg
-  pure (either (Left . T.pack) Right result)
-sendWhatsAppTextIO env _ _ = pure (Left (missingConfigMessage env))
+sendWhatsAppTextIO env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion} phone msg =
+  case (waToken, waPhoneId) of
+    (Just tok, Just pid) -> do
+      let version = fromMaybe "v20.0" waApiVersion
+      result <- sendText waManager version tok pid phone msg
+      pure (either (Left . T.pack) Right result)
+    _ ->
+      pure (Left (missingConfigMessage env))
 
 missingConfigMessage :: WhatsAppEnv -> Text
 missingConfigMessage WhatsAppEnv{waToken, waPhoneId} =
   let missingPieces =
-        [ ("token", ["WHATSAPP_TOKEN", "WA_TOKEN"])               | waToken   == Nothing ] ++
-        [ ("phoneId", ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]) | waPhoneId == Nothing ]
+        [ ("token", ["WHATSAPP_TOKEN", "WA_TOKEN"])
+        | waToken == Nothing ] ++
+        [ ("phoneId", ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"])
+        | waPhoneId == Nothing ]
       pieceToText (name, envs) =
-        T.concat [name, " (", T.intercalate ", " (map T.pack envs), ")"]
+        T.concat
+          [ name
+          , " (expected env vars: "
+          , T.intercalate ", " (map T.pack envs)
+          , ")"
+          ]
       details =
         if null missingPieces
           then "unknown WhatsApp configuration problem"
-          else "missing: " <> T.intercalate "; " (map pieceToText missingPieces)
-  in "WhatsApp config not available — " <> details
+          else T.intercalate "; " (map pieceToText missingPieces)
+  in T.concat ["WhatsApp configuration not available: ", details]
 
 firstNonEmptyText :: [String] -> IO (Maybe Text)
 firstNonEmptyText names = go names
