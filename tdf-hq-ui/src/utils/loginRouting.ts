@@ -1,25 +1,7 @@
-import { buildAccessibleModuleSet } from './accessControl';
+import { buildAccessibleModuleSet, normalizeTokens } from './accessControl';
 
 const LOGIN_ROUTE = '/login';
 const URL_BASE = 'https://tdf.local';
-
-const normalizeTokens = (values: readonly string[] | undefined, { lowerCase = false } = {}): string[] => {
-  if (!values || values.length === 0) return [];
-  const seen = new Set<string>();
-  const normalized: string[] = [];
-
-  values.forEach((value) => {
-    const trimmed = value.trim();
-    if (trimmed === '') return;
-    const normalizedValue = lowerCase ? trimmed.toLowerCase() : trimmed;
-    const key = normalizedValue.toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    normalized.push(normalizedValue);
-  });
-
-  return normalized;
-};
 
 export function pickLandingPath(roles: readonly string[], modules?: readonly string[]): string {
   const normalizedRoles = normalizeTokens(roles, { lowerCase: true });
