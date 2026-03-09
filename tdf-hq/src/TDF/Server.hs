@@ -2506,7 +2506,7 @@ ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do
             [ if isJust (partyPrimaryEmail party) || isNothing mEmail then Nothing else Just (PartyPrimaryEmail =. mEmail)
             , if isJust (partyPrimaryPhone party) || isNothing mPhone then Nothing else Just (PartyPrimaryPhone =. mPhone)
             , if isJust (partyWhatsapp party) || isNothing mPhone then Nothing else Just (PartyWhatsapp =. mPhone)
-            , if T.null (partyDisplayName party) then Just (PartyDisplayName =. display) else Nothing
+            , if T.null (M.partyDisplayName party) then Just (PartyDisplayName =. display) else Nothing
             ]
       unless (null updates) $
         update partyId updates
@@ -2792,11 +2792,11 @@ updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationRece
           { ME.courseRegistrationReceiptPartyId = ME.courseRegistrationPartyId (entityVal ent)
           , ME.courseRegistrationReceiptFileUrl = fileUrlVal
           , ME.courseRegistrationReceiptFileName =
-              maybe (ME.courseRegistrationReceiptFileName receipt) cleanOptional fileName
+              maybe (ME.courseRegistrationReceiptFileName receipt) (cleanOptional . Just) fileName
           , ME.courseRegistrationReceiptMimeType =
-              maybe (ME.courseRegistrationReceiptMimeType receipt) cleanOptional mimeType
+              maybe (ME.courseRegistrationReceiptMimeType receipt) (cleanOptional . Just) mimeType
           , ME.courseRegistrationReceiptNotes =
-              maybe (ME.courseRegistrationReceiptNotes receipt) cleanOptional notes
+              maybe (ME.courseRegistrationReceiptNotes receipt) (cleanOptional . Just) notes
           , ME.courseRegistrationReceiptUpdatedAt = now
           }
   runDB $ update receiptKey
@@ -2888,12 +2888,12 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
           , ME.courseRegistrationFollowUpEntryType =
               maybe (ME.courseRegistrationFollowUpEntryType followUp) (T.toLower . T.strip) (cleanOptional entryType)
           , ME.courseRegistrationFollowUpSubject =
-              maybe (ME.courseRegistrationFollowUpSubject followUp) cleanOptional subject
+              maybe (ME.courseRegistrationFollowUpSubject followUp) (cleanOptional . Just) subject
           , ME.courseRegistrationFollowUpNotes = notesVal
           , ME.courseRegistrationFollowUpAttachmentUrl =
-              maybe (ME.courseRegistrationFollowUpAttachmentUrl followUp) cleanOptional attachmentUrl
+              maybe (ME.courseRegistrationFollowUpAttachmentUrl followUp) (cleanOptional . Just) attachmentUrl
           , ME.courseRegistrationFollowUpAttachmentName =
-              maybe (ME.courseRegistrationFollowUpAttachmentName followUp) cleanOptional attachmentName
+              maybe (ME.courseRegistrationFollowUpAttachmentName followUp) (cleanOptional . Just) attachmentName
           , ME.courseRegistrationFollowUpNextFollowUpAt = mNextFollowUpAt
           , ME.courseRegistrationFollowUpUpdatedAt = now
           }
