@@ -7,7 +7,7 @@ module TDF.WhatsApp.Transport
   , sendWhatsAppTextIO
   ) where
 
-import           Data.Maybe (fromMaybe)
+import           Data.Maybe (fromMaybe, isNothing)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Network.HTTP.Client (newManager)
@@ -40,12 +40,34 @@ loadWhatsAppEnv = do
     }
 
 sendWhatsAppTextIO :: WhatsAppEnv -> Text -> Text -> IO (Either Text SendTextResult)
-sendWhatsAppTextIO WhatsAppEnv{waToken = Just tok, waPhoneId = Just pid, waApiVersion = mVersion} phone msg = do
-  manager <- newManager tlsManagerSettings
-  let version = fromMaybe "v20.0" mVersion
-  result <- sendText manager version tok pid phone msg
-  pure (either (Left . T.pack) Right result)
-sendWhatsAppTextIO _ _ _ = pure (Left "WhatsApp config not available")
+sendWhatsAppTextIO env@WhatsAppEnv{waToken, waPhoneId, waApiVersion} phone msg =
+  case (waToken, waPhoneId) of
+    (Just tok, Just pid) -> do
+      manager <- newManager tlsManagerSettings
+      let version = fromMaybe "v20.0" waApiVersion
+      result <- sendText manager version tok pid phone msg
+      pure (either (Left . T.pack) Right result)
+    _ ->
+      pure (Left (missingConfigMessage env))
+
+missingConfigMessage :: WhatsAppEnv -> Text
+missingConfigMessage WhatsAppEnv{waToken, waPhoneId, waApiVersion} =
+  let missingPieces =
+        [ ("token",      ["WHATSAPP_TOKEN", "WA_TOKEN"])                                    | isNothing waToken      ] ++
+        [ ("phoneId",    ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"])                       | isNothing waPhoneId    ] ++
+        [ ("apiVersion", ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]) | isNothing waApiVersion ]
+      pieceToText (name, envs) =
+        T.concat
+          [ name
+          , " (expected env vars: "
+          , T.intercalate ", " (map T.pack envs)
+          , ")"
+          ]
+      details =
+        if null missingPieces
+          then "unknown WhatsApp configuration problem"
+          else T.intercalate "; " (map pieceToText missingPieces)
+  in T.concat ["WhatsApp configuration not available: ", details]
 
 firstNonEmptyText :: [String] -> IO (Maybe Text)
 firstNonEmptyText names = go names

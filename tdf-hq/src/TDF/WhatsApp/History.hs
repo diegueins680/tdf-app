@@ -8,6 +8,8 @@ module TDF.WhatsApp.History
   , OutgoingWhatsAppRecord(..)
   , WhatsAppDeliveryUpdate(..)
   , normalizeWhatsAppPhone
+  , phoneLookupAliases
+  , cleanMaybeText
   , resolveWhatsAppContactSnapshot
   , recordIncomingWhatsAppMessage
   , recordOutgoingWhatsAppMessage
