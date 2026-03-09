@@ -740,27 +740,27 @@ adminServer user =
       let mode = T.toLower (T.strip awsrMode)
           body = T.strip awsrMessage
       when (T.null body) $
-        throwError err400 { errBody = "Mensaje vacío" }
+        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje vacío") }
       when (mode /= "reply" && mode /= "notify") $
-        throwError err400 { errBody = "mode inválido (reply|notify)" }
+        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
       when (mode == "reply" && awsrReplyToMessageId == Nothing) $
-        throwError err400 { errBody = "replyToMessageId requerido para responder" }
+        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId requerido para responder") }
       mContext <- withPool (loadUserCommunicationContext userId)
       (_, partyEnt) <- maybe (throwError err404) pure mContext
       let partyKey = entityKey partyEnt
           partyVal = entityVal partyEnt
           candidatePhones = resolvePartyPhones partyVal
-      phone <- maybe (throwError err400 { errBody = "El usuario no tiene WhatsApp o teléfono configurado" }) pure (listToMaybe candidatePhones)
+      phone <- maybe (throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario no tiene WhatsApp o teléfono configurado") }) pure (listToMaybe candidatePhones)
       replyTarget <- case (mode, awsrReplyToMessageId) of
         ("reply", Just replyId) -> do
           let msgKey = toSqlKey replyId :: ME.WhatsAppMessageId
           mMsg <- withPool (getEntity msgKey)
           case mMsg of
-            Nothing -> throwError err404 { errBody = "Mensaje de referencia no encontrado" }
+            Nothing -> throwError err404 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje de referencia no encontrado") }
             Just msgEnt ->
               if messageBelongsToParty partyKey candidatePhones (entityVal msgEnt)
                 then pure (Just msgEnt)
-                else throwError err400 { errBody = "El mensaje no pertenece a este usuario" }
+                else throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El mensaje no pertenece a este usuario") }
         _ -> pure Nothing
       now <- liftIO getCurrentTime
       waEnv <- liftIO loadWhatsAppEnv
