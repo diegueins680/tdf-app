@@ -36,6 +36,8 @@ export default function PublicBranding({
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
     [location.hash, location.pathname, location.search],
   );
+  const isActiveNavItem = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
   const footerPrimaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
       return { label: 'WhatsApp reservas', kind: 'external', value: STUDIO_WHATSAPP_URL };
@@ -101,10 +103,19 @@ export default function PublicBranding({
                   {PUBLIC_NAV_ITEMS.map((item) => (
                     <Button
                       key={item.to}
-                      color="inherit"
                       component={RouterLink}
                       to={item.to}
-                      sx={{ textTransform: 'none', color: '#cbd5e1' }}
+                      sx={{
+                        textTransform: 'none',
+                        color: isActiveNavItem(item.to) ? '#f8fafc' : '#cbd5e1',
+                        bgcolor: isActiveNavItem(item.to) ? 'rgba(99,102,241,0.18)' : 'transparent',
+                        borderColor: isActiveNavItem(item.to) ? 'rgba(129,140,248,0.4)' : 'transparent',
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        '&:hover': {
+                          bgcolor: isActiveNavItem(item.to) ? 'rgba(99,102,241,0.24)' : 'rgba(148,163,184,0.08)',
+                        },
+                      }}
                     >
                       {item.label}
                     </Button>
@@ -163,8 +174,10 @@ export default function PublicBranding({
         sx={{
           borderTop: '1px solid',
           borderColor: 'divider',
-          bgcolor: '#0f1118',
-          py: 2,
+          bgcolor: '#0b1020',
+          background:
+            'linear-gradient(180deg, rgba(6,10,18,0.96), rgba(10,15,28,0.98))',
+          py: 3,
         }}
       >
         <Container maxWidth="xl">
@@ -178,7 +191,7 @@ export default function PublicBranding({
               <Typography variant="subtitle2" sx={{ color: '#f8fafc', letterSpacing: 0.2 }}>
                 TDF Records
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.78)' }}>
                 Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -191,7 +204,7 @@ export default function PublicBranding({
                     href={footerPrimaryAction.value}
                     target="_blank"
                     rel="noreferrer"
-                    sx={{ textTransform: 'none' }}
+                    sx={{ textTransform: 'none', boxShadow: 'none' }}
                   >
                     {footerPrimaryAction.label}
                   </Button>
@@ -202,7 +215,7 @@ export default function PublicBranding({
                     color="secondary"
                     component={RouterLink}
                     to={footerPrimaryAction.value}
-                    sx={{ textTransform: 'none' }}
+                    sx={{ textTransform: 'none', boxShadow: 'none' }}
                   >
                     {footerPrimaryAction.label}
                   </Button>
@@ -216,7 +229,15 @@ export default function PublicBranding({
                     href={footerSecondaryAction.value}
                     target="_blank"
                     rel="noreferrer"
-                    sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.35)' }}
+                    sx={{
+                      textTransform: 'none',
+                      borderColor: 'rgba(148,163,184,0.35)',
+                      color: '#e2e8f0',
+                      '&:hover': {
+                        borderColor: 'rgba(148,163,184,0.58)',
+                        bgcolor: 'rgba(148,163,184,0.08)',
+                      },
+                    }}
                   >
                     {footerSecondaryAction.label}
                   </Button>
@@ -227,7 +248,15 @@ export default function PublicBranding({
                     color="inherit"
                     component={RouterLink}
                     to={footerSecondaryAction.value}
-                    sx={{ textTransform: 'none', borderColor: 'rgba(148,163,184,0.35)' }}
+                    sx={{
+                      textTransform: 'none',
+                      borderColor: 'rgba(148,163,184,0.35)',
+                      color: '#e2e8f0',
+                      '&:hover': {
+                        borderColor: 'rgba(148,163,184,0.58)',
+                        bgcolor: 'rgba(148,163,184,0.08)',
+                      },
+                    }}
                   >
                     {footerSecondaryAction.label}
                   </Button>
@@ -243,18 +272,50 @@ export default function PublicBranding({
                   <Button
                     key={item.to}
                     size="small"
-                    color="inherit"
                     component={RouterLink}
                     to={item.to}
-                    sx={{ textTransform: 'none' }}
+                    sx={{
+                      textTransform: 'none',
+                      color: isActiveNavItem(item.to) ? '#f8fafc' : '#cbd5e1',
+                      bgcolor: isActiveNavItem(item.to) ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.03)',
+                      borderRadius: 999,
+                      px: 1.5,
+                      '&:hover': {
+                        bgcolor: isActiveNavItem(item.to) ? 'rgba(99,102,241,0.24)' : 'rgba(148,163,184,0.1)',
+                      },
+                    }}
                   >
                     {item.label}
                   </Button>
                 ))}
-                <Button size="small" color="inherit" component={RouterLink} to="/feedback" sx={{ textTransform: 'none' }}>
+                <Button
+                  size="small"
+                  component={RouterLink}
+                  to="/feedback"
+                  sx={{
+                    textTransform: 'none',
+                    color: '#cbd5e1',
+                    bgcolor: 'rgba(255,255,255,0.03)',
+                    borderRadius: 999,
+                    px: 1.5,
+                    '&:hover': { bgcolor: 'rgba(148,163,184,0.1)' },
+                  }}
+                >
                   Sugerencias
                 </Button>
-                <Button size="small" color="inherit" component={RouterLink} to="/donar" sx={{ textTransform: 'none' }}>
+                <Button
+                  size="small"
+                  component={RouterLink}
+                  to="/donar"
+                  sx={{
+                    textTransform: 'none',
+                    color: '#cbd5e1',
+                    bgcolor: 'rgba(255,255,255,0.03)',
+                    borderRadius: 999,
+                    px: 1.5,
+                    '&:hover': { bgcolor: 'rgba(148,163,184,0.1)' },
+                  }}
+                >
                   Donar
                 </Button>
               </Stack>
@@ -266,19 +327,31 @@ export default function PublicBranding({
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"
-                  color="inherit"
                   component={RouterLink}
                   to="/whatsapp/consentimiento"
-                  sx={{ textTransform: 'none' }}
+                  sx={{
+                    textTransform: 'none',
+                    color: '#cbd5e1',
+                    bgcolor: 'rgba(255,255,255,0.03)',
+                    borderRadius: 999,
+                    px: 1.5,
+                    '&:hover': { bgcolor: 'rgba(148,163,184,0.1)' },
+                  }}
                 >
                   Consentimiento WhatsApp
                 </Button>
                 <Button
                   size="small"
-                  color="inherit"
                   component={RouterLink}
                   to="/whatsapp/ok"
-                  sx={{ textTransform: 'none' }}
+                  sx={{
+                    textTransform: 'none',
+                    color: '#cbd5e1',
+                    bgcolor: 'rgba(255,255,255,0.03)',
+                    borderRadius: 999,
+                    px: 1.5,
+                    '&:hover': { bgcolor: 'rgba(148,163,184,0.1)' },
+                  }}
                 >
                   Confirmación WhatsApp
                 </Button>
@@ -288,10 +361,19 @@ export default function PublicBranding({
               <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"
-                  color="inherit"
                   component={RouterLink}
                   to={contextualLoginPath}
-                  sx={{ textTransform: 'none' }}
+                  sx={{
+                    textTransform: 'none',
+                    color: '#e2e8f0',
+                    borderColor: 'rgba(148,163,184,0.35)',
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    '&:hover': {
+                      borderColor: 'rgba(148,163,184,0.58)',
+                      bgcolor: 'rgba(148,163,184,0.08)',
+                    },
+                  }}
                 >
                   Ir a login
                 </Button>

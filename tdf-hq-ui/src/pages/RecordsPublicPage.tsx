@@ -38,6 +38,7 @@ import { Services } from '../api/services';
 import { Engineers } from '../api/engineers';
 import { useSession } from '../session/SessionContext';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
+import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import EditIcon from '@mui/icons-material/Edit';
 
 const BOOKING_ZONE = 'America/Bogota';
@@ -373,7 +374,22 @@ function BookingRequestDialog({
         <DialogContent dividers>
           <Stack spacing={2}>
             {!hasToken && (
-              <Alert severity="warning">
+              <Alert
+                severity="warning"
+                action={(
+                  <Button
+                    color="inherit"
+                    size="small"
+                    component="a"
+                    href={STUDIO_WHATSAPP_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    sx={{ textTransform: 'none' }}
+                  >
+                    WhatsApp
+                  </Button>
+                )}
+              >
                 La reserva directa no está habilitada en este momento. Puedes revisar lanzamientos y escribirnos para coordinar tu sesión.
               </Alert>
             )}
@@ -525,11 +541,24 @@ function BookingRequestDialog({
         </DialogContent>
         <DialogActions>
           <Button onClick={resetAndClose} disabled={mutation.isPending}>
-            Cancelar
+            {hasToken ? 'Cancelar' : 'Cerrar'}
           </Button>
-          <Button variant="contained" type="submit" disabled={mutation.isPending || !hasToken}>
-            {mutation.isPending ? 'Reservando…' : 'Confirmar reserva'}
-          </Button>
+          {hasToken ? (
+            <Button variant="contained" type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? 'Reservando…' : 'Confirmar reserva'}
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              component="a"
+              href={STUDIO_WHATSAPP_URL}
+              target="_blank"
+              rel="noreferrer"
+              sx={{ textTransform: 'none' }}
+            >
+              Escribir por WhatsApp
+            </Button>
+          )}
         </DialogActions>
       </form>
     </Dialog>
@@ -575,8 +604,9 @@ const GradientCard = ({
     sx={{
       p: 3,
       borderRadius: 3,
-      bgcolor: 'rgba(255,255,255,0.02)',
-      border: '1px solid rgba(255,255,255,0.08)',
+      background: 'linear-gradient(180deg, rgba(10,16,28,0.84), rgba(10,16,28,0.72))',
+      backdropFilter: 'blur(14px)',
+      border: '1px solid rgba(255,255,255,0.1)',
       boxShadow: '0 30px 60px rgba(0,0,0,0.35)',
     }}
   >
@@ -918,10 +948,20 @@ export default function RecordsPublicPage() {
   }, [recordingsQuery.data]);
 
   const heroTitle = 'Historias desde el estudio, lanzamientos y sesiones en vivo de TDF en un solo lugar.';
+  const heroEyebrow = canMaintainCms ? 'TDF Records — CMS público' : 'TDF Records · Estudio y lanzamientos';
   const heroSubtitle =
-    'Mantén al día la vitrina pública de TDF Records con fotos, lanzamientos y videos curados desde el CMS.';
-  const heroCta = 'Reservar sesión';
+    'Descubre lo que suena y se graba en TDF: sesiones recientes, lanzamientos oficiales y videos en vivo desde un solo lugar.';
+  const heroSupportText = hasBookingToken
+    ? 'Cuéntanos qué quieres grabar y te mostraremos disponibilidad, salas e ingenieros desde aquí.'
+    : 'La reserva directa no está disponible ahora mismo. Escríbenos por WhatsApp y coordinamos tu sesión manualmente.';
+  const heroCta = hasBookingToken ? 'Reservar sesión' : 'Coordinar por WhatsApp';
   const heroSecondaryCta = 'Ver lanzamientos';
+  const recordingsIntro =
+    'Una selección de grabaciones recientes para mostrar el ambiente, el sonido y la energía del estudio.';
+  const releasesIntro =
+    'Explora los lanzamientos más recientes de TDF Records y salta directo a la plataforma que prefieras.';
+  const sessionsIntro =
+    'Sesiones en vivo, tomas especiales y performances para descubrir el catálogo en movimiento.';
 
   return (
     <Box
@@ -949,7 +989,7 @@ export default function RecordsPublicPage() {
           </Box>
           <Stack spacing={3} maxWidth="md">
             <Chip
-              label="TDF Records — CMS público"
+              label={heroEyebrow}
               sx={{
                 width: 'fit-content',
                 bgcolor: 'rgba(255,255,255,0.08)',
@@ -990,48 +1030,69 @@ export default function RecordsPublicPage() {
             <Typography variant="h6" sx={{ color: 'rgba(226,232,240,0.82)', maxWidth: 640 }}>
               {heroSubtitle}
             </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <Button
-                variant="contained"
-                size="large"
-                sx={{
-                  bgcolor: '#7c3aed',
-                  color: '#f8fafc',
-                fontWeight: 800,
-                px: 3,
-                textTransform: 'none',
-                '&:hover': { bgcolor: '#6d28d9' },
-              }}
-                onClick={() => setDialogOpen(true)}
-              >
-                {heroCta}
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                href="#releases"
-                sx={{
-                  borderColor: 'rgba(255,255,255,0.3)',
-                  color: '#e5e7eb',
-                  textTransform: 'none',
-                }}
-              >
-                {heroSecondaryCta}
-              </Button>
-              <Button
-                component={RouterLink}
-                to="/fans"
-                variant="text"
-                size="large"
-                sx={{ color: '#e5e7eb', textTransform: 'none' }}
-              >
-                Comunidad
-              </Button>
-              {!hasBookingToken && (
-                <Typography variant="body2" color="rgba(226,232,240,0.8)">
-                  Para agendar automáticamente, agrega VITE_PUBLIC_BOOKING_TOKEN o usa el token demo.
-                </Typography>
-              )}
+            <Stack spacing={1.5}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                {hasBookingToken ? (
+                  <Button
+                    variant="contained"
+                    size="large"
+                    sx={{
+                      bgcolor: '#7c3aed',
+                      color: '#f8fafc',
+                      fontWeight: 800,
+                      px: 3,
+                      textTransform: 'none',
+                      '&:hover': { bgcolor: '#6d28d9' },
+                    }}
+                    onClick={() => setDialogOpen(true)}
+                  >
+                    {heroCta}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    size="large"
+                    component="a"
+                    href={STUDIO_WHATSAPP_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    sx={{
+                      bgcolor: '#22c55e',
+                      color: '#08110d',
+                      fontWeight: 800,
+                      px: 3,
+                      textTransform: 'none',
+                      '&:hover': { bgcolor: '#16a34a' },
+                    }}
+                  >
+                    {heroCta}
+                  </Button>
+                )}
+                <Button
+                  variant="outlined"
+                  size="large"
+                  href="#releases"
+                  sx={{
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    color: '#e5e7eb',
+                    textTransform: 'none',
+                  }}
+                >
+                  {heroSecondaryCta}
+                </Button>
+                <Button
+                  component={RouterLink}
+                  to="/fans"
+                  variant="text"
+                  size="large"
+                  sx={{ color: '#e5e7eb', textTransform: 'none' }}
+                >
+                  Comunidad
+                </Button>
+              </Stack>
+              <Typography variant="body2" color="rgba(226,232,240,0.8)">
+                {heroSupportText}
+              </Typography>
             </Stack>
           </Stack>
           <Stack
@@ -1056,9 +1117,16 @@ export default function RecordsPublicPage() {
                 ) : null
               }
             >
-              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                Actualiza imágenes y textos desde Configuración → CMS (slugs records-recording-*).
-              </Typography>
+              <Stack spacing={0.75} sx={{ mb: 1 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.82)' }}>
+                  Explora salas, sesiones y momentos detrás de cámaras capturados durante grabaciones recientes.
+                </Typography>
+                {canMaintainCms && (
+                  <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
+                    Edita este bloque desde Configuración → CMS con los slugs `records-recording-*`.
+                  </Typography>
+                )}
+              </Stack>
               <Stack direction="row" spacing={1} alignItems="center">
                 {recordings.slice(0, 3).map((item) => (
                   <Avatar
@@ -1092,7 +1160,7 @@ export default function RecordsPublicPage() {
                   const sessionHref = video.url ?? `https://www.youtube.com/watch?v=${video.youtubeId}`;
                   return (
                     <Stack key={video.youtubeId} direction="row" spacing={1} alignItems="center">
-                      <Chip label="Video" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
+                      <Chip label="Sesión" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
                       <Typography variant="body2" sx={{ fontWeight: 700 }}>
                         <MuiLink
                           href={sessionHref}
@@ -1108,6 +1176,11 @@ export default function RecordsPublicPage() {
                   );
                 })}
               </Stack>
+              {canMaintainCms && (
+                <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)', mt: 1.5 }}>
+                  Edita este bloque desde Configuración → CMS con los slugs `records-session-*`.
+                </Typography>
+              )}
             </GradientCard>
             <GradientCard
               title="Lanzamientos"
@@ -1161,6 +1234,11 @@ export default function RecordsPublicPage() {
                   );
                 })}
               </Stack>
+              {canMaintainCms && (
+                <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)', mt: 1.5 }}>
+                  Edita este bloque desde Configuración → CMS con los slugs `records-release-*`.
+                </Typography>
+              )}
             </GradientCard>
           </Stack>
         </Container>
@@ -1185,9 +1263,16 @@ export default function RecordsPublicPage() {
               )
             }
           />
-          <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
-            Mantén este grid con las sesiones más frescas: foto hero, fecha y un párrafo corto sobre cómo se grabó. Edita desde Configuración → CMS.
-          </Typography>
+          <Stack spacing={0.75} sx={{ maxWidth: 760, mb: 3 }}>
+            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+              {recordingsIntro}
+            </Typography>
+            {canMaintainCms && (
+              <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
+                Edita este grid desde Configuración → CMS con los slugs `records-recording-*`.
+              </Typography>
+            )}
+          </Stack>
           <RecordingsGrid items={recordings} />
         </Box>
 
@@ -1219,9 +1304,16 @@ export default function RecordsPublicPage() {
               )
             }
           />
-          <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
-            Cada lanzamiento incluye sus enlaces oficiales a plataformas. Edita los enlaces desde el CMS.
-          </Typography>
+          <Stack spacing={0.75} sx={{ maxWidth: 760, mb: 3 }}>
+            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+              {releasesIntro}
+            </Typography>
+            {canMaintainCms && (
+              <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
+                Gestiona los enlaces y el contenido desde Configuración → CMS o desde el módulo de lanzamientos.
+              </Typography>
+            )}
+          </Stack>
           <ReleasesGrid items={releases} />
         </Box>
 
@@ -1243,16 +1335,23 @@ export default function RecordsPublicPage() {
               )
             }
           />
-          <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 760, mb: 3 }}>
-            Inserta el ID de YouTube en la lista de sesiones para embeberlo aquí. Ideal para compartir en la página pública sin esfuerzo.
-          </Typography>
+          <Stack spacing={0.75} sx={{ maxWidth: 760, mb: 3 }}>
+            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+              {sessionsIntro}
+            </Typography>
+            {canMaintainCms && (
+              <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
+                Inserta el ID de YouTube en los slugs `records-session-*` para embeber cada sesión aquí.
+              </Typography>
+            )}
+          </Stack>
           <SessionsGrid items={sessions} />
         </Box>
 
-        <GradientCard
-          title="Cómo actualizar este CMS"
-          actions={
-            canMaintainCms && (
+        {canMaintainCms && (
+          <GradientCard
+            title="Atajos de CMS"
+            actions={
               <Button
                 component={RouterLink}
                 to="/configuracion/cms"
@@ -1262,13 +1361,13 @@ export default function RecordsPublicPage() {
               >
                 Abrir CMS
               </Button>
-            )
-          }
-        >
-          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-            Usa el panel en Configuración → CMS con slugs records-release-*, records-session-* y records-recording-* para crear borradores, publicar y versionar contenido en es/en.
-          </Typography>
-        </GradientCard>
+            }
+          >
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+              Usa el panel en Configuración → CMS con los slugs `records-release-*`, `records-session-*` y `records-recording-*` para crear borradores, publicar y versionar contenido en es/en.
+            </Typography>
+          </GradientCard>
+        )}
       </Container>
     </Box>
   );
