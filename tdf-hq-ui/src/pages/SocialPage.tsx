@@ -175,7 +175,9 @@ export default function SocialPage() {
   );
 
   useEffect(() => {
-    const defaultName = myProfileQuery.data?.fpDisplayName?.trim() || session?.displayName || '';
+    const profileDisplayName = myProfileQuery.data?.fpDisplayName?.trim();
+    const defaultName =
+      (profileDisplayName !== '' ? profileDisplayName : undefined) ?? session?.displayName ?? '';
     const defaultEmail = session?.username?.includes('@') ? session.username : '';
     setShareName((prev) => (prev.trim() ? prev : defaultName));
     setShareEmail((prev) => (prev.trim() ? prev : defaultEmail));

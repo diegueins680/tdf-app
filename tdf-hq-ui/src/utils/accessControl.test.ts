@@ -270,13 +270,13 @@ describe('canAccessPath', () => {
       },
     ] as const;
 
-    const failures: Array<{
+    const failures: {
       roles: string[];
       modules: string[];
       path: string;
       expected: boolean;
       actual: boolean;
-    }> = [];
+    }[] = [];
 
     subsetsUpToTwo(Object.keys(BACKEND_ROLE_MODULES)).forEach((roles) => {
       const modules = backendModulesForRoles(roles);

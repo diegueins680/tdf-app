@@ -61,8 +61,7 @@ const normalizeStringArray = (
 };
 
 const normalizeApiToken = (value: string | null | undefined): string | null => {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
+  return normalizeNonEmptyString(value);
 };
 
 const normalizePositivePartyId = (value: unknown): number | undefined => {

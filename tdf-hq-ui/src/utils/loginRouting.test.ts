@@ -71,7 +71,7 @@ describe('pickLandingPath', () => {
       return combos;
     };
 
-    const failures: Array<{ roles: string[]; modules: string[]; path: string }> = [];
+    const failures: { roles: string[]; modules: string[]; path: string }[] = [];
 
     subsetsUpToTwo(rolesUniverse).forEach((roles) => {
       subsetsUpToTwo(moduleUniverse).forEach((modules) => {
