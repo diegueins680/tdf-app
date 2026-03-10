@@ -43,11 +43,11 @@ loadWhatsAppEnv = do
     }
 
 sendWhatsAppTextIO :: WhatsAppEnv -> Text -> Text -> IO (Either Text SendTextResult)
-sendWhatsAppTextIO env@WhatsAppEnv{waManager = mgr, waToken, waPhoneId, waApiVersion} phone msg =
+sendWhatsAppTextIO env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion} phone msg =
   case (waToken, waPhoneId) of
     (Just tok, Just pid) -> do
       let version = fromMaybe "v20.0" waApiVersion
-      result <- sendText mgr version tok pid phone msg
+      result <- sendText waManager version tok pid phone msg
       pure (either (Left . T.pack) Right result)
     _ ->
       pure (Left (missingConfigMessage env))

@@ -10,6 +10,8 @@ module TDF.WhatsApp.History
   , normalizeWhatsAppPhone
   , phoneLookupAliases
   , cleanMaybeText
+  , resolvePartyPhones
+  , messageBelongsToParty
   , resolveWhatsAppContactSnapshot
   , recordIncomingWhatsAppMessage
   , recordOutgoingWhatsAppMessage
@@ -410,6 +412,19 @@ cleanMaybeText Nothing = Nothing
 cleanMaybeText (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+resolvePartyPhones :: Party -> [Text]
+resolvePartyPhones party =
+  nub (catMaybes
+    [ partyWhatsapp party >>= normalizeWhatsAppPhone
+    , partyPrimaryPhone party >>= normalizeWhatsAppPhone
+    ])
+
+messageBelongsToParty :: PartyId -> [Text] -> ME.WhatsAppMessage -> Bool
+messageBelongsToParty partyKey phones msg =
+  ME.whatsAppMessagePartyId msg == Just partyKey
+    || maybe False (`elem` phones) (ME.whatsAppMessagePhoneE164 msg)
+    || ME.whatsAppMessageSenderId msg `elem` concatMap phoneLookupAliases phones
 
 setOptionalFieldUpdate :: PersistField typ => EntityField record (Maybe typ) -> Maybe typ -> Maybe (Update record)
 setOptionalFieldUpdate field = fmap (\value -> field =. Just value)
