@@ -10,7 +10,7 @@ const INTERNAL_MANAGER_MODULE_KEYS = [
   'internships',
 ] as const;
 
-const EXPLICIT_SCHOOL_STAFF_ROLE_KEYS = ['admin', 'reception', 'studiomanager'] as const;
+const SCHOOL_STAFF_ROLE_KEYS = ['admin', 'manager', 'reception', 'studiomanager'] as const;
 const OPERATIONS_ROLE_KEYS = ['manager', 'maintenance'] as const;
 const LABEL_TRACK_ROLE_KEYS = ['artist', 'artista'] as const;
 const ROLE_ALIASES: Record<string, string> = {
@@ -219,15 +219,25 @@ export function isSchoolStaffRole(
   modules: readonly string[] | undefined = [],
 ): boolean {
   const normalizedRoles = normalizeAccessRoles(roles);
-  if (hasAnyRole(normalizedRoles, EXPLICIT_SCHOOL_STAFF_ROLE_KEYS)) {
-    return true;
-  }
-  if (!hasAnyRole(normalizedRoles, ['manager'])) {
+  if (!hasAnyRole(normalizedRoles, SCHOOL_STAFF_ROLE_KEYS)) {
     return false;
   }
 
   const moduleSet = buildAccessibleModuleSet(roles, modules);
-  return hasAnyModule(moduleSet, INTERNAL_MANAGER_MODULE_KEYS);
+  return moduleSet.has('scheduling') || hasAnyModule(moduleSet, INTERNAL_MANAGER_MODULE_KEYS);
+}
+
+export function hasSchoolPortalAccess(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined = [],
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  if (!moduleSet.has('scheduling')) {
+    return false;
+  }
+
+  return hasAnyRole(normalizedRoles, ['teacher']) || isSchoolStaffRole(normalizedRoles, modules);
 }
 
 export function pathRequiresSchoolStaff(path: string): boolean {
@@ -262,6 +272,12 @@ export function canAccessPath(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
+  if (path.startsWith('/mi-profesor')) {
+    return hasSchoolPortalAccess(roles, modules);
+  }
+  if (path === '/escuela' || path.startsWith('/escuela/')) {
+    return isSchoolStaffRole(roles, modules);
+  }
   if (path.startsWith('/label/tracks')) {
     return canAccessLabelTracks(roles, modules);
   }

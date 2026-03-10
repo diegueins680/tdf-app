@@ -1,10 +1,65 @@
 import {
   buildAccessibleModuleSet,
   canAccessPath,
+  hasSchoolPortalAccess,
   hasOperationsAccess,
   isSchoolStaffRole,
   normalizeAccessRoles,
 } from './accessControl';
+
+const BACKEND_ROLE_MODULES: Record<string, readonly string[]> = {
+  Admin: ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships'],
+  Manager: ['crm', 'scheduling', 'packages', 'invoicing', 'internships'],
+  'Studio Manager': ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships'],
+  Reception: ['crm', 'scheduling'],
+  Accounting: ['invoicing'],
+  Engineer: ['scheduling'],
+  Teacher: ['scheduling'],
+  'Live Sessions Producer': ['crm', 'scheduling'],
+  Intern: ['internships'],
+  Artist: ['scheduling', 'packages'],
+  Artista: ['scheduling', 'packages'],
+  Webmaster: ['admin', 'crm'],
+  Promotor: [],
+  Promoter: [],
+  Producer: ['crm', 'scheduling'],
+  Songwriter: [],
+  DJ: [],
+  Publicist: [],
+  TourManager: [],
+  LabelRep: [],
+  StageManager: [],
+  RoadCrew: [],
+  Photographer: [],
+  'A&R': ['crm', 'scheduling'],
+  Student: ['scheduling'],
+  Vendor: ['packages'],
+  ReadOnly: ['crm'],
+  Customer: ['packages'],
+  Fan: [],
+  Maintenance: ['packages', 'scheduling'],
+};
+
+const subsetsUpToTwo = <T,>(values: readonly T[]): T[][] => {
+  const combos: T[][] = [[]];
+  values.forEach((value, index) => {
+    combos.push([value]);
+    values.slice(index + 1).forEach((other) => {
+      combos.push([value, other]);
+    });
+  });
+  return combos;
+};
+
+const backendModulesForRoles = (roles: readonly string[]): string[] => {
+  const modules = new Set<string>();
+  roles.forEach((role) => {
+    (BACKEND_ROLE_MODULES[role] ?? []).forEach((module) => {
+      modules.add(module);
+    });
+  });
+  return Array.from(modules);
+};
 
 describe('buildAccessibleModuleSet', () => {
   it('does not infer staff access from public music-industry roles', () => {
@@ -38,9 +93,18 @@ describe('buildAccessibleModuleSet', () => {
 });
 
 describe('isSchoolStaffRole', () => {
-  it('only treats manager as school staff when the session carries staff modules', () => {
-    expect(isSchoolStaffRole(['Manager'], [])).toBe(false);
-    expect(isSchoolStaffRole(['Manager'], ['school'])).toBe(true);
+  it('matches the backend school-staff role predicate instead of trusting a synthetic school module', () => {
+    expect(isSchoolStaffRole(['Manager'], ['scheduling'])).toBe(true);
+    expect(isSchoolStaffRole(['Reception'], ['scheduling'])).toBe(true);
+    expect(isSchoolStaffRole([], ['school'])).toBe(false);
+  });
+});
+
+describe('hasSchoolPortalAccess', () => {
+  it('requires the same scheduling-plus-role predicate as the backend teacher portal', () => {
+    expect(hasSchoolPortalAccess(['Teacher'], ['scheduling'])).toBe(true);
+    expect(hasSchoolPortalAccess(['Manager'], ['scheduling'])).toBe(true);
+    expect(hasSchoolPortalAccess([], ['school'])).toBe(false);
   });
 });
 
@@ -48,9 +112,10 @@ describe('canAccessPath', () => {
   it('blocks staff-only routes for public roles and allows legitimate staff access', () => {
     expect(canAccessPath('/configuracion/roles-permisos', ['Fan'], [])).toBe(false);
     expect(canAccessPath('/label/artistas', ['LabelRep'], [])).toBe(false);
-    expect(canAccessPath('/escuela/clases', ['Manager'], [])).toBe(false);
-    expect(canAccessPath('/escuela/clases', ['Reception'], ['school'])).toBe(true);
-    expect(canAccessPath('/mi-profesor', ['Teacher'], [])).toBe(true);
+    expect(canAccessPath('/escuela/clases', ['Manager'], ['scheduling'])).toBe(true);
+    expect(canAccessPath('/escuela/clases', ['Reception'], ['scheduling'])).toBe(true);
+    expect(canAccessPath('/mi-profesor', ['Teacher'], ['scheduling'])).toBe(true);
+    expect(canAccessPath('/mi-profesor', [], ['school'])).toBe(false);
   });
 
   it('keeps package-only customer sessions out of operations and label routes', () => {
@@ -64,5 +129,66 @@ describe('canAccessPath', () => {
     expect(canAccessPath('/label/assets', ['Maintenance'], ['Packages'])).toBe(true);
     expect(canAccessPath('/label/tracks', ['Artist'], ['Scheduling', 'Packages'])).toBe(true);
     expect(canAccessPath('/label/tracks', ['Fan', 'Customer'], ['Packages'])).toBe(false);
+  });
+
+  it('matches backend route predicates for key protected routes across realistic sessions', () => {
+    const routes = [
+      {
+        path: '/mi-profesor',
+        expected: (roles: readonly string[]) =>
+          roles.some((role) =>
+            ['Teacher', 'Admin', 'Manager', 'Studio Manager', 'Reception'].includes(role),
+          ),
+      },
+      {
+        path: '/escuela/clases',
+        expected: (roles: readonly string[]) =>
+          roles.some((role) => ['Admin', 'Manager', 'Studio Manager', 'Reception'].includes(role)),
+      },
+      {
+        path: '/operacion/inventario',
+        expected: (roles: readonly string[]) =>
+          roles.some((role) =>
+            ['Admin', 'Manager', 'Studio Manager', 'Webmaster', 'Maintenance'].includes(role),
+          ),
+      },
+      {
+        path: '/label/artistas',
+        expected: (roles: readonly string[]) =>
+          roles.some((role) => ['Admin', 'Studio Manager', 'Webmaster'].includes(role)),
+      },
+      {
+        path: '/label/tracks',
+        expected: (roles: readonly string[]) =>
+          roles.some((role) => ['Admin', 'Artist', 'Artista'].includes(role)),
+      },
+    ] as const;
+
+    const failures: Array<{
+      roles: string[];
+      modules: string[];
+      path: string;
+      expected: boolean;
+      actual: boolean;
+    }> = [];
+
+    subsetsUpToTwo(Object.keys(BACKEND_ROLE_MODULES)).forEach((roles) => {
+      const modules = backendModulesForRoles(roles);
+      routes.forEach(({ path, expected }) => {
+        const actual = canAccessPath(path, roles, modules);
+        const expectedResult = expected(roles);
+        if (actual !== expectedResult) {
+          failures.push({
+            roles: [...roles],
+            modules: [...modules],
+            path,
+            expected: expectedResult,
+            actual,
+          });
+        }
+      });
+    });
+
+    expect(failures).toEqual([]);
   });
 });

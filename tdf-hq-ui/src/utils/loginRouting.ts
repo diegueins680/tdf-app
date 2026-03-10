@@ -3,6 +3,7 @@ import {
   canAccessLabelCatalog,
   canAccessLabelTracks,
   canAccessPath,
+  hasSchoolPortalAccess,
   hasOperationsAccess,
   isSchoolStaffRole,
   normalizeAccessRoles,
@@ -22,7 +23,9 @@ export function pickLandingPath(roles: readonly string[], modules?: readonly str
     hasRole('teacher') ? '/mi-profesor' : null,
     moduleSet.has('scheduling') ? '/estudio/calendario' : null,
     moduleSet.has('crm') ? '/crm/contactos' : null,
-    moduleSet.has('school') ? (isSchoolStaffRole(normalizedRoles, modules) ? '/escuela/clases' : '/mi-profesor') : null,
+    hasSchoolPortalAccess(normalizedRoles, modules)
+      ? (isSchoolStaffRole(normalizedRoles, modules) ? '/escuela/clases' : '/mi-profesor')
+      : null,
     canAccessLabelCatalog(normalizedRoles, modules) ? '/label/artistas' : null,
     canAccessLabelTracks(normalizedRoles, modules) ? '/label/tracks' : null,
     hasOperationsAccess(normalizedRoles, modules) ? '/operacion/inventario' : null,

@@ -16,8 +16,8 @@ describe('pickLandingPath', () => {
     expect(pickLandingPath(['customer'], ['internships'])).toBe('/practicas');
   });
 
-  it('routes school-only access to the teacher portal instead of a staff-only page', () => {
-    expect(pickLandingPath([], ['school'])).toBe('/mi-profesor');
+  it('does not land synthetic school-only sessions on routes the backend would reject', () => {
+    expect(pickLandingPath([], ['school'])).toBe('/inicio');
   });
 
   it('keeps package-only sessions on public destinations', () => {
