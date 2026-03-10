@@ -42,7 +42,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@testomatio/reporter": "^1.4.0",
+    "@testomatio/reporter": "^1.6.17",
     "@types/jest": "^30.0.0",
     "@types/luxon": "^3.7.1",
     "@types/node": "^22.5.4",

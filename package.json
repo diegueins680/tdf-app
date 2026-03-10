@@ -50,7 +50,7 @@
     "url": "https://github.com/diegueins680/tdf-app"
   },
   "devDependencies": {
-    "@testomatio/reporter": "^2.3.8",
+    "@testomatio/reporter": "^0.7.6",
     "react-native-reanimated": "~4.1.1"
   }
 }
