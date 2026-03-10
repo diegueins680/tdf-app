@@ -141,6 +141,64 @@ async function ensureLoggedIn(page) {
   await page.waitForLoadState('networkidle').catch(() => {});
 }
 
+async function gotoReviewPage(page, url) {
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+}
+
+async function findFirstInboxConversationRow(page) {
+  const refreshBtn = page.getByRole('button', { name: /Refresh/i }).first();
+  const allFilterBtn = page.getByRole('button', { name: /^All$/i }).first();
+  const instagramTable = page.locator('table').first();
+  const instagramRows = instagramTable.locator('tbody tr');
+
+  const findVisibleConversationRow = async () => {
+    const count = await instagramRows.count();
+    for (let index = 0; index < count; index += 1) {
+      const row = instagramRows.nth(index);
+      const text = ((await row.textContent()) ?? '').replace(/\s+/g, ' ').trim();
+      if (!text) {
+        continue;
+      }
+      if (/No messages for this filter|Sin mensajes para este filtro/i.test(text)) {
+        continue;
+      }
+      return row;
+    }
+    return null;
+  };
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    await instagramTable.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
+    const row = await findVisibleConversationRow();
+    if (row) {
+      return row;
+    }
+
+    if (attempt === 0) {
+      const refreshVisible = await refreshBtn.isVisible({ timeout: 2_000 }).catch(() => false);
+      if (refreshVisible) {
+        await refreshBtn.click().catch(() => {});
+      }
+    } else if (attempt === 1) {
+      const allVisible = await allFilterBtn.isVisible({ timeout: 2_000 }).catch(() => false);
+      if (allVisible) {
+        await allFilterBtn.click().catch(() => {});
+      }
+      const refreshVisible = await refreshBtn.isVisible({ timeout: 2_000 }).catch(() => false);
+      if (refreshVisible) {
+        await refreshBtn.click().catch(() => {});
+      }
+    }
+
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await sleep(2_000);
+  }
+
+  const tableText = ((await instagramTable.textContent().catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
+  throw new Error(`No inbound Instagram conversation row became visible. Instagram table text: ${tableText || '(empty)'}`);
+}
+
 const main = async () => {
   await mkdir(OUT_DIR, { recursive: true });
 
@@ -157,11 +215,11 @@ const main = async () => {
   page.setDefaultTimeout(90_000);
 
   console.log(`Opening: ${URL}`);
-  await page.goto(URL, { waitUntil: 'networkidle' });
+  await gotoReviewPage(page, URL);
   await ensureLoggedIn(page);
 
   // After login we may land elsewhere; always return to review setup page.
-  await page.goto(URL, { waitUntil: 'networkidle' });
+  await gotoReviewPage(page, URL);
   await ensureLoggedIn(page);
 
   // Step 1: Instagram setup screen (review mode)
@@ -197,7 +255,7 @@ const main = async () => {
     );
 
     // After human completes auth, return to setup page.
-    await page.goto(URL, { waitUntil: 'networkidle' }).catch(() => {});
+    await gotoReviewPage(page, URL).catch(() => {});
     await ensureLoggedIn(page);
     await page.getByRole('heading', { name: setupHeadingMatcher }).waitFor();
     console.log('Returned from Meta consent to setup page.');
@@ -225,7 +283,7 @@ const main = async () => {
     console.log('Navigating to messaging inbox flow via Continue button.');
   } else {
     console.log('Continue button still not visible; navigating directly to inbox review URL.');
-    await page.goto(INBOX_URL, { waitUntil: 'networkidle' });
+    await gotoReviewPage(page, INBOX_URL);
     await ensureLoggedIn(page);
   }
 
@@ -239,11 +297,12 @@ const main = async () => {
       'If none, open Instagram and send a message to the business account so it appears here.\n'
   );
 
-  // Open first message row by clicking a sender cell.
-  const firstRow = page.locator('table tbody tr').first();
-  if ((await firstRow.count()) === 0) {
-    throw new Error('No inbound conversation rows found in the inbox table.');
-  }
+  await page.waitForLoadState('networkidle').catch(() => {});
+  await sleep(1_500);
+
+  // Prefer the Instagram panel and wait for a real message row instead of a
+  // transient empty/loading state.
+  const firstRow = await findFirstInboxConversationRow(page);
   await spotlight(page, firstRow, 'Open inbound conversation');
   await firstRow.click();
 
