@@ -88,6 +88,7 @@ import           TDF.Models
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.WhatsApp.History   ( OutgoingWhatsAppRecord(..)
+                                        , cleanMaybeText
                                         , messageBelongsToParty
                                         , normalizeWhatsAppPhone
                                         , phoneLookupAliases
@@ -798,8 +799,8 @@ adminServer user =
       originalBody <- maybe
         (throwError err400 { errBody = "El mensaje original no tiene contenido de texto" })
         pure
-        (normalizeOptionalText (ME.whatsAppMessageText msg))
-      let resendBody = fromMaybe originalBody (normalizeOptionalText awrrMessage)
+        (cleanMaybeText (ME.whatsAppMessageText msg))
+      let resendBody = fromMaybe originalBody (cleanMaybeText awrrMessage)
           phone = ME.whatsAppMessagePhoneE164 msg <|> normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
       targetPhone <- maybe (throwError err400 { errBody = "No se pudo determinar el número destino" }) pure phone
       now <- liftIO getCurrentTime
@@ -956,12 +957,6 @@ buildSendResponse sendResult (Entity msgKey msg) =
     , awspDeliveryStatus = ME.whatsAppMessageDeliveryStatus msg
     , awspMessage = either Just (const (Just "sent")) sendResult
     }
-
-normalizeOptionalText :: Maybe Text -> Maybe Text
-normalizeOptionalText Nothing = Nothing
-normalizeOptionalText (Just raw) =
-  let trimmed = T.strip raw
-  in if T.null trimmed then Nothing else Just trimmed
 
 setPartyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
 setPartyRoles partyKey rolesList = do
