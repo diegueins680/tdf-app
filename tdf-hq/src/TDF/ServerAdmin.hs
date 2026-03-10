@@ -957,7 +957,6 @@ buildSendResponse sendResult (Entity msgKey msg) =
     , awspDeliveryStatus = ME.whatsAppMessageDeliveryStatus msg
     , awspMessage = either Just (const (Just "sent")) sendResult
     }
-
 setPartyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
 setPartyRoles partyKey rolesList = do
   existing <- selectList [PartyRolePartyId ==. partyKey] []
