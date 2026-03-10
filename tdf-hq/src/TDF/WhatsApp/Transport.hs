@@ -7,7 +7,7 @@ module TDF.WhatsApp.Transport
   , sendWhatsAppTextIO
   ) where
 
-import           Data.Maybe (fromMaybe)
+import           Data.Maybe (fromMaybe, isNothing)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Network.HTTP.Client (Manager, newManager)
@@ -55,10 +55,8 @@ sendWhatsAppTextIO env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion} 
 missingConfigMessage :: WhatsAppEnv -> Text
 missingConfigMessage WhatsAppEnv{waToken, waPhoneId} =
   let missingPieces =
-        [ ("token", ["WHATSAPP_TOKEN", "WA_TOKEN"])
-        | waToken == Nothing ] ++
-        [ ("phoneId", ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"])
-        | waPhoneId == Nothing ]
+        [ ("token",   ["WHATSAPP_TOKEN", "WA_TOKEN"])              | isNothing waToken   ] ++
+        [ ("phoneId", ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]) | isNothing waPhoneId ]
       pieceToText (name, envs) =
         T.concat
           [ name
