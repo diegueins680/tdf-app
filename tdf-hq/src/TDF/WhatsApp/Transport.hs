@@ -7,7 +7,7 @@ module TDF.WhatsApp.Transport
   , sendWhatsAppTextIO
   ) where
 
-import           Data.Maybe (fromMaybe, isNothing)
+import           Data.Maybe (fromMaybe)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Network.HTTP.Client (Manager, newManager)
@@ -43,11 +43,11 @@ loadWhatsAppEnv = do
     }
 
 sendWhatsAppTextIO :: WhatsAppEnv -> Text -> Text -> IO (Either Text SendTextResult)
-sendWhatsAppTextIO env@WhatsAppEnv{waManager = mgr, waToken, waPhoneId, waApiVersion} phone msg =
+sendWhatsAppTextIO env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion} phone msg =
   case (waToken, waPhoneId) of
     (Just tok, Just pid) -> do
       let version = fromMaybe "v20.0" waApiVersion
-      result <- sendText mgr version tok pid phone msg
+      result <- sendText waManager version tok pid phone msg
       pure (either (Left . T.pack) Right result)
     _ ->
       pure (Left (missingConfigMessage env))
@@ -55,8 +55,10 @@ sendWhatsAppTextIO env@WhatsAppEnv{waManager = mgr, waToken, waPhoneId, waApiVer
 missingConfigMessage :: WhatsAppEnv -> Text
 missingConfigMessage WhatsAppEnv{waToken, waPhoneId} =
   let missingPieces =
-        [ ("token",   ["WHATSAPP_TOKEN", "WA_TOKEN"])              | isNothing waToken   ] ++
-        [ ("phoneId", ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]) | isNothing waPhoneId ]
+        [ ("token", ["WHATSAPP_TOKEN", "WA_TOKEN"])
+        | waToken == Nothing ] ++
+        [ ("phoneId", ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"])
+        | waPhoneId == Nothing ]
       pieceToText (name, envs) =
         T.concat
           [ name
