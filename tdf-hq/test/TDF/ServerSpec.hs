@@ -4,7 +4,7 @@ module TDF.ServerSpec (spec) where
 
 import Control.Monad (forM_)
 import Database.Persist.Sql (toSqlKey)
-import TDF.Auth (AuthedUser (..), hasOperationsAccess, modulesForRoles)
+import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, modulesForRoles)
 import TDF.Models (BookingStatus (..), RoleEnum (..))
 import TDF.Server (normalizeOptionalInput, parseStatusWithDefault)
 import Test.Hspec
@@ -47,3 +47,20 @@ spec = describe "TDF.Server helpers" $ do
         it "matches the intended single-role operations matrix" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasOperationsAccess (mkUser [role]) `shouldBe` (role `elem` [Admin, Manager, StudioManager, Webmaster, Maintenance])
+
+    describe "hasAiToolingAccess" $ do
+        it "denies baseline customer sessions" $
+            hasAiToolingAccess (mkUser [Fan, Customer]) `shouldBe` False
+
+        it "tracks the operations-access matrix for paid tooling" $
+            forM_ [minBound .. maxBound] $ \role ->
+                hasAiToolingAccess (mkUser [role]) `shouldBe` hasOperationsAccess (mkUser [role])
+
+    describe "hasSocialInboxAccess" $ do
+        it "denies baseline and read-only CRM sessions" $ do
+            hasSocialInboxAccess (mkUser [Fan, Customer]) `shouldBe` False
+            hasSocialInboxAccess (mkUser [ReadOnly]) `shouldBe` False
+
+        it "matches the intended single-role inbox matrix" $
+            forM_ [minBound .. maxBound] $ \role ->
+                hasSocialInboxAccess (mkUser [role]) `shouldBe` (role `elem` [Admin, Manager, StudioManager, Reception, LiveSessionsProducer, Producer, AandR, Webmaster])

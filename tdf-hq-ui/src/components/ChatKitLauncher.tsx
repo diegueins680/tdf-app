@@ -14,11 +14,15 @@ import CloseIcon from '@mui/icons-material/Close';
 import { ChatKit, useChatKit } from '@openai/chatkit-react';
 import { env, reportMissingEnv } from '../utils/env';
 import { createChatKitClientSecretFetcher } from '../utils/chatkit';
+import { useSession } from '../session/SessionContext';
+import { canAccessPath } from '../utils/accessControl';
 
 export default function ChatKitLauncher() {
   const [open, setOpen] = useState(false);
+  const { session } = useSession();
   const workflowId = env.read('VITE_CHATKIT_WORKFLOW_ID') ?? '';
   const supportsChatKit = typeof window !== 'undefined' && typeof window.crypto?.randomUUID === 'function';
+  const canUseChatKit = canAccessPath('/herramientas/chatkit', session?.roles, session?.modules);
 
   useEffect(() => {
     if (!supportsChatKit) return;
@@ -34,7 +38,7 @@ export default function ChatKitLauncher() {
     api: { getClientSecret },
   });
 
-  if (!workflowId || !supportsChatKit) {
+  if (!workflowId || !supportsChatKit || !canUseChatKit) {
     return null;
   }
 

@@ -6,7 +6,9 @@ module TDF.Auth
   ( AuthedUser(..)
   , ModuleAccess(..)
   , authContext
+  , hasAiToolingAccess
   , hasOperationsAccess
+  , hasSocialInboxAccess
   , hasModuleAccess
   , moduleName
   , modulesForRoles
@@ -70,6 +72,23 @@ hasModuleAccess moduleTag AuthedUser{..} = moduleTag `Set.member` auModules
 hasOperationsAccess :: AuthedUser -> Bool
 hasOperationsAccess user@AuthedUser{..} =
   hasModuleAccess ModuleAdmin user || any (`elem` auRoles) [Manager, Maintenance]
+
+hasAiToolingAccess :: AuthedUser -> Bool
+hasAiToolingAccess = hasOperationsAccess
+
+hasSocialInboxAccess :: AuthedUser -> Bool
+hasSocialInboxAccess user@AuthedUser{..} =
+  hasModuleAccess ModuleCRM user
+    && any (`elem` auRoles)
+      [ Admin
+      , Manager
+      , StudioManager
+      , Reception
+      , LiveSessionsProducer
+      , Producer
+      , AandR
+      , Webmaster
+      ]
 
 -- Internal -----------------------------------------------------------------
 

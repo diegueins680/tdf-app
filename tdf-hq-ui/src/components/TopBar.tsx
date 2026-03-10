@@ -764,12 +764,16 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
         <MenuItem component={RouterLink} to="/feedback" onClick={() => setResourcesAnchor(null)}>
           Sugerencias
         </MenuItem>
-        <MenuItem component={RouterLink} to="/herramientas/chatkit" onClick={() => setResourcesAnchor(null)}>
-          ChatKit
-        </MenuItem>
-        <MenuItem component={RouterLink} to="/herramientas/tidal-agent" onClick={() => setResourcesAnchor(null)}>
-          Agente Tidal
-        </MenuItem>
+        {canUsePath('/herramientas/chatkit') && (
+          <MenuItem component={RouterLink} to="/herramientas/chatkit" onClick={() => setResourcesAnchor(null)}>
+            ChatKit
+          </MenuItem>
+        )}
+        {canUsePath('/herramientas/tidal-agent') && (
+          <MenuItem component={RouterLink} to="/herramientas/tidal-agent" onClick={() => setResourcesAnchor(null)}>
+            Agente Tidal
+          </MenuItem>
+        )}
         <MenuItem component={RouterLink} to="/herramientas/creador-musical" onClick={() => setResourcesAnchor(null)}>
           Creador musical
         </MenuItem>

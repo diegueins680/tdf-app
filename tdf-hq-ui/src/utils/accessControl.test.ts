@@ -1,7 +1,9 @@
 import {
   buildAccessibleModuleSet,
   canAccessPath,
+  hasAiToolingAccess,
   hasInternshipsAccess,
+  hasSocialInboxAccess,
   hasSchoolPortalAccess,
   hasOperationsAccess,
   isSchoolStaffRole,
@@ -62,6 +64,14 @@ const backendModulesForRoles = (roles: readonly string[]): string[] => {
   return Array.from(modules);
 };
 
+const hasBackendSocialInboxAccess = (roles: readonly string[]) =>
+  roles.some((role) =>
+    ['Admin', 'Manager', 'Studio Manager', 'Reception', 'Live Sessions Producer', 'Producer', 'A&R', 'Webmaster'].includes(role),
+  );
+
+const hasBackendAiToolingAccess = (roles: readonly string[]) =>
+  roles.some((role) => ['Admin', 'Manager', 'Studio Manager', 'Webmaster', 'Maintenance'].includes(role));
+
 describe('buildAccessibleModuleSet', () => {
   it('does not infer staff access from public music-industry roles', () => {
     const modules = buildAccessibleModuleSet(['TourManager', 'LabelRep', 'StageManager'], []);
@@ -91,6 +101,15 @@ describe('buildAccessibleModuleSet', () => {
     expect(hasOperationsAccess(['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
     expect(hasOperationsAccess(['Maintenance'], ['Packages'])).toBe(true);
   });
+
+  it('matches the backend social inbox and AI-tooling predicates', () => {
+    expect(hasSocialInboxAccess(['Fan', 'Customer'], ['Packages'])).toBe(false);
+    expect(hasSocialInboxAccess(['ReadOnly'], ['CRM'])).toBe(false);
+    expect(hasSocialInboxAccess(['Reception'], ['CRM', 'Scheduling'])).toBe(true);
+    expect(hasAiToolingAccess(['Fan', 'Customer'], ['Packages'])).toBe(false);
+    expect(hasAiToolingAccess(['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
+    expect(hasAiToolingAccess(['Maintenance'], ['Packages'])).toBe(true);
+  });
 });
 
 describe('isSchoolStaffRole', () => {
@@ -111,6 +130,15 @@ describe('hasSchoolPortalAccess', () => {
 
 describe('canAccessPath', () => {
   it('blocks staff-only routes for public roles and allows legitimate staff access', () => {
+    expect(canAccessPath('/social', ['Fan', 'Customer'], ['Packages'])).toBe(true);
+    expect(canAccessPath('/social/eventos', ['Fan', 'Customer'], ['Packages'])).toBe(true);
+    expect(canAccessPath('/social/instagram', ['Fan', 'Customer'], ['Packages'])).toBe(true);
+    expect(canAccessPath('/social/inbox', ['Fan', 'Customer'], ['Packages'])).toBe(false);
+    expect(canAccessPath('/social/inbox', ['ReadOnly'], ['CRM'])).toBe(false);
+    expect(canAccessPath('/social/inbox', ['Reception'], ['CRM', 'Scheduling'])).toBe(true);
+    expect(canAccessPath('/herramientas/chatkit', ['Fan', 'Customer'], ['Packages'])).toBe(false);
+    expect(canAccessPath('/herramientas/chatkit', ['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
+    expect(canAccessPath('/herramientas/tidal-agent', ['Fan', 'Customer'], ['Packages'])).toBe(false);
     expect(canAccessPath('/configuracion/roles-permisos', ['Fan'], [])).toBe(false);
     expect(canAccessPath('/label/artistas', ['LabelRep'], [])).toBe(false);
     expect(canAccessPath('/configuracion/cms', ['Studio Manager'], ['admin'])).toBe(false);
@@ -144,6 +172,30 @@ describe('canAccessPath', () => {
 
   it('matches backend route predicates for key protected routes across realistic sessions', () => {
     const routes = [
+      {
+        path: '/social',
+        expected: () => true,
+      },
+      {
+        path: '/social/eventos',
+        expected: () => true,
+      },
+      {
+        path: '/social/instagram',
+        expected: () => true,
+      },
+      {
+        path: '/social/inbox',
+        expected: (roles: readonly string[]) => hasBackendSocialInboxAccess(roles),
+      },
+      {
+        path: '/herramientas/chatkit',
+        expected: (roles: readonly string[]) => hasBackendAiToolingAccess(roles),
+      },
+      {
+        path: '/herramientas/tidal-agent',
+        expected: (roles: readonly string[]) => hasBackendAiToolingAccess(roles),
+      },
       {
         path: '/mi-profesor',
         expected: (roles: readonly string[]) =>

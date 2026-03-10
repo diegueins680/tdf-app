@@ -57,7 +57,7 @@ import           TDF.API.Rooms              (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Services           (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.Types
-import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess, hasOperationsAccess)
+import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess, hasOperationsAccess, hasSocialInboxAccess)
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
@@ -1687,12 +1687,18 @@ instagramServer
      , MonadReader Env m
      , MonadError ServerError m
      )
-  => ServerT IG.InstagramAPI m
-instagramServer =
+  => AuthedUser
+  -> ServerT IG.InstagramAPI m
+instagramServer user =
        handleReply
   :<|> listMessages
   where
+    ensureInboxAccess =
+      unless (hasSocialInboxAccess user) $
+        throwError err403 { errBody = "Missing required module access" }
+
     handleReply req = do
+      ensureInboxAccess
       now <- liftIO getCurrentTime
       Env{..} <- ask
       let recipient = IG.irSenderId req
@@ -1751,6 +1757,7 @@ instagramServer =
 
 
     listMessages mLimit mDirection mRepliedOnly = do
+      ensureInboxAccess
       Env{..} <- ask
       let limit = normalizeSocialLimit mLimit
       direction <- parseSocialDirectionParam mDirection
@@ -1798,12 +1805,18 @@ facebookServer
      , MonadReader Env m
      , MonadError ServerError m
      )
-  => ServerT FB.FacebookAPI m
-facebookServer =
+  => AuthedUser
+  -> ServerT FB.FacebookAPI m
+facebookServer user =
        handleReply
   :<|> listMessages
   where
+    ensureInboxAccess =
+      unless (hasSocialInboxAccess user) $
+        throwError err403 { errBody = "Missing required module access" }
+
     handleReply req = do
+      ensureInboxAccess
       now <- liftIO getCurrentTime
       Env{..} <- ask
       let recipient = FB.frSenderId req
@@ -1857,6 +1870,7 @@ facebookServer =
           pure (object ["status" .= ("ok" :: Text), "message" .= ("sent" :: Text), "response" .= responseBody])
 
     listMessages mLimit mDirection mRepliedOnly = do
+      ensureInboxAccess
       Env{..} <- ask
       let limit = normalizeSocialLimit mLimit
       direction <- parseSocialDirectionParam mDirection

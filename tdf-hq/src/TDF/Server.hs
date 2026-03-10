@@ -73,7 +73,7 @@ import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO
 import qualified TDF.DTO as DTO
-import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, hasOperationsAccess, moduleName, loadAuthedUser)
+import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasAiToolingAccess, hasModuleAccess, hasOperationsAccess, hasSocialInboxAccess, moduleName, loadAuthedUser)
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
@@ -752,7 +752,9 @@ whatsappHooksServer :: ServerT WhatsAppHooksAPI AppM
 whatsappHooksServer = whatsappWebhookServer
 
 whatsappMessagesServer :: AuthedUser -> ServerT Api.WhatsAppMessagesAPI AppM
-whatsappMessagesServer _ mLimit mDirection mRepliedOnly = do
+whatsappMessagesServer user mLimit mDirection mRepliedOnly = do
+  unless (hasSocialInboxAccess user) $
+    throwError err403 { errBody = "Missing required module access" }
   let limit = normalizeLimit mLimit
   direction <- parseDirectionParam mDirection
   repliedOnly <- parseBoolParam mRepliedOnly
@@ -790,6 +792,8 @@ whatsappMessagesServer _ mLimit mDirection mRepliedOnly = do
 
 whatsappReplyServer :: AuthedUser -> ServerT Api.WhatsAppReplyAPI AppM
 whatsappReplyServer user WhatsAppReplyReq{..} = do
+  unless (hasSocialInboxAccess user) $
+    throwError err403 { errBody = "Missing required module access" }
   now <- liftIO getCurrentTime
   waEnv <- liftIO loadWhatsAppEnv
   let recipient = T.strip wrSenderId
@@ -1748,8 +1752,8 @@ protectedServer user =
   :<|> feedbackServer user
   :<|> marketplaceAdminServer user
   :<|> paymentsServer user
-  :<|> instagramServer
-  :<|> facebookServer
+  :<|> instagramServer user
+  :<|> facebookServer user
   :<|> instagramOAuthServer user
   :<|> whatsappMessagesServer user
   :<|> whatsappReplyServer user
@@ -6523,7 +6527,9 @@ tidalSystemPrompt = T.intercalate "\n"
   ]
 
 tidalAgentServer :: AuthedUser -> TidalAgentRequest -> AppM TidalAgentResponse
-tidalAgentServer _ TidalAgentRequest{..} = do
+tidalAgentServer user TidalAgentRequest{..} = do
+  unless (hasAiToolingAccess user) $
+    throwError err403 { errBody = "Missing required module access" }
   Env{..} <- ask
   let prompt = T.strip taPrompt
   when (T.null prompt) $ throwBadRequest "Prompt requerido"
@@ -6575,6 +6581,8 @@ tidalAgentServer _ TidalAgentRequest{..} = do
 
 chatkitSessionServer :: AuthedUser -> ChatKitSessionRequest -> AppM ChatKitSessionResponse
 chatkitSessionServer user ChatKitSessionRequest{..} = do
+  unless (hasAiToolingAccess user) $
+    throwError err403 { errBody = "Missing required module access" }
   Env{..} <- ask
   let cfg = envConfig
   workflowId <- case resolveWorkflowId cksWorkflowId (chatKitWorkflowId cfg) of

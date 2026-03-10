@@ -13,6 +13,16 @@ const INTERNAL_MANAGER_MODULE_KEYS = [
 const SCHOOL_STAFF_ROLE_KEYS = ['admin', 'manager', 'reception', 'studiomanager'] as const;
 const OPERATIONS_ROLE_KEYS = ['manager', 'maintenance'] as const;
 const ADMIN_ROLE_KEYS = ['admin'] as const;
+const SOCIAL_INBOX_ROLE_KEYS = [
+  'admin',
+  'manager',
+  'studiomanager',
+  'reception',
+  'livesessionsproducer',
+  'producer',
+  'a&r',
+  'webmaster',
+] as const;
 const LABEL_TRACK_ROLE_KEYS = ['artist', 'artista'] as const;
 const CMS_EDITOR_ROLE_KEYS = ['admin', 'webmaster'] as const;
 const INTERNSHIPS_ADMIN_ROLE_KEYS = ['admin', 'manager', 'studiomanager'] as const;
@@ -203,6 +213,22 @@ export function hasOperationsAccess(
   return moduleSet.has('admin') || hasAnyRole(normalizedRoles, OPERATIONS_ROLE_KEYS);
 }
 
+export function hasAiToolingAccess(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  return hasOperationsAccess(roles, modules);
+}
+
+export function hasSocialInboxAccess(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('crm') && hasAnyRole(normalizedRoles, SOCIAL_INBOX_ROLE_KEYS);
+}
+
 export function canAccessLabelCatalog(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
@@ -294,11 +320,13 @@ export function pathRequiresSchoolStaff(path: string): boolean {
 
 export function pathRequiresModule(path: string): string | null {
   if (path.startsWith('/crm')) return 'crm';
-  if (path.startsWith('/social')) return 'crm';
+  if (path.startsWith('/social/inbox')) return 'crm';
   if (path.startsWith('/estudio')) return 'scheduling';
   if (path.startsWith('/finanzas')) return 'invoicing';
   if (path.startsWith('/configuracion')) return 'admin';
   if (path.startsWith('/admin')) return 'admin';
+  if (path.startsWith('/herramientas/chatkit')) return 'ops';
+  if (path.startsWith('/herramientas/tidal-agent')) return 'ops';
   if (path.startsWith('/herramientas/token-admin')) return 'admin';
   if (path.startsWith('/operacion')) return 'ops';
   if (path.startsWith('/label/assets')) return 'ops';
@@ -316,6 +344,15 @@ export function canAccessPath(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
+  if (path.startsWith('/social/inbox')) {
+    return hasSocialInboxAccess(roles, modules);
+  }
+  if (path.startsWith('/social')) {
+    return true;
+  }
+  if (path.startsWith('/herramientas/chatkit') || path.startsWith('/herramientas/tidal-agent')) {
+    return hasAiToolingAccess(roles, modules);
+  }
   if (path.startsWith('/configuracion/cms')) {
     return canAccessCmsAdmin(roles, modules);
   }
