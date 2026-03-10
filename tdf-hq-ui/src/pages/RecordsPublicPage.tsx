@@ -36,8 +36,8 @@ import { Parties } from '../api/parties';
 import { Admin } from '../api/admin';
 import { Services } from '../api/services';
 import { Engineers } from '../api/engineers';
-import { useSession } from '../session/SessionContext';
-import { buildAccessibleModuleSet } from '../utils/accessControl';
+import { setTransientApiToken, useSession } from '../session/SessionContext';
+import { canAccessPath } from '../utils/accessControl';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -839,29 +839,26 @@ export default function RecordsPublicPage() {
   const envVars = import.meta.env as Record<string, string | undefined>;
   const bookingToken = envVars['VITE_PUBLIC_BOOKING_TOKEN'] ?? envVars['VITE_API_DEMO_TOKEN'] ?? '';
   const hasBookingToken = Boolean(bookingToken);
-  const { session, login, setApiToken } = useSession();
-  const modules = useMemo(
-    () => buildAccessibleModuleSet(session?.roles, session?.modules),
+  const { session } = useSession();
+  const canMaintainCms = useMemo(
+    () => canAccessPath('/configuracion/cms', session?.roles, session?.modules),
     [session?.modules, session?.roles],
   );
-  const canMaintainCms = modules.has('admin') || modules.has('cms');
 
   useEffect(() => {
-    if (!bookingToken) return;
-    if (!session) {
-      login(
-        {
-          username: 'records-public',
-          displayName: 'Records Public',
-          roles: [],
-          apiToken: bookingToken,
-        },
-        { remember: false },
-      );
-    } else if (!session.apiToken) {
-      setApiToken(String(bookingToken));
+    if (session?.apiToken) {
+      setTransientApiToken(null);
+      return undefined;
     }
-  }, [bookingToken, session, login, setApiToken]);
+    if (!bookingToken) {
+      setTransientApiToken(null);
+      return undefined;
+    }
+    setTransientApiToken(String(bookingToken));
+    return () => {
+      setTransientApiToken(null);
+    };
+  }, [bookingToken, session?.apiToken]);
 
   const sessions: SessionItem[] = useMemo(() => {
     const mapped =

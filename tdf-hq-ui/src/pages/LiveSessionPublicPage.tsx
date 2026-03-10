@@ -18,12 +18,12 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { LiveSessionIntakeForm } from './LiveSessionIntakePage';
-import { useSession } from '../session/SessionContext';
+import { setTransientApiToken, useSession } from '../session/SessionContext';
 
 export default function LiveSessionPublicPage() {
   const [sp] = useSearchParams();
   const tokenFromQuery = sp.get('token') ?? sp.get('t') ?? '';
-  const { session, login, setApiToken } = useSession();
+  const { session } = useSession();
   const [accessCode, setAccessCode] = useState(() => tokenFromQuery);
   const [codeStatus, setCodeStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
@@ -74,21 +74,19 @@ export default function LiveSessionPublicPage() {
 
   useEffect(() => {
     const code = accessCode.trim();
-    if (!code || codeStatus !== 'valid') return;
-    if (!session) {
-      login(
-        {
-          username: 'live-session-intake',
-          displayName: 'Live Sessions Intake',
-          roles: [],
-          apiToken: code,
-        },
-        { remember: false },
-      );
-    } else if (!session.apiToken || session.apiToken !== code) {
-      setApiToken(code);
+    if (session?.apiToken) {
+      setTransientApiToken(null);
+      return undefined;
     }
-  }, [accessCode, codeStatus, session, login, setApiToken]);
+    if (!code || codeStatus !== 'valid') {
+      setTransientApiToken(null);
+      return undefined;
+    }
+    setTransientApiToken(code);
+    return () => {
+      setTransientApiToken(null);
+    };
+  }, [accessCode, codeStatus, session?.apiToken]);
 
   useEffect(() => {
     const code = accessCode.trim();

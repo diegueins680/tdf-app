@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { inferDemoToken } from '../config/appConfig';
 
 export interface SessionUser {
   username: string;
@@ -16,6 +15,7 @@ export interface LoginOptions {
 }
 
 let currentSession: SessionUser | null = null;
+let transientApiToken: string | null = null;
 
 export interface SessionContextValue {
   session: SessionUser | null;
@@ -25,12 +25,6 @@ export interface SessionContextValue {
 }
 
 export const SESSION_STORAGE_KEY = 'tdf-hq-ui/session';
-
-const inferredDemoToken = (() => {
-  const host = typeof window === 'undefined' ? undefined : window.location.hostname;
-  return inferDemoToken(host);
-})();
-export const DEFAULT_DEMO_TOKEN = inferredDemoToken;
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
@@ -64,6 +58,11 @@ const normalizeStringArray = (
     normalized.push(normalizedEntry);
   });
   return normalized;
+};
+
+const normalizeApiToken = (value: string | null | undefined): string | null => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
 };
 
 const normalizePositivePartyId = (value: unknown): number | undefined => {
@@ -163,11 +162,13 @@ export function SessionProvider({ children }: SessionProviderProps) {
     setPersistSessionEnabled(options?.remember ?? true);
     setSession(user);
     currentSession = user;
+    transientApiToken = null;
   }, []);
 
   const logout = useCallback(() => {
     setSession(null);
     currentSession = null;
+    transientApiToken = null;
   }, []);
 
   const setApiToken = useCallback((token: string | null) => {
@@ -206,9 +207,13 @@ export function getStoredSessionToken(): string | null {
     return currentSession.apiToken;
   }
   const stored = readStoredSession();
-  return stored?.apiToken ?? (DEFAULT_DEMO_TOKEN || null);
+  return stored?.apiToken ?? transientApiToken;
 }
 
 export function getActiveSession(): SessionUser | null {
   return currentSession;
+}
+
+export function setTransientApiToken(token: string | null | undefined): void {
+  transientApiToken = normalizeApiToken(token);
 }

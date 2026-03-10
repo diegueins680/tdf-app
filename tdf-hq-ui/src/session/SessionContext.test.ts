@@ -1,4 +1,39 @@
-import { parseStoredSession } from './SessionContext';
+import { getStoredSessionToken, parseStoredSession, SESSION_STORAGE_KEY, setTransientApiToken } from './SessionContext';
+
+describe('getStoredSessionToken', () => {
+  beforeEach(() => {
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    setTransientApiToken(null);
+  });
+
+  afterEach(() => {
+    setTransientApiToken(null);
+  });
+
+  it('does not infer a token when there is no stored or transient session token', () => {
+    expect(getStoredSessionToken()).toBeNull();
+  });
+
+  it('uses a transient token for public pages without turning it into a stored session', () => {
+    setTransientApiToken(' transient-token ');
+    expect(getStoredSessionToken()).toBe('transient-token');
+    expect(window.localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+  });
+
+  it('prefers a stored session token over a transient public token', () => {
+    setTransientApiToken('transient-token');
+    window.localStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({
+        username: 'alice',
+        roles: ['Admin'],
+        apiToken: 'stored-token',
+      }),
+    );
+
+    expect(getStoredSessionToken()).toBe('stored-token');
+  });
+});
 
 describe('parseStoredSession', () => {
   it('returns null when username is blank', () => {

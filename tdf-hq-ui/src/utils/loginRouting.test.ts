@@ -13,7 +13,7 @@ describe('pickLandingPath', () => {
 
   it('keeps fan users with staff modules on the staff destination instead of the fan hub', () => {
     expect(pickLandingPath(['fan'], ['admin'])).toBe('/configuracion/roles-permisos');
-    expect(pickLandingPath(['customer'], ['internships'])).toBe('/practicas');
+    expect(pickLandingPath(['customer'], ['internships'])).toBe('/fans');
   });
 
   it('does not land synthetic school-only sessions on routes the backend would reject', () => {

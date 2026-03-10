@@ -1,5 +1,6 @@
 import {
   buildAccessibleModuleSet,
+  hasInternshipsAccess,
   canAccessLabelCatalog,
   canAccessLabelTracks,
   canAccessPath,
@@ -29,7 +30,7 @@ export function pickLandingPath(roles: readonly string[], modules?: readonly str
     canAccessLabelCatalog(normalizedRoles, modules) ? '/label/artistas' : null,
     canAccessLabelTracks(normalizedRoles, modules) ? '/label/tracks' : null,
     hasOperationsAccess(normalizedRoles, modules) ? '/operacion/inventario' : null,
-    moduleSet.has('internships') ? '/practicas' : null,
+    hasInternshipsAccess(normalizedRoles, modules) ? '/practicas' : null,
     moduleSet.has('invoicing') ? '/finanzas/pagos' : null,
     hasRole('fan', 'customer') ? '/fans' : null,
   ];

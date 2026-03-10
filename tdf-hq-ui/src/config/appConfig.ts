@@ -21,6 +21,11 @@ const envString = (key: string): string | undefined => {
   const value = env[key];
   return typeof value === 'string' ? value : undefined;
 };
+const envTrimmedOrUndefined = (raw?: string): string | undefined => {
+  const trimmed = raw?.trim();
+  if (!trimmed) return undefined;
+  return trimmed;
+};
 
 const envPublicBase = envString('VITE_PUBLIC_BASE');
 const inferredOrigin =
@@ -44,9 +49,9 @@ const demoTokenEnv = envString('VITE_API_DEMO_TOKEN')?.trim() ?? '';
 const demoTokenHostsEnv = parseList(envString('VITE_DEMO_TOKEN_HOSTS'));
 const demoTokenHosts = demoTokenHostsEnv.length
   ? demoTokenHostsEnv
-  : ['localhost', '127.0.0.1', '::1', 'tdf-app.pages.dev'];
+  : ['localhost', '127.0.0.1', '::1'];
 const demoTokenValue =
-  envString('VITE_DEFAULT_DEMO_TOKEN')?.trim() ?? 'admin-token';
+  envTrimmedOrUndefined(envString('VITE_DEFAULT_DEMO_TOKEN')) ?? '';
 
 const URL_SCHEME_PATTERN = /^[a-z][a-z\d+\-.]*:\/\//i;
 
@@ -75,15 +80,9 @@ const normalizeHost = (host: string): string => {
 
 export const inferDemoToken = (host?: string): string => {
   if (demoTokenEnv) return demoTokenEnv;
-  if (!host) return '';
+  if (!host || !demoTokenValue) return '';
   const normalized = normalizeHost(host);
   return demoTokenHosts.map(normalizeHost).includes(normalized) ? demoTokenValue : '';
-};
-
-const envTrimmedOrUndefined = (raw?: string): string | undefined => {
-  const trimmed = raw?.trim();
-  if (!trimmed) return undefined;
-  return trimmed;
 };
 
 const defaultCourseSlug =

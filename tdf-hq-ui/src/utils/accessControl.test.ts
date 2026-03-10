@@ -1,6 +1,7 @@
 import {
   buildAccessibleModuleSet,
   canAccessPath,
+  hasInternshipsAccess,
   hasSchoolPortalAccess,
   hasOperationsAccess,
   isSchoolStaffRole,
@@ -112,6 +113,10 @@ describe('canAccessPath', () => {
   it('blocks staff-only routes for public roles and allows legitimate staff access', () => {
     expect(canAccessPath('/configuracion/roles-permisos', ['Fan'], [])).toBe(false);
     expect(canAccessPath('/label/artistas', ['LabelRep'], [])).toBe(false);
+    expect(canAccessPath('/configuracion/cms', ['Studio Manager'], ['admin'])).toBe(false);
+    expect(canAccessPath('/configuracion/cms', ['Webmaster'], ['admin'])).toBe(true);
+    expect(canAccessPath('/configuracion/integraciones/calendario', ['Webmaster'], ['admin'])).toBe(false);
+    expect(canAccessPath('/configuracion/whatsapp-consentimiento', ['Admin'], ['admin'])).toBe(true);
     expect(canAccessPath('/escuela/clases', ['Manager'], ['scheduling'])).toBe(true);
     expect(canAccessPath('/escuela/clases', ['Reception'], ['scheduling'])).toBe(true);
     expect(canAccessPath('/mi-profesor', ['Teacher'], ['scheduling'])).toBe(true);
@@ -128,7 +133,13 @@ describe('canAccessPath', () => {
     expect(canAccessPath('/operacion/inventario', ['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
     expect(canAccessPath('/label/assets', ['Maintenance'], ['Packages'])).toBe(true);
     expect(canAccessPath('/label/tracks', ['Artist'], ['Scheduling', 'Packages'])).toBe(true);
+    expect(canAccessPath('/label/tracks', ['Admin'], ['admin'])).toBe(true);
+    expect(canAccessPath('/label/tracks', ['Studio Manager'], ['admin'])).toBe(false);
+    expect(canAccessPath('/label/tracks', ['Webmaster'], ['admin'])).toBe(false);
     expect(canAccessPath('/label/tracks', ['Fan', 'Customer'], ['Packages'])).toBe(false);
+    expect(hasInternshipsAccess(['Studio Manager'], ['internships', 'admin'])).toBe(true);
+    expect(canAccessPath('/practicas', ['Studio Manager'], ['internships', 'admin'])).toBe(true);
+    expect(canAccessPath('/practicas', [], ['internships'])).toBe(false);
   });
 
   it('matches backend route predicates for key protected routes across realistic sessions', () => {
@@ -161,6 +172,26 @@ describe('canAccessPath', () => {
         path: '/label/tracks',
         expected: (roles: readonly string[]) =>
           roles.some((role) => ['Admin', 'Artist', 'Artista'].includes(role)),
+      },
+      {
+        path: '/configuracion/cms',
+        expected: (roles: readonly string[]) =>
+          roles.some((role) => ['Admin', 'Webmaster'].includes(role)),
+      },
+      {
+        path: '/configuracion/integraciones/calendario',
+        expected: (roles: readonly string[]) =>
+          roles.some((role) => ['Admin'].includes(role)),
+      },
+      {
+        path: '/configuracion/whatsapp-consentimiento',
+        expected: (roles: readonly string[]) =>
+          roles.some((role) => ['Admin'].includes(role)),
+      },
+      {
+        path: '/practicas',
+        expected: (roles: readonly string[]) =>
+          roles.some((role) => ['Admin', 'Manager', 'Studio Manager', 'Intern'].includes(role)),
       },
     ] as const;
 

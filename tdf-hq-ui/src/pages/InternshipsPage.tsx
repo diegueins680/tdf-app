@@ -36,6 +36,7 @@ import type {
 } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { parseDateForDisplay } from '../utils/dateOnly';
+import { hasInternshipsAccess, hasInternshipsAdminAccess, normalizeAccessRoles } from '../utils/accessControl';
 
 const TASK_STATUS_OPTIONS = [
   { value: 'todo', label: 'Pendiente' },
@@ -196,16 +197,19 @@ const normalizeOptionalInt = (value?: string | null) => {
 export default function InternshipsPage() {
   const { session } = useSession();
   const qc = useQueryClient();
-  const lowerRoles = useMemo(() => (session?.roles ?? []).map((r) => r.toLowerCase()), [session?.roles]);
+  const normalizedRoles = useMemo(() => normalizeAccessRoles(session?.roles), [session?.roles]);
   const isAdmin = useMemo(
-    () => lowerRoles.some((role) => ['admin', 'manager', 'studiomanager'].includes(role)),
-    [lowerRoles],
+    () => hasInternshipsAdminAccess(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
   );
   const isIntern = useMemo(
-    () => lowerRoles.some((role) => role.includes('intern') || role.includes('pasante') || role.includes('practicante')),
-    [lowerRoles],
+    () => normalizedRoles.includes('intern'),
+    [normalizedRoles],
   );
-  const canAccess = isAdmin || isIntern;
+  const canAccess = useMemo(
+    () => hasInternshipsAccess(session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
 
   const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
   const [progressDraft, setProgressDraft] = useState<Record<string, number>>({});

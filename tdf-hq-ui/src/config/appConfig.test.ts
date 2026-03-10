@@ -4,7 +4,6 @@ describe('inferDemoToken', () => {
   it('normalizes localhost hostnames consistently across URL forms', () => {
     const localToken = inferDemoToken('localhost');
 
-    expect(localToken).not.toBe('');
     expect(inferDemoToken('LOCALHOST:5173')).toBe(localToken);
     expect(inferDemoToken('https://localhost:5173/auth')).toBe(localToken);
     expect(inferDemoToken('http://127.0.0.1:3000')).toBe(localToken);
@@ -28,5 +27,12 @@ describe('inferDemoToken', () => {
     }
 
     expect(unknownHostToken).toBe('');
+  });
+
+  it('treats the public Pages host like an unknown host by default', () => {
+    const pagesToken = inferDemoToken('tdf-app.pages.dev');
+    const unknownHostToken = inferDemoToken('example.com');
+
+    expect(pagesToken).toBe(unknownHostToken);
   });
 });

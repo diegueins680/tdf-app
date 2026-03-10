@@ -12,7 +12,11 @@ const INTERNAL_MANAGER_MODULE_KEYS = [
 
 const SCHOOL_STAFF_ROLE_KEYS = ['admin', 'manager', 'reception', 'studiomanager'] as const;
 const OPERATIONS_ROLE_KEYS = ['manager', 'maintenance'] as const;
+const ADMIN_ROLE_KEYS = ['admin'] as const;
 const LABEL_TRACK_ROLE_KEYS = ['artist', 'artista'] as const;
+const CMS_EDITOR_ROLE_KEYS = ['admin', 'webmaster'] as const;
+const INTERNSHIPS_ADMIN_ROLE_KEYS = ['admin', 'manager', 'studiomanager'] as const;
+const INTERNSHIPS_MEMBER_ROLE_KEYS = ['intern'] as const;
 const ROLE_ALIASES: Record<string, string> = {
   'live sessions producer': 'livesessionsproducer',
   'live-sessions-producer': 'livesessionsproducer',
@@ -211,7 +215,47 @@ export function canAccessLabelTracks(
   modules: readonly string[] | undefined,
 ): boolean {
   const normalizedRoles = normalizeAccessRoles(roles);
-  return canAccessLabelCatalog(roles, modules) || hasAnyRole(normalizedRoles, LABEL_TRACK_ROLE_KEYS);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('admin')
+    ? hasAnyRole(normalizedRoles, [...ADMIN_ROLE_KEYS, ...LABEL_TRACK_ROLE_KEYS])
+    : hasAnyRole(normalizedRoles, LABEL_TRACK_ROLE_KEYS);
+}
+
+export function canAccessCmsAdmin(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('admin') && hasAnyRole(normalizedRoles, CMS_EDITOR_ROLE_KEYS);
+}
+
+export function canAccessAdminOnlyRoute(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('admin') && hasAnyRole(normalizedRoles, ADMIN_ROLE_KEYS);
+}
+
+export function hasInternshipsAdminAccess(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('internships') && hasAnyRole(normalizedRoles, INTERNSHIPS_ADMIN_ROLE_KEYS);
+}
+
+export function hasInternshipsAccess(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  return hasInternshipsAdminAccess(roles, modules)
+    || (buildAccessibleModuleSet(roles, modules).has('internships')
+      && hasAnyRole(normalizedRoles, INTERNSHIPS_MEMBER_ROLE_KEYS));
 }
 
 export function isSchoolStaffRole(
@@ -272,6 +316,18 @@ export function canAccessPath(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
+  if (path.startsWith('/configuracion/cms')) {
+    return canAccessCmsAdmin(roles, modules);
+  }
+  if (path.startsWith('/configuracion/integraciones/calendario')) {
+    return canAccessAdminOnlyRoute(roles, modules);
+  }
+  if (path.startsWith('/configuracion/whatsapp-consentimiento')) {
+    return canAccessAdminOnlyRoute(roles, modules);
+  }
+  if (path.startsWith('/practicas')) {
+    return hasInternshipsAccess(roles, modules);
+  }
   if (path.startsWith('/mi-profesor')) {
     return hasSchoolPortalAccess(roles, modules);
   }
