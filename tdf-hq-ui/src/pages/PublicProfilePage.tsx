@@ -17,7 +17,6 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import { Parties } from '../api/parties';
 import { SocialAPI } from '../api/social';
 import { RadioAPI } from '../api/radio';
 import type { RadioPresenceDTO } from '../api/types';
@@ -39,8 +38,8 @@ export default function PublicProfilePage() {
   const isSelf = session?.partyId === parsedId;
 
   const partyQuery = useQuery({
-    queryKey: ['public-party', parsedId],
-    queryFn: () => Parties.getOne(parsedId ?? 0),
+    queryKey: ['social-profile', parsedId],
+    queryFn: () => SocialAPI.getProfile(parsedId ?? 0),
     enabled,
   });
 
@@ -105,7 +104,7 @@ export default function PublicProfilePage() {
       new CustomEvent('tdf-radio-load-stream', {
         detail: {
           streamUrl: p.rpStreamUrl,
-          stationName: p.rpStationName ?? partyQuery.data?.displayName ?? 'Stream compartido',
+          stationName: p.rpStationName ?? partyQuery.data?.sppDisplayName ?? 'Stream compartido',
           stationId: p.rpStationId ?? `party-${p.rpPartyId}`,
         },
       }),
@@ -146,15 +145,17 @@ export default function PublicProfilePage() {
           <Stack spacing={2}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar sx={{ width: 72, height: 72, bgcolor: '#1d4ed8' }}>
-              {party.displayName?.[0]?.toUpperCase() ?? '?'}
+              {party.sppDisplayName?.[0]?.toUpperCase() ?? '?'}
             </Avatar>
             <Box flex={1}>
               <Typography variant="h5" fontWeight={800}>
-                {party.displayName}
+                {party.sppDisplayName}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {party.legalName ?? party.displayName}
-              </Typography>
+              {party.sppCity && (
+                <Typography variant="body2" color="text.secondary">
+                  {party.sppCity}
+                </Typography>
+              )}
               {session?.partyId && (
                 <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }}>
                   <Chip label={isFriend ? 'Amigos mutuos' : youFollow ? 'Sigues a esta persona' : 'No sigues aún'} size="small" color={isFriend ? 'success' : youFollow ? 'info' : 'default'} />
@@ -213,6 +214,11 @@ export default function PublicProfilePage() {
                   </Button>
                 </Stack>
               </Card>
+            )}
+            {party.sppBio && (
+              <Typography variant="body2" color="text.secondary">
+                {party.sppBio}
+              </Typography>
             )}
             {!presence && (
               <Typography variant="body2" color="text.secondary">

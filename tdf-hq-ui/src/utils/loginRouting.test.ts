@@ -11,8 +11,9 @@ describe('pickLandingPath', () => {
     expect(pickLandingPath(['Intern'])).toBe('/practicas');
   });
 
-  it('keeps fan users with staff modules on the staff destination instead of the fan hub', () => {
-    expect(pickLandingPath(['fan'], ['admin'])).toBe('/configuracion/roles-permisos');
+  it('routes strict admins to account management without forcing broader admin-module roles there', () => {
+    expect(pickLandingPath(['Admin'])).toBe('/configuracion/roles-permisos');
+    expect(pickLandingPath(['Webmaster'], ['admin', 'crm'])).toBe('/crm/contactos');
     expect(pickLandingPath(['customer'], ['internships'])).toBe('/fans');
   });
 

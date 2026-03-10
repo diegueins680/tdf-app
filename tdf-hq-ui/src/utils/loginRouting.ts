@@ -4,6 +4,7 @@ import {
   canAccessLabelCatalog,
   canAccessLabelTracks,
   canAccessPath,
+  hasStrictAdminAccess,
   hasSchoolPortalAccess,
   hasOperationsAccess,
   isSchoolStaffRole,
@@ -19,7 +20,7 @@ export function pickLandingPath(roles: readonly string[], modules?: readonly str
   const hasRole = (...needles: string[]) =>
     needles.some((needle) => normalizedRoles.includes(needle));
   const candidates = [
-    hasRole('admin') || moduleSet.has('admin') ? '/configuracion/roles-permisos' : null,
+    hasStrictAdminAccess(normalizedRoles, modules) ? '/configuracion/roles-permisos' : null,
     hasRole('artist', 'artista') ? '/mi-artista' : null,
     hasRole('teacher') ? '/mi-profesor' : null,
     moduleSet.has('scheduling') ? '/estudio/calendario' : null,

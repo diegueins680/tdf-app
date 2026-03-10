@@ -13,10 +13,7 @@ import { useSession } from '../session/SessionContext';
 import BrandLogo from './BrandLogo';
 import SearchIcon from '@mui/icons-material/Search';
 import { NAV_GROUPS } from './SidebarNav';
-import {
-  buildAccessibleModuleSet,
-  canAccessPath,
-} from '../utils/accessControl';
+import { canAccessPath } from '../utils/accessControl';
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
@@ -222,16 +219,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
     navigate('/login', { replace: true });
   };
 
-  const modules = useMemo(
-    () => buildAccessibleModuleSet(session?.roles, session?.modules),
-    [session?.modules, session?.roles],
-  );
-
-  const hasAdmin = modules.has('admin');
   const canUsePath = useCallback(
     (path: string) => canAccessPath(path, session?.roles, session?.modules),
     [session?.modules, session?.roles],
   );
+  const canManageAdminAccounts = canUsePath('/configuracion/roles-permisos');
+  const canUseTokenAdmin = canUsePath('/herramientas/token-admin');
 
   const quickNavItems = useMemo(() => {
     return NAV_GROUPS.flatMap((group) =>
@@ -489,7 +482,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
             </Badge>
           </Button>
 
-          {hasAdmin && (
+          {canManageAdminAccounts && (
             <Button
               color="inherit"
               variant="outlined"
@@ -777,7 +770,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
         <MenuItem component={RouterLink} to="/herramientas/creador-musical" onClick={() => setResourcesAnchor(null)}>
           Creador musical
         </MenuItem>
-        {hasAdmin && (
+        {canUseTokenAdmin && (
           <MenuItem component={RouterLink} to="/herramientas/token-admin" onClick={() => setResourcesAnchor(null)}>
             Token API
           </MenuItem>

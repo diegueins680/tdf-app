@@ -26,32 +26,18 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import LinkIcon from '@mui/icons-material/Link';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Link as RouterLink } from 'react-router-dom';
-import { Parties } from '../api/parties';
+import { Fans } from '../api/fans';
 import { SocialAPI } from '../api/social';
-import type { PartyDTO, PartyFollowDTO } from '../api/types';
+import type { PartyFollowDTO, SocialPartyProfileDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { buildVCardSharePayload, parseVCardPayload } from '../utils/vcard';
 
 type TabKey = 'friends' | 'following' | 'followers';
 
-function usePartiesMap() {
-  const partiesQuery = useQuery({
-    queryKey: ['parties'],
-    queryFn: () => Parties.list(),
-    staleTime: 5 * 60 * 1000,
-  });
-  const byId = useMemo(() => {
-    const map = new Map<number, PartyDTO>();
-    (partiesQuery.data ?? []).forEach((p) => map.set(p.partyId, p));
-    return map;
-  }, [partiesQuery.data]);
-  return { partiesQuery, byId };
-}
-
-function formatParty(byId: Map<number, PartyDTO>, partyId: number) {
+function formatParty(byId: Map<number, SocialPartyProfileDTO>, partyId: number) {
   const party = byId.get(partyId);
-  if (!party) return `Party #${partyId}`;
-  return party.displayName ?? party.legalName ?? `Party #${partyId}`;
+  if (!party) return `Perfil #${partyId}`;
+  return party.sppDisplayName ?? `Perfil #${partyId}`;
 }
 
 const parsePositivePartyId = (value: string): number | null => {
@@ -74,16 +60,6 @@ export default function SocialPage() {
   const [payloadInput, setPayloadInput] = useState('');
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
-
-  const { partiesQuery, byId } = usePartiesMap();
-  const myParty = session?.partyId ? byId.get(session.partyId) : null;
-
-  useEffect(() => {
-    if (!myParty) return;
-    setShareName((prev) => (prev?.trim() ? prev : myParty.displayName ?? myParty.legalName ?? ''));
-    setShareEmail((prev) => (prev?.trim() ? prev : myParty.primaryEmail ?? ''));
-    setSharePhone((prev) => (prev?.trim() ? prev : myParty.primaryPhone ?? myParty.whatsapp ?? ''));
-  }, [myParty]);
 
   const sharePayload = useMemo(
     () => buildVCardSharePayload({
@@ -152,6 +128,58 @@ export default function SocialPage() {
     queryKey: ['social-suggestions'],
     queryFn: SocialAPI.listSuggestions,
   });
+  const myProfileQuery = useQuery({
+    queryKey: ['fan-profile', 'social-share'],
+    queryFn: Fans.getProfile,
+    enabled: Boolean(session?.partyId),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const profileIds = useMemo(() => {
+    const ids = new Set<number>();
+    if (session?.partyId) ids.add(session.partyId);
+    followersQuery.data?.forEach((row) => ids.add(row.pfFollowerId));
+    followingQuery.data?.forEach((row) => ids.add(row.pfFollowingId));
+    friendsQuery.data?.forEach((row) => {
+      ids.add(row.pfFollowerId);
+      ids.add(row.pfFollowingId);
+    });
+    suggestionsQuery.data?.forEach((row) => ids.add(row.sfPartyId));
+    return Array.from(ids);
+  }, [
+    followersQuery.data,
+    followingQuery.data,
+    friendsQuery.data,
+    session?.partyId,
+    suggestionsQuery.data,
+  ]);
+
+  const profilesQuery = useQuery({
+    queryKey: ['social-profiles', profileIds],
+    queryFn: () => SocialAPI.listProfiles(profileIds),
+    enabled: profileIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const byId = useMemo(() => {
+    const map = new Map<number, SocialPartyProfileDTO>();
+    (profilesQuery.data ?? []).forEach((profile) => {
+      map.set(profile.sppPartyId, profile);
+    });
+    return map;
+  }, [profilesQuery.data]);
+
+  const profileOptions = useMemo(
+    () => (profilesQuery.data ?? []).filter((profile) => profile.sppPartyId !== session?.partyId),
+    [profilesQuery.data, session?.partyId],
+  );
+
+  useEffect(() => {
+    const defaultName = myProfileQuery.data?.fpDisplayName?.trim() || session?.displayName || '';
+    const defaultEmail = session?.username?.includes('@') ? session.username : '';
+    setShareName((prev) => (prev.trim() ? prev : defaultName));
+    setShareEmail((prev) => (prev.trim() ? prev : defaultEmail));
+  }, [myProfileQuery.data?.fpDisplayName, session?.displayName, session?.username]);
 
   const invalidateAll = () => {
     void qc.invalidateQueries({ queryKey: ['social-followers'] });
@@ -260,25 +288,25 @@ export default function SocialPage() {
           <Autocomplete
             sx={{ minWidth: 260 }}
             size="small"
-            options={partiesQuery.data ?? []}
-            loading={partiesQuery.isLoading}
-            getOptionLabel={(option) => option.displayName ?? option.legalName ?? `Party #${option.partyId}`}
+            options={profileOptions}
+            loading={profilesQuery.isLoading}
+            getOptionLabel={(option) => option.sppDisplayName ?? `Perfil #${option.sppPartyId}`}
             value={(() => {
               const numeric = parsePositivePartyId(addId);
               if (numeric === null) return null;
-              return (partiesQuery.data ?? []).find((p) => p.partyId === numeric) ?? null;
+              return profileOptions.find((profile) => profile.sppPartyId === numeric) ?? null;
             })()}
-            onChange={(_, value) => setAddId(value ? String(value.partyId) : '')}
+            onChange={(_, value) => setAddId(value ? String(value.sppPartyId) : '')}
             inputValue={addId}
             onInputChange={(_, value) => setAddId(value)}
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Agregar amigo por contacto o ID"
-                placeholder="Busca un contacto o ingresa su ID"
+                label="Agregar amigo por sugerencia o ID"
+                placeholder="Selecciona una sugerencia o ingresa un ID"
               />
             )}
-            noOptionsText={partiesQuery.isFetching ? 'Cargando contactos…' : 'Sin coincidencias'}
+            noOptionsText={profilesQuery.isFetching ? 'Cargando perfiles…' : 'Sin coincidencias'}
           />
           <Button
             variant="contained"
@@ -541,7 +569,7 @@ export default function SocialPage() {
             <Tab label={`Seguidores (${followersQuery.data?.length ?? 0})`} value="followers" />
           </Tabs>
 
-          {(followersQuery.isLoading || followingQuery.isLoading || friendsQuery.isLoading || partiesQuery.isLoading) ? (
+          {(followersQuery.isLoading || followingQuery.isLoading || friendsQuery.isLoading || profilesQuery.isLoading) ? (
             <Stack direction="row" alignItems="center" spacing={1.5} sx={{ py: 2 }}>
               <CircularProgress size={20} />
               <Typography>Cargando red social...</Typography>

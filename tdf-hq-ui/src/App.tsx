@@ -248,6 +248,29 @@ function Shell() {
   );
 }
 
+function ConfigurationIndexRedirect() {
+  const { session } = useSession();
+  const roles = session?.roles ?? [];
+  const modules = session?.modules;
+  const targetPath = [
+    '/configuracion/roles-permisos',
+    '/configuracion/usuarios-admin',
+    '/configuracion/cms',
+    '/configuracion/whatsapp-consentimiento',
+    '/configuracion/integraciones/calendario',
+    '/configuracion/estado',
+    '/configuracion/logs',
+    '/configuracion/brain',
+    '/configuracion/opciones-ux',
+    '/configuracion/preferencias',
+    '/configuracion/inscripciones-curso',
+    '/configuracion/cursos',
+  ].find((path) => canAccessPath(path, roles, modules))
+    ?? pickLandingPath(roles, modules);
+
+  return <Navigate to={targetPath} replace />;
+}
+
 export default function App() {
   return (
     <>
@@ -366,7 +389,7 @@ export default function App() {
             <Route path="whatsapp-consentimiento" element={<WhatsAppConsentPage />} />
             <Route path="opciones-ux" element={<UxOptionsPage />} />
             <Route path="preferencias" element={<SystemPage />} />
-            <Route index element={<Navigate to="roles-permisos" replace />} />
+            <Route index element={<ConfigurationIndexRedirect />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

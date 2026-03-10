@@ -14,6 +14,14 @@ export interface PartyDTO {
   hasUserAccount?: boolean;
 }
 
+export interface SocialPartyProfileDTO {
+  sppPartyId: number;
+  sppDisplayName: string;
+  sppAvatarUrl?: string | null;
+  sppBio?: string | null;
+  sppCity?: string | null;
+}
+
 export interface PartyCreate {
   cDisplayName: string;
   cIsOrg: boolean;

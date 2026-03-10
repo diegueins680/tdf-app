@@ -213,6 +213,15 @@ export function hasOperationsAccess(
   return moduleSet.has('admin') || hasAnyRole(normalizedRoles, OPERATIONS_ROLE_KEYS);
 }
 
+export function hasStrictAdminAccess(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('admin') && hasAnyRole(normalizedRoles, ADMIN_ROLE_KEYS);
+}
+
 export function hasAiToolingAccess(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
@@ -260,9 +269,7 @@ export function canAccessAdminOnlyRoute(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
-  const normalizedRoles = normalizeAccessRoles(roles);
-  const moduleSet = buildAccessibleModuleSet(roles, modules);
-  return moduleSet.has('admin') && hasAnyRole(normalizedRoles, ADMIN_ROLE_KEYS);
+  return hasStrictAdminAccess(roles, modules);
 }
 
 export function hasInternshipsAdminAccess(
@@ -344,6 +351,12 @@ export function canAccessPath(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
+  if (path.startsWith('/configuracion/roles-permisos') || path.startsWith('/configuracion/usuarios-admin')) {
+    return hasStrictAdminAccess(roles, modules);
+  }
+  if (path.startsWith('/admin/roles')) {
+    return hasStrictAdminAccess(roles, modules);
+  }
   if (path.startsWith('/social/inbox')) {
     return hasSocialInboxAccess(roles, modules);
   }
@@ -364,6 +377,9 @@ export function canAccessPath(
   }
   if (path.startsWith('/practicas')) {
     return hasInternshipsAccess(roles, modules);
+  }
+  if (path.startsWith('/perfil/')) {
+    return true;
   }
   if (path.startsWith('/mi-profesor')) {
     return hasSchoolPortalAccess(roles, modules);

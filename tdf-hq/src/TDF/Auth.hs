@@ -7,7 +7,9 @@ module TDF.Auth
   , ModuleAccess(..)
   , authContext
   , hasAiToolingAccess
+  , hasStrictAdminAccess
   , hasOperationsAccess
+  , hasSocialSyncAccess
   , hasSocialInboxAccess
   , hasModuleAccess
   , moduleName
@@ -69,12 +71,18 @@ authContext env = mkAuthHandler (authWithToken env) :. EmptyContext
 hasModuleAccess :: ModuleAccess -> AuthedUser -> Bool
 hasModuleAccess moduleTag AuthedUser{..} = moduleTag `Set.member` auModules
 
+hasStrictAdminAccess :: AuthedUser -> Bool
+hasStrictAdminAccess AuthedUser{..} = Admin `elem` auRoles
+
 hasOperationsAccess :: AuthedUser -> Bool
 hasOperationsAccess user@AuthedUser{..} =
   hasModuleAccess ModuleAdmin user || any (`elem` auRoles) [Manager, Maintenance]
 
 hasAiToolingAccess :: AuthedUser -> Bool
 hasAiToolingAccess = hasOperationsAccess
+
+hasSocialSyncAccess :: AuthedUser -> Bool
+hasSocialSyncAccess = hasStrictAdminAccess
 
 hasSocialInboxAccess :: AuthedUser -> Bool
 hasSocialInboxAccess user@AuthedUser{..} =

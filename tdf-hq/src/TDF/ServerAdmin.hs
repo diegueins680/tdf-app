@@ -78,6 +78,7 @@ import           TDF.DTO                ( ArtistProfileUpsert(..)
 import           TDF.Auth               ( AuthedUser
                                         , ModuleAccess(..)
                                         , auPartyId
+                                        , hasStrictAdminAccess
                                         , hasModuleAccess
                                         , moduleName
                                         , modulesForRoles
@@ -153,7 +154,7 @@ adminServer user =
       :<|> updateUser userId
 
     rolesHandler = do
-      ensureModule ModuleAdmin user
+      ensureStrictAdmin user
       pure (map roleDetail [minBound .. maxBound])
 
     artistsRouter =
@@ -616,7 +617,7 @@ adminServer user =
               pure (toDTO entity)
 
     listUsers mIncludeInactive = do
-      ensureModule ModuleAdmin user
+      ensureStrictAdmin user
       let includeInactive = fromMaybe False mIncludeInactive
           filters = [UserCredentialActive ==. True | not includeInactive]
       withPool $ do
@@ -624,7 +625,7 @@ adminServer user =
         mapM loadUserAccount creds
 
     createUser UserAccountCreate{..} = do
-      ensureModule ModuleAdmin user
+      ensureStrictAdmin user
       config <- asks envConfig
       let partyKey = toSqlKey uacPartyId :: PartyId
           activeValue = fromMaybe True uacActive
@@ -690,7 +691,7 @@ adminServer user =
                 Just _  -> go (attempt + 1)
 
     getUser userId = do
-      ensureModule ModuleAdmin user
+      ensureStrictAdmin user
       let credKey = toSqlKey userId :: UserCredentialId
       mCred <- withPool $ getEntity credKey
       case mCred of
@@ -698,7 +699,7 @@ adminServer user =
         Just credEnt  -> withPool (loadUserAccount credEnt)
 
     updateUser userId UserAccountUpdate{..} = do
-      ensureModule ModuleAdmin user
+      ensureStrictAdmin user
       let credKey         = toSqlKey userId :: UserCredentialId
           usernameUpdate  = T.strip <$> uauUsername
       when (maybe False T.null usernameUpdate) $
@@ -735,7 +736,7 @@ adminServer user =
             loadUserAccount fresh
 
     userCommunicationHistoryHandler userId mLimit = do
-      ensureModule ModuleAdmin user
+      ensureStrictAdmin user
       let limit = max 1 (min 300 (fromMaybe 150 mLimit))
       mContext <- withPool (loadUserCommunicationContext userId)
       case mContext of
@@ -743,7 +744,7 @@ adminServer user =
         Just context -> withPool (buildUserCommunicationHistory context limit)
 
     userCommunicationSendHandler userId AdminWhatsAppSendRequest{..} = do
-      ensureModule ModuleAdmin user
+      ensureStrictAdmin user
       let mode = T.toLower (T.strip awsrMode)
           body = T.strip awsrMessage
       when (T.null body) $
@@ -790,7 +791,7 @@ adminServer user =
       pure (buildSendResponse sendResult sentEntity)
 
     userCommunicationResendHandler messageId AdminWhatsAppResendRequest{..} = do
-      ensureModule ModuleAdmin user
+      ensureStrictAdmin user
       let msgKey = toSqlKey messageId :: ME.WhatsAppMessageId
       msgEnt <- withPool (getEntity msgKey) >>= maybe (throwError err404) pure
       let msg = entityVal msgEnt
@@ -858,6 +859,14 @@ ensureModule
 ensureModule moduleTag user =
   unless (hasModuleAccess moduleTag user) $
     throwError err403 { errBody = "Missing required module access" }
+
+ensureStrictAdmin
+  :: (MonadError ServerError m)
+  => AuthedUser
+  -> m ()
+ensureStrictAdmin user =
+  unless (hasStrictAdminAccess user) $
+    throwError err403 { errBody = "Admin role required" }
 
 loadUserAccount :: Entity UserCredential -> SqlPersistT IO UserAccountDTO
 loadUserAccount (Entity credId cred) = do

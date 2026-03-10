@@ -116,6 +116,8 @@ type SocialAPI =
   :<|> "friends" :> Get '[JSON] [PartyFollowDTO]
   :<|> "friends" :> Capture "partyId" Int64 :> Post '[JSON] [PartyFollowDTO]
   :<|> "friends" :> Capture "partyId" Int64 :> Delete '[JSON] NoContent
+  :<|> "profiles" :> QueryParams "partyId" Int64 :> Get '[JSON] [SocialPartyProfileDTO]
+  :<|> "profiles" :> Capture "partyId" Int64 :> Get '[JSON] SocialPartyProfileDTO
   :<|> "suggestions" :> Get '[JSON] [SuggestedFriendDTO]
 
 type ChatAPI =

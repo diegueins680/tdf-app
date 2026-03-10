@@ -3,6 +3,7 @@ import {
   canAccessPath,
   hasAiToolingAccess,
   hasInternshipsAccess,
+  hasStrictAdminAccess,
   hasSocialInboxAccess,
   hasSchoolPortalAccess,
   hasOperationsAccess,
@@ -72,6 +73,9 @@ const hasBackendSocialInboxAccess = (roles: readonly string[]) =>
 const hasBackendAiToolingAccess = (roles: readonly string[]) =>
   roles.some((role) => ['Admin', 'Manager', 'Studio Manager', 'Webmaster', 'Maintenance'].includes(role));
 
+const hasBackendStrictAdminAccess = (roles: readonly string[]) =>
+  roles.some((role) => ['Admin'].includes(role));
+
 describe('buildAccessibleModuleSet', () => {
   it('does not infer staff access from public music-industry roles', () => {
     const modules = buildAccessibleModuleSet(['TourManager', 'LabelRep', 'StageManager'], []);
@@ -109,6 +113,9 @@ describe('buildAccessibleModuleSet', () => {
     expect(hasAiToolingAccess(['Fan', 'Customer'], ['Packages'])).toBe(false);
     expect(hasAiToolingAccess(['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
     expect(hasAiToolingAccess(['Maintenance'], ['Packages'])).toBe(true);
+    expect(hasStrictAdminAccess(['Fan', 'Customer'], ['Packages'])).toBe(false);
+    expect(hasStrictAdminAccess(['Admin'], ['admin'])).toBe(true);
+    expect(hasStrictAdminAccess(['Webmaster'], ['admin'])).toBe(false);
   });
 });
 
@@ -140,11 +147,15 @@ describe('canAccessPath', () => {
     expect(canAccessPath('/herramientas/chatkit', ['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
     expect(canAccessPath('/herramientas/tidal-agent', ['Fan', 'Customer'], ['Packages'])).toBe(false);
     expect(canAccessPath('/configuracion/roles-permisos', ['Fan'], [])).toBe(false);
+    expect(canAccessPath('/configuracion/roles-permisos', ['Webmaster'], ['admin'])).toBe(false);
+    expect(canAccessPath('/configuracion/usuarios-admin', ['Studio Manager'], ['admin'])).toBe(false);
+    expect(canAccessPath('/configuracion/usuarios-admin', ['Admin'], ['admin'])).toBe(true);
     expect(canAccessPath('/label/artistas', ['LabelRep'], [])).toBe(false);
     expect(canAccessPath('/configuracion/cms', ['Studio Manager'], ['admin'])).toBe(false);
     expect(canAccessPath('/configuracion/cms', ['Webmaster'], ['admin'])).toBe(true);
     expect(canAccessPath('/configuracion/integraciones/calendario', ['Webmaster'], ['admin'])).toBe(false);
     expect(canAccessPath('/configuracion/whatsapp-consentimiento', ['Admin'], ['admin'])).toBe(true);
+    expect(canAccessPath('/perfil/7', ['Fan', 'Customer'], ['Packages'])).toBe(true);
     expect(canAccessPath('/escuela/clases', ['Manager'], ['scheduling'])).toBe(true);
     expect(canAccessPath('/escuela/clases', ['Reception'], ['scheduling'])).toBe(true);
     expect(canAccessPath('/mi-profesor', ['Teacher'], ['scheduling'])).toBe(true);
@@ -236,9 +247,21 @@ describe('canAccessPath', () => {
           roles.some((role) => ['Admin'].includes(role)),
       },
       {
+        path: '/configuracion/roles-permisos',
+        expected: (roles: readonly string[]) => hasBackendStrictAdminAccess(roles),
+      },
+      {
+        path: '/configuracion/usuarios-admin',
+        expected: (roles: readonly string[]) => hasBackendStrictAdminAccess(roles),
+      },
+      {
         path: '/configuracion/whatsapp-consentimiento',
         expected: (roles: readonly string[]) =>
           roles.some((role) => ['Admin'].includes(role)),
+      },
+      {
+        path: '/perfil/7',
+        expected: () => true,
       },
       {
         path: '/practicas',

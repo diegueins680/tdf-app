@@ -10,11 +10,13 @@ import           Control.Monad              (forM)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
+import qualified Data.ByteString.Lazy       as BL
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe, listToMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
+import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (getCurrentTime)
 import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT, runSqlPool, toSqlKey)
@@ -22,7 +24,7 @@ import           Servant
 import           Web.PathPieces             (toPathPiece)
 
 import           TDF.API.SocialSyncAPI
-import           TDF.Auth                   (AuthedUser)
+import           TDF.Auth                   (AuthedUser, hasSocialSyncAccess)
 import           TDF.DB                     (Env(..))
 import           TDF.DTO.SocialSyncDTO
 import           TDF.Models
@@ -34,10 +36,18 @@ socialSyncServer
      )
   => AuthedUser
   -> ServerT SocialSyncAPI m
-socialSyncServer _user =
+socialSyncServer user =
        ingestHandler
   :<|> listHandler
   where
+    ensureSocialSyncAccess
+      :: (MonadError ServerError m)
+      => m ()
+    ensureSocialSyncAccess =
+      if hasSocialSyncAccess user
+        then pure ()
+        else throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Admin role required") }
+
     ingestHandler
       :: ( MonadReader Env m
          , MonadIO m
@@ -46,6 +56,7 @@ socialSyncServer _user =
       => SocialSyncIngestRequest
       -> m SocialSyncIngestResponse
     ingestHandler SocialSyncIngestRequest{..} = do
+      ensureSocialSyncAccess
       now <- liftIO getCurrentTime
       results <- forM ssirPosts $ \payload -> do
         let platform = normalizePlatform (sspPlatform payload)
@@ -135,6 +146,7 @@ socialSyncServer _user =
       -> Maybe Int
       -> m [SocialSyncPostDTO]
     listHandler mPlatform mParty mProfile mTag mLimit = do
+      ensureSocialSyncAccess
       partyKey <- traverse parsePartyId mParty
       profileKey <- traverse parseProfileId mProfile
       let filters = catMaybes

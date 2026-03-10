@@ -37,6 +37,17 @@ data PartyDTO = PartyDTO
 
 instance ToJSON PartyDTO
 instance FromJSON PartyDTO
+
+data SocialPartyProfileDTO = SocialPartyProfileDTO
+  { sppPartyId     :: Int64
+  , sppDisplayName :: Text
+  , sppAvatarUrl   :: Maybe Text
+  , sppBio         :: Maybe Text
+  , sppCity        :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON SocialPartyProfileDTO
+instance FromJSON SocialPartyProfileDTO
  
 data ArtistProfileDTO = ArtistProfileDTO
   { apArtistId        :: Int64

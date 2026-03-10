@@ -4,7 +4,7 @@ module TDF.ServerSpec (spec) where
 
 import Control.Monad (forM_)
 import Database.Persist.Sql (toSqlKey)
-import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, modulesForRoles)
+import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Models (BookingStatus (..), RoleEnum (..))
 import TDF.Server (normalizeOptionalInput, parseStatusWithDefault)
 import Test.Hspec
@@ -56,6 +56,17 @@ spec = describe "TDF.Server helpers" $ do
             forM_ [minBound .. maxBound] $ \role ->
                 hasAiToolingAccess (mkUser [role]) `shouldBe` hasOperationsAccess (mkUser [role])
 
+    describe "hasStrictAdminAccess" $ do
+        it "requires the literal Admin role instead of broad admin-module membership" $ do
+            hasStrictAdminAccess (mkUser [Fan, Customer]) `shouldBe` False
+            hasStrictAdminAccess (mkUser [Webmaster]) `shouldBe` False
+            hasStrictAdminAccess (mkUser [StudioManager]) `shouldBe` False
+            hasStrictAdminAccess (mkUser [Admin]) `shouldBe` True
+
+        it "matches the intended single-role strict-admin matrix" $
+            forM_ [minBound .. maxBound] $ \role ->
+                hasStrictAdminAccess (mkUser [role]) `shouldBe` (role == Admin)
+
     describe "hasSocialInboxAccess" $ do
         it "denies baseline and read-only CRM sessions" $ do
             hasSocialInboxAccess (mkUser [Fan, Customer]) `shouldBe` False
@@ -64,3 +75,13 @@ spec = describe "TDF.Server helpers" $ do
         it "matches the intended single-role inbox matrix" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasSocialInboxAccess (mkUser [role]) `shouldBe` (role `elem` [Admin, Manager, StudioManager, Reception, LiveSessionsProducer, Producer, AandR, Webmaster])
+
+    describe "hasSocialSyncAccess" $ do
+        it "denies baseline and non-admin staff sessions" $ do
+            hasSocialSyncAccess (mkUser [Fan, Customer]) `shouldBe` False
+            hasSocialSyncAccess (mkUser [Webmaster]) `shouldBe` False
+            hasSocialSyncAccess (mkUser [StudioManager]) `shouldBe` False
+
+        it "matches the strict-admin matrix for global sync data" $
+            forM_ [minBound .. maxBound] $ \role ->
+                hasSocialSyncAccess (mkUser [role]) `shouldBe` hasStrictAdminAccess (mkUser [role])

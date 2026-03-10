@@ -41,6 +41,8 @@ import { useNavigate } from 'react-router-dom';
 import type { Role } from '../api/generated/client';
 import { Admin } from '../api/admin';
 import { ALL_ROLES } from '../constants/roles';
+import { useSession } from '../session/SessionContext';
+import { canAccessPath } from '../utils/accessControl';
 import { normalizeRolesInput } from '../utils/roles';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
 
@@ -303,6 +305,7 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
 
 export default function PartiesPage() {
   const navigate = useNavigate();
+  const { session } = useSession();
   const partiesQuery: UseQueryResult<PartyDTO[], Error> = useQuery<PartyDTO[], Error>({
     queryKey: ['parties'],
     queryFn: Parties.list,
@@ -315,6 +318,7 @@ export default function PartiesPage() {
   const [userDialogParty, setUserDialogParty] = useState<PartyDTO | null>(null);
   const [relatedParty, setRelatedParty] = useState<PartyDTO | null>(null);
   const [relatedAnchor, setRelatedAnchor] = useState<HTMLElement | null>(null);
+  const canManageRoles = canAccessPath('/configuracion/roles-permisos', session?.roles, session?.modules);
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
@@ -439,11 +443,13 @@ export default function PartiesPage() {
                       </IconButton>
                     </span>
                   </Tooltip>
-                  <Tooltip title="Roles y accesos">
-                    <IconButton onClick={() => navigate('/configuracion/roles-permisos')}>
-                      <SchoolIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  {canManageRoles && (
+                    <Tooltip title="Roles y accesos">
+                      <IconButton onClick={() => navigate('/configuracion/roles-permisos')}>
+                        <SchoolIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

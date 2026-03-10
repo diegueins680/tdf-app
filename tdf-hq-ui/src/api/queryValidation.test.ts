@@ -23,6 +23,7 @@ const { Bookings } = await import('./bookings');
 const { ChatAPI } = await import('./chat');
 const { Label } = await import('./label');
 const { Courses } = await import('./courses');
+const { SocialAPI } = await import('./social');
 
 describe('API query/id validation', () => {
   beforeEach(() => {
@@ -76,6 +77,19 @@ describe('API query/id validation', () => {
     expect(() => Parties.related(-3)).toThrow('id debe ser un entero positivo.');
     expect(() => Parties.update(0, {})).toThrow('id debe ser un entero positivo.');
     expect(() => Parties.addRole(0, 'teacher')).toThrow('id debe ser un entero positivo.');
+  });
+
+  it('validates social profile ids before requesting profile lookups', async () => {
+    await SocialAPI.getProfile(7);
+    expect(getMock).toHaveBeenCalledWith('/social/profiles/7');
+
+    await SocialAPI.listProfiles([7, 9, 7]);
+    expect(getMock).toHaveBeenCalledWith('/social/profiles?partyId=7&partyId=9');
+
+    await expect(SocialAPI.listProfiles([])).resolves.toEqual([]);
+
+    expect(() => SocialAPI.getProfile(0)).toThrow('Party ID inválido para obtener perfil social.');
+    expect(() => SocialAPI.listProfiles([3, 0])).toThrow('Party ID inválido para listar perfiles sociales.');
   });
 
   it('routes radio presence correctly and rejects invalid ids', async () => {

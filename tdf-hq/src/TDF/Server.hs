@@ -73,7 +73,7 @@ import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO
 import qualified TDF.DTO as DTO
-import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasAiToolingAccess, hasModuleAccess, hasOperationsAccess, hasSocialInboxAccess, moduleName, loadAuthedUser)
+import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasAiToolingAccess, hasModuleAccess, hasOperationsAccess, hasSocialInboxAccess, hasStrictAdminAccess, moduleName, loadAuthedUser)
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
@@ -1542,6 +1542,8 @@ socialServer user =
   :<|> socialListFriends user
   :<|> socialAddFriend user
   :<|> socialRemoveFriend user
+  :<|> socialListProfiles user
+  :<|> socialGetProfile user
   :<|> socialListSuggestedFriends user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
@@ -4467,6 +4469,23 @@ vcardExchange user VCardExchangeRequest{..} = do
           ] [Desc PartyFollowCreatedAt]
         pure (map partyFollowEntityToDTO (rowsAB ++ rowsBA))
 
+socialListProfiles :: AuthedUser -> [Int64] -> AppM [SocialPartyProfileDTO]
+socialListProfiles _ rawPartyIds = do
+  when (any (<= 0) rawPartyIds) $ throwBadRequest "Invalid party id"
+  let partyIds = nub rawPartyIds
+  if null partyIds
+    then pure []
+    else do
+      Env pool _ <- ask
+      liftIO $ flip runSqlPool pool $ loadSocialPartyProfilesDTO partyIds
+
+socialGetProfile :: AuthedUser -> Int64 -> AppM SocialPartyProfileDTO
+socialGetProfile _ partyId = do
+  when (partyId <= 0) $ throwBadRequest "Invalid party id"
+  Env pool _ <- ask
+  mProfile <- liftIO $ flip runSqlPool pool $ loadSocialPartyProfileDTO (toSqlKey partyId)
+  maybe (throwError err404) pure mProfile
+
 requireFanAccess :: AuthedUser -> AppM ()
 requireFanAccess AuthedUser{..} =
   unless (Fan `elem` auRoles || Customer `elem` auRoles) $
@@ -4515,6 +4534,41 @@ loadFanProfileDTO fanId = do
     Just ent -> pure ent
   let fallbackName = maybe Nothing (Just . M.partyDisplayName) party
   pure (fanProfileToDTO fallbackName (entityVal profileEntity))
+
+loadSocialPartyProfilesDTO :: [Int64] -> SqlPersistT IO [SocialPartyProfileDTO]
+loadSocialPartyProfilesDTO rawIds = do
+  let uniqueIds = nub rawIds
+      partyKeys = map toSqlKey uniqueIds :: [PartyId]
+  parties <- if null partyKeys then pure [] else selectList [PartyId <-. partyKeys] []
+  profiles <- if null partyKeys then pure [] else selectList [FanProfileFanPartyId <-. partyKeys] []
+  let partyMap = Map.fromList [(entityKey ent, ent) | ent <- parties]
+      profileMap = Map.fromList [(fanProfileFanPartyId profile, profile) | Entity _ profile <- profiles]
+  pure $ mapMaybe
+    (\rawId -> do
+      let partyKey = toSqlKey rawId :: PartyId
+      partyEnt <- Map.lookup partyKey partyMap
+      pure (toSocialPartyProfileDTO (Map.lookup partyKey profileMap) partyEnt)
+    )
+    uniqueIds
+
+loadSocialPartyProfileDTO :: PartyId -> SqlPersistT IO (Maybe SocialPartyProfileDTO)
+loadSocialPartyProfileDTO partyId = do
+  mParty <- getEntity partyId
+  case mParty of
+    Nothing -> pure Nothing
+    Just partyEnt -> do
+      mProfile <- getBy (UniqueFanProfile partyId)
+      pure (Just (toSocialPartyProfileDTO (entityVal <$> mProfile) partyEnt))
+
+toSocialPartyProfileDTO :: Maybe FanProfile -> Entity Party -> SocialPartyProfileDTO
+toSocialPartyProfileDTO mProfile (Entity partyId party) =
+  SocialPartyProfileDTO
+    { sppPartyId = fromSqlKey partyId
+    , sppDisplayName = fromMaybe (M.partyDisplayName party) (mProfile >>= fanProfileDisplayName)
+    , sppAvatarUrl = mProfile >>= fanProfileAvatarUrl
+    , sppBio = mProfile >>= fanProfileBio
+    , sppCity = mProfile >>= fanProfileCity
+    }
 
 partyFollowEntityToDTO :: Entity PartyFollow -> PartyFollowDTO
 partyFollowEntityToDTO (Entity _ pf) =
@@ -5965,6 +6019,12 @@ requireModule user moduleTag
       { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
   where
     msg = "Missing access to module: " <> moduleName moduleTag
+
+requireStrictAdmin :: AuthedUser -> AppM ()
+requireStrictAdmin user
+  | hasStrictAdminAccess user = pure ()
+  | otherwise = throwError err403
+      { errBody = BL.fromStrict (TE.encodeUtf8 "Admin role required") }
 -- User roles API
 userRolesServer :: AuthedUser -> ServerT UserRolesAPI AppM
 userRolesServer user =
@@ -5972,7 +6032,7 @@ userRolesServer user =
   :<|> userRoutes
   where
     listUsers = do
-      requireModule user ModuleAdmin
+      requireStrictAdmin user
       Env pool _ <- ask
       liftIO $ flip runSqlPool pool loadUserRoleSummaries
 
@@ -5981,7 +6041,7 @@ userRolesServer user =
       :<|> updateUserRolesH userId
 
     getUserRolesH userId = do
-      requireModule user ModuleAdmin
+      requireStrictAdmin user
       Env pool _ <- ask
       let credKey = toSqlKey userId :: Key UserCredential
       mRoles <- liftIO $ flip runSqlPool pool $ do
@@ -5998,7 +6058,7 @@ userRolesServer user =
       maybe (throwError err404) pure mRoles
 
     updateUserRolesH userId UserRoleUpdatePayload{roles = payloadRoles} = do
-      requireModule user ModuleAdmin
+      requireStrictAdmin user
       Env pool _ <- ask
       let credKey = toSqlKey userId :: Key UserCredential
       updated <- liftIO $ flip runSqlPool pool $ do
@@ -6844,16 +6904,7 @@ cmsPublicServer = cmsGet :<|> cmsList
         , CMS.CmsContentLocale ==. locale
         , CMS.CmsContentStatus ==. "published"
         ] [Desc CMS.CmsContentVersion]
-      contentDTO <- case mPublished of
-        Just ent -> pure (toCmsDTO ent)
-        Nothing -> do
-          mDraft <- runDB $ selectFirst
-            [ CMS.CmsContentSlug ==. slug
-            , CMS.CmsContentLocale ==. locale
-            ]
-            [Desc CMS.CmsContentVersion]
-          maybe (fallbackContent slug locale) (pure . toCmsDTO) mDraft
-      pure contentDTO
+      maybe (fallbackContent slug locale) (pure . toCmsDTO) mPublished
 
     cmsList mLocale mPrefix = do
       let locale = fromMaybe "es" mLocale
