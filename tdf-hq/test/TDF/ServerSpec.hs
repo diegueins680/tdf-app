@@ -2,9 +2,20 @@
 
 module TDF.ServerSpec (spec) where
 
-import TDF.Models (BookingStatus (..))
+import Control.Monad (forM_)
+import Database.Persist.Sql (toSqlKey)
+import TDF.Auth (AuthedUser (..), hasOperationsAccess, modulesForRoles)
+import TDF.Models (BookingStatus (..), RoleEnum (..))
 import TDF.Server (normalizeOptionalInput, parseStatusWithDefault)
 import Test.Hspec
+
+mkUser :: [RoleEnum] -> AuthedUser
+mkUser roles =
+    AuthedUser
+        { auPartyId = toSqlKey 1
+        , auRoles = roles
+        , auModules = modulesForRoles roles
+        }
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
@@ -24,3 +35,15 @@ spec = describe "TDF.Server helpers" $ do
 
         it "falls back to the provided status when parsing fails" $
             parseStatusWithDefault Confirmed "not-a-status" `shouldBe` Confirmed
+
+    describe "hasOperationsAccess" $ do
+        it "denies baseline customer sessions even though they carry package access" $
+            hasOperationsAccess (mkUser [Fan, Customer]) `shouldBe` False
+
+        it "does not treat package-only roles as operations staff" $
+            forM_ [[Artist], [Artista], [Vendor], [Customer]] $ \roles ->
+                hasOperationsAccess (mkUser roles) `shouldBe` False
+
+        it "matches the intended single-role operations matrix" $
+            forM_ [minBound .. maxBound] $ \role ->
+                hasOperationsAccess (mkUser [role]) `shouldBe` (role `elem` [Admin, Manager, StudioManager, Webmaster, Maintenance])

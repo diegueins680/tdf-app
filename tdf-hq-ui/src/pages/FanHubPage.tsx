@@ -49,7 +49,7 @@ import { buildReleaseStreamingSources } from '../utils/media';
 import { compareReleaseDateValues, formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
 import { slugify } from '../utils/slug';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
-import { buildAccessibleModuleSet } from '../utils/accessControl';
+import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
 import { recordings, releases as featuredReleases, sessionVideos } from '../constants/recordsContent';
 
@@ -124,10 +124,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const qc = useQueryClient();
-  const accessModules = useMemo(
-    () => buildAccessibleModuleSet(session?.roles, session?.modules),
-    [session?.modules, session?.roles],
-  );
   const viewerId = session?.partyId ?? null;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const isFan = useMemo(() => {
@@ -160,11 +156,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const artistSlugTouchedRef = useRef(false);
   const hasAuthToken = Boolean(session?.apiToken);
   const isAuthenticated = Boolean(session);
-  const canManageReleases = useMemo(() => {
-    const roles = session?.roles?.map((role) => role.trim().toLowerCase()) ?? [];
-    const isStaffManager = roles.includes('manager') && accessModules.size > 0;
-    return accessModules.has('admin') || accessModules.has('label') || isStaffManager;
-  }, [accessModules, session?.roles]);
+  const canManageReleases = useMemo(
+    () => canAccessPath('/label/releases', session?.roles, session?.modules),
+    [session?.modules, session?.roles],
+  );
   const isHomeManagerView = location.pathname === '/inicio' && isAuthenticated && canManageReleases;
   const radioTargetPath = `${location.pathname}#radio`;
   const loginPath = useMemo(

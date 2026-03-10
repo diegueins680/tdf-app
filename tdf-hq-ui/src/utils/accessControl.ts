@@ -11,6 +11,20 @@ const INTERNAL_MANAGER_MODULE_KEYS = [
 ] as const;
 
 const EXPLICIT_SCHOOL_STAFF_ROLE_KEYS = ['admin', 'reception', 'studiomanager'] as const;
+const OPERATIONS_ROLE_KEYS = ['manager', 'maintenance'] as const;
+const LABEL_TRACK_ROLE_KEYS = ['artist', 'artista'] as const;
+const ROLE_ALIASES: Record<string, string> = {
+  'live sessions producer': 'livesessionsproducer',
+  'live-sessions-producer': 'livesessionsproducer',
+  'studio manager': 'studiomanager',
+  'studio-manager': 'studiomanager',
+};
+
+const normalizeAccessRole = (value: string): string => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === '') return '';
+  return ROLE_ALIASES[normalized] ?? normalized;
+};
 
 export const normalizeTokens = (
   values: readonly string[] | undefined,
@@ -32,14 +46,25 @@ export const normalizeTokens = (
 
   return normalized;
 };
-
-export { normalizeTokens };
-
 const hasAnyModule = (moduleSet: ReadonlySet<string>, needles: readonly string[]): boolean =>
   needles.some((needle) => moduleSet.has(needle));
 
+const hasAnyRole = (normalizedRoles: readonly string[], needles: readonly string[]): boolean =>
+  needles.some((needle) => normalizedRoles.includes(needle));
+
 export function normalizeAccessRoles(roles: readonly string[] | undefined): string[] {
-  return normalizeTokens(roles, { lowerCase: true });
+  if (!roles || roles.length === 0) return [];
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  roles.forEach((role) => {
+    const normalizedRole = normalizeAccessRole(role);
+    if (!normalizedRole || seen.has(normalizedRole)) return;
+    seen.add(normalizedRole);
+    normalized.push(normalizedRole);
+  });
+
+  return normalized;
 }
 
 export function deriveModulesFromRoles(roles: readonly string[] | undefined): string[] {
@@ -56,7 +81,24 @@ export function deriveModulesFromRoles(roles: readonly string[] | undefined): st
         moduleSet.add('invoicing');
         moduleSet.add('packages');
         moduleSet.add('ops');
-        moduleSet.add('label');
+        moduleSet.add('internships');
+        return;
+      case 'manager':
+        moduleSet.add('crm');
+        moduleSet.add('scheduling');
+        moduleSet.add('invoicing');
+        moduleSet.add('packages');
+        moduleSet.add('ops');
+        moduleSet.add('internships');
+        return;
+      case 'studiomanager':
+        moduleSet.add('admin');
+        moduleSet.add('crm');
+        moduleSet.add('scheduling');
+        moduleSet.add('school');
+        moduleSet.add('invoicing');
+        moduleSet.add('packages');
+        moduleSet.add('ops');
         moduleSet.add('internships');
         return;
       case 'reception':
@@ -73,6 +115,21 @@ export function deriveModulesFromRoles(roles: readonly string[] | undefined): st
       case 'scheduling':
         moduleSet.add('scheduling');
         return;
+      case 'livesessionsproducer':
+      case 'producer':
+      case 'a&r':
+      case 'aandr':
+      case 'ar':
+        moduleSet.add('crm');
+        moduleSet.add('scheduling');
+        return;
+      case 'webmaster':
+        moduleSet.add('admin');
+        moduleSet.add('crm');
+        return;
+      case 'readonly':
+        moduleSet.add('crm');
+        return;
       case 'teacher':
         moduleSet.add('scheduling');
         moduleSet.add('school');
@@ -80,6 +137,16 @@ export function deriveModulesFromRoles(roles: readonly string[] | undefined): st
       case 'intern':
         moduleSet.add('internships');
         return;
+      case 'artist':
+      case 'artista':
+        moduleSet.add('scheduling');
+        moduleSet.add('packages');
+        return;
+      case 'student':
+        moduleSet.add('scheduling');
+        return;
+      case 'vendor':
+      case 'customer':
       case 'packages':
       case 'package':
         moduleSet.add('packages');
@@ -113,15 +180,38 @@ export function buildAccessibleModuleSet(
   const normalizedModules = normalizeTokens(modules, { lowerCase: true });
   const moduleSet = new Set([...normalizedModules, ...deriveModulesFromRoles(roles)]);
 
-  if (moduleSet.has('packages')) {
-    moduleSet.add('ops');
+  if (moduleSet.has('admin')) {
     moduleSet.add('label');
   }
-  if (moduleSet.has('ops')) {
+  if (moduleSet.has('ops') || hasAnyRole(normalizeAccessRoles(roles), OPERATIONS_ROLE_KEYS)) {
     moduleSet.add('packages');
   }
 
   return moduleSet;
+}
+
+export function hasOperationsAccess(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('admin') || hasAnyRole(normalizedRoles, OPERATIONS_ROLE_KEYS);
+}
+
+export function canAccessLabelCatalog(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  return buildAccessibleModuleSet(roles, modules).has('admin');
+}
+
+export function canAccessLabelTracks(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  return canAccessLabelCatalog(roles, modules) || hasAnyRole(normalizedRoles, LABEL_TRACK_ROLE_KEYS);
 }
 
 export function isSchoolStaffRole(
@@ -129,10 +219,10 @@ export function isSchoolStaffRole(
   modules: readonly string[] | undefined = [],
 ): boolean {
   const normalizedRoles = normalizeAccessRoles(roles);
-  if (EXPLICIT_SCHOOL_STAFF_ROLE_KEYS.some((needle) => normalizedRoles.includes(needle))) {
+  if (hasAnyRole(normalizedRoles, EXPLICIT_SCHOOL_STAFF_ROLE_KEYS)) {
     return true;
   }
-  if (!normalizedRoles.includes('manager')) {
+  if (!hasAnyRole(normalizedRoles, ['manager'])) {
     return false;
   }
 
@@ -157,7 +247,9 @@ export function pathRequiresModule(path: string): string | null {
   if (path.startsWith('/admin')) return 'admin';
   if (path.startsWith('/herramientas/token-admin')) return 'admin';
   if (path.startsWith('/operacion')) return 'ops';
-  if (path.startsWith('/label')) return 'label';
+  if (path.startsWith('/label/assets')) return 'ops';
+  if (path.startsWith('/label/tracks')) return 'artist';
+  if (path.startsWith('/label')) return 'admin';
   if (path.startsWith('/escuela')) return 'school';
   if (path.startsWith('/mi-profesor')) return 'school';
   if (path.startsWith('/practicas')) return 'internships';
@@ -170,6 +262,18 @@ export function canAccessPath(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
+  if (path.startsWith('/label/tracks')) {
+    return canAccessLabelTracks(roles, modules);
+  }
+  if (path.startsWith('/label/assets')) {
+    return hasOperationsAccess(roles, modules);
+  }
+  if (path.startsWith('/label')) {
+    return canAccessLabelCatalog(roles, modules);
+  }
+  if (path.startsWith('/operacion')) {
+    return hasOperationsAccess(roles, modules);
+  }
   if (pathRequiresSchoolStaff(path) && !isSchoolStaffRole(roles, modules)) {
     return false;
   }

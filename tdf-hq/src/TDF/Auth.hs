@@ -6,6 +6,7 @@ module TDF.Auth
   ( AuthedUser(..)
   , ModuleAccess(..)
   , authContext
+  , hasOperationsAccess
   , hasModuleAccess
   , moduleName
   , modulesForRoles
@@ -65,6 +66,10 @@ authContext env = mkAuthHandler (authWithToken env) :. EmptyContext
 -- | Check whether the user can access the given module.
 hasModuleAccess :: ModuleAccess -> AuthedUser -> Bool
 hasModuleAccess moduleTag AuthedUser{..} = moduleTag `Set.member` auModules
+
+hasOperationsAccess :: AuthedUser -> Bool
+hasOperationsAccess user@AuthedUser{..} =
+  hasModuleAccess ModuleAdmin user || any (`elem` auRoles) [Manager, Maintenance]
 
 -- Internal -----------------------------------------------------------------
 

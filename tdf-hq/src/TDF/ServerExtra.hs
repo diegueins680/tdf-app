@@ -57,7 +57,7 @@ import           TDF.API.Rooms              (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Services           (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.Types
-import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
+import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess, hasOperationsAccess)
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
@@ -105,11 +105,8 @@ inventoryServer user =
   :<|> resolveByQrH
   where
     ensureInventoryAccess =
-      unless (hasModuleAccess ModuleAdmin user || hasInventoryRole user) $
+      unless (hasOperationsAccess user) $
         throwError err403 { errBody = "Missing required module access" }
-
-    hasInventoryRole u =
-      any (`elem` auRoles u) [M.Manager, M.Maintenance]
 
     listAssets _mq mp mps = do
       ensureInventoryAccess

@@ -1,26 +1,42 @@
-import { buildAccessibleModuleSet, normalizeTokens } from './accessControl';
+import {
+  buildAccessibleModuleSet,
+  canAccessLabelCatalog,
+  canAccessLabelTracks,
+  canAccessPath,
+  hasOperationsAccess,
+  isSchoolStaffRole,
+  normalizeAccessRoles,
+} from './accessControl';
 
 const LOGIN_ROUTE = '/login';
 const URL_BASE = 'https://tdf.local';
 
 export function pickLandingPath(roles: readonly string[], modules?: readonly string[]): string {
-  const normalizedRoles = normalizeTokens(roles, { lowerCase: true });
+  const normalizedRoles = normalizeAccessRoles(roles);
   const moduleSet = buildAccessibleModuleSet(normalizedRoles, modules);
   const hasRole = (...needles: string[]) =>
     needles.some((needle) => normalizedRoles.includes(needle));
-  const hasModule = (needle: string) => moduleSet.has(needle);
+  const candidates = [
+    hasRole('admin') || moduleSet.has('admin') ? '/configuracion/roles-permisos' : null,
+    hasRole('artist', 'artista') ? '/mi-artista' : null,
+    hasRole('teacher') ? '/mi-profesor' : null,
+    moduleSet.has('scheduling') ? '/estudio/calendario' : null,
+    moduleSet.has('crm') ? '/crm/contactos' : null,
+    moduleSet.has('school') ? (isSchoolStaffRole(normalizedRoles, modules) ? '/escuela/clases' : '/mi-profesor') : null,
+    canAccessLabelCatalog(normalizedRoles, modules) ? '/label/artistas' : null,
+    canAccessLabelTracks(normalizedRoles, modules) ? '/label/tracks' : null,
+    hasOperationsAccess(normalizedRoles, modules) ? '/operacion/inventario' : null,
+    moduleSet.has('internships') ? '/practicas' : null,
+    moduleSet.has('invoicing') ? '/finanzas/pagos' : null,
+    hasRole('fan', 'customer') ? '/fans' : null,
+  ];
 
-  if (hasRole('admin') || hasModule('admin')) return '/configuracion/roles-permisos';
-  if (hasRole('artist', 'artista')) return '/mi-artista';
-  if (hasRole('teacher')) return '/mi-profesor';
-  if (hasModule('scheduling')) return '/estudio/calendario';
-  if (hasModule('crm')) return '/crm/contactos';
-  if (hasModule('school')) return '/escuela/clases';
-  if (hasModule('label')) return '/label/artistas';
-  if (hasModule('ops')) return '/operacion/inventario';
-  if (hasModule('internships')) return '/practicas';
-  if (hasModule('invoicing')) return '/finanzas/pagos';
-  if (hasRole('fan', 'customer')) return '/fans';
+  const firstAccessible = candidates.find(
+    (path): path is string => path !== null && canAccessPath(path, normalizedRoles, modules),
+  );
+  if (firstAccessible) {
+    return firstAccessible;
+  }
   return '/inicio';
 }
 

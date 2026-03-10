@@ -4,6 +4,7 @@ import {
   readSafeRedirectPath,
   sanitizeRedirectPath,
 } from './loginRouting';
+import { canAccessPath } from './accessControl';
 
 describe('pickLandingPath', () => {
   it('sends interns to the internships panel even without explicit modules', () => {
@@ -11,23 +12,76 @@ describe('pickLandingPath', () => {
   });
 
   it('keeps fan users with staff modules on the staff destination instead of the fan hub', () => {
-    expect(pickLandingPath(['fan'], ['label'])).toBe('/label/artistas');
+    expect(pickLandingPath(['fan'], ['admin'])).toBe('/configuracion/roles-permisos');
     expect(pickLandingPath(['customer'], ['internships'])).toBe('/practicas');
   });
 
-  it('maps school-only access to the school landing page', () => {
-    expect(pickLandingPath([], ['school'])).toBe('/escuela/clases');
+  it('routes school-only access to the teacher portal instead of a staff-only page', () => {
+    expect(pickLandingPath([], ['school'])).toBe('/mi-profesor');
   });
 
-  it('honors legacy packages access as label/ops access', () => {
-    expect(pickLandingPath([], ['packages'])).toBe('/label/artistas');
+  it('keeps package-only sessions on public destinations', () => {
+    expect(pickLandingPath(['customer'], ['packages'])).toBe('/fans');
   });
 
   it('does not route public music-industry roles into staff panels without explicit modules', () => {
-    expect(pickLandingPath(['Manager'])).toBe('/inicio');
     expect(pickLandingPath(['TourManager'])).toBe('/inicio');
     expect(pickLandingPath(['LabelRep'])).toBe('/inicio');
-    expect(pickLandingPath(['Manager'], ['crm'])).toBe('/crm/contactos');
+    expect(pickLandingPath(['TourManager'], ['crm'])).toBe('/crm/contactos');
+  });
+
+  it('always returns a route the same session can actually access', () => {
+    const rolesUniverse = [
+      'admin',
+      'manager',
+      'studio manager',
+      'reception',
+      'teacher',
+      'artist',
+      'artista',
+      'maintenance',
+      'intern',
+      'fan',
+      'customer',
+      'tourmanager',
+      'labelrep',
+      'stagemanager',
+    ] as const;
+    const moduleUniverse = [
+      'admin',
+      'crm',
+      'scheduling',
+      'school',
+      'invoicing',
+      'packages',
+      'ops',
+      'label',
+      'internships',
+    ] as const;
+
+    const subsetsUpToTwo = <T,>(values: readonly T[]): T[][] => {
+      const combos: T[][] = [[]];
+      values.forEach((value, index) => {
+        combos.push([value]);
+        values.slice(index + 1).forEach((other) => {
+          combos.push([value, other]);
+        });
+      });
+      return combos;
+    };
+
+    const failures: Array<{ roles: string[]; modules: string[]; path: string }> = [];
+
+    subsetsUpToTwo(rolesUniverse).forEach((roles) => {
+      subsetsUpToTwo(moduleUniverse).forEach((modules) => {
+        const path = pickLandingPath(roles, modules);
+        if (!canAccessPath(path, roles, modules)) {
+          failures.push({ roles: [...roles], modules: [...modules], path });
+        }
+      });
+    });
+
+    expect(failures).toEqual([]);
   });
 });
 

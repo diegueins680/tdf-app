@@ -10,10 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { useChatUnreadCount } from '../hooks/useChatUnreadCount';
 import {
-  buildAccessibleModuleSet,
-  isSchoolStaffRole,
+  canAccessPath,
   pathRequiresModule,
-  pathRequiresSchoolStaff,
 } from '../utils/accessControl';
 
 export interface NavItem {
@@ -168,8 +166,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const [highlightIndex, setHighlightIndex] = useState<number>(-1);
   const [recentPaths, setRecentPaths] = useState<string[]>(() => readStoredPathList(QUICK_RECENTS_KEY));
   const searchRef = useRef<HTMLInputElement | null>(null);
-  const isSchoolStaff = useMemo(
-    () => isSchoolStaffRole(session?.roles, session?.modules),
+  const canUsePath = useCallback(
+    (path: string) => canAccessPath(path, session?.roles, session?.modules),
     [session?.modules, session?.roles],
   );
   const { unreadCount: chatUnreadCount } = useChatUnreadCount({ enabled: open });
@@ -190,33 +188,15 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     [session],
   );
 
-  const modules = useMemo(
-    () => buildAccessibleModuleSet(session?.roles, session?.modules),
-    [session?.modules, session?.roles],
-  );
-
   const allowedNavGroups = useMemo<NavGroupView[]>(() => {
     return NAV_GROUPS.map((group) => {
-      const roleAllowedItems = group.items.filter((item) => {
-        if (pathRequiresSchoolStaff(item.path) && !isSchoolStaff) return false;
-        return true;
-      });
-      const requiredModule = roleAllowedItems
-        .map((item) => pathRequiresModule(item.path))
-        .find((m) => m !== null && !modules.has(m));
-      const filteredItems = roleAllowedItems.filter((item) => {
-        const required = pathRequiresModule(item.path);
-        if (!required) return true;
-        return modules.has(required);
-      });
-      const hadHidden = roleAllowedItems.some((item) => {
-        const required = pathRequiresModule(item.path);
-        return required !== null && !modules.has(required);
-      });
-      const restricted = filteredItems.length === 0 && hadHidden;
+      const hiddenItems = group.items.filter((item) => !canUsePath(item.path));
+      const filteredItems = group.items.filter((item) => canUsePath(item.path));
+      const requiredModule = hiddenItems[0] ? pathRequiresModule(hiddenItems[0].path) : null;
+      const restricted = filteredItems.length === 0 && hiddenItems.length > 0;
       return { ...group, items: filteredItems, restricted, requiredModule };
     }).filter((group) => group.items.length > 0 || group.restricted);
-  }, [isSchoolStaff, modules]);
+  }, [canUsePath]);
 
   const filteredNavGroups = useMemo<NavGroupView[]>(() => {
     const query = filter.trim().toLowerCase();
@@ -247,14 +227,16 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     const itemByPath = new Map(flatAllowedItems.map((item) => [item.path, item]));
     const moduleShortcutCandidates = [
       '/inicio',
-      modules.has('crm') ? '/crm/contactos' : null,
-      modules.has('scheduling') ? '/estudio/calendario' : null,
-      modules.has('school') ? (isSchoolStaff ? '/escuela/clases' : '/mi-profesor') : null,
-      modules.has('label') ? '/label/artistas' : null,
-      modules.has('ops') ? '/operacion/inventario' : null,
-      modules.has('invoicing') ? '/finanzas/pagos' : null,
-      modules.has('internships') ? '/practicas' : null,
-    ].filter((path): path is string => Boolean(path));
+      '/crm/contactos',
+      '/mi-profesor',
+      '/escuela/clases',
+      '/estudio/calendario',
+      '/label/artistas',
+      '/label/tracks',
+      '/operacion/inventario',
+      '/finanzas/pagos',
+      '/practicas',
+    ].filter((path) => canUsePath(path));
     const preferredPaths = [
       location.pathname,
       ...recentPaths,
@@ -270,7 +252,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         return true;
       })
       .slice(0, 6);
-  }, [flatAllowedItems, isSchoolStaff, location.pathname, modules, recentPaths]);
+  }, [canUsePath, flatAllowedItems, location.pathname, recentPaths]);
 
   const ensureExpandedDefaults = (groups: NavGroupView[]) => {
     const next = new Set<string>();

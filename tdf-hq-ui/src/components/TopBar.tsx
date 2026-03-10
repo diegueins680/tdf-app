@@ -15,9 +15,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { NAV_GROUPS } from './SidebarNav';
 import {
   buildAccessibleModuleSet,
-  isSchoolStaffRole,
-  pathRequiresModule,
-  pathRequiresSchoolStaff,
+  canAccessPath,
 } from '../utils/accessControl';
 
 interface TopBarProps {
@@ -230,23 +228,18 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
   );
 
   const hasAdmin = modules.has('admin');
-  const isSchoolStaff = useMemo(
-    () => isSchoolStaffRole(session?.roles, session?.modules),
+  const canUsePath = useCallback(
+    (path: string) => canAccessPath(path, session?.roles, session?.modules),
     [session?.modules, session?.roles],
   );
 
   const quickNavItems = useMemo(() => {
     return NAV_GROUPS.flatMap((group) =>
       group.items
-        .filter((item) => {
-          if (pathRequiresSchoolStaff(item.path) && !isSchoolStaff) return false;
-          const required = pathRequiresModule(item.path);
-          if (!required) return true;
-          return modules.has(required);
-        })
+        .filter((item) => canUsePath(item.path))
         .map((item) => ({ ...item, group: group.title })),
     );
-  }, [isSchoolStaff, modules]);
+  }, [canUsePath]);
 
   const favoritePaths = useMemo(() => new Set(quickFavorites), [quickFavorites]);
   const recentPathIndex = useMemo(

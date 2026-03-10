@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Alert, Box, Card, CardContent, Chip, Link, Stack, Typography } from '@mui/material';
 import LaunchIcon from '@mui/icons-material/Launch';
 import { useSession } from '../session/SessionContext';
-import { buildAccessibleModuleSet } from '../utils/accessControl';
+import { canAccessPath } from '../utils/accessControl';
 
 interface ManualItem {
   title: string;
@@ -54,19 +54,18 @@ const sectionsByModule: Record<string, ManualItem[]> = {
 
 export default function ManualPage() {
   const { session } = useSession();
-  const modules = useMemo(
-    () => Array.from(buildAccessibleModuleSet(session?.roles, session?.modules)),
-    [session?.modules, session?.roles],
-  );
-
   const items = useMemo(() => {
-    const merged: ManualItem[] = [];
-    modules.forEach((m) => {
-      const entries = sectionsByModule[m];
-      if (entries) merged.push(...entries);
-    });
-    return merged;
-  }, [modules]);
+    const unique = new Map<string, ManualItem>();
+    Object.values(sectionsByModule)
+      .flat()
+      .forEach((item) => {
+        if (!canAccessPath(item.path, session?.roles, session?.modules)) return;
+        if (!unique.has(item.path)) {
+          unique.set(item.path, item);
+        }
+      });
+    return Array.from(unique.values());
+  }, [session?.modules, session?.roles]);
 
   return (
     <Stack spacing={3}>

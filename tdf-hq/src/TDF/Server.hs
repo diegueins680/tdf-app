@@ -73,7 +73,7 @@ import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO
 import qualified TDF.DTO as DTO
-import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, moduleName, loadAuthedUser)
+import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasModuleAccess, hasOperationsAccess, moduleName, loadAuthedUser)
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
@@ -7474,7 +7474,7 @@ parseListingId rawId =
 
 requireMarketplaceAccess :: AuthedUser -> AppM ()
 requireMarketplaceAccess user =
-  unless (hasModuleAccess ModuleAdmin user || hasModuleAccess ModulePackages user) $
+  unless (hasOperationsAccess user) $
     throwError err403
 
 loadCartDTO :: Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
