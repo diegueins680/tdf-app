@@ -1991,7 +1991,13 @@ export default function RadioWidget() {
               </span>
             </Tooltip>
             <Tooltip title="Detener todo (audio y presencia)">
-              <IconButton onClick={stopAllAudio} color="error" data-no-drag sx={controlFadeSx}>
+              <IconButton
+                onClick={stopAllAudio}
+                color="error"
+                data-no-drag
+                sx={controlFadeSx}
+                aria-label="Detener todo el audio y la presencia"
+              >
                 <StopCircleIcon />
               </IconButton>
             </Tooltip>
