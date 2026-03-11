@@ -187,6 +187,7 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
                   <Tooltip title="Copiar instrucciones Tidal">
                     <IconButton
                       size="small"
+                      aria-label="Copiar instrucciones Tidal"
                       onClick={() => {
                         if (navigator?.clipboard?.writeText) {
                           navigator.clipboard
