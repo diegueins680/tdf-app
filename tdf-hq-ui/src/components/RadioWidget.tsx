@@ -1886,17 +1886,24 @@ export default function RadioWidget() {
                 onClick={() => setPinned((v) => !v)}
                 data-no-drag
                 color={pinned ? 'primary' : 'inherit'}
-            >
+                aria-label="Alternar fijación del radio"
+                aria-pressed={pinned}
+              >
               <PushPinIcon fontSize="small" sx={{ transform: pinned ? 'rotate(25deg)' : 'none' }} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Ocultar radio y mostrar mini barra">
-            <IconButton size="small" onClick={() => setMiniBarVisible(true)} data-no-drag>
+            <IconButton
+              size="small"
+              onClick={() => setMiniBarVisible(true)}
+              data-no-drag
+              aria-label="Ocultar radio y mostrar mini barra"
+            >
               <VisibilityOffIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Volver a la esquina">
-            <IconButton size="small" onClick={resetPosition} data-no-drag>
+            <IconButton size="small" onClick={resetPosition} data-no-drag aria-label="Volver a la esquina">
               <RestartAltIcon fontSize="small" />
             </IconButton>
           </Tooltip>
