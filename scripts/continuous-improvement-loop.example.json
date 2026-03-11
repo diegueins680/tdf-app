@@ -1,0 +1,13 @@
+{
+  "ideaCommand": "node scripts/discover-improvement-idea.mjs",
+  "implementationCommand": "./scripts/replace-with-your-implementer.sh {idea_file}",
+  "uiFixCommand": "./scripts/replace-with-your-implementer.sh {ui_report_file}",
+  "formalFixCommand": "./scripts/replace-with-your-implementer.sh {formal_report_file}",
+  "ciRepairCommand": "./scripts/replace-with-your-implementer.sh {ci_report_file}",
+  "commitMessageTemplate": "chore: continuous improvement iteration {iteration}",
+  "pushRemote": "origin",
+  "pushBranch": "main",
+  "pollGitHub": true,
+  "pollIntervalSeconds": 30,
+  "ciTimeoutMinutes": 30
+}

@@ -13,6 +13,9 @@ run_npm() {
 }
 
 echo "▶ Linting, type-checking and testing tdf-hq-ui"
+echo "▶ Verifying continuous improvement loop invariants"
+run_npm run verify:auto-loop --prefix "$ROOT"
+run_npm run test:auto-loop --prefix "$ROOT"
 run_npm run lint --workspace=tdf-hq-ui --prefix "$ROOT"
 run_npm run typecheck --workspace=tdf-hq-ui --prefix "$ROOT"
 run_npm run test --workspace=tdf-hq-ui --prefix "$ROOT"

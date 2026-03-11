@@ -198,6 +198,34 @@ npm run quality
 
 > Runs ESLint + TypeScript checks for UI/mobile, builds the Haskell executable (`stack build tdf-hq:exe:tdf-hq-exe`), and then runs `stack test` so regressions across TypeScript + Haskell are caught locally before pushing. Configure Stack/DB access first if you run it on a fresh machine.
 
+### Continuous Improvement Loop
+
+The repo now includes a guarded automation harness for the workflow:
+
+1. discover an improvement idea
+2. implement it through a configured worker command
+3. run a static UI audit
+4. fix UI findings
+5. run formal verification on the loop state machine
+6. fix formal findings
+7. commit and push
+8. poll GitHub checks and optionally repair failures
+9. repeat
+
+Useful commands:
+
+```bash
+npm run loop:idea
+npm run audit:ui:static
+npm run verify:auto-loop
+npm run loop:improve -- --config scripts/continuous-improvement-loop.example.json
+```
+
+Notes:
+- Start from a clean worktree unless you intentionally pass `--allow-dirty`.
+- `loop:improve` is agent-agnostic: wire `implementationCommand`, `uiFixCommand`, `formalFixCommand`, and `ciRepairCommand` to your preferred coding worker.
+- GitHub polling uses `gh api`, so run `gh auth status` first and ensure the repo remote points at GitHub.
+
 ### Build for Production
 
 ```bash

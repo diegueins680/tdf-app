@@ -103,14 +103,22 @@ export default function BasicFeaturePage({ title, description, storageKey }: Bas
                     p: 1,
                   }}
                 >
-                  <Checkbox checked={item.done} onChange={() => toggleItem(item.id)} />
+                  <Checkbox
+                    checked={item.done}
+                    onChange={() => toggleItem(item.id)}
+                    inputProps={{ 'aria-label': `Marcar pendiente: ${item.text}` }}
+                  />
                   <Typography
                     variant="body2"
                     sx={{ flexGrow: 1, textDecoration: item.done ? 'line-through' : 'none' }}
                   >
                     {item.text}
                   </Typography>
-                  <IconButton size="small" onClick={() => deleteItem(item.id)}>
+                  <IconButton
+                    size="small"
+                    onClick={() => deleteItem(item.id)}
+                    aria-label={`Eliminar nota: ${item.text}`}
+                  >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Box>
