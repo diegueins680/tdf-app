@@ -713,6 +713,9 @@ export default function RadioWidget() {
     setIsPlaying(true);
   }, [activeStation.id, sortedVisibleStations]);
   const isFavoriteActive = useMemo(() => favoriteSet.has(keyFor(activeStation)), [favoriteSet, activeStation, keyFor]);
+  const favoriteToggleLabel = isFavoriteActive
+    ? `Quitar ${activeStation.name || 'esta estación'} de favoritos`
+    : `Agregar ${activeStation.name || 'esta estación'} a favoritos`;
   const canSkipStations = sortedVisibleStations.length > 1;
   const nowPlayingStatus = isPlaying ? 'Reproduciendo' : 'En pausa';
   const normalizedNowPlayingTitle = nowPlayingTitle?.trim() ?? '';
@@ -2007,6 +2010,7 @@ export default function RadioWidget() {
                 color={isFavoriteActive ? 'warning' : 'inherit'}
                 data-no-drag
                 sx={controlFadeSx}
+                aria-label={favoriteToggleLabel}
               >
                 {isFavoriteActive ? <StarIcon /> : <StarBorderIcon />}
               </IconButton>
