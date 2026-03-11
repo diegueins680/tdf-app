@@ -272,7 +272,11 @@ export default function GoogleDriveUploadWidget({
             </Stack>
             {item.status === 'done' && <CheckCircleIcon color="success" fontSize="small" />}
             {item.status === 'error' && (
-              <IconButton size="small" onClick={() => setItems((prev) => prev.filter((it) => it.id !== item.id))}>
+              <IconButton
+                size="small"
+                onClick={() => setItems((prev) => prev.filter((it) => it.id !== item.id))}
+                aria-label={`Quitar ${item.file.name} de la lista de cargas`}
+              >
                 <DeleteIcon fontSize="small" />
               </IconButton>
             )}

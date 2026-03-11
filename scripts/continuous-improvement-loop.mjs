@@ -182,6 +182,10 @@ function hasFindings(report) {
   return Array.isArray(report.findings) && report.findings.length > 0;
 }
 
+function findingKey(finding) {
+  return [finding.rule, finding.file, finding.message, finding.snippet].join('::');
+}
+
 async function getCurrentBranch(repoRoot) {
   const { stdout } = await execText('git', ['branch', '--show-current'], repoRoot);
   return stdout.trim();
@@ -281,11 +285,15 @@ async function generateUiReport(repoRoot, context, config) {
   }
 
   const rootDir = path.join(repoRoot, 'tdf-hq-ui', 'src');
-  const findings = await collectUiFindings(rootDir);
+  const allFindings = await collectUiFindings(rootDir);
+  const baseline = config.uiBaselineFindingKeys ?? new Set();
+  const findings = allFindings.filter((finding) => !baseline.has(findingKey(finding)));
   const report = {
     ok: findings.length === 0,
     findings,
     summary: summarizeUiFindings(findings),
+    baselineSuppressedCount: allFindings.length - findings.length,
+    baselineTotal: baseline.size,
     tool: 'builtin-static-ui-audit',
     generatedAt: new Date().toISOString(),
   };
@@ -626,6 +634,18 @@ async function main() {
   }
 
   config.initialUntracked = await ensureStartState(repoRoot, config.allowDirty);
+  config.uiBaselineFindingKeys = new Set();
+  try {
+    const baselineFindings = await collectUiFindings(path.join(repoRoot, 'tdf-hq-ui', 'src'));
+    for (const finding of baselineFindings) {
+      config.uiBaselineFindingKeys.add(findingKey(finding));
+    }
+    if (config.uiBaselineFindingKeys.size > 0) {
+      console.log(`Recorded ${config.uiBaselineFindingKeys.size} baseline UI finding(s) to avoid re-fixing the existing backlog in one iteration.`);
+    }
+  } catch (error) {
+    console.warn(`Skipping UI baseline capture: ${error.message}`);
+  }
 
   let iteration = 1;
   while (config.maxIterations === 0 || iteration <= Number(config.maxIterations)) {
