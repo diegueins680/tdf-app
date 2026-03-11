@@ -1968,7 +1968,12 @@ export default function RadioWidget() {
               </span>
             </Tooltip>
             <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
-              <IconButton onClick={togglePlay} color="primary" data-no-drag>
+              <IconButton
+                onClick={togglePlay}
+                color="primary"
+                data-no-drag
+                aria-label={isPlaying ? 'Pausar radio' : 'Reproducir radio'}
+              >
                 {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
               </IconButton>
             </Tooltip>
