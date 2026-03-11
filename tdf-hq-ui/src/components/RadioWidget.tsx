@@ -1979,7 +1979,13 @@ export default function RadioWidget() {
             </Tooltip>
             <Tooltip title="Estación siguiente">
               <span>
-                <IconButton onClick={jumpToNextStation} data-no-drag sx={controlFadeSx} disabled={!canSkipStations}>
+                <IconButton
+                  onClick={jumpToNextStation}
+                  data-no-drag
+                  sx={controlFadeSx}
+                  aria-label="Saltar a la siguiente estación"
+                  disabled={!canSkipStations}
+                >
                   <SkipNextIcon />
                 </IconButton>
               </span>
