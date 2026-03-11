@@ -1,0 +1,15 @@
+{
+  "ideaCommand": "node scripts/discover-improvement-idea.mjs",
+  "implementationCommand": "./scripts/codex-loop-worker.sh implement {idea_file}",
+  "uiFixCommand": "./scripts/codex-loop-worker.sh ui-fix {ui_report_file}",
+  "formalFixCommand": "./scripts/codex-loop-worker.sh formal-fix {formal_report_file}",
+  "ciRepairCommand": "./scripts/codex-loop-worker.sh ci-repair {ci_report_file}",
+  "commitMessageTemplate": "chore: continuous improvement iteration {iteration}",
+  "pushRemote": "origin",
+  "pushBranch": "main",
+  "pollGitHub": true,
+  "pollIntervalSeconds": 30,
+  "ciTimeoutMinutes": 45,
+  "stopOnNoChanges": false,
+  "iterationDelaySeconds": 20
+}

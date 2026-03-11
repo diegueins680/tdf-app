@@ -23,6 +23,7 @@ const DEFAULTS = {
   pollGitHub: true,
   pushRemote: 'origin',
   stopOnNoChanges: true,
+  iterationDelaySeconds: 10,
   commitMessageTemplate: 'chore: continuous improvement iteration {iteration}',
 };
 
@@ -196,17 +197,50 @@ async function getHeadSha(repoRoot) {
   return stdout.trim();
 }
 
-async function hasUncommittedChanges(repoRoot) {
-  const { stdout } = await execText('git', ['status', '--porcelain'], repoRoot);
-  return stdout.trim().length > 0;
+function splitLines(stdout) {
+  return stdout
+    .split('\n')
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 
-async function ensureCleanWorktree(repoRoot) {
-  if (await hasUncommittedChanges(repoRoot)) {
+async function listTrackedChanges(repoRoot) {
+  const { stdout } = await execText('git', ['status', '--porcelain', '--untracked-files=no'], repoRoot);
+  return splitLines(stdout);
+}
+
+async function listUntrackedFiles(repoRoot) {
+  const { stdout } = await execText('git', ['ls-files', '--others', '--exclude-standard'], repoRoot);
+  return splitLines(stdout);
+}
+
+async function hasCommitCandidateChanges(repoRoot, baselineUntracked) {
+  const trackedChanges = await listTrackedChanges(repoRoot);
+  if (trackedChanges.length > 0) {
+    return true;
+  }
+
+  const baseline = baselineUntracked ?? new Set();
+  const untrackedFiles = await listUntrackedFiles(repoRoot);
+  return untrackedFiles.some((filePath) => !baseline.has(filePath));
+}
+
+async function ensureStartState(repoRoot, allowDirty) {
+  const trackedChanges = await listTrackedChanges(repoRoot);
+  if (trackedChanges.length > 0) {
     throw new Error(
-      'Continuous improvement loop requires a clean worktree. Commit, stash, or pass --allow-dirty first.',
+      'Continuous improvement loop requires a clean tracked worktree. Commit or stash tracked changes first.',
     );
   }
+
+  const initialUntracked = new Set(await listUntrackedFiles(repoRoot));
+  if (!allowDirty && initialUntracked.size > 0) {
+    throw new Error(
+      'Continuous improvement loop found pre-existing untracked files. Pass --allow-dirty to preserve them as an ignored baseline.',
+    );
+  }
+
+  return initialUntracked;
 }
 
 async function writeJson(filePath, value) {
@@ -280,13 +314,19 @@ async function generateFormalReport(repoRoot, context, config) {
   return report;
 }
 
-async function commitAllChanges(repoRoot, commitMessage) {
-  await execText('git', ['add', '-A'], repoRoot);
+async function stageCommitCandidates(repoRoot, baselineUntracked) {
+  await execText('git', ['add', '-u'], repoRoot);
+  const untrackedFiles = await listUntrackedFiles(repoRoot);
+  const newUntrackedFiles = untrackedFiles.filter((filePath) => !baselineUntracked.has(filePath));
+  if (newUntrackedFiles.length > 0) {
+    await execText('git', ['add', '--', ...newUntrackedFiles], repoRoot);
+  }
+}
+
+async function commitAllChanges(repoRoot, commitMessage, baselineUntracked) {
+  await stageCommitCandidates(repoRoot, baselineUntracked);
   const { stdout } = await execText('git', ['diff', '--cached', '--name-only'], repoRoot);
-  const stagedFiles = stdout
-    .split('\n')
-    .map((value) => value.trim())
-    .filter(Boolean);
+  const stagedFiles = splitLines(stdout);
 
   if (stagedFiles.length === 0) {
     return {
@@ -401,20 +441,20 @@ async function waitForGreenCi(repoRoot, config, sha) {
 
 async function finalizeIteration(repoRoot, config, context) {
   if (config.dryRun) {
-    const { stdout } = await execText('git', ['status', '--short'], repoRoot);
+    const trackedChanges = await listTrackedChanges(repoRoot);
+    const newUntrackedFiles = (await listUntrackedFiles(repoRoot)).filter(
+      (filePath) => !config.initialUntracked.has(filePath),
+    );
     return {
       ok: true,
       dryRun: true,
-      changes: stdout
-        .split('\n')
-        .map((value) => value.trim())
-        .filter(Boolean),
+      changes: [...trackedChanges, ...newUntrackedFiles.map((filePath) => `?? ${filePath}`)],
     };
   }
 
   while (true) {
     const commitMessage = expandTemplate(config.commitMessageTemplate, context);
-    const commitResult = await commitAllChanges(repoRoot, commitMessage);
+    const commitResult = await commitAllChanges(repoRoot, commitMessage, config.initialUntracked);
     if (!commitResult.changed) {
       return {
         ok: true,
@@ -467,7 +507,7 @@ async function finalizeIteration(repoRoot, config, context) {
       stepName: 'CI repair',
     });
 
-    if (!(await hasUncommittedChanges(repoRoot))) {
+    if (!(await hasCommitCandidateChanges(repoRoot, config.initialUntracked))) {
       throw new Error('ciRepairCommand completed without creating changes.');
     }
   }
@@ -585,9 +625,7 @@ async function main() {
     throw new Error('maxIterations must be a non-negative number.');
   }
 
-  if (!config.allowDirty) {
-    await ensureCleanWorktree(repoRoot);
-  }
+  config.initialUntracked = await ensureStartState(repoRoot, config.allowDirty);
 
   let iteration = 1;
   while (config.maxIterations === 0 || iteration <= Number(config.maxIterations)) {
@@ -595,6 +633,10 @@ async function main() {
     if (result.skipped && config.stopOnNoChanges) {
       console.log(result.reason);
       break;
+    }
+    if (Number(config.iterationDelaySeconds) > 0) {
+      console.log(`Sleeping ${config.iterationDelaySeconds}s before the next iteration...`);
+      await sleep(Number(config.iterationDelaySeconds) * 1000);
     }
     iteration += 1;
   }
