@@ -518,6 +518,7 @@ export default function ChatPage() {
               />
               <IconButton
                 color="primary"
+                aria-label="Enviar mensaje"
                 onClick={handleSend}
                 disabled={!selectedThreadId || sendMutation.isPending || !draft.trim()}
               >
