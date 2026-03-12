@@ -419,7 +419,12 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
             ),
             endAdornment: filter ? (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setFilter('')} sx={{ color: 'rgba(248,250,252,0.7)' }}>
+                <IconButton
+                  size="small"
+                  aria-label="Limpiar búsqueda"
+                  onClick={() => setFilter('')}
+                  sx={{ color: 'rgba(248,250,252,0.7)' }}
+                >
                   <ClearIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>
@@ -500,7 +505,13 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                   {group.title}
                 </Typography>
                 {group.items.length > 1 && (
-                  <IconButton size="small" onClick={() => toggleGroup(group.title)} sx={{ color: 'rgba(248,250,252,0.6)' }}>
+                  <IconButton
+                    size="small"
+                    aria-label={`Mostrar u ocultar ${group.title}`}
+                    aria-expanded={isExpanded}
+                    onClick={() => toggleGroup(group.title)}
+                    sx={{ color: 'rgba(248,250,252,0.6)' }}
+                  >
                     {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
                   </IconButton>
                 )}
