@@ -69,14 +69,11 @@ const toLocalInputValue = (date: Date) => {
     date.getMinutes(),
   )}`;
 };
-const roundToNext = (date: Date, minutes: number) => {
-  const ms = minutes * 60 * 1000;
-  return new Date(Math.ceil(date.getTime() / ms) * ms);
-};
 
 const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
+const QUICK_SLOT_STEP_MINUTES = 30;
 const ROOM_FALLBACKS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
@@ -135,6 +132,31 @@ const normalizeDurationMinutes = (value: number, fallback = 60): number => {
   if (!Number.isFinite(value)) return fallback;
   const rounded = Math.round(value);
   return Math.min(MAX_DURATION_MINUTES, Math.max(30, rounded));
+};
+
+export const resolveFirstAvailableShortcut = ({
+  dayOffset,
+  studioTimeZone,
+  userTimeZone,
+  now = DateTime.now(),
+}: {
+  dayOffset: number;
+  studioTimeZone: string;
+  userTimeZone: string;
+  now?: DateTime;
+}) => {
+  const nowStudio = now
+    .setZone(studioTimeZone)
+    .plus({ minutes: 15 })
+    .set({ second: 0, millisecond: 0 });
+  const targetDayStudio = nowStudio.startOf('day').plus({ days: dayOffset });
+  const openStudio = targetDayStudio.set({ hour: OPEN_HOURS.start, minute: 0, second: 0, millisecond: 0 });
+  const closeStudio = targetDayStudio.set({ hour: OPEN_HOURS.end, minute: 0, second: 0, millisecond: 0 });
+  const baselineStudio = dayOffset === 0 && nowStudio > openStudio ? nowStudio : openStudio;
+  const roundedStudio = alignToStepMinutes(baselineStudio, QUICK_SLOT_STEP_MINUTES);
+  const latestStartStudio = closeStudio.minus({ minutes: QUICK_SLOT_STEP_MINUTES });
+  const limitedStudio = roundedStudio >= closeStudio ? latestStartStudio : roundedStudio;
+  return limitedStudio.setZone(userTimeZone);
 };
 
 const buildInitialForm = (defaultService: string, roomOptions: string[]) => {
@@ -238,15 +260,34 @@ export default function PublicBookingPage() {
     queryFn: () => Rooms.listPublic(),
     staleTime: 5 * 60 * 1000,
   });
+  const publicRooms = useMemo<RoomDTO[]>(
+    () => (roomsQuery.data ?? []).filter((room) => room.roomId.trim() !== '' && room.rName.trim() !== ''),
+    [roomsQuery.data],
+  );
   const services = useMemo<ServiceType[]>(() => {
     const merged = mergeServiceTypes(serviceCatalogQuery.data, { sort: false });
     return merged.filter((svc) => svc.priceCents != null);
   }, [serviceCatalogQuery.data]);
   const roomOptions = useMemo<string[]>(() => {
-    const apiRooms = (roomsQuery.data ?? []).map((r) => r.rName).filter(Boolean);
+    const apiRooms = publicRooms.map((r) => r.rName).filter(Boolean);
     const unique = Array.from(new Set(apiRooms));
     return unique.length ? unique : [...ROOM_FALLBACKS];
-  }, [roomsQuery.data]);
+  }, [publicRooms]);
+  const roomIdByLabel = useMemo(() => {
+    const lookup = new Map<string, string | null>();
+    publicRooms.forEach((room) => {
+      const label = room.rName.trim();
+      const existing = lookup.get(label);
+      if (existing === undefined) {
+        lookup.set(label, room.roomId);
+        return;
+      }
+      if (existing !== room.roomId) {
+        lookup.set(label, null);
+      }
+    });
+    return lookup;
+  }, [publicRooms]);
   const defaultService = services[0]?.name ?? 'Reserva';
   const { session, logout } = useSession();
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -581,6 +622,9 @@ export default function PublicBookingPage() {
     const autoRooms = defaultRoomsForService(form.serviceType, roomOptions);
     const roomsToSend =
       autoRooms.length > 0 ? autoRooms : roomOptions.length > 0 ? roomOptions.slice(0, 1) : [];
+    const roomIdsToSend = roomsToSend.every((label) => roomIdByLabel.get(label.trim()))
+      ? roomsToSend.map((label) => roomIdByLabel.get(label.trim()) as string)
+      : null;
     if (roomsToSend.length > 0) {
       setForm((prev) => (sameRooms(prev.resourceLabels, roomsToSend) ? prev : { ...prev, resourceLabels: roomsToSend }));
     }
@@ -598,7 +642,7 @@ export default function PublicBookingPage() {
         pbNotes: form.notes.trim() || null,
         pbEngineerPartyId: engineerPartyId,
         pbEngineerName: engineerName,
-        pbResourceIds: roomsToSend.length ? roomsToSend : null,
+        pbResourceIds: roomIdsToSend,
       });
       setSuccess(dto);
     } catch (err) {
@@ -763,29 +807,9 @@ export default function PublicBookingPage() {
 
   const firstAvailable = useCallback(
     (dayOffset: number) => {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() + 15);
-      now.setSeconds(0, 0);
-      const targetDay = new Date(now);
-      targetDay.setDate(targetDay.getDate() + dayOffset);
-      const start = new Date(
-        targetDay.getFullYear(),
-        targetDay.getMonth(),
-        targetDay.getDate(),
-        OPEN_HOURS.start,
-        0,
-        0,
-        0,
-      );
-      const baseline = dayOffset === 0 && now > start ? now : start;
-      const rounded = roundToNext(baseline, 30);
-      const limited =
-        rounded.getHours() >= OPEN_HOURS.end
-          ? new Date(targetDay.getFullYear(), targetDay.getMonth(), targetDay.getDate(), OPEN_HOURS.end - 1, 30, 0, 0)
-          : rounded;
-      return limited;
+      return resolveFirstAvailableShortcut({ dayOffset, studioTimeZone, userTimeZone });
     },
-    [],
+    [studioTimeZone, userTimeZone],
   );
 
   useEffect(() => {
@@ -1424,12 +1448,16 @@ export default function PublicBookingPage() {
                                 size="small"
                                 variant="outlined"
                                 disabled={formDisabled}
-                                onClick={() =>
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    startsAt: toLocalInputValue(firstAvailable(0)),
-                                  }))
-                                }
+                                onClick={() => {
+                                  setDurationNotice(null);
+                                  setForm((prev) => {
+                                    const shortcut = sanitizeStart(firstAvailable(0), normalizeDurationMinutes(prev.durationMinutes));
+                                    return {
+                                      ...prev,
+                                      startsAt: toLocalInputValue(shortcut.toJSDate()),
+                                    };
+                                  });
+                                }}
                               >
                                 Primer horario hoy
                               </Button>
@@ -1437,12 +1465,16 @@ export default function PublicBookingPage() {
                                 size="small"
                                 variant="text"
                                 disabled={formDisabled}
-                                onClick={() =>
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    startsAt: toLocalInputValue(firstAvailable(1)),
-                                  }))
-                                }
+                                onClick={() => {
+                                  setDurationNotice(null);
+                                  setForm((prev) => {
+                                    const shortcut = sanitizeStart(firstAvailable(1), normalizeDurationMinutes(prev.durationMinutes));
+                                    return {
+                                      ...prev,
+                                      startsAt: toLocalInputValue(shortcut.toJSDate()),
+                                    };
+                                  });
+                                }}
                               >
                                 Mañana
                               </Button>
@@ -1577,6 +1609,12 @@ export default function PublicBookingPage() {
                                   <Autocomplete<string | PublicEngineer, false, false, true>
                                     options={engineers}
                                     getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.peName)}
+                                    isOptionEqualToValue={(option, value) => {
+                                      if (typeof option === 'string' || typeof value === 'string') {
+                                        return typeof option === 'string' && typeof value === 'string' && option === value;
+                                      }
+                                      return option.peId === value.peId;
+                                    }}
                                     loading={engineersLoading}
                                     freeSolo
                                     disabled={formDisabled}
@@ -1603,6 +1641,16 @@ export default function PublicBookingPage() {
                                           engineerId: exactEngineerId,
                                         };
                                       });
+                                    }}
+                                    renderOption={(props, option) => {
+                                      const { key: _muiKey, ...optionProps } = props;
+                                      const label = typeof option === 'string' ? option : option.peName;
+                                      const optionKey = typeof option === 'string' ? `engineer-free-${label}` : `engineer-${option.peId}`;
+                                      return (
+                                        <li {...optionProps} key={optionKey}>
+                                          {label}
+                                        </li>
+                                      );
                                     }}
                                     renderInput={(params) => (
                                       <TextField

@@ -9,6 +9,12 @@ interface CreatePublicPayload {
   pbResourceIds?: string[] | null;
 }
 
+interface PublicRoomItem {
+  roomId: string;
+  rName: string;
+  rBookable: boolean;
+}
+
 interface PublicServiceCatalogItem {
   id: string;
   name: string;
@@ -25,6 +31,14 @@ const listPublicServicesMock = jest.fn<() => Promise<PublicServiceCatalogItem[]>
   () => Promise.resolve([]),
 );
 const listPublicEngineersMock = jest.fn<() => Promise<Array<{ peId: number; peName: string }>>>(() => Promise.resolve([]));
+const defaultPublicRooms: PublicRoomItem[] = [
+  { roomId: 'room-live', rName: 'Live Room', rBookable: true },
+  { roomId: 'room-control', rName: 'Control Room', rBookable: true },
+  { roomId: 'room-vocal', rName: 'Vocal Booth', rBookable: true },
+];
+const listPublicRoomsMock = jest.fn<() => Promise<PublicRoomItem[]>>(
+  () => Promise.resolve(defaultPublicRooms),
+);
 
 jest.unstable_mockModule('../api/bookings', () => ({
   Bookings: {
@@ -40,7 +54,7 @@ jest.unstable_mockModule('../api/services', () => ({
 
 jest.unstable_mockModule('../api/rooms', () => ({
   Rooms: {
-    listPublic: () => Promise.resolve([]),
+    listPublic: () => listPublicRoomsMock(),
   },
 }));
 
@@ -55,7 +69,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
   getStoredSessionToken: () => null,
 }));
 
-const { default: PublicBookingPage } = await import('../pages/PublicBookingPage');
+const { default: PublicBookingPage, resolveFirstAvailableShortcut } = await import('../pages/PublicBookingPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -160,6 +174,8 @@ describe('PublicBookingPage', () => {
     listPublicServicesMock.mockResolvedValue([]);
     listPublicEngineersMock.mockReset();
     listPublicEngineersMock.mockResolvedValue([]);
+    listPublicRoomsMock.mockReset();
+    listPublicRoomsMock.mockResolvedValue(defaultPublicRooms);
     window.localStorage.clear();
     globalThis.fetch = jest.fn(() =>
       Promise.resolve({
@@ -178,6 +194,26 @@ describe('PublicBookingPage', () => {
 
     await cleanup();
     document.body.removeChild(container);
+  });
+
+  it('computes quick schedule shortcuts using studio-timezone opening hours', () => {
+    const now = DateTime.fromISO('2030-01-01T06:30:00.000Z');
+
+    const todayShortcut = resolveFirstAvailableShortcut({
+      dayOffset: 0,
+      now,
+      studioTimeZone: 'America/Guayaquil',
+      userTimeZone: 'Europe/Madrid',
+    });
+    const tomorrowShortcut = resolveFirstAvailableShortcut({
+      dayOffset: 1,
+      now,
+      studioTimeZone: 'America/Guayaquil',
+      userTimeZone: 'Europe/Madrid',
+    });
+
+    expect(todayShortcut.toFormat("yyyy-MM-dd'T'HH:mm")).toBe('2030-01-01T14:00');
+    expect(tomorrowShortcut.toFormat("yyyy-MM-dd'T'HH:mm")).toBe('2030-01-02T14:00');
   });
 
   it('submits auto-assigned rooms based on service rules', async () => {
@@ -227,7 +263,7 @@ describe('PublicBookingPage', () => {
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
-    expect(payload?.pbResourceIds).toEqual(['Live Room', 'Control Room']);
+    expect(payload?.pbResourceIds).toEqual(['room-live', 'room-control']);
 
     await cleanup();
     document.body.removeChild(container);
@@ -347,55 +383,65 @@ describe('PublicBookingPage', () => {
   });
 
   it('does not auto-bind an ambiguous engineer id when duplicate names exist', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     listPublicEngineersMock.mockResolvedValueOnce([
       { peId: 7, peName: 'Ana' },
       { peId: 9, peName: 'Ana' },
     ]);
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderPage(container);
+    try {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
 
-    await act(async () => {
-      setInputValue(getInputByLabel(container, 'Nombre completo'), 'Test User');
-      setInputValue(getInputByLabel(container, 'Correo'), 'test@example.com');
-      clickButtonByText(container, 'Continuar');
-      await flushPromises();
-    });
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Nombre completo'), 'Test User');
+        setInputValue(getInputByLabel(container, 'Correo'), 'test@example.com');
+        clickButtonByText(container, 'Continuar');
+        await flushPromises();
+      });
 
-    await act(async () => {
-      const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-      const desiredStudio = DateTime.fromObject(
-        { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
-        { zone: 'America/Guayaquil' },
+      await act(async () => {
+        const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+        const desiredStudio = DateTime.fromObject(
+          { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
+          { zone: 'America/Guayaquil' },
+        );
+        const desiredUser = desiredStudio.setZone(userZone);
+        setInputValue(getInputByLabel(container, 'Fecha y hora'), desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
+        setInputValue(getInputByLabel(container, 'Ingeniero asignado'), 'Ana');
+        await flushPromises();
+      });
+
+      await act(async () => {
+        clickButtonByText(container, 'Revisar reserva');
+        await flushPromises();
+      });
+
+      await act(async () => {
+        const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
+        if (!submitButton) throw new Error('Submit button not found');
+        submitButton.click();
+        await flushPromises();
+      });
+
+      expect(createPublicMock).toHaveBeenCalledTimes(1);
+      expect(createPublicMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pbEngineerPartyId: null,
+          pbEngineerName: 'Ana',
+        }),
       );
-      const desiredUser = desiredStudio.setZone(userZone);
-      setInputValue(getInputByLabel(container, 'Fecha y hora'), desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
-      setInputValue(getInputByLabel(container, 'Ingeniero asignado'), 'Ana');
-      await flushPromises();
-    });
+      expect(
+        consoleErrorSpy.mock.calls.some(([message]) =>
+          String(message).includes('Encountered two children with the same key'),
+        ),
+      ).toBe(false);
 
-    await act(async () => {
-      clickButtonByText(container, 'Revisar reserva');
-      await flushPromises();
-    });
-
-    await act(async () => {
-      const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
-      if (!submitButton) throw new Error('Submit button not found');
-      submitButton.click();
-      await flushPromises();
-    });
-
-    expect(createPublicMock).toHaveBeenCalledTimes(1);
-    expect(createPublicMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pbEngineerPartyId: null,
-        pbEngineerName: 'Ana',
-      }),
-    );
-
-    await cleanup();
-    document.body.removeChild(container);
+      await cleanup();
+      document.body.removeChild(container);
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
   });
 });
