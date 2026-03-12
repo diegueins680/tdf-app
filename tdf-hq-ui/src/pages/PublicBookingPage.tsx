@@ -806,6 +806,23 @@ export default function PublicBookingPage() {
     engineers.find((opt) => opt.peId === form.engineerId) ??
     (form.engineerName ? { peId: -1, peName: form.engineerName } : null);
 
+  const exactEngineerIdByName = useMemo(() => {
+    const lookup = new Map<string, number | null>();
+    engineers.forEach((engineer) => {
+      const normalized = engineer.peName.trim().toLowerCase();
+      if (!normalized) return;
+      const current = lookup.get(normalized);
+      if (current === undefined) {
+        lookup.set(normalized, engineer.peId);
+        return;
+      }
+      if (current !== engineer.peId) {
+        lookup.set(normalized, null);
+      }
+    });
+    return lookup;
+  }, [engineers]);
+
   const clearSavedProfile = () => {
     setRememberProfile(false);
     setForm((prev) => ({
@@ -1578,11 +1595,12 @@ export default function PublicBookingPage() {
                                       if (reason === 'reset') return;
                                       setForm((prev) => {
                                         const normalized = value.trim().toLowerCase();
-                                        const exact = engineers.find((opt) => opt.peName.trim().toLowerCase() === normalized);
+                                        const exactEngineerId =
+                                          normalized === '' ? null : exactEngineerIdByName.get(normalized) ?? null;
                                         return {
                                           ...prev,
                                           engineerName: value,
-                                          engineerId: exact?.peId ?? null,
+                                          engineerId: exactEngineerId,
                                         };
                                       });
                                     }}

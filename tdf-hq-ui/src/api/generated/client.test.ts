@@ -1,9 +1,16 @@
 import { jest } from '@jest/globals';
 
 const buildAuthorizationHeaderMock = jest.fn<() => string | undefined>(() => 'Bearer generated-token');
+const envReadMock = jest.fn<(key: string) => string | undefined>(() => undefined);
 
 jest.unstable_mockModule('../authHeader', () => ({
   buildAuthorizationHeader: buildAuthorizationHeaderMock,
+}));
+
+jest.unstable_mockModule('../../utils/env', () => ({
+  env: {
+    read: envReadMock,
+  },
 }));
 
 const { ApiClient } = await import('./client');
@@ -43,6 +50,7 @@ describe('generated ApiClient', () => {
     fetchMock.mockReset();
     buildAuthorizationHeaderMock.mockReset();
     buildAuthorizationHeaderMock.mockReturnValue('Bearer generated-token');
+    envReadMock.mockReset().mockReturnValue(undefined);
     (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
   });
 
@@ -100,6 +108,15 @@ describe('generated ApiClient', () => {
       'https://api.tdf.test/api/users',
       expect.anything(),
     );
+  });
+
+  it('defaults to same-origin paths when VITE_API_BASE is missing', async () => {
+    fetchMock.mockResolvedValueOnce(buildResponse({ body: '[]' }));
+
+    const client = new ApiClient();
+    await client.getUsers();
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/users', expect.anything());
   });
 
   it('avoids forcing content-type for bodyless requests', async () => {

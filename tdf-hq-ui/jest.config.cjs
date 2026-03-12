@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'ts-jest/presets/default-esm',
@@ -7,9 +9,9 @@ module.exports = {
   },
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', { useESM: true }],
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: path.join(__dirname, 'tsconfig.jest.json'), useESM: true }],
   },
-  modulePaths: ['<rootDir>/node_modules'],
+  modulePaths: ['<rootDir>/node_modules', '<rootDir>/../node_modules'],
   moduleNameMapper: {
     '^@mui/icons-material/(.*)$': '<rootDir>/src/__mocks__/muiIconMock.tsx',
     '^react$': '<rootDir>/node_modules/react',

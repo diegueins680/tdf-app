@@ -135,21 +135,22 @@ describe('useInstagramCallback', () => {
     instagramConfigErrorMock.mockReset().mockReturnValue(null);
   });
 
-  it('accepts a valid parsed state when session storage was already consumed', async () => {
+  it('rejects callbacks when the browser-stored state is already missing', async () => {
     const issuedAt = Date.now();
     window.history.replaceState({}, '', '/oauth/instagram/callback?code=abc123&state=state-relay');
 
     consumeInstagramStateMock.mockReturnValue(null);
     parseInstagramStateMock.mockReturnValue({ returnTo: '/social/instagram', issuedAt });
-    exchangeInstagramCodeMock.mockResolvedValue({ tokenType: 'bearer' });
 
     const { container, cleanup } = await renderProbe(<CallbackProbe />);
     await flushAll();
 
-    expect(exchangeInstagramCodeMock).toHaveBeenCalledTimes(1);
-    expect(exchangeInstagramCodeMock).toHaveBeenCalledWith('abc123');
-    expect(storeInstagramResultMock).toHaveBeenCalledTimes(1);
-    expect(readCallbackResult(container)).toEqual({ ok: true, returnTo: '/social/instagram' });
+    expect(exchangeInstagramCodeMock).not.toHaveBeenCalled();
+    expect(storeInstagramResultMock).not.toHaveBeenCalled();
+    expect(readCallbackResult(container)).toEqual({
+      ok: false,
+      message: 'Estado de OAuth inválido o expirado.',
+    });
 
     await cleanup();
   });
@@ -174,12 +175,13 @@ describe('useInstagramCallback', () => {
     await cleanup();
   });
 
-  it('allows retrying the same callback query after the previous run settles', async () => {
+  it('rejects reusing the same callback query after the stored state is consumed', async () => {
     const issuedAt = Date.now();
     window.history.replaceState({}, '', '/oauth/instagram/callback?code=retry123&state=retry-state');
 
-    consumeInstagramStateMock.mockReturnValue(null);
-    parseInstagramStateMock.mockReturnValue({ returnTo: '/social/instagram', issuedAt });
+    consumeInstagramStateMock
+      .mockReturnValueOnce({ state: 'retry-state', returnTo: '/social/instagram', issuedAt })
+      .mockReturnValue(null);
     exchangeInstagramCodeMock.mockResolvedValue({ tokenType: 'bearer' });
 
     const firstRender = await renderProbe(<CallbackProbe />);
@@ -188,17 +190,21 @@ describe('useInstagramCallback', () => {
 
     const secondRender = await renderProbe(<CallbackProbe />);
     await flushAll();
-    await secondRender.cleanup();
 
-    expect(exchangeInstagramCodeMock).toHaveBeenCalledTimes(2);
+    expect(exchangeInstagramCodeMock).toHaveBeenCalledTimes(1);
+    expect(readCallbackResult(secondRender.container)).toEqual({
+      ok: false,
+      message: 'Estado de OAuth inválido o expirado.',
+    });
+
+    await secondRender.cleanup();
   });
 
   it('rejects parsed states that are too far in the future', async () => {
     const issuedAt = Date.now() + 2 * 60 * 1000;
     window.history.replaceState({}, '', '/oauth/instagram/callback?code=future123&state=future-state');
 
-    consumeInstagramStateMock.mockReturnValue(null);
-    parseInstagramStateMock.mockReturnValue({ returnTo: '/social/instagram', issuedAt });
+    consumeInstagramStateMock.mockReturnValue({ state: 'future-state', returnTo: '/social/instagram', issuedAt });
 
     const { container, cleanup } = await renderProbe(<CallbackProbe />);
     await flushAll();

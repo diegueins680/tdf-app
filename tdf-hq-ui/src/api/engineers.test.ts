@@ -27,6 +27,7 @@ describe('Engineers.listPublic', () => {
     getMock.mockResolvedValueOnce([
       { peId: '2', peName: '  Ana  ' },
       { peId: 2, peName: 'ana' },
+      { peId: 6, peName: 'Ana' },
       { peId: 0, peName: 'Zero' },
       { peId: -1, peName: 'Negative' },
       { peId: 3.5, peName: 'Float' },
@@ -39,6 +40,7 @@ describe('Engineers.listPublic', () => {
 
     expect(result).toEqual([
       { peId: 2, peName: 'Ana' },
+      { peId: 6, peName: 'Ana' },
       { peId: 4, peName: 'Luis' },
     ]);
     expect(JSON.parse(window.localStorage.getItem(ENGINEERS_CACHE_KEY) ?? '[]')).toEqual(result);
@@ -50,6 +52,7 @@ describe('Engineers.listPublic', () => {
       JSON.stringify([
         { peId: '8', peName: '  Marta  ' },
         { peId: 8, peName: 'marta' },
+        { peId: 18, peName: 'Marta' },
         { peId: -10, peName: 'Invalid negative' },
         { peId: 'oops', peName: 'Invalid text' },
         { peId: 11, peName: ' Leo ' },
@@ -64,6 +67,7 @@ describe('Engineers.listPublic', () => {
     expect(result).toEqual([
       { peId: 11, peName: 'Leo' },
       { peId: 8, peName: 'Marta' },
+      { peId: 18, peName: 'Marta' },
     ]);
     expect(warnSpy).toHaveBeenCalledWith(
       'Engineer catalog unavailable, using cached engineer list',

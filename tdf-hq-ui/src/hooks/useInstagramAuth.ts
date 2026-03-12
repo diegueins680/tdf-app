@@ -6,7 +6,6 @@ import {
   exchangeInstagramCode,
   getStoredInstagramResult,
   instagramConfigError,
-  parseInstagramState,
   storeInstagramResult,
 } from '../services/instagramAuth';
 
@@ -18,11 +17,6 @@ interface InstagramCallbackResult {
   ok: boolean;
   message?: string;
   returnTo?: string;
-}
-
-interface ParsedInstagramState {
-  returnTo?: string;
-  issuedAt?: number;
 }
 
 const callbackFlowByQuery = new Map<string, Promise<InstagramCallbackResult>>();
@@ -109,24 +103,14 @@ export function useInstagramCallback() {
 
     const callbackFlow = async (): Promise<InstagramCallbackResult> => {
       const storedState = consumeInstagramState();
-      const parsedState = rawState ? parseInstagramState(rawState) : null;
-      const parsedStateRecord = parsedState as ParsedInstagramState | null;
-      const parsedReturnTo =
-        typeof parsedStateRecord?.returnTo === 'string' ? parsedStateRecord.returnTo : undefined;
-      const parsedIssuedAt =
-        typeof parsedStateRecord?.issuedAt === 'number' ? parsedStateRecord.issuedAt : undefined;
-      const returnTo = storedState?.returnTo ?? parsedReturnTo;
+      const returnTo = storedState?.returnTo;
       const now = Date.now();
 
-      if (storedState) {
-        if (!rawState || rawState !== storedState.state) {
-          return { ok: false, message: 'Estado de OAuth inválido o expirado.', returnTo };
-        }
-      } else if (!rawState || !parsedStateRecord) {
+      if (!storedState || !rawState || rawState !== storedState.state) {
         return { ok: false, message: 'Estado de OAuth inválido o expirado.', returnTo };
       }
 
-      const issuedAt = storedState?.issuedAt ?? parsedIssuedAt;
+      const issuedAt = storedState.issuedAt;
       if (
         typeof issuedAt !== 'number' ||
         !Number.isFinite(issuedAt) ||

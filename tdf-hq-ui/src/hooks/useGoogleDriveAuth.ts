@@ -7,6 +7,7 @@ import {
   ensureAccessToken,
   exchangeCodeForToken,
   getStoredToken,
+  parseDriveState,
   storeToken,
 } from '../services/googleDrive';
 
@@ -14,6 +15,12 @@ export type DriveAuthStatus = 'idle' | 'authenticating' | 'ready' | 'error';
 
 interface DriveAuthOptions {
   enabled?: boolean;
+}
+
+interface DriveCallbackResult {
+  ok: boolean;
+  message?: string;
+  returnTo?: string;
 }
 
 export function useGoogleDriveAuth(options: DriveAuthOptions = {}) {
@@ -82,28 +89,42 @@ export function useGoogleDriveAuth(options: DriveAuthOptions = {}) {
 }
 
 export function useGoogleDriveCallback() {
-  const [result, setResult] = useState<{ ok: boolean; message?: string; state?: string }>({ ok: false });
+  const [result, setResult] = useState<DriveCallbackResult>({ ok: false });
 
   useEffect(() => {
     const search = new URLSearchParams(window.location.search);
     const code = search.get('code');
     const error = search.get('error');
-    const state = search.get('state') ?? consumeDriveState() ?? undefined;
+    const rawState = search.get('state');
+    const storedState = consumeDriveState();
+    const parsedState =
+      storedState && rawState && rawState === storedState ? parseDriveState(storedState) : null;
+    const returnTo = parsedState?.returnTo;
+
+    if (!storedState || !rawState || rawState !== storedState || !parsedState) {
+      setResult({ ok: false, message: 'Estado de OAuth inválido o expirado.' });
+      return;
+    }
+
     if (error) {
-      setResult({ ok: false, message: error, state });
+      setResult({ ok: false, message: error, returnTo });
       return;
     }
     if (!code) {
-      setResult({ ok: false, message: 'No se recibió código de Google', state });
+      setResult({ ok: false, message: 'No se recibió código de Google', returnTo });
       return;
     }
     void (async () => {
       try {
         const token = await exchangeCodeForToken(code);
         storeToken(token);
-        setResult({ ok: true, state });
+        setResult({ ok: true, returnTo });
       } catch (err) {
-        setResult({ ok: false, message: err instanceof Error ? err.message : 'No se pudo guardar el token', state });
+        setResult({
+          ok: false,
+          message: err instanceof Error ? err.message : 'No se pudo guardar el token',
+          returnTo,
+        });
       }
     })();
   }, []);

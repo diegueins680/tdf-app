@@ -30,7 +30,7 @@ const normalizePositiveEngineerId = (value: unknown): number | null => {
 
 const normalizeEngineers = (rows: unknown): PublicEngineer[] => {
   if (!Array.isArray(rows)) return [];
-  const map = new Map<string, PublicEngineer>();
+  const map = new Map<number, PublicEngineer>();
   rows.forEach((row) => {
     if (!row || typeof row !== 'object') return;
     const item = row as Record<string, unknown>;
@@ -38,12 +38,14 @@ const normalizeEngineers = (rows: unknown): PublicEngineer[] => {
     const peName = normalizeNonEmptyString(item['peName']);
     if (peId === null || !peName) return;
 
-    const key = peName.toLowerCase();
-    if (!map.has(key)) {
-      map.set(key, { peId, peName });
+    if (!map.has(peId)) {
+      map.set(peId, { peId, peName });
     }
   });
-  return Array.from(map.values()).sort((a, b) => a.peName.localeCompare(b.peName));
+  return Array.from(map.values()).sort((a, b) => {
+    const nameOrder = a.peName.localeCompare(b.peName);
+    return nameOrder !== 0 ? nameOrder : a.peId - b.peId;
+  });
 };
 
 const readCachedEngineers = (): PublicEngineer[] => {

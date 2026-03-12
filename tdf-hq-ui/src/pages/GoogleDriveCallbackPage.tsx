@@ -8,9 +8,8 @@ export default function GoogleDriveCallbackPage() {
   const result = useGoogleDriveCallback();
 
   useEffect(() => {
-    if (result.ok && result.state) {
-      const target = decodeURIComponent(result.state);
-      navigate(target, { replace: true });
+    if (result.ok && result.returnTo) {
+      navigate(result.returnTo, { replace: true });
     } else if (result.ok) {
       navigate('/', { replace: true });
     }

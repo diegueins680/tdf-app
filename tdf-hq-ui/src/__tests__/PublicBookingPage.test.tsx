@@ -24,6 +24,7 @@ const logoutMock = jest.fn();
 const listPublicServicesMock = jest.fn<() => Promise<PublicServiceCatalogItem[]>>(
   () => Promise.resolve([]),
 );
+const listPublicEngineersMock = jest.fn<() => Promise<Array<{ peId: number; peName: string }>>>(() => Promise.resolve([]));
 
 jest.unstable_mockModule('../api/bookings', () => ({
   Bookings: {
@@ -45,7 +46,7 @@ jest.unstable_mockModule('../api/rooms', () => ({
 
 jest.unstable_mockModule('../api/engineers', () => ({
   Engineers: {
-    listPublic: () => Promise.resolve([]),
+    listPublic: () => listPublicEngineersMock(),
   },
 }));
 
@@ -157,6 +158,8 @@ describe('PublicBookingPage', () => {
     createPublicMock.mockClear();
     listPublicServicesMock.mockReset();
     listPublicServicesMock.mockResolvedValue([]);
+    listPublicEngineersMock.mockReset();
+    listPublicEngineersMock.mockResolvedValue([]);
     window.localStorage.clear();
     globalThis.fetch = jest.fn(() =>
       Promise.resolve({
@@ -338,6 +341,59 @@ describe('PublicBookingPage', () => {
       await flushPromises();
     });
     expect(createPublicMock).toHaveBeenCalledTimes(1);
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('does not auto-bind an ambiguous engineer id when duplicate names exist', async () => {
+    listPublicEngineersMock.mockResolvedValueOnce([
+      { peId: 7, peName: 'Ana' },
+      { peId: 9, peName: 'Ana' },
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Nombre completo'), 'Test User');
+      setInputValue(getInputByLabel(container, 'Correo'), 'test@example.com');
+      clickButtonByText(container, 'Continuar');
+      await flushPromises();
+    });
+
+    await act(async () => {
+      const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+      const desiredStudio = DateTime.fromObject(
+        { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
+        { zone: 'America/Guayaquil' },
+      );
+      const desiredUser = desiredStudio.setZone(userZone);
+      setInputValue(getInputByLabel(container, 'Fecha y hora'), desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
+      setInputValue(getInputByLabel(container, 'Ingeniero asignado'), 'Ana');
+      await flushPromises();
+    });
+
+    await act(async () => {
+      clickButtonByText(container, 'Revisar reserva');
+      await flushPromises();
+    });
+
+    await act(async () => {
+      const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (!submitButton) throw new Error('Submit button not found');
+      submitButton.click();
+      await flushPromises();
+    });
+
+    expect(createPublicMock).toHaveBeenCalledTimes(1);
+    expect(createPublicMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pbEngineerPartyId: null,
+        pbEngineerName: 'Ana',
+      }),
+    );
 
     await cleanup();
     document.body.removeChild(container);

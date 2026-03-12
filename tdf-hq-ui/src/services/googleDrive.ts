@@ -18,6 +18,11 @@ interface DriveTokenResponse {
   tokenType?: string;
 }
 
+interface DriveOAuthStatePayload {
+  nonce: string;
+  returnTo?: string;
+}
+
 export interface DriveFileInfo {
   id: string;
   name: string;
@@ -35,6 +40,42 @@ const getClientId = () =>
 const getRedirectUri = () =>
   (import.meta.env as Record<string, string | undefined>)['VITE_GOOGLE_DRIVE_REDIRECT_URI'];
 const getFolderId = () => (import.meta.env as Record<string, string | undefined>)['VITE_GOOGLE_DRIVE_FOLDER_ID'];
+
+const sanitizeReturnTo = (value?: string | null) => {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || !trimmed.startsWith('/') || trimmed.startsWith('//')) return undefined;
+  return trimmed;
+};
+
+const buildDriveState = (returnTo?: string) =>
+  encodeURIComponent(
+    JSON.stringify({
+      nonce: nanoid(),
+      returnTo: sanitizeReturnTo(returnTo),
+    } satisfies DriveOAuthStatePayload),
+  );
+
+export const parseDriveState = (value: string | null | undefined): DriveOAuthStatePayload | null => {
+  if (!value) return null;
+
+  const legacyReturnTo = sanitizeReturnTo(value);
+  if (legacyReturnTo) {
+    return { nonce: 'legacy', returnTo: legacyReturnTo };
+  }
+
+  try {
+    const parsed = JSON.parse(decodeURIComponent(value)) as Partial<DriveOAuthStatePayload>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (typeof parsed.nonce !== 'string' || parsed.nonce.trim() === '') return null;
+    return {
+      nonce: parsed.nonce,
+      returnTo: sanitizeReturnTo(parsed.returnTo),
+    };
+  } catch {
+    return null;
+  }
+};
 
 export const driveConfigError = () => {
   const clientId = getClientId();
@@ -123,6 +164,7 @@ export const buildAuthUrl = async (state?: string) => {
   const redirectUri = getRedirectUri();
   if (!clientId || !redirectUri) throw new Error('Faltan VITE_GOOGLE_DRIVE_CLIENT_ID o VITE_GOOGLE_DRIVE_REDIRECT_URI');
   const { challenge } = await generatePkce();
+  const authState = buildDriveState(state);
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -132,11 +174,9 @@ export const buildAuthUrl = async (state?: string) => {
     scope: 'https://www.googleapis.com/auth/drive.file',
     code_challenge: challenge,
     code_challenge_method: 'S256',
+    state: authState,
   });
-  if (state) {
-    params.set('state', state);
-    storeState(state);
-  }
+  storeState(authState);
   return `${GOOGLE_AUTH_ENDPOINT}?${params.toString()}`;
 };
 

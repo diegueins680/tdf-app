@@ -8,7 +8,7 @@ export type UserSummary = components['schemas']['UserRoleSummary'];
 type RoleInput = Role | (string & Record<never, never>);
 export type UserRoleUpdate = { roles: RoleInput[] };
 
-const API_BASE = env.read('VITE_API_BASE') ?? 'http://localhost:8080';
+const API_BASE = env.read('VITE_API_BASE') ?? '';
 const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
 
 const isJsonContentType = (contentType: string): boolean => /[/+]json(?:;|$)/i.test(contentType);
