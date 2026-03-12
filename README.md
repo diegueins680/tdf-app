@@ -224,6 +224,7 @@ npm run loop:improve -- --config scripts/continuous-improvement-loop.example.jso
 Notes:
 - Start from a clean worktree unless you intentionally pass `--allow-dirty`.
 - `loop:improve` is agent-agnostic: wire `implementationCommand`, `uiFixCommand`, `formalFixCommand`, and `ciRepairCommand` to your preferred coding worker.
+- `commitMessageTemplate` defaults to `{commit_message}` and can use `{commit_type}`, `{commit_summary}`, `{primary_path}`, and `{files_changed}` if you want a custom format.
 - GitHub polling uses `gh api`, so run `gh auth status` first and ensure the repo remote points at GitHub.
 
 ### Build for Production

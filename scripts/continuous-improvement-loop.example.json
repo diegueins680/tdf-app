@@ -4,7 +4,7 @@
   "uiFixCommand": "./scripts/replace-with-your-implementer.sh {ui_report_file}",
   "formalFixCommand": "./scripts/replace-with-your-implementer.sh {formal_report_file}",
   "ciRepairCommand": "./scripts/replace-with-your-implementer.sh {ci_report_file}",
-  "commitMessageTemplate": "chore: continuous improvement iteration {iteration}",
+  "commitMessageTemplate": "{commit_message}",
   "pushRemote": "origin",
   "pushBranch": "main",
   "pollGitHub": true,

@@ -4,7 +4,7 @@
   "uiFixCommand": "./scripts/codex-loop-worker.sh ui-fix {ui_report_file}",
   "formalFixCommand": "./scripts/codex-loop-worker.sh formal-fix {formal_report_file}",
   "ciRepairCommand": "./scripts/codex-loop-worker.sh ci-repair {ci_report_file}",
-  "commitMessageTemplate": "chore: continuous improvement iteration {iteration}",
+  "commitMessageTemplate": "{commit_message}",
   "pushRemote": "origin",
   "pushBranch": "main",
   "pollGitHub": true,

@@ -8,7 +8,9 @@ import { promisify, parseArgs } from 'node:util';
 import { buildDefaultIdea } from './lib/discovery.mjs';
 import { collectUiFindings, summarizeUiFindings } from './lib/ui-static-audit.mjs';
 import {
+  buildCommitContext,
   expandTemplate,
+  parseIdeaMarkdown,
   parseGitHubRemote,
   summarizeCheckRuns,
   verifyImprovementLoopModel,
@@ -24,7 +26,7 @@ const DEFAULTS = {
   pushRemote: 'origin',
   stopOnNoChanges: true,
   iterationDelaySeconds: 10,
-  commitMessageTemplate: 'chore: continuous improvement iteration {iteration}',
+  commitMessageTemplate: '{commit_message}',
 };
 
 function sleep(milliseconds) {
@@ -261,15 +263,25 @@ async function generateIdea(repoRoot, context, config) {
       throw new Error('ideaCommand completed successfully but produced no idea text.');
     }
     await fs.writeFile(context.idea_file, `${markdown}\n`, 'utf8');
+    const metadata = parseIdeaMarkdown(markdown);
     return {
       source: 'custom',
       markdown,
+      ...metadata,
     };
   }
 
   const idea = await buildDefaultIdea(repoRoot);
   await fs.writeFile(context.idea_file, idea.markdown, 'utf8');
-  return idea;
+  const metadata = parseIdeaMarkdown(idea.markdown);
+  return {
+    ...metadata,
+    ...idea,
+    title: idea.title ?? metadata.title,
+    source: idea.source ?? metadata.source,
+    target: idea.target ?? metadata.target,
+    reason: idea.reason ?? metadata.reason,
+  };
 }
 
 async function generateUiReport(repoRoot, context, config) {
@@ -331,18 +343,13 @@ async function stageCommitCandidates(repoRoot, baselineUntracked) {
   }
 }
 
-async function commitAllChanges(repoRoot, commitMessage, baselineUntracked) {
+async function listStagedFiles(repoRoot, baselineUntracked) {
   await stageCommitCandidates(repoRoot, baselineUntracked);
   const { stdout } = await execText('git', ['diff', '--cached', '--name-only'], repoRoot);
-  const stagedFiles = splitLines(stdout);
+  return splitLines(stdout);
+}
 
-  if (stagedFiles.length === 0) {
-    return {
-      changed: false,
-      stagedFiles: [],
-    };
-  }
-
+async function commitStagedChanges(repoRoot, commitMessage, stagedFiles) {
   await execText('git', ['commit', '-m', commitMessage], repoRoot);
   return {
     changed: true,
@@ -461,9 +468,8 @@ async function finalizeIteration(repoRoot, config, context) {
   }
 
   while (true) {
-    const commitMessage = expandTemplate(config.commitMessageTemplate, context);
-    const commitResult = await commitAllChanges(repoRoot, commitMessage, config.initialUntracked);
-    if (!commitResult.changed) {
+    const stagedFiles = await listStagedFiles(repoRoot, config.initialUntracked);
+    if (stagedFiles.length === 0) {
       return {
         ok: true,
         skipped: true,
@@ -471,7 +477,11 @@ async function finalizeIteration(repoRoot, config, context) {
       };
     }
 
+    const commitContext = buildCommitContext(context, stagedFiles);
+    const commitMessage = expandTemplate(config.commitMessageTemplate, commitContext);
+    const commitResult = await commitStagedChanges(repoRoot, commitMessage, stagedFiles);
     context.head_sha = commitResult.sha;
+    context.last_commit_message = commitMessage;
     console.log(`Committed ${commitResult.sha} with ${commitResult.stagedFiles.length} file(s).`);
 
     if (!config.pushBranch) {
@@ -526,7 +536,11 @@ async function runIteration(repoRoot, config, iteration) {
   const context = buildContext(repoRoot, contextDir, iteration);
 
   logStep(`Iteration ${iteration}: idea discovery`);
-  await generateIdea(repoRoot, context, config);
+  const idea = await generateIdea(repoRoot, context, config);
+  context.idea_source = idea.source ?? '';
+  context.idea_title = idea.title ?? '';
+  context.idea_target = idea.target ?? '';
+  context.idea_reason = idea.reason ?? '';
 
   if (!config.implementationCommand) {
     throw new Error('implementationCommand is required to run the loop unattended.');
@@ -592,6 +606,10 @@ Options:
 Placeholders available inside command hooks:
   {repo_root} {context_dir} {iteration}
   {idea_file} {ui_report_file} {formal_report_file} {ci_report_file}
+
+Commit message templates can also use:
+  {commit_message} {commit_type} {commit_summary}
+  {primary_path} {files_changed} {staged_files}
 
 Environment variables are also exported with the CONTINUOUS_LOOP_* prefix.`);
 }
