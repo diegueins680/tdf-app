@@ -2491,6 +2491,7 @@ export default function RadioWidget() {
                                     <Tooltip title="Copiar">
                                       <IconButton
                                         size="small"
+                                        aria-label="Copiar Ingest URL"
                                         onClick={() => void navigator.clipboard.writeText(broadcastInfo.rtiIngestUrl)}
                                       >
                                         <ContentCopyIcon fontSize="small" />
@@ -2510,6 +2511,7 @@ export default function RadioWidget() {
                                     <Tooltip title="Copiar">
                                       <IconButton
                                         size="small"
+                                        aria-label="Copiar Stream Key"
                                         onClick={() => void navigator.clipboard.writeText(broadcastInfo.rtiStreamKey)}
                                       >
                                         <ContentCopyIcon fontSize="small" />
@@ -2529,6 +2531,7 @@ export default function RadioWidget() {
                                     <Tooltip title="Copiar">
                                       <IconButton
                                         size="small"
+                                        aria-label="Copiar URL WHIP"
                                         onClick={() => void navigator.clipboard.writeText(broadcastInfo.rtiWhipUrl)}
                                       >
                                         <ContentCopyIcon fontSize="small" />
@@ -2548,6 +2551,7 @@ export default function RadioWidget() {
                                     <Tooltip title="Copiar">
                                       <IconButton
                                         size="small"
+                                        aria-label="Copiar URL publica"
                                         onClick={() => void navigator.clipboard.writeText(broadcastInfo.rtiStreamUrl)}
                                       >
                                         <ContentCopyIcon fontSize="small" />
