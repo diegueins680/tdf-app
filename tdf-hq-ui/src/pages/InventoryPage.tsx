@@ -208,13 +208,25 @@ export default function InventoryPage() {
                   <TableCell>{asset.condition ?? '—'}</TableCell>
                   <TableCell>{asset.location ?? '—'}</TableCell>
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => void openQr(asset)} title="QR">
+                    <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>
                       <QrCodeIcon fontSize="small" />
                     </IconButton>
-                    <IconButton size="small" onClick={() => openCheckout(asset)} title="Check-out" disabled={asset.status.toLowerCase() === 'booked'}>
+                    <IconButton
+                      size="small"
+                      onClick={() => openCheckout(asset)}
+                      title="Check-out"
+                      aria-label={`Abrir check-out de ${asset.name}`}
+                      disabled={asset.status.toLowerCase() === 'booked'}
+                    >
                       <ExitToAppIcon fontSize="small" />
                     </IconButton>
-                    <IconButton size="small" onClick={() => openCheckin(asset)} title="Check-in" disabled={asset.status.toLowerCase() !== 'booked'}>
+                    <IconButton
+                      size="small"
+                      onClick={() => openCheckin(asset)}
+                      title="Check-in"
+                      aria-label={`Abrir check-in de ${asset.name}`}
+                      disabled={asset.status.toLowerCase() !== 'booked'}
+                    >
                       <HowToRegIcon fontSize="small" />
                     </IconButton>
                     <Button size="small" onClick={() => openHistory(asset)}>
