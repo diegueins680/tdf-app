@@ -2086,6 +2086,8 @@ export default function RadioWidget() {
                 onClick={() => setAutoSkipOnError((v) => !v)}
                 color={autoSkipOnError ? 'success' : 'inherit'}
                 data-no-drag
+                aria-label={autoSkipOnError ? 'Desactivar auto-skip al fallar' : 'Saltar al siguiente si falla'}
+                aria-pressed={autoSkipOnError}
                 sx={controlFadeSx}
               >
                 <BoltIcon />
