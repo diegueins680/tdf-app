@@ -48,7 +48,11 @@ export default function AdminUsersPage() {
             label="Incluir inactivos"
           />
           <Tooltip title="Refrescar">
-            <IconButton onClick={handleRefresh} disabled={usersQuery.isFetching}>
+            <IconButton
+              aria-label="Refrescar lista de usuarios"
+              onClick={handleRefresh}
+              disabled={usersQuery.isFetching}
+            >
               <RefreshIcon />
             </IconButton>
           </Tooltip>
