@@ -104,6 +104,7 @@ describe('buildAccessibleModuleSet', () => {
     expect(hasOperationsAccess(['Fan', 'Customer'], ['Packages'])).toBe(false);
     expect(hasOperationsAccess(['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
     expect(hasOperationsAccess(['Maintenance'], ['Packages'])).toBe(true);
+    expect(hasOperationsAccess([], ['ops'])).toBe(true);
   });
 
   it('matches the backend social inbox and AI-tooling predicates', () => {
@@ -171,6 +172,8 @@ describe('canAccessPath', () => {
   it('matches route-specific backend access rules for operations and label tracks', () => {
     expect(canAccessPath('/operacion/inventario', ['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
     expect(canAccessPath('/label/assets', ['Maintenance'], ['Packages'])).toBe(true);
+    expect(canAccessPath('/label/assets', [], ['ops'])).toBe(true);
+    expect(canAccessPath('/herramientas/chatkit', [], ['ops'])).toBe(true);
     expect(canAccessPath('/label/tracks', ['Artist'], ['Scheduling', 'Packages'])).toBe(true);
     expect(canAccessPath('/label/tracks', ['Admin'], ['admin'])).toBe(true);
     expect(canAccessPath('/label/tracks', ['Studio Manager'], ['admin'])).toBe(false);
@@ -179,6 +182,12 @@ describe('canAccessPath', () => {
     expect(hasInternshipsAccess(['Studio Manager'], ['internships', 'admin'])).toBe(true);
     expect(canAccessPath('/practicas', ['Studio Manager'], ['internships', 'admin'])).toBe(true);
     expect(canAccessPath('/practicas', [], ['internships'])).toBe(false);
+  });
+
+  it('keeps the token page restricted to strict admins even for broader admin-module roles', () => {
+    expect(canAccessPath('/herramientas/token-admin', ['Admin'], ['admin'])).toBe(true);
+    expect(canAccessPath('/herramientas/token-admin', ['Studio Manager'], ['admin'])).toBe(false);
+    expect(canAccessPath('/herramientas/token-admin', ['Webmaster'], ['admin'])).toBe(false);
   });
 
   it('matches backend route predicates for key protected routes across realistic sessions', () => {
@@ -206,6 +215,10 @@ describe('canAccessPath', () => {
       {
         path: '/herramientas/tidal-agent',
         expected: (roles: readonly string[]) => hasBackendAiToolingAccess(roles),
+      },
+      {
+        path: '/herramientas/token-admin',
+        expected: (roles: readonly string[]) => hasBackendStrictAdminAccess(roles),
       },
       {
         path: '/mi-profesor',

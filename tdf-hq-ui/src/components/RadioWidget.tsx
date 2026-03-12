@@ -2016,7 +2016,13 @@ export default function RadioWidget() {
               </IconButton>
             </Tooltip>
             <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
-              <IconButton onClick={() => setMuted((m) => !m)} color="inherit" data-no-drag sx={controlFadeSx}>
+              <IconButton
+                onClick={() => setMuted((m) => !m)}
+                color="inherit"
+                data-no-drag
+                sx={controlFadeSx}
+                aria-label={muted ? 'Quitar silencio' : 'Silenciar'}
+              >
                 {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
               </IconButton>
             </Tooltip>

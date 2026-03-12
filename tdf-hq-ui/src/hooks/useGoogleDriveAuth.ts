@@ -23,6 +23,11 @@ interface DriveCallbackResult {
   returnTo?: string;
 }
 
+const callbackFlowByQuery = new Map<string, Promise<DriveCallbackResult>>();
+
+const buildCallbackKey = (code: string | null, error: string | null, rawState: string | null) =>
+  JSON.stringify([code, error, rawState]);
+
 export function useGoogleDriveAuth(options: DriveAuthOptions = {}) {
   const enabled = options.enabled ?? true;
   const [status, setStatus] = useState<DriveAuthStatus>(() => (enabled && getStoredToken() ? 'ready' : 'idle'));
@@ -96,37 +101,61 @@ export function useGoogleDriveCallback() {
     const code = search.get('code');
     const error = search.get('error');
     const rawState = search.get('state');
-    const storedState = consumeDriveState();
-    const parsedState =
-      storedState && rawState && rawState === storedState ? parseDriveState(storedState) : null;
-    const returnTo = parsedState?.returnTo;
+    const callbackKey =
+      code !== null || error !== null || rawState !== null
+        ? buildCallbackKey(code, error, rawState)
+        : null;
 
-    if (!storedState || !rawState || rawState !== storedState || !parsedState) {
-      setResult({ ok: false, message: 'Estado de OAuth inválido o expirado.' });
-      return;
+    if (callbackKey) {
+      const cached = callbackFlowByQuery.get(callbackKey);
+      if (cached) {
+        void cached.then(setResult);
+        return;
+      }
     }
 
-    if (error) {
-      setResult({ ok: false, message: error, returnTo });
-      return;
-    }
-    if (!code) {
-      setResult({ ok: false, message: 'No se recibió código de Google', returnTo });
-      return;
-    }
-    void (async () => {
+    const callbackFlow = async (): Promise<DriveCallbackResult> => {
+      const storedState = consumeDriveState();
+      const parsedState =
+        storedState && rawState && rawState === storedState ? parseDriveState(storedState) : null;
+      const returnTo = parsedState?.returnTo;
+
+      if (!storedState || !rawState || rawState !== storedState || !parsedState) {
+        return { ok: false, message: 'Estado de OAuth inválido o expirado.' };
+      }
+
+      if (error) {
+        return { ok: false, message: error, returnTo };
+      }
+      if (!code) {
+        return { ok: false, message: 'No se recibió código de Google', returnTo };
+      }
       try {
         const token = await exchangeCodeForToken(code);
         storeToken(token);
-        setResult({ ok: true, returnTo });
+        return { ok: true, returnTo };
       } catch (err) {
-        setResult({
+        return {
           ok: false,
           message: err instanceof Error ? err.message : 'No se pudo guardar el token',
           returnTo,
-        });
+        };
       }
-    })();
+    };
+
+    const flowPromise = callbackFlow();
+    if (callbackKey) {
+      const inflightPromise = flowPromise.finally(() => {
+        if (callbackFlowByQuery.get(callbackKey) === inflightPromise) {
+          callbackFlowByQuery.delete(callbackKey);
+        }
+      });
+      callbackFlowByQuery.set(callbackKey, inflightPromise);
+      void inflightPromise.then(setResult);
+      return;
+    }
+
+    void flowPromise.then(setResult);
   }, []);
 
   return result;

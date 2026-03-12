@@ -210,7 +210,7 @@ export function hasOperationsAccess(
 ): boolean {
   const normalizedRoles = normalizeAccessRoles(roles);
   const moduleSet = buildAccessibleModuleSet(roles, modules);
-  return moduleSet.has('admin') || hasAnyRole(normalizedRoles, OPERATIONS_ROLE_KEYS);
+  return moduleSet.has('admin') || moduleSet.has('ops') || hasAnyRole(normalizedRoles, OPERATIONS_ROLE_KEYS);
 }
 
 export function hasStrictAdminAccess(
@@ -359,6 +359,9 @@ export function canAccessPath(
   }
   if (path.startsWith('/social/inbox')) {
     return hasSocialInboxAccess(roles, modules);
+  }
+  if (path.startsWith('/herramientas/token-admin')) {
+    return hasStrictAdminAccess(roles, modules);
   }
   if (path.startsWith('/social')) {
     return true;

@@ -85,13 +85,35 @@ declare global {
 const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
 let googleScriptPromise: Promise<void> | null = null;
 
-const loadGoogleScript = () => {
-  if (googleScriptPromise) return googleScriptPromise;
-  googleScriptPromise = new Promise<void>((resolve, reject) => {
+const GOOGLE_SCRIPT_ERROR_MESSAGE = 'No se pudo cargar Google Sign-In.';
+
+const createGoogleScriptPromise = () =>
+  new Promise<void>((resolve, reject) => {
     if (typeof window === 'undefined') {
       resolve();
       return;
     }
+
+    const watchScript = (script: HTMLScriptElement) => {
+      const cleanup = () => {
+        script.removeEventListener('load', onLoad);
+        script.removeEventListener('error', onError);
+      };
+      const onLoad = () => {
+        script.dataset['loaded'] = 'true';
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        script.dataset['loaded'] = 'error';
+        cleanup();
+        script.remove();
+        reject(new Error(GOOGLE_SCRIPT_ERROR_MESSAGE));
+      };
+      script.addEventListener('load', onLoad, { once: true });
+      script.addEventListener('error', onError, { once: true });
+    };
+
     const existing = document.querySelector<HTMLScriptElement>(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
     if (existing) {
       if (existing.dataset['loaded'] === 'true' || Boolean(window.google?.accounts?.id)) {
@@ -99,22 +121,28 @@ const loadGoogleScript = () => {
         resolve();
         return;
       }
-      existing.addEventListener('load', () => resolve(), { once: true });
-      existing.addEventListener('error', () => reject(new Error('No se pudo cargar Google Sign-In.')), { once: true });
-      return;
+      if (existing.dataset['loaded'] !== 'error') {
+        watchScript(existing);
+        return;
+      }
+      existing.remove();
     }
     const script = document.createElement('script');
     script.src = GOOGLE_SCRIPT_SRC;
     script.async = true;
     script.defer = true;
     script.dataset['loaded'] = 'false';
-    script.onload = () => {
-      script.dataset['loaded'] = 'true';
-      resolve();
-    };
-    script.onerror = () => reject(new Error('No se pudo cargar Google Sign-In.'));
+    watchScript(script);
     document.head.appendChild(script);
   });
+
+const loadGoogleScript = () => {
+  if (!googleScriptPromise) {
+    googleScriptPromise = createGoogleScriptPromise().catch((error) => {
+      googleScriptPromise = null;
+      throw error;
+    });
+  }
   return googleScriptPromise;
 };
 
@@ -384,25 +412,17 @@ export default function LoginPage() {
         password: normalizedPassword,
       });
       const apiToken = response.token;
-      const roles = response.roles?.map((role) => role.toLowerCase()) ?? [];
+      const roles = Array.from(new Set((response.roles ?? []).map((role) => role.toLowerCase())));
       const modules = response.modules;
       const partyId = response.partyId;
-
-      const baseRoles =
-        roles.length > 0
-          ? roles
-          : normalizedIdentifier.toLowerCase().includes('admin')
-            ? ['admin']
-            : ['staff'];
-      const normalized = Array.from(new Set(baseRoles.map((r) => r.toLowerCase())));
-      const landingPath = pickLandingPath(normalized, modules);
+      const landingPath = pickLandingPath(roles, modules);
       const targetPath = redirectPath ?? landingPath;
 
       login(
         {
           username: normalizedIdentifier,
           displayName,
-          roles: normalized,
+          roles,
           apiToken,
           modules,
           partyId,
@@ -435,7 +455,7 @@ export default function LoginPage() {
         setGoogleStatus('Conectando con Google…');
         setGoogleError(null);
         const response = await googleLoginMutation.mutateAsync({ idToken: credential });
-        const normalizedRoles = response.roles?.map((role) => role.toLowerCase()) ?? [];
+        const normalizedRoles = Array.from(new Set((response.roles ?? []).map((role) => role.toLowerCase())));
         const landingPath = pickLandingPath(normalizedRoles, response.modules);
         const targetPath = redirectPath ?? landingPath;
         login(
@@ -447,7 +467,7 @@ export default function LoginPage() {
             modules: response.modules,
             partyId: response.partyId,
           },
-          { remember: true },
+          { remember: rememberDevice },
         );
         setSignupDialogOpen(false);
         setSignupFeedback(null);
@@ -464,7 +484,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [googleLoginMutation, login, navigate, redirectPath, signupDialogOpen],
+    [googleLoginMutation, login, navigate, redirectPath, rememberDevice, signupDialogOpen],
   );
 
   useEffect(() => {
@@ -525,6 +545,11 @@ export default function LoginPage() {
           renderGoogleButton(googleSignupButtonRef.current, 'signup_with');
         }
       } catch (error) {
+        const message = error instanceof Error ? error.message : GOOGLE_SCRIPT_ERROR_MESSAGE;
+        if (!cancelled) {
+          setGoogleError(message);
+          setGoogleStatus(null);
+        }
         console.warn('Google Sign-In initialization failed', error);
       }
     })();
@@ -660,7 +685,7 @@ export default function LoginPage() {
           modules: response.modules,
           partyId: response.partyId,
         },
-        { remember: true },
+        { remember: rememberDevice },
       );
       if (shouldFollowArtists) {
         void Promise.all(

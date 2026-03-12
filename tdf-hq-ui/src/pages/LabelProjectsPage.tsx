@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -42,10 +42,13 @@ function parsePayload(content?: CmsContentDTO): ProjectNote[] {
   }
 }
 
+const fingerprintNotes = (items: readonly ProjectNote[]) => JSON.stringify(items);
+
 export default function LabelProjectsPage() {
   const qc = useQueryClient();
   const [input, setInput] = useState('');
   const [notes, setNotes] = useState<ProjectNote[]>([]);
+  const hydratedNotesFingerprintRef = useRef<string | null>(null);
 
   const liveQuery = useQuery({
     queryKey: ['cms-public', slug, locale],
@@ -60,12 +63,23 @@ export default function LabelProjectsPage() {
 
   useEffect(() => {
     const fromCms = parsePayload(listQuery.data?.[0]);
-    if (fromCms.length) {
-      setNotes(fromCms);
-    } else {
-      const fromLive = parsePayload(liveQuery.data);
-      setNotes(fromLive);
-    }
+    const nextNotes = fromCms.length ? fromCms : parsePayload(liveQuery.data);
+    const nextFingerprint = fingerprintNotes(nextNotes);
+
+    setNotes((currentNotes) => {
+      const currentFingerprint = fingerprintNotes(currentNotes);
+      const lastHydratedFingerprint = hydratedNotesFingerprintRef.current;
+
+      if (currentFingerprint === nextFingerprint) {
+        hydratedNotesFingerprintRef.current = nextFingerprint;
+        return currentNotes;
+      }
+      if (lastHydratedFingerprint === null || currentFingerprint === lastHydratedFingerprint) {
+        hydratedNotesFingerprintRef.current = nextFingerprint;
+        return nextNotes;
+      }
+      return currentNotes;
+    });
   }, [listQuery.data, liveQuery.data]);
 
   const saveMutation = useMutation({
@@ -105,6 +119,7 @@ export default function LabelProjectsPage() {
 
   const handleReloadLive = () => {
     const live = parsePayload(liveQuery.data);
+    hydratedNotesFingerprintRef.current = fingerprintNotes(live);
     setNotes(live);
   };
 

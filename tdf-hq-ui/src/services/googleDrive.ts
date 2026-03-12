@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid';
 import { post } from '../api/client';
 
 const TOKEN_KEY = 'tdf-google-drive-token';
@@ -40,6 +39,7 @@ const getClientId = () =>
 const getRedirectUri = () =>
   (import.meta.env as Record<string, string | undefined>)['VITE_GOOGLE_DRIVE_REDIRECT_URI'];
 const getFolderId = () => (import.meta.env as Record<string, string | undefined>)['VITE_GOOGLE_DRIVE_FOLDER_ID'];
+const createNonce = () => crypto.randomUUID().replace(/-/g, '');
 
 const sanitizeReturnTo = (value?: string | null) => {
   if (!value) return undefined;
@@ -51,7 +51,7 @@ const sanitizeReturnTo = (value?: string | null) => {
 const buildDriveState = (returnTo?: string) =>
   encodeURIComponent(
     JSON.stringify({
-      nonce: nanoid(),
+      nonce: createNonce(),
       returnTo: sanitizeReturnTo(returnTo),
     } satisfies DriveOAuthStatePayload),
   );
@@ -255,7 +255,7 @@ export const uploadToDrive = async (
   onProgress?: (pct: number) => void,
 ): Promise<DriveFileInfo> => {
   const token = await ensureAccessToken();
-  const boundary = `-------tdf-${nanoid()}`;
+  const boundary = `-------tdf-${createNonce()}`;
   const metadata = {
     name: file.name,
     mimeType: file.type,

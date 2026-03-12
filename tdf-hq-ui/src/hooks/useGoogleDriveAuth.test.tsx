@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { act } from 'react';
+import { StrictMode, act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
 interface DriveCallbackResult {
@@ -41,13 +41,20 @@ function CallbackProbe() {
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-const renderProbe = async () => {
+const renderProbe = async (strictMode = false) => {
   const container = document.createElement('div');
   document.body.appendChild(container);
   let root: Root | null = createRoot(container);
+  const element = strictMode ? (
+    <StrictMode>
+      <CallbackProbe />
+    </StrictMode>
+  ) : (
+    <CallbackProbe />
+  );
 
   await act(async () => {
-    root?.render(<CallbackProbe />);
+    root?.render(element);
     await flushPromises();
   });
 
@@ -125,6 +132,28 @@ describe('useGoogleDriveCallback', () => {
     expect(readCallbackResult(container)).toEqual({
       ok: true,
       returnTo: '/exports/100%ready',
+    });
+
+    await cleanup();
+  });
+
+  it('deduplicates the callback exchange in StrictMode', async () => {
+    window.history.replaceState({}, '', '/oauth/google/callback?code=strict123&state=strict-state');
+
+    consumeDriveStateMock.mockReturnValueOnce('strict-state').mockReturnValue(null);
+    parseDriveStateMock.mockReturnValue({ nonce: 'strict-nonce', returnTo: '/drive/files' });
+    exchangeCodeForTokenMock.mockResolvedValue({ accessToken: 'token' });
+
+    const { container, cleanup } = await renderProbe(true);
+    await act(async () => {
+      await flushPromises();
+    });
+
+    expect(exchangeCodeForTokenMock).toHaveBeenCalledTimes(1);
+    expect(storeTokenMock).toHaveBeenCalledTimes(1);
+    expect(readCallbackResult(container)).toEqual({
+      ok: true,
+      returnTo: '/drive/files',
     });
 
     await cleanup();
