@@ -337,7 +337,11 @@ export default function LabelArtistsPage() {
           />
           <Tooltip title="Refrescar">
             <span>
-              <IconButton onClick={handleRefresh} disabled={artistsQuery.isFetching}>
+              <IconButton
+                onClick={handleRefresh}
+                disabled={artistsQuery.isFetching}
+                aria-label="Refrescar artistas"
+              >
                 <RefreshIcon />
               </IconButton>
             </span>
