@@ -2074,6 +2074,8 @@ export default function RadioWidget() {
                 onClick={() => setShowAdvanced((v) => !v)}
                 color={showAdvanced ? 'secondary' : 'inherit'}
                 data-no-drag
+                aria-label={showAdvanced ? 'Ocultar catálogo y transmisión' : 'Mostrar catálogo y transmisión'}
+                aria-pressed={showAdvanced}
                 sx={controlFadeSx}
               >
                 {showAdvanced ? <ExpandLessIcon /> : <ExpandMoreIcon />}
