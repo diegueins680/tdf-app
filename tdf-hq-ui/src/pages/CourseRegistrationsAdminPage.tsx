@@ -827,6 +827,7 @@ export default function CourseRegistrationsAdminPage() {
                         <IconButton
                           size="small"
                           color="warning"
+                          aria-label={`Marcar pendiente para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
                           disabled={isUpdating || reg.crStatus === 'pending_payment'}
                           onClick={() => handleQuickStatus(reg, 'pending_payment')}
                         >
@@ -839,6 +840,7 @@ export default function CourseRegistrationsAdminPage() {
                         <IconButton
                           size="small"
                           color="error"
+                          aria-label={`Cancelar inscripción para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
                           disabled={isUpdating || reg.crStatus === 'cancelled'}
                           onClick={() => handleQuickStatus(reg, 'cancelled')}
                         >
@@ -1039,10 +1041,19 @@ export default function CourseRegistrationsAdminPage() {
                                     </Typography>
                                   </Box>
                                   <Stack direction="row" spacing={0.5}>
-                                    <IconButton size="small" onClick={() => handleEditReceipt(receipt)}>
+                                    <IconButton
+                                      size="small"
+                                      aria-label={`Editar ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
+                                      onClick={() => handleEditReceipt(receipt)}
+                                    >
                                       <EditIcon fontSize="small" />
                                     </IconButton>
-                                    <IconButton size="small" color="error" onClick={() => handleDeleteReceipt(receipt)}>
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      aria-label={`Eliminar ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
+                                      onClick={() => handleDeleteReceipt(receipt)}
+                                    >
                                       <DeleteOutlineIcon fontSize="small" />
                                     </IconButton>
                                   </Stack>
@@ -1175,10 +1186,19 @@ export default function CourseRegistrationsAdminPage() {
                                     )}
                                   </Stack>
                                   <Stack direction="row" spacing={0.5}>
-                                    <IconButton size="small" onClick={() => handleEditFollowUp(entry)}>
+                                    <IconButton
+                                      size="small"
+                                      aria-label={`Editar seguimiento ${entry.crfSubject ?? `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`}`}
+                                      onClick={() => handleEditFollowUp(entry)}
+                                    >
                                       <EditIcon fontSize="small" />
                                     </IconButton>
-                                    <IconButton size="small" color="error" onClick={() => handleDeleteFollowUp(entry)}>
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      aria-label={`Eliminar seguimiento ${entry.crfSubject ?? `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`}`}
+                                      onClick={() => handleDeleteFollowUp(entry)}
+                                    >
                                       <DeleteOutlineIcon fontSize="small" />
                                     </IconButton>
                                   </Stack>
