@@ -814,6 +814,7 @@ export default function CourseRegistrationsAdminPage() {
                         <IconButton
                           size="small"
                           color="success"
+                          aria-label={`Subir comprobante y marcar pagado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
                           disabled={isUpdating || reg.crStatus === 'paid'}
                           onClick={() => handleOpenDossier(reg, 'markPaid')}
                         >
