@@ -2102,6 +2102,9 @@ export default function RadioWidget() {
               }}
               color="inherit"
               data-no-drag
+              aria-label={expanded ? 'Ocultar panel completo de radio' : 'Mostrar panel completo de radio'}
+              aria-expanded={expanded}
+              aria-controls="radio-widget-expanded-panel"
               sx={controlFadeSx}
             >
               {expanded ? <ExpandMoreIcon /> : <ExpandLessIcon />}
@@ -2157,7 +2160,7 @@ export default function RadioWidget() {
             </Stack>
           )}
         </CardContent>
-        <Collapse in={expanded}>
+        <Collapse in={expanded} id="radio-widget-expanded-panel">
           <Divider />
           <CardContent
             sx={{
