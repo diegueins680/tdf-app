@@ -70,11 +70,13 @@ EOF
 cat "$PROMPT_FILE" | codex -a never -s workspace-write exec -C "$REPO_ROOT" --color never -o "$OUTPUT_FILE" -
 cat "$OUTPUT_FILE"
 
-if ! grep -Eq '^RESULT: (done|blocked)$' "$OUTPUT_FILE"; then
+RESULT_MARKER="$(grep -Eo 'RESULT: (done|blocked)' "$OUTPUT_FILE" | tail -n1 || true)"
+
+if [ -z "$RESULT_MARKER" ]; then
   echo "Codex worker did not emit a valid RESULT marker." >&2
   exit 1
 fi
 
-if grep -Eq '^RESULT: blocked$' "$OUTPUT_FILE"; then
+if [ "$RESULT_MARKER" = "RESULT: blocked" ]; then
   exit 1
 fi
