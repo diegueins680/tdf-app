@@ -670,7 +670,7 @@ export default function CourseRegistrationsAdminPage() {
           <Chip label={`Pendientes: ${statusCounts.pending_payment}`} size="small" color="warning" variant="outlined" />
           <Chip label={`Canceladas: ${statusCounts.cancelled}`} size="small" color="error" variant="outlined" />
           <Tooltip title="Refrescar">
-            <IconButton onClick={handleRefresh} disabled={regsQuery.isFetching}>
+            <IconButton aria-label="Refrescar inscripciones" onClick={handleRefresh} disabled={regsQuery.isFetching}>
               <RefreshIcon />
             </IconButton>
           </Tooltip>
