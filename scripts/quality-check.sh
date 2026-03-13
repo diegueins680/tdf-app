@@ -24,9 +24,9 @@ run_npm run build --workspace=tdf-hq-ui --prefix "$ROOT"
 
 if [ -f "$ROOT/tdf-mobile/package.json" ]; then
   echo "▶ Linting, type-checking and testing tdf-mobile"
-  run_npm run lint --workspace=tdf-mobile --prefix "$ROOT"
-  run_npm run typecheck --workspace=tdf-mobile --prefix "$ROOT"
-  run_npm run test --workspace=tdf-mobile --prefix "$ROOT"
+  run_npm --prefix "$ROOT/tdf-mobile" run lint
+  run_npm --prefix "$ROOT/tdf-mobile" run typecheck
+  run_npm --prefix "$ROOT/tdf-mobile" run test
 elif [ "${REQUIRE_MOBILE_WORKSPACE:-0}" = "1" ]; then
   echo "✖ Missing tdf-mobile workspace. Run: git submodule update --init --recursive" >&2
   exit 1

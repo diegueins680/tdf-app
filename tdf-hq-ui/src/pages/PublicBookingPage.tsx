@@ -622,8 +622,8 @@ export default function PublicBookingPage() {
     const autoRooms = defaultRoomsForService(form.serviceType, roomOptions);
     const roomsToSend =
       autoRooms.length > 0 ? autoRooms : roomOptions.length > 0 ? roomOptions.slice(0, 1) : [];
-    const roomIdsToSend = roomsToSend.every((label) => roomIdByLabel.get(label.trim()))
-      ? roomsToSend.map((label) => roomIdByLabel.get(label.trim()) as string)
+    const roomIdsToSend = roomsToSend.every((label) => roomIdByLabel.has(label.trim()))
+      ? roomsToSend.map((label) => roomIdByLabel.get(label.trim())!)
       : null;
     if (roomsToSend.length > 0) {
       setForm((prev) => (sameRooms(prev.resourceLabels, roomsToSend) ? prev : { ...prev, resourceLabels: roomsToSend }));
@@ -1643,7 +1643,8 @@ export default function PublicBookingPage() {
                                       });
                                     }}
                                     renderOption={(props, option) => {
-                                      const { key: _muiKey, ...optionProps } = props;
+                                      const optionProps = { ...props };
+                                      delete optionProps.key;
                                       const label = typeof option === 'string' ? option : option.peName;
                                       const optionKey = typeof option === 'string' ? `engineer-free-${label}` : `engineer-${option.peId}`;
                                       return (

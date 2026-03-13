@@ -137,12 +137,10 @@ const createGoogleScriptPromise = () =>
   });
 
 const loadGoogleScript = () => {
-  if (!googleScriptPromise) {
-    googleScriptPromise = createGoogleScriptPromise().catch((error) => {
-      googleScriptPromise = null;
-      throw error;
-    });
-  }
+  googleScriptPromise ??= createGoogleScriptPromise().catch((error) => {
+    googleScriptPromise = null;
+    throw error;
+  });
   return googleScriptPromise;
 };
 

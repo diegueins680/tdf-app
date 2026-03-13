@@ -30,7 +30,7 @@ const logoutMock = jest.fn();
 const listPublicServicesMock = jest.fn<() => Promise<PublicServiceCatalogItem[]>>(
   () => Promise.resolve([]),
 );
-const listPublicEngineersMock = jest.fn<() => Promise<Array<{ peId: number; peName: string }>>>(() => Promise.resolve([]));
+const listPublicEngineersMock = jest.fn<() => Promise<{ peId: number; peName: string }[]>>(() => Promise.resolve([]));
 const defaultPublicRooms: PublicRoomItem[] = [
   { roomId: 'room-live', rName: 'Live Room', rBookable: true },
   { roomId: 'room-control', rName: 'Control Room', rBookable: true },
@@ -383,7 +383,7 @@ describe('PublicBookingPage', () => {
   });
 
   it('does not auto-bind an ambiguous engineer id when duplicate names exist', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     listPublicEngineersMock.mockResolvedValueOnce([
       { peId: 7, peName: 'Ana' },
       { peId: 9, peName: 'Ana' },
