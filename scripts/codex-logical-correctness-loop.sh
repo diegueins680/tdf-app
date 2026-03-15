@@ -12,6 +12,7 @@ mkdir -p "${LOG_DIR}"
 CODEX_MODEL="${CODEX_LOOP_MODEL:-gpt-5.4}"
 POLL_SECONDS="${CODEX_LOOP_POLL_SECONDS:-45}"
 CI_TIMEOUT_MINUTES="${CODEX_LOOP_CI_TIMEOUT_MINUTES:-60}"
+NO_RUNS_GRACE_SECONDS="${CODEX_LOOP_NO_RUNS_GRACE_SECONDS:-180}"
 SLEEP_BETWEEN_CYCLES="${CODEX_LOOP_CYCLE_SLEEP_SECONDS:-20}"
 ALLOW_DIRTY="${CODEX_LOOP_ALLOW_DIRTY:-0}"
 MAX_CYCLES="${CODEX_LOOP_MAX_CYCLES:-0}"
@@ -185,8 +186,11 @@ make_prompt_file() {
 
 wait_for_ci_runs() {
   local sha="$1"
+  local output_file="$2"
   local deadline=$(( $(date +%s) + CI_TIMEOUT_MINUTES * 60 ))
+  local no_runs_deadline=$(( $(date +%s) + NO_RUNS_GRACE_SECONDS ))
   local branch
+  : > "$output_file"
   branch="$(current_branch)"
   while true; do
     local runs_file
@@ -205,19 +209,27 @@ wait_for_ci_runs() {
     success="$(jq '[.[] | select((.status // "") == "completed" and (.conclusion // "") == "success")] | length' "$runs_file")"
 
     if [[ "$failed" -gt 0 ]]; then
-      cat "$runs_file"
+      cp "$runs_file" "$output_file"
       rm -f "$runs_file"
       return 10
     fi
 
     if [[ "$total" -gt 0 && "$pending" -eq 0 ]]; then
       log "All detected GitHub Actions are green for ${sha} (${success}/${total} successful)."
+      cp "$runs_file" "$output_file"
+      rm -f "$runs_file"
+      return 0
+    fi
+
+    if [[ "$total" -eq 0 && $(date +%s) -ge "$no_runs_deadline" ]]; then
+      log "No GitHub Actions detected for ${sha} after ${NO_RUNS_GRACE_SECONDS}s. Assuming no workflows matched."
+      cp "$runs_file" "$output_file"
       rm -f "$runs_file"
       return 0
     fi
 
     if [[ $(date +%s) -ge "$deadline" ]]; then
-      cat "$runs_file"
+      cp "$runs_file" "$output_file"
       rm -f "$runs_file"
       return 11
     fi
@@ -451,7 +463,7 @@ main() {
     while true; do
       local runs_json
       runs_json="${LOG_DIR}/cycle-${cycle}-runs.json"
-      if wait_for_ci_runs "$sha" > "$runs_json"; then
+      if wait_for_ci_runs "$sha" "$runs_json"; then
         break
       fi
       local rc=$?
