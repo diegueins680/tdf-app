@@ -210,6 +210,30 @@ function splitLines(stdout) {
     .filter(Boolean);
 }
 
+function extractPathsFromPorcelainLine(line) {
+  const pathSpec = line.slice(3).trim();
+  if (!pathSpec) return [];
+  if (pathSpec.includes(' -> ')) {
+    const [fromPath, toPath] = pathSpec.split(' -> ');
+    return [fromPath, toPath].filter(Boolean);
+  }
+  return [pathSpec];
+}
+
+function extractPathsFromPorcelain(lines) {
+  return [...new Set(lines.flatMap(extractPathsFromPorcelainLine))];
+}
+
+function filterTrackedChanges(lines, baselineTrackedPaths) {
+  if (!baselineTrackedPaths || baselineTrackedPaths.size === 0) {
+    return lines;
+  }
+
+  return lines.filter((line) =>
+    extractPathsFromPorcelainLine(line).some((filePath) => !baselineTrackedPaths.has(filePath)),
+  );
+}
+
 async function listTrackedChanges(repoRoot) {
   const { stdout } = await execText('git', ['status', '--porcelain', '--untracked-files=no'], repoRoot);
   return splitLines(stdout);
@@ -220,8 +244,8 @@ async function listUntrackedFiles(repoRoot) {
   return splitLines(stdout);
 }
 
-async function hasCommitCandidateChanges(repoRoot, baselineUntracked) {
-  const trackedChanges = await listTrackedChanges(repoRoot);
+async function hasCommitCandidateChanges(repoRoot, baselineUntracked, baselineTrackedPaths) {
+  const trackedChanges = filterTrackedChanges(await listTrackedChanges(repoRoot), baselineTrackedPaths);
   if (trackedChanges.length > 0) {
     return true;
   }
@@ -233,7 +257,7 @@ async function hasCommitCandidateChanges(repoRoot, baselineUntracked) {
 
 async function ensureStartState(repoRoot, allowDirty) {
   const trackedChanges = await listTrackedChanges(repoRoot);
-  if (trackedChanges.length > 0) {
+  if (!allowDirty && trackedChanges.length > 0) {
     throw new Error(
       'Continuous improvement loop requires a clean tracked worktree. Commit or stash tracked changes first.',
     );
@@ -246,7 +270,10 @@ async function ensureStartState(repoRoot, allowDirty) {
     );
   }
 
-  return initialUntracked;
+  return {
+    initialTrackedPaths: new Set(extractPathsFromPorcelain(trackedChanges)),
+    initialUntracked,
+  };
 }
 
 async function writeJson(filePath, value) {
@@ -334,8 +361,13 @@ async function generateFormalReport(repoRoot, context, config) {
   return report;
 }
 
-async function stageCommitCandidates(repoRoot, baselineUntracked) {
-  await execText('git', ['add', '-u'], repoRoot);
+async function stageCommitCandidates(repoRoot, baselineUntracked, baselineTrackedPaths) {
+  const trackedPaths = extractPathsFromPorcelain(
+    filterTrackedChanges(await listTrackedChanges(repoRoot), baselineTrackedPaths),
+  );
+  if (trackedPaths.length > 0) {
+    await execText('git', ['add', '-u', '--', ...trackedPaths], repoRoot);
+  }
   const untrackedFiles = await listUntrackedFiles(repoRoot);
   const newUntrackedFiles = untrackedFiles.filter((filePath) => !baselineUntracked.has(filePath));
   if (newUntrackedFiles.length > 0) {
@@ -343,8 +375,8 @@ async function stageCommitCandidates(repoRoot, baselineUntracked) {
   }
 }
 
-async function listStagedFiles(repoRoot, baselineUntracked) {
-  await stageCommitCandidates(repoRoot, baselineUntracked);
+async function listStagedFiles(repoRoot, baselineUntracked, baselineTrackedPaths) {
+  await stageCommitCandidates(repoRoot, baselineUntracked, baselineTrackedPaths);
   const { stdout } = await execText('git', ['diff', '--cached', '--name-only'], repoRoot);
   return splitLines(stdout);
 }
@@ -456,7 +488,10 @@ async function waitForGreenCi(repoRoot, config, sha) {
 
 async function finalizeIteration(repoRoot, config, context) {
   if (config.dryRun) {
-    const trackedChanges = await listTrackedChanges(repoRoot);
+    const trackedChanges = filterTrackedChanges(
+      await listTrackedChanges(repoRoot),
+      config.initialTrackedPaths,
+    );
     const newUntrackedFiles = (await listUntrackedFiles(repoRoot)).filter(
       (filePath) => !config.initialUntracked.has(filePath),
     );
@@ -468,7 +503,11 @@ async function finalizeIteration(repoRoot, config, context) {
   }
 
   while (true) {
-    const stagedFiles = await listStagedFiles(repoRoot, config.initialUntracked);
+    const stagedFiles = await listStagedFiles(
+      repoRoot,
+      config.initialUntracked,
+      config.initialTrackedPaths,
+    );
     if (stagedFiles.length === 0) {
       return {
         ok: true,
@@ -525,7 +564,7 @@ async function finalizeIteration(repoRoot, config, context) {
       stepName: 'CI repair',
     });
 
-    if (!(await hasCommitCandidateChanges(repoRoot, config.initialUntracked))) {
+    if (!(await hasCommitCandidateChanges(repoRoot, config.initialUntracked, config.initialTrackedPaths))) {
       throw new Error('ciRepairCommand completed without creating changes.');
     }
   }
@@ -651,7 +690,9 @@ async function main() {
     throw new Error('maxIterations must be a non-negative number.');
   }
 
-  config.initialUntracked = await ensureStartState(repoRoot, config.allowDirty);
+  const startState = await ensureStartState(repoRoot, config.allowDirty);
+  config.initialTrackedPaths = startState.initialTrackedPaths;
+  config.initialUntracked = startState.initialUntracked;
   config.uiBaselineFindingKeys = new Set();
   try {
     const baselineFindings = await collectUiFindings(path.join(repoRoot, 'tdf-hq-ui', 'src'));

@@ -56,8 +56,10 @@ import { useSession } from '../session/SessionContext';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 
-const API_BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
-  ? import.meta.env.VITE_API_BASE
+const IMPORT_META_ENV = (import.meta.env ?? {}) as Record<string, string | undefined>;
+
+const API_BASE = (IMPORT_META_ENV['VITE_API_BASE'] && IMPORT_META_ENV['VITE_API_BASE'].trim() !== ''
+  ? IMPORT_META_ENV['VITE_API_BASE']
   : 'https://tdf-hq.fly.dev');
 const normalizeGoogleDriveUrl = (url: string): string | null => {
   const trimmed = url.trim();
@@ -149,8 +151,103 @@ interface SavedBuyer {
   pref?: 'email' | 'phone';
 }
 
+interface MarketplaceInitialViewState {
+  search: string;
+  category: string;
+  sort: 'relevance' | 'price-asc' | 'price-desc' | 'title-asc';
+  purpose: 'all' | 'rent' | 'sale';
+  condition: string;
+  listingId: string | null;
+}
+
+const DEFAULT_MARKETPLACE_VIEW_STATE: MarketplaceInitialViewState = {
+  search: '',
+  category: 'all',
+  sort: 'relevance',
+  purpose: 'all',
+  condition: 'all',
+  listingId: null,
+};
+
+const parseSavedFilters = (raw: string | null): SavedFilters | null => {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as SavedFilters;
+  } catch {
+    return null;
+  }
+};
+
+const parseSavedBuyer = (raw: string | null): SavedBuyer | null => {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as SavedBuyer;
+  } catch {
+    return null;
+  }
+};
+
+const resolveMarketplaceInitialViewState = (
+  searchString: string,
+  savedFilters: SavedFilters | null,
+): MarketplaceInitialViewState => {
+  const params = new URLSearchParams(searchString);
+  const next: MarketplaceInitialViewState = {
+    ...DEFAULT_MARKETPLACE_VIEW_STATE,
+    search: savedFilters?.search ? String(savedFilters.search) : '',
+    category: savedFilters?.category ? String(savedFilters.category) : 'all',
+    sort:
+      savedFilters?.sort === 'relevance' ||
+      savedFilters?.sort === 'price-asc' ||
+      savedFilters?.sort === 'price-desc' ||
+      savedFilters?.sort === 'title-asc'
+        ? savedFilters.sort
+        : 'relevance',
+    purpose:
+      savedFilters?.purpose === 'all' || savedFilters?.purpose === 'rent' || savedFilters?.purpose === 'sale'
+        ? savedFilters.purpose
+        : 'all',
+    condition: savedFilters?.condition ? String(savedFilters.condition) : 'all',
+    listingId: params.get('listing'),
+  };
+
+  if (params.has('q')) {
+    next.search = params.get('q') ?? '';
+  }
+  if (params.has('cat')) {
+    next.category = params.get('cat') || 'all';
+  }
+  if (params.has('sort')) {
+    const sortParam = params.get('sort');
+    if (sortParam === 'relevance' || sortParam === 'price-asc' || sortParam === 'price-desc' || sortParam === 'title-asc') {
+      next.sort = sortParam;
+    }
+  }
+  if (params.has('purpose')) {
+    const purposeParam = params.get('purpose');
+    if (purposeParam === 'all' || purposeParam === 'rent' || purposeParam === 'sale') {
+      next.purpose = purposeParam;
+    }
+  }
+  if (params.has('cond')) {
+    next.condition = params.get('cond') || 'all';
+  }
+
+  return next;
+};
+
+const normalizeSavedBuyer = (parsed: SavedBuyer | null): SavedBuyer => ({
+  name: typeof parsed?.name === 'string' ? parsed.name : '',
+  email: typeof parsed?.email === 'string' ? parsed.email : '',
+  phone: typeof parsed?.phone === 'string' ? parsed.phone : '',
+  pref: parsed?.pref === 'phone' ? 'phone' : 'email',
+});
+
+const hasBuyerInfo = (buyer: SavedBuyer) =>
+  Boolean(buyer.name?.trim() || buyer.email?.trim() || buyer.phone?.trim());
+
 const parseEnvNumber = (key: string): number | null => {
-  const raw = import.meta.env[key];
+  const raw = IMPORT_META_ENV[key];
   if (!raw) return null;
   const val = Number(raw);
   return Number.isFinite(val) ? val : null;
@@ -194,12 +291,24 @@ export default function MarketplacePage() {
   );
   const canManagePhotos = modules.has('ops') || modules.has('admin');
   const paypalClientId = useMemo<string>(() => {
-    const baked = String(import.meta.env['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
+    const baked = String(IMPORT_META_ENV['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
     const runtimeVal: string = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
     const cleanedRuntime = runtimeVal.trim();
     return baked !== '' ? baked : cleanedRuntime;
   }, []);
-  const [search, setSearch] = useState('');
+  const [initialViewState] = useState<MarketplaceInitialViewState>(() => {
+    if (typeof window === 'undefined') return DEFAULT_MARKETPLACE_VIEW_STATE;
+    return resolveMarketplaceInitialViewState(
+      window.location.search,
+      parseSavedFilters(localStorage.getItem(FILTERS_KEY)),
+    );
+  });
+  const [initialBuyerSnapshot] = useState<SavedBuyer>(() => {
+    if (typeof window === 'undefined') return normalizeSavedBuyer(null);
+    return normalizeSavedBuyer(parseSavedBuyer(localStorage.getItem(BUYER_INFO_KEY)));
+  });
+  const [initialListingId] = useState<string | null>(initialViewState.listingId);
+  const [search, setSearch] = useState(initialViewState.search);
   const [toast, setToast] = useState<string | null>(null);
   const [copyToast, setCopyToast] = useState<string | null>(null);
   const [photoDialogListing, setPhotoDialogListing] = useState<MarketplaceItemDTO | null>(null);
@@ -209,15 +318,17 @@ export default function MarketplacePage() {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem(CART_STORAGE_KEY);
   });
-  const [category, setCategory] = useState<string>('all');
-  const [purpose, setPurpose] = useState<'all' | 'rent' | 'sale'>('all');
-  const [condition, setCondition] = useState<string>('all');
-  const [sort, setSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'title-asc'>('relevance');
-  const [buyerName, setBuyerName] = useState('');
-  const [buyerEmail, setBuyerEmail] = useState('');
-  const [buyerPhone, setBuyerPhone] = useState('');
-  const [contactPref, setContactPref] = useState<'email' | 'phone'>('email');
-  const [savedBuyerSnapshot, setSavedBuyerSnapshot] = useState<{ name?: string; email?: string; phone?: string; pref?: 'email' | 'phone' } | null>(null);
+  const [category, setCategory] = useState<string>(initialViewState.category);
+  const [purpose, setPurpose] = useState<'all' | 'rent' | 'sale'>(initialViewState.purpose);
+  const [condition, setCondition] = useState<string>(initialViewState.condition);
+  const [sort, setSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'title-asc'>(initialViewState.sort);
+  const [buyerName, setBuyerName] = useState(initialBuyerSnapshot.name ?? '');
+  const [buyerEmail, setBuyerEmail] = useState(initialBuyerSnapshot.email ?? '');
+  const [buyerPhone, setBuyerPhone] = useState(initialBuyerSnapshot.phone ?? '');
+  const [contactPref, setContactPref] = useState<'email' | 'phone'>(initialBuyerSnapshot.pref ?? 'email');
+  const [savedBuyerSnapshot, setSavedBuyerSnapshot] = useState<SavedBuyer | null>(
+    hasBuyerInfo(initialBuyerSnapshot) ? initialBuyerSnapshot : null,
+  );
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
   const [paypalReady, setPaypalReady] = useState(false);
   const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
@@ -296,79 +407,18 @@ export default function MarketplacePage() {
   });
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (cartId) {
       localStorage.setItem(CART_STORAGE_KEY, cartId);
+      return;
     }
+    localStorage.removeItem(CART_STORAGE_KEY);
   }, [cartId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     localStorage.setItem(PAYMENT_PREF_KEY, paymentMethod);
   }, [paymentMethod]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const urlSearch = params.get('q');
-      const urlCategory = params.get('cat');
-      const urlSort = params.get('sort');
-      const urlPurpose = params.get('purpose');
-      const urlCondition = params.get('cond');
-      if (urlSearch) setSearch(urlSearch);
-      if (urlCategory) setCategory(urlCategory);
-      if (urlSort === 'relevance' || urlSort === 'price-asc' || urlSort === 'price-desc' || urlSort === 'title-asc') {
-        setSort(urlSort);
-      }
-      if (urlPurpose === 'rent' || urlPurpose === 'sale' || urlPurpose === 'all') {
-        setPurpose(urlPurpose);
-      }
-      if (urlCondition) setCondition(urlCondition);
-    } catch {
-      // ignore url parse errors
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const raw = localStorage.getItem(FILTERS_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as SavedFilters;
-      if (parsed?.search) setSearch(String(parsed.search));
-      if (parsed?.category) setCategory(String(parsed.category));
-      if (parsed?.sort) setSort(parsed.sort);
-      if (parsed?.purpose) setPurpose(parsed.purpose);
-      if (parsed?.condition) setCondition(parsed.condition);
-    } catch {
-      // ignore malformed filters
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const raw = localStorage.getItem(BUYER_INFO_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as SavedBuyer;
-      const nameVal = typeof parsed?.name === 'string' ? parsed.name : '';
-      const emailVal = typeof parsed?.email === 'string' ? parsed.email : '';
-      const phoneVal = typeof parsed?.phone === 'string' ? parsed.phone : '';
-      const prefVal = parsed?.pref === 'phone' ? 'phone' : 'email';
-      setBuyerName(nameVal);
-      setBuyerEmail(emailVal);
-      setBuyerPhone(phoneVal);
-      setContactPref(prefVal);
-      setSavedBuyerSnapshot({
-        name: nameVal,
-        email: emailVal,
-        phone: phoneVal,
-        pref: prefVal,
-      });
-    } catch {
-      // ignore malformed payloads
-    }
-  }, []);
 
   useEffect(() => {
     if (!paypalClientId || typeof window === 'undefined') return;
@@ -412,15 +462,24 @@ export default function MarketplacePage() {
       (acc: number, it: MarketplaceCartItemDTO) => acc + it.mciQuantity,
       0,
     );
+    if (typeof window === 'undefined') return;
+    if (count <= 0) {
+      localStorage.removeItem(CART_META_KEY);
+      setSavedCartMeta(null);
+      fireCartMetaEvent();
+      return;
+    }
+
+    const updatedAt = Date.now();
     const preview = cartQuery.data.mcItems.slice(0, 3).map((it) => ({
       title: it.mciTitle,
       subtotal: it.mciSubtotalDisplay,
     }));
     localStorage.setItem(
       CART_META_KEY,
-      JSON.stringify({ cartId: cartQuery.data.mcCartId, count, preview, updatedAt: Date.now() }),
+      JSON.stringify({ cartId: cartQuery.data.mcCartId, count, preview, updatedAt }),
     );
-    setSavedCartMeta({ cartId: cartQuery.data.mcCartId, count, updatedAt: Date.now() });
+    setSavedCartMeta({ cartId: cartQuery.data.mcCartId, count, updatedAt });
     fireCartMetaEvent();
   }, [cartQuery.data]);
 
@@ -441,14 +500,23 @@ export default function MarketplacePage() {
     onSuccess: (data) => {
       qc.setQueryData(['marketplace-cart', data.mcCartId], data);
       const count = data.mcItems.reduce((acc, it) => acc + it.mciQuantity, 0);
-      const preview = data.mcItems.slice(0, 3).map((it) => ({
-        title: it.mciTitle,
-        subtotal: it.mciSubtotalDisplay,
-      }));
-      localStorage.setItem(
-        CART_META_KEY,
-        JSON.stringify({ cartId: data.mcCartId, count, preview, updatedAt: Date.now() }),
-      );
+      if (typeof window !== 'undefined') {
+        if (count <= 0) {
+          localStorage.removeItem(CART_META_KEY);
+          setSavedCartMeta(null);
+        } else {
+          const updatedAt = Date.now();
+          const preview = data.mcItems.slice(0, 3).map((it) => ({
+            title: it.mciTitle,
+            subtotal: it.mciSubtotalDisplay,
+          }));
+          localStorage.setItem(
+            CART_META_KEY,
+            JSON.stringify({ cartId: data.mcCartId, count, preview, updatedAt }),
+          );
+          setSavedCartMeta({ cartId: data.mcCartId, count, updatedAt });
+        }
+      }
       setToast('Carrito actualizado');
       fireCartMetaEvent();
     },
@@ -467,8 +535,14 @@ export default function MarketplacePage() {
     },
     onSuccess: (order) => {
       setLastOrder(order);
-      void qc.invalidateQueries({ queryKey: ['marketplace-cart'] });
-      localStorage.setItem(CART_META_KEY, JSON.stringify({ cartId: cartId ?? '', count: 0, preview: [], updatedAt: Date.now() }));
+      qc.removeQueries({ queryKey: ['marketplace-cart'] });
+      setCartId(null);
+      setSavedCartMeta(null);
+      setShowRestoreBanner(false);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        localStorage.removeItem(CART_META_KEY);
+      }
       setToast(
         `Pedido enviado. Te contactaremos por ${
           contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'
@@ -531,11 +605,14 @@ export default function MarketplacePage() {
       setLastOrder(order);
       setPaypalDialogOpen(false);
       setPaypalOrder(null);
-      void qc.invalidateQueries({ queryKey: ['marketplace-cart'] });
-      localStorage.setItem(
-        CART_META_KEY,
-        JSON.stringify({ cartId: cartId ?? '', count: 0, preview: [], updatedAt: Date.now() }),
-      );
+      qc.removeQueries({ queryKey: ['marketplace-cart'] });
+      setCartId(null);
+      setSavedCartMeta(null);
+      setShowRestoreBanner(false);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        localStorage.removeItem(CART_META_KEY);
+      }
       setToast('Pago recibido con PayPal. Gracias por tu compra.');
       fireCartMetaEvent();
     },
@@ -568,6 +645,7 @@ export default function MarketplacePage() {
   });
 
   const listings = useMemo(() => listingsQuery.data ?? [], [listingsQuery.data]);
+  const initialListingHandledRef = useRef(false);
   const categories = useMemo(
     () => Array.from(new Set(listings.map((item) => item.miCategory).filter(Boolean))),
     [listings],
@@ -667,13 +745,13 @@ export default function MarketplacePage() {
     (sort !== 'relevance' ? 1 : 0);
 
   useEffect(() => {
-    if (!savedCartMeta || hasCartItems) {
+    if (!savedCartMeta?.cartId || savedCartMeta.count <= 0 || hasCartItems) {
       setShowRestoreBanner(false);
       return;
     }
     setShowRestoreBanner(true);
   }, [hasCartItems, savedCartMeta]);
-  const canRestoreCart = savedCartMeta && !hasCartItems;
+  const restorableCartMeta = savedCartMeta?.cartId && savedCartMeta.count > 0 && !hasCartItems ? savedCartMeta : null;
   const scrollToListings = () => {
     if (typeof window === 'undefined') return;
     const el = document.getElementById('marketplace-listings');
@@ -688,12 +766,31 @@ export default function MarketplacePage() {
     if (typeof window === 'undefined') return;
     try {
       const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref };
-      localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
-      setSavedBuyerSnapshot(payload);
+      if (hasBuyerInfo(payload)) {
+        localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
+        return;
+      }
+      localStorage.removeItem(BUYER_INFO_KEY);
     } catch {
       // ignore storage errors
     }
   }, [buyerName, buyerEmail, buyerPhone, contactPref]);
+
+  useEffect(() => {
+    if (initialListingHandledRef.current) return;
+    if (!initialListingId) {
+      initialListingHandledRef.current = true;
+      return;
+    }
+    if (listingsQuery.isLoading) return;
+
+    initialListingHandledRef.current = true;
+    const listing = listings.find((item) => item.miListingId === initialListingId);
+    if (listing) {
+      setSelectedListing(listing);
+      setDetailOpen(true);
+    }
+  }, [initialListingId, listings, listingsQuery.isLoading]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1074,7 +1171,7 @@ export default function MarketplacePage() {
           <Typography variant="body2" color="text.secondary">
             1) Elige equipos, 2) Ingresa contacto, 3) Selecciona cómo pagar. Guarda tu carrito y retoma cuando quieras.
           </Typography>
-          {canRestoreCart ? (
+          {restorableCartMeta ? (
             <Alert
               severity="info"
               action={
@@ -1088,8 +1185,8 @@ export default function MarketplacePage() {
                 </Stack>
               }
             >
-              Tienes un carrito guardado con {savedCartMeta.count} productos · actualizado{' '}
-              {formatLastSavedTimestamp(savedCartMeta.updatedAt) ?? 'hace poco'}.
+              Tienes un carrito guardado con {restorableCartMeta.count} productos · actualizado{' '}
+              {formatLastSavedTimestamp(restorableCartMeta.updatedAt) ?? 'hace poco'}.
             </Alert>
           ) : null}
         </Stack>
@@ -1303,10 +1400,9 @@ export default function MarketplacePage() {
                             variant="contained"
                             size="small"
                             onClick={() => {
-                              localStorage.setItem(
-                                BUYER_INFO_KEY,
-                                JSON.stringify({ name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref }),
-                              );
+                              const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref };
+                              localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
+                              setSavedBuyerSnapshot(payload);
                               setToast('Guardamos tu contacto; te avisaremos.');
                             }}
                           >

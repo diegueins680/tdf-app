@@ -106,7 +106,53 @@ list_non_baseline_paths() {
   rm -f "$current" "$current_paths" "$tmp"
 }
 
-stage_non_baseline_changes() {
+path_matches_baseline() {
+  local candidate="$1"
+  local baseline_path=""
+  if [[ ! -s "${BASELINE_PATHS_FILE}" ]]; then
+    return 1
+  fi
+  while IFS= read -r baseline_path || [[ -n "$baseline_path" ]]; do
+    if [[ "$candidate" == "$baseline_path" || "$candidate" == "${baseline_path%/}/"* ]]; then
+      return 0
+    fi
+  done < "${BASELINE_PATHS_FILE}"
+  return 1
+}
+
+collect_requested_baseline_paths() {
+  local output_file="$1"
+  local prefix="$2"
+  local requested_file="$3"
+  local line=""
+  local path=""
+  : > "$requested_file"
+  if [[ ! -f "$output_file" ]]; then
+    return 0
+  fi
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    case "$line" in
+      "${prefix}: "*)
+        path="${line#${prefix}: }"
+        if path_matches_baseline "$path"; then
+          printf '%s\n' "$path"
+        fi
+        ;;
+    esac
+  done < "$output_file" | awk 'NF && !seen[$0]++' > "$requested_file"
+}
+
+list_commit_candidate_paths() {
+  local requested_baseline_file="${1:-}"
+  {
+    list_non_baseline_paths
+    if [[ -n "$requested_baseline_file" && -s "$requested_baseline_file" ]]; then
+      cat "$requested_baseline_file"
+    fi
+  } | awk 'NF && !seen[$0]++'
+}
+
+stage_paths() {
   local paths_file="$1"
   local -a paths
   local path=""
@@ -126,7 +172,8 @@ stage_non_baseline_changes() {
 manual_commit_and_push() {
   local cycle_label="$1"
   local reason="${2:-fallback}"
-  local branch paths_file message
+  local codex_output_file="${3:-}"
+  local branch paths_file requested_paths_file message
   local -a paths
   local path=""
   branch="$(current_branch)"
@@ -135,10 +182,14 @@ manual_commit_and_push() {
     return 1
   fi
 
+  requested_paths_file="$(mktemp)"
+  collect_requested_baseline_paths "$codex_output_file" "COMMIT_PUSH_INCLUDE_BASELINE" "$requested_paths_file"
+
   paths_file="$(mktemp)"
-  list_non_baseline_paths > "$paths_file"
+  list_commit_candidate_paths "$requested_paths_file" > "$paths_file"
   if [[ ! -s "$paths_file" ]]; then
-    log "Wrapper fallback found no non-baseline paths to commit."
+    log "Wrapper fallback found no commit candidate paths."
+    rm -f "$requested_paths_file"
     rm -f "$paths_file"
     return 1
   fi
@@ -147,13 +198,18 @@ manual_commit_and_push() {
     paths+=("$path")
   done < "$paths_file"
   if [[ "${#paths[@]}" -eq 0 ]]; then
-    log "Wrapper fallback could not parse any non-baseline paths."
+    log "Wrapper fallback could not parse any commit candidate paths."
+    rm -f "$requested_paths_file"
     rm -f "$paths_file"
     return 1
   fi
 
-  log "Wrapper fallback staging non-baseline paths after Codex ${reason}: $(paste -sd ', ' "$paths_file")"
-  stage_non_baseline_changes "$paths_file"
+  if [[ -s "$requested_paths_file" ]]; then
+    log "Wrapper fallback including requested baseline paths after Codex ${reason}: $(paste -sd ', ' "$requested_paths_file")"
+  fi
+  log "Wrapper fallback staging commit candidate paths after Codex ${reason}: $(paste -sd ', ' "$paths_file")"
+  stage_paths "$paths_file"
+  rm -f "$requested_paths_file"
   rm -f "$paths_file"
 
   if git -C "${ROOT_DIR}" diff --cached --quiet -- "${paths[@]}"; then
@@ -305,6 +361,7 @@ Requirements:
 - Review the current git diff/status.
 - Commit only files relevant to the current iteration's fixes.
 - Do NOT stage or commit protected baseline paths that predated this loop unless they were intentionally part of the new fixes.
+- If a protected baseline path must be included and you cannot complete the commit/push yourself, print one line per path exactly as: COMMIT_PUSH_INCLUDE_BASELINE: <path>
 - Push the current branch to origin.
 - If there is nothing to commit for this iteration, output exactly: COMMIT_PUSH_RESULT: no_changes
 - If you successfully commit and push, end with exactly: COMMIT_PUSH_RESULT: pushed
@@ -443,7 +500,7 @@ main() {
         continue
         ;;
       blocked|unknown)
-        if manual_commit_and_push "$cycle" "commit-push/${commit_result}"; then
+        if manual_commit_and_push "$cycle" "commit-push/${commit_result}" "$commit_output"; then
           log "Wrapper fallback committed and pushed cycle ${cycle} after Codex result=${commit_result}."
         else
           if [[ "$commit_codex_failed" -eq 1 ]]; then
@@ -516,7 +573,7 @@ main() {
           exit 1
           ;;
         blocked|unknown)
-          if manual_commit_and_push "${cycle}-ci" "commit-push-after-ci-fix/${commit_result}"; then
+          if manual_commit_and_push "${cycle}-ci" "commit-push-after-ci-fix/${commit_result}" "$commit_output"; then
             log "Wrapper fallback committed and pushed CI follow-up for cycle ${cycle} after Codex result=${commit_result}."
           else
             if [[ "$commit_codex_failed" -eq 1 ]]; then

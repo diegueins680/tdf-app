@@ -1,5 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { execFile } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import {
   buildCommitContext,
   expandTemplate,
@@ -8,6 +14,10 @@ import {
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
 import { auditUiSource } from '../lib/ui-static-audit.mjs';
+
+const execFileAsync = promisify(execFile);
+const testDir = path.dirname(fileURLToPath(import.meta.url));
+const loopScriptPath = path.resolve(testDir, '..', 'continuous-improvement-loop.mjs');
 
 test('expandTemplate substitutes known placeholders and leaves unknown ones intact', () => {
   const rendered = expandTemplate('idea={idea_file} missing={unknown}', {
@@ -120,4 +130,58 @@ test('auditUiSource does not treat arrow functions as the end of a labeled tag',
 
   const findings = auditUiSource(source, 'Example.tsx');
   assert.equal(findings.length, 0);
+});
+
+test('continuous-improvement-loop honors --allow-dirty for tracked baseline changes without committing them', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-test-'));
+  const remoteDir = path.join(tempRoot, 'remote.git');
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '--bare', remoteDir], tempRoot);
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await fs.writeFile(path.join(repoDir, 'existing.txt'), 'baseline\n', 'utf8');
+    await git(['add', 'existing.txt']);
+    await git(['commit', '-m', 'initial']);
+    await git(['remote', 'add', 'origin', remoteDir]);
+    await git(['push', '-u', 'origin', 'main']);
+
+    await fs.writeFile(path.join(repoDir, 'existing.txt'), 'baseline\nlocal dirty change\n', 'utf8');
+    const configPath = path.join(repoDir, 'loop-config.json');
+    await fs.writeFile(
+      configPath,
+      JSON.stringify(
+        {
+          pollGitHub: false,
+          iterationDelaySeconds: 0,
+          ideaCommand: "printf '# Dirty baseline test\\nSource: test\\nTarget: new-file.txt:1\\nReason: verify allow-dirty tracked baselines stay out of loop commits.\\n'",
+          implementationCommand: "printf 'created by loop\\n' > new-file.txt",
+          uiAuditCommand: "printf '[]\\n'",
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+
+    await execFileAsync(
+      'node',
+      [loopScriptPath, '--config', 'loop-config.json', '--allow-dirty', '--max-iterations', '1'],
+      { cwd: repoDir },
+    );
+
+    const commitDiff = await git(['diff', '--name-only', 'HEAD~1', 'HEAD']);
+    assert.deepEqual(commitDiff.stdout.trim().split('\n').filter(Boolean), ['new-file.txt']);
+
+    const status = await git(['status', '--short']);
+    assert.match(status.stdout, /^ M existing\.txt$/m);
+    assert.doesNotMatch(status.stdout, /^M  existing\.txt$/m);
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
 });
