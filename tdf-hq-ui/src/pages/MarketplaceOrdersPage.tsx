@@ -46,6 +46,7 @@ import { Marketplace } from '../api/marketplace';
 import { DateTime } from 'luxon';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
+import { getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
 
 const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] }[] = [
   { value: 'paid', label: 'Pagado', color: 'success' },
@@ -62,15 +63,13 @@ const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] 
 
 const statusColor = (value: string): ChipProps['color'] => {
   const match = STATUS_PRESETS.find((p) => p.value === value);
-  return match?.color ?? (value.toLowerCase().includes('fail') ? 'error' : 'default');
+  return match?.color ?? getOrderStatusMeta(value).color;
 };
 
 const statusLabel = (value: string): string => {
   const match = STATUS_PRESETS.find((p) => p.value === value);
   if (match) return match.label;
-  if (value.toLowerCase().includes('datafast')) return 'Tarjeta';
-  if (value.toLowerCase().includes('paypal')) return 'PayPal';
-  return value;
+  return getOrderStatusMeta(value).label;
 };
 
 const formatDate = (iso?: string | null, withTime = true) => {
@@ -177,8 +176,8 @@ export default function MarketplaceOrdersPage() {
     (fromDate ? 1 : 0) +
     (toDate ? 1 : 0) +
     (paidOnly ? 1 : 0);
-  const paidTotal = orders.filter((o) => o.moStatus === 'paid').length;
-  const paidVisible = filtered.filter((o) => o.moStatus === 'paid').length;
+  const paidTotal = orders.filter((o) => isPaidOrderStatus(o.moStatus)).length;
+  const paidVisible = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -366,9 +365,9 @@ export default function MarketplaceOrdersPage() {
   const effectiveStatus = (statusInput ?? selectedOrder?.moStatus ?? '').trim();
   const effectiveProvider = (paymentProviderInput ?? selectedOrder?.moPaymentProvider ?? '').trim();
   const warnMissingProvider = Boolean(selectedOrder && !effectiveProvider);
-  const warnMissingPaidAt = Boolean(selectedOrder && effectiveStatus === 'paid' && !paidAtInput);
+  const warnMissingPaidAt = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !paidAtInput);
   const blockSave =
-    effectiveStatus === 'paid' && (warnMissingProvider || warnMissingPaidAt);
+    isPaidOrderStatus(effectiveStatus) && (warnMissingProvider || warnMissingPaidAt);
   const statusHint = (() => {
     if (!effectiveStatus) return null;
     if (effectiveStatus === 'datafast_pending') {
@@ -524,13 +523,13 @@ export default function MarketplaceOrdersPage() {
             <Stack direction="row" spacing={1}>
               <Chip
                 icon={<CheckCircleIcon />}
-                label={`${orders.filter((o) => o.moStatus === 'paid').length} pagados`}
+                label={`${orders.filter((o) => isPaidOrderStatus(o.moStatus)).length} pagados`}
                 color="success"
                 variant="outlined"
               />
               <Chip
                 icon={<InventoryIcon />}
-                label={`${orders.filter((o) => o.moStatus !== 'paid').length} pendientes`}
+                label={`${orders.filter((o) => !isPaidOrderStatus(o.moStatus)).length} pendientes`}
                 color="warning"
                 variant="outlined"
               />
@@ -799,7 +798,7 @@ export default function MarketplaceOrdersPage() {
                           InputLabelProps={{ shrink: true }}
                         />
                         {warnMissingProvider && (
-                          <Alert severity={effectiveStatus === 'paid' ? 'warning' : 'info'} variant="outlined">
+                          <Alert severity={isPaidOrderStatus(effectiveStatus) ? 'warning' : 'info'} variant="outlined">
                             No hay método de pago registrado. Ingresa paypal, datafast o manual para dejar trazabilidad.
                           </Alert>
                         )}

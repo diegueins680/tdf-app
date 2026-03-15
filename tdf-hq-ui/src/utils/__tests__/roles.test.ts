@@ -1,7 +1,14 @@
 import { buildSignupPayload, deriveEffectiveRoles, normalizeRolesInput, normalizeSignupRoles } from '../roles';
-import { SELF_SIGNUP_ROLES } from '../../constants/roles';
+import { ALL_ROLES, SELF_SIGNUP_ROLES } from '../../constants/roles';
 
 describe('role normalization helpers', () => {
+  it('keeps admin-managed API roles available in the global role list', () => {
+    expect(ALL_ROLES).toContain('Vendor');
+    expect(ALL_ROLES).toContain('Customer');
+    expect(SELF_SIGNUP_ROLES).not.toContain('Vendor');
+    expect(SELF_SIGNUP_ROLES).not.toContain('Customer');
+  });
+
   it('normalizes roles with trimming, case-insensitive de-dup, and filtering', () => {
     const allowed = ['Fan', 'Admin'] as const;
     const result = normalizeRolesInput([' Fan ', 'fan', 'ADMIN', 'Unknown'], allowed);

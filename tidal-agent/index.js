@@ -2,6 +2,8 @@
 
 // Minimal CLI to turn natural language prompts into TidalCycles snippets.
 // It calls an OpenAI-compatible chat API and post-processes the output to keep only safe Tidal code.
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const API_URL = process.env.TIDAL_AGENT_API_URL || process.env.OPENAI_API_URL || 'https://api.openai.com/v1/chat/completions';
 const API_KEY = process.env.TIDAL_AGENT_API_KEY || process.env.OPENAI_API_KEY;
@@ -17,7 +19,7 @@ Your goals:
 
 Behavior rules:
 1) Main output is always TidalCycles code.
-   - When the user asks for a pattern, respond with a fenced Haskell code block: "```haskell\\nd1 $ ...\\n```".
+   - When the user asks for a pattern, respond with a fenced Haskell code block: "\`\`\`haskell\\nd1 $ ...\\n\`\`\`".
    - Use d1, d2, etc. as needed, but keep things minimal unless the user explicitly asks for more layers.
 
 2) Interpret vague language musically.
@@ -55,7 +57,7 @@ Example interactions:
 - Simple techno kick & hats:
   User: "A simple techno loop with a 4/4 kick and offbeat hi-hats."
   Assistant:
-  ```haskell
+  \`\`\`haskell
   d1 $ sound "bd*4"
 
   d2 $ sound "hh*4"
@@ -66,11 +68,11 @@ Example interactions:
     # delayfeedback 0.3
 
   d3 $ off 0.5 (|+ speed 0.5) $ sound "~ hh ~ hh"
-  ```
+  \`\`\`
 - Dark halftime beat with sub bass:
   User: "Dark halftime drum and bass beat at half-time with a heavy sub bass, lots of space."
   Assistant:
-  ```haskell
+  \`\`\`haskell
   d1 $ slow 2 $ sound "bd ~ ~ bd ~ ~ bd ~"
     # gain 1.1
     # shape 0.4
@@ -87,28 +89,35 @@ Example interactions:
     # shape 0.5
     # lpf 200
     # lpq 0.2
-  ```
+  \`\`\`
 `.trim();
 
-const allowedLine = (line) => {
+const hasSafePrefixBoundary = (line, prefix) => {
+  if (!line.startsWith(prefix)) return false;
+  if (line.length === prefix.length) return true;
+  const nextChar = line.charAt(prefix.length);
+  return nextChar === ' ' || nextChar === '$' || nextChar === '(';
+};
+
+export const allowedLine = (line) => {
   const trimmed = line.trim();
   if (!trimmed) return false;
   const safePrefixes = ['d1', 'd2', 'd3', 'd4', 'hush', 'bps', 'cps', 'setcps', 'once', 'solo', 'unsolo', 'all', 'xfade', 'xfadeIn'];
-  return safePrefixes.some((p) => trimmed.startsWith(p));
+  return safePrefixes.some((p) => hasSafePrefixBoundary(trimmed, p));
 };
 
-const extractCode = (text) => {
+export const extractCode = (text) => {
   // Prefer fenced code
-  const fenceMatch = text.match(/```(?:tidal)?\\s*([\\s\\S]*?)```/i);
+  const fenceMatch = text.match(/```(?:haskell|tidal)?\s*([\s\S]*?)```/i);
   const body = fenceMatch ? fenceMatch[1] : text;
   const lines = body
-    .split('\\n')
-    .map((l) => l.replace(/[\\r\\t]/g, '').trimEnd())
+    .split('\n')
+    .map((l) => l.replace(/[\r\t]/g, '').trimEnd())
     .filter((l) => !l.startsWith('--') && !l.startsWith('//'));
   const filtered = lines.filter(allowedLine);
   if (filtered.length === 0) return null;
   // Trim to a reasonable number of lines
-  return filtered.slice(0, 12).join('\\n');
+  return filtered.slice(0, 12).join('\n');
 };
 
 async function callModel(userPrompt) {
@@ -170,11 +179,22 @@ async function main() {
       console.error('Model responded without usable Tidal code.');
       process.exit(1);
     }
-    process.stdout.write(`${code}\\n`);
+    process.stdout.write(`${code}\n`);
   } catch (err) {
     console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);
   }
 }
 
-main();
+const isDirectRun = () => {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+};
+
+if (isDirectRun()) {
+  void main();
+}

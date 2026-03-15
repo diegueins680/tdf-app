@@ -3,7 +3,7 @@ import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider,
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Marketplace } from '../api/marketplace';
 import type { MarketplaceOrderDTO } from '../api/types';
-import { getOrderStatusMeta } from '../utils/marketplace';
+import { getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
 
 function getQueryParam(name: string): string | null {
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -16,10 +16,11 @@ export default function DatafastReturnPage() {
   const resourcePath = getQueryParam('resourcePath') ?? getQueryParam('id');
   const navigate = useNavigate();
   const location = useLocation();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'review' | 'error'>('loading');
   const [order, setOrder] = useState<MarketplaceOrderDTO | null>(null);
   const [message, setMessage] = useState<string>('Confirmando tu pago...');
   const [redirectSeconds, setRedirectSeconds] = useState<number>(5);
+  const orderStatusMeta = order ? getOrderStatusMeta(order.moStatus) : null;
 
   const statusColor = (value?: string | null): 'default' | 'success' | 'warning' | 'info' => {
     if (!value) return 'default';
@@ -37,12 +38,18 @@ export default function DatafastReturnPage() {
       try {
         const dto = await Marketplace.confirmDatafastPayment(orderId, resourcePath);
         setOrder(dto);
-        setStatus('success');
-        // Limpia el carrito local para evitar dobles compras tras un pago exitoso.
-        localStorage.removeItem('tdf-marketplace-cart-id');
-        localStorage.removeItem('tdf-marketplace-cart-meta');
-        localStorage.removeItem('tdf-marketplace-buyer');
-        setMessage('Pago confirmado. ¡Gracias por tu compra!');
+        if (isPaidOrderStatus(dto.moStatus)) {
+          setStatus('success');
+          // Limpia el carrito local para evitar dobles compras tras un pago exitoso.
+          localStorage.removeItem('tdf-marketplace-cart-id');
+          localStorage.removeItem('tdf-marketplace-cart-meta');
+          localStorage.removeItem('tdf-marketplace-buyer');
+          setMessage('Pago confirmado. ¡Gracias por tu compra!');
+          return;
+        }
+        const meta = getOrderStatusMeta(dto.moStatus);
+        setStatus('review');
+        setMessage(meta.desc || 'Tu pago aún no está confirmado. Revisa el estado del pedido antes de volver a intentar.');
       } catch (err) {
         console.error(err);
         setStatus('error');
@@ -80,10 +87,10 @@ export default function DatafastReturnPage() {
             </Typography>
           </Stack>
         )}
-        {status === 'success' && order && (
+        {(status === 'success' || status === 'review') && order && (
           <Stack spacing={2}>
-            <Alert severity="success">
-              {message} Te redirigiremos al marketplace en {redirectSeconds}s.
+            <Alert severity={status === 'success' ? 'success' : orderStatusMeta?.color === 'warning' || orderStatusMeta?.color === 'info' ? 'warning' : 'error'}>
+              {status === 'success' ? `${message} Te redirigiremos al marketplace en ${redirectSeconds}s.` : message}
             </Alert>
             <Card variant="outlined">
               <CardContent>
@@ -92,7 +99,7 @@ export default function DatafastReturnPage() {
                     <Typography variant="subtitle1" fontWeight={700}>
                       Resumen de compra
                     </Typography>
-                    <Chip label={getOrderStatusMeta(order.moStatus).label} color={statusColor(order.moStatus)} size="small" />
+                    <Chip label={orderStatusMeta?.label ?? getOrderStatusMeta(order.moStatus).label} color={statusColor(order.moStatus)} size="small" />
                   </Stack>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Typography variant="body2" color="text.secondary">

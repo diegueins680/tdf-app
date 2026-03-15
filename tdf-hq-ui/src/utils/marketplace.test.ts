@@ -1,4 +1,4 @@
-import { formatLastSavedTimestamp, getOrderStatusMeta } from './marketplace';
+import { formatLastSavedTimestamp, getOrderStatusMeta, isPaidOrderStatus } from './marketplace';
 
 describe('getOrderStatusMeta', () => {
   it('marks paid statuses as paid', () => {
@@ -6,6 +6,16 @@ describe('getOrderStatusMeta', () => {
     expect(paid.label).toBe('Pagado');
     expect(paid.color).toBe('success');
     expect(paid.desc.toLowerCase()).toContain('confirmado');
+  });
+
+  it('recognizes alternate paid variants through the shared parser', () => {
+    expect(isPaidOrderStatus('approved')).toBe(true);
+    expect(isPaidOrderStatus('completed')).toBe(true);
+    expect(isPaidOrderStatus('successful')).toBe(true);
+    expect(isPaidOrderStatus('datafast_paid')).toBe(true);
+    expect(isPaidOrderStatus('paypal_approved')).toBe(true);
+    expect(isPaidOrderStatus('datafast_pending')).toBe(false);
+    expect(isPaidOrderStatus('delivered')).toBe(false);
   });
 
   it('keeps pending statuses pending (including paypal_pending)', () => {

@@ -622,8 +622,9 @@ export default function PublicBookingPage() {
     const autoRooms = defaultRoomsForService(form.serviceType, roomOptions);
     const roomsToSend =
       autoRooms.length > 0 ? autoRooms : roomOptions.length > 0 ? roomOptions.slice(0, 1) : [];
-    const roomIdsToSend = roomsToSend.every((label) => roomIdByLabel.has(label.trim()))
-      ? roomsToSend.map((label) => roomIdByLabel.get(label.trim())!)
+    const resolvedRoomIds = roomsToSend.map((label) => roomIdByLabel.get(label.trim()) ?? null);
+    const roomIdsToSend = resolvedRoomIds.every((roomId): roomId is string => typeof roomId === 'string' && roomId.trim() !== '')
+      ? resolvedRoomIds
       : null;
     if (roomsToSend.length > 0) {
       setForm((prev) => (sameRooms(prev.resourceLabels, roomsToSend) ? prev : { ...prev, resourceLabels: roomsToSend }));

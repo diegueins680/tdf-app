@@ -269,6 +269,62 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
+  it('drops auto-assigned room ids when a public room label is ambiguous', async () => {
+    listPublicRoomsMock.mockResolvedValueOnce([
+      { roomId: 'room-live-a', rName: 'Live Room', rBookable: true },
+      { roomId: 'room-live-b', rName: 'Live Room', rBookable: true },
+      { roomId: 'room-control', rName: 'Control Room', rBookable: true },
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Nombre completo'), 'Test User');
+      setInputValue(getInputByLabel(container, 'Correo'), 'test@example.com');
+      clickButtonByText(container, 'Continuar');
+      await flushPromises();
+    });
+
+    await act(async () => {
+      const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+      const desiredStudio = DateTime.fromObject(
+        { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
+        { zone: 'America/Guayaquil' },
+      );
+      const desiredUser = desiredStudio.setZone(userZone);
+      const dateInput = getInputByLabel(container, 'Fecha y hora');
+      setInputValue(dateInput, desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
+      await flushPromises();
+    });
+
+    await act(async () => {
+      const checkbox = clickCheckboxNearText(container, 'Asignar ingeniero después');
+      expect(checkbox?.checked).toBe(true);
+      await flushPromises();
+    });
+
+    await act(async () => {
+      clickButtonByText(container, 'Revisar reserva');
+      await flushPromises();
+    });
+
+    await act(async () => {
+      const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (!submitButton) throw new Error('Submit button not found');
+      submitButton.click();
+      await flushPromises();
+    });
+
+    expect(createPublicMock).toHaveBeenCalledTimes(1);
+    const payload = createPublicMock.mock.calls[0]?.[0];
+    expect(payload?.pbResourceIds).toBeNull();
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
   it('prevents moving to schedule step with invalid email', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

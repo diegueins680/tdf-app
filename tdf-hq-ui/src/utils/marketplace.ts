@@ -114,6 +114,10 @@ export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
   return { label: normalizedStatus || 'Estado', color: 'default', desc: '' };
 };
 
+export const isPaidOrderStatus = (status: string): boolean => {
+  return getOrderStatusMeta(status).label === 'Pagado';
+};
+
 // Present human readable "last updated" text from a timestamp in ms.
 export const formatLastSavedTimestamp = (updatedAt?: number | null): string | null => {
   if (updatedAt == null || !Number.isFinite(updatedAt) || updatedAt <= 0) return null;
