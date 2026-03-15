@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STATE_DIR="${ROOT_DIR}/.tmp/codex-logical-correctness-loop"
 LOG_DIR="${STATE_DIR}/logs"
 BASELINE_FILE="${STATE_DIR}/baseline-status.txt"
+BASELINE_PATHS_FILE="${STATE_DIR}/baseline-paths.txt"
 RUN_LOG="${STATE_DIR}/runner.log"
 mkdir -p "${LOG_DIR}"
 
@@ -34,15 +35,32 @@ trim_file() {
   fi
 }
 
+extract_paths_from_porcelain() {
+  while IFS= read -r line; do
+    local path_spec
+    path_spec="${line:3}"
+    if [[ -z "$path_spec" ]]; then
+      continue
+    fi
+    if [[ "$path_spec" == *" -> "* ]]; then
+      printf '%s\n' "${path_spec%% -> *}"
+      printf '%s\n' "${path_spec#* -> }"
+    else
+      printf '%s\n' "$path_spec"
+    fi
+  done | awk 'NF && !seen[$0]++'
+}
+
 capture_baseline() {
   git -C "${ROOT_DIR}" status --porcelain=v1 > "${BASELINE_FILE}"
+  extract_paths_from_porcelain < "${BASELINE_FILE}" > "${BASELINE_PATHS_FILE}"
 }
 
 baseline_paths_block() {
-  if [[ ! -s "${BASELINE_FILE}" ]]; then
+  if [[ ! -s "${BASELINE_PATHS_FILE}" ]]; then
     return 0
   fi
-  awk '{print substr($0,4)}' "${BASELINE_FILE}" | sed '/^$/d' | sed 's/^/- /'
+  sed 's/^/- /' "${BASELINE_PATHS_FILE}"
 }
 
 repo_status_block() {
@@ -60,21 +78,91 @@ ensure_baseline_policy() {
 }
 
 has_non_baseline_changes() {
-  local current tmp
-  current="$(mktemp)"
-  tmp="$(mktemp)"
-  git -C "${ROOT_DIR}" status --porcelain=v1 > "$current"
-  if [[ -s "${BASELINE_FILE}" ]]; then
-    grep -Fvx -f "${BASELINE_FILE}" "$current" > "$tmp" || true
-  else
-    cp "$current" "$tmp"
-  fi
-  if [[ -s "$tmp" ]]; then
-    rm -f "$current" "$tmp"
+  local paths_file
+  paths_file="$(mktemp)"
+  list_non_baseline_paths > "$paths_file"
+  if [[ -s "$paths_file" ]]; then
+    rm -f "$paths_file"
     return 0
   fi
-  rm -f "$current" "$tmp"
+  rm -f "$paths_file"
   return 1
+}
+
+list_non_baseline_paths() {
+  local current current_paths tmp
+  current="$(mktemp)"
+  current_paths="$(mktemp)"
+  tmp="$(mktemp)"
+  git -C "${ROOT_DIR}" status --porcelain=v1 > "$current"
+  extract_paths_from_porcelain < "$current" > "$current_paths"
+  if [[ -s "${BASELINE_PATHS_FILE}" ]]; then
+    grep -Fvx -f "${BASELINE_PATHS_FILE}" "$current_paths" > "$tmp" || true
+  else
+    cp "$current_paths" "$tmp"
+  fi
+  sed '/^$/d' "$tmp"
+  rm -f "$current" "$current_paths" "$tmp"
+}
+
+stage_non_baseline_changes() {
+  local paths_file="$1"
+  local -a paths
+  local path=""
+  if [[ ! -s "$paths_file" ]]; then
+    return 1
+  fi
+  paths=()
+  while IFS= read -r path || [[ -n "$path" ]]; do
+    paths+=("$path")
+  done < "$paths_file"
+  if [[ "${#paths[@]}" -eq 0 ]]; then
+    return 1
+  fi
+  git -C "${ROOT_DIR}" add -A -- "${paths[@]}"
+}
+
+manual_commit_and_push() {
+  local cycle_label="$1"
+  local reason="${2:-fallback}"
+  local branch paths_file message
+  local -a paths
+  local path=""
+  branch="$(current_branch)"
+  if [[ -z "$branch" ]]; then
+    log "Wrapper fallback could not determine current branch."
+    return 1
+  fi
+
+  paths_file="$(mktemp)"
+  list_non_baseline_paths > "$paths_file"
+  if [[ ! -s "$paths_file" ]]; then
+    log "Wrapper fallback found no non-baseline paths to commit."
+    rm -f "$paths_file"
+    return 1
+  fi
+  paths=()
+  while IFS= read -r path || [[ -n "$path" ]]; do
+    paths+=("$path")
+  done < "$paths_file"
+  if [[ "${#paths[@]}" -eq 0 ]]; then
+    log "Wrapper fallback could not parse any non-baseline paths."
+    rm -f "$paths_file"
+    return 1
+  fi
+
+  log "Wrapper fallback staging non-baseline paths after Codex ${reason}: $(paste -sd ', ' "$paths_file")"
+  stage_non_baseline_changes "$paths_file"
+  rm -f "$paths_file"
+
+  if git -C "${ROOT_DIR}" diff --cached --quiet -- "${paths[@]}"; then
+    log "Wrapper fallback found nothing staged after git add."
+    return 1
+  fi
+
+  message="chore: codex logical correctness loop iteration ${cycle_label}"
+  git -C "${ROOT_DIR}" commit -m "$message" -- "${paths[@]}"
+  git -C "${ROOT_DIR}" push -u origin "$branch"
 }
 
 current_branch() {
@@ -247,6 +335,19 @@ $(cat "$logs_file")
 EOF
 }
 
+commit_push_result() {
+  local output_file="$1"
+  if grep -Fxq 'COMMIT_PUSH_RESULT: pushed' "$output_file"; then
+    echo "pushed"
+  elif grep -Fxq 'COMMIT_PUSH_RESULT: no_changes' "$output_file"; then
+    echo "no_changes"
+  elif grep -Fxq 'COMMIT_PUSH_RESULT: blocked' "$output_file"; then
+    echo "blocked"
+  else
+    echo "unknown"
+  fi
+}
+
 collect_failed_logs() {
   local runs_json_file="$1"
   local logs_file="$2"
@@ -311,19 +412,37 @@ main() {
     commit_prompt="$(mktemp)"
     commit_output="${LOG_DIR}/cycle-${cycle}-commit-push.md"
     build_commit_push_prompt "$commit_prompt"
-    codex_prompt "commit-push" "$commit_prompt" "$commit_output"
+    local commit_codex_failed=0
+    if ! codex_prompt "commit-push" "$commit_prompt" "$commit_output"; then
+      commit_codex_failed=1
+      log "Codex commit/push step exited non-zero for cycle ${cycle}; attempting wrapper fallback."
+    fi
     rm -f "$commit_prompt"
 
-    if grep -Fxq 'COMMIT_PUSH_RESULT: blocked' "$commit_output"; then
-      log "Codex reported blocked during commit/push. Stopping loop."
-      exit 1
-    fi
-    if grep -Fxq 'COMMIT_PUSH_RESULT: no_changes' "$commit_output"; then
-      log "Codex reported no changes to commit. Sleeping ${SLEEP_BETWEEN_CYCLES}s."
-      sleep "$SLEEP_BETWEEN_CYCLES"
-      cycle=$((cycle + 1))
-      continue
-    fi
+    local commit_result
+    commit_result="$(commit_push_result "$commit_output")"
+    case "$commit_result" in
+      pushed)
+        ;;
+      no_changes)
+        log "Codex reported no changes to commit. Sleeping ${SLEEP_BETWEEN_CYCLES}s."
+        sleep "$SLEEP_BETWEEN_CYCLES"
+        cycle=$((cycle + 1))
+        continue
+        ;;
+      blocked|unknown)
+        if manual_commit_and_push "$cycle" "commit-push/${commit_result}"; then
+          log "Wrapper fallback committed and pushed cycle ${cycle} after Codex result=${commit_result}."
+        else
+          if [[ "$commit_codex_failed" -eq 1 ]]; then
+            log "Codex commit/push failed and wrapper fallback also failed. Stopping loop."
+          else
+            log "Codex reported ${commit_result} during commit/push and wrapper fallback failed. Stopping loop."
+          fi
+          exit 1
+        fi
+        ;;
+    esac
 
     local sha
     sha="$(git -C "${ROOT_DIR}" rev-parse HEAD)"
@@ -369,17 +488,34 @@ main() {
       commit_prompt="$(mktemp)"
       commit_output="${LOG_DIR}/cycle-${cycle}-commit-push-ci.md"
       build_commit_push_prompt "$commit_prompt"
-      codex_prompt "commit-push-after-ci-fix" "$commit_prompt" "$commit_output"
+      commit_codex_failed=0
+      if ! codex_prompt "commit-push-after-ci-fix" "$commit_prompt" "$commit_output"; then
+        commit_codex_failed=1
+        log "Codex commit/push step after CI fix exited non-zero for cycle ${cycle}; attempting wrapper fallback."
+      fi
       rm -f "$commit_prompt"
 
-      if grep -Fxq 'COMMIT_PUSH_RESULT: blocked' "$commit_output"; then
-        log "Codex blocked during commit/push after CI fix. Stopping loop."
-        exit 1
-      fi
-      if grep -Fxq 'COMMIT_PUSH_RESULT: no_changes' "$commit_output"; then
-        log "No changes to commit after CI fix attempt. Stopping loop."
-        exit 1
-      fi
+      commit_result="$(commit_push_result "$commit_output")"
+      case "$commit_result" in
+        pushed)
+          ;;
+        no_changes)
+          log "No changes to commit after CI fix attempt. Stopping loop."
+          exit 1
+          ;;
+        blocked|unknown)
+          if manual_commit_and_push "${cycle}-ci" "commit-push-after-ci-fix/${commit_result}"; then
+            log "Wrapper fallback committed and pushed CI follow-up for cycle ${cycle} after Codex result=${commit_result}."
+          else
+            if [[ "$commit_codex_failed" -eq 1 ]]; then
+              log "Codex commit/push after CI fix failed and wrapper fallback also failed. Stopping loop."
+            else
+              log "Codex reported ${commit_result} after CI fix and wrapper fallback failed. Stopping loop."
+            fi
+            exit 1
+          fi
+          ;;
+      esac
 
       sha="$(git -C "${ROOT_DIR}" rev-parse HEAD)"
       log "Pushed follow-up commit ${sha}. Re-polling GitHub Actions."
