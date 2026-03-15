@@ -28,12 +28,15 @@ import Servant.Multipart (FileData, FromMultipart(..), MultipartForm, Tmp, looku
 
 import TDF.DTO.SocialEventsDTO
   ( EventDTO
+  , EventUpdateDTO
   , VenueDTO
+  , VenueUpdateDTO
   , ArtistDTO
   , ArtistFollowerDTO
   , ArtistFollowRequest
   , RsvpDTO
   , InvitationDTO
+  , InvitationUpdateDTO
   , TicketTierDTO
   , TicketPurchaseRequestDTO
   , TicketOrderStatusUpdateDTO
@@ -90,7 +93,7 @@ type EventsRoutes =
          :> Get '[JSON] [EventDTO]
   :<|> "events" :> ReqBody '[JSON] EventDTO :> Post '[JSON] EventDTO
   :<|> "events" :> IdParam :> Get '[JSON] EventDTO
-  :<|> "events" :> IdParam :> ReqBody '[JSON] EventDTO :> Put '[JSON] EventDTO
+  :<|> "events" :> IdParam :> ReqBody '[JSON] EventUpdateDTO :> Put '[JSON] EventDTO
   :<|> "events" :> IdParam :> "image" :> MultipartForm Tmp EventImageUploadForm :> Post '[JSON] EventImageUploadDTO
   :<|> "events" :> IdParam :> DeleteNoContent
 
@@ -98,7 +101,7 @@ type VenuesRoutes =
        "venues" :> QueryParam "city" Text :> QueryParam "near" Text :> QueryParam "q" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [VenueDTO]
   :<|> "venues" :> ReqBody '[JSON] VenueDTO :> Post '[JSON] VenueDTO
   :<|> "venues" :> IdParam :> Get '[JSON] VenueDTO
-  :<|> "venues" :> IdParam :> ReqBody '[JSON] VenueDTO :> Put '[JSON] VenueDTO
+  :<|> "venues" :> IdParam :> ReqBody '[JSON] VenueUpdateDTO :> Put '[JSON] VenueDTO
 
 type ArtistsRoutes =
        "artists" :> QueryParam "name" Text :> QueryParam "genre" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [ArtistDTO]
@@ -117,7 +120,7 @@ type InvitationsRoutes =
        "events" :> Capture "eventId" Text :> "invitations" :>
          ( Get '[JSON] [InvitationDTO]
       :<|> ReqBody '[JSON] InvitationDTO :> Post '[JSON] InvitationDTO
-      :<|> Capture "invitationId" Text :> ReqBody '[JSON] InvitationDTO :> Put '[JSON] InvitationDTO
+      :<|> Capture "invitationId" Text :> ReqBody '[JSON] InvitationUpdateDTO :> Put '[JSON] InvitationDTO
          )
 
 type TicketsRoutes =

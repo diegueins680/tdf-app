@@ -8,10 +8,16 @@ module TDF.DTO.SocialEventsDTO
   , ArtistSocialLinksDTO(..)
   , ArtistFollowerDTO(..)
   , ArtistFollowRequest(..)
+  , NullableFieldUpdate(..)
   , VenueDTO(..)
+  , VenueContactUpdateDTO(..)
+  , VenueUpdateDTO(..)
   , EventDTO(..)
+  , EventMetadataUpdateDTO(..)
+  , EventUpdateDTO(..)
   , RsvpDTO(..)
   , InvitationDTO(..)
+  , InvitationUpdateDTO(..)
   , TicketTierDTO(..)
   , TicketPurchaseRequestDTO(..)
   , TicketOrderStatusUpdateDTO(..)
@@ -23,10 +29,21 @@ module TDF.DTO.SocialEventsDTO
   , EventFinanceSummaryDTO(..)
   ) where
 
-import           Data.Aeson (FromJSON, ToJSON, withObject, (.:), (.:?), (.=), object, toJSON, parseJSON)
+import           Data.Aeson (FromJSON, ToJSON, Value(..), withObject, (.:), (.:!), (.:?), (.=), object, toJSON, parseJSON)
 import           Data.Text  (Text)
 import           Data.Time  (UTCTime)
 import           GHC.Generics (Generic)
+
+data NullableFieldUpdate a
+  = FieldMissing
+  | FieldNull
+  | FieldValue a
+  deriving (Show, Eq, Generic)
+
+nullableFieldFromParsed :: Maybe (Maybe a) -> NullableFieldUpdate a
+nullableFieldFromParsed Nothing = FieldMissing
+nullableFieldFromParsed (Just Nothing) = FieldNull
+nullableFieldFromParsed (Just (Just value)) = FieldValue value
 
 data ArtistSocialLinksDTO = ArtistSocialLinksDTO
   { aslSpotify    :: Maybe Text
@@ -147,6 +164,31 @@ data VenueDTO = VenueDTO
 instance ToJSON VenueDTO
 instance FromJSON VenueDTO
 
+data VenueContactUpdateDTO = VenueContactUpdateDTO
+  { vcuPhone    :: NullableFieldUpdate Text
+  , vcuWebsite  :: NullableFieldUpdate Text
+  , vcuState    :: NullableFieldUpdate Text
+  , vcuZipCode  :: NullableFieldUpdate Text
+  , vcuImageUrl :: NullableFieldUpdate Text
+  } deriving (Show, Eq, Generic)
+
+data VenueUpdateDTO = VenueUpdateDTO
+  { vudVenue         :: VenueDTO
+  , vudContactUpdate :: VenueContactUpdateDTO
+  } deriving (Show, Eq, Generic)
+
+instance FromJSON VenueUpdateDTO where
+  parseJSON value@(Object o) =
+    VenueUpdateDTO
+      <$> parseJSON value
+      <*> (VenueContactUpdateDTO
+            <$> (nullableFieldFromParsed <$> (o .:! "venuePhone"))
+            <*> (nullableFieldFromParsed <$> (o .:! "venueWebsite"))
+            <*> (nullableFieldFromParsed <$> (o .:! "venueState"))
+            <*> (nullableFieldFromParsed <$> (o .:! "venueZipCode"))
+            <*> (nullableFieldFromParsed <$> (o .:! "venueImageUrl")))
+  parseJSON _ = fail "VenueUpdateDTO must be an object"
+
 data EventDTO = EventDTO
   { eventId          :: Maybe Text
   , eventOrganizerPartyId :: Maybe Text
@@ -171,6 +213,35 @@ data EventDTO = EventDTO
 instance ToJSON EventDTO
 instance FromJSON EventDTO
 
+data EventMetadataUpdateDTO = EventMetadataUpdateDTO
+  { emuTicketUrl   :: NullableFieldUpdate Text
+  , emuImageUrl    :: NullableFieldUpdate Text
+  , emuIsPublic    :: NullableFieldUpdate Bool
+  , emuType        :: NullableFieldUpdate Text
+  , emuStatus      :: NullableFieldUpdate Text
+  , emuCurrency    :: NullableFieldUpdate Text
+  , emuBudgetCents :: NullableFieldUpdate Int
+  } deriving (Show, Eq, Generic)
+
+data EventUpdateDTO = EventUpdateDTO
+  { eudEvent          :: EventDTO
+  , eudMetadataUpdate :: EventMetadataUpdateDTO
+  } deriving (Show, Eq, Generic)
+
+instance FromJSON EventUpdateDTO where
+  parseJSON value@(Object o) =
+    EventUpdateDTO
+      <$> parseJSON value
+      <*> (EventMetadataUpdateDTO
+            <$> (nullableFieldFromParsed <$> (o .:! "eventTicketUrl"))
+            <*> (nullableFieldFromParsed <$> (o .:! "eventImageUrl"))
+            <*> (nullableFieldFromParsed <$> (o .:! "eventIsPublic"))
+            <*> (nullableFieldFromParsed <$> (o .:! "eventType"))
+            <*> (nullableFieldFromParsed <$> (o .:! "eventStatus"))
+            <*> (nullableFieldFromParsed <$> (o .:! "eventCurrency"))
+            <*> (nullableFieldFromParsed <$> (o .:! "eventBudgetCents")))
+  parseJSON _ = fail "EventUpdateDTO must be an object"
+
 data RsvpDTO = RsvpDTO
   { rsvpId        :: Maybe Text
   , rsvpEventId   :: Text
@@ -194,6 +265,18 @@ data InvitationDTO = InvitationDTO
   } deriving (Show, Eq, Generic)
 instance ToJSON InvitationDTO
 instance FromJSON InvitationDTO
+
+data InvitationUpdateDTO = InvitationUpdateDTO
+  { iudInvitation    :: InvitationDTO
+  , iudMessageUpdate :: NullableFieldUpdate Text
+  } deriving (Show, Eq, Generic)
+
+instance FromJSON InvitationUpdateDTO where
+  parseJSON value@(Object o) =
+    InvitationUpdateDTO
+      <$> parseJSON value
+      <*> (nullableFieldFromParsed <$> (o .:! "invitationMessage"))
+  parseJSON _ = fail "InvitationUpdateDTO must be an object"
 
 data TicketTierDTO = TicketTierDTO
   { ticketTierId            :: Maybe Text

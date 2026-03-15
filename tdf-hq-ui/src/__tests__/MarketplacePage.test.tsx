@@ -250,11 +250,52 @@ describe('MarketplacePage', () => {
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
-    expect(getInputByLabel(container, 'Buscar equipo').value).toBe('url term');
-    expect(container.textContent).toContain('Categoría: Mics');
-    expect(container.textContent).toContain('Modalidad: Venta');
-    expect(container.textContent).toContain('Condición: used');
-    expect(window.location.search).toBe('?q=url+term&cat=Mics&sort=price-desc&purpose=sale&cond=used');
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, 'Buscar equipo').value).toBe('url term');
+      expect(container.textContent).toContain('Categoría: Mics');
+      expect(container.textContent).toContain('Modalidad: Venta');
+      expect(container.textContent).toContain('Condición: used');
+      expect(window.location.search).toBe('?q=url+term&cat=Mics&sort=price-desc&purpose=sale&cond=used');
+    });
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('drops stale saved category and condition filters once listings load', async () => {
+    listMock.mockResolvedValue([
+      buildListing({ miCategory: 'Mics', miCondition: 'used', miPurpose: 'sale' }),
+      buildListing({
+        miListingId: 'listing-2',
+        miAssetId: 'asset-2',
+        miTitle: 'Stage Piano',
+        miCategory: 'Keys',
+        miCondition: 'demo',
+        miPurpose: 'rent',
+      }),
+    ]);
+    window.localStorage.setItem(
+      'tdf-marketplace-filters',
+      JSON.stringify({ category: 'Missing', condition: 'broken', sort: 'relevance', purpose: 'all', search: '' }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Vintage Mic');
+      expect(container.textContent).toContain('Stage Piano');
+      expect(window.location.search).toBe('');
+      const savedFilters = JSON.parse(window.localStorage.getItem('tdf-marketplace-filters') ?? '{}') as {
+        category?: string;
+        condition?: string;
+      };
+      expect(savedFilters.category).toBe('all');
+      expect(savedFilters.condition).toBe('all');
+      expect(container.textContent).not.toContain('Categoría: Missing');
+      expect(container.textContent).not.toContain('Condición: broken');
+    });
 
     await cleanup();
     document.body.removeChild(container);

@@ -18,6 +18,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeFinanceDirection
   , normalizeFinanceSource
   , normalizeFinanceEntryStatus
+  , normalizePositivePartyIdText
   ) where
 
 import           Control.Applicative ((<|>))
@@ -55,13 +56,19 @@ import           TDF.Auth (AuthedUser(..))
 import           TDF.Config (assetsRootDir, resolveConfiguredAssetsBase)
 import           TDF.DTO.SocialEventsDTO
   ( EventDTO(..)
+  , EventUpdateDTO(..)
+  , EventMetadataUpdateDTO(..)
   , VenueDTO(..)
+  , VenueUpdateDTO(..)
+  , VenueContactUpdateDTO(..)
   , ArtistDTO(..)
   , ArtistSocialLinksDTO(..)
   , ArtistFollowerDTO(..)
   , ArtistFollowRequest(..)
+  , NullableFieldUpdate(..)
   , RsvpDTO(..)
   , InvitationDTO(..)
+  , InvitationUpdateDTO(..)
   , TicketTierDTO(..)
   , TicketPurchaseRequestDTO(..)
   , TicketOrderStatusUpdateDTO(..)
@@ -157,26 +164,51 @@ encodeEventMetadata EventMetadataDTO{..}
             , emBudgetCents = emBudgetCents
             })
 
-eventMetadataFromDTO :: EventDTO -> EventMetadataDTO
-eventMetadataFromDTO dto = EventMetadataDTO
-  { emTicketUrl = cleanMaybeText (eventTicketUrl dto)
-  , emImageUrl = cleanMaybeText (eventImageUrl dto)
-  , emIsPublic = eventIsPublic dto
-  , emType = normalizeEventType (eventType dto)
-  , emStatus = normalizeEventStatus (eventStatus dto)
-  , emCurrency = normalizeCurrencyMaybe (eventCurrency dto)
-  , emBudgetCents = normalizeBudgetCentsMaybe (eventBudgetCents dto)
-  }
+applyNullableTextUpdate :: NullableFieldUpdate T.Text -> Maybe T.Text -> Maybe T.Text
+applyNullableTextUpdate field existing =
+  case field of
+    FieldMissing -> existing
+    FieldNull -> Nothing
+    FieldValue value -> cleanMaybeText (Just value)
 
-mergeEventMetadata :: EventMetadataDTO -> EventMetadataDTO -> EventMetadataDTO
-mergeEventMetadata incoming existing = EventMetadataDTO
-  { emTicketUrl = emTicketUrl incoming <|> emTicketUrl existing
-  , emImageUrl = emImageUrl incoming <|> emImageUrl existing
-  , emIsPublic = emIsPublic incoming <|> emIsPublic existing
-  , emType = emType incoming <|> emType existing
-  , emStatus = emStatus incoming <|> emStatus existing
-  , emCurrency = emCurrency incoming <|> emCurrency existing
-  , emBudgetCents = emBudgetCents incoming <|> emBudgetCents existing
+applyNullableBoolUpdate :: NullableFieldUpdate Bool -> Maybe Bool -> Maybe Bool
+applyNullableBoolUpdate field existing =
+  case field of
+    FieldMissing -> existing
+    FieldNull -> Nothing
+    FieldValue value -> Just value
+
+applyNullableIntUpdate :: (a -> Maybe b) -> NullableFieldUpdate a -> Maybe b -> Maybe b
+applyNullableIntUpdate normalizeValue field existing =
+  case field of
+    FieldMissing -> existing
+    FieldNull -> Nothing
+    FieldValue value ->
+      case normalizeValue value of
+        Just normalized -> Just normalized
+        Nothing -> existing
+
+applyNullableNormalizedTextUpdate :: (Maybe T.Text -> Maybe T.Text) -> NullableFieldUpdate T.Text -> Maybe T.Text -> Maybe T.Text
+applyNullableNormalizedTextUpdate normalizeValue field existing =
+  case field of
+    FieldMissing -> existing
+    FieldNull -> Nothing
+    FieldValue value ->
+      case normalizeValue (Just value) of
+        Just normalized -> Just normalized
+        Nothing
+          | T.null (T.strip value) -> Nothing
+          | otherwise -> existing
+
+applyEventMetadataUpdate :: EventMetadataUpdateDTO -> EventMetadataDTO -> EventMetadataDTO
+applyEventMetadataUpdate EventMetadataUpdateDTO{..} existing = EventMetadataDTO
+  { emTicketUrl = applyNullableTextUpdate emuTicketUrl (emTicketUrl existing)
+  , emImageUrl = applyNullableTextUpdate emuImageUrl (emImageUrl existing)
+  , emIsPublic = applyNullableBoolUpdate emuIsPublic (emIsPublic existing)
+  , emType = applyNullableNormalizedTextUpdate normalizeEventType emuType (emType existing)
+  , emStatus = applyNullableNormalizedTextUpdate normalizeEventStatus emuStatus (emStatus existing)
+  , emCurrency = applyNullableNormalizedTextUpdate normalizeCurrencyMaybe emuCurrency (emCurrency existing)
+  , emBudgetCents = applyNullableIntUpdate (\value -> normalizeBudgetCentsMaybe (Just value)) emuBudgetCents (emBudgetCents existing)
   }
 
 data VenueContactMetadata = VenueContactMetadata
@@ -249,13 +281,13 @@ venueContactMetadataFromDTO dto =
       , vcmImageUrl = cleanMaybeText (venueImageUrl dto) <|> vcmImageUrl parsedContact
       }
 
-mergeVenueContactMetadata :: VenueContactMetadata -> VenueContactMetadata -> VenueContactMetadata
-mergeVenueContactMetadata incoming existing = VenueContactMetadata
-  { vcmPhone = vcmPhone incoming <|> vcmPhone existing
-  , vcmWebsite = vcmWebsite incoming <|> vcmWebsite existing
-  , vcmState = vcmState incoming <|> vcmState existing
-  , vcmZipCode = vcmZipCode incoming <|> vcmZipCode existing
-  , vcmImageUrl = vcmImageUrl incoming <|> vcmImageUrl existing
+applyVenueContactUpdate :: VenueContactUpdateDTO -> VenueContactMetadata -> VenueContactMetadata
+applyVenueContactUpdate VenueContactUpdateDTO{..} existing = VenueContactMetadata
+  { vcmPhone = applyNullableTextUpdate vcuPhone (vcmPhone existing)
+  , vcmWebsite = applyNullableTextUpdate vcuWebsite (vcmWebsite existing)
+  , vcmState = applyNullableTextUpdate vcuState (vcmState existing)
+  , vcmZipCode = applyNullableTextUpdate vcuZipCode (vcmZipCode existing)
+  , vcmImageUrl = applyNullableTextUpdate vcuImageUrl (vcmImageUrl existing)
   }
 
 socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
@@ -405,22 +437,19 @@ socialEventsServer user = eventsServer
           artists <- liftIO $ loadEventArtists envPool eventKey
           pure (eventEntityToDTO eventKey eventRow artists)
 
-    updateEvent :: T.Text -> EventDTO -> AppM EventDTO
-    updateEvent rawId dto = do
+    updateEvent :: T.Text -> EventUpdateDTO -> AppM EventDTO
+    updateEvent rawId EventUpdateDTO{..} = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
       eventKey <- parseKeyOr400 "event" rawId
       mExisting <- liftIO $ runSqlPool (get eventKey) envPool
       existing <- maybe (throwError err404 { errBody = "Event not found" }) pure mExisting
+      let dto = eudEvent
       when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
       when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
       let existingMetadata = decodeEventMetadata (socialEventMetadata existing)
-          requestedMetadata = eventMetadataFromDTO dto
-          mergedMetadata =
-            mergeEventMetadata
-              requestedMetadata
-              existingMetadata
+          mergedMetadata = applyEventMetadataUpdate eudMetadataUpdate existingMetadata
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
         Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
@@ -647,16 +676,16 @@ socialEventsServer user = eventsServer
               , venueUpdatedAt = Just (SM.venueUpdatedAt v)
               }
 
-    updateVenue :: T.Text -> VenueDTO -> AppM VenueDTO
-    updateVenue rawId dto = do
+    updateVenue :: T.Text -> VenueUpdateDTO -> AppM VenueDTO
+    updateVenue rawId VenueUpdateDTO{..} = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
       venueKey <- parseKeyOr400 "venue" rawId
       mExisting <- liftIO $ runSqlPool (get venueKey) envPool
       existing <- maybe (throwError err404 { errBody = "Venue not found" }) pure mExisting
+      let dto = vudVenue
       let existingContactMeta = decodeVenueContactMetadata (SM.venueContact existing)
-          requestedContactMeta = venueContactMetadataFromDTO dto
-          mergedContactMeta = mergeVenueContactMetadata requestedContactMeta existingContactMeta
+          mergedContactMeta = applyVenueContactUpdate vudContactUpdate existingContactMeta
       liftIO $ runSqlPool (update venueKey
         [ VenueName =. venueName dto
         , VenueAddress =. venueAddress dto
@@ -876,8 +905,10 @@ socialEventsServer user = eventsServer
       artistKey <- parseArtistId artistIdStr
       mArtist <- liftIO $ runSqlPool (get artistKey) envPool
       when (isNothing mArtist) $ throwError err404 { errBody = "Artist not found" }
-      let followerParty = T.strip afrFollowerPartyId
-      when (T.null followerParty) $ throwError err400 { errBody = "followerPartyId is required" }
+      followerParty <-
+        case normalizePositivePartyIdText afrFollowerPartyId of
+          Nothing -> throwError err400 { errBody = "followerPartyId must be a positive integer" }
+          Just normalized -> pure normalized
       liftIO $ followArtistDb envPool artistKey followerParty
 
     unfollowArtist :: T.Text -> Maybe T.Text -> AppM NoContent
@@ -921,16 +952,20 @@ socialEventsServer user = eventsServer
       eventKey <- parseKeyOr400 "event" eventIdStr
       mEvent <- liftIO $ runSqlPool (get eventKey) envPool
       when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
+      partyIdVal <-
+        case normalizePositivePartyIdText (rsvpPartyId dto) of
+          Nothing -> throwError err400 { errBody = "rsvpPartyId must be a positive integer" }
+          Just normalized -> pure normalized
 
       existingRsvps <- liftIO $ runSqlPool
-        (selectList [EventRsvpEventId ==. eventKey, EventRsvpPartyId ==. rsvpPartyId dto] [])
+        (selectList [EventRsvpEventId ==. eventKey, EventRsvpPartyId ==. partyIdVal] [])
         envPool
 
       case existingRsvps of
         [] -> do
           key <- liftIO $ runSqlPool (insert EventRsvp
             { eventRsvpEventId = eventKey
-            , eventRsvpPartyId = rsvpPartyId dto
+            , eventRsvpPartyId = partyIdVal
             , eventRsvpStatus = rsvpStatus dto
             , eventRsvpMetadata = Nothing
             , eventRsvpCreatedAt = now
@@ -938,6 +973,7 @@ socialEventsServer user = eventsServer
             }) envPool
           pure dto
             { rsvpId = Just (renderKeyText key)
+            , rsvpPartyId = partyIdVal
             , rsvpCreatedAt = Just now
             , rsvpUpdatedAt = Just now
             }
@@ -948,6 +984,7 @@ socialEventsServer user = eventsServer
             ]) envPool
           pure dto
             { rsvpId = Just (renderKeyText existingKey)
+            , rsvpPartyId = partyIdVal
             , rsvpCreatedAt = Just (eventRsvpCreatedAt existing)
             , rsvpUpdatedAt = Just now
             }
@@ -1009,8 +1046,8 @@ socialEventsServer user = eventsServer
         , invitationUpdatedAt = Just now
         }
 
-    updateInvitation :: T.Text -> T.Text -> InvitationDTO -> AppM InvitationDTO
-    updateInvitation eventIdStr invitationIdStr dto = do
+    updateInvitation :: T.Text -> T.Text -> InvitationUpdateDTO -> AppM InvitationDTO
+    updateInvitation eventIdStr invitationIdStr InvitationUpdateDTO{..} = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
       (eventKey, invitationKey) <- parseIds eventIdStr invitationIdStr
@@ -1020,9 +1057,10 @@ socialEventsServer user = eventsServer
       case mExisting of
         Nothing -> throwError err404 { errBody = "Invitation not found" }
         Just inv -> do
+          let dto = iudInvitation
           when (eventInvitationEventId inv /= eventKey) $ throwError err400 { errBody = "Invitation does not belong to this event" }
           let statusVal = normalizeInvitationStatus (invitationStatus dto)
-          let messageVal = invitationMessage dto <|> eventInvitationMessage inv
+          let messageVal = applyNullableTextUpdate iudMessageUpdate (eventInvitationMessage inv)
           let newToParty = cleanMaybeText (Just (invitationToPartyId dto))
           let toPartyVal = newToParty <|> eventInvitationToPartyId inv
           liftIO $ runSqlPool (update invitationKey
@@ -1819,7 +1857,7 @@ renderFollowId artistId followerPartyId =
 followArtistDb :: ConnectionPool -> ArtistProfileId -> T.Text -> IO ArtistFollowerDTO
 followArtistDb pool artistId followerPartyIdRaw = do
   now <- getCurrentTime
-  let followerPartyId = T.strip followerPartyIdRaw
+  let followerPartyId = fromMaybe (T.strip followerPartyIdRaw) (normalizePositivePartyIdText followerPartyIdRaw)
   let followKey = ArtistFollowKey artistId followerPartyId
   existing <- runSqlPool (get followKey) pool
   _ <- case existing of
@@ -1834,6 +1872,12 @@ followArtistDb pool artistId followerPartyIdRaw = do
     , afFollowerPartyId = followerPartyId
     , afCreatedAt = Just createdAtVal
     }
+
+normalizePositivePartyIdText :: T.Text -> Maybe T.Text
+normalizePositivePartyIdText rawPartyId =
+  case readMaybe (T.unpack (T.strip rawPartyId)) :: Maybe Int64 of
+    Just partyId | partyId > 0 -> Just (T.pack (show partyId))
+    _ -> Nothing
 
 -- | Normalize invitation status to a lowercase, non-empty value.
 normalizeInvitationStatus :: Maybe T.Text -> T.Text

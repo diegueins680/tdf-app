@@ -654,11 +654,19 @@ export default function MarketplacePage() {
     () => Array.from(new Set(listings.map((item) => item.miCondition).filter((v): v is string => Boolean(v)))),
     [listings],
   );
+  const resolvedCategory = useMemo(
+    () => (category !== 'all' && categories.includes(category) ? category : 'all'),
+    [categories, category],
+  );
+  const resolvedCondition = useMemo(
+    () => (condition !== 'all' && conditions.includes(condition) ? condition : 'all'),
+    [condition, conditions],
+  );
   const filteredListings = useMemo(() => {
     return listings.filter((item) => {
-      const matchesCategory = category === 'all' ? true : item.miCategory === category;
+      const matchesCategory = resolvedCategory === 'all' ? true : item.miCategory === resolvedCategory;
       const matchesPurpose = purpose === 'all' ? true : item.miPurpose === purpose;
-      const matchesCondition = condition === 'all' ? true : item.miCondition === condition;
+      const matchesCondition = resolvedCondition === 'all' ? true : item.miCondition === resolvedCondition;
       if (searchTokens.length === 0) return matchesCategory && matchesPurpose && matchesCondition;
       const haystack = [
         item.miTitle,
@@ -674,7 +682,7 @@ export default function MarketplacePage() {
       const matchesText = searchTokens.every((token) => haystackNormalized.includes(token));
       return matchesCategory && matchesPurpose && matchesCondition && matchesText;
     });
-  }, [category, condition, listings, purpose, searchTokens]);
+  }, [listings, purpose, resolvedCategory, resolvedCondition, searchTokens]);
   const computeRelevanceScore = useCallback((item: MarketplaceItemDTO) => {
     const status = (item.miStatus ?? '').toLowerCase();
     const isInStock = status.includes('stock') || status.includes('disponible');
@@ -723,6 +731,20 @@ export default function MarketplacePage() {
   }, [paypalEnabled, modules]);
 
   useEffect(() => {
+    if (!listingsQuery.isSuccess) return;
+    if (category !== 'all' && resolvedCategory === 'all') {
+      setCategory('all');
+    }
+  }, [category, listingsQuery.isSuccess, resolvedCategory]);
+
+  useEffect(() => {
+    if (!listingsQuery.isSuccess) return;
+    if (condition !== 'all' && resolvedCondition === 'all') {
+      setCondition('all');
+    }
+  }, [condition, listingsQuery.isSuccess, resolvedCondition]);
+
+  useEffect(() => {
     if (paymentMethod === 'paypal' && !showPaypalOption) {
       setPaymentMethod('contact');
     }
@@ -739,9 +761,9 @@ export default function MarketplacePage() {
   };
   const filtersActiveCount =
     (search.trim() ? 1 : 0) +
-    (category !== 'all' ? 1 : 0) +
+    (resolvedCategory !== 'all' ? 1 : 0) +
     (purpose !== 'all' ? 1 : 0) +
-    (condition !== 'all' ? 1 : 0) +
+    (resolvedCondition !== 'all' ? 1 : 0) +
     (sort !== 'relevance' ? 1 : 0);
 
   useEffect(() => {
@@ -1253,7 +1275,7 @@ export default function MarketplacePage() {
                 <InputLabel id="marketplace-category-label">Categoría</InputLabel>
                 <Select
                   labelId="marketplace-category-label"
-                  value={category}
+                  value={resolvedCategory}
                   label="Categoría"
                   onChange={(event: SelectChangeEvent<string>) => setCategory(event.target.value)}
                 >
@@ -1299,8 +1321,8 @@ export default function MarketplacePage() {
                   <Chip
                     label="Todas"
                     size="small"
-                    variant={condition === 'all' ? 'filled' : 'outlined'}
-                    color={condition === 'all' ? 'primary' : 'default'}
+                    variant={resolvedCondition === 'all' ? 'filled' : 'outlined'}
+                    color={resolvedCondition === 'all' ? 'primary' : 'default'}
                     onClick={() => setCondition('all')}
                   />
                   {conditions.map((c) => (
@@ -1308,8 +1330,8 @@ export default function MarketplacePage() {
                       key={c}
                       label={c}
                       size="small"
-                      variant={condition === c ? 'filled' : 'outlined'}
-                      color={condition === c ? 'primary' : 'default'}
+                      variant={resolvedCondition === c ? 'filled' : 'outlined'}
+                      color={resolvedCondition === c ? 'primary' : 'default'}
                       onClick={() => setCondition(c || 'all')}
                     />
                   ))}
@@ -1357,9 +1379,9 @@ export default function MarketplacePage() {
             </Stack>
             {filtersActiveCount > 0 && (
               <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ mb: 1 }}>
-                {category !== 'all' && <Chip label={`Categoría: ${category}`} size="small" />}
+                {resolvedCategory !== 'all' && <Chip label={`Categoría: ${resolvedCategory}`} size="small" />}
                 {purpose !== 'all' && <Chip label={`Modalidad: ${purpose === 'sale' ? 'Venta' : 'Renta'}`} size="small" />}
-                {condition !== 'all' && <Chip label={`Condición: ${condition}`} size="small" />}
+                {resolvedCondition !== 'all' && <Chip label={`Condición: ${resolvedCondition}`} size="small" />}
                 {sort !== 'relevance' && <Chip label={`Orden: ${sort}`} size="small" />}
                 {search.trim() && <Chip label="Búsqueda activa" size="small" />}
               </Stack>

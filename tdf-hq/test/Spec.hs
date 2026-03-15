@@ -3,6 +3,7 @@
 module Main (main) where
 
 import qualified Data.ByteString.Lazy.Char8 as BL
+import Data.Aeson (eitherDecode)
 import Data.Either (isLeft)
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Database.Persist.Sql (toSqlKey)
@@ -11,6 +12,17 @@ import Test.Hspec
 
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
+import TDF.DTO.SocialEventsDTO
+    ( EventUpdateDTO (..),
+      InvitationUpdateDTO (..),
+      NullableFieldUpdate (..),
+      VenueUpdateDTO (..),
+      eudMetadataUpdate,
+      emuBudgetCents,
+      emuTicketUrl,
+      iudMessageUpdate,
+      vcuPhone,
+      vudContactUpdate )
 import TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
@@ -23,6 +35,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeFinanceSource,
     normalizeArtistGenres,
     normalizeInvitationStatus,
+    normalizePositivePartyIdText,
     normalizeTicketOrderStatus,
     normalizeTicketStatus,
     parseInvitationIdsEither,
@@ -47,6 +60,35 @@ main = hspec $ do
     describe "normalizeArtistGenres" $ do
         it "trims genres, drops blanks, and deduplicates case-insensitively" $ do
             normalizeArtistGenres ["  Salsa ", "", "salsa", " Rock ", "ROCK", "Pop"] `shouldBe` ["Salsa", "Rock", "Pop"]
+
+    describe "social events update payload parsing" $ do
+        it "distinguishes missing metadata fields from explicit nulls for event updates" $ do
+            let payload = "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventTicketUrl\":null,\"eventBudgetCents\":4500}"
+            case eitherDecode payload :: Either String EventUpdateDTO of
+                Left err -> expectationFailure err
+                Right parsed -> do
+                    emuTicketUrl (eudMetadataUpdate parsed) `shouldBe` FieldNull
+                    emuBudgetCents (eudMetadataUpdate parsed) `shouldBe` FieldValue 4500
+
+        it "captures venue contact nulls and invitation message nulls in update payloads" $ do
+            let venuePayload = "{\"venueName\":\"Sala Uno\",\"venuePhone\":null}"
+                invitationPayload = "{\"invitationToPartyId\":\"12\",\"invitationMessage\":null}"
+            case eitherDecode venuePayload :: Either String VenueUpdateDTO of
+                Left err -> expectationFailure err
+                Right parsed ->
+                    vcuPhone (vudContactUpdate parsed) `shouldBe` FieldNull
+            case eitherDecode invitationPayload :: Either String InvitationUpdateDTO of
+                Left err -> expectationFailure err
+                Right parsed ->
+                    iudMessageUpdate parsed `shouldBe` FieldNull
+
+    describe "normalizePositivePartyIdText" $ do
+        it "accepts positive numeric ids and canonicalizes them" $ do
+            normalizePositivePartyIdText " 0042 " `shouldBe` Just "42"
+
+        it "rejects blank and non-numeric ids" $ do
+            normalizePositivePartyIdText "   " `shouldBe` Nothing
+            normalizePositivePartyIdText "abc" `shouldBe` Nothing
 
     describe "parseInvitationIdsEither" $ do
         it "parses numeric ids into typed keys" $ do
