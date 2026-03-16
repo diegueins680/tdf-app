@@ -1,0 +1,169 @@
+import { jest } from '@jest/globals';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
+import type { PartyDTO } from '../api/types';
+
+const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
+const createPartyMock = jest.fn<() => Promise<PartyDTO>>();
+const updatePartyMock = jest.fn<() => Promise<PartyDTO | null>>();
+
+jest.unstable_mockModule('../api/parties', () => ({
+  Parties: {
+    list: () => listPartiesMock(),
+    create: (...args: unknown[]) => createPartyMock(...args),
+    update: (...args: unknown[]) => updatePartyMock(...args),
+  },
+}));
+
+jest.unstable_mockModule('../api/admin', () => ({
+  Admin: {
+    createUser: jest.fn(() => Promise.resolve(null)),
+  },
+}));
+
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  useSession: () => ({ session: null }),
+}));
+
+jest.unstable_mockModule('../utils/accessControl', () => ({
+  canAccessPath: () => false,
+}));
+
+jest.unstable_mockModule('../components/PartyRelatedPopover', () => ({
+  default: () => null,
+}));
+
+const { default: PartiesPage } = await import('./PartiesPage');
+
+const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+const waitForExpectation = async (assertion: () => void, attempts = 12) => {
+  let lastError: unknown;
+  for (let index = 0; index < attempts; index += 1) {
+    try {
+      assertion();
+      return;
+    } catch (error) {
+      lastError = error;
+      await act(async () => {
+        await flushPromises();
+      });
+    }
+  }
+  throw lastError;
+};
+
+const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+const getButtonsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('button')).filter((element) => buttonText(element) === labelText) as HTMLButtonElement[];
+
+const clickButton = (button: HTMLButtonElement) => {
+  button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+};
+
+const renderPage = async (container: HTMLElement) => {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  });
+  let root: Root | null = createRoot(container);
+
+  await act(async () => {
+    root?.render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <QueryClientProvider client={qc}>
+          <PartiesPage />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+    await flushPromises();
+    await flushPromises();
+  });
+
+  return {
+    cleanup: async () => {
+      if (!root) return;
+      await act(async () => {
+        root?.unmount();
+        await flushPromises();
+      });
+      root = null;
+      qc.clear();
+      document.body.removeChild(container);
+    },
+  };
+};
+
+describe('PartiesPage', () => {
+  beforeAll(() => {
+    (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    if (!window.matchMedia) {
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: () => ({
+          matches: false,
+          media: '',
+          onchange: null,
+          addListener: () => undefined,
+          removeListener: () => undefined,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          dispatchEvent: () => false,
+        }),
+      });
+    }
+  });
+
+  beforeEach(() => {
+    listPartiesMock.mockReset();
+    createPartyMock.mockReset();
+    updatePartyMock.mockReset();
+    listPartiesMock.mockResolvedValue([]);
+    createPartyMock.mockResolvedValue({
+      partyId: 1,
+      displayName: 'Nuevo contacto',
+      isOrg: false,
+    } satisfies PartyDTO);
+    updatePartyMock.mockResolvedValue(null);
+  });
+
+  it('uses a single create CTA and keeps the person-vs-company choice inside the dialog', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(document.body, 'Nuevo contacto')).toHaveLength(1);
+        expect(getButtonsByText(document.body, 'Nueva banda')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Nueva persona')).toHaveLength(0);
+        expect(document.body.textContent).toContain('El tipo se elige dentro del formulario de alta.');
+      });
+
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Nuevo contacto')[0]!);
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain(
+          'Usa Persona para individuos y Empresa para bandas, sellos o negocios.',
+        );
+        expect(getButtonsByText(document.body, 'Cambiar a empresa')).toHaveLength(1);
+      });
+
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Cambiar a empresa')[0]!);
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getButtonsByText(document.body, 'Cambiar a persona')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+});

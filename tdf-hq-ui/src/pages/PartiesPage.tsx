@@ -34,7 +34,6 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import EditIcon from '@mui/icons-material/Edit';
 import SchoolIcon from '@mui/icons-material/School';
 import AddIcon from '@mui/icons-material/Add';
-import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { useNavigate } from 'react-router-dom';
@@ -51,17 +50,12 @@ type RoleValue = Role | (string & Record<never, never>);
 interface CreatePartyDialogProps {
   open: boolean;
   onClose: () => void;
-  defaultIsOrg: boolean;
 }
 
-function CreatePartyDialog({ open, onClose, defaultIsOrg }: CreatePartyDialogProps) {
+function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
   const [name, setName] = useState('');
-  const [isOrg, setIsOrg] = useState(defaultIsOrg);
-
-  useEffect(() => {
-    setIsOrg(defaultIsOrg);
-  }, [defaultIsOrg, open]);
+  const [isOrg, setIsOrg] = useState(false);
 
   const mutation = useMutation<PartyDTO, Error, PartyCreate>({
     mutationFn: (body) => Parties.create(body),
@@ -83,13 +77,24 @@ function CreatePartyDialog({ open, onClose, defaultIsOrg }: CreatePartyDialogPro
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
           <TextField label="Nombre / Display" value={name} onChange={(e) => setName(e.target.value)} required />
-          <Button
-            variant={isOrg ? 'contained' : 'outlined'}
-            onClick={() => setIsOrg((prev) => !prev)}
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            {isOrg ? 'Empresa' : 'Persona'}
-          </Button>
+          <Typography variant="body2" color="text.secondary">
+            Usa Persona para individuos y Empresa para bandas, sellos o negocios.
+          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+            <Chip
+              label={isOrg ? 'Empresa' : 'Persona'}
+              color={isOrg ? 'primary' : 'default'}
+              variant={isOrg ? 'filled' : 'outlined'}
+              size="small"
+            />
+            <Button
+              variant="outlined"
+              onClick={() => setIsOrg((prev) => !prev)}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              {isOrg ? 'Cambiar a persona' : 'Cambiar a empresa'}
+            </Button>
+          </Stack>
           {mutation.isError && mutation.error && (
             <Alert severity="error">{mutation.error.message}</Alert>
           )}
@@ -313,7 +318,6 @@ export default function PartiesPage() {
   const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const [editing, setEditing] = useState<PartyDTO | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [createDialogIsOrg, setCreateDialogIsOrg] = useState(false);
   const [search, setSearch] = useState('');
   const [userDialogParty, setUserDialogParty] = useState<PartyDTO | null>(null);
   const [relatedParty, setRelatedParty] = useState<PartyDTO | null>(null);
@@ -330,7 +334,7 @@ export default function PartiesPage() {
       <Stack spacing={1}>
         <Typography variant="h4">Personas / CRM</Typography>
         <Typography variant="body2" color="text.secondary">
-          Gestiona leads, empresas y roles en un solo lugar.
+          Gestiona personas, empresas y roles en un solo lugar. El tipo se elige dentro del formulario de alta.
         </Typography>
       </Stack>
 
@@ -359,24 +363,11 @@ export default function PartiesPage() {
           />
           <Stack direction="row" spacing={1}>
             <Button
-              variant="outlined"
-              startIcon={<GroupAddIcon />}
-              onClick={() => {
-                setCreateDialogIsOrg(true);
-                setCreateOpen(true);
-              }}
-            >
-              Nueva banda
-            </Button>
-            <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={() => {
-                setCreateDialogIsOrg(false);
-                setCreateOpen(true);
-              }}
+              onClick={() => setCreateOpen(true)}
             >
-              Nueva persona
+              Nuevo contacto
             </Button>
           </Stack>
         </Stack>
@@ -466,7 +457,7 @@ export default function PartiesPage() {
         </Table>
       </Paper>
 
-      <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} defaultIsOrg={createDialogIsOrg} />
+      <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       <EditPartyDialog party={editing} open={!!editing} onClose={() => setEditing(null)} />
       <CreateUserFromPartyDialog
         party={userDialogParty}
