@@ -49,6 +49,7 @@ import { formatTimestampForDisplay, parseTimestamp } from '../utils/dateTime';
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 type DossierIntent = 'review' | 'markPaid';
 type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
+const DEFAULT_LIMIT = 200;
 
 interface FlashState {
   severity: FlashSeverity;
@@ -78,6 +79,12 @@ interface FollowUpFormState {
 }
 
 const statusFilters: readonly StatusFilter[] = ['all', 'pending_payment', 'paid', 'cancelled'];
+const statusFilterLabels: Record<StatusFilter, string> = {
+  all: 'Todos',
+  pending_payment: 'Pendiente de pago',
+  paid: 'Pagado',
+  cancelled: 'Cancelado',
+};
 const followUpTypeOptions = ['note', 'call', 'whatsapp', 'email', 'payment_receipt', 'status_change', 'registration'];
 
 const emptyReceiptForm = (): ReceiptFormState => ({
@@ -105,11 +112,28 @@ const parseStatusFilter = (value: string | null): StatusFilter => {
   return isStatusFilter(trimmed) ? trimmed : 'all';
 };
 
-const parsePositiveLimit = (value: string | null, fallback = 200): number => {
+const parsePositiveLimit = (value: string | null, fallback = DEFAULT_LIMIT): number => {
   const trimmed = value?.trim() ?? '';
   if (!/^\d+$/.test(trimmed)) return fallback;
   const parsed = Number(trimmed);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const summarizeActiveFilters = ({
+  slug,
+  status,
+  limit,
+}: {
+  slug: string;
+  status: StatusFilter;
+  limit: number;
+}) => {
+  const parts: string[] = [];
+  const trimmedSlug = slug.trim();
+  if (trimmedSlug) parts.push(`cohorte ${trimmedSlug}`);
+  if (status !== 'all') parts.push(`estado ${statusFilterLabels[status].toLowerCase()}`);
+  if (limit !== DEFAULT_LIMIT) parts.push(`límite ${limit}`);
+  return parts.join(' · ');
 };
 
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
@@ -297,6 +321,12 @@ export default function CourseRegistrationsAdminPage() {
     );
   }, [regsQuery.data]);
 
+  const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
+  const activeFilterSummary = useMemo(
+    () => summarizeActiveFilters({ slug, status, limit }),
+    [slug, status, limit],
+  );
+
   const updateStatusMutation = useMutation({
     mutationFn: (args: { id: number; courseSlug: string; newStatus: Exclude<StatusFilter, 'all'> }) =>
       Courses.updateStatus(args.courseSlug, args.id, { status: args.newStatus }),
@@ -390,7 +420,7 @@ export default function CourseRegistrationsAdminPage() {
     const params = new URLSearchParams();
     if (slug.trim()) params.set('slug', slug.trim());
     if (status !== 'all') params.set('status', status);
-    if (limit && limit !== 200) params.set('limit', String(limit));
+    if (limit && limit !== DEFAULT_LIMIT) params.set('limit', String(limit));
     setSearchParams(params, { replace: true });
   }, [slug, status, limit, setSearchParams]);
 
@@ -444,6 +474,12 @@ export default function CourseRegistrationsAdminPage() {
       setCopyMessage('No se pudo copiar el CSV');
       setTimeout(() => setCopyMessage(null), 2000);
     }
+  };
+
+  const handleResetFilters = () => {
+    setSlug('');
+    setStatus('all');
+    setLimit(DEFAULT_LIMIT);
   };
 
   const handleQuickStatus = (reg: CourseRegistrationDTO, newStatus: Exclude<StatusFilter, 'all'>) => {
@@ -743,7 +779,7 @@ export default function CourseRegistrationsAdminPage() {
               type="number"
               inputProps={{ min: 1 }}
               value={limit}
-              onChange={(e) => setLimit(parsePositiveLimit(e.target.value, 100))}
+              onChange={(e) => setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT))}
               fullWidth
               size="small"
             />
@@ -756,6 +792,16 @@ export default function CourseRegistrationsAdminPage() {
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
           Cada fila solo muestra cambios de estado disponibles; el estado actual ya queda marcado en su chip.
         </Typography>
+        {hasCustomFilters && (
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
+            <Typography variant="body2" color="text.secondary">
+              Vista filtrada: {activeFilterSummary}.
+            </Typography>
+            <Button size="small" onClick={handleResetFilters}>
+              Restablecer filtros
+            </Button>
+          </Stack>
+        )}
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
           <Typography variant="caption" color="text.secondary">
             Leyenda de estados:

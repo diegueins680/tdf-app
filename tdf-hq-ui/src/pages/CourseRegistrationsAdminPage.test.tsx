@@ -274,4 +274,53 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await cleanup();
   });
+
+  it('shows when the list is filtered and lets admins reset filters in one step', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).not.toContain('Vista filtrada:');
+      expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Límite'), '50');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 50,
+      });
+      expect(container.textContent).toContain('Vista filtrada: límite 50.');
+      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Restablecer filtros'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 200,
+      });
+      expect(container.textContent).not.toContain('Vista filtrada:');
+      expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
+    });
+
+    await cleanup();
+  });
 });
