@@ -197,11 +197,13 @@ export default function TidalAgentPage() {
                   Código Tidal resultante
                 </Typography>
                 <TextField
+                  aria-label="Código Tidal resultante"
                   value={code ?? ''}
                   placeholder="El resultado aparecerá aquí..."
                   multiline
                   minRows={6}
                   fullWidth
+                  inputProps={{ 'aria-label': 'Código Tidal resultante' }}
                   InputProps={{ readOnly: true }}
                 />
               </Stack>
@@ -349,7 +351,15 @@ export default function TidalAgentPage() {
                   <Typography variant="subtitle2" color="text.secondary">
                     Respuesta completa del modelo (depuración)
                   </Typography>
-                  <TextField value={raw} multiline minRows={4} fullWidth InputProps={{ readOnly: true }} />
+                  <TextField
+                    aria-label="Respuesta completa del modelo"
+                    value={raw}
+                    multiline
+                    minRows={4}
+                    fullWidth
+                    inputProps={{ 'aria-label': 'Respuesta completa del modelo' }}
+                    InputProps={{ readOnly: true }}
+                  />
                 </Stack>
               )}
 
