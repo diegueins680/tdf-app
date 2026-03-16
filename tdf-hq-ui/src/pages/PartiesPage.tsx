@@ -441,6 +441,7 @@ export default function PartiesPage() {
                       <IconButton
                         onClick={() => setUserDialogParty(party)}
                         disabled={Boolean(party.hasUserAccount)}
+                        aria-label={`Crear usuario para ${party.displayName}`}
                       >
                         <PersonAddAltIcon fontSize="small" />
                       </IconButton>
@@ -448,7 +449,10 @@ export default function PartiesPage() {
                   </Tooltip>
                   {canManageRoles && (
                     <Tooltip title="Roles y accesos">
-                      <IconButton onClick={() => navigate('/configuracion/roles-permisos')}>
+                      <IconButton
+                        onClick={() => navigate('/configuracion/roles-permisos')}
+                        aria-label={`Abrir roles y accesos para ${party.displayName}`}
+                      >
                         <SchoolIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
