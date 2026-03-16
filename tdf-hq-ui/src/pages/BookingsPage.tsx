@@ -19,7 +19,6 @@ import {
   Select,
   Autocomplete,
   Chip,
-  Box,
 } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -32,6 +31,7 @@ import type { RoomDTO } from '../api/types';
 import { Parties } from '../api/parties';
 import { Services } from '../api/services';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { defaultMinutesForService, describeServiceDefaults, requiresEngineerForService } from './bookingsPageLogic';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -254,21 +254,6 @@ export default function BookingsPage() {
     });
   }, [assignedRoomIds, bookings, editingId, endInput, startInput, zone]);
 
-  const requiresEngineer = (svc: string) => {
-    const lowered = svc.toLowerCase();
-    return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
-      lowered.includes(keyword),
-    );
-  };
-  const defaultMinutesForService = (svc: string) => {
-    const lowered = svc.toLowerCase();
-    if (lowered.includes('trial') || lowered.includes('lesson') || lowered.includes('clase')) return 60;
-    if (lowered.includes('rehearsal') || lowered.includes('ensayo')) return 90;
-    if (lowered.includes('mix') || lowered.includes('master')) return 120;
-    if (lowered.includes('record') || lowered.includes('grab')) return 120;
-    return 60;
-  };
-
   const categorizeRooms = useMemo(() => {
     const map = {
       djBooth: [] as RoomDTO[],
@@ -336,7 +321,7 @@ export default function BookingsPage() {
     [parties],
   );
   const customerOptions = parties;
-  const missingEngineer = requiresEngineer(serviceType) && !(engineerName.trim() || engineerPartyId);
+  const missingEngineer = requiresEngineerForService(serviceType) && !(engineerName.trim() || engineerPartyId);
   const createPartyMutation = useMutation({
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
     onSuccess: (party) => {
@@ -1045,7 +1030,7 @@ const openDialogForRange = (start: Date, end: Date) => {
             />
             <TextField
               select
-              label="Plantilla rápida"
+              label="Plantilla rápida (opcional)"
               value={template}
               onChange={(e) => {
                 const val = String(e.target.value);
@@ -1070,7 +1055,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                   }
                 }
               }}
-              helperText="Prefill servicio, salas y notas"
+              helperText="Úsala si quieres precargar servicio, salas y notas de una vez."
               fullWidth
             >
               <MenuItem value="">Sin plantilla</MenuItem>
@@ -1120,7 +1105,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                   helperText={
                     engineerOptions.length === 0
                       ? 'No hay ingenieros en el catálogo de contactos.'
-                      : requiresEngineer(serviceType)
+                      : requiresEngineerForService(serviceType)
                         ? 'Recomendado para recording/mixing/mastering.'
                         : 'Opcional.'
                   }
@@ -1164,7 +1149,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                     setRoomsManuallyAdjusted(false);
                   }
                 }
-                if (requiresEngineer(value) && !engineerName && engineerOptions.length > 0) {
+                if (requiresEngineerForService(value) && !engineerName && engineerOptions.length > 0) {
                   const eng = engineerOptions[0]!;
                   setEngineerName(eng.displayName);
                   setEngineerPartyId(eng.partyId);
@@ -1180,7 +1165,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                 }
                 setAutoAssignMessage(messageParts.join(' · '));
               }}
-              helperText="Elige el tipo de servicio asociado a la sesión."
+              helperText={describeServiceDefaults(serviceType)}
             >
               <MenuItem value="">(Sin asignar)</MenuItem>
               {serviceTypes.map((svc) => (
@@ -1228,11 +1213,6 @@ const openDialogForRange = (start: Date, end: Date) => {
                 {autoAssignMessage}
               </Typography>
             )}
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Reglas: DJ Practice → DJ Booth · Band recording → Live + Control · Vocal recording → Vocal Booth + Control · Band rehearsal → Live · Mixing/Mastering → Control. Recording/Mixing/Mastering requieren ingeniero.
-              </Typography>
-            </Box>
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
