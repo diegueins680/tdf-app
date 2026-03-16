@@ -392,6 +392,7 @@ export default function LabelArtistsPage() {
                       onChange={(e) =>
                         setNoteDrafts((prev) => ({ ...prev, [artist.apArtistId]: e.target.value }))
                       }
+                      aria-label={`Nota o pendiente para ${artist.apDisplayName}`}
                       placeholder="Agregar nota o pendiente"
                       fullWidth
                       size="small"
