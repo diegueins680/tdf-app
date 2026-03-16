@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Collapse,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -228,6 +229,8 @@ export default function CourseRegistrationsAdminPage() {
   const [notesDraft, setNotesDraft] = useState('');
   const [receiptForm, setReceiptForm] = useState<ReceiptFormState>(emptyReceiptForm);
   const [followUpForm, setFollowUpForm] = useState<FollowUpFormState>(emptyFollowUpForm);
+  const [showReceiptUrlField, setShowReceiptUrlField] = useState(false);
+  const [showFollowUpUrlField, setShowFollowUpUrlField] = useState(false);
 
   const listQueryKey = useMemo(
     () => ['admin', 'course-registrations', { slug, status, limit }],
@@ -432,10 +435,14 @@ export default function CourseRegistrationsAdminPage() {
       setNotesDraft('');
       setReceiptForm(emptyReceiptForm());
       setFollowUpForm(emptyFollowUpForm());
+      setShowReceiptUrlField(false);
+      setShowFollowUpUrlField(false);
       return;
     }
     setReceiptForm(emptyReceiptForm());
     setFollowUpForm(emptyFollowUpForm());
+    setShowReceiptUrlField(false);
+    setShowFollowUpUrlField(false);
     setDossierFlash(
       selectedDossier.intent === 'markPaid'
         ? {
@@ -579,6 +586,7 @@ export default function CourseRegistrationsAdminPage() {
     void action
       .then(() => {
         setReceiptForm(emptyReceiptForm());
+        setShowReceiptUrlField(false);
         setDossierFlash({
           severity: 'success',
           message: receiptForm.editingId == null ? 'Comprobante guardado.' : 'Comprobante actualizado.',
@@ -596,6 +604,7 @@ export default function CourseRegistrationsAdminPage() {
       fileName: receipt.crrFileName ?? '',
       notes: receipt.crrNotes ?? '',
     });
+    setShowReceiptUrlField(true);
   };
 
   const handleDeleteReceipt = (receipt: CourseRegistrationReceiptDTO) => {
@@ -611,6 +620,7 @@ export default function CourseRegistrationsAdminPage() {
       .then(() => {
         if (receiptForm.editingId === receipt.crrId) {
           setReceiptForm(emptyReceiptForm());
+          setShowReceiptUrlField(false);
         }
         setDossierFlash({ severity: 'success', message: 'Comprobante eliminado.' });
       })
@@ -651,6 +661,7 @@ export default function CourseRegistrationsAdminPage() {
     void action
       .then(() => {
         setFollowUpForm(emptyFollowUpForm());
+        setShowFollowUpUrlField(false);
         setDossierFlash({
           severity: 'success',
           message: followUpForm.editingId == null ? 'Seguimiento guardado.' : 'Seguimiento actualizado.',
@@ -671,6 +682,7 @@ export default function CourseRegistrationsAdminPage() {
       attachmentName: entry.crfAttachmentName ?? '',
       nextFollowUpAt: toLocalDateTimeInputValue(entry.crfNextFollowUpAt),
     });
+    setShowFollowUpUrlField(Boolean(entry.crfAttachmentUrl));
   };
 
   const handleDeleteFollowUp = (entry: CourseRegistrationFollowUpDTO) => {
@@ -686,6 +698,7 @@ export default function CourseRegistrationsAdminPage() {
       .then(() => {
         if (followUpForm.editingId === entry.crfId) {
           setFollowUpForm(emptyFollowUpForm());
+          setShowFollowUpUrlField(false);
         }
         setDossierFlash({ severity: 'success', message: 'Seguimiento eliminado.' });
       })
@@ -1057,13 +1070,25 @@ export default function CourseRegistrationsAdminPage() {
                             onComplete={handleReceiptUpload}
                             dense
                           />
-                          <TextField
-                            label="URL del comprobante"
-                            value={receiptForm.fileUrl}
-                            onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
-                            placeholder="Pega un enlace existente si el archivo ya está cargado"
-                            fullWidth
-                          />
+                          {!showReceiptUrlField && (
+                            <Button
+                              size="small"
+                              variant="text"
+                              sx={{ alignSelf: 'flex-start' }}
+                              onClick={() => setShowReceiptUrlField(true)}
+                            >
+                              Usar enlace existente en lugar de subir archivo
+                            </Button>
+                          )}
+                          <Collapse in={showReceiptUrlField} unmountOnExit>
+                            <TextField
+                              label="URL del comprobante"
+                              value={receiptForm.fileUrl}
+                              onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
+                              placeholder="Pega un enlace existente si el archivo ya está cargado"
+                              fullWidth
+                            />
+                          </Collapse>
                           <TextField
                             label="Nombre visible"
                             value={receiptForm.fileName}
@@ -1089,7 +1114,13 @@ export default function CourseRegistrationsAdminPage() {
                               {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
                             </Button>
                             {receiptForm.editingId != null && (
-                              <Button variant="text" onClick={() => setReceiptForm(emptyReceiptForm())}>
+                              <Button
+                                variant="text"
+                                onClick={() => {
+                                  setReceiptForm(emptyReceiptForm());
+                                  setShowReceiptUrlField(false);
+                                }}
+                              >
                                 Cancelar edición
                               </Button>
                             )}
@@ -1228,12 +1259,24 @@ export default function CourseRegistrationsAdminPage() {
                             onComplete={handleFollowUpUpload}
                             dense
                           />
-                          <TextField
-                            label="URL del adjunto"
-                            value={followUpForm.attachmentUrl}
-                            onChange={(e) => setFollowUpForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))}
-                            fullWidth
-                          />
+                          {!showFollowUpUrlField && (
+                            <Button
+                              size="small"
+                              variant="text"
+                              sx={{ alignSelf: 'flex-start' }}
+                              onClick={() => setShowFollowUpUrlField(true)}
+                            >
+                              Usar enlace existente en lugar de subir adjunto
+                            </Button>
+                          )}
+                          <Collapse in={showFollowUpUrlField} unmountOnExit>
+                            <TextField
+                              label="URL del adjunto"
+                              value={followUpForm.attachmentUrl}
+                              onChange={(e) => setFollowUpForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))}
+                              fullWidth
+                            />
+                          </Collapse>
                           <Stack direction="row" spacing={1}>
                             <Button
                               variant="contained"
@@ -1243,7 +1286,13 @@ export default function CourseRegistrationsAdminPage() {
                               {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
                             </Button>
                             {followUpForm.editingId != null && (
-                              <Button variant="text" onClick={() => setFollowUpForm(emptyFollowUpForm())}>
+                              <Button
+                                variant="text"
+                                onClick={() => {
+                                  setFollowUpForm(emptyFollowUpForm());
+                                  setShowFollowUpUrlField(false);
+                                }}
+                              >
                                 Cancelar edición
                               </Button>
                             )}

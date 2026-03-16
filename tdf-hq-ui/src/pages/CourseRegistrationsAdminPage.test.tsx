@@ -123,6 +123,12 @@ const getInputByLabel = (container: HTMLElement, labelText: string) => {
   return fallback;
 };
 
+const hasLabel = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('label')).some((el) => {
+    const text = (el.textContent ?? '').replace('*', '').trim();
+    return text === labelText;
+  });
+
 const setInputValue = (input: HTMLInputElement, value: string) => {
   const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
   if (descriptor?.set) {
@@ -226,6 +232,25 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Expediente de inscripción');
       expect(document.body.textContent).toContain('Ver correos');
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Usar enlace existente en lugar de subir archivo');
+      expect(document.body.textContent).toContain('Usar enlace existente en lugar de subir adjunto');
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
+      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
     });
 
     await cleanup();
