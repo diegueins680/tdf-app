@@ -323,9 +323,11 @@ export default function LabelArtistsPage() {
         <Stack direction="row" spacing={1} alignItems="center">
           <TextField
             size="small"
+            aria-label="Buscar artistas"
             placeholder="Buscar por nombre, slug o ciudad"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
+            inputProps={{ 'aria-label': 'Buscar artistas' }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
