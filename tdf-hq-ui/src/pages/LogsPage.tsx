@@ -81,12 +81,13 @@ export default function LogsPage() {
             inputProps={{ min: 1, max: 1000 }}
           />
           <Tooltip title="Refresh logs">
-            <IconButton onClick={() => void logsQuery.refetch()} disabled={logsQuery.isFetching}>
+            <IconButton aria-label="Refresh logs" onClick={() => void logsQuery.refetch()} disabled={logsQuery.isFetching}>
               <RefreshIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title="Clear all logs">
             <IconButton
+              aria-label="Clear all logs"
               onClick={() => clearLogsMutation.mutate()}
               disabled={clearLogsMutation.isPending}
               color="error"
