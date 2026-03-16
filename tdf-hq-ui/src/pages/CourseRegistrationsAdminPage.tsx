@@ -670,9 +670,11 @@ export default function CourseRegistrationsAdminPage() {
           <Chip label={`Pendientes: ${statusCounts.pending_payment}`} size="small" color="warning" variant="outlined" />
           <Chip label={`Canceladas: ${statusCounts.cancelled}`} size="small" color="error" variant="outlined" />
           <Tooltip title="Refrescar">
-            <IconButton aria-label="Refrescar inscripciones" onClick={handleRefresh} disabled={regsQuery.isFetching}>
-              <RefreshIcon />
-            </IconButton>
+            <span>
+              <IconButton aria-label="Refrescar inscripciones" onClick={handleRefresh} disabled={regsQuery.isFetching}>
+                <RefreshIcon />
+              </IconButton>
+            </span>
           </Tooltip>
         </Stack>
       </Stack>
@@ -681,10 +683,10 @@ export default function CourseRegistrationsAdminPage() {
 
       <Paper sx={{ p: 3, borderRadius: 3 }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={5}>
             <TextField
               select
-              label="Slug"
+              label="Curso / cohorte"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               fullWidth
@@ -706,7 +708,7 @@ export default function CourseRegistrationsAdminPage() {
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={4}>
             <TextField
               select
               label="Estado"
@@ -721,7 +723,7 @@ export default function CourseRegistrationsAdminPage() {
               <MenuItem value="cancelled">Cancelado</MenuItem>
             </TextField>
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid item xs={12} md={3}>
             <TextField
               label="Límite"
               type="number"
@@ -732,12 +734,10 @@ export default function CourseRegistrationsAdminPage() {
               size="small"
             />
           </Grid>
-          <Grid item xs={12} md={3} display="flex" alignItems="center" justifyContent="flex-end">
-            <Button variant="contained" onClick={handleRefresh} disabled={regsQuery.isFetching}>
-              Aplicar filtros
-            </Button>
-          </Grid>
         </Grid>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+          Los filtros se aplican automáticamente al cambiar. Usa refrescar si necesitas volver a consultar.
+        </Typography>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
           <Typography variant="caption" color="text.secondary">
             Leyenda de estados:
