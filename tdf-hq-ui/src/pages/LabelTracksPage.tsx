@@ -381,7 +381,11 @@ export default function LabelTracksPage() {
             <Card key={track.ltId} variant="outlined">
               <CardContent>
                 <Stack direction="row" spacing={1} alignItems="flex-start">
-                  <IconButton size="small" onClick={() => handleToggle(track)}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleToggle(track)}
+                    aria-label={isDone ? `Reabrir track ${track.ltTitle}` : `Cerrar track ${track.ltTitle}`}
+                  >
                     {isDone ? (
                       <CheckCircleIcon color="success" />
                     ) : (
