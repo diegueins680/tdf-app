@@ -4,6 +4,15 @@ export interface OrderStatusMeta {
   desc: string;
 }
 
+export interface MarketplaceOrderFilters {
+  statusFilter: string;
+  providerFilter: string;
+  fromDate: string;
+  toDate: string;
+  search: string;
+  paidOnly: boolean;
+}
+
 const toTokenList = (status: string): string[] => {
   const normalized = status.toLowerCase();
   return normalized.split(/[^a-z0-9]+/).filter(Boolean);
@@ -14,6 +23,54 @@ const toTokenSet = (status: string): Set<string> => {
 };
 
 const normalizeStatus = (status: string): string => status.trim();
+
+const formatDateOnly = (value: Date): string => {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const createDefaultMarketplaceOrderFilters = (): MarketplaceOrderFilters => ({
+  statusFilter: 'all',
+  providerFilter: 'all',
+  fromDate: '',
+  toDate: '',
+  search: '',
+  paidOnly: false,
+});
+
+export const applyMarketplaceOrderPreset = (
+  preset: 'last7' | 'paid' | 'paypal' | 'card',
+  now: Date = new Date(),
+): MarketplaceOrderFilters => {
+  const next = createDefaultMarketplaceOrderFilters();
+  if (preset === 'last7') {
+    const fromDate = new Date(now);
+    fromDate.setDate(fromDate.getDate() - 7);
+    next.fromDate = formatDateOnly(fromDate);
+    return next;
+  }
+  if (preset === 'paid') {
+    next.statusFilter = 'paid';
+    return next;
+  }
+  if (preset === 'paypal') {
+    next.providerFilter = 'paypal';
+    return next;
+  }
+  next.statusFilter = 'datafast_pending';
+  next.providerFilter = 'datafast';
+  return next;
+};
+
+export const getMarketplacePaymentProviderLabel = (provider: string): string => {
+  const normalized = provider.trim().toLowerCase();
+  if (normalized === 'paypal') return 'PayPal';
+  if (normalized === 'datafast') return 'Tarjeta (Datafast)';
+  if (normalized === 'contact') return 'Manual/otros';
+  return provider.trim();
+};
 
 // Map backend order status to badge copy and color.
 export const getOrderStatusMeta = (status: string): OrderStatusMeta => {

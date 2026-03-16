@@ -1,4 +1,10 @@
-import { formatLastSavedTimestamp, getOrderStatusMeta, isPaidOrderStatus } from './marketplace';
+import {
+  applyMarketplaceOrderPreset,
+  formatLastSavedTimestamp,
+  getMarketplacePaymentProviderLabel,
+  getOrderStatusMeta,
+  isPaidOrderStatus,
+} from './marketplace';
 
 describe('getOrderStatusMeta', () => {
   it('marks paid statuses as paid', () => {
@@ -94,5 +100,54 @@ describe('formatLastSavedTimestamp', () => {
     expect(formatLastSavedTimestamp(0)).toBeNull();
     expect(formatLastSavedTimestamp(Number.NaN)).toBeNull();
     expect(formatLastSavedTimestamp(Number.POSITIVE_INFINITY)).toBeNull();
+  });
+});
+
+describe('applyMarketplaceOrderPreset', () => {
+  it('returns a clean date-only quick filter for the last 7 days preset', () => {
+    expect(applyMarketplaceOrderPreset('last7', new Date(2026, 2, 16, 12, 0, 0))).toEqual({
+      statusFilter: 'all',
+      providerFilter: 'all',
+      fromDate: '2026-03-09',
+      toDate: '',
+      search: '',
+      paidOnly: false,
+    });
+  });
+
+  it('clears unrelated filters when applying payment presets', () => {
+    expect(applyMarketplaceOrderPreset('paid')).toEqual({
+      statusFilter: 'paid',
+      providerFilter: 'all',
+      fromDate: '',
+      toDate: '',
+      search: '',
+      paidOnly: false,
+    });
+    expect(applyMarketplaceOrderPreset('paypal')).toEqual({
+      statusFilter: 'all',
+      providerFilter: 'paypal',
+      fromDate: '',
+      toDate: '',
+      search: '',
+      paidOnly: false,
+    });
+    expect(applyMarketplaceOrderPreset('card')).toEqual({
+      statusFilter: 'datafast_pending',
+      providerFilter: 'datafast',
+      fromDate: '',
+      toDate: '',
+      search: '',
+      paidOnly: false,
+    });
+  });
+});
+
+describe('getMarketplacePaymentProviderLabel', () => {
+  it('formats known provider names for human-readable filter chips', () => {
+    expect(getMarketplacePaymentProviderLabel('paypal')).toBe('PayPal');
+    expect(getMarketplacePaymentProviderLabel('datafast')).toBe('Tarjeta (Datafast)');
+    expect(getMarketplacePaymentProviderLabel('contact')).toBe('Manual/otros');
+    expect(getMarketplacePaymentProviderLabel(' wire_transfer ')).toBe('wire_transfer');
   });
 });

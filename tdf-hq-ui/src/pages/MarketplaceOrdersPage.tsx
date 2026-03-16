@@ -46,7 +46,14 @@ import { Marketplace } from '../api/marketplace';
 import { DateTime } from 'luxon';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
-import { getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
+import {
+  applyMarketplaceOrderPreset,
+  createDefaultMarketplaceOrderFilters,
+  getMarketplacePaymentProviderLabel,
+  getOrderStatusMeta,
+  isPaidOrderStatus,
+  type MarketplaceOrderFilters,
+} from '../utils/marketplace';
 
 const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] }[] = [
   { value: 'paid', label: 'Pagado', color: 'success' },
@@ -90,15 +97,16 @@ const summarizeItems = (items: MarketplaceOrderDTO['moItems']) =>
   items.map((it) => `${it.moiQuantity} × ${it.moiTitle}`).join(' · ');
 
 export default function MarketplaceOrdersPage() {
+  const defaultFilters = createDefaultMarketplaceOrderFilters();
   const { session } = useSession();
   const isAuthed = Boolean(session);
   const qc = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [providerFilter, setProviderFilter] = useState<string>('all');
-  const [fromDate, setFromDate] = useState<string>('');
-  const [toDate, setToDate] = useState<string>('');
-  const [search, setSearch] = useState('');
-  const [paidOnly, setPaidOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>(defaultFilters.statusFilter);
+  const [providerFilter, setProviderFilter] = useState<string>(defaultFilters.providerFilter);
+  const [fromDate, setFromDate] = useState<string>(defaultFilters.fromDate);
+  const [toDate, setToDate] = useState<string>(defaultFilters.toDate);
+  const [search, setSearch] = useState(defaultFilters.search);
+  const [paidOnly, setPaidOnly] = useState(defaultFilters.paidOnly);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusInput, setStatusInput] = useState<string>('');
   const [paymentProviderInput, setPaymentProviderInput] = useState<string>('');
@@ -244,30 +252,21 @@ export default function MarketplaceOrdersPage() {
     void qc.invalidateQueries({ queryKey: ['marketplace-orders'] });
   };
 
-  const clearFilters = () => {
-    setStatusFilter('all');
-    setProviderFilter('all');
-    setSearch('');
-    setFromDate('');
-    setToDate('');
-    setPaidOnly(false);
+  const applyFilters = (nextFilters: MarketplaceOrderFilters) => {
+    setStatusFilter(nextFilters.statusFilter);
+    setProviderFilter(nextFilters.providerFilter);
+    setSearch(nextFilters.search);
+    setFromDate(nextFilters.fromDate);
+    setToDate(nextFilters.toDate);
+    setPaidOnly(nextFilters.paidOnly);
   };
+
+  const clearFilters = () => {
+    applyFilters(createDefaultMarketplaceOrderFilters());
+  };
+
   const applyPreset = (preset: 'last7' | 'paid' | 'paypal' | 'card') => {
-    if (preset === 'last7') {
-      const dt = DateTime.now().minus({ days: 7 }).toFormat("yyyy-LL-dd'T'00:00");
-      setFromDate(dt);
-      setToDate('');
-    }
-    if (preset === 'paid') {
-      setStatusFilter('paid');
-    }
-    if (preset === 'paypal') {
-      setProviderFilter('paypal');
-    }
-    if (preset === 'card') {
-      setStatusFilter('datafast_pending');
-      setProviderFilter('datafast');
-    }
+    applyFilters(applyMarketplaceOrderPreset(preset));
   };
 
   const openOrder = (id: string) => {
@@ -473,6 +472,9 @@ export default function MarketplaceOrdersPage() {
           />
         </Grid>
       </Grid>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+        Atajos rápidos: cada atajo reemplaza los filtros actuales para dejar una vista limpia antes de revisar resultados.
+      </Typography>
       <Stack direction="row" spacing={1} mb={2} alignItems="center" flexWrap="wrap">
         <Button size="small" variant="outlined" onClick={() => applyPreset('last7')}>
           Últimos 7 días
@@ -493,10 +495,14 @@ export default function MarketplaceOrdersPage() {
           </Button>
         )}
         {statusFilter !== 'all' && (
-          <Chip size="small" label={`Estado: ${statusFilter}`} onDelete={() => setStatusFilter('all')} />
+          <Chip size="small" label={`Estado: ${statusLabel(statusFilter)}`} onDelete={() => setStatusFilter('all')} />
         )}
         {providerFilter !== 'all' && (
-          <Chip size="small" label={`Pago: ${providerFilter}`} onDelete={() => setProviderFilter('all')} />
+          <Chip
+            size="small"
+            label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
+            onDelete={() => setProviderFilter('all')}
+          />
         )}
         {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
         {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
