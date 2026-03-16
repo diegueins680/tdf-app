@@ -147,6 +147,7 @@ export default function LabelProjectsPage() {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <TextField
                 fullWidth
+                label="Nota o pendiente"
                 placeholder="Agregar nota o pendiente"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
