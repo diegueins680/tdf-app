@@ -1144,6 +1144,7 @@ export default function RecordsPublicPage() {
                     <IconButton
                       component={RouterLink}
                       to="/configuracion/cms?slug=records-session-"
+                      aria-label="Editar sesiones en vivo TDF en CMS"
                       size="small"
                       sx={{ color: 'rgba(229,231,235,0.9)' }}
                     >
@@ -1189,6 +1190,7 @@ export default function RecordsPublicPage() {
                       <IconButton
                         component={RouterLink}
                         to="/configuracion/cms?slug=records-release-"
+                        aria-label="Editar lanzamientos en CMS"
                         size="small"
                         sx={{ color: 'rgba(229,231,235,0.9)' }}
                       >
@@ -1199,6 +1201,7 @@ export default function RecordsPublicPage() {
                       <IconButton
                         component={RouterLink}
                         to="/label/releases"
+                        aria-label="Ir al CRUD de lanzamientos"
                         size="small"
                         sx={{ color: 'rgba(229,231,235,0.9)' }}
                       >
