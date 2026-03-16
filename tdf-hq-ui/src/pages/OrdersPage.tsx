@@ -236,6 +236,7 @@ export default function OrdersPage() {
                 }}
                 disabled={bookingsQuery.isFetching}
                 color="primary"
+                aria-label="Actualizar lista de sesiones"
               >
                 <RefreshIcon />
               </IconButton>
