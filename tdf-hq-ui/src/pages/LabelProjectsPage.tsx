@@ -205,7 +205,11 @@ export default function LabelProjectsPage() {
                   >
                     {n.text}
                   </Typography>
-                  <IconButton size="small" onClick={() => handleDelete(n.id)}>
+                  <IconButton
+                    size="small"
+                    aria-label={`Eliminar nota: ${n.text}`}
+                    onClick={() => handleDelete(n.id)}
+                  >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Box>
