@@ -540,12 +540,13 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón del estado actual para cambios rápidos.',
+        'Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón del estado actual para ver solo los cambios posibles.',
       );
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
       expect(getButtonByText(container, 'Estado: Pendiente de pago')).toBeTruthy();
       expect(getButtonByText(container, 'Estado: Pagado')).toBeTruthy();
       expect(getButtonByText(container, 'Estado: Cancelado')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).toBeNull();
@@ -559,10 +560,10 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Estado actual: Pendiente de pago');
       expect(document.body.textContent).toContain('Subir comprobante para marcar pagado');
       expect(document.body.textContent).toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Marcar pendiente');
+      expect(document.body.textContent).not.toContain('Estado actual:');
     });
 
     await act(async () => {
@@ -572,10 +573,10 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Estado actual: Pagado');
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
+      expect(document.body.textContent).not.toContain('Estado actual:');
     });
 
     await act(async () => {
@@ -585,10 +586,10 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Estado actual: Cancelado');
       expect(document.body.textContent).toContain('Subir comprobante para marcar pagado');
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
+      expect(document.body.textContent).not.toContain('Estado actual:');
     });
 
     await cleanup();
@@ -999,7 +1000,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).toContain('No hay inscripciones para esta vista.');
       expect(container.textContent).not.toContain(
-        'Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón del estado actual para cambios rápidos.',
+        'Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón del estado actual para ver solo los cambios posibles.',
       );
       expect(container.textContent).not.toContain('Leyenda de estados:');
       expect(container.textContent).not.toContain('Total: 0');

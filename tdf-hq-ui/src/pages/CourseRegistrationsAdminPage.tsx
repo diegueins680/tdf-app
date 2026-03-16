@@ -811,11 +811,6 @@ export default function CourseRegistrationsAdminPage() {
   );
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
-  const statusMenuStatusLabel = statusMenuReg
-    ? (isRegistrationStatus(statusMenuReg.crStatus)
-      ? statusFilterLabels[statusMenuReg.crStatus]
-      : statusMenuReg.crStatus)
-    : '';
   const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
     ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
@@ -926,7 +921,7 @@ export default function CourseRegistrationsAdminPage() {
         {hasVisibleRegistrations && (
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
             Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón
-            del estado actual para cambios rápidos.
+            del estado actual para ver solo los cambios posibles.
           </Typography>
         )}
         {hasCustomFilters && hasVisibleRegistrations && (
@@ -1031,6 +1026,7 @@ export default function CourseRegistrationsAdminPage() {
                     variant="outlined"
                     color={registrationStatusButtonColor(reg.crStatus)}
                     aria-label={`Cambiar estado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
+                    aria-haspopup="menu"
                     disabled={isUpdating}
                     onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
                   >
@@ -1077,11 +1073,6 @@ export default function CourseRegistrationsAdminPage() {
             }}
           >
             Cancelar inscripción
-          </MenuItem>
-        )}
-        {statusMenuReg && (
-          <MenuItem disabled>
-            Estado actual: {statusMenuStatusLabel}
           </MenuItem>
         )}
       </Menu>
