@@ -88,6 +88,7 @@ export default function RoomsPage() {
             Agregar
           </Button>
           <IconButton
+            aria-label="Actualizar lista de salas"
             onClick={() => {
               void roomsQuery.refetch();
             }}
@@ -133,6 +134,7 @@ export default function RoomsPage() {
                     <Stack direction="row" spacing={1} alignItems="center">
                       <TextField
                         size="small"
+                        aria-label={`Nuevo nombre para ${room.rName}`}
                         value={renameValue}
                         onChange={(e) => setRenameValue(e.target.value)}
                       />
@@ -146,7 +148,14 @@ export default function RoomsPage() {
                   ) : (
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Typography fontWeight={600}>{room.rName}</Typography>
-                      <IconButton size="small" onClick={() => { setRenameId(room.roomId); setRenameValue(room.rName); }}>
+                      <IconButton
+                        size="small"
+                        aria-label={`Renombrar ${room.rName}`}
+                        onClick={() => {
+                          setRenameId(room.roomId);
+                          setRenameValue(room.rName);
+                        }}
+                      >
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Stack>
