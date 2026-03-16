@@ -895,9 +895,6 @@ export default function CourseRegistrationsAdminPage() {
           >
             {showAdvancedFilters ? 'Ocultar filtros avanzados' : 'Más filtros'}
           </Button>
-          {!showAdvancedFilters && limit !== DEFAULT_LIMIT && (
-            <Chip size="small" label={`Límite activo: ${limit}`} variant="outlined" />
-          )}
         </Stack>
         <Collapse in={showAdvancedFilters} unmountOnExit>
           <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>

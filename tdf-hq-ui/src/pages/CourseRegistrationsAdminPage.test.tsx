@@ -879,7 +879,20 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 50,
       });
       expect(container.textContent).toContain('Vista filtrada: límite 50.');
+      expect(container.textContent).not.toContain('Límite activo: 50');
       expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Ocultar filtros avanzados'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
+      expect(container.textContent).toContain('Vista filtrada: límite 50.');
+      expect(container.textContent).not.toContain('Límite activo: 50');
     });
 
     listRegistrationsMock.mockClear();
