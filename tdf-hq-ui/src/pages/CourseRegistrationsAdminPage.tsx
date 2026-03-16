@@ -779,6 +779,10 @@ export default function CourseRegistrationsAdminPage() {
       ? statusFilterLabels[statusMenuReg.crStatus]
       : statusMenuReg.crStatus)
     : '';
+  const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
+  const activeRegistrationCourseLabel = activeRegistrationCourseSlug
+    ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
+    : 'Sin cohorte';
 
   return (
     <Stack spacing={3}>
@@ -1067,7 +1071,7 @@ export default function CourseRegistrationsAdminPage() {
                     {activeRegistration.crEmail ?? 'Sin correo'} {activeRegistration.crPhoneE164 ? `· ${activeRegistration.crPhoneE164}` : ''}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Slug: {activeRegistration.crCourseSlug} · Fuente: {activeRegistration.crSource} · Creado: {formatDate(activeRegistration.crCreatedAt)}
+                    Curso: {activeRegistrationCourseLabel} · Fuente: {activeRegistration.crSource} · Creado: {formatDate(activeRegistration.crCreatedAt)}
                   </Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     {canMarkPaid && (

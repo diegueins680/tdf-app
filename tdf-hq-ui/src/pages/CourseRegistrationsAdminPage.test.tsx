@@ -376,6 +376,29 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses the course label inside the dossier instead of raw slug jargon', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Curso: Beatmaking 101 (beatmaking-101) · Fuente: landing');
+      expect(document.body.textContent).not.toContain('Slug: beatmaking-101');
+    });
+
+    await cleanup();
+  });
+
   it('summarizes a shared cohort once when every visible row belongs to it', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
