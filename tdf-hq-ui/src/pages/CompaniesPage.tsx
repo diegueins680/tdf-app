@@ -238,6 +238,7 @@ export default function CompaniesPage() {
       <Paper sx={{ p: 2.5, borderRadius: 3, boxShadow: '0 10px 30px rgba(15,23,42,0.12)' }}>
         <Stack direction={{ xs: 'column', md: 'row' }} gap={2} alignItems={{ xs: 'stretch', md: 'center' }}>
           <TextField
+            label="Buscar empresas"
             placeholder="Buscar por nombre, correo o RUC"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
