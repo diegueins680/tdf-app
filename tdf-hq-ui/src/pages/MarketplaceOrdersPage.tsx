@@ -598,6 +598,7 @@ export default function MarketplaceOrdersPage() {
                             <Tooltip title="Copiar ID">
                               <IconButton
                                 size="small"
+                                aria-label={`Copiar ID del pedido ${order.moOrderId}`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   void handleCopyOrderId(order.moOrderId);
@@ -679,6 +680,7 @@ export default function MarketplaceOrdersPage() {
                         <Tooltip title="Copiar fila (TSV)">
                           <IconButton
                             size="small"
+                            aria-label={`Copiar fila del pedido ${order.moOrderId} como TSV`}
                             onClick={(e) => {
                               e.stopPropagation();
                               void copyRow(order);
@@ -711,7 +713,11 @@ export default function MarketplaceOrdersPage() {
                       action={
                         <Stack direction="row" spacing={1}>
                           <Tooltip title="Copiar ID de pedido">
-                            <IconButton size="small" onClick={() => void handleCopyOrderId(selectedOrder.moOrderId)}>
+                            <IconButton
+                              size="small"
+                              aria-label={`Copiar ID del pedido ${selectedOrder.moOrderId}`}
+                              onClick={() => void handleCopyOrderId(selectedOrder.moOrderId)}
+                            >
                               <ContentCopyIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
