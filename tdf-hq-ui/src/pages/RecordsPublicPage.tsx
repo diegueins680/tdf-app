@@ -1105,6 +1105,7 @@ export default function RecordsPublicPage() {
                     <IconButton
                       component={RouterLink}
                       to="/configuracion/cms?slug=records-recording-"
+                      aria-label="Editar fotos del estudio en CMS"
                       size="small"
                       sx={{ color: 'rgba(229,231,235,0.9)' }}
                     >
