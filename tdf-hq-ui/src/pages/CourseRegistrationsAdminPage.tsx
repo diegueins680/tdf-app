@@ -887,11 +887,8 @@ export default function CourseRegistrationsAdminPage() {
         {hasVisibleRegistrations && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
             <Typography variant="caption" color="text.secondary">
-              Leyenda de estados:
+              Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.
             </Typography>
-            <Chip label="Pagado" size="small" color="success" />
-            <Chip label="Pendiente" size="small" color="warning" />
-            <Chip label="Cancelado" size="small" color="error" />
             <Button
               size="small"
               startIcon={<ContentCopyIcon fontSize="small" />}

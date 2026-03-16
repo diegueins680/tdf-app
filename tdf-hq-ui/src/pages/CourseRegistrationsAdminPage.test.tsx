@@ -711,6 +711,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses the header totals as the only status key while keeping CSV export available', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'cancelled',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Total: 3');
+      expect(container.textContent).toContain('Pagadas: 1');
+      expect(container.textContent).toContain('Pendientes: 1');
+      expect(container.textContent).toContain('Canceladas: 1');
+      expect(container.textContent).toContain(
+        'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
+      );
+      expect(container.textContent).not.toContain('Leyenda de estados:');
+      expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('hides result-only summaries when the current view has no registrations', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
