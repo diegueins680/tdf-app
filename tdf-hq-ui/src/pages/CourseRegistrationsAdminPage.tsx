@@ -232,6 +232,7 @@ export default function CourseRegistrationsAdminPage() {
   const [followUpForm, setFollowUpForm] = useState<FollowUpFormState>(emptyFollowUpForm);
   const [showReceiptUrlField, setShowReceiptUrlField] = useState(false);
   const [showFollowUpUrlField, setShowFollowUpUrlField] = useState(false);
+  const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
   const selectedSlug = slug.trim();
 
   const listQueryKey = useMemo(
@@ -340,6 +341,12 @@ export default function CourseRegistrationsAdminPage() {
     [activeCohortLabel, status, limit],
   );
 
+  const resetFollowUpComposer = () => {
+    setFollowUpForm(emptyFollowUpForm());
+    setShowFollowUpUrlField(false);
+    setShowFollowUpComposer(false);
+  };
+
   const updateStatusMutation = useMutation({
     mutationFn: (args: { id: number; courseSlug: string; newStatus: Exclude<StatusFilter, 'all'> }) =>
       Courses.updateStatus(args.courseSlug, args.id, { status: args.newStatus }),
@@ -445,12 +452,14 @@ export default function CourseRegistrationsAdminPage() {
       setFollowUpForm(emptyFollowUpForm());
       setShowReceiptUrlField(false);
       setShowFollowUpUrlField(false);
+      setShowFollowUpComposer(false);
       return;
     }
     setReceiptForm(emptyReceiptForm());
     setFollowUpForm(emptyFollowUpForm());
     setShowReceiptUrlField(false);
     setShowFollowUpUrlField(false);
+    setShowFollowUpComposer(false);
     setDossierFlash(
       selectedDossier.intent === 'markPaid'
         ? {
@@ -668,8 +677,7 @@ export default function CourseRegistrationsAdminPage() {
     setDossierFlash(null);
     void action
       .then(() => {
-        setFollowUpForm(emptyFollowUpForm());
-        setShowFollowUpUrlField(false);
+        resetFollowUpComposer();
         setDossierFlash({
           severity: 'success',
           message: followUpForm.editingId == null ? 'Seguimiento guardado.' : 'Seguimiento actualizado.',
@@ -681,6 +689,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleEditFollowUp = (entry: CourseRegistrationFollowUpDTO) => {
+    setShowFollowUpComposer(true);
     setFollowUpForm({
       editingId: entry.crfId,
       entryType: entry.crfEntryType,
@@ -705,8 +714,7 @@ export default function CourseRegistrationsAdminPage() {
       })
       .then(() => {
         if (followUpForm.editingId === entry.crfId) {
-          setFollowUpForm(emptyFollowUpForm());
-          setShowFollowUpUrlField(false);
+          resetFollowUpComposer();
         }
         setDossierFlash({ severity: 'success', message: 'Seguimiento eliminado.' });
       })
@@ -1225,93 +1233,116 @@ export default function CourseRegistrationsAdminPage() {
                     <Grid container spacing={2}>
                       <Grid item xs={12} md={6}>
                         <Stack spacing={1.5}>
-                          <TextField
-                            select
-                            label="Tipo"
-                            value={followUpForm.entryType}
-                            onChange={(e) => setFollowUpForm((prev) => ({ ...prev, entryType: e.target.value }))}
-                            fullWidth
+                          <Stack
+                            direction="row"
+                            alignItems="flex-start"
+                            justifyContent="space-between"
+                            flexWrap="wrap"
+                            useFlexGap
+                            spacing={1}
                           >
-                            {followUpTypeOptions.map((option) => (
-                              <MenuItem key={option} value={option}>
-                                {eventTypeLabel(option)}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                          <TextField
-                            label="Asunto"
-                            value={followUpForm.subject}
-                            onChange={(e) => setFollowUpForm((prev) => ({ ...prev, subject: e.target.value }))}
-                            placeholder="Ej. Confirmó transferencia"
-                            fullWidth
-                          />
-                          <TextField
-                            label="Nota de seguimiento"
-                            value={followUpForm.notes}
-                            onChange={(e) => setFollowUpForm((prev) => ({ ...prev, notes: e.target.value }))}
-                            multiline
-                            minRows={3}
-                            placeholder="Qué pasó, qué se acordó y cuál es el siguiente paso."
-                            fullWidth
-                          />
-                          <TextField
-                            label="Próximo seguimiento"
-                            type="datetime-local"
-                            value={followUpForm.nextFollowUpAt}
-                            onChange={(e) => setFollowUpForm((prev) => ({ ...prev, nextFollowUpAt: e.target.value }))}
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                          />
-                          <GoogleDriveUploadWidget
-                            label={
-                              followUpForm.attachmentName
-                                ? `Adjunto listo: ${followUpForm.attachmentName}`
-                                : 'Adjuntar evidencia opcional'
-                            }
-                            helperText="Puedes adjuntar un audio, captura, PDF o imagen."
-                            accept="application/pdf,image/*,audio/*"
-                            multiple={false}
-                            onComplete={handleFollowUpUpload}
-                            dense
-                          />
-                          {!showFollowUpUrlField && (
-                            <Button
-                              size="small"
-                              variant="text"
-                              sx={{ alignSelf: 'flex-start' }}
-                              onClick={() => setShowFollowUpUrlField(true)}
-                            >
-                              Usar enlace existente en lugar de subir adjunto
-                            </Button>
-                          )}
-                          <Collapse in={showFollowUpUrlField} unmountOnExit>
-                            <TextField
-                              label="URL del adjunto"
-                              value={followUpForm.attachmentUrl}
-                              onChange={(e) => setFollowUpForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))}
-                              fullWidth
-                            />
-                          </Collapse>
-                          <Stack direction="row" spacing={1}>
-                            <Button
-                              variant="contained"
-                              onClick={handleSubmitFollowUp}
-                              disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending}
-                            >
-                              {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
-                            </Button>
-                            {followUpForm.editingId != null && (
+                            <Box sx={{ minWidth: 240, flexGrow: 1 }}>
+                              <Typography variant="subtitle2">
+                                {followUpForm.editingId == null ? 'Registrar seguimiento' : 'Editar seguimiento'}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Abre el formulario solo cuando necesites documentar una llamada, correo o
+                                próximo paso.
+                              </Typography>
+                            </Box>
+                            {!showFollowUpComposer && (
                               <Button
-                                variant="text"
-                                onClick={() => {
-                                  setFollowUpForm(emptyFollowUpForm());
-                                  setShowFollowUpUrlField(false);
-                                }}
+                                size="small"
+                                variant="contained"
+                                onClick={() => setShowFollowUpComposer(true)}
                               >
-                                Cancelar edición
+                                Agregar seguimiento
                               </Button>
                             )}
                           </Stack>
+                          <Collapse in={showFollowUpComposer} unmountOnExit>
+                            <Stack spacing={1.5} sx={{ pt: 0.5 }}>
+                              <TextField
+                                select
+                                label="Tipo"
+                                value={followUpForm.entryType}
+                                onChange={(e) => setFollowUpForm((prev) => ({ ...prev, entryType: e.target.value }))}
+                                fullWidth
+                              >
+                                {followUpTypeOptions.map((option) => (
+                                  <MenuItem key={option} value={option}>
+                                    {eventTypeLabel(option)}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                              <TextField
+                                label="Asunto"
+                                value={followUpForm.subject}
+                                onChange={(e) => setFollowUpForm((prev) => ({ ...prev, subject: e.target.value }))}
+                                placeholder="Ej. Confirmó transferencia"
+                                fullWidth
+                              />
+                              <TextField
+                                label="Nota de seguimiento"
+                                value={followUpForm.notes}
+                                onChange={(e) => setFollowUpForm((prev) => ({ ...prev, notes: e.target.value }))}
+                                multiline
+                                minRows={3}
+                                placeholder="Qué pasó, qué se acordó y cuál es el siguiente paso."
+                                fullWidth
+                              />
+                              <TextField
+                                label="Próximo seguimiento"
+                                type="datetime-local"
+                                value={followUpForm.nextFollowUpAt}
+                                onChange={(e) => setFollowUpForm((prev) => ({ ...prev, nextFollowUpAt: e.target.value }))}
+                                fullWidth
+                                InputLabelProps={{ shrink: true }}
+                              />
+                              <GoogleDriveUploadWidget
+                                label={
+                                  followUpForm.attachmentName
+                                    ? `Adjunto listo: ${followUpForm.attachmentName}`
+                                    : 'Adjuntar evidencia opcional'
+                                }
+                                helperText="Puedes adjuntar un audio, captura, PDF o imagen."
+                                accept="application/pdf,image/*,audio/*"
+                                multiple={false}
+                                onComplete={handleFollowUpUpload}
+                                dense
+                              />
+                              {!showFollowUpUrlField && (
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  sx={{ alignSelf: 'flex-start' }}
+                                  onClick={() => setShowFollowUpUrlField(true)}
+                                >
+                                  Usar enlace existente en lugar de subir adjunto
+                                </Button>
+                              )}
+                              <Collapse in={showFollowUpUrlField} unmountOnExit>
+                                <TextField
+                                  label="URL del adjunto"
+                                  value={followUpForm.attachmentUrl}
+                                  onChange={(e) => setFollowUpForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))}
+                                  fullWidth
+                                />
+                              </Collapse>
+                              <Stack direction="row" spacing={1}>
+                                <Button
+                                  variant="contained"
+                                  onClick={handleSubmitFollowUp}
+                                  disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending}
+                                >
+                                  {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
+                                </Button>
+                                <Button variant="text" onClick={resetFollowUpComposer}>
+                                  {followUpForm.editingId == null ? 'Cancelar' : 'Cancelar edición'}
+                                </Button>
+                              </Stack>
+                            </Stack>
+                          </Collapse>
                         </Stack>
                       </Grid>
                       <Grid item xs={12} md={6}>

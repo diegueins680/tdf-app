@@ -258,13 +258,23 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Usar enlace existente en lugar de subir archivo');
-      expect(document.body.textContent).toContain('Usar enlace existente en lugar de subir adjunto');
+      expect(document.body.textContent).toContain('Agregar seguimiento');
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
     });
 
     await act(async () => {
       clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
+    });
+
+    await act(async () => {
       clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto'));
       await flushPromises();
       await flushPromises();
@@ -366,6 +376,51 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain('Subir comprobante para marcar pagado');
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the follow-up composer collapsed until admins explicitly open it', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
+      );
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(hasLabel(document.body, 'Tipo')).toBe(false);
+      expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(false);
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Guardar seguimiento',
+        ),
+      ).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Tipo')).toBe(true);
+      expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
+      expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Cancelar')).toBeTruthy();
     });
 
     await cleanup();
