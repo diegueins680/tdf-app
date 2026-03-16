@@ -597,12 +597,20 @@ export default function LabelAssetsPage() {
                       <TableCell>{displayLocation(asset)}</TableCell>
                       <TableCell align="right">
                         <Tooltip title="Editar">
-                          <IconButton size="small" onClick={() => handleEdit(asset)}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(asset)}
+                            aria-label={`Editar activo ${asset.name}`}
+                          >
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="QR">
-                          <IconButton size="small" onClick={() => void openQr(asset)}>
+                          <IconButton
+                            size="small"
+                            onClick={() => void openQr(asset)}
+                            aria-label={`Abrir QR de ${asset.name}`}
+                          >
                             <QrCodeIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
@@ -611,6 +619,7 @@ export default function LabelAssetsPage() {
                             <IconButton
                               size="small"
                               onClick={() => openCheckout(asset)}
+                              aria-label={`Abrir check-out de ${asset.name}`}
                               disabled={asset.status.toLowerCase() === 'booked'}
                             >
                               <ExitToAppIcon fontSize="small" />
@@ -622,6 +631,7 @@ export default function LabelAssetsPage() {
                             <IconButton
                               size="small"
                               onClick={() => openCheckin(asset)}
+                              aria-label={`Abrir check-in de ${asset.name}`}
                               disabled={asset.status.toLowerCase() !== 'booked'}
                             >
                               <HowToRegIcon fontSize="small" />
@@ -636,6 +646,7 @@ export default function LabelAssetsPage() {
                             <IconButton
                               size="small"
                               onClick={() => handleDelete(asset)}
+                              aria-label={`Eliminar activo ${asset.name}`}
                               disabled={deleteMutation.isPending}
                             >
                               <DeleteIcon fontSize="small" />
