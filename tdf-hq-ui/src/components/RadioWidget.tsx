@@ -2883,6 +2883,8 @@ export default function RadioWidget() {
                     <TextField
                       fullWidth
                       size="small"
+                      label="Nuevo prompt"
+                      InputLabelProps={{ shrink: true }}
                       placeholder="Escribe tu prompt (ej. dembow con quenas y delay granular)"
                       value={promptDraft}
                       onChange={(e) => setPromptDraft(e.target.value)}
