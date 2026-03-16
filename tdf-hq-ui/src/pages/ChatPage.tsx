@@ -244,6 +244,9 @@ export default function ChatPage() {
     if (!selectedThreadId) return '';
     return draftByThread[String(selectedThreadId)] ?? '';
   }, [draftByThread, selectedThreadId]);
+  const composerAriaLabel = selectedThreadId
+    ? 'Escribe un mensaje'
+    : 'Selecciona una conversación para escribir un mensaje';
 
   const updateDraft = (next: string) => {
     if (!selectedThreadId) return;
@@ -505,9 +508,11 @@ export default function ChatPage() {
                 multiline
                 minRows={1}
                 maxRows={4}
+                aria-label={composerAriaLabel}
                 placeholder={selectedThreadId ? 'Escribe un mensaje…' : 'Selecciona una conversación…'}
                 value={draft}
                 disabled={!selectedThreadId || sendMutation.isPending}
+                inputProps={{ 'aria-label': composerAriaLabel }}
                 onChange={(e) => updateDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
