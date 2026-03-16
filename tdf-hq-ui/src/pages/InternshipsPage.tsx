@@ -572,6 +572,7 @@ export default function InternshipsPage() {
             <Stack spacing={1.5}>
               <Typography variant="h6" fontWeight={700}>Link de registro para pasantes</Typography>
               <TextField
+                label="Link de registro"
                 value={signupUrl}
                 InputProps={{ readOnly: true }}
                 fullWidth
