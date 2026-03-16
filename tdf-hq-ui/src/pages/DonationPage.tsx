@@ -57,7 +57,7 @@ export default function DonationPage() {
                 <Typography variant="subtitle2" color="text.secondary">
                   Dirección
                 </Typography>
-                <TextField value={CARDANO_ADDRESS} multiline minRows={2} fullWidth InputProps={{ readOnly: true }} />
+                <TextField label="Dirección de Cardano" value={CARDANO_ADDRESS} multiline minRows={2} fullWidth InputProps={{ readOnly: true }} />
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Button
                     variant="contained"
@@ -89,7 +89,7 @@ export default function DonationPage() {
                   <Typography variant="body2" color="text.secondary">
                     Memo sugerido:
                   </Typography>
-                  <TextField value={memoNote} size="small" InputProps={{ readOnly: true }} sx={{ maxWidth: 220 }} />
+                  <TextField label="Memo sugerido" value={memoNote} size="small" InputProps={{ readOnly: true }} sx={{ maxWidth: 220 }} />
                   <Button
                     size="small"
                     variant="outlined"
