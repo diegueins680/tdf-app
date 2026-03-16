@@ -736,7 +736,8 @@ export default function CourseRegistrationsAdminPage() {
           </Grid>
         </Grid>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-          Los filtros se aplican automáticamente al cambiar. Usa refrescar si necesitas volver a consultar.
+          Los filtros se aplican automáticamente al cambiar. Abre el expediente para gestionar notas,
+          comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.
         </Typography>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
           <Typography variant="caption" color="text.secondary">
@@ -802,10 +803,7 @@ export default function CourseRegistrationsAdminPage() {
                   </Box>
                   <Box>{statusChip(reg.crStatus)}</Box>
                   <Button size="small" variant="outlined" onClick={() => handleOpenDossier(reg, 'review')}>
-                    Expediente
-                  </Button>
-                  <Button size="small" variant="outlined" onClick={() => setSelectedRegForEmails(reg)}>
-                    Ver correos
+                    Abrir expediente
                   </Button>
                   <Box sx={{ flexGrow: 1 }} />
                   <Stack direction="row" spacing={1}>

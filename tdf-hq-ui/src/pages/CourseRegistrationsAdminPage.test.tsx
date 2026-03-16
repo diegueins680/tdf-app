@@ -134,6 +134,19 @@ const setInputValue = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
+const getButtonByText = (root: ParentNode, labelText: string) => {
+  const buttons = Array.from(root.querySelectorAll('button'));
+  const button = buttons.find((el) => (el.textContent ?? '').trim() === labelText);
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${labelText}`);
+  }
+  return button;
+};
+
+const clickButton = (button: HTMLButtonElement) => {
+  button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+};
+
 describe('CourseRegistrationsAdminPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -161,16 +174,18 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockResolvedValue([buildRegistration()]);
   });
 
-  it('explains that filters auto-apply and refetches when the limit changes', async () => {
+  it('consolidates row details into the dossier and refetches when the limit changes', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Los filtros se aplican automáticamente al cambiar. Usa refrescar si necesitas volver a consultar.',
+        'Los filtros se aplican automáticamente al cambiar. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.',
       );
       expect(container.textContent).not.toContain('Aplicar filtros');
+      expect(container.textContent).toContain('Abrir expediente');
+      expect(container.textContent).not.toContain('Ver correos');
       expect(listRegistrationsMock).toHaveBeenCalledWith({
         slug: undefined,
         status: undefined,
@@ -193,6 +208,16 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 50,
       });
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Expediente de inscripción');
+      expect(document.body.textContent).toContain('Ver correos');
     });
 
     await cleanup();
