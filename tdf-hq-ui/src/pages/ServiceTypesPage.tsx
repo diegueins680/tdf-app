@@ -301,10 +301,10 @@ export default function ServiceTypesPage() {
                       />
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton size="small" onClick={() => handleEdit(item)}>
+                      <IconButton size="small" onClick={() => handleEdit(item)} aria-label={`Editar servicio ${item.name}`}>
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton size="small" onClick={() => handleDelete(item.id)}>
+                      <IconButton size="small" onClick={() => handleDelete(item.id)} aria-label={`Eliminar servicio ${item.name}`}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </TableCell>
