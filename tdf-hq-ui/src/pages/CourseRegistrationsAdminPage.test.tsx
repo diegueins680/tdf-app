@@ -71,7 +71,7 @@ const buildRegistration = (overrides: Partial<CourseRegistrationDTO> = {}): Cour
   ...overrides,
 });
 
-const renderPage = async (container: HTMLElement) => {
+const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
@@ -80,7 +80,7 @@ const renderPage = async (container: HTMLElement) => {
   await act(async () => {
     root?.render(
       <MemoryRouter
-        initialEntries={['/inscripciones-curso']}
+        initialEntries={[initialEntry]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <QueryClientProvider client={qc}>
@@ -197,6 +197,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'Los filtros se aplican automáticamente al cambiar. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.',
       );
+      expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Aplicar filtros');
       expect(container.textContent).toContain('Abrir expediente');
       expect(container.textContent).not.toContain('Ver correos');
@@ -251,6 +253,26 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
+    });
+
+    await cleanup();
+  });
+
+  it('shows the selected cohort once in the filtered summary instead of repeating it on each row', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: 'beatmaking-101',
+        status: undefined,
+        limit: 200,
+      });
+      expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
+      expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).not.toContain('Slug: beatmaking-101');
+      expect(container.textContent).toContain('Fuente: landing');
     });
 
     await cleanup();

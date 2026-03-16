@@ -119,17 +119,17 @@ const parsePositiveLimit = (value: string | null, fallback = DEFAULT_LIMIT): num
 };
 
 const summarizeActiveFilters = ({
-  slug,
+  cohortLabel,
   status,
   limit,
 }: {
-  slug: string;
+  cohortLabel: string;
   status: StatusFilter;
   limit: number;
 }) => {
   const parts: string[] = [];
-  const trimmedSlug = slug.trim();
-  if (trimmedSlug) parts.push(`cohorte ${trimmedSlug}`);
+  const trimmedCohortLabel = cohortLabel.trim();
+  if (trimmedCohortLabel) parts.push(`cohorte ${trimmedCohortLabel}`);
   if (status !== 'all') parts.push(`estado ${statusFilterLabels[status].toLowerCase()}`);
   if (limit !== DEFAULT_LIMIT) parts.push(`límite ${limit}`);
   return parts.join(' · ');
@@ -231,6 +231,7 @@ export default function CourseRegistrationsAdminPage() {
   const [followUpForm, setFollowUpForm] = useState<FollowUpFormState>(emptyFollowUpForm);
   const [showReceiptUrlField, setShowReceiptUrlField] = useState(false);
   const [showFollowUpUrlField, setShowFollowUpUrlField] = useState(false);
+  const selectedSlug = slug.trim();
 
   const listQueryKey = useMemo(
     () => ['admin', 'course-registrations', { slug, status, limit }],
@@ -261,19 +262,25 @@ export default function CourseRegistrationsAdminPage() {
     staleTime: 60_000,
   });
 
-  const cohortOptions = useMemo(() => {
+  const cohortLabelsBySlug = useMemo(() => {
     const bySlug = new Map<string, string>();
     for (const cohort of cohortsQuery.data ?? []) {
       const cohortSlug = cohort.ccSlug.trim();
       if (!cohortSlug || bySlug.has(cohortSlug)) continue;
       bySlug.set(cohortSlug, cohortOptionLabel(cohort));
     }
-    const selectedSlug = slug.trim();
     if (selectedSlug && !bySlug.has(selectedSlug)) {
       bySlug.set(selectedSlug, selectedSlug);
     }
-    return Array.from(bySlug.entries()).map(([value, label]) => ({ value, label }));
-  }, [cohortsQuery.data, slug]);
+    return bySlug;
+  }, [cohortsQuery.data, selectedSlug]);
+
+  const cohortOptions = useMemo(
+    () => Array.from(cohortLabelsBySlug.entries()).map(([value, label]) => ({ value, label })),
+    [cohortLabelsBySlug],
+  );
+
+  const activeCohortLabel = selectedSlug ? (cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug) : '';
 
   const regsQuery = useQuery({
     queryKey: listQueryKey,
@@ -328,8 +335,8 @@ export default function CourseRegistrationsAdminPage() {
 
   const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
   const activeFilterSummary = useMemo(
-    () => summarizeActiveFilters({ slug, status, limit }),
-    [slug, status, limit],
+    () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
+    [activeCohortLabel, status, limit],
   );
 
   const updateStatusMutation = useMutation({
@@ -869,6 +876,9 @@ export default function CourseRegistrationsAdminPage() {
           <Stack divider={<Divider flexItem />} spacing={2}>
             {regsQuery.data.map((reg) => {
               const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
+              const rowCohortSlug = reg.crCourseSlug.trim();
+              const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
+              const showRowCohort = !selectedSlug || rowCohortSlug !== selectedSlug;
               return (
                 <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Box sx={{ minWidth: 240 }}>
@@ -886,7 +896,9 @@ export default function CourseRegistrationsAdminPage() {
                     {reg.crAdminNotes && <Chip size="small" label="Con notas" variant="outlined" sx={{ mt: 1 }} />}
                   </Box>
                   <Box sx={{ minWidth: 180 }}>
-                    <Typography variant="body2">Slug: {reg.crCourseSlug}</Typography>
+                    {showRowCohort && (
+                      <Typography variant="body2">Cohorte: {rowCohortLabel}</Typography>
+                    )}
                     <Typography variant="body2" color="text.secondary">
                       Fuente: {reg.crSource}
                     </Typography>
