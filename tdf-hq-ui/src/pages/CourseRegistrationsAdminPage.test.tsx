@@ -7,6 +7,7 @@ import type {
   CourseCohortOptionDTO,
   CourseRegistrationDTO,
   CourseRegistrationDossierDTO,
+  CourseRegistrationReceiptDTO,
 } from '../api/courses';
 
 const listCohortsMock = jest.fn<() => Promise<CourseCohortOptionDTO[]>>();
@@ -86,6 +87,22 @@ const buildDossier = (
   crdReceipts: [],
   crdFollowUps: [],
   crdCanMarkPaid: false,
+  ...overrides,
+});
+
+const buildReceipt = (
+  overrides: Partial<CourseRegistrationReceiptDTO> = {},
+): CourseRegistrationReceiptDTO => ({
+  crrId: 301,
+  crrRegistrationId: 101,
+  crrPartyId: 9,
+  crrFileUrl: 'https://example.com/receipt.pdf',
+  crrFileName: 'receipt.pdf',
+  crrMimeType: 'application/pdf',
+  crrNotes: null,
+  crrUploadedBy: 4,
+  crrCreatedAt: '2030-01-02T03:04:05.000Z',
+  crrUpdatedAt: '2030-01-02T03:04:05.000Z',
   ...overrides,
 });
 
@@ -174,6 +191,9 @@ const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
   }
   return button;
 };
+
+const countOccurrences = (root: ParentNode, text: string) =>
+  (root.textContent ?? '').split(text).length - 1;
 
 const clickButton = (button: HTMLButtonElement) => {
   button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -451,6 +471,7 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('shows the mark-paid action only when the dossier can actually use it', async () => {
+    const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const registration = buildRegistration();
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({ crdRegistration: registration, crdCanMarkPaid: false }),
@@ -471,14 +492,19 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Sube un comprobante para habilitar Marcar pagado');
+      expect(document.body.textContent).toContain(markPaidReceiptHint);
+      expect(countOccurrences(document.body, markPaidReceiptHint)).toBe(1);
       expect(Array.from(document.body.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Marcar pagado')).toBe(false);
     });
 
     await cleanup();
 
     getRegistrationDossierMock.mockResolvedValue(
-      buildDossier({ crdRegistration: registration, crdCanMarkPaid: true }),
+      buildDossier({
+        crdRegistration: registration,
+        crdReceipts: [buildReceipt({ crrRegistrationId: registration.crId })],
+        crdCanMarkPaid: true,
+      }),
     );
 
     const secondContainer = document.createElement('div');
@@ -497,7 +523,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
-      expect(document.body.textContent).not.toContain('Sube un comprobante para habilitar Marcar pagado');
+      expect(document.body.textContent).not.toContain(markPaidReceiptHint);
     });
 
     await secondRender.cleanup();

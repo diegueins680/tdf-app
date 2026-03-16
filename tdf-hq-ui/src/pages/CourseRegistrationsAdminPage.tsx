@@ -49,7 +49,7 @@ type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 type DossierIntent = 'review' | 'markPaid';
 type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
-const markPaidReceiptHint = 'Sube un comprobante para habilitar Marcar pagado';
+const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -1054,9 +1054,6 @@ export default function CourseRegistrationsAdminPage() {
                     >
                       Ver correos
                     </Button>
-                    {!canMarkPaid && (
-                      <Chip size="small" color="warning" label={markPaidReceiptHint} />
-                    )}
                   </Stack>
                 </Stack>
               </Paper>
@@ -1173,7 +1170,7 @@ export default function CourseRegistrationsAdminPage() {
                         <Stack spacing={1.5}>
                           {receipts.length === 0 && (
                             <Alert severity="info">
-                              Aún no hay comprobantes. Sin al menos uno, la inscripción no puede pasar a pagada.
+                              {markPaidReceiptHint}
                             </Alert>
                           )}
                           {receipts.map((receipt) => (
