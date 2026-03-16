@@ -222,4 +222,56 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await cleanup();
   });
+
+  it('shows only meaningful quick status actions for each registration row', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'cancelled',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Cada fila solo muestra cambios de estado disponibles; el estado actual ya queda marcado en su chip.',
+      );
+
+      expect(container.querySelector('button[aria-label="Marcar pendiente para Ada Lovelace"]')).toBeNull();
+      expect(
+        container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]'),
+      ).not.toBeNull();
+      expect(container.querySelector('button[aria-label="Cancelar inscripción para Ada Lovelace"]')).not.toBeNull();
+
+      expect(
+        container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Grace Hopper"]'),
+      ).toBeNull();
+      expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).not.toBeNull();
+      expect(container.querySelector('button[aria-label="Cancelar inscripción para Grace Hopper"]')).not.toBeNull();
+
+      expect(
+        container.querySelector('button[aria-label="Cancelar inscripción para Katherine Johnson"]'),
+      ).toBeNull();
+      expect(
+        container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Katherine Johnson"]'),
+      ).not.toBeNull();
+      expect(
+        container.querySelector('button[aria-label="Marcar pendiente para Katherine Johnson"]'),
+      ).not.toBeNull();
+    });
+
+    await cleanup();
+  });
 });

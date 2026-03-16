@@ -121,6 +121,20 @@ const statusChip = (status: string) => {
   return <Chip label="Pendiente de pago" color="warning" size="small" />;
 };
 
+const isRegistrationStatus = (
+  status: string,
+): status is Exclude<StatusFilter, 'all'> => (
+  status === 'pending_payment' || status === 'paid' || status === 'cancelled'
+);
+
+const canTransitionToStatus = (
+  currentStatus: string,
+  nextStatus: Exclude<StatusFilter, 'all'>,
+) => {
+  if (!isRegistrationStatus(currentStatus)) return true;
+  return currentStatus !== nextStatus;
+};
+
 const eventStatusColor = (
   status: string,
 ): 'default' | 'success' | 'warning' | 'error' | 'info' => {
@@ -739,6 +753,9 @@ export default function CourseRegistrationsAdminPage() {
           Los filtros se aplican automáticamente al cambiar. Abre el expediente para gestionar notas,
           comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.
         </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
+          Cada fila solo muestra cambios de estado disponibles; el estado actual ya queda marcado en su chip.
+        </Typography>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
           <Typography variant="caption" color="text.secondary">
             Leyenda de estados:
@@ -807,45 +824,51 @@ export default function CourseRegistrationsAdminPage() {
                   </Button>
                   <Box sx={{ flexGrow: 1 }} />
                   <Stack direction="row" spacing={1}>
-                    <Tooltip title="Subir comprobante y marcar pagado">
-                      <span>
-                        <IconButton
-                          size="small"
-                          color="success"
-                          aria-label={`Subir comprobante y marcar pagado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
-                          disabled={isUpdating || reg.crStatus === 'paid'}
-                          onClick={() => handleOpenDossier(reg, 'markPaid')}
-                        >
-                          <DoneIcon fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                    <Tooltip title="Marcar pendiente">
-                      <span>
-                        <IconButton
-                          size="small"
-                          color="warning"
-                          aria-label={`Marcar pendiente para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
-                          disabled={isUpdating || reg.crStatus === 'pending_payment'}
-                          onClick={() => handleQuickStatus(reg, 'pending_payment')}
-                        >
-                          <PendingIcon fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                    <Tooltip title="Cancelar">
-                      <span>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          aria-label={`Cancelar inscripción para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
-                          disabled={isUpdating || reg.crStatus === 'cancelled'}
-                          onClick={() => handleQuickStatus(reg, 'cancelled')}
-                        >
-                          <CancelIcon fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
+                    {canTransitionToStatus(reg.crStatus, 'paid') && (
+                      <Tooltip title="Subir comprobante y marcar pagado">
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="success"
+                            aria-label={`Subir comprobante y marcar pagado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
+                            disabled={isUpdating}
+                            onClick={() => handleOpenDossier(reg, 'markPaid')}
+                          >
+                            <DoneIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    )}
+                    {canTransitionToStatus(reg.crStatus, 'pending_payment') && (
+                      <Tooltip title="Marcar pendiente">
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="warning"
+                            aria-label={`Marcar pendiente para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
+                            disabled={isUpdating}
+                            onClick={() => handleQuickStatus(reg, 'pending_payment')}
+                          >
+                            <PendingIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    )}
+                    {canTransitionToStatus(reg.crStatus, 'cancelled') && (
+                      <Tooltip title="Cancelar">
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            aria-label={`Cancelar inscripción para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
+                            disabled={isUpdating}
+                            onClick={() => handleQuickStatus(reg, 'cancelled')}
+                          >
+                            <CancelIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    )}
                   </Stack>
                 </Box>
               );
