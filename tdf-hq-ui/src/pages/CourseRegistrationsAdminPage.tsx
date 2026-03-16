@@ -934,6 +934,7 @@ export default function CourseRegistrationsAdminPage() {
                       </Button>
                     </Stack>
                     <TextField
+                      label="Notas internas"
                       multiline
                       minRows={4}
                       value={notesDraft}
