@@ -355,6 +355,9 @@ export default function CourseRegistrationsAdminPage() {
     () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
     [activeCohortLabel, status, limit],
   );
+  const filteredEmptyStateMessage = activeFilterSummary
+    ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
+    : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -869,7 +872,7 @@ export default function CourseRegistrationsAdminPage() {
             válidas para esa inscripción.
           </Typography>
         )}
-        {hasCustomFilters && (
+        {hasCustomFilters && hasVisibleRegistrations && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
             <Typography variant="body2" color="text.secondary">
               Vista filtrada: {activeFilterSummary}.
@@ -914,7 +917,20 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
         {!regsQuery.isLoading && regsQuery.data?.length === 0 && (
-          <Typography color="text.secondary">No hay inscripciones para esta vista.</Typography>
+          hasCustomFilters ? (
+            <Alert
+              severity="info"
+              action={(
+                <Button color="inherit" size="small" onClick={handleResetFilters}>
+                  Restablecer filtros
+                </Button>
+              )}
+            >
+              {filteredEmptyStateMessage}
+            </Alert>
+          ) : (
+            <Typography color="text.secondary">No hay inscripciones para esta vista.</Typography>
+          )
         )}
         {regsQuery.data?.length ? (
           <Stack divider={<Divider flexItem />} spacing={2}>
