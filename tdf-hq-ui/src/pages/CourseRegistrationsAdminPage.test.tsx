@@ -192,11 +192,24 @@ const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
   return button;
 };
 
+const getMenuItemByText = (root: ParentNode, labelText: string) => {
+  const items = Array.from(root.querySelectorAll('[role="menuitem"]'));
+  const item = items.find((el) => (el.textContent ?? '').trim() === labelText);
+  if (!(item instanceof HTMLElement)) {
+    throw new Error(`Menu item not found: ${labelText}`);
+  }
+  return item;
+};
+
 const countOccurrences = (root: ParentNode, text: string) =>
   (root.textContent ?? '').split(text).length - 1;
 
+const clickElement = (element: Element) => {
+  element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+};
+
 const clickButton = (button: HTMLButtonElement) => {
-  button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  clickElement(button);
 };
 
 describe('CourseRegistrationsAdminPage', () => {
@@ -277,30 +290,40 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Usar enlace existente en lugar de subir archivo');
+      expect(document.body.textContent).toContain(
+        'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.',
+      );
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
       expect(document.body.textContent).toContain('Agregar seguimiento');
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
       clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
     });
 
     await act(async () => {
+      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
       clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto'));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
     });
@@ -420,6 +443,48 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain('Subir comprobante para marcar pagado');
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
+    });
+
+    await cleanup();
+  });
+
+  it('opens the receipt composer directly from the mark-paid flow without duplicating the hint', async () => {
+    const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Subir comprobante para marcar pagado')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, 'Subir comprobante para marcar pagado'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(markPaidReceiptHint);
+      expect(countOccurrences(document.body, markPaidReceiptHint)).toBe(1);
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
+      expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Agregar comprobante',
+        ),
+      ).toBe(false);
     });
 
     await cleanup();

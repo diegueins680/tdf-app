@@ -230,6 +230,7 @@ export default function CourseRegistrationsAdminPage() {
   const [notesDraft, setNotesDraft] = useState('');
   const [receiptForm, setReceiptForm] = useState<ReceiptFormState>(emptyReceiptForm);
   const [followUpForm, setFollowUpForm] = useState<FollowUpFormState>(emptyFollowUpForm);
+  const [showReceiptComposer, setShowReceiptComposer] = useState(false);
   const [showReceiptUrlField, setShowReceiptUrlField] = useState(false);
   const [showFollowUpUrlField, setShowFollowUpUrlField] = useState(false);
   const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
@@ -355,6 +356,12 @@ export default function CourseRegistrationsAdminPage() {
     [activeCohortLabel, status, limit],
   );
 
+  const resetReceiptComposer = (open = false) => {
+    setReceiptForm(emptyReceiptForm());
+    setShowReceiptUrlField(false);
+    setShowReceiptComposer(open);
+  };
+
   const resetFollowUpComposer = () => {
     setFollowUpForm(emptyFollowUpForm());
     setShowFollowUpUrlField(false);
@@ -463,22 +470,24 @@ export default function CourseRegistrationsAdminPage() {
       setDossierFlash(null);
       setNotesDraft('');
       setReceiptForm(emptyReceiptForm());
-      setFollowUpForm(emptyFollowUpForm());
       setShowReceiptUrlField(false);
+      setShowReceiptComposer(false);
+      setFollowUpForm(emptyFollowUpForm());
       setShowFollowUpUrlField(false);
       setShowFollowUpComposer(false);
       return;
     }
     setReceiptForm(emptyReceiptForm());
-    setFollowUpForm(emptyFollowUpForm());
     setShowReceiptUrlField(false);
+    setShowReceiptComposer(selectedDossier.intent === 'markPaid');
+    setFollowUpForm(emptyFollowUpForm());
     setShowFollowUpUrlField(false);
     setShowFollowUpComposer(false);
     setDossierFlash(
       selectedDossier.intent === 'markPaid'
         ? {
             severity: 'info',
-            message: 'Para marcar esta inscripción como pagada, primero sube o pega un comprobante.',
+            message: markPaidReceiptHint,
           }
         : null,
     );
@@ -616,8 +625,7 @@ export default function CourseRegistrationsAdminPage() {
     setDossierFlash(null);
     void action
       .then(() => {
-        setReceiptForm(emptyReceiptForm());
-        setShowReceiptUrlField(false);
+        resetReceiptComposer();
         setDossierFlash({
           severity: 'success',
           message: receiptForm.editingId == null ? 'Comprobante guardado.' : 'Comprobante actualizado.',
@@ -629,6 +637,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleEditReceipt = (receipt: CourseRegistrationReceiptDTO) => {
+    setShowReceiptComposer(true);
     setReceiptForm({
       editingId: receipt.crrId,
       fileUrl: receipt.crrFileUrl,
@@ -650,8 +659,7 @@ export default function CourseRegistrationsAdminPage() {
       })
       .then(() => {
         if (receiptForm.editingId === receipt.crrId) {
-          setReceiptForm(emptyReceiptForm());
-          setShowReceiptUrlField(false);
+          resetReceiptComposer();
         }
         setDossierFlash({ severity: 'success', message: 'Comprobante eliminado.' });
       })
@@ -1089,86 +1097,104 @@ export default function CourseRegistrationsAdminPage() {
               <Card variant="outlined">
                 <CardContent>
                   <Stack spacing={2}>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
-                      <Typography variant="h6">Comprobantes de pago</Typography>
-                      <Chip size="small" label={`${receipts.length} guardado${receipts.length === 1 ? '' : 's'}`} />
+                    <Stack
+                      direction="row"
+                      alignItems="flex-start"
+                      justifyContent="space-between"
+                      flexWrap="wrap"
+                      useFlexGap
+                      spacing={1}
+                    >
+                      <Box sx={{ minWidth: 240, flexGrow: 1 }}>
+                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                          <Typography variant="h6">Comprobantes de pago</Typography>
+                          <Chip size="small" label={`${receipts.length} guardado${receipts.length === 1 ? '' : 's'}`} />
+                        </Stack>
+                        <Typography variant="body2" color="text.secondary">
+                          Abre el formulario solo cuando necesites guardar un comprobante o pegar un
+                          enlace existente.
+                        </Typography>
+                      </Box>
+                      {!showReceiptComposer && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => setShowReceiptComposer(true)}
+                        >
+                          Agregar comprobante
+                        </Button>
+                      )}
                     </Stack>
 
                     <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <Stack spacing={1.5}>
-                          <GoogleDriveUploadWidget
-                            label={
-                              receiptForm.fileName
-                                ? `Archivo listo: ${receiptForm.fileName}`
-                                : 'Subir comprobante (imagen/PDF)'
-                            }
-                            helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
-                            accept="application/pdf,image/*"
-                            multiple={false}
-                            onComplete={handleReceiptUpload}
-                            dense
-                          />
-                          {!showReceiptUrlField && (
-                            <Button
-                              size="small"
-                              variant="text"
-                              sx={{ alignSelf: 'flex-start' }}
-                              onClick={() => setShowReceiptUrlField(true)}
-                            >
-                              Usar enlace existente en lugar de subir archivo
-                            </Button>
-                          )}
-                          <Collapse in={showReceiptUrlField} unmountOnExit>
-                            <TextField
-                              label="URL del comprobante"
-                              value={receiptForm.fileUrl}
-                              onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
-                              placeholder="Pega un enlace existente si el archivo ya está cargado"
-                              fullWidth
+                      {showReceiptComposer && (
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={1.5}>
+                            <GoogleDriveUploadWidget
+                              label={
+                                receiptForm.fileName
+                                  ? `Archivo listo: ${receiptForm.fileName}`
+                                  : 'Subir comprobante (imagen/PDF)'
+                              }
+                              helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
+                              accept="application/pdf,image/*"
+                              multiple={false}
+                              onComplete={handleReceiptUpload}
+                              dense
                             />
-                          </Collapse>
-                          <TextField
-                            label="Nombre visible"
-                            value={receiptForm.fileName}
-                            onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileName: e.target.value }))}
-                            placeholder="Ej. transferencia-produbanco-marzo.png"
-                            fullWidth
-                          />
-                          <TextField
-                            label="Notas del comprobante"
-                            value={receiptForm.notes}
-                            onChange={(e) => setReceiptForm((prev) => ({ ...prev, notes: e.target.value }))}
-                            placeholder="Referencia, banco, monto o aclaraciones"
-                            fullWidth
-                            multiline
-                            minRows={2}
-                          />
-                          <Stack direction="row" spacing={1}>
-                            <Button
-                              variant="contained"
-                              onClick={handleSubmitReceipt}
-                              disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending}
-                            >
-                              {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
-                            </Button>
-                            {receiptForm.editingId != null && (
+                            {!showReceiptUrlField && (
                               <Button
+                                size="small"
                                 variant="text"
-                                onClick={() => {
-                                  setReceiptForm(emptyReceiptForm());
-                                  setShowReceiptUrlField(false);
-                                }}
+                                sx={{ alignSelf: 'flex-start' }}
+                                onClick={() => setShowReceiptUrlField(true)}
                               >
-                                Cancelar edición
+                                Usar enlace existente en lugar de subir archivo
                               </Button>
                             )}
+                            <Collapse in={showReceiptUrlField} unmountOnExit>
+                              <TextField
+                                label="URL del comprobante"
+                                value={receiptForm.fileUrl}
+                                onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
+                                placeholder="Pega un enlace existente si el archivo ya está cargado"
+                                fullWidth
+                              />
+                            </Collapse>
+                            <TextField
+                              label="Nombre visible"
+                              value={receiptForm.fileName}
+                              onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileName: e.target.value }))}
+                              placeholder="Ej. transferencia-produbanco-marzo.png"
+                              fullWidth
+                            />
+                            <TextField
+                              label="Notas del comprobante"
+                              value={receiptForm.notes}
+                              onChange={(e) => setReceiptForm((prev) => ({ ...prev, notes: e.target.value }))}
+                              placeholder="Referencia, banco, monto o aclaraciones"
+                              fullWidth
+                              multiline
+                              minRows={2}
+                            />
+                            <Stack direction="row" spacing={1}>
+                              <Button
+                                variant="contained"
+                                onClick={handleSubmitReceipt}
+                                disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending}
+                              >
+                                {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
+                              </Button>
+                              <Button variant="text" onClick={() => resetReceiptComposer()}>
+                                {receiptForm.editingId == null ? 'Cancelar' : 'Cancelar edición'}
+                              </Button>
+                            </Stack>
                           </Stack>
-                        </Stack>
-                      </Grid>
-                      <Grid item xs={12} md={6}>
+                        </Grid>
+                      )}
+                      <Grid item xs={12} md={showReceiptComposer ? 6 : 12}>
                         <Stack spacing={1.5}>
-                          {receipts.length === 0 && (
+                          {receipts.length === 0 && selectedDossier?.intent !== 'markPaid' && (
                             <Alert severity="info">
                               {markPaidReceiptHint}
                             </Alert>
