@@ -348,6 +348,7 @@ export default function CourseRegistrationsAdminPage() {
       { ...base },
     );
   }, [regsQuery.data]);
+  const hasVisibleRegistrations = (regsQuery.data?.length ?? 0) > 0;
 
   const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
   const activeFilterSummary = useMemo(
@@ -783,10 +784,14 @@ export default function CourseRegistrationsAdminPage() {
           Inscripciones de cursos
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Chip label={`Total: ${statusCounts.total}`} size="small" />
-          <Chip label={`Pagadas: ${statusCounts.paid}`} size="small" color="success" variant="outlined" />
-          <Chip label={`Pendientes: ${statusCounts.pending_payment}`} size="small" color="warning" variant="outlined" />
-          <Chip label={`Canceladas: ${statusCounts.cancelled}`} size="small" color="error" variant="outlined" />
+          {hasVisibleRegistrations && (
+            <>
+              <Chip label={`Total: ${statusCounts.total}`} size="small" />
+              <Chip label={`Pagadas: ${statusCounts.paid}`} size="small" color="success" variant="outlined" />
+              <Chip label={`Pendientes: ${statusCounts.pending_payment}`} size="small" color="warning" variant="outlined" />
+              <Chip label={`Canceladas: ${statusCounts.cancelled}`} size="small" color="error" variant="outlined" />
+            </>
+          )}
           <Tooltip title="Refrescar">
             <span>
               <IconButton aria-label="Refrescar inscripciones" onClick={handleRefresh} disabled={regsQuery.isFetching}>
@@ -854,13 +859,16 @@ export default function CourseRegistrationsAdminPage() {
           </Grid>
         </Grid>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-          Los filtros se aplican automáticamente al cambiar. Abre el expediente para gestionar notas,
-          comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.
+          {hasVisibleRegistrations
+            ? 'Los filtros se aplican automáticamente al cambiar. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.'
+            : 'Los filtros se aplican automáticamente al cambiar. Ajusta la vista o usa refrescar si esperabas resultados.'}
         </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
-          Cada fila concentra los cambios de estado en &quot;Cambiar estado&quot;; el menu solo muestra opciones
-          válidas para esa inscripción.
-        </Typography>
+        {hasVisibleRegistrations && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
+            Cada fila concentra los cambios de estado en &quot;Cambiar estado&quot;; el menu solo muestra opciones
+            válidas para esa inscripción.
+          </Typography>
+        )}
         {hasCustomFilters && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
             <Typography variant="body2" color="text.secondary">
@@ -876,27 +884,29 @@ export default function CourseRegistrationsAdminPage() {
             Mostrando una sola cohorte: {singleVisibleCohortLabel}.
           </Typography>
         )}
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
-          <Typography variant="caption" color="text.secondary">
-            Leyenda de estados:
-          </Typography>
-          <Chip label="Pagado" size="small" color="success" />
-          <Chip label="Pendiente" size="small" color="warning" />
-          <Chip label="Cancelado" size="small" color="error" />
-          <Button
-            size="small"
-            startIcon={<ContentCopyIcon fontSize="small" />}
-            onClick={() => void handleCopyCsv()}
-            disabled={!regsQuery.data?.length}
-          >
-            Copiar CSV filtrado
-          </Button>
-          {copyMessage && (
+        {hasVisibleRegistrations && (
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
             <Typography variant="caption" color="text.secondary">
-              {copyMessage}
+              Leyenda de estados:
             </Typography>
-          )}
-        </Stack>
+            <Chip label="Pagado" size="small" color="success" />
+            <Chip label="Pendiente" size="small" color="warning" />
+            <Chip label="Cancelado" size="small" color="error" />
+            <Button
+              size="small"
+              startIcon={<ContentCopyIcon fontSize="small" />}
+              onClick={() => void handleCopyCsv()}
+              disabled={!regsQuery.data?.length}
+            >
+              Copiar CSV filtrado
+            </Button>
+            {copyMessage && (
+              <Typography variant="caption" color="text.secondary">
+                {copyMessage}
+              </Typography>
+            )}
+          </Stack>
+        )}
       </Paper>
 
       <Paper sx={{ p: 3, borderRadius: 3 }}>
@@ -907,7 +917,7 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
         {!regsQuery.isLoading && regsQuery.data?.length === 0 && (
-          <Typography color="text.secondary">No hay inscripciones para estos filtros.</Typography>
+          <Typography color="text.secondary">No hay inscripciones para esta vista.</Typography>
         )}
         {regsQuery.data?.length ? (
           <Stack divider={<Divider flexItem />} spacing={2}>

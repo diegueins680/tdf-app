@@ -710,4 +710,33 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await cleanup();
   });
+
+  it('hides result-only summaries when the current view has no registrations', async () => {
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Los filtros se aplican automáticamente al cambiar. Ajusta la vista o usa refrescar si esperabas resultados.',
+      );
+      expect(container.textContent).toContain('No hay inscripciones para esta vista.');
+      expect(container.textContent).not.toContain('Cada fila concentra los cambios de estado en "Cambiar estado"');
+      expect(container.textContent).not.toContain('Leyenda de estados:');
+      expect(container.textContent).not.toContain('Total: 0');
+      expect(container.textContent).not.toContain('Pagadas: 0');
+      expect(container.textContent).not.toContain('Pendientes: 0');
+      expect(container.textContent).not.toContain('Canceladas: 0');
+      expect(
+        Array.from(container.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
+        ),
+      ).toBe(false);
+      expect(getButtonByAriaLabel(container, 'Refrescar inscripciones')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
 });
