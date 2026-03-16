@@ -217,6 +217,7 @@ export default function CourseRegistrationsAdminPage() {
   const [slug, setSlug] = useState(initialSlug);
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(initialLimit !== DEFAULT_LIMIT);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [pageFlash, setPageFlash] = useState<FlashState | null>(null);
   const [dossierFlash, setDossierFlash] = useState<FlashState | null>(null);
@@ -534,6 +535,7 @@ export default function CourseRegistrationsAdminPage() {
     setSlug('');
     setStatus('all');
     setLimit(DEFAULT_LIMIT);
+    setShowAdvancedFilters(false);
   };
 
   const handleOpenStatusMenu = (anchorEl: HTMLElement, reg: CourseRegistrationDTO) => {
@@ -813,7 +815,7 @@ export default function CourseRegistrationsAdminPage() {
 
       <Paper sx={{ p: 3, borderRadius: 3 }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={5}>
+          <Grid item xs={12} md={6}>
             <TextField
               select
               label="Curso / cohorte"
@@ -838,7 +840,7 @@ export default function CourseRegistrationsAdminPage() {
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={6}>
             <TextField
               select
               label="Estado"
@@ -853,22 +855,38 @@ export default function CourseRegistrationsAdminPage() {
               <MenuItem value="cancelled">Cancelado</MenuItem>
             </TextField>
           </Grid>
-          <Grid item xs={12} md={3}>
+        </Grid>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => setShowAdvancedFilters((current) => !current)}
+            aria-expanded={showAdvancedFilters}
+          >
+            {showAdvancedFilters ? 'Ocultar filtros avanzados' : 'Más filtros'}
+          </Button>
+          {!showAdvancedFilters && limit !== DEFAULT_LIMIT && (
+            <Chip size="small" label={`Límite activo: ${limit}`} variant="outlined" />
+          )}
+        </Stack>
+        <Collapse in={showAdvancedFilters} unmountOnExit>
+          <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>
             <TextField
               label="Límite"
               type="number"
               inputProps={{ min: 1 }}
               value={limit}
               onChange={(e) => setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT))}
+              helperText="Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto."
               fullWidth
               size="small"
             />
-          </Grid>
-        </Grid>
+          </Box>
+        </Collapse>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
           {hasVisibleRegistrations
-            ? 'Los filtros se aplican automáticamente al cambiar. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.'
-            : 'Los filtros se aplican automáticamente al cambiar. Ajusta la vista o usa refrescar si esperabas resultados.'}
+            ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.'
+            : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.'}
         </Typography>
         {hasVisibleRegistrations && (
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>

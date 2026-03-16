@@ -273,13 +273,15 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Los filtros se aplican automáticamente al cambiar. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.',
+        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.',
       );
       expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Aplicar filtros');
       expect(container.textContent).toContain('Abrir expediente');
       expect(container.textContent).not.toContain('Ver correos');
+      expect(hasLabel(container, 'Límite')).toBe(false);
+      expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
       expect(listRegistrationsMock).toHaveBeenCalledWith({
         slug: undefined,
         status: undefined,
@@ -288,6 +290,16 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Más filtros'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Límite')).toBe(true);
+    });
 
     await act(async () => {
       setInputValue(getInputByLabel(container, 'Límite'), '50');
@@ -365,6 +377,53 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await cleanup();
+  });
+
+  it('keeps the limit filter inside advanced controls unless a custom limit is already active', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Límite')).toBe(false);
+      expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
+      expect(container.textContent).not.toContain('Límite activo:');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Más filtros'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Límite')).toBe(true);
+      expect(getButtonByText(container, 'Ocultar filtros avanzados')).toBeTruthy();
+      expect(container.textContent).toContain(
+        'Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto.',
+      );
+    });
+
+    await cleanup();
+
+    listRegistrationsMock.mockClear();
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer, '/inscripciones-curso?limit=50');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 50,
+      });
+      expect(hasLabel(secondContainer, 'Límite')).toBe(true);
+      expect(getButtonByText(secondContainer, 'Ocultar filtros avanzados')).toBeTruthy();
+      expect(secondContainer.textContent).not.toContain('Límite activo: 50');
+    });
+
+    await secondRender.cleanup();
   });
 
   it('shows the selected cohort once in the filtered summary instead of repeating it on each row', async () => {
@@ -761,6 +820,16 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
+      clickButton(getButtonByText(container, 'Más filtros'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Límite')).toBe(true);
+    });
+
+    await act(async () => {
       setInputValue(getInputByLabel(container, 'Límite'), '50');
       await flushPromises();
       await flushPromises();
@@ -791,6 +860,8 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 200,
       });
       expect(container.textContent).not.toContain('Vista filtrada:');
+      expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
+      expect(container.textContent).not.toContain('Límite activo:');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
     });
 
@@ -888,7 +959,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Los filtros se aplican automáticamente al cambiar. Ajusta la vista o usa refrescar si esperabas resultados.',
+        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.',
       );
       expect(container.textContent).toContain('No hay inscripciones para esta vista.');
       expect(container.textContent).not.toContain('Cada fila concentra los cambios de estado en "Cambiar estado"');
