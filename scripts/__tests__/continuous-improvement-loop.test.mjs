@@ -185,3 +185,56 @@ test('continuous-improvement-loop honors --allow-dirty for tracked baseline chan
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 });
+
+test('continuous-improvement-loop stages tracked files modified during an iteration', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-tracked-test-'));
+  const remoteDir = path.join(tempRoot, 'remote.git');
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '--bare', remoteDir], tempRoot);
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
+    await git(['add', 'tracked.txt']);
+    await git(['commit', '-m', 'initial']);
+    await git(['remote', 'add', 'origin', remoteDir]);
+    await git(['push', '-u', 'origin', 'main']);
+
+    const configPath = path.join(repoDir, 'loop-config.json');
+    await fs.writeFile(
+      configPath,
+      JSON.stringify(
+        {
+          pollGitHub: false,
+          iterationDelaySeconds: 0,
+          ideaCommand:
+            "printf '# Tracked file test\\nSource: test\\nTarget: tracked.txt:1\\nReason: verify tracked file edits are staged correctly.\\n'",
+          implementationCommand: "printf 'after\\n' >> tracked.txt",
+          uiAuditCommand: "printf '[]\\n'",
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+
+    await execFileAsync(
+      'node',
+      [loopScriptPath, '--config', 'loop-config.json', '--allow-dirty', '--max-iterations', '1'],
+      { cwd: repoDir },
+    );
+
+    const commitDiff = await git(['diff', '--name-only', 'HEAD~1', 'HEAD']);
+    assert.deepEqual(commitDiff.stdout.trim().split('\n').filter(Boolean), ['tracked.txt']);
+
+    const fileContents = await fs.readFile(path.join(repoDir, 'tracked.txt'), 'utf8');
+    assert.equal(fileContents, 'before\nafter\n');
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});

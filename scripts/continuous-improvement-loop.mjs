@@ -206,8 +206,8 @@ async function getHeadSha(repoRoot) {
 function splitLines(stdout) {
   return stdout
     .split('\n')
-    .map((value) => value.trim())
-    .filter(Boolean);
+    .map((value) => value.replace(/\r$/, ''))
+    .filter((value) => value.length > 0);
 }
 
 function extractPathsFromPorcelainLine(line) {
