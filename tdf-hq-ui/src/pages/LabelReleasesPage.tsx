@@ -425,7 +425,7 @@ export default function LabelReleasesPage() {
                     InputProps={{
                       endAdornment: (
                         <Tooltip title="Subir archivo">
-                          <IconButton component="label" size="small">
+                          <IconButton component="label" size="small" aria-label="Subir portada del release">
                             <CloudUploadIcon fontSize="small" />
                             <input
                               type="file"
