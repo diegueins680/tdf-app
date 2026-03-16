@@ -481,6 +481,7 @@ export default function LabelAssetsPage() {
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
             <TextField
               fullWidth
+              label="Buscar assets"
               placeholder="Buscar por nombre, categoría o modelo"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
