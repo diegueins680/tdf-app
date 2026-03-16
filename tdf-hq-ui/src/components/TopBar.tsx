@@ -652,6 +652,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
         <DialogContent>
           <TextField
             fullWidth
+            label="Buscar secciones"
             placeholder="Escribe para buscar (ej: inventario, leads, marketplace)"
             value={quickQuery}
             onChange={(e) => setQuickQuery(e.target.value)}
