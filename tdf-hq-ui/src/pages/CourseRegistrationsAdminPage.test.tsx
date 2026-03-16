@@ -358,6 +358,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
       expect(document.body.textContent).toContain('Registrar seguimiento');
+      expect(document.body.textContent).not.toContain(
+        'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
+      );
       expect(document.body.textContent).toContain(
         'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
       );
@@ -754,6 +757,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Registrar seguimiento');
+      expect(document.body.textContent).not.toContain(
+        'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
+      );
       expect(document.body.textContent).toContain(
         'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
       );
