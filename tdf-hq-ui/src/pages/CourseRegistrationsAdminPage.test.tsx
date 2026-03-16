@@ -3,18 +3,26 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { CourseCohortOptionDTO, CourseRegistrationDTO } from '../api/courses';
+import type {
+  CourseCohortOptionDTO,
+  CourseRegistrationDTO,
+  CourseRegistrationDossierDTO,
+} from '../api/courses';
 
 const listCohortsMock = jest.fn<() => Promise<CourseCohortOptionDTO[]>>();
 const listRegistrationsMock = jest.fn<
   (params?: { slug?: string; status?: string; limit?: number }) => Promise<CourseRegistrationDTO[]>
+>();
+const getRegistrationDossierMock = jest.fn<
+  (slug: string, registrationId: number) => Promise<CourseRegistrationDossierDTO | null>
 >();
 
 jest.unstable_mockModule('../api/courses', () => ({
   Courses: {
     listCohorts: () => listCohortsMock(),
     listRegistrations: (params?: { slug?: string; status?: string; limit?: number }) => listRegistrationsMock(params),
-    getRegistrationDossier: jest.fn(() => Promise.resolve(null)),
+    getRegistrationDossier: (slug: string, registrationId: number) =>
+      getRegistrationDossierMock(slug, registrationId),
     listRegistrationEmails: jest.fn(() => Promise.resolve([])),
     updateStatus: jest.fn(() => Promise.resolve(null)),
     updateRegistrationNotes: jest.fn(() => Promise.resolve(null)),
@@ -68,6 +76,16 @@ const buildRegistration = (overrides: Partial<CourseRegistrationDTO> = {}): Cour
   crUtmContent: null,
   crCreatedAt: '2030-01-02T03:04:05.000Z',
   crUpdatedAt: '2030-01-02T03:04:05.000Z',
+  ...overrides,
+});
+
+const buildDossier = (
+  overrides: Partial<CourseRegistrationDossierDTO> = {},
+): CourseRegistrationDossierDTO => ({
+  crdRegistration: buildRegistration(),
+  crdReceipts: [],
+  crdFollowUps: [],
+  crdCanMarkPaid: false,
   ...overrides,
 });
 
@@ -184,8 +202,10 @@ describe('CourseRegistrationsAdminPage', () => {
   beforeEach(() => {
     listCohortsMock.mockReset();
     listRegistrationsMock.mockReset();
+    getRegistrationDossierMock.mockReset();
     listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' }]);
     listRegistrationsMock.mockResolvedValue([buildRegistration()]);
+    getRegistrationDossierMock.mockResolvedValue(null);
   });
 
   it('consolidates row details into the dossier and refetches when the limit changes', async () => {
@@ -349,6 +369,59 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await cleanup();
+  });
+
+  it('shows the mark-paid action only when the dossier can actually use it', async () => {
+    const registration = buildRegistration();
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({ crdRegistration: registration, crdCanMarkPaid: false }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Sube un comprobante para habilitar Marcar pagado');
+      expect(Array.from(document.body.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Marcar pagado')).toBe(false);
+    });
+
+    await cleanup();
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({ crdRegistration: registration, crdCanMarkPaid: true }),
+    );
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(secondContainer, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(secondContainer, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
+      expect(document.body.textContent).not.toContain('Sube un comprobante para habilitar Marcar pagado');
+    });
+
+    await secondRender.cleanup();
   });
 
   it('shows when the list is filtered and lets admins reset filters in one step', async () => {

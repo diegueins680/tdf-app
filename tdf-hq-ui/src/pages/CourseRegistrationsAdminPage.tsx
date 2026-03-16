@@ -49,6 +49,7 @@ type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 type DossierIntent = 'review' | 'markPaid';
 type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
+const markPaidReceiptHint = 'Sube un comprobante para habilitar Marcar pagado';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -1010,14 +1011,16 @@ export default function CourseRegistrationsAdminPage() {
                     Slug: {activeRegistration.crCourseSlug} · Fuente: {activeRegistration.crSource} · Creado: {formatDate(activeRegistration.crCreatedAt)}
                   </Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      onClick={handleMarkPaidFromDossier}
-                      disabled={updateStatusMutation.isPending || !canMarkPaid}
-                    >
-                      Marcar pagado
-                    </Button>
+                    {canMarkPaid && (
+                      <Button
+                        variant="contained"
+                        color="success"
+                        onClick={handleMarkPaidFromDossier}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        Marcar pagado
+                      </Button>
+                    )}
                     <Button
                       variant="outlined"
                       onClick={() => setSelectedRegForEmails(activeRegistration)}
@@ -1025,7 +1028,7 @@ export default function CourseRegistrationsAdminPage() {
                       Ver correos
                     </Button>
                     {!canMarkPaid && (
-                      <Chip size="small" color="warning" label="Falta comprobante para marcar pagado" />
+                      <Chip size="small" color="warning" label={markPaidReceiptHint} />
                     )}
                   </Stack>
                 </Stack>
