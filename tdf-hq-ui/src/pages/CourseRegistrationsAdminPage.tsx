@@ -138,18 +138,42 @@ const summarizeActiveFilters = ({
 
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
 
-const statusChip = (status: string) => {
-  const normalized = status.toLowerCase();
-  if (normalized === 'paid') return <Chip label="Pagado" color="success" size="small" />;
-  if (normalized === 'cancelled') return <Chip label="Cancelado" color="error" size="small" />;
-  return <Chip label="Pendiente de pago" color="warning" size="small" />;
-};
-
 const isRegistrationStatus = (
   status: string,
 ): status is Exclude<StatusFilter, 'all'> => (
   status === 'pending_payment' || status === 'paid' || status === 'cancelled'
 );
+
+const registrationStatusLabel = (status: string) =>
+  isRegistrationStatus(status) ? statusFilterLabels[status] : status.trim() || 'Estado desconocido';
+
+const registrationStatusChipColor = (
+  status: string,
+): 'default' | 'success' | 'warning' | 'error' => {
+  if (status === 'paid') return 'success';
+  if (status === 'cancelled') return 'error';
+  if (status === 'pending_payment') return 'warning';
+  return 'default';
+};
+
+const registrationStatusButtonColor = (
+  status: string,
+): 'inherit' | 'success' | 'warning' | 'error' => {
+  if (status === 'paid') return 'success';
+  if (status === 'cancelled') return 'error';
+  if (status === 'pending_payment') return 'warning';
+  return 'inherit';
+};
+
+const statusChip = (status: string) => {
+  return (
+    <Chip
+      label={registrationStatusLabel(status)}
+      color={registrationStatusChipColor(status)}
+      size="small"
+    />
+  );
+};
 
 const canTransitionToStatus = (
   currentStatus: string,
@@ -305,7 +329,8 @@ export default function CourseRegistrationsAdminPage() {
       ),
     );
     if (uniqueCohortSlugs.length !== 1) return '';
-    const [cohortSlug] = uniqueCohortSlugs;
+    const cohortSlug = uniqueCohortSlugs[0];
+    if (!cohortSlug) return '';
     return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
   }, [cohortLabelsBySlug, regsQuery.data, selectedSlug]);
 
@@ -898,8 +923,8 @@ export default function CourseRegistrationsAdminPage() {
         </Typography>
         {hasVisibleRegistrations && (
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
-            Cada fila concentra los cambios de estado en &quot;Cambiar estado&quot;; el menu solo muestra opciones
-            válidas para esa inscripción.
+            Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón
+            del estado actual para cambios rápidos.
           </Typography>
         )}
         {hasCustomFilters && hasVisibleRegistrations && (
@@ -996,20 +1021,20 @@ export default function CourseRegistrationsAdminPage() {
                       Creado: {formatDate(reg.crCreatedAt)}
                     </Typography>
                   </Box>
-                  <Box>{statusChip(reg.crStatus)}</Box>
                   <Button size="small" variant="outlined" onClick={() => handleOpenDossier(reg, 'review')}>
                     Abrir expediente
                   </Button>
-                  <Box sx={{ flexGrow: 1 }} />
                   <Button
                     size="small"
-                    variant="text"
+                    variant="outlined"
+                    color={registrationStatusButtonColor(reg.crStatus)}
                     aria-label={`Cambiar estado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
                     disabled={isUpdating}
                     onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
                   >
-                    Cambiar estado
+                    Estado: {registrationStatusLabel(reg.crStatus)}
                   </Button>
+                  <Box sx={{ flexGrow: 1 }} />
                 </Box>
               );
             })}

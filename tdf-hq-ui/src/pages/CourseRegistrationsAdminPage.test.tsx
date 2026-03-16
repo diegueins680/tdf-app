@@ -536,9 +536,13 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Cada fila concentra los cambios de estado en "Cambiar estado"; el menu solo muestra opciones válidas para esa inscripción.',
+        'Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón del estado actual para cambios rápidos.',
       );
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
+      expect(getButtonByText(container, 'Estado: Pendiente de pago')).toBeTruthy();
+      expect(getButtonByText(container, 'Estado: Pagado')).toBeTruthy();
+      expect(getButtonByText(container, 'Estado: Cancelado')).toBeTruthy();
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Cancelar inscripción para Katherine Johnson"]')).toBeNull();
@@ -987,7 +991,9 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.',
       );
       expect(container.textContent).toContain('No hay inscripciones para esta vista.');
-      expect(container.textContent).not.toContain('Cada fila concentra los cambios de estado en "Cambiar estado"');
+      expect(container.textContent).not.toContain(
+        'Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón del estado actual para cambios rápidos.',
+      );
       expect(container.textContent).not.toContain('Leyenda de estados:');
       expect(container.textContent).not.toContain('Total: 0');
       expect(container.textContent).not.toContain('Pagadas: 0');
