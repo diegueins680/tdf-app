@@ -387,9 +387,10 @@ export default function TeachersPage() {
             <TextField
               fullWidth
               size="small"
+              label="Buscar profesor"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar profesor"
+              placeholder="Nombre o materia"
               InputProps={{
                 startAdornment: <SearchIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />,
               }}
