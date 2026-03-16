@@ -489,7 +489,11 @@ export default function LabelArtistsPage() {
                         </TableCell>
                         <TableCell align="right">
                           <Tooltip title="Editar perfil">
-                            <IconButton size="small" onClick={() => handleEdit(artist)}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEdit(artist)}
+                              aria-label={`Editar perfil de ${artist.apDisplayName || `artista ${artist.apArtistId}`}`}
+                            >
                               <EditIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
