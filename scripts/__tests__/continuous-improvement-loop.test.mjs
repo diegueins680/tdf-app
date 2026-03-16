@@ -164,6 +164,32 @@ test('buildDefaultIdea ignores TODO-like code literals and keeps real comment TO
   }
 });
 
+test('buildDefaultIdea surfaces UI audit errors instead of hiding them behind TODO fallback', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'discovery-ui-error-test-'));
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(path.join(repoDir, 'tdf-hq-ui'), { recursive: true });
+  await fs.mkdir(path.join(repoDir, 'src'), { recursive: true });
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init']);
+    await fs.writeFile(path.join(repoDir, 'tdf-hq-ui', 'src'), 'not a directory\n', 'utf8');
+    await fs.writeFile(
+      path.join(repoDir, 'src', 'example.mjs'),
+      '// TODO: this should not hide a broken UI workspace\n',
+      'utf8',
+    );
+    await git(['add', 'tdf-hq-ui/src', 'src/example.mjs']);
+
+    await assert.rejects(() => buildDefaultIdea(repoDir), {
+      code: 'ENOTDIR',
+    });
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('continuous-improvement-loop honors --allow-dirty for tracked baseline changes without committing them', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-test-'));
   const remoteDir = path.join(tempRoot, 'remote.git');

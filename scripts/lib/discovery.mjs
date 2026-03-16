@@ -64,6 +64,18 @@ function normalizeTodoText(text) {
   return text.replace(/\s*(?:\*\/|-->)\s*$/, '').trim();
 }
 
+async function pathExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return false;
+    }
+    throw error;
+  }
+}
+
 function matchTodoText(line, extension) {
   if (TEXT_TODO_EXTENSIONS.has(extension)) {
     const todoMatch = line.match(TODO_PATTERN);
@@ -180,13 +192,11 @@ function buildFallbackIdea() {
 
 export async function buildDefaultIdea(repoRoot) {
   const uiRoot = path.join(repoRoot, 'tdf-hq-ui', 'src');
-  try {
+  if (await pathExists(uiRoot)) {
     const uiFindings = await collectUiFindings(uiRoot);
     if (uiFindings.length > 0) {
       return buildUiIdea(repoRoot, uiFindings[0]);
     }
-  } catch {
-    // Ignore missing UI workspace and fall back to TODO scanning.
   }
 
   const todoMatches = await scanTodoMatches(repoRoot);
