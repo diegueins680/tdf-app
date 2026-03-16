@@ -249,6 +249,7 @@ export default function LeadsPage() {
 
       <Paper sx={{ p: 2.5, borderRadius: 3, boxShadow: '0 10px 30px rgba(15,23,42,0.12)' }}>
         <TextField
+          label="Buscar leads"
           placeholder="Buscar por nombre, correo, teléfono o nota"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
