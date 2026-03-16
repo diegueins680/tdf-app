@@ -50,6 +50,7 @@ type DossierIntent = 'review' | 'markPaid';
 type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
 const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
+const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -799,6 +800,7 @@ export default function CourseRegistrationsAdminPage() {
   const receipts = dossierData?.crdReceipts ?? [];
   const followUps = dossierData?.crdFollowUps ?? [];
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
+  const hasReceipts = receipts.length > 0;
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
   const showReceiptMetadataFields = (
     selectedDossier?.intent === 'markPaid'
@@ -1275,11 +1277,14 @@ export default function CourseRegistrationsAdminPage() {
                       <Box sx={{ minWidth: 240, flexGrow: 1 }}>
                         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                           <Typography variant="h6">Comprobantes de pago</Typography>
-                          <Chip size="small" label={`${receipts.length} guardado${receipts.length === 1 ? '' : 's'}`} />
+                          {hasReceipts && (
+                            <Chip size="small" label={`${receipts.length} guardado${receipts.length === 1 ? '' : 's'}`} />
+                          )}
                         </Stack>
                         <Typography variant="body2" color="text.secondary">
-                          Abre el formulario solo cuando necesites guardar un comprobante o pegar un
-                          enlace existente.
+                          {hasReceipts
+                            ? 'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.'
+                            : emptyReceiptHelpText}
                         </Typography>
                       </Box>
                       {!showReceiptComposer && (
@@ -1288,7 +1293,7 @@ export default function CourseRegistrationsAdminPage() {
                           variant="contained"
                           onClick={() => setShowReceiptComposer(true)}
                         >
-                          Agregar comprobante
+                          {hasReceipts ? 'Agregar comprobante' : 'Agregar primer comprobante'}
                         </Button>
                       )}
                     </Stack>
@@ -1371,11 +1376,6 @@ export default function CourseRegistrationsAdminPage() {
                       )}
                       <Grid item xs={12} md={showReceiptComposer ? 6 : 12}>
                         <Stack spacing={1.5}>
-                          {receipts.length === 0 && selectedDossier?.intent !== 'markPaid' && (
-                            <Alert severity="info">
-                              {markPaidReceiptHint}
-                            </Alert>
-                          )}
                           {receipts.map((receipt) => (
                             <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
                               <Stack spacing={1}>

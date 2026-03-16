@@ -328,9 +328,13 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(
-        'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.',
+        'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.',
       );
-      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(
+        'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.',
+      );
+      expect(document.body.textContent).not.toContain('0 guardados');
+      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(1);
       expect(document.body.textContent).toContain(
         'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
@@ -346,7 +350,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
+      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
       clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
       await flushPromises();
       await flushPromises();
@@ -779,6 +783,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
   it('shows the mark-paid action only when the dossier can actually use it', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
+    const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
     const registration = buildRegistration();
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({ crdRegistration: registration, crdCanMarkPaid: false }),
@@ -799,8 +804,10 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(markPaidReceiptHint);
-      expect(countOccurrences(document.body, markPaidReceiptHint)).toBe(1);
+      expect(document.body.textContent).toContain(emptyReceiptHelpText);
+      expect(document.body.textContent).not.toContain(markPaidReceiptHint);
+      expect(document.body.textContent).not.toContain('0 guardados');
+      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
       expect(Array.from(document.body.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Marcar pagado')).toBe(false);
     });
 
