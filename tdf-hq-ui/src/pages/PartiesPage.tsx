@@ -343,9 +343,11 @@ export default function PartiesPage() {
           sx={{ mb: 2 }}
         >
           <TextField
+            aria-label="Buscar contactos"
             placeholder="Buscar..."
             value={search}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+            inputProps={{ 'aria-label': 'Buscar contactos' }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
