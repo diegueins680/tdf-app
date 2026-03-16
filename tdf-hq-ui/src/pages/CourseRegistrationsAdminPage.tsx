@@ -1039,7 +1039,23 @@ export default function CourseRegistrationsAdminPage() {
         fullWidth
         maxWidth="lg"
       >
-        <DialogTitle>Expediente de inscripción</DialogTitle>
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} useFlexGap>
+            <span>Expediente de inscripción</span>
+            <Tooltip title="Refrescar expediente">
+              <span>
+                <IconButton
+                  size="small"
+                  aria-label="Refrescar expediente"
+                  onClick={() => void dossierQuery.refetch()}
+                  disabled={!selectedDossier || dossierQuery.isFetching}
+                >
+                  <RefreshIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Stack>
+        </DialogTitle>
         <DialogContent dividers>
           {dossierQuery.isLoading && (
             <Stack direction="row" spacing={1} alignItems="center">
@@ -1556,18 +1572,6 @@ export default function CourseRegistrationsAdminPage() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => {
-              if (selectedDossier) {
-                void qc.invalidateQueries({
-                  queryKey: ['admin', 'course-registration-dossier', selectedDossier.reg.crCourseSlug, selectedDossier.reg.crId],
-                });
-              }
-            }}
-            disabled={dossierQuery.isFetching}
-          >
-            Actualizar
-          </Button>
           <Button onClick={() => setSelectedDossier(null)}>Cerrar</Button>
         </DialogActions>
       </Dialog>

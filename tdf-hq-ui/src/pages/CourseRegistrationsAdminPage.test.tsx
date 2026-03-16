@@ -539,6 +539,50 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses a scoped dossier refresh control instead of a generic footer action', async () => {
+    getRegistrationDossierMock.mockResolvedValue(buildDossier());
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
+      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente').disabled).toBe(false);
+      expect(getRegistrationDossierMock).toHaveBeenCalledWith('beatmaking-101', 101);
+      expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Actualizar',
+        ),
+      ).toBe(false);
+    });
+
+    getRegistrationDossierMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, 'Refrescar expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getRegistrationDossierMock).toHaveBeenCalledWith('beatmaking-101', 101);
+    });
+
+    await cleanup();
+  });
+
   it('opens the receipt composer directly from the mark-paid flow without duplicating the hint', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const container = document.createElement('div');
