@@ -630,7 +630,11 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
                         {senderLabel}
                       </Typography>
                       <Tooltip title={reviewMode ? 'Copy sender' : 'Copiar remitente'}>
-                        <IconButton size="small" onClick={() => void handleCopySender()}>
+                        <IconButton
+                          size="small"
+                          onClick={() => void handleCopySender()}
+                          aria-label={reviewMode ? 'Copy sender' : 'Copiar remitente'}
+                        >
                           <ContentCopyIcon fontSize="inherit" />
                         </IconButton>
                       </Tooltip>
@@ -645,7 +649,11 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
                         {msg.externalId}
                       </Typography>
                       <Tooltip title={reviewMode ? 'Copy ID' : 'Copiar ID'}>
-                        <IconButton size="small" onClick={() => void handleCopyExternal()}>
+                        <IconButton
+                          size="small"
+                          onClick={() => void handleCopyExternal()}
+                          aria-label={reviewMode ? 'Copy ID' : 'Copiar ID'}
+                        >
                           <ContentCopyIcon fontSize="inherit" />
                         </IconButton>
                       </Tooltip>
