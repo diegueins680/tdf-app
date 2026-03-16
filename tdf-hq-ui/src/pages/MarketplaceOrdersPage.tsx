@@ -396,7 +396,7 @@ export default function MarketplaceOrdersPage() {
             <Chip label={`${filtered.length} resultado${filtered.length === 1 ? '' : 's'}`} color="default" size="small" />
             <Box flex={1} />
             <Tooltip title="Recargar">
-              <IconButton onClick={handleRefresh}>
+              <IconButton aria-label="Recargar órdenes" onClick={handleRefresh}>
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
