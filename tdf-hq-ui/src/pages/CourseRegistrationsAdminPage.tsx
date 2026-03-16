@@ -775,6 +775,7 @@ export default function CourseRegistrationsAdminPage() {
   const followUps = dossierData?.crdFollowUps ?? [];
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
+  const showEmptyFollowUpCallToAction = followUps.length === 0 && !showFollowUpComposer;
   const showReceiptMetadataFields = (
     selectedDossier?.intent === 'markPaid'
     || receiptForm.editingId != null
@@ -1424,7 +1425,7 @@ export default function CourseRegistrationsAdminPage() {
                         <Typography variant="h6">Historial de seguimiento</Typography>
                         <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
                       </Stack>
-                      {!showFollowUpComposer && (
+                      {!showFollowUpComposer && followUps.length > 0 && (
                         <Button
                           size="small"
                           variant="contained"
@@ -1535,10 +1536,17 @@ export default function CourseRegistrationsAdminPage() {
                       <Grid item xs={12} md={showFollowUpComposer ? 6 : 12}>
                         <Stack spacing={1.5}>
                           {followUps.length === 0 && (
-                            <Alert severity="info">
+                            <Alert
+                              severity="info"
+                              action={showEmptyFollowUpCallToAction ? (
+                                <Button color="inherit" size="small" onClick={() => setShowFollowUpComposer(true)}>
+                                  Agregar seguimiento
+                                </Button>
+                              ) : undefined}
+                            >
                               {showFollowUpComposer
                                 ? 'Aún no hay seguimiento manual. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.'
-                                : 'Aún no hay seguimiento manual. Usa Agregar seguimiento para documentar llamadas, correos o próximos pasos. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.'}
+                                : 'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.'}
                             </Alert>
                           )}
                           {followUps.map((entry) => (

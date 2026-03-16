@@ -331,9 +331,9 @@ describe('CourseRegistrationsAdminPage', () => {
         'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.',
       );
       expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
-      expect(document.body.textContent).toContain('Agregar seguimiento');
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(1);
       expect(document.body.textContent).toContain(
-        'Aún no hay seguimiento manual. Usa Agregar seguimiento para documentar llamadas, correos o próximos pasos. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
+        'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
       );
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
       expect(document.body.textContent).not.toContain(
@@ -364,6 +364,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(
         'Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y las notas.',
       );
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
     });
@@ -728,8 +729,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(1);
       expect(document.body.textContent).toContain(
-        'Aún no hay seguimiento manual. Usa Agregar seguimiento para documentar llamadas, correos o próximos pasos. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
+        'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
       );
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
       expect(document.body.textContent).not.toContain(
@@ -755,6 +757,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(
         'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
       );
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();
