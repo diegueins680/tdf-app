@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type {
   CourseCohortOptionDTO,
+  CourseEmailEventDTO,
   CourseRegistrationDTO,
   CourseRegistrationDossierDTO,
   CourseRegistrationReceiptDTO,
@@ -17,6 +18,9 @@ const listRegistrationsMock = jest.fn<
 const getRegistrationDossierMock = jest.fn<
   (slug: string, registrationId: number) => Promise<CourseRegistrationDossierDTO | null>
 >();
+const listRegistrationEmailsMock = jest.fn<
+  (registrationId: number, limit?: number) => Promise<CourseEmailEventDTO[]>
+>();
 
 jest.unstable_mockModule('../api/courses', () => ({
   Courses: {
@@ -24,7 +28,8 @@ jest.unstable_mockModule('../api/courses', () => ({
     listRegistrations: (params?: { slug?: string; status?: string; limit?: number }) => listRegistrationsMock(params),
     getRegistrationDossier: (slug: string, registrationId: number) =>
       getRegistrationDossierMock(slug, registrationId),
-    listRegistrationEmails: jest.fn(() => Promise.resolve([])),
+    listRegistrationEmails: (registrationId: number, limit?: number) =>
+      listRegistrationEmailsMock(registrationId, limit),
     updateStatus: jest.fn(() => Promise.resolve(null)),
     updateRegistrationNotes: jest.fn(() => Promise.resolve(null)),
     createReceipt: jest.fn(() => Promise.resolve(null)),
@@ -103,6 +108,21 @@ const buildReceipt = (
   crrUploadedBy: 4,
   crrCreatedAt: '2030-01-02T03:04:05.000Z',
   crrUpdatedAt: '2030-01-02T03:04:05.000Z',
+  ...overrides,
+});
+
+const buildEmailEvent = (
+  overrides: Partial<CourseEmailEventDTO> = {},
+): CourseEmailEventDTO => ({
+  ceId: 501,
+  ceCourseSlug: 'beatmaking-101',
+  ceRegistrationId: 101,
+  ceRecipientEmail: 'ada@example.com',
+  ceRecipientName: 'Ada Lovelace',
+  ceEventType: 'payment_reminder',
+  ceStatus: 'sent',
+  ceMessage: 'Recordatorio de pago enviado.',
+  ceCreatedAt: '2030-01-03T03:04:05.000Z',
   ...overrides,
 });
 
@@ -204,6 +224,9 @@ const getMenuItemByText = (root: ParentNode, labelText: string) => {
 const countOccurrences = (root: ParentNode, text: string) =>
   (root.textContent ?? '').split(text).length - 1;
 
+const countButtonsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('button')).filter((el) => (el.textContent ?? '').trim() === labelText).length;
+
 const clickElement = (element: Element) => {
   element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 };
@@ -236,9 +259,11 @@ describe('CourseRegistrationsAdminPage', () => {
     listCohortsMock.mockReset();
     listRegistrationsMock.mockReset();
     getRegistrationDossierMock.mockReset();
+    listRegistrationEmailsMock.mockReset();
     listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' }]);
     listRegistrationsMock.mockResolvedValue([buildRegistration()]);
     getRegistrationDossierMock.mockResolvedValue(null);
+    listRegistrationEmailsMock.mockResolvedValue([]);
   });
 
   it('consolidates row details into the dossier and refetches when the limit changes', async () => {
@@ -443,6 +468,49 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain('Subir comprobante para marcar pagado');
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
+    });
+
+    await cleanup();
+  });
+
+  it('shows email history inline inside the dossier without opening duplicate close actions', async () => {
+    listRegistrationEmailsMock.mockResolvedValue([
+      buildEmailEvent(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Ver correos')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
+      expect(document.body.textContent).not.toContain('Historial persistente por inscripción.');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Ver correos'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationEmailsMock).toHaveBeenCalledWith(101, 200);
+      expect(getButtonByText(document.body, 'Ocultar correos')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Actualizar correos')).toBeTruthy();
+      expect(document.body.textContent).toContain('Historial persistente por inscripción.');
+      expect(document.body.textContent).toContain('Recordatorio de pago enviado.');
+      expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
     });
 
     await cleanup();

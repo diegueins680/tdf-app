@@ -220,9 +220,8 @@ export default function CourseRegistrationsAdminPage() {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [pageFlash, setPageFlash] = useState<FlashState | null>(null);
   const [dossierFlash, setDossierFlash] = useState<FlashState | null>(null);
-  const [selectedRegForEmails, setSelectedRegForEmails] =
-    useState<CourseRegistrationDTO | null>(null);
   const [selectedDossier, setSelectedDossier] = useState<DossierTarget | null>(null);
+  const [showEmailHistory, setShowEmailHistory] = useState(false);
   const [statusMenuTarget, setStatusMenuTarget] = useState<{
     anchorEl: HTMLElement;
     reg: CourseRegistrationDTO;
@@ -241,7 +240,7 @@ export default function CourseRegistrationsAdminPage() {
     [slug, status, limit],
   );
 
-  const selectedRegistrationId = selectedRegForEmails?.crId;
+  const selectedRegistrationId = showEmailHistory ? (selectedDossier?.reg.crId ?? null) : null;
   const selectedDossierSlug = selectedDossier?.reg.crCourseSlug ?? '';
   const selectedDossierId = selectedDossier?.reg.crId ?? null;
   const dossierQueryKey = useMemo(
@@ -468,6 +467,7 @@ export default function CourseRegistrationsAdminPage() {
   useEffect(() => {
     if (!selectedDossier) {
       setDossierFlash(null);
+      setShowEmailHistory(false);
       setNotesDraft('');
       setReceiptForm(emptyReceiptForm());
       setShowReceiptUrlField(false);
@@ -477,6 +477,7 @@ export default function CourseRegistrationsAdminPage() {
       setShowFollowUpComposer(false);
       return;
     }
+    setShowEmailHistory(false);
     setReceiptForm(emptyReceiptForm());
     setShowReceiptUrlField(false);
     setShowReceiptComposer(selectedDossier.intent === 'markPaid');
@@ -1058,13 +1059,85 @@ export default function CourseRegistrationsAdminPage() {
                     )}
                     <Button
                       variant="outlined"
-                      onClick={() => setSelectedRegForEmails(activeRegistration)}
+                      onClick={() => setShowEmailHistory((current) => !current)}
+                      aria-expanded={showEmailHistory}
                     >
-                      Ver correos
+                      {showEmailHistory ? 'Ocultar correos' : 'Ver correos'}
                     </Button>
                   </Stack>
                 </Stack>
               </Paper>
+
+              <Collapse in={showEmailHistory} unmountOnExit>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Stack spacing={1.5}>
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        <Box sx={{ minWidth: 240, flexGrow: 1 }}>
+                          <Typography variant="h6">Historial de correos</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Historial persistente por inscripción.
+                          </Typography>
+                        </Box>
+                        <Button
+                          size="small"
+                          onClick={() => void emailEventsQuery.refetch()}
+                          disabled={emailEventsQuery.isFetching}
+                        >
+                          Actualizar correos
+                        </Button>
+                      </Stack>
+
+                      {emailEventsQuery.isLoading && (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <CircularProgress size={18} />
+                          <Typography variant="body2">Cargando historial…</Typography>
+                        </Stack>
+                      )}
+
+                      {emailEventsQuery.isError && (
+                        <Alert severity="error">
+                          No se pudo cargar el historial: {emailEventsQuery.error instanceof Error ? emailEventsQuery.error.message : 'Error'}
+                        </Alert>
+                      )}
+
+                      {!emailEventsQuery.isLoading && !emailEventsQuery.isError && (emailEventsQuery.data?.length ?? 0) === 0 && (
+                        <Alert severity="info">No hay correos registrados para esta inscripción.</Alert>
+                      )}
+
+                      {!emailEventsQuery.isLoading && !emailEventsQuery.isError && (emailEventsQuery.data?.length ?? 0) > 0 && (
+                        <Stack spacing={1}>
+                          {(emailEventsQuery.data ?? []).map((entry) => (
+                            <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
+                              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
+                                <Chip size="small" label={entry.ceStatus} color={eventStatusColor(entry.ceStatus)} />
+                                <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
+                                <Typography variant="caption" color="text.secondary">
+                                  {formatDate(entry.ceCreatedAt)}
+                                </Typography>
+                              </Stack>
+                              {entry.ceMessage && (
+                                <Typography
+                                  variant="body2"
+                                  sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                                >
+                                  {entry.ceMessage}
+                                </Typography>
+                              )}
+                            </Paper>
+                          ))}
+                        </Stack>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Collapse>
 
               <Card variant="outlined">
                 <CardContent>
@@ -1472,73 +1545,6 @@ export default function CourseRegistrationsAdminPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={Boolean(selectedRegForEmails)}
-        onClose={() => setSelectedRegForEmails(null)}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>Historial de correos</DialogTitle>
-        <DialogContent dividers>
-          {selectedRegForEmails && (
-            <Stack spacing={1.5}>
-              <Typography variant="subtitle2">
-                {selectedRegForEmails.crFullName ?? 'Sin nombre'} · {selectedRegForEmails.crEmail ?? 'Sin correo'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Historial persistente por inscripción.
-              </Typography>
-
-              {emailEventsQuery.isLoading && (
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <CircularProgress size={18} />
-                  <Typography variant="body2">Cargando historial…</Typography>
-                </Stack>
-              )}
-
-              {emailEventsQuery.isError && (
-                <Alert severity="error">
-                  No se pudo cargar el historial: {emailEventsQuery.error instanceof Error ? emailEventsQuery.error.message : 'Error'}
-                </Alert>
-              )}
-
-              {!emailEventsQuery.isLoading && !emailEventsQuery.isError && (emailEventsQuery.data?.length ?? 0) === 0 && (
-                <Alert severity="info">No hay correos registrados para esta inscripción.</Alert>
-              )}
-
-              {!emailEventsQuery.isLoading && !emailEventsQuery.isError && (emailEventsQuery.data?.length ?? 0) > 0 && (
-                <Stack spacing={1}>
-                  {(emailEventsQuery.data ?? []).map((entry) => (
-                    <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
-                        <Chip size="small" label={entry.ceStatus} color={eventStatusColor(entry.ceStatus)} />
-                        <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
-                        <Typography variant="caption" color="text.secondary">
-                          {formatDate(entry.ceCreatedAt)}
-                        </Typography>
-                      </Stack>
-                      {entry.ceMessage && (
-                        <Typography
-                          variant="body2"
-                          sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-                        >
-                          {entry.ceMessage}
-                        </Typography>
-                      )}
-                    </Paper>
-                  ))}
-                </Stack>
-              )}
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => void emailEventsQuery.refetch()} disabled={emailEventsQuery.isFetching}>
-            Actualizar
-          </Button>
-          <Button onClick={() => setSelectedRegForEmails(null)}>Cerrar</Button>
-        </DialogActions>
-      </Dialog>
     </Stack>
   );
 }
