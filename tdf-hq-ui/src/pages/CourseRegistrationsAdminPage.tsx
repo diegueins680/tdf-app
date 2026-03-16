@@ -294,6 +294,20 @@ export default function CourseRegistrationsAdminPage() {
       }),
   });
 
+  const singleVisibleCohortLabel = useMemo(() => {
+    if (selectedSlug || !regsQuery.data || regsQuery.data.length < 2) return '';
+    const uniqueCohortSlugs = Array.from(
+      new Set(
+        regsQuery.data
+          .map((reg) => reg.crCourseSlug.trim())
+          .filter((value) => value !== ''),
+      ),
+    );
+    if (uniqueCohortSlugs.length !== 1) return '';
+    const [cohortSlug] = uniqueCohortSlugs;
+    return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
+  }, [cohortLabelsBySlug, regsQuery.data, selectedSlug]);
+
   const dossierQuery = useQuery<CourseRegistrationDossierDTO>({
     queryKey: dossierQueryKey,
     enabled: Boolean(selectedDossier && selectedDossierId != null),
@@ -848,6 +862,11 @@ export default function CourseRegistrationsAdminPage() {
             </Button>
           </Stack>
         )}
+        {!hasCustomFilters && singleVisibleCohortLabel && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+            Mostrando una sola cohorte: {singleVisibleCohortLabel}.
+          </Typography>
+        )}
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
           <Typography variant="caption" color="text.secondary">
             Leyenda de estados:
@@ -887,7 +906,7 @@ export default function CourseRegistrationsAdminPage() {
               const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
               const rowCohortSlug = reg.crCourseSlug.trim();
               const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
-              const showRowCohort = !selectedSlug || rowCohortSlug !== selectedSlug;
+              const showRowCohort = selectedSlug ? rowCohortSlug !== selectedSlug : !singleVisibleCohortLabel;
               return (
                 <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Box sx={{ minWidth: 240 }}>

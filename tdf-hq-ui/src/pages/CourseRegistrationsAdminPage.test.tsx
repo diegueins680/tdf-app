@@ -308,6 +308,30 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes a shared cohort once when every visible row belongs to it', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Mostrando una sola cohorte: Beatmaking 101 (beatmaking-101).');
+      expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Grace Hopper');
+    });
+
+    await cleanup();
+  });
+
   it('shows only meaningful quick status actions for each registration row', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
