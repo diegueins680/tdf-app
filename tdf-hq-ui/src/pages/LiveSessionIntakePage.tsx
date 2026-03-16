@@ -470,7 +470,11 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                     Músico #{idx + 1}
                   </Typography>
                   {musicians.length > 1 && (
-                    <IconButton onClick={() => handleRemoveMusician(musician.id)} size="small">
+                    <IconButton
+                      onClick={() => handleRemoveMusician(musician.id)}
+                      size="small"
+                      aria-label={`Eliminar músico ${musician.name.trim() || `#${idx + 1}`}`}
+                    >
                       <DeleteIcon />
                     </IconButton>
                   )}
@@ -616,7 +620,11 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                     Canción #{idx + 1}
                   </Typography>
                   {setlist.length > 1 && (
-                    <IconButton onClick={() => handleRemoveSong(song.id)} size="small">
+                    <IconButton
+                      onClick={() => handleRemoveSong(song.id)}
+                      size="small"
+                      aria-label={`Eliminar canción ${song.title.trim() || `#${idx + 1}`}`}
+                    >
                       <DeleteIcon />
                     </IconButton>
                   )}
