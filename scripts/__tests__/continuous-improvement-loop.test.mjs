@@ -13,6 +13,7 @@ import {
   parseGitHubRemote,
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
+import { buildDefaultIdea } from '../lib/discovery.mjs';
 import { auditUiSource } from '../lib/ui-static-audit.mjs';
 
 const execFileAsync = promisify(execFile);
@@ -130,6 +131,37 @@ test('auditUiSource does not treat arrow functions as the end of a labeled tag',
 
   const findings = auditUiSource(source, 'Example.tsx');
   assert.equal(findings.length, 0);
+});
+
+test('buildDefaultIdea ignores TODO-like code literals and keeps real comment TODOs', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'discovery-test-'));
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(path.join(repoDir, 'src'), { recursive: true });
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init']);
+    await fs.writeFile(
+      path.join(repoDir, 'src', 'example.mjs'),
+      [
+        'const TODO_PATTERN = /\\b(TODO|FIXME|HACK|XXX)\\b[^\\n]*/g;',
+        '// TODO: replace the placeholder scan with comment-aware matching',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    await git(['add', 'src/example.mjs']);
+
+    const idea = await buildDefaultIdea(repoDir);
+
+    assert.equal(idea.source, 'builtin-todo-scan');
+    assert.match(idea.markdown, /Target: src\/example\.mjs:2/);
+    assert.match(idea.markdown, /Reason: TODO: replace the placeholder scan with comment-aware matching/);
+    assert.doesNotMatch(idea.markdown, /Target: src\/example\.mjs:1/);
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test('continuous-improvement-loop honors --allow-dirty for tracked baseline changes without committing them', async () => {

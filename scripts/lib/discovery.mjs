@@ -21,7 +21,16 @@ const SCANNED_EXTENSIONS = new Set([
   '.sql',
   '.txt',
 ]);
-const TODO_PATTERN = /\b(TODO|FIXME|HACK|XXX)\b[^\n]*/g;
+const TODO_PATTERN = /\b(TODO|FIXME|HACK|XXX)\b[^\r\n]*/;
+const TEXT_TODO_EXTENSIONS = new Set(['.json', '.md', '.txt']);
+const COMMENT_PATTERNS = [
+  /(?:^|\s)\/\/\s*(?<text>.*)$/,
+  /(?:^|\s)#\s*(?<text>.*)$/,
+  /(?:^|\s)--\s*(?<text>.*)$/,
+  /(?:^|\s)\/\*+\s*(?<text>.*)$/,
+  /^\s*\*\s*(?<text>.*)$/,
+  /(?:^|\s)<!--\s*(?<text>.*)$/,
+];
 const SKIPPED_SEGMENTS = [
   `${path.sep}node_modules${path.sep}`,
   `${path.sep}archives${path.sep}`,
@@ -51,6 +60,30 @@ function shouldScanFile(filePath) {
   return SCANNED_EXTENSIONS.has(path.extname(filePath));
 }
 
+function normalizeTodoText(text) {
+  return text.replace(/\s*(?:\*\/|-->)\s*$/, '').trim();
+}
+
+function matchTodoText(line, extension) {
+  if (TEXT_TODO_EXTENSIONS.has(extension)) {
+    const todoMatch = line.match(TODO_PATTERN);
+    return todoMatch ? normalizeTodoText(todoMatch[0]) : null;
+  }
+
+  for (const pattern of COMMENT_PATTERNS) {
+    const commentMatch = line.match(pattern);
+    if (!commentMatch) continue;
+
+    const commentText = commentMatch.groups?.text ?? '';
+    const todoMatch = commentText.match(TODO_PATTERN);
+    if (todoMatch) {
+      return normalizeTodoText(todoMatch[0]);
+    }
+  }
+
+  return null;
+}
+
 async function scanTodoMatches(repoRoot) {
   const files = await listTrackedFiles(repoRoot);
   const matches = [];
@@ -62,12 +95,17 @@ async function scanTodoMatches(repoRoot) {
     if (stats.size > 300_000) continue;
 
     const source = await fs.readFile(filePath, 'utf8');
-    for (const match of source.matchAll(TODO_PATTERN)) {
-      const index = match.index ?? 0;
+    const extension = path.extname(filePath);
+    const lines = source.split(/\r?\n/);
+
+    for (const [index, line] of lines.entries()) {
+      const text = matchTodoText(line, extension);
+      if (!text) continue;
+
       matches.push({
         file: path.relative(repoRoot, filePath),
-        line: source.slice(0, index).split('\n').length,
-        text: match[0].trim(),
+        line: index + 1,
+        text,
       });
       if (matches.length >= 50) return matches;
     }
