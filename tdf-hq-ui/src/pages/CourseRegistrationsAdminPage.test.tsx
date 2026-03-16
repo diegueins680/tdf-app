@@ -143,6 +143,14 @@ const getButtonByText = (root: ParentNode, labelText: string) => {
   return button;
 };
 
+const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
+  const button = root.querySelector(`button[aria-label="${labelText}"]`);
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${labelText}`);
+  }
+  return button;
+};
+
 const clickButton = (button: HTMLButtonElement) => {
   button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 };
@@ -246,30 +254,51 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Cada fila solo muestra cambios de estado disponibles; el estado actual ya queda marcado en su chip.',
+        'Cada fila concentra los cambios de estado en "Cambiar estado"; el menu solo muestra opciones válidas para esa inscripción.',
       );
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
+      expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cancelar inscripción para Katherine Johnson"]')).toBeNull();
+    });
 
-      expect(container.querySelector('button[aria-label="Marcar pendiente para Ada Lovelace"]')).toBeNull();
-      expect(
-        container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]'),
-      ).not.toBeNull();
-      expect(container.querySelector('button[aria-label="Cancelar inscripción para Ada Lovelace"]')).not.toBeNull();
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
 
-      expect(
-        container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Grace Hopper"]'),
-      ).toBeNull();
-      expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).not.toBeNull();
-      expect(container.querySelector('button[aria-label="Cancelar inscripción para Grace Hopper"]')).not.toBeNull();
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Estado actual: Pendiente de pago');
+      expect(document.body.textContent).toContain('Subir comprobante para marcar pagado');
+      expect(document.body.textContent).toContain('Cancelar inscripción');
+      expect(document.body.textContent).not.toContain('Marcar pendiente');
+    });
 
-      expect(
-        container.querySelector('button[aria-label="Cancelar inscripción para Katherine Johnson"]'),
-      ).toBeNull();
-      expect(
-        container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Katherine Johnson"]'),
-      ).not.toBeNull();
-      expect(
-        container.querySelector('button[aria-label="Marcar pendiente para Katherine Johnson"]'),
-      ).not.toBeNull();
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Estado actual: Pagado');
+      expect(document.body.textContent).toContain('Marcar pendiente');
+      expect(document.body.textContent).toContain('Cancelar inscripción');
+      expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Estado actual: Cancelado');
+      expect(document.body.textContent).toContain('Subir comprobante para marcar pagado');
+      expect(document.body.textContent).toContain('Marcar pendiente');
+      expect(document.body.textContent).not.toContain('Cancelar inscripción');
     });
 
     await cleanup();

@@ -15,6 +15,7 @@ import {
   Grid,
   IconButton,
   Link,
+  Menu,
   MenuItem,
   Paper,
   Stack,
@@ -23,9 +24,6 @@ import {
   Typography,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import DoneIcon from '@mui/icons-material/Done';
-import CancelIcon from '@mui/icons-material/Cancel';
-import PendingIcon from '@mui/icons-material/HourglassBottom';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditIcon from '@mui/icons-material/Edit';
@@ -223,6 +221,10 @@ export default function CourseRegistrationsAdminPage() {
   const [selectedRegForEmails, setSelectedRegForEmails] =
     useState<CourseRegistrationDTO | null>(null);
   const [selectedDossier, setSelectedDossier] = useState<DossierTarget | null>(null);
+  const [statusMenuTarget, setStatusMenuTarget] = useState<{
+    anchorEl: HTMLElement;
+    reg: CourseRegistrationDTO;
+  } | null>(null);
   const [notesDraft, setNotesDraft] = useState('');
   const [receiptForm, setReceiptForm] = useState<ReceiptFormState>(emptyReceiptForm);
   const [followUpForm, setFollowUpForm] = useState<FollowUpFormState>(emptyFollowUpForm);
@@ -482,6 +484,14 @@ export default function CourseRegistrationsAdminPage() {
     setLimit(DEFAULT_LIMIT);
   };
 
+  const handleOpenStatusMenu = (anchorEl: HTMLElement, reg: CourseRegistrationDTO) => {
+    setStatusMenuTarget({ anchorEl, reg });
+  };
+
+  const handleCloseStatusMenu = () => {
+    setStatusMenuTarget(null);
+  };
+
   const handleQuickStatus = (reg: CourseRegistrationDTO, newStatus: Exclude<StatusFilter, 'all'>) => {
     setPageFlash(null);
     void updateStatusMutation
@@ -707,6 +717,12 @@ export default function CourseRegistrationsAdminPage() {
   const followUps = dossierData?.crdFollowUps ?? [];
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
+  const statusMenuReg = statusMenuTarget?.reg ?? null;
+  const statusMenuStatusLabel = statusMenuReg
+    ? (isRegistrationStatus(statusMenuReg.crStatus)
+      ? statusFilterLabels[statusMenuReg.crStatus]
+      : statusMenuReg.crStatus)
+    : '';
 
   return (
     <Stack spacing={3}>
@@ -790,7 +806,8 @@ export default function CourseRegistrationsAdminPage() {
           comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
-          Cada fila solo muestra cambios de estado disponibles; el estado actual ya queda marcado en su chip.
+          Cada fila concentra los cambios de estado en &quot;Cambiar estado&quot;; el menu solo muestra opciones
+          válidas para esa inscripción.
         </Typography>
         {hasCustomFilters && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
@@ -869,59 +886,63 @@ export default function CourseRegistrationsAdminPage() {
                     Abrir expediente
                   </Button>
                   <Box sx={{ flexGrow: 1 }} />
-                  <Stack direction="row" spacing={1}>
-                    {canTransitionToStatus(reg.crStatus, 'paid') && (
-                      <Tooltip title="Subir comprobante y marcar pagado">
-                        <span>
-                          <IconButton
-                            size="small"
-                            color="success"
-                            aria-label={`Subir comprobante y marcar pagado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
-                            disabled={isUpdating}
-                            onClick={() => handleOpenDossier(reg, 'markPaid')}
-                          >
-                            <DoneIcon fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    )}
-                    {canTransitionToStatus(reg.crStatus, 'pending_payment') && (
-                      <Tooltip title="Marcar pendiente">
-                        <span>
-                          <IconButton
-                            size="small"
-                            color="warning"
-                            aria-label={`Marcar pendiente para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
-                            disabled={isUpdating}
-                            onClick={() => handleQuickStatus(reg, 'pending_payment')}
-                          >
-                            <PendingIcon fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    )}
-                    {canTransitionToStatus(reg.crStatus, 'cancelled') && (
-                      <Tooltip title="Cancelar">
-                        <span>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            aria-label={`Cancelar inscripción para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
-                            disabled={isUpdating}
-                            onClick={() => handleQuickStatus(reg, 'cancelled')}
-                          >
-                            <CancelIcon fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    )}
-                  </Stack>
+                  <Button
+                    size="small"
+                    variant="text"
+                    aria-label={`Cambiar estado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
+                    disabled={isUpdating}
+                    onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
+                  >
+                    Cambiar estado
+                  </Button>
                 </Box>
               );
             })}
           </Stack>
         ) : null}
       </Paper>
+
+      <Menu
+        open={Boolean(statusMenuTarget)}
+        anchorEl={statusMenuTarget?.anchorEl ?? null}
+        onClose={handleCloseStatusMenu}
+      >
+        {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'paid') && (
+          <MenuItem
+            onClick={() => {
+              handleCloseStatusMenu();
+              handleOpenDossier(statusMenuReg, 'markPaid');
+            }}
+          >
+            Subir comprobante para marcar pagado
+          </MenuItem>
+        )}
+        {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment') && (
+          <MenuItem
+            onClick={() => {
+              handleCloseStatusMenu();
+              handleQuickStatus(statusMenuReg, 'pending_payment');
+            }}
+          >
+            Marcar pendiente
+          </MenuItem>
+        )}
+        {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'cancelled') && (
+          <MenuItem
+            onClick={() => {
+              handleCloseStatusMenu();
+              handleQuickStatus(statusMenuReg, 'cancelled');
+            }}
+          >
+            Cancelar inscripción
+          </MenuItem>
+        )}
+        {statusMenuReg && (
+          <MenuItem disabled>
+            Estado actual: {statusMenuStatusLabel}
+          </MenuItem>
+        )}
+      </Menu>
 
       <Dialog
         open={Boolean(selectedDossier)}
