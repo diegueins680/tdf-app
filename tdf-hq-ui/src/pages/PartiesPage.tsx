@@ -421,7 +421,10 @@ export default function PartiesPage() {
                 <TableCell>{party.instagram ?? '—'}</TableCell>
                 <TableCell align="right">
                   <Tooltip title="Editar contacto">
-                    <IconButton onClick={() => setEditing(party)}>
+                    <IconButton
+                      onClick={() => setEditing(party)}
+                      aria-label={`Editar contacto ${party.displayName}`}
+                    >
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
