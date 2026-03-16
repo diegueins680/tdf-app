@@ -61,7 +61,7 @@ function normalizeAssets(payload: AssetsPayload): AssetDTO[] {
   return payload.items ?? [];
 }
 
-const API_BASE = (import.meta.env.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
+const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
   ? import.meta.env.VITE_API_BASE
   : 'https://tdf-hq.fly.dev');
 const ASSET_CATEGORY_KEY = 'asset-category';
@@ -436,6 +436,31 @@ export default function LabelAssetsPage() {
     return <Chip size="small" label={status} color={color} variant="outlined" />;
   };
 
+  const renderMovementAction = (asset: AssetDTO) => {
+    const isBooked = asset.status.toLowerCase() === 'booked';
+    return isBooked ? (
+      <Tooltip title="Registrar devolucion">
+        <IconButton
+          size="small"
+          onClick={() => openCheckin(asset)}
+          aria-label={`Abrir devolucion de ${asset.name}`}
+        >
+          <HowToRegIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ) : (
+      <Tooltip title="Registrar prestamo">
+        <IconButton
+          size="small"
+          onClick={() => openCheckout(asset)}
+          aria-label={`Abrir prestamo de ${asset.name}`}
+        >
+          <ExitToAppIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
   return (
     <Box sx={{ color: '#0f172a' }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
@@ -615,30 +640,7 @@ export default function LabelAssetsPage() {
                             <QrCodeIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Check-out">
-                          <span>
-                            <IconButton
-                              size="small"
-                              onClick={() => openCheckout(asset)}
-                              aria-label={`Abrir check-out de ${asset.name}`}
-                              disabled={asset.status.toLowerCase() === 'booked'}
-                            >
-                              <ExitToAppIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                        <Tooltip title="Check-in">
-                          <span>
-                            <IconButton
-                              size="small"
-                              onClick={() => openCheckin(asset)}
-                              aria-label={`Abrir check-in de ${asset.name}`}
-                              disabled={asset.status.toLowerCase() !== 'booked'}
-                            >
-                              <HowToRegIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
+                        {renderMovementAction(asset)}
                         <Button size="small" onClick={() => openHistory(asset)}>
                           Historial
                         </Button>
