@@ -2138,8 +2138,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
               <TextField
                 size="small"
+                aria-label="Buscar géneros"
                 placeholder="Buscar géneros"
                 value={genreSearch}
+                inputProps={{ 'aria-label': 'Buscar géneros' }}
                 onChange={(e) => setGenreSearch(e.target.value)}
                 sx={{ minWidth: 200, maxWidth: 320 }}
               />
