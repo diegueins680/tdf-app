@@ -320,6 +320,13 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
       expect(document.body.textContent).toContain('Agregar seguimiento');
+      expect(document.body.textContent).toContain(
+        'Aún no hay seguimiento manual. Usa Agregar seguimiento para documentar llamadas, correos o próximos pasos. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
+      );
+      expect(document.body.textContent).not.toContain('Registrar seguimiento');
+      expect(document.body.textContent).not.toContain(
+        'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
+      );
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
@@ -337,6 +344,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
+      expect(document.body.textContent).toContain('Registrar seguimiento');
+      expect(document.body.textContent).toContain(
+        'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
+      );
     });
 
     await act(async () => {
@@ -641,10 +652,14 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
       expect(document.body.textContent).toContain(
+        'Aún no hay seguimiento manual. Usa Agregar seguimiento para documentar llamadas, correos o próximos pasos. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
+      );
+      expect(document.body.textContent).not.toContain('Registrar seguimiento');
+      expect(document.body.textContent).not.toContain(
         'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
       );
-      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(false);
       expect(
@@ -661,6 +676,10 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Registrar seguimiento');
+      expect(document.body.textContent).toContain(
+        'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
+      );
       expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();

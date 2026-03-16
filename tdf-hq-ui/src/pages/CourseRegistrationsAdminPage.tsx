@@ -1384,21 +1384,25 @@ export default function CourseRegistrationsAdminPage() {
                 <CardContent>
                   <Stack spacing={2}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
-                      <Typography variant="h6">Historial de seguimiento</Typography>
-                      <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
+                      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                        <Typography variant="h6">Historial de seguimiento</Typography>
+                        <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
+                      </Stack>
+                      {!showFollowUpComposer && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => setShowFollowUpComposer(true)}
+                        >
+                          Agregar seguimiento
+                        </Button>
+                      )}
                     </Stack>
 
                     <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <Stack spacing={1.5}>
-                          <Stack
-                            direction="row"
-                            alignItems="flex-start"
-                            justifyContent="space-between"
-                            flexWrap="wrap"
-                            useFlexGap
-                            spacing={1}
-                          >
+                      {showFollowUpComposer && (
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={1.5}>
                             <Box sx={{ minWidth: 240, flexGrow: 1 }}>
                               <Typography variant="subtitle2">
                                 {followUpForm.editingId == null ? 'Registrar seguimiento' : 'Editar seguimiento'}
@@ -1408,17 +1412,6 @@ export default function CourseRegistrationsAdminPage() {
                                 próximo paso.
                               </Typography>
                             </Box>
-                            {!showFollowUpComposer && (
-                              <Button
-                                size="small"
-                                variant="contained"
-                                onClick={() => setShowFollowUpComposer(true)}
-                              >
-                                Agregar seguimiento
-                              </Button>
-                            )}
-                          </Stack>
-                          <Collapse in={showFollowUpComposer} unmountOnExit>
                             <Stack spacing={1.5} sx={{ pt: 0.5 }}>
                               <TextField
                                 select
@@ -1500,14 +1493,16 @@ export default function CourseRegistrationsAdminPage() {
                                 </Button>
                               </Stack>
                             </Stack>
-                          </Collapse>
-                        </Stack>
-                      </Grid>
-                      <Grid item xs={12} md={6}>
+                          </Stack>
+                        </Grid>
+                      )}
+                      <Grid item xs={12} md={showFollowUpComposer ? 6 : 12}>
                         <Stack spacing={1.5}>
                           {followUps.length === 0 && (
                             <Alert severity="info">
-                              Aún no hay seguimiento manual. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.
+                              {showFollowUpComposer
+                                ? 'Aún no hay seguimiento manual. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.'
+                                : 'Aún no hay seguimiento manual. Usa Agregar seguimiento para documentar llamadas, correos o próximos pasos. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.'}
                             </Alert>
                           )}
                           {followUps.map((entry) => (
