@@ -466,7 +466,11 @@ export default function LabelTracksPage() {
                       Editar nota rápido
                     </Button>
                   </Stack>
-                  <IconButton size="small" onClick={() => deleteMutation.mutate(track.ltId)}>
+                  <IconButton
+                    size="small"
+                    onClick={() => deleteMutation.mutate(track.ltId)}
+                    aria-label={`Eliminar track ${track.ltTitle}`}
+                  >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Stack>
