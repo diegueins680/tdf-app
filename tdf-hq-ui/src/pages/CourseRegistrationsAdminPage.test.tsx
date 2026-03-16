@@ -354,12 +354,18 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
       expect(document.body.textContent).toContain('Registrar seguimiento');
       expect(document.body.textContent).toContain(
         'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
       );
+      expect(document.body.textContent).toContain(
+        'Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y las notas.',
+      );
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
     });
 
     await act(async () => {
@@ -374,6 +380,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(document.body, 'URL del comprobante'), 'https://example.com/new-receipt.pdf');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(false);
     });
 
     await cleanup();

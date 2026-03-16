@@ -774,6 +774,14 @@ export default function CourseRegistrationsAdminPage() {
   const receipts = dossierData?.crdReceipts ?? [];
   const followUps = dossierData?.crdFollowUps ?? [];
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
+  const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
+  const showReceiptMetadataFields = (
+    selectedDossier?.intent === 'markPaid'
+    || receiptForm.editingId != null
+    || showReceiptUrlField
+    || Boolean(trimToNull(receiptForm.fileName))
+    || canSubmitReceipt
+  );
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
   const statusMenuStatusLabel = statusMenuReg
@@ -1295,27 +1303,37 @@ export default function CourseRegistrationsAdminPage() {
                                 fullWidth
                               />
                             </Collapse>
-                            <TextField
-                              label="Nombre visible"
-                              value={receiptForm.fileName}
-                              onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileName: e.target.value }))}
-                              placeholder="Ej. transferencia-produbanco-marzo.png"
-                              fullWidth
-                            />
-                            <TextField
-                              label="Notas del comprobante"
-                              value={receiptForm.notes}
-                              onChange={(e) => setReceiptForm((prev) => ({ ...prev, notes: e.target.value }))}
-                              placeholder="Referencia, banco, monto o aclaraciones"
-                              fullWidth
-                              multiline
-                              minRows={2}
-                            />
+                            {!showReceiptMetadataFields && (
+                              <Typography variant="caption" color="text.secondary">
+                                Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y
+                                las notas.
+                              </Typography>
+                            )}
+                            <Collapse in={showReceiptMetadataFields} unmountOnExit>
+                              <Stack spacing={1.5}>
+                                <TextField
+                                  label="Nombre visible"
+                                  value={receiptForm.fileName}
+                                  onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileName: e.target.value }))}
+                                  placeholder="Ej. transferencia-produbanco-marzo.png"
+                                  fullWidth
+                                />
+                                <TextField
+                                  label="Notas del comprobante"
+                                  value={receiptForm.notes}
+                                  onChange={(e) => setReceiptForm((prev) => ({ ...prev, notes: e.target.value }))}
+                                  placeholder="Referencia, banco, monto o aclaraciones"
+                                  fullWidth
+                                  multiline
+                                  minRows={2}
+                                />
+                              </Stack>
+                            </Collapse>
                             <Stack direction="row" spacing={1}>
                               <Button
                                 variant="contained"
                                 onClick={handleSubmitReceipt}
-                                disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending}
+                                disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending || !canSubmitReceipt}
                               >
                                 {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
                               </Button>
