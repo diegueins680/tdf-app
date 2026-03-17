@@ -344,17 +344,18 @@ export default function CourseRegistrationsAdminPage() {
     if (!cohortSlug) return '';
     return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
   }, [cohortLabelsBySlug, regsQuery.data, selectedSlug]);
-  const sharedVisibleSourceLabel = useMemo(() => {
+  const sharedVisibleSourceSummary = useMemo(() => {
     if (!regsQuery.data || regsQuery.data.length < 2) return '';
     const uniqueSources = Array.from(
       new Set(
         regsQuery.data
-          .map((reg) => reg.crSource?.trim() ?? '')
-          .filter((value) => value !== ''),
+          .map((reg) => registrationSourceLabel(reg.crSource)),
       ),
     );
     if (uniqueSources.length !== 1) return '';
-    return registrationSourceLabel(uniqueSources[0]);
+    return uniqueSources[0] === 'Sin fuente'
+      ? 'Todas las inscripciones visibles están sin fuente registrada.'
+      : `Mostrando una sola fuente: ${uniqueSources[0]}.`;
   }, [regsQuery.data]);
 
   const dossierQuery = useQuery<CourseRegistrationDossierDTO>({
@@ -441,7 +442,7 @@ export default function CourseRegistrationsAdminPage() {
     ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
     : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
-  const shouldShowSharedSourceSummary = Boolean(sharedVisibleSourceLabel);
+  const shouldShowSharedSourceSummary = Boolean(sharedVisibleSourceSummary);
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -1094,7 +1095,7 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {shouldShowSharedSourceSummary && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: shouldShowSharedCohortSummary ? 0.75 : 1.5 }}>
-            Mostrando una sola fuente: {sharedVisibleSourceLabel}.
+            {sharedVisibleSourceSummary}
           </Typography>
         )}
         {hasVisibleRegistrations && (
