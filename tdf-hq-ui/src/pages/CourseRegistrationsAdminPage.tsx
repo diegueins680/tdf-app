@@ -441,6 +441,9 @@ export default function CourseRegistrationsAdminPage() {
     () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
     [activeCohortLabel, status, limit],
   );
+  const combinedSingleChoiceSummary = singleAvailableCohortLabel && singleVisibleStatus
+    ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
+    : '';
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
     : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
@@ -973,8 +976,8 @@ export default function CourseRegistrationsAdminPage() {
 
       <Paper sx={{ p: 3, borderRadius: 3 }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            {singleAvailableCohortLabel ? (
+          {combinedSingleChoiceSummary ? (
+            <Grid item xs={12}>
               <Stack
                 spacing={0.5}
                 sx={{
@@ -988,92 +991,121 @@ export default function CourseRegistrationsAdminPage() {
                 }}
               >
                 <Typography variant="caption" color="text.secondary">
-                  Cohorte disponible
+                  Vista actual
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
-                  {singleAvailableCohortLabel}
+                  {combinedSingleChoiceSummary}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  No hace falta filtrarla: es la unica cohorte disponible ahora mismo.
+                  No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.
                 </Typography>
               </Stack>
-            ) : (
-              <TextField
-                select
-                label="Curso / cohorte"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                fullWidth
-                size="small"
-                error={cohortsQuery.isError}
-                helperText={
-                  cohortsQuery.isError
-                    ? 'No se pudieron cargar cohortes.'
-                    : cohortsQuery.isLoading
-                      ? 'Cargando cohortes…'
-                      : undefined
-                }
-              >
-                <MenuItem value="">Todos</MenuItem>
-                {cohortOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          </Grid>
-          <Grid item xs={12} md={6}>
-            {singleVisibleStatus ? (
-              <Stack
-                spacing={0.5}
-                sx={{
-                  minHeight: 40,
-                  justifyContent: 'center',
-                  px: 1.5,
-                  py: 1.25,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                }}
-              >
-                <Typography variant="caption" color="text.secondary">
-                  Estado disponible
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {statusFilterLabels[singleVisibleStatus]}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  No hace falta filtrarlo: es el unico estado presente en esta vista.
-                </Typography>
-              </Stack>
-            ) : (
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Estado
-                </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {visibleStatusFilters.map((value) => (
-                    <Chip
-                      key={value}
-                      clickable
-                      color={registrationStatusChipColor(value)}
-                      label={statusFilterLabels[value]}
-                      variant={status === value ? 'filled' : 'outlined'}
-                      aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
-                      aria-pressed={status === value}
-                      onClick={() => setStatus(value)}
-                    />
-                  ))}
-                </Stack>
-                {hasHiddenStatusFilters && (
-                  <Typography variant="caption" color="text.secondary">
-                    Solo aparecen estados con inscripciones en esta vista.
-                  </Typography>
+            </Grid>
+          ) : (
+            <>
+              <Grid item xs={12} md={6}>
+                {singleAvailableCohortLabel ? (
+                  <Stack
+                    spacing={0.5}
+                    sx={{
+                      minHeight: 40,
+                      justifyContent: 'center',
+                      px: 1.5,
+                      py: 1.25,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Cohorte disponible
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {singleAvailableCohortLabel}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      No hace falta filtrarla: es la unica cohorte disponible ahora mismo.
+                    </Typography>
+                  </Stack>
+                ) : (
+                  <TextField
+                    select
+                    label="Curso / cohorte"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    fullWidth
+                    size="small"
+                    error={cohortsQuery.isError}
+                    helperText={
+                      cohortsQuery.isError
+                        ? 'No se pudieron cargar cohortes.'
+                        : cohortsQuery.isLoading
+                          ? 'Cargando cohortes…'
+                          : undefined
+                    }
+                  >
+                    <MenuItem value="">Todos</MenuItem>
+                    {cohortOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 )}
-              </Stack>
-            )}
-          </Grid>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                {singleVisibleStatus ? (
+                  <Stack
+                    spacing={0.5}
+                    sx={{
+                      minHeight: 40,
+                      justifyContent: 'center',
+                      px: 1.5,
+                      py: 1.25,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Estado disponible
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {statusFilterLabels[singleVisibleStatus]}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      No hace falta filtrarlo: es el unico estado presente en esta vista.
+                    </Typography>
+                  </Stack>
+                ) : (
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Estado
+                    </Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {visibleStatusFilters.map((value) => (
+                        <Chip
+                          key={value}
+                          clickable
+                          color={registrationStatusChipColor(value)}
+                          label={statusFilterLabels[value]}
+                          variant={status === value ? 'filled' : 'outlined'}
+                          aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
+                          aria-pressed={status === value}
+                          onClick={() => setStatus(value)}
+                        />
+                      ))}
+                    </Stack>
+                    {hasHiddenStatusFilters && (
+                      <Typography variant="caption" color="text.secondary">
+                        Solo aparecen estados con inscripciones en esta vista.
+                      </Typography>
+                    )}
+                  </Stack>
+                )}
+              </Grid>
+            </>
+          )}
         </Grid>
         {showAdvancedLimitControl && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>

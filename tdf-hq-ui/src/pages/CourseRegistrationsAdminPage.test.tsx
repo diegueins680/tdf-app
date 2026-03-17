@@ -509,6 +509,16 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('replaces a single cohort selector with context copy and restores it when multiple cohorts exist', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -518,6 +528,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain('No hace falta filtrarla: es la unica cohorte disponible ahora mismo.');
+      expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Mostrando una sola cohorte: Beatmaking 101 (beatmaking-101).');
     });
 
@@ -538,6 +549,26 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await secondRender.cleanup();
+  });
+
+  it('combines single-choice cohort and status context into one summary block', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(container.textContent).toContain(
+        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
+      );
+      expect(container.textContent).not.toContain('Cohorte disponible');
+      expect(container.textContent).not.toContain('Estado disponible');
+    });
+
+    await cleanup();
   });
 
   it('uses the course label inside the dossier instead of raw slug jargon', async () => {
@@ -858,6 +889,10 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('replaces a single real status filter with context copy when the current view does not need status filtering', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -876,6 +911,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pendiente de pago');
       expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
+      expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Solo aparecen estados con inscripciones en esta vista.');
     });
 
@@ -1449,8 +1485,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Pendientes: 1');
       expect(container.textContent).not.toContain('Pagadas: 0');
       expect(container.textContent).not.toContain('Canceladas: 0');
-      expect(container.textContent).toContain('Estado disponible');
-      expect(container.textContent).toContain('Pendiente de pago');
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(container.textContent).not.toContain('Cohorte disponible');
+      expect(container.textContent).not.toContain('Estado disponible');
       expect(container.textContent).not.toContain(
         'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
       );
