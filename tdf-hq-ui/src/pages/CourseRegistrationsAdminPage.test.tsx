@@ -1196,6 +1196,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
   it('opens the receipt composer directly from the mark-paid flow without duplicating the hint', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
+    const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
+    const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1223,12 +1225,19 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(markPaidReceiptHint);
       expect(countOccurrences(document.body, markPaidReceiptHint)).toBe(1);
+      expect(document.body.textContent).toContain(markPaidReceiptSectionHelpText);
+      expect(document.body.textContent).not.toContain(emptyReceiptHelpText);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
       expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Agregar comprobante',
+        ),
+      ).toBe(false);
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Agregar primer comprobante',
         ),
       ).toBe(false);
     });
