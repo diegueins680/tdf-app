@@ -458,10 +458,16 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceSummary = singleAvailableCohortLabel && showSingleStatusSummary && singleVisibleStatus
     ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
     : '';
-  const combinedSingleChoiceSourceSummary = combinedSingleChoiceSummary && singleVisibleSourceLabel
+  const summarizedVisibleSourceLabel = singleVisibleSourceLabel
     ? singleVisibleSourceLabel === 'Sin fuente'
       ? 'Fuente visible: sin fuente registrada.'
       : `Fuente visible: ${singleVisibleSourceLabel}.`
+    : '';
+  const combinedSingleChoiceSourceSummary = combinedSingleChoiceSummary
+    ? summarizedVisibleSourceLabel
+    : '';
+  const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary && (singleAvailableCohortLabel || showSingleStatusSummary)
+    ? summarizedVisibleSourceLabel
     : '';
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
@@ -471,7 +477,9 @@ export default function CourseRegistrationsAdminPage() {
   const showListUtilitySummary = canCopyCsv || Boolean(copyMessage);
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
-  const shouldShowSharedSourceSummary = hasSharedVisibleSource && !combinedSingleChoiceSourceSummary;
+  const shouldShowSharedSourceSummary = hasSharedVisibleSource
+    && !combinedSingleChoiceSourceSummary
+    && !standaloneSingleChoiceSourceSummary;
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
@@ -1115,6 +1123,11 @@ export default function CourseRegistrationsAdminPage() {
                         <Typography variant="body2" fontWeight={600}>
                           {singleAvailableCohortLabel}
                         </Typography>
+                        {standaloneSingleChoiceSourceSummary && (
+                          <Typography variant="caption" color="text.secondary">
+                            {standaloneSingleChoiceSourceSummary}
+                          </Typography>
+                        )}
                         <Typography variant="caption" color="text.secondary">
                           No hace falta filtrarla: es la unica cohorte disponible ahora mismo.
                         </Typography>
@@ -1165,6 +1178,11 @@ export default function CourseRegistrationsAdminPage() {
                         <Typography variant="body2" fontWeight={600}>
                           {statusFilterLabels[singleVisibleStatus]}
                         </Typography>
+                        {standaloneSingleChoiceSourceSummary && (
+                          <Typography variant="caption" color="text.secondary">
+                            {standaloneSingleChoiceSourceSummary}
+                          </Typography>
+                        )}
                         <Typography variant="caption" color="text.secondary">
                           No hace falta filtrarlo: es el unico estado presente en esta vista.
                         </Typography>

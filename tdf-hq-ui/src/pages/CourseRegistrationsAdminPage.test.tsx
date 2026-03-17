@@ -606,6 +606,35 @@ describe('CourseRegistrationsAdminPage', () => {
     await secondRender.cleanup();
   });
 
+  it('absorbs a shared source into the single-cohort summary block instead of adding another summary line', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.textContent).toContain('Cohorte disponible');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).toContain('Fuente visible: landing.');
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: landing.');
+      expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Grace Hopper');
+    });
+
+    await cleanup();
+  });
+
   it('combines single-choice cohort and status context into one summary block', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
