@@ -103,6 +103,23 @@ const getLinkByText = (root: ParentNode, labelText: string) => {
   return link;
 };
 
+const buildMessage = (overrides: Partial<SocialMessage> = {}): SocialMessage => ({
+  externalId: 'msg-1',
+  senderId: 'sender-1',
+  senderName: 'Ada',
+  text: 'Hello there',
+  metadata: null,
+  direction: 'incoming',
+  repliedAt: null,
+  replyText: null,
+  replyError: null,
+  createdAt: '2030-01-02T03:04:05.000Z',
+  ...overrides,
+});
+
+const queryFilterChip = (root: ParentNode, labelText: string) =>
+  root.querySelector(`[aria-label="Filter inbox by ${labelText}"]`);
+
 describe('SocialInboxPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -177,6 +194,38 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).not.toContain('Select asset in Instagram setup');
       expect(container.textContent).not.toContain('Open Instagram setup');
       expect(container.textContent).not.toContain('Re-select asset');
+    });
+
+    await cleanup();
+  });
+
+  it('hides zero-result inbox filters once inbound statuses are known', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage(),
+    ]);
+    listFacebookMessagesMock.mockResolvedValue([
+      buildMessage({
+        externalId: 'msg-2',
+        senderId: 'sender-2',
+        senderName: 'Grace',
+        repliedAt: '2030-01-03T03:04:05.000Z',
+        replyText: 'Done.',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(queryFilterChip(container, 'All')).not.toBeNull();
+      expect(queryFilterChip(container, 'Pending')).not.toBeNull();
+      expect(queryFilterChip(container, 'Replied')).not.toBeNull();
+      expect(queryFilterChip(container, 'Failed')).toBeNull();
+      expect(queryFilterChip(container, 'All')?.textContent).toContain('All (2)');
+      expect(queryFilterChip(container, 'Pending')?.textContent).toContain('Pending (1)');
+      expect(queryFilterChip(container, 'Replied')?.textContent).toContain('Replied (1)');
+      expect(container.textContent).toContain('Only statuses with inbound messages in this view are shown.');
     });
 
     await cleanup();

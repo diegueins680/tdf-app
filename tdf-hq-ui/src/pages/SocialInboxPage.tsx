@@ -55,12 +55,18 @@ const parseInboxLimit = (value: string, fallback = 100): number => {
   return LIMIT_OPTIONS.some((limit) => limit === parsed) ? parsed : fallback;
 };
 
-const FILTERS: { id: FilterKey; label: string }[] = [
-  { id: 'all', label: 'Todos' },
-  { id: 'pending', label: 'Pendientes' },
-  { id: 'replied', label: 'Respondidos' },
-  { id: 'failed', label: 'Fallidos' },
+const FILTERS: { id: FilterKey; label: string; reviewLabel: string }[] = [
+  { id: 'all', label: 'Todos', reviewLabel: 'All' },
+  { id: 'pending', label: 'Pendientes', reviewLabel: 'Pending' },
+  { id: 'replied', label: 'Respondidos', reviewLabel: 'Replied' },
+  { id: 'failed', label: 'Fallidos', reviewLabel: 'Failed' },
 ];
+
+const getFilterLabel = (filter: FilterKey, reviewMode: boolean) => {
+  const match = FILTERS.find((item) => item.id === filter);
+  if (!match) return filter;
+  return reviewMode ? match.reviewLabel : match.label;
+};
 
 const buildStats = (messages: SocialMessage[] | undefined): MessageStats => {
   const incoming = (messages ?? []).filter((msg) => msg.direction === 'incoming');
@@ -1150,6 +1156,20 @@ export default function SocialInboxPage() {
   const instagramStats = useMemo(() => buildStats(instagramQuery.data), [instagramQuery.data]);
   const facebookStats = useMemo(() => buildStats(facebookQuery.data), [facebookQuery.data]);
   const whatsappStats = useMemo(() => buildStats(whatsappQuery.data), [whatsappQuery.data]);
+  const filterCounts = useMemo<Record<FilterKey, number>>(
+    () => ({
+      all: instagramStats.incoming.length + facebookStats.incoming.length + whatsappStats.incoming.length,
+      pending: instagramStats.pending.length + facebookStats.pending.length + whatsappStats.pending.length,
+      replied: instagramStats.replied.length + facebookStats.replied.length + whatsappStats.replied.length,
+      failed: instagramStats.failed.length + facebookStats.failed.length + whatsappStats.failed.length,
+    }),
+    [facebookStats, instagramStats, whatsappStats],
+  );
+  const visibleFilters = useMemo(() => {
+    if (filterCounts.all === 0) return FILTERS;
+    return FILTERS.filter((item) => item.id === 'all' || item.id === filter || filterCounts[item.id] > 0);
+  }, [filter, filterCounts]);
+  const hasHiddenFilters = filterCounts.all > 0 && visibleFilters.length < FILTERS.length;
   const instagramMessages = useMemo(() => selectMessages(instagramStats, filter), [instagramStats, filter]);
   const facebookMessages = useMemo(() => selectMessages(facebookStats, filter), [facebookStats, filter]);
   const whatsappMessages = useMemo(() => selectMessages(whatsappStats, filter), [whatsappStats, filter]);
@@ -1273,26 +1293,30 @@ export default function SocialInboxPage() {
             {reviewMode ? 'Filter' : 'Filtro'}
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap">
-            {FILTERS.map((item) => (
-              <Chip
-                key={item.id}
-                label={
-                  reviewMode
-                    ? item.id === 'all'
-                      ? 'All'
-                      : item.id === 'pending'
-                        ? 'Pending'
-                        : item.id === 'replied'
-                          ? 'Replied'
-                          : 'Failed'
-                    : item.label
-                }
-                onClick={() => setFilter(item.id)}
-                color={filter === item.id ? 'primary' : 'default'}
-                variant={filter === item.id ? 'filled' : 'outlined'}
-              />
-            ))}
+            {visibleFilters.map((item) => {
+              const label = getFilterLabel(item.id, reviewMode);
+              const count = filterCounts[item.id];
+              const showCount = item.id === 'all' || count > 0;
+              return (
+                <Chip
+                  key={item.id}
+                  label={`${label}${showCount ? ` (${count})` : ''}`}
+                  onClick={() => setFilter(item.id)}
+                  color={filter === item.id ? 'primary' : 'default'}
+                  variant={filter === item.id ? 'filled' : 'outlined'}
+                  aria-label={reviewMode ? `Filter inbox by ${label}` : `Filtrar inbox por ${label}`}
+                  aria-pressed={filter === item.id}
+                />
+              );
+            })}
           </Stack>
+          {hasHiddenFilters && (
+            <Typography variant="caption" color="text.secondary">
+              {reviewMode
+                ? 'Only statuses with inbound messages in this view are shown.'
+                : 'Solo aparecen estados con mensajes entrantes en esta vista.'}
+            </Typography>
+          )}
           {repliedOnly && (
             <Typography variant="caption" color="text.secondary">
               {reviewMode ? 'Replied only (server-side filter).' : 'Solo respondidos (filtrado en servidor).'}
