@@ -423,10 +423,15 @@ export default function LabelAssetsPage() {
     ...(statusFilterLabel ? [`Estado: ${statusFilterLabel}`] : []),
   ];
   const filtersActiveCount = activeFilterLabels.length;
+  const showFilteredEmptyState = !assetsQuery.isLoading && filteredAssets.length === 0 && filtersActiveCount > 0;
+  const filterSummaryLabels = showFilteredEmptyState ? [] : activeFilterLabels;
+  const filteredEmptyStateMessage =
+    activeFilterLabels.length > 0
+      ? `No hay assets con los filtros actuales: ${activeFilterLabels.join(' · ')}. Limpia filtros o ajusta la búsqueda si esperabas resultados.`
+      : 'No hay assets con los filtros actuales.';
   const showFilterSummary = !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
   const showCategoryColumn = !showSingleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
-  const visibleTableColumnCount = 3 + (showCategoryColumn ? 1 : 0) + (showStatusColumn ? 1 : 0);
 
   const handleOpenNew = () => {
     setEditingAsset(null);
@@ -700,11 +705,11 @@ export default function LabelAssetsPage() {
                     variant="outlined"
                   />
                 )}
-                {activeFilterLabels.map((label) => (
+                {filterSummaryLabels.map((label) => (
                   <Chip key={label} label={label} size="small" variant="outlined" />
                 ))}
               </Stack>
-              {filtersActiveCount > 0 && (
+              {filtersActiveCount > 0 && !showFilteredEmptyState && (
                 <Button size="small" variant="text" onClick={clearFilters}>
                   Limpiar filtros
                 </Button>
@@ -722,9 +727,24 @@ export default function LabelAssetsPage() {
               ver el QR, revisar el historial o eliminar el asset.
             </Typography>
           )}
-          {assetsQuery.isLoading ? (
+          {showFilteredEmptyState ? (
+            <Alert
+              severity="info"
+              action={(
+                <Button color="inherit" size="small" onClick={clearFilters}>
+                  Limpiar filtros
+                </Button>
+              )}
+            >
+              {filteredEmptyStateMessage}
+            </Alert>
+          ) : assetsQuery.isLoading ? (
             <Typography variant="body2" color="text.secondary">
               Cargando inventario…
+            </Typography>
+          ) : assets.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No hay assets todavía. Agrega un asset para empezar.
             </Typography>
           ) : (
             <Table size="small">
@@ -797,15 +817,6 @@ export default function LabelAssetsPage() {
                     </TableRow>
                   );
                 })}
-                {filteredAssets.length === 0 && !assetsQuery.isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={visibleTableColumnCount}>
-                      <Typography variant="body2" color="text.secondary">
-                        No hay assets con los filtros actuales.
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           )}

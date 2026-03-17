@@ -169,6 +169,11 @@ const getElementByAriaLabel = (root: ParentNode, labelText: string) => {
 const queryButtonByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).find((candidate) => (candidate.textContent ?? '').trim() === labelText) ?? null;
 
+const countButtonsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('button')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
+
+const countOccurrences = (haystack: string, needle: string) => haystack.split(needle).length - 1;
+
 const getButtonByText = (root: ParentNode, labelText: string) => {
   const button = queryButtonByText(root, labelText);
   if (!(button instanceof HTMLButtonElement)) {
@@ -475,6 +480,62 @@ describe('LabelAssetsPage', () => {
       expect(container.textContent).not.toContain('Busca: Beta');
       expect(container.textContent).not.toContain('Estado: Mantenimiento');
       expect(queryButtonByText(container, 'Limpiar filtros')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
+  it('replaces an empty filtered table with one contextual reset state', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Bateria Roja',
+        status: 'Booked',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Microfono Beta',
+        status: 'OutForMaintenance',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('table')).not.toBeNull();
+      expect(container.textContent).toContain('Mostrando 3 de 3 assets');
+    });
+
+    await clickElement(getElementByAriaLabel(container, 'Filtrar assets por estado Mantenimiento'));
+    await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Nada');
+
+    await waitForExpectation(() => {
+      const text = container.textContent ?? '';
+      expect(container.textContent).toContain('Mostrando 0 de 3 assets');
+      expect(container.textContent).toContain('2 filtros activos');
+      expect(text).toContain(
+        'No hay assets con los filtros actuales: Busca: Nada · Estado: Mantenimiento. Limpia filtros o ajusta la búsqueda si esperabas resultados.',
+      );
+      expect(countOccurrences(text, 'Busca: Nada')).toBe(1);
+      expect(countOccurrences(text, 'Estado: Mantenimiento')).toBe(1);
+      expect(container.querySelector('table')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar filtros')).toBe(1);
+    });
+
+    await clickElement(getButtonByText(container, 'Limpiar filtros'));
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, 'Buscar assets').value).toBe('');
+      expect(container.textContent).toContain('Mostrando 3 de 3 assets');
+      expect(container.textContent).toContain('Sintetizador Uno');
+      expect(container.textContent).toContain('Bateria Roja');
+      expect(container.textContent).toContain('Microfono Beta');
+      expect(container.textContent).not.toContain('No hay assets con los filtros actuales:');
+      expect(container.querySelector('table')).not.toBeNull();
+      expect(countButtonsByText(container, 'Limpiar filtros')).toBe(0);
     });
 
     await cleanup();
