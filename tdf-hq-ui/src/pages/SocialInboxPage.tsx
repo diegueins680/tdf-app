@@ -1010,10 +1010,20 @@ interface ChannelPanelProps {
   messages: SocialMessage[];
   loading: boolean;
   reviewMode: boolean;
+  showStatusChips: boolean;
   onSelect: (selection: SelectedMessage) => void;
 }
 
-const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, onSelect }: ChannelPanelProps) => {
+const ChannelPanel = ({
+  label,
+  channel,
+  stats,
+  messages,
+  loading,
+  reviewMode,
+  showStatusChips,
+  onSelect,
+}: ChannelPanelProps) => {
   const visibleStatusChips = [
     {
       key: 'replied',
@@ -1049,7 +1059,7 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, on
           </Typography>
           <Chip label={`${reviewMode ? 'Inbound' : 'Entrantes'}: ${stats.incoming.length}`} size="small" variant="outlined" />
         </Stack>
-        {visibleStatusChips.length > 0 && (
+        {showStatusChips && visibleStatusChips.length > 0 && (
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {visibleStatusChips.map((chip) => (
               <Chip key={chip.key} label={`${chip.label}: ${chip.count}`} size="small" color={chip.color} />
@@ -1488,6 +1498,7 @@ export default function SocialInboxPage() {
                 messages={panel.messages}
                 loading={panel.loading}
                 reviewMode={reviewMode}
+                showStatusChips={!showSingleFilterSummary}
                 onSelect={(next) => setSelection(next)}
               />
             ))}

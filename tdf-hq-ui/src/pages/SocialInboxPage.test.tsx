@@ -281,6 +281,7 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('Status available');
       expect(container.textContent).toContain('Pending');
       expect(container.textContent).toContain('No need to filter it: it is the only inbound status in this view.');
+      expect(container.textContent).not.toContain('Pending: 1');
       expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
     });
 
