@@ -209,6 +209,11 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   return `${title} (${slug})`;
 };
 
+const registrationSourceLabel = (source: string | null | undefined) => {
+  const trimmed = source?.trim() ?? '';
+  return trimmed === '' ? 'Sin fuente' : trimmed;
+};
+
 const trimToNull = (value: string): string | null => {
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
@@ -339,6 +344,18 @@ export default function CourseRegistrationsAdminPage() {
     if (!cohortSlug) return '';
     return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
   }, [cohortLabelsBySlug, regsQuery.data, selectedSlug]);
+  const sharedVisibleSourceLabel = useMemo(() => {
+    if (!regsQuery.data || regsQuery.data.length < 2) return '';
+    const uniqueSources = Array.from(
+      new Set(
+        regsQuery.data
+          .map((reg) => reg.crSource?.trim() ?? '')
+          .filter((value) => value !== ''),
+      ),
+    );
+    if (uniqueSources.length !== 1) return '';
+    return registrationSourceLabel(uniqueSources[0]);
+  }, [regsQuery.data]);
 
   const dossierQuery = useQuery<CourseRegistrationDossierDTO>({
     queryKey: dossierQueryKey,
@@ -424,6 +441,7 @@ export default function CourseRegistrationsAdminPage() {
     ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
     : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
+  const shouldShowSharedSourceSummary = Boolean(sharedVisibleSourceLabel);
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -1074,6 +1092,11 @@ export default function CourseRegistrationsAdminPage() {
             Mostrando una sola cohorte: {singleVisibleCohortLabel}.
           </Typography>
         )}
+        {shouldShowSharedSourceSummary && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: shouldShowSharedCohortSummary ? 0.75 : 1.5 }}>
+            Mostrando una sola fuente: {sharedVisibleSourceLabel}.
+          </Typography>
+        )}
         {hasVisibleRegistrations && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
             <Typography variant="caption" color="text.secondary">
@@ -1126,6 +1149,7 @@ export default function CourseRegistrationsAdminPage() {
               const rowCohortSlug = reg.crCourseSlug.trim();
               const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
               const showRowCohort = selectedSlug ? rowCohortSlug !== selectedSlug : !singleVisibleCohortLabel;
+              const showRowSource = !shouldShowSharedSourceSummary;
               return (
                 <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Box sx={{ minWidth: 240 }}>
@@ -1146,9 +1170,11 @@ export default function CourseRegistrationsAdminPage() {
                     {showRowCohort && (
                       <Typography variant="body2">Cohorte: {rowCohortLabel}</Typography>
                     )}
-                    <Typography variant="body2" color="text.secondary">
-                      Fuente: {reg.crSource}
-                    </Typography>
+                    {showRowSource && (
+                      <Typography variant="body2" color="text.secondary">
+                        Fuente: {registrationSourceLabel(reg.crSource)}
+                      </Typography>
+                    )}
                     <Typography variant="body2" color="text.secondary">
                       Creado: {formatDate(reg.crCreatedAt)}
                     </Typography>
@@ -1266,7 +1292,7 @@ export default function CourseRegistrationsAdminPage() {
                     {activeRegistration.crEmail ?? 'Sin correo'} {activeRegistration.crPhoneE164 ? `· ${activeRegistration.crPhoneE164}` : ''}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Curso: {activeRegistrationCourseLabel} · Fuente: {activeRegistration.crSource} · Creado: {formatDate(activeRegistration.crCreatedAt)}
+                    Curso: {activeRegistrationCourseLabel} · Fuente: {registrationSourceLabel(activeRegistration.crSource)} · Creado: {formatDate(activeRegistration.crCreatedAt)}
                   </Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     {canMarkPaid && (

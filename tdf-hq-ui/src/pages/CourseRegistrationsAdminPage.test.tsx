@@ -555,6 +555,37 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes a shared visible source once instead of repeating it on each row', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'mixing-bootcamp',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Mostrando una sola fuente: landing.');
+      expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).toContain('Cohorte: Mixing Bootcamp (mixing-bootcamp)');
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Grace Hopper');
+    });
+
+    await cleanup();
+  });
+
   it('uses a status chip group instead of a dropdown and keeps the filter resettable', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({
