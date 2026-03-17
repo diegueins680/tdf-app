@@ -1592,7 +1592,10 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 200,
       });
-      expect(container.textContent).toContain('Todavía no hay inscripciones para mostrar en esta vista.');
+      expect(container.textContent).toContain(
+        'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.',
+      );
+      expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
       expect(container.textContent).not.toContain('No hay inscripciones con los filtros actuales:');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
@@ -1688,9 +1691,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Cuando exista la primera inscripción, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.',
+        'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.',
       );
-      expect(container.textContent).toContain('Todavía no hay inscripciones para mostrar en esta vista.');
+      expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
+      expect(countOccurrences(container, 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.')).toBe(1);
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Cambiar estado:');

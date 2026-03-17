@@ -52,6 +52,7 @@ type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
 const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
 const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
+const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -1029,7 +1030,7 @@ export default function CourseRegistrationsAdminPage() {
       <Paper sx={{ p: 3, borderRadius: 3 }}>
         {showInitialFilterGuidance ? (
           <Alert severity="info" variant="outlined">
-            Cuando exista la primera inscripción, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.
+            {initialEmptyStateMessage}
           </Alert>
         ) : (
           <>
@@ -1246,87 +1247,89 @@ export default function CourseRegistrationsAdminPage() {
         )}
       </Paper>
 
-      <Paper sx={{ p: 3, borderRadius: 3 }}>
-        {regsQuery.isError && (
-          <Typography color="error">
-            No se pudieron cargar las inscripciones: {regsQuery.error instanceof Error ? regsQuery.error.message : 'Error'}
-          </Typography>
-        )}
-        {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
-        {!regsQuery.isLoading && regsQuery.data?.length === 0 && (
-          hasCustomFilters ? (
-            <Alert
-              severity="info"
-              action={(
-                <Button color="inherit" size="small" onClick={handleResetFilters}>
-                  Restablecer filtros
-                </Button>
-              )}
-            >
-              {filteredEmptyStateMessage}
-            </Alert>
-          ) : (
-            <Typography color="text.secondary">Todavía no hay inscripciones para mostrar en esta vista.</Typography>
-          )
-        )}
-        {regsQuery.data?.length ? (
-          <Stack spacing={1.5}>
-            <Stack divider={<Divider flexItem />} spacing={2}>
-              {regsQuery.data.map((reg) => {
-                const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
-                const rowCohortSlug = reg.crCourseSlug.trim();
-                const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
-                const showRowCohort = selectedSlug
-                  ? rowCohortSlug !== selectedSlug
-                  : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
-                const showRowSource = !hasSharedVisibleSource;
-                return (
-                  <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <Box sx={{ minWidth: 240 }}>
-                      <Typography variant="subtitle1" fontWeight={700}>
-                        {reg.crFullName ?? 'Sin nombre'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {registrationContactSummary(reg.crEmail, reg.crPhoneE164)}
-                      </Typography>
-                      {reg.crAdminNotes && <Chip size="small" label="Con notas" variant="outlined" sx={{ mt: 1 }} />}
-                    </Box>
-                    <Box sx={{ minWidth: 180 }}>
-                      {showRowCohort && (
-                        <Typography variant="body2">Cohorte: {rowCohortLabel}</Typography>
-                      )}
-                      {showRowSource && (
-                        <Typography variant="body2" color="text.secondary">
-                          Fuente: {registrationSourceLabel(reg.crSource)}
+      {!showInitialFilterGuidance && (
+        <Paper sx={{ p: 3, borderRadius: 3 }}>
+          {regsQuery.isError && (
+            <Typography color="error">
+              No se pudieron cargar las inscripciones: {regsQuery.error instanceof Error ? regsQuery.error.message : 'Error'}
+            </Typography>
+          )}
+          {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
+          {!regsQuery.isLoading && regsQuery.data?.length === 0 && (
+            hasCustomFilters ? (
+              <Alert
+                severity="info"
+                action={(
+                  <Button color="inherit" size="small" onClick={handleResetFilters}>
+                    Restablecer filtros
+                  </Button>
+                )}
+              >
+                {filteredEmptyStateMessage}
+              </Alert>
+            ) : (
+              <Typography color="text.secondary">Todavía no hay inscripciones para mostrar en esta vista.</Typography>
+            )
+          )}
+          {regsQuery.data?.length ? (
+            <Stack spacing={1.5}>
+              <Stack divider={<Divider flexItem />} spacing={2}>
+                {regsQuery.data.map((reg) => {
+                  const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
+                  const rowCohortSlug = reg.crCourseSlug.trim();
+                  const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
+                  const showRowCohort = selectedSlug
+                    ? rowCohortSlug !== selectedSlug
+                    : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
+                  const showRowSource = !hasSharedVisibleSource;
+                  return (
+                    <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <Box sx={{ minWidth: 240 }}>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          {reg.crFullName ?? 'Sin nombre'}
                         </Typography>
-                      )}
-                      <Typography variant="body2" color="text.secondary">
-                        Creado: {formatDate(reg.crCreatedAt)}
-                      </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {registrationContactSummary(reg.crEmail, reg.crPhoneE164)}
+                        </Typography>
+                        {reg.crAdminNotes && <Chip size="small" label="Con notas" variant="outlined" sx={{ mt: 1 }} />}
+                      </Box>
+                      <Box sx={{ minWidth: 180 }}>
+                        {showRowCohort && (
+                          <Typography variant="body2">Cohorte: {rowCohortLabel}</Typography>
+                        )}
+                        {showRowSource && (
+                          <Typography variant="body2" color="text.secondary">
+                            Fuente: {registrationSourceLabel(reg.crSource)}
+                          </Typography>
+                        )}
+                        <Typography variant="body2" color="text.secondary">
+                          Creado: {formatDate(reg.crCreatedAt)}
+                        </Typography>
+                      </Box>
+                      <Button size="small" variant="outlined" onClick={() => handleOpenDossier(reg, 'review')}>
+                        Abrir expediente
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color={registrationStatusButtonColor(reg.crStatus)}
+                        endIcon={<ArrowDropDownIcon />}
+                        aria-label={`Cambiar estado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
+                        aria-haspopup="menu"
+                        disabled={isUpdating}
+                        onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
+                      >
+                        {registrationStatusActionLabel(reg.crStatus)}
+                      </Button>
+                      <Box sx={{ flexGrow: 1 }} />
                     </Box>
-                    <Button size="small" variant="outlined" onClick={() => handleOpenDossier(reg, 'review')}>
-                      Abrir expediente
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color={registrationStatusButtonColor(reg.crStatus)}
-                      endIcon={<ArrowDropDownIcon />}
-                      aria-label={`Cambiar estado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
-                      aria-haspopup="menu"
-                      disabled={isUpdating}
-                      onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
-                    >
-                      {registrationStatusActionLabel(reg.crStatus)}
-                    </Button>
-                    <Box sx={{ flexGrow: 1 }} />
-                  </Box>
-                );
-              })}
+                  );
+                })}
+              </Stack>
             </Stack>
-          </Stack>
-        ) : null}
-      </Paper>
+          ) : null}
+        </Paper>
+      )}
 
       <Menu
         open={Boolean(statusMenuTarget)}
