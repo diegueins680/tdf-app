@@ -449,6 +449,12 @@ export default function CourseRegistrationsAdminPage() {
   const showListUtilitySummary = visibleStatusSummaryChips.length > 0 || canCopyCsv || Boolean(copyMessage);
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const shouldShowSharedSourceSummary = Boolean(sharedVisibleSourceSummary);
+  const showAdvancedLimitControl = hasVisibleRegistrations || limit !== DEFAULT_LIMIT;
+  const filtersHelpText = showAdvancedLimitControl
+    ? hasVisibleRegistrations
+      ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote.'
+      : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.'
+    : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; el límite aparecerá cuando esta vista tenga inscripciones y necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.';
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -1069,17 +1075,19 @@ export default function CourseRegistrationsAdminPage() {
             )}
           </Grid>
         </Grid>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
-          <Button
-            size="small"
-            variant="text"
-            onClick={() => setShowAdvancedFilters((current) => !current)}
-            aria-expanded={showAdvancedFilters}
-          >
-            {showAdvancedFilters ? 'Ocultar filtros avanzados' : 'Más filtros'}
-          </Button>
-        </Stack>
-        <Collapse in={showAdvancedFilters} unmountOnExit>
+        {showAdvancedLimitControl && (
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => setShowAdvancedFilters((current) => !current)}
+              aria-expanded={showAdvancedFilters}
+            >
+              {showAdvancedFilters ? 'Ocultar filtros avanzados' : 'Más filtros'}
+            </Button>
+          </Stack>
+        )}
+        <Collapse in={showAdvancedFilters && showAdvancedLimitControl} unmountOnExit>
           <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>
             <TextField
               label="Límite"
@@ -1094,9 +1102,7 @@ export default function CourseRegistrationsAdminPage() {
           </Box>
         </Collapse>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-          {hasVisibleRegistrations
-            ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote.'
-            : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.'}
+          {filtersHelpText}
         </Typography>
         {hasCustomFilters && hasVisibleRegistrations && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
@@ -1163,7 +1169,7 @@ export default function CourseRegistrationsAdminPage() {
               {filteredEmptyStateMessage}
             </Alert>
           ) : (
-            <Typography color="text.secondary">No hay inscripciones para esta vista.</Typography>
+            <Typography color="text.secondary">Todavía no hay inscripciones para mostrar en esta vista.</Typography>
           )
         )}
         {regsQuery.data?.length ? (
