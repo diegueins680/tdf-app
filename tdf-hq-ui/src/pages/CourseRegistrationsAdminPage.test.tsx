@@ -1592,10 +1592,16 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; el límite aparecerá cuando esta vista tenga inscripciones y necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.',
+        'Cuando exista la primera inscripción, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.',
       );
       expect(container.textContent).toContain('Todavía no hay inscripciones para mostrar en esta vista.');
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Cambiar estado:');
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Cohorte disponible');
+      expect(container.textContent).not.toContain('Estado disponible');
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Leyenda de estados:');
       expect(container.textContent).not.toContain('Total: 0');
       expect(container.textContent).not.toContain('Pagadas: 0');

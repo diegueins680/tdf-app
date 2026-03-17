@@ -461,6 +461,11 @@ export default function CourseRegistrationsAdminPage() {
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const shouldShowSharedSourceSummary = Boolean(sharedVisibleSourceSummary);
   const showAdvancedLimitControl = hasVisibleRegistrations || limit !== DEFAULT_LIMIT;
+  const showInitialFilterGuidance = !regsQuery.isLoading
+    && !regsQuery.isError
+    && !cohortsQuery.isError
+    && !hasCustomFilters
+    && !hasVisibleRegistrations;
   const filtersHelpText = showAdvancedLimitControl
     ? hasVisibleRegistrations
       ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote.'
@@ -983,36 +988,15 @@ export default function CourseRegistrationsAdminPage() {
       {pageFlash && <Alert severity={pageFlash.severity}>{pageFlash.message}</Alert>}
 
       <Paper sx={{ p: 3, borderRadius: 3 }}>
-        <Grid container spacing={2}>
-          {combinedSingleChoiceSummary ? (
-            <Grid item xs={12}>
-              <Stack
-                spacing={0.5}
-                sx={{
-                  minHeight: 40,
-                  justifyContent: 'center',
-                  px: 1.5,
-                  py: 1.25,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                }}
-              >
-                <Typography variant="caption" color="text.secondary">
-                  Vista actual
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {combinedSingleChoiceSummary}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.
-                </Typography>
-              </Stack>
-            </Grid>
-          ) : (
-            <>
-              <Grid item xs={12} md={6}>
-                {singleAvailableCohortLabel ? (
+        {showInitialFilterGuidance ? (
+          <Alert severity="info" variant="outlined">
+            Cuando exista la primera inscripción, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.
+          </Alert>
+        ) : (
+          <>
+            <Grid container spacing={2}>
+              {combinedSingleChoiceSummary ? (
+                <Grid item xs={12}>
                   <Stack
                     spacing={0.5}
                     sx={{
@@ -1026,166 +1010,195 @@ export default function CourseRegistrationsAdminPage() {
                     }}
                   >
                     <Typography variant="caption" color="text.secondary">
-                      Cohorte disponible
+                      Vista actual
                     </Typography>
                     <Typography variant="body2" fontWeight={600}>
-                      {singleAvailableCohortLabel}
+                      {combinedSingleChoiceSummary}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      No hace falta filtrarla: es la unica cohorte disponible ahora mismo.
+                      No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.
                     </Typography>
                   </Stack>
-                ) : (
-                  <TextField
-                    select
-                    label="Curso / cohorte"
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                    fullWidth
-                    size="small"
-                    error={cohortsQuery.isError}
-                    helperText={
-                      cohortsQuery.isError
-                        ? 'No se pudieron cargar cohortes.'
-                        : cohortsQuery.isLoading
-                          ? 'Cargando cohortes…'
-                          : undefined
-                    }
-                  >
-                    <MenuItem value="">Todos</MenuItem>
-                    {cohortOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                {singleVisibleStatus ? (
-                  <Stack
-                    spacing={0.5}
-                    sx={{
-                      minHeight: 40,
-                      justifyContent: 'center',
-                      px: 1.5,
-                      py: 1.25,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary">
-                      Estado disponible
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {statusFilterLabels[singleVisibleStatus]}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      No hace falta filtrarlo: es el unico estado presente en esta vista.
-                    </Typography>
-                  </Stack>
-                ) : (
-                  <Stack spacing={1}>
-                    <Typography variant="caption" color="text.secondary">
-                      Estado
-                    </Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                      {visibleStatusFilters.map((value) => (
-                        <Chip
-                          key={value}
-                          clickable
-                          color={registrationStatusChipColor(value)}
-                          label={statusFilterLabels[value]}
-                          variant={status === value ? 'filled' : 'outlined'}
-                          aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
-                          aria-pressed={status === value}
-                          onClick={() => setStatus(value)}
-                        />
-                      ))}
-                    </Stack>
-                    {hasHiddenStatusFilters && (
-                      <Typography variant="caption" color="text.secondary">
-                        Solo aparecen estados con inscripciones en esta vista.
-                      </Typography>
+                </Grid>
+              ) : (
+                <>
+                  <Grid item xs={12} md={6}>
+                    {singleAvailableCohortLabel ? (
+                      <Stack
+                        spacing={0.5}
+                        sx={{
+                          minHeight: 40,
+                          justifyContent: 'center',
+                          px: 1.5,
+                          py: 1.25,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          Cohorte disponible
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {singleAvailableCohortLabel}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          No hace falta filtrarla: es la unica cohorte disponible ahora mismo.
+                        </Typography>
+                      </Stack>
+                    ) : (
+                      <TextField
+                        select
+                        label="Curso / cohorte"
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value)}
+                        fullWidth
+                        size="small"
+                        error={cohortsQuery.isError}
+                        helperText={
+                          cohortsQuery.isError
+                            ? 'No se pudieron cargar cohortes.'
+                            : cohortsQuery.isLoading
+                              ? 'Cargando cohortes…'
+                              : undefined
+                        }
+                      >
+                        <MenuItem value="">Todos</MenuItem>
+                        {cohortOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
                     )}
-                  </Stack>
-                )}
-              </Grid>
-            </>
-          )}
-        </Grid>
-        {showAdvancedLimitControl && (
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
-            <Button
-              size="small"
-              variant="text"
-              onClick={() => setShowAdvancedFilters((current) => !current)}
-              aria-expanded={showAdvancedFilters}
-            >
-              {showAdvancedFilters ? 'Ocultar filtros avanzados' : 'Más filtros'}
-            </Button>
-          </Stack>
-        )}
-        <Collapse in={showAdvancedFilters && showAdvancedLimitControl} unmountOnExit>
-          <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>
-            <TextField
-              label="Límite"
-              type="number"
-              inputProps={{ min: 1 }}
-              value={limit}
-              onChange={(e) => setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT))}
-              helperText="Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto."
-              fullWidth
-              size="small"
-            />
-          </Box>
-        </Collapse>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-          {filtersHelpText}
-        </Typography>
-        {hasCustomFilters && hasVisibleRegistrations && (
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
-            <Typography variant="body2" color="text.secondary">
-              Vista filtrada: {activeFilterSummary}.
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    {singleVisibleStatus ? (
+                      <Stack
+                        spacing={0.5}
+                        sx={{
+                          minHeight: 40,
+                          justifyContent: 'center',
+                          px: 1.5,
+                          py: 1.25,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          Estado disponible
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {statusFilterLabels[singleVisibleStatus]}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          No hace falta filtrarlo: es el unico estado presente en esta vista.
+                        </Typography>
+                      </Stack>
+                    ) : (
+                      <Stack spacing={1}>
+                        <Typography variant="caption" color="text.secondary">
+                          Estado
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {visibleStatusFilters.map((value) => (
+                            <Chip
+                              key={value}
+                              clickable
+                              color={registrationStatusChipColor(value)}
+                              label={statusFilterLabels[value]}
+                              variant={status === value ? 'filled' : 'outlined'}
+                              aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
+                              aria-pressed={status === value}
+                              onClick={() => setStatus(value)}
+                            />
+                          ))}
+                        </Stack>
+                        {hasHiddenStatusFilters && (
+                          <Typography variant="caption" color="text.secondary">
+                            Solo aparecen estados con inscripciones en esta vista.
+                          </Typography>
+                        )}
+                      </Stack>
+                    )}
+                  </Grid>
+                </>
+              )}
+            </Grid>
+            {showAdvancedLimitControl && (
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => setShowAdvancedFilters((current) => !current)}
+                  aria-expanded={showAdvancedFilters}
+                >
+                  {showAdvancedFilters ? 'Ocultar filtros avanzados' : 'Más filtros'}
+                </Button>
+              </Stack>
+            )}
+            <Collapse in={showAdvancedFilters && showAdvancedLimitControl} unmountOnExit>
+              <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>
+                <TextField
+                  label="Límite"
+                  type="number"
+                  inputProps={{ min: 1 }}
+                  value={limit}
+                  onChange={(e) => setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT))}
+                  helperText="Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto."
+                  fullWidth
+                  size="small"
+                />
+              </Box>
+            </Collapse>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+              {filtersHelpText}
             </Typography>
-            <Button size="small" onClick={handleResetFilters}>
-              Restablecer filtros
-            </Button>
-          </Stack>
-        )}
-        {shouldShowSharedCohortSummary && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-            Mostrando una sola cohorte: {singleVisibleCohortLabel}.
-          </Typography>
-        )}
-        {shouldShowSharedSourceSummary && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: shouldShowSharedCohortSummary ? 0.75 : 1.5 }}>
-            {sharedVisibleSourceSummary}
-          </Typography>
-        )}
-        {hasVisibleRegistrations && showListUtilitySummary && (
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
-            {visibleStatusSummaryChips.length > 0 && (
-              <Typography variant="caption" color="text.secondary">
-                Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.
+            {hasCustomFilters && hasVisibleRegistrations && (
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
+                <Typography variant="body2" color="text.secondary">
+                  Vista filtrada: {activeFilterSummary}.
+                </Typography>
+                <Button size="small" onClick={handleResetFilters}>
+                  Restablecer filtros
+                </Button>
+              </Stack>
+            )}
+            {shouldShowSharedCohortSummary && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+                Mostrando una sola cohorte: {singleVisibleCohortLabel}.
               </Typography>
             )}
-            {canCopyCsv && (
-              <Button
-                size="small"
-                startIcon={<ContentCopyIcon fontSize="small" />}
-                onClick={() => void handleCopyCsv()}
-              >
-                {copyCsvButtonLabel}
-              </Button>
-            )}
-            {copyMessage && (
-              <Typography variant="caption" color="text.secondary">
-                {copyMessage}
+            {shouldShowSharedSourceSummary && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: shouldShowSharedCohortSummary ? 0.75 : 1.5 }}>
+                {sharedVisibleSourceSummary}
               </Typography>
             )}
-          </Stack>
+            {hasVisibleRegistrations && showListUtilitySummary && (
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+                {visibleStatusSummaryChips.length > 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.
+                  </Typography>
+                )}
+                {canCopyCsv && (
+                  <Button
+                    size="small"
+                    startIcon={<ContentCopyIcon fontSize="small" />}
+                    onClick={() => void handleCopyCsv()}
+                  >
+                    {copyCsvButtonLabel}
+                  </Button>
+                )}
+                {copyMessage && (
+                  <Typography variant="caption" color="text.secondary">
+                    {copyMessage}
+                  </Typography>
+                )}
+              </Stack>
+            )}
+          </>
         )}
       </Paper>
 
