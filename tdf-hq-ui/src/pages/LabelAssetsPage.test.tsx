@@ -366,9 +366,10 @@ describe('LabelAssetsPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.querySelectorAll('[aria-label^="Filtrar assets por estado "]')).toHaveLength(5);
+      expect(container.querySelectorAll('[aria-label^="Filtrar assets por estado "]')).toHaveLength(4);
       expect(countLabelsByText(container, 'Estado')).toBe(0);
       expect(container.textContent).toContain('Todos (3)');
+      expect(container.textContent).not.toContain('Retirados');
       expect(container.textContent).toContain('Sintetizador Uno');
       expect(container.textContent).toContain('Bateria Roja');
       expect(container.textContent).toContain('Microfono Beta');
@@ -388,6 +389,30 @@ describe('LabelAssetsPage', () => {
       expect(container.textContent).toContain('Sintetizador Uno');
       expect(container.textContent).toContain('Bateria Roja');
       expect(container.textContent).toContain('Microfono Beta');
+    });
+
+    await cleanup();
+  });
+
+  it('replaces a single real status filter with context copy when the current view does not need status filtering', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Bateria Roja',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelectorAll('[aria-label^="Filtrar assets por estado "]')).toHaveLength(0);
+      expect(container.textContent).toContain('Estado disponible');
+      expect(container.textContent).toContain('Activos');
+      expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
+      expect(container.textContent).not.toContain('Filtrar por estado');
     });
 
     await cleanup();
@@ -417,8 +442,8 @@ describe('LabelAssetsPage', () => {
       expect(queryButtonByText(container, 'Limpiar filtros')).toBeNull();
     });
 
-    await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Beta');
     await clickElement(getElementByAriaLabel(container, 'Filtrar assets por estado Mantenimiento'));
+    await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Beta');
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Mostrando 1 de 3 assets');

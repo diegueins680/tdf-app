@@ -369,28 +369,46 @@ export default function LabelAssetsPage() {
     return categoryOptions.find((opt) => opt.value === trimmed || opt.label === trimmed) ?? null;
   }, [assetForm.category, categoryOptions]);
 
-  const statusCounts = useMemo(() => {
-    return assets.reduce<Record<string, number>>((acc, asset) => {
-      const key = asset.status ?? 'Unknown';
-      acc[key] = (acc[key] ?? 0) + 1;
-      return acc;
-    }, {});
-  }, [assets]);
-
-  const filteredAssets = useMemo(() => {
-    const term = search.trim().toLowerCase();
+  const trimmedSearch = search.trim();
+  const assetsMatchingSearchAndCategory = useMemo(() => {
+    const term = trimmedSearch.toLowerCase();
     return assets.filter((asset) => {
       const matchesSearch =
         !term ||
         `${asset.name} ${asset.category} ${asset.brand ?? ''} ${asset.model ?? ''} ${asset.status}`
           .toLowerCase()
           .includes(term);
-      const matchesStatus = statusFilter === 'all' || asset.status === statusFilter;
       const matchesCategory = categoryFilter === 'all' || asset.category === categoryFilter;
-      return matchesSearch && matchesStatus && matchesCategory;
+      return matchesSearch && matchesCategory;
     });
-  }, [assets, search, statusFilter, categoryFilter]);
-  const trimmedSearch = search.trim();
+  }, [assets, categoryFilter, trimmedSearch]);
+
+  const visibleStatusCounts = useMemo(() => {
+    return assetsMatchingSearchAndCategory.reduce<Record<string, number>>((acc, asset) => {
+      const key = asset.status ?? 'Unknown';
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    }, {});
+  }, [assetsMatchingSearchAndCategory]);
+
+  const filteredAssets = useMemo(() => {
+    return assetsMatchingSearchAndCategory.filter((asset) => statusFilter === 'all' || asset.status === statusFilter);
+  }, [assetsMatchingSearchAndCategory, statusFilter]);
+  const visibleStatusOptions = useMemo(() => {
+    if (assetsMatchingSearchAndCategory.length === 0) return STATUS_OPTIONS;
+    return STATUS_OPTIONS.filter(
+      (opt) => opt.value === 'all' || statusFilter === opt.value || (visibleStatusCounts[opt.value] ?? 0) > 0,
+    );
+  }, [assetsMatchingSearchAndCategory.length, statusFilter, visibleStatusCounts]);
+  const singleVisibleStatusOption = useMemo(() => {
+    if (assetsMatchingSearchAndCategory.length === 0) return null;
+    const realStatusOptions = visibleStatusOptions.filter((opt) => opt.value !== 'all');
+    return realStatusOptions.length === 1 ? realStatusOptions[0] : null;
+  }, [assetsMatchingSearchAndCategory.length, visibleStatusOptions]);
+  const showSingleStatusSummary = Boolean(
+    singleVisibleStatusOption
+    && (statusFilter === 'all' || statusFilter === singleVisibleStatusOption.value),
+  );
   const categoryFilterLabel =
     categoryFilter === 'all'
       ? null
@@ -611,30 +629,56 @@ export default function LabelAssetsPage() {
               </TextField>
             )}
           </Stack>
-          <Stack spacing={1} mt={2}>
-            <Typography variant="caption" color="text.secondary">
-              Filtrar por estado
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {STATUS_OPTIONS.map((opt) => {
-                const count = opt.value === 'all' ? assets.length : (statusCounts[opt.value] ?? 0);
-                const isActive = statusFilter === opt.value;
-                const showCount = opt.value === 'all' || count > 0;
-                return (
-                  <Chip
-                    key={opt.value}
-                    label={`${opt.label}${showCount ? ` (${count})` : ''}`}
-                    onClick={() => setStatusFilter(opt.value)}
-                    variant={isActive ? 'filled' : 'outlined'}
-                    color={isActive ? 'primary' : 'default'}
-                    aria-label={`Filtrar assets por estado ${opt.label}`}
-                    aria-pressed={isActive}
-                    sx={{ textTransform: 'capitalize' }}
-                  />
-                );
-              })}
+          {showSingleStatusSummary ? (
+            <Stack
+              spacing={0.5}
+              mt={2}
+              sx={{
+                minHeight: 40,
+                justifyContent: 'center',
+                px: 1.5,
+                py: 1.25,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                Estado disponible
+              </Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {singleVisibleStatusOption?.label}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                No hace falta filtrarlo: es el unico estado presente en esta vista.
+              </Typography>
             </Stack>
-          </Stack>
+          ) : (
+            <Stack spacing={1} mt={2}>
+              <Typography variant="caption" color="text.secondary">
+                Filtrar por estado
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {visibleStatusOptions.map((opt) => {
+                  const count = opt.value === 'all' ? assetsMatchingSearchAndCategory.length : (visibleStatusCounts[opt.value] ?? 0);
+                  const isActive = statusFilter === opt.value;
+                  const showCount = opt.value === 'all' || count > 0;
+                  return (
+                    <Chip
+                      key={opt.value}
+                      label={`${opt.label}${showCount ? ` (${count})` : ''}`}
+                      onClick={() => setStatusFilter(opt.value)}
+                      variant={isActive ? 'filled' : 'outlined'}
+                      color={isActive ? 'primary' : 'default'}
+                      aria-label={`Filtrar assets por estado ${opt.label}`}
+                      aria-pressed={isActive}
+                      sx={{ textTransform: 'capitalize' }}
+                    />
+                  );
+                })}
+              </Stack>
+            </Stack>
+          )}
           {showFilterSummary && (
             <Stack
               direction={{ xs: 'column', md: 'row' }}
