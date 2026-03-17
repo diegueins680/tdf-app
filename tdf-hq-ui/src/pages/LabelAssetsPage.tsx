@@ -354,6 +354,15 @@ export default function LabelAssetsPage() {
     });
     return list;
   }, [dropdownOptions, assetCategories]);
+  const filterCategoryOptions = useMemo(
+    () => categoryOptions.filter((opt) => assetCategories.includes(opt.value)),
+    [categoryOptions, assetCategories],
+  );
+  const singleAvailableCategory = filterCategoryOptions.length === 1 ? filterCategoryOptions[0] : null;
+  const showSingleCategorySummary = Boolean(
+    singleAvailableCategory
+    && (categoryFilter === 'all' || categoryFilter === singleAvailableCategory.value),
+  );
   const selectedCategoryOption = useMemo(() => {
     const trimmed = assetForm.category.trim();
     if (!trimmed) return null;
@@ -385,7 +394,9 @@ export default function LabelAssetsPage() {
   const categoryFilterLabel =
     categoryFilter === 'all'
       ? null
-      : categoryOptions.find((opt) => opt.value === categoryFilter)?.label ?? categoryFilter;
+      : filterCategoryOptions.find((opt) => opt.value === categoryFilter)?.label
+        ?? categoryOptions.find((opt) => opt.value === categoryFilter)?.label
+        ?? categoryFilter;
   const statusFilterLabel =
     statusFilter === 'all' ? null : STATUS_OPTIONS.find((opt) => opt.value === statusFilter)?.label ?? statusFilter;
   const activeFilterLabels = [
@@ -559,20 +570,46 @@ export default function LabelAssetsPage() {
                 ),
               }}
             />
-            <TextField
-              select
-              label="Categoría"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              sx={{ minWidth: 180 }}
-            >
-              <MenuItem value="all">Todas</MenuItem>
-              {categoryOptions.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label ?? opt.value}
-                </MenuItem>
-              ))}
-            </TextField>
+            {showSingleCategorySummary ? (
+              <Stack
+                spacing={0.5}
+                sx={{
+                  minHeight: 56,
+                  justifyContent: 'center',
+                  minWidth: { md: 240 },
+                  px: 1.5,
+                  py: 1.25,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Categoria disponible
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {singleAvailableCategory?.label ?? singleAvailableCategory?.value}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  No hace falta filtrarla: es la unica categoria cargada ahora mismo.
+                </Typography>
+              </Stack>
+            ) : (
+              <TextField
+                select
+                label="Categoría"
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                sx={{ minWidth: 180 }}
+              >
+                <MenuItem value="all">Todas</MenuItem>
+                {filterCategoryOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label ?? opt.value}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
           </Stack>
           <Stack spacing={1} mt={2}>
             <Typography variant="caption" color="text.secondary">

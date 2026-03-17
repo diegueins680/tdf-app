@@ -298,6 +298,54 @@ describe('LabelAssetsPage', () => {
     await cleanup();
   });
 
+  it('replaces a single category selector with context copy and restores it when multiple asset categories exist', async () => {
+    listDropdownsMock.mockResolvedValue([
+      {
+        optionId: 'cat-cables',
+        category: 'asset-category',
+        value: 'Cables',
+        label: 'Cables',
+        active: true,
+        sortOrder: 20,
+      },
+    ]);
+    listAssetsMock.mockResolvedValue([buildAsset()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countLabelsByText(container, 'Categoría')).toBe(0);
+      expect(container.textContent).toContain('Categoria disponible');
+      expect(container.textContent).toContain('Synth');
+      expect(container.textContent).toContain('No hace falta filtrarla: es la unica categoria cargada ahora mismo.');
+    });
+
+    await cleanup();
+
+    listDropdownsMock.mockResolvedValue([]);
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Guitarra Clasica',
+        category: 'Guitarras',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    await waitForExpectation(() => {
+      expect(countLabelsByText(secondContainer, 'Categoría')).toBe(1);
+      expect(secondContainer.textContent).not.toContain('No hace falta filtrarla: es la unica categoria cargada ahora mismo.');
+    });
+
+    await secondRender.cleanup();
+  });
+
   it('uses one status chip group to filter and reset the asset list', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),
