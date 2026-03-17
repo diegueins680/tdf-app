@@ -268,6 +268,10 @@ export default function CourseRegistrationsAdminPage() {
     anchorEl: HTMLElement;
     reg: CourseRegistrationDTO;
   } | null>(null);
+  const [receiptMenuTarget, setReceiptMenuTarget] = useState<{
+    anchorEl: HTMLElement;
+    receipt: CourseRegistrationReceiptDTO;
+  } | null>(null);
   const [notesDraft, setNotesDraft] = useState('');
   const [showNotesComposer, setShowNotesComposer] = useState(false);
   const [receiptForm, setReceiptForm] = useState<ReceiptFormState>(emptyReceiptForm);
@@ -595,6 +599,7 @@ export default function CourseRegistrationsAdminPage() {
     if (!selectedDossier) {
       setDossierFlash(null);
       setShowEmailHistory(false);
+      setReceiptMenuTarget(null);
       setNotesDraft('');
       setShowNotesComposer(false);
       setReceiptForm(emptyReceiptForm());
@@ -607,6 +612,7 @@ export default function CourseRegistrationsAdminPage() {
       return;
     }
     setShowEmailHistory(false);
+    setReceiptMenuTarget(null);
     setNotesDraft(selectedDossier.reg.crAdminNotes ?? '');
     setShowNotesComposer(false);
     setReceiptForm(emptyReceiptForm());
@@ -681,6 +687,14 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleCloseStatusMenu = () => {
     setStatusMenuTarget(null);
+  };
+
+  const handleOpenReceiptMenu = (anchorEl: HTMLElement, receipt: CourseRegistrationReceiptDTO) => {
+    setReceiptMenuTarget({ anchorEl, receipt });
+  };
+
+  const handleCloseReceiptMenu = () => {
+    setReceiptMenuTarget(null);
   };
 
   const handleQuickStatus = (reg: CourseRegistrationDTO, newStatus: Exclude<StatusFilter, 'all'>) => {
@@ -796,6 +810,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleEditReceipt = (receipt: CourseRegistrationReceiptDTO) => {
+    handleCloseReceiptMenu();
     setShowReceiptComposer(true);
     setReceiptForm({
       editingId: receipt.crrId,
@@ -808,6 +823,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleDeleteReceipt = (receipt: CourseRegistrationReceiptDTO) => {
     if (!selectedDossier || selectedDossierId == null) return;
+    handleCloseReceiptMenu();
     if (!window.confirm('¿Eliminar este comprobante?')) return;
     setDossierFlash(null);
     void deleteReceiptMutation
@@ -950,6 +966,7 @@ export default function CourseRegistrationsAdminPage() {
   const showFollowUpOptionalFields = showFollowUpDetails || hasFollowUpOptionalDetails;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
+  const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
   const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
     ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
@@ -1330,6 +1347,23 @@ export default function CourseRegistrationsAdminPage() {
         )}
       </Menu>
 
+      <Menu
+        open={Boolean(receiptMenuTarget)}
+        anchorEl={receiptMenuTarget?.anchorEl ?? null}
+        onClose={handleCloseReceiptMenu}
+      >
+        {receiptMenuReceipt && (
+          <MenuItem onClick={() => handleEditReceipt(receiptMenuReceipt)}>
+            Editar comprobante
+          </MenuItem>
+        )}
+        {receiptMenuReceipt && (
+          <MenuItem onClick={() => handleDeleteReceipt(receiptMenuReceipt)}>
+            Eliminar comprobante
+          </MenuItem>
+        )}
+      </Menu>
+
       <Dialog
         open={Boolean(selectedDossier)}
         onClose={() => setSelectedDossier(null)}
@@ -1668,23 +1702,16 @@ export default function CourseRegistrationsAdminPage() {
                                       Subido: {formatDate(receipt.crrCreatedAt)}
                                     </Typography>
                                   </Box>
-                                  <Stack direction="row" spacing={0.5}>
-                                    <IconButton
-                                      size="small"
-                                      aria-label={`Editar ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
-                                      onClick={() => handleEditReceipt(receipt)}
-                                    >
-                                      <EditIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                      size="small"
-                                      color="error"
-                                      aria-label={`Eliminar ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
-                                      onClick={() => handleDeleteReceipt(receipt)}
-                                    >
-                                      <DeleteOutlineIcon fontSize="small" />
-                                    </IconButton>
-                                  </Stack>
+                                  <Button
+                                    size="small"
+                                    variant="text"
+                                    endIcon={<ArrowDropDownIcon />}
+                                    aria-label={`Abrir acciones para comprobante ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
+                                    aria-haspopup="menu"
+                                    onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
+                                  >
+                                    Acciones
+                                  </Button>
                                 </Stack>
                                 {receipt.crrNotes && (
                                   <Typography variant="body2" color="text.secondary">

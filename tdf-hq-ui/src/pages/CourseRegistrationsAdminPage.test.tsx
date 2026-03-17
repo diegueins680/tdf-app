@@ -1387,6 +1387,64 @@ describe('CourseRegistrationsAdminPage', () => {
     await secondRender.cleanup();
   });
 
+  it('keeps one receipt actions entry point per saved receipt and reveals edit only on demand', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [buildReceipt()],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf')).toBeTruthy();
+      expect(document.body.querySelector('button[aria-label="Editar receipt.pdf"]')).toBeNull();
+      expect(document.body.querySelector('button[aria-label="Eliminar receipt.pdf"]')).toBeNull();
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Actualizar comprobante',
+        ),
+      ).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Editar comprobante')).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Eliminar comprobante')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, 'Editar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Actualizar comprobante')).toBeTruthy();
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+    });
+
+    await cleanup();
+  });
+
   it('shows when the list is filtered and lets admins reset filters in one step', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
