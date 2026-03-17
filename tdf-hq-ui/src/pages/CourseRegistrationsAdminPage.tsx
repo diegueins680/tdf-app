@@ -149,7 +149,7 @@ const isRegistrationStatus = (
 const registrationStatusLabel = (status: string) =>
   isRegistrationStatus(status) ? statusFilterLabels[status] : status.trim() || 'Estado desconocido';
 
-const registrationStatusActionLabel = (status: string) => `Estado: ${registrationStatusLabel(status)}`;
+const registrationStatusActionLabel = (status: string) => registrationStatusLabel(status);
 
 const registrationStatusChipColor = (
   status: string,
