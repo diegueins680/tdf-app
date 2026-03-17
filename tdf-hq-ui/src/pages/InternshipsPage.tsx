@@ -226,6 +226,7 @@ export default function InternshipsPage() {
     ipcStartAt: '',
     ipcDueAt: '',
   });
+  const [showProjectComposer, setShowProjectComposer] = useState(false);
   const [profileForm, setProfileForm] = useState({
     startAt: '',
     endAt: '',
@@ -318,6 +319,7 @@ export default function InternshipsPage() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['internships', 'projects'] });
       setProjectForm({ ipcTitle: '', ipcDescription: '', ipcStatus: 'active', ipcStartAt: '', ipcDueAt: '' });
+      setShowProjectComposer(false);
     },
   });
   const updateProfileMutation = useMutation({
@@ -541,6 +543,11 @@ export default function InternshipsPage() {
     } catch {
       setSignupFeedback('No se pudo copiar. Usa el link manual.');
     }
+  };
+
+  const resetProjectComposer = () => {
+    setProjectForm({ ipcTitle: '', ipcDescription: '', ipcStatus: 'active', ipcStartAt: '', ipcDueAt: '' });
+    setShowProjectComposer(false);
   };
 
   if (!canAccess) {
@@ -882,14 +889,47 @@ export default function InternshipsPage() {
       <Card>
         <CardContent>
           <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" fontWeight={700}>Proyectos</Typography>
-              <Chip label={`${projects.length} activos`} variant="outlined" />
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              spacing={1}
+            >
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="h6" fontWeight={700}>Proyectos</Typography>
+                <Chip label={`${projects.length} activos`} variant="outlined" />
+              </Stack>
+              {isAdmin && !showProjectComposer && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => setShowProjectComposer(true)}
+                  sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                >
+                  Nuevo proyecto
+                </Button>
+              )}
             </Stack>
 
-            {isAdmin && (
+            {isAdmin && showProjectComposer && (
               <Stack spacing={1}>
-                <Typography fontWeight={600}>Crear proyecto</Typography>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'stretch', sm: 'center' }}
+                  spacing={1}
+                >
+                  <Typography fontWeight={600}>Nuevo proyecto</Typography>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="inherit"
+                    onClick={resetProjectComposer}
+                    sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                  >
+                    Cancelar proyecto
+                  </Button>
+                </Stack>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                   <TextField
                     label="Nombre"
@@ -946,13 +986,23 @@ export default function InternshipsPage() {
                   }}
                   disabled={!projectForm.ipcTitle.trim() || createProjectMutation.isPending}
                 >
-                  {createProjectMutation.isPending ? 'Creando…' : 'Crear proyecto'}
+                  {createProjectMutation.isPending ? 'Guardando…' : 'Guardar proyecto'}
                 </Button>
               </Stack>
             )}
 
             {projects.length === 0 && (
-              <Typography color="text.secondary">No hay proyectos todavía.</Typography>
+              <Typography color="text.secondary">
+                {isAdmin && !showProjectComposer
+                  ? 'Todavía no hay proyectos. Crea el primero desde Nuevo proyecto.'
+                  : 'No hay proyectos todavía.'}
+              </Typography>
+            )}
+
+            {isAdmin && projects.length === 0 && !showProjectComposer && (
+              <Alert severity="info" variant="outlined">
+                Usa proyectos para agrupar tareas y entregables. El formulario se abre solo cuando realmente vayas a crear uno.
+              </Alert>
             )}
 
             <Stack spacing={1}>
