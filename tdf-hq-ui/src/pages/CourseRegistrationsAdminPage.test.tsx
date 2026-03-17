@@ -1253,7 +1253,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides zero-value status totals so the header only shows relevant states', async () => {
+  it('keeps the header comparative by hiding redundant single-status totals', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
     ]);
@@ -1264,10 +1264,12 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Total: 1');
-      expect(container.textContent).toContain('Pendientes: 1');
+      expect(container.textContent).not.toContain('Pendientes: 1');
       expect(container.textContent).not.toContain('Pagadas: 0');
       expect(container.textContent).not.toContain('Canceladas: 0');
-      expect(container.textContent).toContain(
+      expect(container.textContent).toContain('Estado disponible');
+      expect(container.textContent).toContain('Pendiente de pago');
+      expect(container.textContent).not.toContain(
         'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
       );
     });

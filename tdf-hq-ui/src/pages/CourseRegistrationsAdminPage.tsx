@@ -397,8 +397,8 @@ export default function CourseRegistrationsAdminPage() {
       { ...base },
     );
   }, [regsQuery.data]);
-  const visibleStatusSummaryChips = useMemo(
-    () => [
+  const visibleStatusSummaryChips = useMemo(() => {
+    const chips = [
       {
         key: 'paid',
         count: statusCounts.paid,
@@ -417,9 +417,9 @@ export default function CourseRegistrationsAdminPage() {
         label: `Canceladas: ${statusCounts.cancelled}`,
         color: 'error' as const,
       },
-    ].filter((chip) => chip.count > 0),
-    [statusCounts],
-  );
+    ].filter((chip) => chip.count > 0);
+    return chips.length > 1 ? chips : [];
+  }, [statusCounts]);
   const hasVisibleRegistrations = (regsQuery.data?.length ?? 0) > 0;
   const visibleStatusFilters = useMemo<readonly StatusFilter[]>(() => {
     if (!hasVisibleRegistrations) return statusFilters;
@@ -1099,9 +1099,11 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {hasVisibleRegistrations && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
-            <Typography variant="caption" color="text.secondary">
-              Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.
-            </Typography>
+            {visibleStatusSummaryChips.length > 0 && (
+              <Typography variant="caption" color="text.secondary">
+                Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.
+              </Typography>
+            )}
             <Button
               size="small"
               startIcon={<ContentCopyIcon fontSize="small" />}
