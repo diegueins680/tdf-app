@@ -468,7 +468,9 @@ export default function CourseRegistrationsAdminPage() {
   const showListUtilitySummary = visibleStatusSummaryChips.length > 0 || canCopyCsv || Boolean(copyMessage);
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const shouldShowSharedSourceSummary = Boolean(sharedVisibleSourceSummary);
-  const showAdvancedLimitControl = hasVisibleRegistrations || limit !== DEFAULT_LIMIT;
+  const loadedRegistrationCount = regsQuery.data?.length ?? 0;
+  const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
+  const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
     && !cohortsQuery.isError
@@ -483,7 +485,9 @@ export default function CourseRegistrationsAdminPage() {
     ? hasVisibleRegistrations
       ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto.'
       : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.'
-    : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista tenga inscripciones y necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.';
+    : hasVisibleRegistrations
+      ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.'
+      : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado. Ajusta la vista o usa refrescar si esperabas resultados.';
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());

@@ -85,6 +85,19 @@ const buildRegistration = (overrides: Partial<CourseRegistrationDTO> = {}): Cour
   ...overrides,
 });
 
+const buildRegistrations = (
+  count: number,
+  overrides: (index: number) => Partial<CourseRegistrationDTO> = () => ({}),
+): CourseRegistrationDTO[] => (
+  Array.from({ length: count }, (_, index) => buildRegistration({
+    crId: 101 + index,
+    crPartyId: 9 + index,
+    crFullName: `Estudiante ${index + 1}`,
+    crEmail: `student${index + 1}@example.com`,
+    ...overrides(index),
+  }))
+);
+
 const buildDossier = (
   overrides: Partial<CourseRegistrationDossierDTO> = {},
 ): CourseRegistrationDossierDTO => ({
@@ -270,14 +283,14 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationEmailsMock.mockResolvedValue([]);
   });
 
-  it('consolidates row details into the dossier and refetches when the limit changes', async () => {
+  it('consolidates row details into the dossier without extra list chrome', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto.',
+        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
       );
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
@@ -289,7 +302,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('Ver correos');
       expect(hasLabel(container, 'Límite')).toBe(false);
-      expect(getButtonByText(container, 'Ajustar límite')).toBeTruthy();
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some((el) => {
           const label = (el.textContent ?? '').trim();
@@ -300,33 +313,6 @@ describe('CourseRegistrationsAdminPage', () => {
         slug: undefined,
         status: undefined,
         limit: 200,
-      });
-    });
-
-    listRegistrationsMock.mockClear();
-
-    await act(async () => {
-      clickButton(getButtonByText(container, 'Ajustar límite'));
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(hasLabel(container, 'Límite')).toBe(true);
-    });
-
-    await act(async () => {
-      setInputValue(getInputByLabel(container, 'Límite'), '50');
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(listRegistrationsMock).toHaveBeenCalled();
-      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
-        slug: undefined,
-        status: undefined,
-        limit: 50,
       });
     });
 
@@ -445,38 +431,55 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the limit filter behind an explicit limit toggle, even when a custom limit is already active', async () => {
+  it('reveals the limit toggle only when the current batch reaches its cap or a custom limit is active', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Límite')).toBe(false);
-      expect(getButtonByText(container, 'Ajustar límite')).toBeTruthy();
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
+      expect(container.textContent).toContain(
+        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
+      );
       expect(container.textContent).not.toContain('Límite activo:');
     });
 
+    await cleanup();
+
+    const cappedRegistrations = buildRegistrations(200);
+    listRegistrationsMock.mockImplementation(async (params) => cappedRegistrations.slice(0, params?.limit ?? 200));
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(secondContainer, 'Límite')).toBe(false);
+      expect(getButtonByText(secondContainer, 'Ajustar límite')).toBeTruthy();
+    });
+
     await act(async () => {
-      clickButton(getButtonByText(container, 'Ajustar límite'));
+      clickButton(getButtonByText(secondContainer, 'Ajustar límite'));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Límite')).toBe(true);
-      expect(getButtonByText(container, 'Ocultar límite')).toBeTruthy();
-      expect(container.textContent).toContain(
+      expect(hasLabel(secondContainer, 'Límite')).toBe(true);
+      expect(getButtonByText(secondContainer, 'Ocultar límite')).toBeTruthy();
+      expect(secondContainer.textContent).toContain(
         'Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto.',
       );
     });
 
-    await cleanup();
+    await secondRender.cleanup();
 
     listRegistrationsMock.mockClear();
 
-    const secondContainer = document.createElement('div');
-    document.body.appendChild(secondContainer);
-    const secondRender = await renderPage(secondContainer, '/inscripciones-curso?limit=50');
+    const thirdContainer = document.createElement('div');
+    document.body.appendChild(thirdContainer);
+    const thirdRender = await renderPage(thirdContainer, '/inscripciones-curso?limit=50');
 
     await waitForExpectation(() => {
       expect(listRegistrationsMock).toHaveBeenCalledWith({
@@ -484,13 +487,13 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 50,
       });
-      expect(hasLabel(secondContainer, 'Límite')).toBe(false);
-      expect(getButtonByText(secondContainer, 'Ajustar límite (50)')).toBeTruthy();
-      expect(secondContainer.textContent).toContain('Vista filtrada: límite 50.');
-      expect(secondContainer.textContent).not.toContain('Límite activo: 50');
+      expect(hasLabel(thirdContainer, 'Límite')).toBe(false);
+      expect(getButtonByText(thirdContainer, 'Ajustar límite (50)')).toBeTruthy();
+      expect(thirdContainer.textContent).toContain('Vista filtrada: límite 50.');
+      expect(thirdContainer.textContent).not.toContain('Límite activo: 50');
     });
 
-    await secondRender.cleanup();
+    await thirdRender.cleanup();
   });
 
   it('shows the selected cohort once in the filtered summary instead of repeating it on each row', async () => {
@@ -1446,6 +1449,9 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('shows when the list is filtered and lets admins reset filters in one step', async () => {
+    const cappedRegistrations = buildRegistrations(200);
+    listRegistrationsMock.mockImplementation(async (params) => cappedRegistrations.slice(0, params?.limit ?? 200));
+
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1593,31 +1599,26 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('keeps CSV export focused on real list views and labels filtered exports clearly', async () => {
-    listRegistrationsMock.mockResolvedValue([
-      buildRegistration(),
-      buildRegistration({
-        crId: 102,
-        crFullName: 'Grace Hopper',
-        crEmail: 'grace@example.com',
-        crStatus: 'paid',
-      }),
-      buildRegistration({
-        crId: 103,
-        crFullName: 'Katherine Johnson',
-        crEmail: 'katherine@example.com',
-        crStatus: 'cancelled',
-      }),
-    ]);
+    const registrations = buildRegistrations(200, (index) => {
+      if (index % 3 === 1) {
+        return { crStatus: 'paid' };
+      }
+      if (index % 3 === 2) {
+        return { crStatus: 'cancelled' };
+      }
+      return { crStatus: 'pending_payment' };
+    });
+    listRegistrationsMock.mockImplementation(async (params) => registrations.slice(0, params?.limit ?? 200));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Total: 3');
-      expect(container.textContent).toContain('Pagadas: 1');
-      expect(container.textContent).toContain('Pendientes: 1');
-      expect(container.textContent).toContain('Canceladas: 1');
+      expect(container.textContent).toContain('Total: 200');
+      expect(container.textContent).toContain('Pagadas:');
+      expect(container.textContent).toContain('Pendientes:');
+      expect(container.textContent).toContain('Canceladas:');
       expect(container.textContent).toContain(
         'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
       );
