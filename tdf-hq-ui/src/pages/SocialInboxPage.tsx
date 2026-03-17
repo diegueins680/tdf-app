@@ -49,8 +49,9 @@ interface MessageStats {
 type FilterKey = 'all' | 'pending' | 'replied' | 'failed';
 type RealFilterKey = Exclude<FilterKey, 'all'>;
 const LIMIT_OPTIONS = [50, 100, 200] as const;
+const DEFAULT_LIMIT = 100;
 
-const parseInboxLimit = (value: string, fallback = 100): number => {
+const parseInboxLimit = (value: string, fallback = DEFAULT_LIMIT): number => {
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed)) return fallback;
   return LIMIT_OPTIONS.some((limit) => limit === parsed) ? parsed : fallback;
@@ -1134,7 +1135,7 @@ export default function SocialInboxPage() {
   const location = useLocation();
   const reviewMode = useMemo(() => new URLSearchParams(location.search).get('review') === '1', [location.search]);
   const [filter, setFilter] = useState<FilterKey>('pending');
-  const [limit, setLimit] = useState(100);
+  const [limit, setLimit] = useState(DEFAULT_LIMIT);
   const [selection, setSelection] = useState<SelectedMessage | null>(null);
   const [activeAsset, setActiveAsset] = useState<MetaReviewAssetSelection | null>(() => getMetaReviewAssetSelection());
   const [expandedFetchErrorChannels, setExpandedFetchErrorChannels] = useState<SocialChannel[]>([]);
@@ -1257,6 +1258,7 @@ export default function SocialInboxPage() {
   const allChannelsLoaded = !instagramQuery.isLoading && !facebookQuery.isLoading && !whatsappQuery.isLoading;
   const hasChannelLoadErrors = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
   const showUnifiedEmptyState = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
+  const showLimitControl = !showUnifiedEmptyState || limit !== DEFAULT_LIMIT;
   const reviewAssetActionLabel = activeAsset
     ? 'Change selected asset'
     : 'Select asset in Instagram setup';
@@ -1321,20 +1323,22 @@ export default function SocialInboxPage() {
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center">
-          <TextField
-            select
-            label={reviewMode ? 'Limit' : 'Limite'}
-            size="small"
-            value={limit}
-            onChange={(e) => setLimit(parseInboxLimit(e.target.value))}
-            sx={{ minWidth: 120 }}
-          >
-            {LIMIT_OPTIONS.map((value) => (
-              <MenuItem key={value} value={value}>
-                {value}
-              </MenuItem>
-            ))}
-          </TextField>
+          {showLimitControl && (
+            <TextField
+              select
+              label={reviewMode ? 'Limit' : 'Limite'}
+              size="small"
+              value={limit}
+              onChange={(e) => setLimit(parseInboxLimit(e.target.value))}
+              sx={{ minWidth: 120 }}
+            >
+              {LIMIT_OPTIONS.map((value) => (
+                <MenuItem key={value} value={value}>
+                  {value}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
           <Button
             variant="outlined"
             size="small"

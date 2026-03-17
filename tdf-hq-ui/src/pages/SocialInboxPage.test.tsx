@@ -117,6 +117,12 @@ const buildMessage = (overrides: Partial<SocialMessage> = {}): SocialMessage => 
   ...overrides,
 });
 
+const hasLabel = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('label')).some((el) => {
+    const text = (el.textContent ?? '').replace('*', '').trim();
+    return text === labelText;
+  });
+
 const queryFilterChip = (root: ParentNode, labelText: string) =>
   root.querySelector(`[aria-label="Filter inbox by ${labelText}"]`);
 
@@ -207,6 +213,7 @@ describe('SocialInboxPage', () => {
     await waitForExpectation(() => {
       expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
       expect(container.querySelectorAll('table')).toHaveLength(0);
+      expect(hasLabel(container, 'Limit')).toBe(false);
       expect(container.textContent).toContain('No inbound messages yet.');
       expect(container.textContent).toContain(
         'Select the review asset, send one test message, then refresh. Status filters and channel panels appear after the first inbound message arrives.',
@@ -237,6 +244,7 @@ describe('SocialInboxPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(hasLabel(container, 'Limit')).toBe(true);
       expect(queryFilterChip(container, 'All')).not.toBeNull();
       expect(queryFilterChip(container, 'Pending')).not.toBeNull();
       expect(queryFilterChip(container, 'Replied')).not.toBeNull();
