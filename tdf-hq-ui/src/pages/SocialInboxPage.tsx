@@ -1254,6 +1254,9 @@ export default function SocialInboxPage() {
         .filter((panel) => !panel.loading && !panel.hasError && panel.messages.length === 0)
         .map((panel) => panel.label)
     : [];
+  const allChannelsLoaded = !instagramQuery.isLoading && !facebookQuery.isLoading && !whatsappQuery.isLoading;
+  const hasChannelLoadErrors = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
+  const showUnifiedEmptyState = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
   const reviewAssetActionLabel = activeAsset
     ? 'Change selected asset'
     : 'Select asset in Instagram setup';
@@ -1368,72 +1371,112 @@ export default function SocialInboxPage() {
           </Stack>
         </Paper>
       )}
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Stack spacing={1.5}>
-          <Typography variant="subtitle2" color="text.secondary">
-            {reviewMode ? 'Filter' : 'Filtro'}
-          </Typography>
-          {showSingleFilterSummary ? (
-            <Stack
-              spacing={0.5}
-              sx={{
-                minHeight: 40,
-                justifyContent: 'center',
-                px: 1.5,
-                py: 1.25,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="caption" color="text.secondary">
-                {reviewMode ? 'Status available' : 'Estado disponible'}
+      {showUnifiedEmptyState ? (
+        <Alert severity="info" variant="outlined">
+          <Stack spacing={0.5}>
+            <Typography variant="body2" fontWeight={700}>
+              {reviewMode ? 'No inbound messages yet.' : 'Todavia no hay mensajes entrantes.'}
+            </Typography>
+            <Typography variant="body2">
+              {reviewMode
+                ? activeAsset
+                  ? 'Send one test message to the selected asset, then refresh. Status filters and channel panels appear after the first inbound message arrives.'
+                  : 'Select the review asset, send one test message, then refresh. Status filters and channel panels appear after the first inbound message arrives.'
+                : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado.'}
+            </Typography>
+          </Stack>
+        </Alert>
+      ) : (
+        <>
+          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" color="text.secondary">
+                {reviewMode ? 'Filter' : 'Filtro'}
               </Typography>
-              <Typography variant="body2" fontWeight={600}>
-                {singleVisibleFilterLabel}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {reviewMode
-                  ? 'No need to filter it: it is the only inbound status in this view.'
-                  : 'No hace falta filtrarlo: es el unico estado entrante presente en esta vista.'}
-              </Typography>
+              {showSingleFilterSummary ? (
+                <Stack
+                  spacing={0.5}
+                  sx={{
+                    minHeight: 40,
+                    justifyContent: 'center',
+                    px: 1.5,
+                    py: 1.25,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    {reviewMode ? 'Status available' : 'Estado disponible'}
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {singleVisibleFilterLabel}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {reviewMode
+                      ? 'No need to filter it: it is the only inbound status in this view.'
+                      : 'No hace falta filtrarlo: es el unico estado entrante presente en esta vista.'}
+                  </Typography>
+                </Stack>
+              ) : (
+                <>
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    {visibleFilters.map((item) => {
+                      const label = getFilterLabel(item.id, reviewMode);
+                      const count = filterCounts[item.id];
+                      const showCount = item.id === 'all' || count > 0;
+                      return (
+                        <Chip
+                          key={item.id}
+                          label={`${label}${showCount ? ` (${count})` : ''}`}
+                          onClick={() => setFilter(item.id)}
+                          color={filter === item.id ? 'primary' : 'default'}
+                          variant={filter === item.id ? 'filled' : 'outlined'}
+                          aria-label={reviewMode ? `Filter inbox by ${label}` : `Filtrar inbox por ${label}`}
+                          aria-pressed={filter === item.id}
+                        />
+                      );
+                    })}
+                  </Stack>
+                  {hasHiddenFilters && (
+                    <Typography variant="caption" color="text.secondary">
+                      {reviewMode
+                        ? 'Only statuses with inbound messages in this view are shown.'
+                        : 'Solo aparecen estados con mensajes entrantes en esta vista.'}
+                    </Typography>
+                  )}
+                  {repliedOnly && (
+                    <Typography variant="caption" color="text.secondary">
+                      {reviewMode ? 'Replied only (server-side filter).' : 'Solo respondidos (filtrado en servidor).'}
+                    </Typography>
+                  )}
+                </>
+              )}
             </Stack>
-          ) : (
-            <>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                {visibleFilters.map((item) => {
-                  const label = getFilterLabel(item.id, reviewMode);
-                  const count = filterCounts[item.id];
-                  const showCount = item.id === 'all' || count > 0;
-                  return (
-                    <Chip
-                      key={item.id}
-                      label={`${label}${showCount ? ` (${count})` : ''}`}
-                      onClick={() => setFilter(item.id)}
-                      color={filter === item.id ? 'primary' : 'default'}
-                      variant={filter === item.id ? 'filled' : 'outlined'}
-                      aria-label={reviewMode ? `Filter inbox by ${label}` : `Filtrar inbox por ${label}`}
-                      aria-pressed={filter === item.id}
-                    />
-                  );
-                })}
-              </Stack>
-              {hasHiddenFilters && (
-                <Typography variant="caption" color="text.secondary">
-                  {reviewMode
-                    ? 'Only statuses with inbound messages in this view are shown.'
-                    : 'Solo aparecen estados con mensajes entrantes en esta vista.'}
-                </Typography>
-              )}
-              {repliedOnly && (
-                <Typography variant="caption" color="text.secondary">
-                  {reviewMode ? 'Replied only (server-side filter).' : 'Solo respondidos (filtrado en servidor).'}
-                </Typography>
-              )}
-            </>
+          </Paper>
+          {hiddenEmptyChannelLabels.length > 0 && (
+            <Typography variant="body2" color="text.secondary">
+              {reviewMode
+                ? `Showing only channels with messages in this view. No messages right now: ${hiddenEmptyChannelLabels.join(', ')}.`
+                : `Mostrando solo canales con mensajes en esta vista. Sin mensajes ahora: ${hiddenEmptyChannelLabels.join(', ')}.`}
+            </Typography>
           )}
-        </Stack>
-      </Paper>
+          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
+            {visibleChannelPanels.map((panel) => (
+              <ChannelPanel
+                key={panel.channel}
+                label={panel.label}
+                channel={panel.channel}
+                stats={panel.stats}
+                messages={panel.messages}
+                loading={panel.loading}
+                reviewMode={reviewMode}
+                onSelect={(next) => setSelection(next)}
+              />
+            ))}
+          </Stack>
+        </>
+      )}
       {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (
         <Stack spacing={1}>
           {instagramQuery.isError && renderChannelLoadError('instagram', instagramQuery.error)}
@@ -1441,27 +1484,6 @@ export default function SocialInboxPage() {
           {whatsappQuery.isError && renderChannelLoadError('whatsapp', whatsappQuery.error)}
         </Stack>
       )}
-      {hiddenEmptyChannelLabels.length > 0 && (
-        <Typography variant="body2" color="text.secondary">
-          {reviewMode
-            ? `Showing only channels with messages in this view. No messages right now: ${hiddenEmptyChannelLabels.join(', ')}.`
-            : `Mostrando solo canales con mensajes en esta vista. Sin mensajes ahora: ${hiddenEmptyChannelLabels.join(', ')}.`}
-        </Typography>
-      )}
-      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
-        {visibleChannelPanels.map((panel) => (
-          <ChannelPanel
-            key={panel.channel}
-            label={panel.label}
-            channel={panel.channel}
-            stats={panel.stats}
-            messages={panel.messages}
-            loading={panel.loading}
-            reviewMode={reviewMode}
-            onSelect={(next) => setSelection(next)}
-          />
-        ))}
-      </Stack>
       <SocialMessageDialog
         selection={selection}
         reviewMode={reviewMode}

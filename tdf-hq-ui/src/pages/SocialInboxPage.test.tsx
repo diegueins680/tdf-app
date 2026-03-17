@@ -199,6 +199,25 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('shows one guided empty state instead of empty filters and channel tables when inbox is empty', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
+      expect(container.querySelectorAll('table')).toHaveLength(0);
+      expect(container.textContent).toContain('No inbound messages yet.');
+      expect(container.textContent).toContain(
+        'Select the review asset, send one test message, then refresh. Status filters and channel panels appear after the first inbound message arrives.',
+      );
+      expect(container.textContent).not.toContain('No messages for this filter.');
+      expect(container.textContent).not.toContain('Status available');
+    });
+
+    await cleanup();
+  });
+
   it('hides zero-result inbox filters once inbound statuses are known', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage(),
