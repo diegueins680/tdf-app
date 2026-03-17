@@ -425,7 +425,8 @@ export default function LabelAssetsPage() {
   const filtersActiveCount = activeFilterLabels.length;
   const showFilterSummary = !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
   const showCategoryColumn = !showSingleCategorySummary && categoryFilter === 'all';
-  const visibleTableColumnCount = showCategoryColumn ? 5 : 4;
+  const showStatusColumn = !showSingleStatusSummary;
+  const visibleTableColumnCount = 3 + (showCategoryColumn ? 1 : 0) + (showStatusColumn ? 1 : 0);
 
   const handleOpenNew = () => {
     setEditingAsset(null);
@@ -731,7 +732,7 @@ export default function LabelAssetsPage() {
                 <TableRow>
                   <TableCell>Asset</TableCell>
                   {showCategoryColumn && <TableCell>Categoría</TableCell>}
-                  <TableCell>Estado</TableCell>
+                  {showStatusColumn && <TableCell>Estado</TableCell>}
                   <TableCell>Ubicación</TableCell>
                   <TableCell align="right">Acciones</TableCell>
                 </TableRow>
@@ -777,7 +778,7 @@ export default function LabelAssetsPage() {
                         </Stack>
                       </TableCell>
                       {showCategoryColumn && <TableCell>{asset.category}</TableCell>}
-                      <TableCell>{renderStatusChip(asset.status)}</TableCell>
+                      {showStatusColumn && <TableCell>{renderStatusChip(asset.status)}</TableCell>}
                       <TableCell>{displayLocation(asset)}</TableCell>
                       <TableCell align="right">
                         <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>

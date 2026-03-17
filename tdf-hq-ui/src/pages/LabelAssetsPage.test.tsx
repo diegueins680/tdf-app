@@ -373,6 +373,7 @@ describe('LabelAssetsPage', () => {
     await waitForExpectation(() => {
       expect(container.querySelectorAll('[aria-label^="Filtrar assets por estado "]')).toHaveLength(4);
       expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(hasTableHeader(container, 'Estado')).toBe(true);
       expect(container.textContent).toContain('Todos (3)');
       expect(container.textContent).not.toContain('Retirados');
       expect(container.textContent).toContain('Sintetizador Uno');
@@ -418,6 +419,7 @@ describe('LabelAssetsPage', () => {
       expect(container.textContent).toContain('Activos');
       expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
       expect(container.textContent).not.toContain('Filtrar por estado');
+      expect(hasTableHeader(container, 'Estado')).toBe(false);
     });
 
     await cleanup();
