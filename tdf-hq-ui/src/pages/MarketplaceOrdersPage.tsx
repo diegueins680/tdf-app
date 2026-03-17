@@ -52,6 +52,7 @@ import {
   getMarketplacePaymentProviderLabel,
   getOrderStatusMeta,
   isPaidOrderStatus,
+  summarizeMarketplaceOrderList,
   type MarketplaceOrderFilters,
 } from '../utils/marketplace';
 
@@ -186,6 +187,11 @@ export default function MarketplaceOrdersPage() {
     (paidOnly ? 1 : 0);
   const paidTotal = orders.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const paidVisible = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
+  const ordersSummary = summarizeMarketplaceOrderList({
+    totalOrders: orders.length,
+    visibleOrders: filtered.length,
+    activeFilterCount: filtersActiveCount,
+  });
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -386,20 +392,21 @@ export default function MarketplaceOrdersPage() {
       <Alert severity="info" sx={{ mb: 2 }}>
         Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.
       </Alert>
-          <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-            <LocalMallIcon color="primary" />
-            <Typography variant="h4" fontWeight={700}>
-              Órdenes del marketplace
-            </Typography>
-            <Chip label={`${orders.length} órdenes`} color="info" size="small" />
-            <Chip label={`${filtered.length} resultado${filtered.length === 1 ? '' : 's'}`} color="default" size="small" />
-            <Box flex={1} />
-            <Tooltip title="Recargar">
-              <IconButton aria-label="Recargar órdenes" onClick={handleRefresh}>
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
+      <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
+        <LocalMallIcon color="primary" />
+        <Typography variant="h4" fontWeight={700}>
+          Órdenes del marketplace
+        </Typography>
+        <Box flex={1} />
+        <Tooltip title="Recargar">
+          <IconButton aria-label="Recargar órdenes" onClick={handleRefresh}>
+            <RefreshIcon />
+          </IconButton>
+        </Tooltip>
+      </Stack>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        {ordersSummary}
+      </Typography>
 
       <Grid container spacing={2} mb={1}>
         <Grid item xs={12} md={5} lg={4}>
@@ -508,9 +515,6 @@ export default function MarketplaceOrdersPage() {
         {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
         {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
         {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
-        {filtersActiveCount > 0 && (
-          <Chip label={`${filtersActiveCount} filtro${filtersActiveCount === 1 ? '' : 's'} activos`} size="small" />
-        )}
         <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">
           Limpiar filtros
         </Button>
@@ -542,9 +546,6 @@ export default function MarketplaceOrdersPage() {
               <Button size="small" variant="outlined" onClick={exportCsv} disabled={filtered.length === 0}>
                 Exportar CSV
               </Button>
-              {filtersDirty && (
-                <Chip label="Filtros activos" size="small" color="info" variant="filled" />
-              )}
             </Stack>
           }
         />

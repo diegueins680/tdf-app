@@ -4,6 +4,7 @@ import {
   getMarketplacePaymentProviderLabel,
   getOrderStatusMeta,
   isPaidOrderStatus,
+  summarizeMarketplaceOrderList,
 } from './marketplace';
 
 describe('getOrderStatusMeta', () => {
@@ -149,5 +150,37 @@ describe('getMarketplacePaymentProviderLabel', () => {
     expect(getMarketplacePaymentProviderLabel('datafast')).toBe('Tarjeta (Datafast)');
     expect(getMarketplacePaymentProviderLabel('contact')).toBe('Manual/otros');
     expect(getMarketplacePaymentProviderLabel(' wire_transfer ')).toBe('wire_transfer');
+  });
+});
+
+describe('summarizeMarketplaceOrderList', () => {
+  it('summarizes the full list cleanly when no filters are active', () => {
+    expect(
+      summarizeMarketplaceOrderList({
+        totalOrders: 12,
+        visibleOrders: 12,
+        activeFilterCount: 0,
+      }),
+    ).toBe('Mostrando 12 órdenes.');
+  });
+
+  it('explains the narrowed scope when filters are active', () => {
+    expect(
+      summarizeMarketplaceOrderList({
+        totalOrders: 12,
+        visibleOrders: 3,
+        activeFilterCount: 2,
+      }),
+    ).toBe('Mostrando 3 de 12 órdenes. 2 filtros activos.');
+  });
+
+  it('clamps invalid counts so the summary never overstates visible orders', () => {
+    expect(
+      summarizeMarketplaceOrderList({
+        totalOrders: 2,
+        visibleOrders: 5,
+        activeFilterCount: Number.NaN,
+      }),
+    ).toBe('Mostrando 2 órdenes.');
   });
 });

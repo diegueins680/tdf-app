@@ -13,6 +13,15 @@ export interface MarketplaceOrderFilters {
   paidOnly: boolean;
 }
 
+const toNonNegativeInteger = (value: number): number => {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.floor(value));
+};
+
+const formatOrderCount = (count: number): string => {
+  return count === 1 ? '1 orden' : `${count} órdenes`;
+};
+
 const toTokenList = (status: string): string[] => {
   const normalized = status.toLowerCase();
   return normalized.split(/[^a-z0-9]+/).filter(Boolean);
@@ -173,6 +182,29 @@ export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
 
 export const isPaidOrderStatus = (status: string): boolean => {
   return getOrderStatusMeta(status).label === 'Pagado';
+};
+
+export const summarizeMarketplaceOrderList = ({
+  totalOrders,
+  visibleOrders,
+  activeFilterCount,
+}: {
+  totalOrders: number;
+  visibleOrders: number;
+  activeFilterCount: number;
+}): string => {
+  const total = toNonNegativeInteger(totalOrders);
+  const visible = Math.min(toNonNegativeInteger(visibleOrders), total);
+  const filters = toNonNegativeInteger(activeFilterCount);
+
+  if (total === 0) return 'No hay órdenes todavía.';
+
+  const summary = filters > 0 && visible !== total
+    ? `Mostrando ${visible} de ${formatOrderCount(total)}.`
+    : `Mostrando ${formatOrderCount(visible)}.`;
+
+  if (filters === 0) return summary;
+  return `${summary} ${filters} filtro${filters === 1 ? '' : 's'} activo${filters === 1 ? '' : 's'}.`;
 };
 
 // Present human readable "last updated" text from a timestamp in ms.
