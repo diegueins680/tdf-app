@@ -3,16 +3,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { AssetDTO, DropdownOptionDTO, RoomDTO } from '../api/types';
+import type { AssetCheckoutDTO, AssetDTO, DropdownOptionDTO, RoomDTO } from '../api/types';
 
 const listAssetsMock = jest.fn<() => Promise<AssetDTO[]>>();
 const listRoomsMock = jest.fn<() => Promise<RoomDTO[]>>();
 const listDropdownsMock = jest.fn<() => Promise<DropdownOptionDTO[]>>();
+const historyMock = jest.fn<(assetId: string) => Promise<AssetCheckoutDTO[]>>();
 
 jest.unstable_mockModule('../api/inventory', () => ({
   Inventory: {
     list: () => listAssetsMock(),
-    history: jest.fn(() => Promise.resolve([])),
+    history: (assetId: string) => historyMock(assetId),
     generateQr: jest.fn(() => Promise.resolve({ qrUrl: 'https://example.com/qr' })),
     checkout: jest.fn(() => Promise.resolve(null)),
     checkin: jest.fn(() => Promise.resolve(null)),
@@ -230,8 +231,10 @@ describe('LabelAssetsPage', () => {
     listAssetsMock.mockReset();
     listRoomsMock.mockReset();
     listDropdownsMock.mockReset();
+    historyMock.mockReset();
     listRoomsMock.mockResolvedValue([]);
     listDropdownsMock.mockResolvedValue([]);
+    historyMock.mockResolvedValue([]);
   });
 
   it('renders one movement action per asset and picks the relevant action from status', async () => {
@@ -308,6 +311,44 @@ describe('LabelAssetsPage', () => {
       expect(getMenuItemByText(document.body, 'Ver QR')).toBeTruthy();
       expect(getMenuItemByText(document.body, 'Historial')).toBeTruthy();
       expect(getMenuItemByText(document.body, 'Eliminar')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
+  it('shows one dismissible history panel with an empty-state message when an asset has no movements', async () => {
+    listAssetsMock.mockResolvedValue([buildAsset()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Sintetizador Uno');
+      expect(container.textContent).not.toContain('Historial · Sintetizador Uno');
+    });
+
+    await clickElement(getElementByAriaLabel(container, 'Abrir acciones para Sintetizador Uno'));
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Historial')).toBeTruthy();
+    });
+
+    await clickElement(getMenuItemByText(document.body, 'Historial'));
+
+    await waitForExpectation(() => {
+      expect(historyMock).toHaveBeenCalledWith('asset-1');
+      expect(container.textContent).toContain('Historial · Sintetizador Uno');
+      expect(container.textContent).toContain('Todavia no hay prestamos o devoluciones registrados para este asset.');
+      expect(countButtonsByText(container, 'Ocultar historial')).toBe(1);
+    });
+
+    await clickElement(getButtonByText(container, 'Ocultar historial'));
+
+    await waitForExpectation(() => {
+      expect(container.textContent).not.toContain('Historial · Sintetizador Uno');
+      expect(container.textContent).not.toContain('Todavia no hay prestamos o devoluciones registrados para este asset.');
+      expect(countButtonsByText(container, 'Ocultar historial')).toBe(0);
     });
 
     await cleanup();

@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent } from 'react';
+import { useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -178,11 +178,13 @@ export default function LabelAssetsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selected, setSelected] = useState<AssetDTO | null>(null);
+  const [historyAsset, setHistoryAsset] = useState<AssetDTO | null>(null);
   const [editingAsset, setEditingAsset] = useState<AssetDTO | null>(null);
   const [assetForm, setAssetForm] = useState<AssetFormState>(buildEmptyForm);
   const [assetFormError, setAssetFormError] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
+  const latestHistoryAssetIdRef = useRef<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState<'checkout' | 'checkin' | 'qr' | 'form' | null>(null);
   const [actionsMenuTarget, setActionsMenuTarget] = useState<{
     anchorEl: HTMLElement;
@@ -204,7 +206,11 @@ export default function LabelAssetsPage() {
 
   const assetHistoryMutation = useMutation({
     mutationFn: (assetId: string) => Inventory.history(assetId),
-    onSuccess: (data) => setHistory(data),
+    onSuccess: (data, assetId) => {
+      if (latestHistoryAssetIdRef.current === assetId) {
+        setHistory(data);
+      }
+    },
   });
 
   const qrMutation = useMutation({
@@ -330,9 +336,17 @@ export default function LabelAssetsPage() {
   };
 
   const openHistory = (asset: AssetDTO) => {
-    setSelected(asset);
+    latestHistoryAssetIdRef.current = asset.assetId;
+    setHistoryAsset(asset);
     setHistory([]);
     assetHistoryMutation.mutate(asset.assetId);
+  };
+
+  const closeHistory = () => {
+    latestHistoryAssetIdRef.current = null;
+    setHistoryAsset(null);
+    setHistory([]);
+    assetHistoryMutation.reset();
   };
 
   const assets = useMemo(() => assetsQuery.data ?? [], [assetsQuery.data]);
@@ -1025,32 +1039,56 @@ export default function LabelAssetsPage() {
         </DialogActions>
       </Dialog>
 
-      {selected && history.length > 0 && (
+      {historyAsset && (
         <Card sx={{ mt: 3, bgcolor: 'rgba(255,255,255,0.5)', border: '1px solid', borderColor: 'divider' }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Historial · {selected.name}
-            </Typography>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Salida</TableCell>
-                  <TableCell>Devuelto</TableCell>
-                  <TableCell>Destino</TableCell>
-                  <TableCell>Notas</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {history.map((h) => (
-                  <TableRow key={h.checkoutId}>
-                    <TableCell>{formatDate(h.checkedOutAt)}</TableCell>
-                    <TableCell>{h.returnedAt ? formatDate(h.returnedAt) : '—'}</TableCell>
-                    <TableCell>{h.targetKind}</TableCell>
-                    <TableCell>{h.notes ?? '—'}</TableCell>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              justifyContent="space-between"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              sx={{ mb: 1.5 }}
+            >
+              <Box>
+                <Typography variant="h6">Historial · {historyAsset.name}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Revisa prestamos y devoluciones sin dejar esta vista.
+                </Typography>
+              </Box>
+              <Button size="small" variant="text" onClick={closeHistory}>
+                Ocultar historial
+              </Button>
+            </Stack>
+            {assetHistoryMutation.isPending ? (
+              <Typography variant="body2" color="text.secondary">
+                Cargando historial…
+              </Typography>
+            ) : assetHistoryMutation.isError ? (
+              <Alert severity="error">No se pudo cargar el historial de este asset.</Alert>
+            ) : history.length === 0 ? (
+              <Alert severity="info">Todavia no hay prestamos o devoluciones registrados para este asset.</Alert>
+            ) : (
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Salida</TableCell>
+                    <TableCell>Devuelto</TableCell>
+                    <TableCell>Destino</TableCell>
+                    <TableCell>Notas</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {history.map((h) => (
+                    <TableRow key={h.checkoutId}>
+                      <TableCell>{formatDate(h.checkedOutAt)}</TableCell>
+                      <TableCell>{h.returnedAt ? formatDate(h.returnedAt) : '—'}</TableCell>
+                      <TableCell>{h.targetKind}</TableCell>
+                      <TableCell>{h.notes ?? '—'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       )}
