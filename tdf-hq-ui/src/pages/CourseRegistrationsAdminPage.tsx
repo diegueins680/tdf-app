@@ -441,6 +441,9 @@ export default function CourseRegistrationsAdminPage() {
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
     : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
+  const canCopyCsv = (regsQuery.data?.length ?? 0) > 1;
+  const copyCsvButtonLabel = hasCustomFilters ? 'Copiar CSV filtrado' : 'Copiar CSV de esta vista';
+  const showListUtilitySummary = visibleStatusSummaryChips.length > 0 || canCopyCsv || Boolean(copyMessage);
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const shouldShowSharedSourceSummary = Boolean(sharedVisibleSourceSummary);
 
@@ -604,7 +607,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleCopyCsv = async () => {
-    if (!regsQuery.data?.length) return;
+    if ((regsQuery.data?.length ?? 0) < 2) return;
     const header = ['id', 'slug', 'nombre', 'email', 'estado', 'creado'];
     const rows = regsQuery.data.map((reg) => [
       reg.crId,
@@ -1092,21 +1095,22 @@ export default function CourseRegistrationsAdminPage() {
             {sharedVisibleSourceSummary}
           </Typography>
         )}
-        {hasVisibleRegistrations && (
+        {hasVisibleRegistrations && showListUtilitySummary && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
             {visibleStatusSummaryChips.length > 0 && (
               <Typography variant="caption" color="text.secondary">
                 Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.
               </Typography>
             )}
-            <Button
-              size="small"
-              startIcon={<ContentCopyIcon fontSize="small" />}
-              onClick={() => void handleCopyCsv()}
-              disabled={!regsQuery.data?.length}
-            >
-              Copiar CSV filtrado
-            </Button>
+            {canCopyCsv && (
+              <Button
+                size="small"
+                startIcon={<ContentCopyIcon fontSize="small" />}
+                onClick={() => void handleCopyCsv()}
+              >
+                {copyCsvButtonLabel}
+              </Button>
+            )}
             {copyMessage && (
               <Typography variant="caption" color="text.secondary">
                 {copyMessage}

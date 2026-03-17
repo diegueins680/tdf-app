@@ -284,6 +284,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Ver correos');
       expect(hasLabel(container, 'Límite')).toBe(false);
       expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
+      expect(
+        Array.from(container.querySelectorAll('button')).some((el) => {
+          const label = (el.textContent ?? '').trim();
+          return label === 'Copiar CSV filtrado' || label === 'Copiar CSV de esta vista';
+        }),
+      ).toBe(false);
       expect(listRegistrationsMock).toHaveBeenCalledWith({
         slug: undefined,
         status: undefined,
@@ -1348,7 +1354,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses the header totals as the only status key while keeping CSV export available', async () => {
+  it('keeps CSV export focused on real list views and labels filtered exports clearly', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -1378,7 +1384,28 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
       );
       expect(container.textContent).not.toContain('Leyenda de estados:');
+      expect(getButtonByText(container, 'Copiar CSV de esta vista')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Más filtros'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Límite')).toBe(true);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Límite'), '50');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
       expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
+      expect(container.textContent).toContain('Vista filtrada: límite 50.');
     });
 
     await cleanup();
