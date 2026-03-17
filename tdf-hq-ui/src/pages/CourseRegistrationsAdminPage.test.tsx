@@ -1194,6 +1194,48 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces the empty receipt list area with one guided first-receipt CTA', async () => {
+    const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
+    const emptyReceiptListStateMessage =
+      'Cuando guardes el primer comprobante, quedara listado aqui con enlace y acciones para revisarlo despues.';
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(emptyReceiptHelpText);
+      expect(document.body.textContent).toContain(emptyReceiptListStateMessage);
+      expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(1);
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Agregar comprobante',
+        ),
+      ).toBe(false);
+      expect(document.body.textContent).not.toContain('Abrir comprobante');
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('opens the receipt composer directly from the mark-paid flow without duplicating the hint', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';

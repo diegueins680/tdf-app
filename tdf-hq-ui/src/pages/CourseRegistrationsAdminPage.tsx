@@ -51,6 +51,7 @@ const DEFAULT_LIMIT = 200;
 const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
 const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
 const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
+const emptyReceiptListStateMessage = 'Cuando guardes el primer comprobante, quedara listado aqui con enlace y acciones para revisarlo despues.';
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
 
 interface FlashState {
@@ -1670,13 +1671,13 @@ export default function CourseRegistrationsAdminPage() {
                           {receiptSectionHelpText}
                         </Typography>
                       </Box>
-                      {!showReceiptComposer && (
+                      {!showReceiptComposer && hasReceipts && (
                         <Button
                           size="small"
                           variant="contained"
                           onClick={() => setShowReceiptComposer(true)}
                         >
-                          {hasReceipts ? 'Agregar comprobante' : 'Agregar primer comprobante'}
+                          Agregar comprobante
                         </Button>
                       )}
                     </Stack>
@@ -1759,6 +1760,18 @@ export default function CourseRegistrationsAdminPage() {
                       )}
                       <Grid item xs={12} md={showReceiptComposer ? 6 : 12}>
                         <Stack spacing={1.5}>
+                          {receipts.length === 0 && !showReceiptComposer && (
+                            <Alert
+                              severity="info"
+                              action={(
+                                <Button color="inherit" size="small" onClick={() => setShowReceiptComposer(true)}>
+                                  Agregar primer comprobante
+                                </Button>
+                              )}
+                            >
+                              {emptyReceiptListStateMessage}
+                            </Alert>
+                          )}
                           {receipts.map((receipt) => (
                             <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
                               <Stack spacing={1}>
