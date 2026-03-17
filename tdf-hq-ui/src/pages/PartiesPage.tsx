@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
@@ -15,6 +14,8 @@ import {
   DialogActions,
   IconButton,
   Chip,
+  Menu,
+  MenuItem,
   Table,
   TableHead,
   TableRow,
@@ -27,13 +28,13 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
   OutlinedInput,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import EditIcon from '@mui/icons-material/Edit';
 import SchoolIcon from '@mui/icons-material/School';
 import AddIcon from '@mui/icons-material/Add';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { useNavigate } from 'react-router-dom';
@@ -322,6 +323,10 @@ export default function PartiesPage() {
   const [userDialogParty, setUserDialogParty] = useState<PartyDTO | null>(null);
   const [relatedParty, setRelatedParty] = useState<PartyDTO | null>(null);
   const [relatedAnchor, setRelatedAnchor] = useState<HTMLElement | null>(null);
+  const [actionsMenuTarget, setActionsMenuTarget] = useState<{
+    anchorEl: HTMLElement;
+    party: PartyDTO;
+  } | null>(null);
   const canManageRoles = canAccessPath('/configuracion/roles-permisos', session?.roles, session?.modules);
   const hasContacts = parties.length > 0;
   const showDirectoryChrome = partiesQuery.isLoading || hasContacts;
@@ -338,6 +343,23 @@ export default function PartiesPage() {
     });
   }, [parties, trimmedSearch]);
   const showSearchEmptyState = !partiesQuery.isLoading && hasContacts && filtered.length === 0 && trimmedSearch !== '';
+  const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0;
+
+  const openActionsMenu = (event: MouseEvent<HTMLButtonElement>, party: PartyDTO) => {
+    setActionsMenuTarget({ anchorEl: event.currentTarget, party });
+  };
+
+  const closeActionsMenu = () => {
+    setActionsMenuTarget(null);
+  };
+
+  const runPartyMenuAction = (action: (party: PartyDTO) => void) => {
+    const party = actionsMenuTarget?.party;
+    closeActionsMenu();
+    if (party) {
+      action(party);
+    }
+  };
 
   return (
     <Stack gap={3}>
@@ -403,87 +425,92 @@ export default function PartiesPage() {
             No hay contactos que coincidan con "{trimmedSearch}". Limpia la búsqueda para volver a ver toda la lista.
           </Alert>
         ) : (
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Instagram</TableCell>
-                <TableCell align="right">Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {partiesQuery.isLoading && (
+          <>
+            {showTableGuidance && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                Haz clic en el nombre para ver relaciones. Abre Acciones para editar el contacto o crear accesos sin
+                llenar cada fila de iconos.
+              </Typography>
+            )}
+            <Table size="small">
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={4}>Cargando...</TableCell>
+                  <TableCell>Nombre</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Instagram</TableCell>
+                  <TableCell align="right">Acciones</TableCell>
                 </TableRow>
-              )}
-              {!partiesQuery.isLoading && filtered.map((party) => (
-                <TableRow key={party.partyId} hover>
-                  <TableCell>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Button
-                        variant="text"
-                        onClick={(event) => {
-                          setRelatedParty(party);
-                          setRelatedAnchor(event.currentTarget);
-                        }}
-                        sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
-                      >
-                        <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                          {party.displayName}
-                        </Typography>
-                      </Button>
-                      {party.isOrg && <Chip label="Empresa" size="small" />}
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{party.primaryEmail ?? '—'}</TableCell>
-                  <TableCell>{party.instagram ?? '—'}</TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Editar contacto">
-                      <IconButton
-                        onClick={() => setEditing(party)}
-                        aria-label={`Editar contacto ${party.displayName}`}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip
-                      title={
-                        party.hasUserAccount
-                          ? 'Este contacto ya tiene usuario'
-                          : party.primaryEmail
-                            ? 'Crear usuario y enviar contraseña'
-                            : 'Agrega o corrige el correo antes de crear la cuenta'
-                      }
-                    >
-                      <span>
-                        <IconButton
-                          onClick={() => setUserDialogParty(party)}
-                          disabled={Boolean(party.hasUserAccount)}
-                          aria-label={`Crear usuario para ${party.displayName}`}
+              </TableHead>
+              <TableBody>
+                {partiesQuery.isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={4}>Cargando...</TableCell>
+                  </TableRow>
+                )}
+                {!partiesQuery.isLoading && filtered.map((party) => (
+                  <TableRow key={party.partyId} hover>
+                    <TableCell>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Button
+                          variant="text"
+                          onClick={(event) => {
+                            setRelatedParty(party);
+                            setRelatedAnchor(event.currentTarget);
+                          }}
+                          sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
                         >
-                          <PersonAddAltIcon fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                    {canManageRoles && (
-                      <Tooltip title="Roles y accesos">
+                          <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                            {party.displayName}
+                          </Typography>
+                        </Button>
+                        {party.isOrg && <Chip label="Empresa" size="small" />}
+                      </Stack>
+                    </TableCell>
+                    <TableCell>{party.primaryEmail ?? '—'}</TableCell>
+                    <TableCell>{party.instagram ?? '—'}</TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Acciones">
                         <IconButton
-                          onClick={() => navigate('/configuracion/roles-permisos')}
-                          aria-label={`Abrir roles y accesos para ${party.displayName}`}
+                          onClick={(event) => openActionsMenu(event, party)}
+                          aria-label={`Abrir acciones para ${party.displayName}`}
+                          aria-haspopup="menu"
+                          aria-expanded={actionsMenuTarget?.party.partyId === party.partyId ? 'true' : undefined}
                         >
-                          <SchoolIcon fontSize="small" />
+                          <MoreHorizIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </>
         )}
       </Paper>
+
+      <Menu
+        open={Boolean(actionsMenuTarget)}
+        anchorEl={actionsMenuTarget?.anchorEl ?? null}
+        onClose={closeActionsMenu}
+      >
+        <MenuItem onClick={() => runPartyMenuAction((party) => setEditing(party))}>
+          <EditIcon fontSize="small" sx={{ mr: 1 }} />
+          Editar contacto
+        </MenuItem>
+        <MenuItem
+          onClick={() => runPartyMenuAction((party) => setUserDialogParty(party))}
+          disabled={Boolean(actionsMenuTarget?.party.hasUserAccount)}
+        >
+          <PersonAddAltIcon fontSize="small" sx={{ mr: 1 }} />
+          {actionsMenuTarget?.party.hasUserAccount ? 'Usuario ya creado' : 'Crear usuario y enviar contraseña'}
+        </MenuItem>
+        {canManageRoles && (
+          <MenuItem onClick={() => runPartyMenuAction(() => navigate('/configuracion/roles-permisos'))}>
+            <SchoolIcon fontSize="small" sx={{ mr: 1 }} />
+            Roles y accesos
+          </MenuItem>
+        )}
+      </Menu>
 
       <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       <EditPartyDialog party={editing} open={!!editing} onClose={() => setEditing(null)} />

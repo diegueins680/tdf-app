@@ -60,8 +60,30 @@ const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s
 const getButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((element) => buttonText(element) === labelText) as HTMLButtonElement[];
 
+const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
+  const button = root.querySelector(`button[aria-label="${labelText}"]`);
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${labelText}`);
+  }
+  return button;
+};
+
+const getMenuItemByText = (root: ParentNode, labelText: string) => {
+  const item = Array.from(root.querySelectorAll('[role="menuitem"]')).find(
+    (element) => buttonText(element) === labelText,
+  );
+  if (!(item instanceof HTMLElement)) {
+    throw new Error(`Menu item not found: ${labelText}`);
+  }
+  return item;
+};
+
 const clickButton = (button: HTMLButtonElement) => {
   button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+};
+
+const clickElement = (element: Element) => {
+  element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 };
 
 const setInputValue = (input: HTMLInputElement, value: string) => {
@@ -321,6 +343,65 @@ describe('PartiesPage', () => {
         expect(container.textContent).toContain('Los Navegantes');
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).not.toContain('No hay contactos que coincidan con');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps one overflow actions trigger per contact row and moves secondary actions into the menu', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        primaryEmail: 'ada@example.com',
+        instagram: '@ada',
+        hasUserAccount: false,
+      } satisfies PartyDTO,
+      {
+        partyId: 2,
+        displayName: 'Los Navegantes',
+        isOrg: true,
+        primaryEmail: 'hola@navegantes.test',
+        instagram: '@navegantes',
+        hasUserAccount: true,
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Haz clic en el nombre para ver relaciones. Abre Acciones para editar el contacto o crear accesos sin llenar cada fila de iconos.',
+        );
+        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
+        expect(container.querySelector('button[aria-label="Editar contacto Ada Lovelace"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Crear usuario para Ada Lovelace"]')).toBeNull();
+      });
+
+      await act(async () => {
+        clickButton(getButtonByAriaLabel(container, 'Abrir acciones para Ada Lovelace'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getMenuItemByText(document.body, 'Editar contacto')).toBeTruthy();
+        expect(getMenuItemByText(document.body, 'Crear usuario y enviar contraseña')).toBeTruthy();
+      });
+
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, 'Editar contacto'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Editar Ada Lovelace');
       });
     } finally {
       await cleanup();
