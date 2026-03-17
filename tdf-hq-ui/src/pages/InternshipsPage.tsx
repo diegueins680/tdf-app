@@ -194,6 +194,14 @@ const normalizeOptionalInt = (value?: string | null) => {
   return parsed;
 };
 
+const buildEmptyTaskForm = (): InternTaskCreate => ({
+  itcProjectId: '',
+  itcTitle: '',
+  itcDescription: '',
+  itcAssignedTo: null,
+  itcDueAt: '',
+});
+
 export default function InternshipsPage() {
   const { session } = useSession();
   const qc = useQueryClient();
@@ -234,13 +242,8 @@ export default function InternshipsPage() {
     skills: '',
     areas: '',
   });
-  const [taskForm, setTaskForm] = useState<InternTaskCreate>({
-    itcProjectId: '',
-    itcTitle: '',
-    itcDescription: '',
-    itcAssignedTo: null,
-    itcDueAt: '',
-  });
+  const [taskForm, setTaskForm] = useState<InternTaskCreate>(buildEmptyTaskForm);
+  const [showTaskComposer, setShowTaskComposer] = useState(false);
   const [todoForm, setTodoForm] = useState<InternTodoCreate>({ itdcText: '' });
   const [permissionForm, setPermissionForm] = useState<InternPermissionCreate>({
     ipcCategory: '',
@@ -340,7 +343,8 @@ export default function InternshipsPage() {
     mutationFn: (payload: InternTaskCreate) => Internships.createTask(payload),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['internships', 'tasks'] });
-      setTaskForm({ itcProjectId: '', itcTitle: '', itcDescription: '', itcAssignedTo: null, itcDueAt: '' });
+      setTaskForm(buildEmptyTaskForm());
+      setShowTaskComposer(false);
     },
   });
   const updateTaskMutation = useMutation({
@@ -548,6 +552,11 @@ export default function InternshipsPage() {
   const resetProjectComposer = () => {
     setProjectForm({ ipcTitle: '', ipcDescription: '', ipcStatus: 'active', ipcStartAt: '', ipcDueAt: '' });
     setShowProjectComposer(false);
+  };
+
+  const resetTaskComposer = () => {
+    setTaskForm(buildEmptyTaskForm());
+    setShowTaskComposer(false);
   };
 
   if (!canAccess) {
@@ -1059,14 +1068,47 @@ export default function InternshipsPage() {
       <Card>
         <CardContent>
           <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" fontWeight={700}>Tareas</Typography>
-              <Chip label={`${tasks.length} tareas`} variant="outlined" />
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              spacing={1}
+            >
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="h6" fontWeight={700}>Tareas</Typography>
+                <Chip label={`${tasks.length} tareas`} variant="outlined" />
+              </Stack>
+              {isAdmin && projects.length > 0 && !showTaskComposer && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => setShowTaskComposer(true)}
+                  sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                >
+                  Nueva tarea
+                </Button>
+              )}
             </Stack>
 
-            {isAdmin && (
+            {isAdmin && showTaskComposer && (
               <Stack spacing={1}>
-                <Typography fontWeight={600}>Asignar tarea</Typography>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'stretch', sm: 'center' }}
+                  spacing={1}
+                >
+                  <Typography fontWeight={600}>Nueva tarea</Typography>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="inherit"
+                    onClick={resetTaskComposer}
+                    sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                  >
+                    Cancelar tarea
+                  </Button>
+                </Stack>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                   <FormControl fullWidth>
                     <InputLabel id="task-project-label">Proyecto</InputLabel>
@@ -1138,7 +1180,27 @@ export default function InternshipsPage() {
             )}
 
             {tasks.length === 0 && (
-              <Typography color="text.secondary">No hay tareas todavía.</Typography>
+              <Typography color="text.secondary">
+                {isAdmin && projects.length === 0
+                  ? 'Todavía no hay tareas. Crea primero un proyecto para empezar a asignarlas.'
+                  : isAdmin && projects.length > 0 && !showTaskComposer
+                    ? 'Todavía no hay tareas. Crea la primera desde Nueva tarea.'
+                    : 'No hay tareas todavía.'}
+              </Typography>
+            )}
+
+            {isAdmin && projects.length === 0 && (
+              <Alert severity="info" variant="outlined">
+                Las tareas se asignan dentro de un proyecto. Crea el primero en Proyectos y luego aparecera Nueva tarea
+                aqui.
+              </Alert>
+            )}
+
+            {isAdmin && projects.length > 0 && tasks.length === 0 && !showTaskComposer && (
+              <Alert severity="info" variant="outlined">
+                Usa tareas para repartir trabajo dentro de un proyecto. El formulario se abre solo cuando realmente
+                vayas a asignar una.
+              </Alert>
             )}
 
             <Stack spacing={1.5}>

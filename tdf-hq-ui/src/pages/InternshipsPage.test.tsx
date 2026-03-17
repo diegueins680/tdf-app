@@ -114,6 +114,16 @@ const hasLabel = (root: ParentNode, labelText: string) =>
     return text === labelText;
   });
 
+const buildProject = (overrides: Record<string, unknown> = {}) => ({
+  ipId: 'project-1',
+  ipTitle: 'Campana de lanzamiento',
+  ipDescription: 'Entregables semanales',
+  ipStatus: 'active',
+  ipStartAt: null,
+  ipDueAt: null,
+  ...overrides,
+});
+
 const getButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((element) => (element.textContent ?? '').trim() === labelText) as HTMLButtonElement[];
 
@@ -226,6 +236,77 @@ describe('InternshipsPage', () => {
         expect(getButtonsByText(container, 'Guardar proyecto')).toHaveLength(0);
         expect(getButtonsByText(container, 'Cancelar proyecto')).toHaveLength(0);
         expect(hasLabel(container, 'Nombre')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the task form collapsed behind one CTA and replaces the no-project dead end with guidance', async () => {
+    listProjectsMock.mockResolvedValue([buildProject()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Tareas');
+        expect(container.textContent).toContain('Todavía no hay tareas. Crea la primera desde Nueva tarea.');
+        expect(container.textContent).toContain(
+          'Usa tareas para repartir trabajo dentro de un proyecto. El formulario se abre solo cuando realmente vayas a asignar una.',
+        );
+        expect(getButtonsByText(container, 'Nueva tarea')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Crear tarea')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Cancelar tarea')).toHaveLength(0);
+        expect(hasLabel(container, 'Proyecto')).toBe(false);
+        expect(hasLabel(container, 'Título')).toBe(false);
+      });
+
+      await clickButton(getButtonsByText(container, 'Nueva tarea')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Nueva tarea')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Crear tarea')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Cancelar tarea')).toHaveLength(1);
+        expect(hasLabel(container, 'Proyecto')).toBe(true);
+        expect(hasLabel(container, 'Título')).toBe(true);
+        expect(container.textContent).not.toContain(
+          'Usa tareas para repartir trabajo dentro de un proyecto. El formulario se abre solo cuando realmente vayas a asignar una.',
+        );
+      });
+
+      await clickButton(getButtonsByText(container, 'Cancelar tarea')[0]!);
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Todavía no hay tareas. Crea la primera desde Nueva tarea.');
+        expect(getButtonsByText(container, 'Nueva tarea')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Crear tarea')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Cancelar tarea')).toHaveLength(0);
+        expect(hasLabel(container, 'Proyecto')).toBe(false);
+        expect(hasLabel(container, 'Título')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces the empty task form with project-first guidance until an admin has something to assign into', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Todavía no hay tareas. Crea primero un proyecto para empezar a asignarlas.');
+        expect(container.textContent).toContain(
+          'Las tareas se asignan dentro de un proyecto. Crea el primero en Proyectos y luego aparecera Nueva tarea aqui.',
+        );
+        expect(getButtonsByText(container, 'Nueva tarea')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Crear tarea')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Cancelar tarea')).toHaveLength(0);
+        expect(hasLabel(container, 'Proyecto')).toBe(false);
+        expect(hasLabel(container, 'Título')).toBe(false);
       });
     } finally {
       await cleanup();
