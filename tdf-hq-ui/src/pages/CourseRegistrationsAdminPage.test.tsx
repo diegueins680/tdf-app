@@ -650,7 +650,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Ver correos')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
-      expect(document.body.textContent).not.toContain('Historial persistente por inscripción.');
+      expect(document.body.textContent).not.toContain(
+        'Historial persistente por inscripción. Usa el refresco del expediente para volver a consultarlo.',
+      );
     });
 
     await act(async () => {
@@ -662,10 +664,31 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(listRegistrationEmailsMock).toHaveBeenCalledWith(101, 200);
       expect(getButtonByText(document.body, 'Ocultar correos')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Actualizar correos')).toBeTruthy();
-      expect(document.body.textContent).toContain('Historial persistente por inscripción.');
+      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente y correos')).toBeTruthy();
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Actualizar correos',
+        ),
+      ).toBe(false);
+      expect(document.body.textContent).toContain(
+        'Historial persistente por inscripción. Usa el refresco del expediente para volver a consultarlo.',
+      );
       expect(document.body.textContent).toContain('Recordatorio de pago enviado.');
       expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
+    });
+
+    getRegistrationDossierMock.mockClear();
+    listRegistrationEmailsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, 'Refrescar expediente y correos'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getRegistrationDossierMock).toHaveBeenCalledWith('beatmaking-101', 101);
+      expect(listRegistrationEmailsMock).toHaveBeenCalledWith(101, 200);
     });
 
     await cleanup();

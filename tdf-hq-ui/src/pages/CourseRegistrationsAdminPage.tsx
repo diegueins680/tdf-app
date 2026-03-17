@@ -564,6 +564,15 @@ export default function CourseRegistrationsAdminPage() {
     void qc.invalidateQueries({ queryKey: ['admin', 'course-registrations'] });
   };
 
+  const handleRefreshDossier = () => {
+    if (!selectedDossier) return;
+    const requests: Array<Promise<unknown>> = [dossierQuery.refetch()];
+    if (showEmailHistory && selectedRegistrationId != null) {
+      requests.push(emailEventsQuery.refetch());
+    }
+    void Promise.all(requests);
+  };
+
   const handleCopyCsv = async () => {
     if (!regsQuery.data?.length) return;
     const header = ['id', 'slug', 'nombre', 'email', 'estado', 'creado'];
@@ -864,6 +873,8 @@ export default function CourseRegistrationsAdminPage() {
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
     ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
     : 'Sin cohorte';
+  const isRefreshingDossier = dossierQuery.isFetching || (showEmailHistory && emailEventsQuery.isFetching);
+  const dossierRefreshLabel = showEmailHistory ? 'Refrescar expediente y correos' : 'Refrescar expediente';
 
   return (
     <Stack spacing={3}>
@@ -1163,13 +1174,13 @@ export default function CourseRegistrationsAdminPage() {
         <DialogTitle>
           <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} useFlexGap>
             <span>Expediente de inscripción</span>
-            <Tooltip title="Refrescar expediente">
+            <Tooltip title={dossierRefreshLabel}>
               <span>
                 <IconButton
                   size="small"
-                  aria-label="Refrescar expediente"
-                  onClick={() => void dossierQuery.refetch()}
-                  disabled={!selectedDossier || dossierQuery.isFetching}
+                  aria-label={dossierRefreshLabel}
+                  onClick={handleRefreshDossier}
+                  disabled={!selectedDossier || isRefreshingDossier}
                 >
                   <RefreshIcon fontSize="small" />
                 </IconButton>
@@ -1246,16 +1257,10 @@ export default function CourseRegistrationsAdminPage() {
                         <Box sx={{ minWidth: 240, flexGrow: 1 }}>
                           <Typography variant="h6">Historial de correos</Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Historial persistente por inscripción.
+                            Historial persistente por inscripción. Usa el refresco del expediente para volver a
+                            consultarlo.
                           </Typography>
                         </Box>
-                        <Button
-                          size="small"
-                          onClick={() => void emailEventsQuery.refetch()}
-                          disabled={emailEventsQuery.isFetching}
-                        >
-                          Actualizar correos
-                        </Button>
                       </Stack>
 
                       {emailEventsQuery.isLoading && (
