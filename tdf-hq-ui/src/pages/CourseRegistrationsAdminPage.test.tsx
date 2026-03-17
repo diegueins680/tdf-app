@@ -563,6 +563,67 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the dossier header focused on contact context instead of a raw party id when identity is already visible', async () => {
+    getRegistrationDossierMock.mockResolvedValue(buildDossier());
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('ada@example.com');
+      expect(document.body.textContent).toContain('+593999000111');
+      expect(document.body.textContent).not.toContain('Party #9');
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the party id as a fallback when the dossier lacks name, email, and phone context', async () => {
+    const sparseRegistration = buildRegistration({
+      crFullName: null,
+      crEmail: null,
+      crPhoneE164: null,
+    });
+    listRegistrationsMock.mockResolvedValue([sparseRegistration]);
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: sparseRegistration,
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Party #9');
+      expect(document.body.textContent).toContain('Sin correo');
+    });
+
+    await cleanup();
+  });
+
   it('summarizes a shared visible cohort once when the page still offers multiple cohort choices', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

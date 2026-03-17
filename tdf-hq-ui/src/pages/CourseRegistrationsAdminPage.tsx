@@ -924,6 +924,12 @@ export default function CourseRegistrationsAdminPage() {
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
     ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
     : 'Sin cohorte';
+  const showPartyIdFallback = Boolean(
+    activeRegistration?.crPartyId
+    && !activeRegistration?.crFullName?.trim()
+    && !activeRegistration?.crEmail?.trim()
+    && !activeRegistration?.crPhoneE164?.trim(),
+  );
   const isRefreshingDossier = dossierQuery.isFetching || (showEmailHistory && emailEventsQuery.isFetching);
   const dossierRefreshLabel = showEmailHistory ? 'Refrescar expediente y correos' : 'Refrescar expediente';
 
@@ -1308,7 +1314,7 @@ export default function CourseRegistrationsAdminPage() {
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                     <Typography variant="h6">{activeRegistration.crFullName ?? 'Sin nombre'}</Typography>
                     {statusChip(activeRegistration.crStatus)}
-                    {activeRegistration.crPartyId && (
+                    {showPartyIdFallback && (
                       <Chip size="small" label={`Party #${activeRegistration.crPartyId}`} variant="outlined" />
                     )}
                   </Stack>
