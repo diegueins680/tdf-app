@@ -325,11 +325,19 @@ export default function PartiesPage() {
   const canManageRoles = canAccessPath('/configuracion/roles-permisos', session?.roles, session?.modules);
   const hasContacts = parties.length > 0;
   const showDirectoryChrome = partiesQuery.isLoading || hasContacts;
+  const trimmedSearch = search.trim();
 
   const filtered = useMemo(() => {
-    const term = search.toLowerCase();
-    return parties.filter((p) => p.displayName.toLowerCase().includes(term));
-  }, [parties, search]);
+    const term = trimmedSearch.toLowerCase();
+    if (!term) return parties;
+    return parties.filter((party) => {
+      const haystack = [party.displayName, party.primaryEmail ?? '', party.instagram ?? '']
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [parties, trimmedSearch]);
+  const showSearchEmptyState = !partiesQuery.isLoading && hasContacts && filtered.length === 0 && trimmedSearch !== '';
 
   return (
     <Stack gap={3}>
@@ -351,7 +359,7 @@ export default function PartiesPage() {
           {showDirectoryChrome && (
             <TextField
               aria-label="Buscar contactos"
-              placeholder="Buscar..."
+              placeholder="Buscar por nombre, email o Instagram"
               value={search}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               inputProps={{ 'aria-label': 'Buscar contactos' }}
@@ -381,6 +389,18 @@ export default function PartiesPage() {
         {!partiesQuery.isLoading && !partiesQuery.error && !hasContacts ? (
           <Alert severity="info" variant="outlined">
             Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto.
+          </Alert>
+        ) : showSearchEmptyState ? (
+          <Alert
+            severity="info"
+            variant="outlined"
+            action={(
+              <Button color="inherit" size="small" onClick={() => setSearch('')}>
+                Limpiar búsqueda
+              </Button>
+            )}
+          >
+            No hay contactos que coincidan con "{trimmedSearch}". Limpia la búsqueda para volver a ver toda la lista.
           </Alert>
         ) : (
           <Table size="small">

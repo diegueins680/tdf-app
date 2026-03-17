@@ -64,6 +64,17 @@ const clickButton = (button: HTMLButtonElement) => {
   button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 };
 
+const setInputValue = (input: HTMLInputElement, value: string) => {
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  if (descriptor?.set) {
+    descriptor.set.call(input, value);
+  } else {
+    input.value = value;
+  }
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+};
+
 const getColumnHeaders = (root: ParentNode) =>
   Array.from(root.querySelectorAll('th')).map((element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim());
 
@@ -235,6 +246,81 @@ describe('PartiesPage', () => {
           '@ada',
           '',
         ]);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces a no-match search table with one reset state and restores the full list in one step', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Los Navegantes',
+        isOrg: true,
+        primaryEmail: 'hola@navegantes.test',
+        instagram: '@navegantes',
+      } satisfies PartyDTO,
+      {
+        partyId: 2,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        primaryEmail: 'ada@example.com',
+        instagram: '@ada',
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = container.querySelector('input[aria-label="Buscar contactos"]') as HTMLInputElement | null;
+        expect(searchInput).not.toBeNull();
+        expect(searchInput?.getAttribute('placeholder')).toBe('Buscar por nombre, email o Instagram');
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Los Navegantes');
+        expect(container.textContent).toContain('Ada Lovelace');
+      });
+
+      await act(async () => {
+        setInputValue(container.querySelector('input[aria-label="Buscar contactos"]') as HTMLInputElement, 'ada@example.com');
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).not.toContain('Los Navegantes');
+        expect(container.textContent).not.toContain('No hay contactos que coincidan con');
+      });
+
+      await act(async () => {
+        setInputValue(container.querySelector('input[aria-label="Buscar contactos"]') as HTMLInputElement, 'sin-coincidencias');
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).toContain(
+          'No hay contactos que coincidan con "sin-coincidencias". Limpia la búsqueda para volver a ver toda la lista.',
+        );
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+      });
+
+      await act(async () => {
+        clickButton(getButtonsByText(container, 'Limpiar búsqueda')[0]!);
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const searchInput = container.querySelector('input[aria-label="Buscar contactos"]') as HTMLInputElement | null;
+        expect(searchInput?.value).toBe('');
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Los Navegantes');
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).not.toContain('No hay contactos que coincidan con');
       });
     } finally {
       await cleanup();
