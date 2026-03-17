@@ -135,6 +135,26 @@ describe('PartiesPage', () => {
     updatePartyMock.mockResolvedValue(null);
   });
 
+  it('replaces empty CRM chrome with a first-contact empty state', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(document.body, 'Nuevo contacto')).toHaveLength(1);
+        expect(container.querySelector('input[aria-label="Buscar contactos"]')).toBeNull();
+        expect(container.querySelector('table')).toBeNull();
+        expect(getColumnHeaders(container)).toEqual([]);
+        expect(container.textContent).toContain(
+          'Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses a single create CTA and keeps the person-vs-company choice inside the dialog', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

@@ -323,6 +323,8 @@ export default function PartiesPage() {
   const [relatedParty, setRelatedParty] = useState<PartyDTO | null>(null);
   const [relatedAnchor, setRelatedAnchor] = useState<HTMLElement | null>(null);
   const canManageRoles = canAccessPath('/configuracion/roles-permisos', session?.roles, session?.modules);
+  const hasContacts = parties.length > 0;
+  const showDirectoryChrome = partiesQuery.isLoading || hasContacts;
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
@@ -346,21 +348,23 @@ export default function PartiesPage() {
           spacing={2}
           sx={{ mb: 2 }}
         >
-          <TextField
-            aria-label="Buscar contactos"
-            placeholder="Buscar..."
-            value={search}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            inputProps={{ 'aria-label': 'Buscar contactos' }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: 'text.secondary' }} />
-                </InputAdornment>
-              ),
-            }}
-            fullWidth
-          />
+          {showDirectoryChrome && (
+            <TextField
+              aria-label="Buscar contactos"
+              placeholder="Buscar..."
+              value={search}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              inputProps={{ 'aria-label': 'Buscar contactos' }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              }}
+              fullWidth
+            />
+          )}
           <Stack direction="row" spacing={1}>
             <Button
               variant="contained"
@@ -374,85 +378,91 @@ export default function PartiesPage() {
 
         {partiesQuery.error && <Alert severity="error">{partiesQuery.error.message}</Alert>}
 
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Instagram</TableCell>
-              <TableCell align="right">Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {partiesQuery.isLoading && (
+        {!partiesQuery.isLoading && !partiesQuery.error && !hasContacts ? (
+          <Alert severity="info" variant="outlined">
+            Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto.
+          </Alert>
+        ) : (
+          <Table size="small">
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={4}>Cargando...</TableCell>
+                <TableCell>Nombre</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Instagram</TableCell>
+                <TableCell align="right">Acciones</TableCell>
               </TableRow>
-            )}
-            {!partiesQuery.isLoading && filtered.map((party) => (
-              <TableRow key={party.partyId} hover>
-                <TableCell>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Button
-                      variant="text"
-                      onClick={(event) => {
-                        setRelatedParty(party);
-                        setRelatedAnchor(event.currentTarget);
-                      }}
-                      sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
-                    >
-                      <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                        {party.displayName}
-                      </Typography>
-                    </Button>
-                    {party.isOrg && <Chip label="Empresa" size="small" />}
-                  </Stack>
-                </TableCell>
-                <TableCell>{party.primaryEmail ?? '—'}</TableCell>
-                <TableCell>{party.instagram ?? '—'}</TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Editar contacto">
-                    <IconButton
-                      onClick={() => setEditing(party)}
-                      aria-label={`Editar contacto ${party.displayName}`}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip
-                    title={
-                      party.hasUserAccount
-                        ? 'Este contacto ya tiene usuario'
-                        : party.primaryEmail
-                          ? 'Crear usuario y enviar contraseña'
-                          : 'Agrega o corrige el correo antes de crear la cuenta'
-                    }
-                  >
-                    <span>
-                      <IconButton
-                        onClick={() => setUserDialogParty(party)}
-                        disabled={Boolean(party.hasUserAccount)}
-                        aria-label={`Crear usuario para ${party.displayName}`}
+            </TableHead>
+            <TableBody>
+              {partiesQuery.isLoading && (
+                <TableRow>
+                  <TableCell colSpan={4}>Cargando...</TableCell>
+                </TableRow>
+              )}
+              {!partiesQuery.isLoading && filtered.map((party) => (
+                <TableRow key={party.partyId} hover>
+                  <TableCell>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Button
+                        variant="text"
+                        onClick={(event) => {
+                          setRelatedParty(party);
+                          setRelatedAnchor(event.currentTarget);
+                        }}
+                        sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
                       >
-                        <PersonAddAltIcon fontSize="small" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                  {canManageRoles && (
-                    <Tooltip title="Roles y accesos">
+                        <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                          {party.displayName}
+                        </Typography>
+                      </Button>
+                      {party.isOrg && <Chip label="Empresa" size="small" />}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>{party.primaryEmail ?? '—'}</TableCell>
+                  <TableCell>{party.instagram ?? '—'}</TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Editar contacto">
                       <IconButton
-                        onClick={() => navigate('/configuracion/roles-permisos')}
-                        aria-label={`Abrir roles y accesos para ${party.displayName}`}
+                        onClick={() => setEditing(party)}
+                        aria-label={`Editar contacto ${party.displayName}`}
                       >
-                        <SchoolIcon fontSize="small" />
+                        <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                    <Tooltip
+                      title={
+                        party.hasUserAccount
+                          ? 'Este contacto ya tiene usuario'
+                          : party.primaryEmail
+                            ? 'Crear usuario y enviar contraseña'
+                            : 'Agrega o corrige el correo antes de crear la cuenta'
+                      }
+                    >
+                      <span>
+                        <IconButton
+                          onClick={() => setUserDialogParty(party)}
+                          disabled={Boolean(party.hasUserAccount)}
+                          aria-label={`Crear usuario para ${party.displayName}`}
+                        >
+                          <PersonAddAltIcon fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    {canManageRoles && (
+                      <Tooltip title="Roles y accesos">
+                        <IconButton
+                          onClick={() => navigate('/configuracion/roles-permisos')}
+                          aria-label={`Abrir roles y accesos para ${party.displayName}`}
+                        >
+                          <SchoolIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </Paper>
 
       <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
