@@ -1153,6 +1153,9 @@ export default function SocialInboxPage() {
   const instagramMessages = useMemo(() => selectMessages(instagramStats, filter), [instagramStats, filter]);
   const facebookMessages = useMemo(() => selectMessages(facebookStats, filter), [facebookStats, filter]);
   const whatsappMessages = useMemo(() => selectMessages(whatsappStats, filter), [whatsappStats, filter]);
+  const reviewAssetActionLabel = activeAsset
+    ? 'Change selected asset'
+    : 'Select asset in Instagram setup';
   const refetch = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -1258,14 +1261,9 @@ export default function SocialInboxPage() {
                 No asset selected yet. Go to Instagram setup and select the Page/account first.
               </Alert>
             )}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined">
-                Open Instagram setup
-              </Button>
-              <Button component={RouterLink} to="/social/instagram?review=1" variant="text">
-                Re-select asset
-              </Button>
-            </Stack>
+            <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined">
+              {reviewAssetActionLabel}
+            </Button>
           </Stack>
         </Paper>
       )}

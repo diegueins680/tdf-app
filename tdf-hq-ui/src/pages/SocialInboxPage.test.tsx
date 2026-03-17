@@ -1,0 +1,184 @@
+import { jest } from '@jest/globals';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
+import type { SocialMessage } from '../api/socialInbox';
+import type { InstagramOAuthExchangeResponse } from '../api/instagramOAuth';
+import type { MetaReviewAssetSelection } from '../services/instagramAuth';
+
+const listInstagramMessagesMock = jest.fn<
+  (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) => Promise<SocialMessage[]>
+>();
+const listFacebookMessagesMock = jest.fn<
+  (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) => Promise<SocialMessage[]>
+>();
+const listWhatsAppMessagesMock = jest.fn<
+  (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) => Promise<SocialMessage[]>
+>();
+const getMetaReviewAssetSelectionMock = jest.fn<() => MetaReviewAssetSelection | null>();
+const getStoredInstagramResultMock = jest.fn<() => InstagramOAuthExchangeResponse | null>();
+
+jest.unstable_mockModule('../api/socialInbox', () => ({
+  SocialInboxAPI: {
+    listInstagramMessages: (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) =>
+      listInstagramMessagesMock(filters),
+    listFacebookMessages: (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) =>
+      listFacebookMessagesMock(filters),
+    listWhatsAppMessages: (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) =>
+      listWhatsAppMessagesMock(filters),
+    sendReply: jest.fn(() => Promise.resolve({ status: 'ok' })),
+    suggestReply: jest.fn(() => Promise.resolve('Reply drafted by AI.')),
+  },
+}));
+
+jest.unstable_mockModule('../services/instagramAuth', () => ({
+  getMetaReviewAssetSelection: () => getMetaReviewAssetSelectionMock(),
+  getStoredInstagramResult: () => getStoredInstagramResultMock(),
+}));
+
+const { default: SocialInboxPage } = await import('./SocialInboxPage');
+
+const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+const waitForExpectation = async (assertion: () => void, attempts = 12) => {
+  let lastError: unknown;
+  for (let index = 0; index < attempts; index += 1) {
+    try {
+      assertion();
+      return;
+    } catch (error) {
+      lastError = error;
+      await act(async () => {
+        await flushPromises();
+      });
+    }
+  }
+  throw lastError;
+};
+
+const renderPage = async (container: HTMLElement, initialEntry = '/social/inbox?review=1') => {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  });
+  let root: Root | null = createRoot(container);
+
+  await act(async () => {
+    root?.render(
+      <MemoryRouter
+        initialEntries={[initialEntry]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <QueryClientProvider client={qc}>
+          <SocialInboxPage />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+    await flushPromises();
+    await flushPromises();
+  });
+
+  return {
+    cleanup: async () => {
+      if (!root) return;
+      await act(async () => {
+        root?.unmount();
+        await flushPromises();
+      });
+      root = null;
+      qc.clear();
+      document.body.removeChild(container);
+    },
+  };
+};
+
+const countInstagramSetupLinks = (root: ParentNode) =>
+  root.querySelectorAll('a[href="/social/instagram?review=1"]').length;
+
+const getLinkByText = (root: ParentNode, labelText: string) => {
+  const link = Array.from(root.querySelectorAll('a')).find((candidate) => (candidate.textContent ?? '').trim() === labelText);
+  if (!(link instanceof HTMLAnchorElement)) {
+    throw new Error(`Link not found: ${labelText}`);
+  }
+  return link;
+};
+
+describe('SocialInboxPage', () => {
+  beforeAll(() => {
+    (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    if (!window.matchMedia) {
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: () => ({
+          matches: false,
+          media: '',
+          onchange: null,
+          addListener: () => undefined,
+          removeListener: () => undefined,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          dispatchEvent: () => false,
+        }),
+      });
+    }
+  });
+
+  beforeEach(() => {
+    listInstagramMessagesMock.mockReset();
+    listFacebookMessagesMock.mockReset();
+    listWhatsAppMessagesMock.mockReset();
+    getMetaReviewAssetSelectionMock.mockReset();
+    getStoredInstagramResultMock.mockReset();
+
+    listInstagramMessagesMock.mockResolvedValue([]);
+    listFacebookMessagesMock.mockResolvedValue([]);
+    listWhatsAppMessagesMock.mockResolvedValue([]);
+    getMetaReviewAssetSelectionMock.mockReturnValue(null);
+    getStoredInstagramResultMock.mockReturnValue(null);
+  });
+
+  it('shows a single setup CTA for first-time review runs', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Recording checklist');
+      expect(container.textContent).toContain('No asset selected yet. Go to Instagram setup and select the Page/account first.');
+      expect(countInstagramSetupLinks(container)).toBe(1);
+      expect(getLinkByText(container, 'Select asset in Instagram setup').getAttribute('href')).toBe('/social/instagram?review=1');
+      expect(container.textContent).not.toContain('Open Instagram setup');
+      expect(container.textContent).not.toContain('Re-select asset');
+      expect(container.textContent).not.toContain('Change selected asset');
+    });
+
+    await cleanup();
+  });
+
+  it('keeps one setup CTA after an asset is already selected', async () => {
+    getMetaReviewAssetSelectionMock.mockReturnValue({
+      pageId: 'page-1',
+      pageName: 'TDF Review Page',
+      instagramUserId: 'ig-user-1',
+      instagramUsername: 'tdfreview',
+      selectedAt: 1_763_000_000_000,
+    });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Selected asset: TDF Review Page (Page ID: page-1');
+      expect(container.textContent).toContain('@tdfreview');
+      expect(container.textContent).toContain('IG User ID: ig-user-1');
+      expect(countInstagramSetupLinks(container)).toBe(1);
+      expect(getLinkByText(container, 'Change selected asset').getAttribute('href')).toBe('/social/instagram?review=1');
+      expect(container.textContent).not.toContain('Select asset in Instagram setup');
+      expect(container.textContent).not.toContain('Open Instagram setup');
+      expect(container.textContent).not.toContain('Re-select asset');
+    });
+
+    await cleanup();
+  });
+});
