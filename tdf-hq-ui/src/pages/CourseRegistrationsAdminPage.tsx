@@ -176,7 +176,8 @@ const statusFilterChipLabel = (
   includeCounts: boolean,
 ) => {
   const label = statusFilterLabels[status];
-  if (!includeCounts || status === 'all') return label;
+  if (!includeCounts) return label;
+  if (status === 'all') return `${label} (${counts.total})`;
   return `${label} (${counts[status]})`;
 };
 
@@ -450,6 +451,9 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleStatusSummary = Boolean(
     singleVisibleStatus && (status === 'all' || status === singleVisibleStatus),
   );
+  const showHeaderTotalChip = hasVisibleRegistrations
+    && statusCounts.total > 1
+    && showSingleStatusSummary;
   const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
   const activeFilterSummary = useMemo(
     () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
@@ -1046,11 +1050,7 @@ export default function CourseRegistrationsAdminPage() {
           Inscripciones de cursos
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {hasVisibleRegistrations && (
-            <>
-              {statusCounts.total > 1 && <Chip label={`Total: ${statusCounts.total}`} size="small" />}
-            </>
-          )}
+          {showHeaderTotalChip && <Chip label={`Total: ${statusCounts.total}`} size="small" />}
           <Tooltip title="Refrescar">
             <span>
               <IconButton aria-label="Refrescar inscripciones" onClick={handleRefresh} disabled={regsQuery.isFetching}>

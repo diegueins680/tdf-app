@@ -920,6 +920,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Estado')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Todos').textContent?.trim()).toBe('Todos (3)');
+      expect(container.textContent).not.toContain('Total: 3');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).toContain('Katherine Johnson');
@@ -1860,10 +1862,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Todos').textContent?.trim()).toBe('Todos');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Todos').textContent?.trim()).toBe('Todos (3)');
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago').textContent?.trim()).toBe('Pendiente de pago (1)');
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado').textContent?.trim()).toBe('Cancelado (1)');
+      expect(container.textContent).not.toContain('Total: 3');
       expect(container.textContent).not.toContain('Pendientes: 1');
       expect(container.textContent).not.toContain('Pagadas: 1');
       expect(container.textContent).not.toContain('Canceladas: 1');
@@ -1892,7 +1895,8 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Total: 200');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Todos').textContent?.trim()).toBe('Todos (200)');
+      expect(container.textContent).not.toContain('Total: 200');
       expect(container.textContent).not.toContain('Pagadas:');
       expect(container.textContent).not.toContain('Pendientes:');
       expect(container.textContent).not.toContain('Canceladas:');
