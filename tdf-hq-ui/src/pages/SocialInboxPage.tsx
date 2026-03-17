@@ -47,6 +47,7 @@ interface MessageStats {
 }
 
 type FilterKey = 'all' | 'pending' | 'replied' | 'failed';
+type RealFilterKey = Exclude<FilterKey, 'all'>;
 const LIMIT_OPTIONS = [50, 100, 200] as const;
 
 const parseInboxLimit = (value: string, fallback = 100): number => {
@@ -1170,6 +1171,15 @@ export default function SocialInboxPage() {
     return FILTERS.filter((item) => item.id === 'all' || item.id === filter || filterCounts[item.id] > 0);
   }, [filter, filterCounts]);
   const hasHiddenFilters = filterCounts.all > 0 && visibleFilters.length < FILTERS.length;
+  const singleVisibleFilter = useMemo<RealFilterKey | null>(() => {
+    if (filterCounts.all === 0) return null;
+    const realFilters = FILTERS
+      .map((item) => item.id)
+      .filter((item): item is RealFilterKey => item !== 'all' && filterCounts[item] > 0);
+    return realFilters.length === 1 ? realFilters[0] : null;
+  }, [filterCounts]);
+  const showSingleFilterSummary = Boolean(singleVisibleFilter) && (filter === 'all' || filter === singleVisibleFilter);
+  const singleVisibleFilterLabel = singleVisibleFilter ? getFilterLabel(singleVisibleFilter, reviewMode) : '';
   const instagramMessages = useMemo(() => selectMessages(instagramStats, filter), [instagramStats, filter]);
   const facebookMessages = useMemo(() => selectMessages(facebookStats, filter), [facebookStats, filter]);
   const whatsappMessages = useMemo(() => selectMessages(whatsappStats, filter), [whatsappStats, filter]);
@@ -1292,35 +1302,64 @@ export default function SocialInboxPage() {
           <Typography variant="subtitle2" color="text.secondary">
             {reviewMode ? 'Filter' : 'Filtro'}
           </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            {visibleFilters.map((item) => {
-              const label = getFilterLabel(item.id, reviewMode);
-              const count = filterCounts[item.id];
-              const showCount = item.id === 'all' || count > 0;
-              return (
-                <Chip
-                  key={item.id}
-                  label={`${label}${showCount ? ` (${count})` : ''}`}
-                  onClick={() => setFilter(item.id)}
-                  color={filter === item.id ? 'primary' : 'default'}
-                  variant={filter === item.id ? 'filled' : 'outlined'}
-                  aria-label={reviewMode ? `Filter inbox by ${label}` : `Filtrar inbox por ${label}`}
-                  aria-pressed={filter === item.id}
-                />
-              );
-            })}
-          </Stack>
-          {hasHiddenFilters && (
-            <Typography variant="caption" color="text.secondary">
-              {reviewMode
-                ? 'Only statuses with inbound messages in this view are shown.'
-                : 'Solo aparecen estados con mensajes entrantes en esta vista.'}
-            </Typography>
-          )}
-          {repliedOnly && (
-            <Typography variant="caption" color="text.secondary">
-              {reviewMode ? 'Replied only (server-side filter).' : 'Solo respondidos (filtrado en servidor).'}
-            </Typography>
+          {showSingleFilterSummary ? (
+            <Stack
+              spacing={0.5}
+              sx={{
+                minHeight: 40,
+                justifyContent: 'center',
+                px: 1.5,
+                py: 1.25,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                {reviewMode ? 'Status available' : 'Estado disponible'}
+              </Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {singleVisibleFilterLabel}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {reviewMode
+                  ? 'No need to filter it: it is the only inbound status in this view.'
+                  : 'No hace falta filtrarlo: es el unico estado entrante presente en esta vista.'}
+              </Typography>
+            </Stack>
+          ) : (
+            <>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                {visibleFilters.map((item) => {
+                  const label = getFilterLabel(item.id, reviewMode);
+                  const count = filterCounts[item.id];
+                  const showCount = item.id === 'all' || count > 0;
+                  return (
+                    <Chip
+                      key={item.id}
+                      label={`${label}${showCount ? ` (${count})` : ''}`}
+                      onClick={() => setFilter(item.id)}
+                      color={filter === item.id ? 'primary' : 'default'}
+                      variant={filter === item.id ? 'filled' : 'outlined'}
+                      aria-label={reviewMode ? `Filter inbox by ${label}` : `Filtrar inbox por ${label}`}
+                      aria-pressed={filter === item.id}
+                    />
+                  );
+                })}
+              </Stack>
+              {hasHiddenFilters && (
+                <Typography variant="caption" color="text.secondary">
+                  {reviewMode
+                    ? 'Only statuses with inbound messages in this view are shown.'
+                    : 'Solo aparecen estados con mensajes entrantes en esta vista.'}
+                </Typography>
+              )}
+              {repliedOnly && (
+                <Typography variant="caption" color="text.secondary">
+                  {reviewMode ? 'Replied only (server-side filter).' : 'Solo respondidos (filtrado en servidor).'}
+                </Typography>
+              )}
+            </>
           )}
         </Stack>
       </Paper>

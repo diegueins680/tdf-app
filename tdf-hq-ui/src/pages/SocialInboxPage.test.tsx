@@ -230,4 +230,49 @@ describe('SocialInboxPage', () => {
 
     await cleanup();
   });
+
+  it('replaces a single real inbox filter with context copy when the current view does not need status filtering', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
+      expect(container.textContent).toContain('Status available');
+      expect(container.textContent).toContain('Pending');
+      expect(container.textContent).toContain('No need to filter it: it is the only inbound status in this view.');
+      expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
+    });
+
+    await cleanup();
+  });
+
+  it('keeps inbox filters visible when the default filter would hide the only available status', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage({
+        repliedAt: '2030-01-03T03:04:05.000Z',
+        replyText: 'Done.',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(queryFilterChip(container, 'All')).not.toBeNull();
+      expect(queryFilterChip(container, 'Pending')).not.toBeNull();
+      expect(queryFilterChip(container, 'Replied')).not.toBeNull();
+      expect(queryFilterChip(container, 'Failed')).toBeNull();
+      expect(container.textContent).toContain('Only statuses with inbound messages in this view are shown.');
+      expect(container.textContent).toContain('No messages for this filter.');
+      expect(container.textContent).not.toContain('Status available');
+    });
+
+    await cleanup();
+  });
 });
