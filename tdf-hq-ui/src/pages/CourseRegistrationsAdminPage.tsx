@@ -258,7 +258,7 @@ export default function CourseRegistrationsAdminPage() {
   const [slug, setSlug] = useState(initialSlug);
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(initialLimit !== DEFAULT_LIMIT);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [pageFlash, setPageFlash] = useState<FlashState | null>(null);
   const [dossierFlash, setDossierFlash] = useState<FlashState | null>(null);
@@ -470,11 +470,16 @@ export default function CourseRegistrationsAdminPage() {
     && !cohortsQuery.isError
     && !hasCustomFilters
     && !hasVisibleRegistrations;
+  const limitToggleLabel = showAdvancedFilters
+    ? 'Ocultar límite'
+    : limit !== DEFAULT_LIMIT
+      ? `Ajustar límite (${limit})`
+      : 'Ajustar límite';
   const filtersHelpText = showAdvancedLimitControl
     ? hasVisibleRegistrations
-      ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote.'
-      : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.'
-    : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; el límite aparecerá cuando esta vista tenga inscripciones y necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.';
+      ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto.'
+      : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.'
+    : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista tenga inscripciones y necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.';
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -1138,7 +1143,7 @@ export default function CourseRegistrationsAdminPage() {
                   onClick={() => setShowAdvancedFilters((current) => !current)}
                   aria-expanded={showAdvancedFilters}
                 >
-                  {showAdvancedFilters ? 'Ocultar filtros avanzados' : 'Más filtros'}
+                  {limitToggleLabel}
                 </Button>
               </Stack>
             )}

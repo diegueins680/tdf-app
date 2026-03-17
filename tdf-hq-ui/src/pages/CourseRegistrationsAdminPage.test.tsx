@@ -277,7 +277,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote.',
+        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto.',
       );
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
@@ -289,7 +289,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('Ver correos');
       expect(hasLabel(container, 'Límite')).toBe(false);
-      expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
+      expect(getButtonByText(container, 'Ajustar límite')).toBeTruthy();
       expect(
         Array.from(container.querySelectorAll('button')).some((el) => {
           const label = (el.textContent ?? '').trim();
@@ -306,7 +306,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Más filtros'));
+      clickButton(getButtonByText(container, 'Ajustar límite'));
       await flushPromises();
       await flushPromises();
     });
@@ -445,26 +445,26 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the limit filter inside advanced controls unless a custom limit is already active', async () => {
+  it('keeps the limit filter behind an explicit limit toggle, even when a custom limit is already active', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Límite')).toBe(false);
-      expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
+      expect(getButtonByText(container, 'Ajustar límite')).toBeTruthy();
       expect(container.textContent).not.toContain('Límite activo:');
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Más filtros'));
+      clickButton(getButtonByText(container, 'Ajustar límite'));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Límite')).toBe(true);
-      expect(getButtonByText(container, 'Ocultar filtros avanzados')).toBeTruthy();
+      expect(getButtonByText(container, 'Ocultar límite')).toBeTruthy();
       expect(container.textContent).toContain(
         'Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto.',
       );
@@ -484,8 +484,9 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 50,
       });
-      expect(hasLabel(secondContainer, 'Límite')).toBe(true);
-      expect(getButtonByText(secondContainer, 'Ocultar filtros avanzados')).toBeTruthy();
+      expect(hasLabel(secondContainer, 'Límite')).toBe(false);
+      expect(getButtonByText(secondContainer, 'Ajustar límite (50)')).toBeTruthy();
+      expect(secondContainer.textContent).toContain('Vista filtrada: límite 50.');
       expect(secondContainer.textContent).not.toContain('Límite activo: 50');
     });
 
@@ -1399,7 +1400,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Más filtros'));
+      clickButton(getButtonByText(container, 'Ajustar límite'));
       await flushPromises();
       await flushPromises();
     });
@@ -1426,13 +1427,13 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Ocultar filtros avanzados'));
+      clickButton(getButtonByText(container, 'Ocultar límite'));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
+      expect(getButtonByText(container, 'Ajustar límite (50)')).toBeTruthy();
       expect(container.textContent).toContain('Vista filtrada: límite 50.');
       expect(container.textContent).not.toContain('Límite activo: 50');
     });
@@ -1452,7 +1453,7 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 200,
       });
       expect(container.textContent).not.toContain('Vista filtrada:');
-      expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
+      expect(getButtonByText(container, 'Ajustar límite')).toBeTruthy();
       expect(container.textContent).not.toContain('Límite activo:');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
     });
@@ -1500,7 +1501,7 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(container.textContent).toContain('Todavía no hay inscripciones para mostrar en esta vista.');
       expect(container.textContent).not.toContain('No hay inscripciones con los filtros actuales:');
-      expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Más filtros')).toBe(false);
+      expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
     });
 
@@ -1567,7 +1568,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Más filtros'));
+      clickButton(getButtonByText(container, 'Ajustar límite'));
       await flushPromises();
       await flushPromises();
     });
@@ -1614,7 +1615,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Pagadas: 0');
       expect(container.textContent).not.toContain('Pendientes: 0');
       expect(container.textContent).not.toContain('Canceladas: 0');
-      expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Más filtros')).toBe(false);
+      expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
