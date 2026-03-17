@@ -25,12 +25,7 @@ import { Cms, type CmsContentDTO, type CmsContentIn } from '../api/cms';
 import ApiErrorNotice from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
 import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
-
-const defaultSlugs = [
-  'records-public',
-  'fan-hub',
-  'course-production',
-];
+import { CUSTOM_CMS_SLUG_OPTION, DEFAULT_CMS_SLUGS, getCmsSlugFieldState } from './cmsAdminSlugSelection';
 
 const locales = ['es', 'en'];
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
@@ -150,6 +145,9 @@ export default function CmsAdminPage() {
   const [pendingVersion, setPendingVersion] = useState<CmsContentDTO | null>(null);
   const [showDraftDiff, setShowDraftDiff] = useState(false);
   const draftKey = useMemo(() => `${DRAFT_PREFIX}:${slugFilter}:${localeFilter}`, [slugFilter, localeFilter]);
+  const normalizedSlugFilter = slugFilter.trim();
+  const hasSlugSelection = normalizedSlugFilter.length > 0;
+  const slugFieldState = useMemo(() => getCmsSlugFieldState(slugFilter), [slugFilter]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -193,9 +191,9 @@ export default function CmsAdminPage() {
 
   const liveQuery = useQuery({
     queryKey: ['cms-public', slugFilter, localeFilter],
-    queryFn: () => Cms.getPublic(slugFilter, localeFilter),
+    queryFn: () => Cms.getPublic(normalizedSlugFilter, localeFilter),
     retry: 1,
-    enabled: Boolean(slugFilter && localeFilter),
+    enabled: Boolean(normalizedSlugFilter && localeFilter),
   });
 
   const createMutation = useMutation({
@@ -267,6 +265,10 @@ export default function CmsAdminPage() {
   const pendingEqualsLive = pendingVersion ? pendingPayloadPreview === livePayloadPreview : false;
 
   const handleCreate = () => {
+    if (!hasSlugSelection) {
+      alert('Selecciona o escribe un slug antes de guardar la versión.');
+      return;
+    }
     let parsed: unknown = null;
     try {
       parsed = JSON.parse(payload);
@@ -276,7 +278,7 @@ export default function CmsAdminPage() {
     }
     const normalizedTitle = title.trim();
     createMutation.mutate({
-      cciSlug: slugFilter,
+      cciSlug: normalizedSlugFilter,
       cciLocale: localeFilter,
       cciTitle: normalizedTitle.length > 0 ? normalizedTitle : undefined,
       cciStatus: status,
@@ -334,10 +336,11 @@ export default function CmsAdminPage() {
   };
 
   const handleFetchLiveNow = async () => {
+    if (!hasSlugSelection) return;
     setLoadingLiveOnDemand(true);
     setLiveFetchError(null);
     try {
-      const fresh = await Cms.getPublic(slugFilter, localeFilter);
+      const fresh = await Cms.getPublic(normalizedSlugFilter, localeFilter);
       setTitle(fresh.ccdTitle ?? '');
       setStatus((fresh.ccdStatus as 'draft' | 'published') ?? 'draft');
       setEditingFromId(fresh.ccdId);
@@ -354,7 +357,9 @@ export default function CmsAdminPage() {
     }
   };
 
-  const liveUrl = `${PUBLIC_BASE}${livePathForSlug(slugFilter)}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`;
+  const liveUrl = hasSlugSelection
+    ? `${PUBLIC_BASE}${livePathForSlug(normalizedSlugFilter)}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`
+    : '';
   const livePayloadPretty = useMemo(() => {
     if (!liveContent) return '';
     try {
@@ -515,9 +520,15 @@ export default function CmsAdminPage() {
             Crear, publicar y versionar bloques para páginas públicas (records, fan hub, landing cursos).
           </Typography>
         </Box>
-        <Button variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
-          Abrir página en vivo
-        </Button>
+        {hasSlugSelection ? (
+          <Button variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
+            Abrir página en vivo
+          </Button>
+        ) : (
+          <Button variant="outlined" disabled>
+            Abrir página en vivo
+          </Button>
+        )}
       </Stack>
 
       <Paper variant="outlined" sx={{ p: 2.5 }}>
@@ -528,22 +539,32 @@ export default function CmsAdminPage() {
                 select
                 fullWidth
                 label="Slug"
-                value={slugFilter}
-                onChange={(e) => setSlugFilter(e.target.value)}
-                helperText="Identificador de la página"
+                value={slugFieldState.selectValue}
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+                  setSlugFilter(nextValue === CUSTOM_CMS_SLUG_OPTION ? '' : nextValue);
+                }}
+                helperText={
+                  slugFieldState.showCustomInput
+                    ? 'Escribe el slug exacto abajo si todavía no aparece en la lista.'
+                    : 'Identificador de la página.'
+                }
               >
-                {defaultSlugs.map((slug) => (
+                {DEFAULT_CMS_SLUGS.map((slug) => (
                   <MenuItem key={slug} value={slug}>{slug}</MenuItem>
                 ))}
-                <MenuItem value={slugFilter ?? ''}>Otro… escribe abajo</MenuItem>
+                <MenuItem value={CUSTOM_CMS_SLUG_OPTION}>Otro slug…</MenuItem>
               </TextField>
-              <TextField
-                fullWidth
-                label="Slug custom"
-                value={slugFilter}
-                onChange={(e) => setSlugFilter(e.target.value)}
-                sx={{ mt: 1 }}
-              />
+              {slugFieldState.showCustomInput && (
+                <TextField
+                  fullWidth
+                  label="Slug personalizado"
+                  value={slugFilter}
+                  onChange={(e) => setSlugFilter(e.target.value)}
+                  sx={{ mt: 1 }}
+                  helperText="Usa el mismo slug que consume la ruta pública."
+                />
+              )}
             </Grid>
             <Grid item xs={12} md={2}>
               <TextField
