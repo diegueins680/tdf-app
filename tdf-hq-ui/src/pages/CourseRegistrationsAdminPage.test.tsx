@@ -363,6 +363,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Cancelar',
+        ),
+      ).toBe(false);
       expect(document.body.textContent).toContain('Registrar seguimiento');
       expect(document.body.textContent).not.toContain(
         'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
@@ -1128,7 +1135,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Cancelar')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
     });
 
     await cleanup();

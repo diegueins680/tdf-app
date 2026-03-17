@@ -1539,7 +1539,7 @@ export default function CourseRegistrationsAdminPage() {
                                 {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
                               </Button>
                               <Button variant="text" onClick={() => resetReceiptComposer()}>
-                                {receiptForm.editingId == null ? 'Cancelar' : 'Cancelar edición'}
+                                {receiptForm.editingId == null ? 'Cancelar comprobante' : 'Cancelar edición de comprobante'}
                               </Button>
                             </Stack>
                           </Stack>
@@ -1723,7 +1723,7 @@ export default function CourseRegistrationsAdminPage() {
                                   {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
                                 </Button>
                                 <Button variant="text" onClick={resetFollowUpComposer}>
-                                  {followUpForm.editingId == null ? 'Cancelar' : 'Cancelar edición'}
+                                  {followUpForm.editingId == null ? 'Cancelar seguimiento' : 'Cancelar edición de seguimiento'}
                                 </Button>
                               </Stack>
                             </Stack>
