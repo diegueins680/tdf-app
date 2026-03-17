@@ -240,6 +240,26 @@ const registrationContactSummary = (email: string | null | undefined, phone: str
   return parts.join(' · ');
 };
 
+const registrationListContextSummary = ({
+  cohortLabel,
+  createdAt,
+  showCohort,
+  showSource,
+  source,
+}: {
+  cohortLabel: string;
+  createdAt: string | null | undefined;
+  showCohort: boolean;
+  showSource: boolean;
+  source: string | null | undefined;
+}) => {
+  const parts: string[] = [];
+  if (showCohort) parts.push(`Cohorte: ${cohortLabel}`);
+  if (showSource) parts.push(`Fuente: ${registrationSourceLabel(source)}`);
+  parts.push(`Creado: ${formatDate(createdAt)}`);
+  return parts.join(' · ');
+};
+
 const trimToNull = (value: string): string | null => {
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
@@ -1327,6 +1347,13 @@ export default function CourseRegistrationsAdminPage() {
                     ? rowCohortSlug !== selectedSlug
                     : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
                   const showRowSource = !hasSharedVisibleSource;
+                  const rowContextSummary = registrationListContextSummary({
+                    cohortLabel: rowCohortLabel,
+                    createdAt: reg.crCreatedAt,
+                    showCohort: showRowCohort,
+                    showSource: showRowSource,
+                    source: reg.crSource,
+                  });
                   return (
                     <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Box sx={{ minWidth: 240 }}>
@@ -1339,16 +1366,8 @@ export default function CourseRegistrationsAdminPage() {
                         {reg.crAdminNotes && <Chip size="small" label="Con notas" variant="outlined" sx={{ mt: 1 }} />}
                       </Box>
                       <Box sx={{ minWidth: 180 }}>
-                        {showRowCohort && (
-                          <Typography variant="body2">Cohorte: {rowCohortLabel}</Typography>
-                        )}
-                        {showRowSource && (
-                          <Typography variant="body2" color="text.secondary">
-                            Fuente: {registrationSourceLabel(reg.crSource)}
-                          </Typography>
-                        )}
                         <Typography variant="body2" color="text.secondary">
-                          Creado: {formatDate(reg.crCreatedAt)}
+                          {rowContextSummary}
                         </Typography>
                       </Box>
                       <Button size="small" variant="outlined" onClick={() => handleOpenDossier(reg, 'review')}>

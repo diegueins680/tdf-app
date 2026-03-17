@@ -11,6 +11,7 @@ import type {
   CourseRegistrationFollowUpDTO,
   CourseRegistrationReceiptDTO,
 } from '../api/courses';
+import { formatTimestampForDisplay } from '../utils/dateTime';
 
 const listCohortsMock = jest.fn<() => Promise<CourseCohortOptionDTO[]>>();
 const listRegistrationsMock = jest.fn<
@@ -557,6 +558,40 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(container, 'ada@example.com · +593999000111')).toBe(true);
       expect(hasExactText(container, '+593999000111')).toBe(false);
       expect(hasExactText(container, 'grace@example.com')).toBe(true);
+    });
+
+    await cleanup();
+  });
+
+  it('condenses row cohort, source, and created metadata into one summary line', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'mixing-bootcamp',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crSource: 'referral',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasExactText(
+        container,
+        `Cohorte: Beatmaking 101 (beatmaking-101) · Fuente: landing · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+      )).toBe(true);
+      expect(hasExactText(
+        container,
+        `Cohorte: Mixing Bootcamp (mixing-bootcamp) · Fuente: referral · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+      )).toBe(true);
     });
 
     await cleanup();
