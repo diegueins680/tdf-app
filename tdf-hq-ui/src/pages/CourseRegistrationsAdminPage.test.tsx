@@ -48,7 +48,6 @@ jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
 const { default: CourseRegistrationsAdminPage } = await import('./CourseRegistrationsAdminPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
-const rowActionsHint = 'Abre el expediente para notas, comprobantes, seguimiento y correos. Usa el boton de estado solo para cambios rapidos.';
 
 const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   let lastError: unknown;
@@ -277,12 +276,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote.',
       );
-      expect(container.textContent).toContain(rowActionsHint);
-      expect(countOccurrences(container, rowActionsHint)).toBe(1);
       expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Aplicar filtros');
       expect(container.textContent).toContain('Abrir expediente');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe(
+        'Cambiar estado: Pendiente de pago',
+      );
       expect(container.textContent).not.toContain('Ver correos');
       expect(hasLabel(container, 'Límite')).toBe(false);
       expect(getButtonByText(container, 'Más filtros')).toBeTruthy();
@@ -904,15 +904,14 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain(rowActionsHint);
-      expect(countOccurrences(container, rowActionsHint)).toBe(1);
+      expect(container.textContent).not.toContain('Usa el boton de estado solo para cambios rapidos.');
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cancelado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado: Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado: Pagado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado: Cancelado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
-      expect(container.textContent).not.toContain('Estado:');
-      expect(container.textContent).not.toContain('Cambiar estado:');
+      expect(container.textContent).not.toContain('Estado disponible');
+      expect(countOccurrences(container, 'Cambiar estado:')).toBe(3);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).toBeNull();
@@ -1528,7 +1527,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.',
       );
       expect(container.textContent).toContain('No hay inscripciones para esta vista.');
-      expect(container.textContent).not.toContain(rowActionsHint);
+      expect(container.textContent).not.toContain('Cambiar estado:');
       expect(container.textContent).not.toContain('Leyenda de estados:');
       expect(container.textContent).not.toContain('Total: 0');
       expect(container.textContent).not.toContain('Pagadas: 0');

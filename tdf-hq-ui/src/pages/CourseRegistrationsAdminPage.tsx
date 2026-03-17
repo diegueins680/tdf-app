@@ -51,7 +51,6 @@ type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
 const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
 const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
-const rowActionsHint = 'Abre el expediente para notas, comprobantes, seguimiento y correos. Usa el boton de estado solo para cambios rapidos.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -149,7 +148,7 @@ const isRegistrationStatus = (
 const registrationStatusLabel = (status: string) =>
   isRegistrationStatus(status) ? statusFilterLabels[status] : status.trim() || 'Estado desconocido';
 
-const registrationStatusActionLabel = (status: string) => registrationStatusLabel(status);
+const registrationStatusActionLabel = (status: string) => `Cambiar estado: ${registrationStatusLabel(status)}`;
 
 const registrationStatusChipColor = (
   status: string,
@@ -1169,9 +1168,6 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {regsQuery.data?.length ? (
           <Stack spacing={1.5}>
-            <Typography variant="caption" color="text.secondary">
-              {rowActionsHint}
-            </Typography>
             <Stack divider={<Divider flexItem />} spacing={2}>
               {regsQuery.data.map((reg) => {
                 const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
