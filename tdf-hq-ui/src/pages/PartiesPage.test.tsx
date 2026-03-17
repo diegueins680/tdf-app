@@ -64,6 +64,12 @@ const clickButton = (button: HTMLButtonElement) => {
   button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 };
 
+const getColumnHeaders = (root: ParentNode) =>
+  Array.from(root.querySelectorAll('th')).map((element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim());
+
+const getRowCellTexts = (row: HTMLTableRowElement) =>
+  Array.from(row.querySelectorAll('td')).map((element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim());
+
 const renderPage = async (container: HTMLElement) => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -161,6 +167,54 @@ describe('PartiesPage', () => {
 
       await waitForExpectation(() => {
         expect(getButtonsByText(document.body, 'Cambiar a persona')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('uses one plain-language company indicator instead of a duplicated org column', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Los Navegantes',
+        isOrg: true,
+        primaryEmail: 'hola@navegantes.test',
+        instagram: '@navegantes',
+      } satisfies PartyDTO,
+      {
+        partyId: 2,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        primaryEmail: 'ada@example.com',
+        instagram: '@ada',
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const bodyRows = Array.from(container.querySelectorAll('tbody tr')) as HTMLTableRowElement[];
+        expect(getColumnHeaders(container)).toEqual(['Nombre', 'Email', 'Instagram', 'Acciones']);
+        expect(bodyRows).toHaveLength(2);
+        expect(container.textContent).toContain('Los Navegantes');
+        expect(container.textContent).toContain('Empresa');
+        expect(container.textContent).not.toContain('ORG');
+        expect(getRowCellTexts(bodyRows[0] ?? document.createElement('tr'))).toEqual([
+          'Los NavegantesEmpresa',
+          'hola@navegantes.test',
+          '@navegantes',
+          '',
+        ]);
+        expect(getRowCellTexts(bodyRows[1] ?? document.createElement('tr'))).toEqual([
+          'Ada Lovelace',
+          'ada@example.com',
+          '@ada',
+          '',
+        ]);
       });
     } finally {
       await cleanup();

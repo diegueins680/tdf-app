@@ -378,7 +378,6 @@ export default function PartiesPage() {
           <TableHead>
             <TableRow>
               <TableCell>Nombre</TableCell>
-              <TableCell>Org</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Instagram</TableCell>
               <TableCell align="right">Acciones</TableCell>
@@ -387,7 +386,7 @@ export default function PartiesPage() {
           <TableBody>
             {partiesQuery.isLoading && (
               <TableRow>
-                <TableCell colSpan={5}>Cargando...</TableCell>
+                <TableCell colSpan={4}>Cargando...</TableCell>
               </TableRow>
             )}
             {!partiesQuery.isLoading && filtered.map((party) => (
@@ -406,10 +405,9 @@ export default function PartiesPage() {
                         {party.displayName}
                       </Typography>
                     </Button>
-                    {party.isOrg && <Chip label="ORG" size="small" />}
+                    {party.isOrg && <Chip label="Empresa" size="small" />}
                   </Stack>
                 </TableCell>
-                <TableCell>{party.isOrg ? 'Sí' : 'No'}</TableCell>
                 <TableCell>{party.primaryEmail ?? '—'}</TableCell>
                 <TableCell>{party.instagram ?? '—'}</TableCell>
                 <TableCell align="right">
