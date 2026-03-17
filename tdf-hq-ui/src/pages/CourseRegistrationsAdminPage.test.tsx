@@ -861,9 +861,12 @@ describe('CourseRegistrationsAdminPage', () => {
         status: 'paid',
         limit: 200,
       });
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).not.toContain('Ada Lovelace');
       expect(container.textContent).not.toContain('Katherine Johnson');
+      expect(container.textContent).toContain('Estado disponible');
+      expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
       expect(container.textContent).toContain('Vista filtrada: estado pagado.');
       expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
     });
@@ -882,10 +885,12 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 200,
       });
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).toContain('Katherine Johnson');
       expect(container.textContent).not.toContain('Vista filtrada:');
+      expect(container.textContent).not.toContain('Estado disponible');
     });
 
     await cleanup();

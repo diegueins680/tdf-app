@@ -440,17 +440,20 @@ export default function CourseRegistrationsAdminPage() {
   }, [hasVisibleRegistrations, status, statusCounts]);
   const hasHiddenStatusFilters = visibleStatusFilters.length < statusFilters.length;
   const singleVisibleStatus = useMemo<Exclude<StatusFilter, 'all'> | null>(() => {
-    if (!hasVisibleRegistrations || status !== 'all') return null;
+    if (!hasVisibleRegistrations) return null;
     const realStatuses = visibleStatusFilters.filter((value): value is Exclude<StatusFilter, 'all'> => value !== 'all');
     return realStatuses.length === 1 ? (realStatuses[0] ?? null) : null;
-  }, [hasVisibleRegistrations, status, visibleStatusFilters]);
+  }, [hasVisibleRegistrations, visibleStatusFilters]);
 
+  const showSingleStatusSummary = Boolean(
+    singleVisibleStatus && (status === 'all' || status === singleVisibleStatus),
+  );
   const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
   const activeFilterSummary = useMemo(
     () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
     [activeCohortLabel, status, limit],
   );
-  const combinedSingleChoiceSummary = singleAvailableCohortLabel && singleVisibleStatus
+  const combinedSingleChoiceSummary = singleAvailableCohortLabel && showSingleStatusSummary && singleVisibleStatus
     ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
     : '';
   const filteredEmptyStateMessage = activeFilterSummary
@@ -1074,7 +1077,7 @@ export default function CourseRegistrationsAdminPage() {
                     )}
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    {singleVisibleStatus ? (
+                    {showSingleStatusSummary && singleVisibleStatus ? (
                       <Stack
                         spacing={0.5}
                         sx={{
