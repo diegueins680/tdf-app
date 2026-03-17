@@ -216,6 +216,14 @@ const registrationSourceLabel = (source: string | null | undefined) => {
   return trimmed === '' ? 'Sin fuente' : trimmed;
 };
 
+const registrationContactSummary = (email: string | null | undefined, phone: string | null | undefined) => {
+  const trimmedEmail = email?.trim() ?? '';
+  const trimmedPhone = phone?.trim() ?? '';
+  const parts = [trimmedEmail || 'Sin correo'];
+  if (trimmedPhone) parts.push(trimmedPhone);
+  return parts.join(' · ');
+};
+
 const trimToNull = (value: string): string | null => {
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
@@ -1222,13 +1230,8 @@ export default function CourseRegistrationsAdminPage() {
                         {reg.crFullName ?? 'Sin nombre'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {reg.crEmail ?? 'Sin correo'}
+                        {registrationContactSummary(reg.crEmail, reg.crPhoneE164)}
                       </Typography>
-                      {reg.crPhoneE164 && (
-                        <Typography variant="body2" color="text.secondary">
-                          {reg.crPhoneE164}
-                        </Typography>
-                      )}
                       {reg.crAdminNotes && <Chip size="small" label="Con notas" variant="outlined" sx={{ mt: 1 }} />}
                     </Box>
                     <Box sx={{ minWidth: 180 }}>
@@ -1355,7 +1358,7 @@ export default function CourseRegistrationsAdminPage() {
                     )}
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
-                    {activeRegistration.crEmail ?? 'Sin correo'} {activeRegistration.crPhoneE164 ? `· ${activeRegistration.crPhoneE164}` : ''}
+                    {registrationContactSummary(activeRegistration.crEmail, activeRegistration.crPhoneE164)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Curso: {activeRegistrationCourseLabel} · Fuente: {registrationSourceLabel(activeRegistration.crSource)} · Creado: {formatDate(activeRegistration.crCreatedAt)}

@@ -225,6 +225,9 @@ const getMenuItemByText = (root: ParentNode, labelText: string) => {
 const countOccurrences = (root: ParentNode, text: string) =>
   (root.textContent ?? '').split(text).length - 1;
 
+const hasExactText = (root: ParentNode, text: string) =>
+  Array.from(root.querySelectorAll('*')).some((el) => (el.textContent ?? '').trim() === text);
+
 const countButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((el) => (el.textContent ?? '').trim() === labelText).length;
 
@@ -503,6 +506,30 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).toContain('Fuente: landing');
+    });
+
+    await cleanup();
+  });
+
+  it('condenses each registration contact line into one scan-friendly summary', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crPhoneE164: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasExactText(container, 'ada@example.com · +593999000111')).toBe(true);
+      expect(hasExactText(container, '+593999000111')).toBe(false);
+      expect(hasExactText(container, 'grace@example.com')).toBe(true);
     });
 
     await cleanup();
