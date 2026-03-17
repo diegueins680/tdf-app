@@ -967,7 +967,7 @@ export default function CourseRegistrationsAdminPage() {
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {hasVisibleRegistrations && (
             <>
-              <Chip label={`Total: ${statusCounts.total}`} size="small" />
+              {statusCounts.total > 1 && <Chip label={`Total: ${statusCounts.total}`} size="small" />}
               {visibleStatusSummaryChips.map((chip) => (
                 <Chip
                   key={chip.key}

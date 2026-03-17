@@ -1507,7 +1507,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the header comparative by hiding redundant single-status totals', async () => {
+  it('keeps the header comparative by hiding a solitary total chip and redundant single-status totals', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
     ]);
@@ -1517,7 +1517,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Total: 1');
+      expect(container.textContent).not.toContain('Total: 1');
       expect(container.textContent).not.toContain('Pendientes: 1');
       expect(container.textContent).not.toContain('Pagadas: 0');
       expect(container.textContent).not.toContain('Canceladas: 0');
