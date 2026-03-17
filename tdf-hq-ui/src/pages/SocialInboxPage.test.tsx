@@ -251,6 +251,26 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('hides duplicate empty channel panels when another channel already has messages', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelectorAll('table')).toHaveLength(1);
+      expect(container.textContent).toContain(
+        'Showing only channels with messages in this view. No messages right now: Facebook, WhatsApp.',
+      );
+      expect(container.textContent).not.toContain('No messages for this filter.');
+    });
+
+    await cleanup();
+  });
+
   it('keeps inbox filters visible when the default filter would hide the only available status', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage({

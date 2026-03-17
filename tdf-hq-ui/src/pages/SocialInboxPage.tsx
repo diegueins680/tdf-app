@@ -1183,6 +1183,57 @@ export default function SocialInboxPage() {
   const instagramMessages = useMemo(() => selectMessages(instagramStats, filter), [instagramStats, filter]);
   const facebookMessages = useMemo(() => selectMessages(facebookStats, filter), [facebookStats, filter]);
   const whatsappMessages = useMemo(() => selectMessages(whatsappStats, filter), [whatsappStats, filter]);
+  const channelPanels = useMemo(
+    () => [
+      {
+        label: 'Instagram',
+        channel: 'instagram' as const,
+        stats: instagramStats,
+        messages: instagramMessages,
+        loading: instagramQuery.isLoading,
+        hasError: instagramQuery.isError,
+      },
+      {
+        label: 'Facebook',
+        channel: 'facebook' as const,
+        stats: facebookStats,
+        messages: facebookMessages,
+        loading: facebookQuery.isLoading,
+        hasError: facebookQuery.isError,
+      },
+      {
+        label: 'WhatsApp',
+        channel: 'whatsapp' as const,
+        stats: whatsappStats,
+        messages: whatsappMessages,
+        loading: whatsappQuery.isLoading,
+        hasError: whatsappQuery.isError,
+      },
+    ],
+    [
+      facebookMessages,
+      facebookQuery.isError,
+      facebookQuery.isLoading,
+      facebookStats,
+      instagramMessages,
+      instagramQuery.isError,
+      instagramQuery.isLoading,
+      instagramStats,
+      whatsappMessages,
+      whatsappQuery.isError,
+      whatsappQuery.isLoading,
+      whatsappStats,
+    ],
+  );
+  const hasVisibleChannelMessages = channelPanels.some((panel) => panel.messages.length > 0);
+  const visibleChannelPanels = hasVisibleChannelMessages
+    ? channelPanels.filter((panel) => panel.loading || panel.messages.length > 0)
+    : channelPanels;
+  const hiddenEmptyChannelLabels = hasVisibleChannelMessages
+    ? channelPanels
+        .filter((panel) => !panel.loading && !panel.hasError && panel.messages.length === 0)
+        .map((panel) => panel.label)
+    : [];
   const reviewAssetActionLabel = activeAsset
     ? 'Change selected asset'
     : 'Select asset in Instagram setup';
@@ -1370,34 +1421,26 @@ export default function SocialInboxPage() {
           {whatsappQuery.isError && renderChannelLoadError('whatsapp', whatsappQuery.error)}
         </Stack>
       )}
+      {hiddenEmptyChannelLabels.length > 0 && (
+        <Typography variant="body2" color="text.secondary">
+          {reviewMode
+            ? `Showing only channels with messages in this view. No messages right now: ${hiddenEmptyChannelLabels.join(', ')}.`
+            : `Mostrando solo canales con mensajes en esta vista. Sin mensajes ahora: ${hiddenEmptyChannelLabels.join(', ')}.`}
+        </Typography>
+      )}
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
-        <ChannelPanel
-          label="Instagram"
-          channel="instagram"
-          stats={instagramStats}
-          messages={instagramMessages}
-          loading={instagramQuery.isLoading}
-          reviewMode={reviewMode}
-          onSelect={(next) => setSelection(next)}
-        />
-        <ChannelPanel
-          label="Facebook"
-          channel="facebook"
-          stats={facebookStats}
-          messages={facebookMessages}
-          loading={facebookQuery.isLoading}
-          reviewMode={reviewMode}
-          onSelect={(next) => setSelection(next)}
-        />
-        <ChannelPanel
-          label="WhatsApp"
-          channel="whatsapp"
-          stats={whatsappStats}
-          messages={whatsappMessages}
-          loading={whatsappQuery.isLoading}
-          reviewMode={reviewMode}
-          onSelect={(next) => setSelection(next)}
-        />
+        {visibleChannelPanels.map((panel) => (
+          <ChannelPanel
+            key={panel.channel}
+            label={panel.label}
+            channel={panel.channel}
+            stats={panel.stats}
+            messages={panel.messages}
+            loading={panel.loading}
+            reviewMode={reviewMode}
+            onSelect={(next) => setSelection(next)}
+          />
+        ))}
       </Stack>
       <SocialMessageDialog
         selection={selection}
