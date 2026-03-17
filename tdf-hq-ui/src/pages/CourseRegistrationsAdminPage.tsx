@@ -1464,7 +1464,9 @@ export default function CourseRegistrationsAdminPage() {
                     <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
                       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                         <Typography variant="h6">Historial de seguimiento</Typography>
-                        <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
+                        {followUps.length > 0 && (
+                          <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
+                        )}
                       </Stack>
                       {!showFollowUpComposer && followUps.length > 0 && (
                         <Button
@@ -1581,7 +1583,7 @@ export default function CourseRegistrationsAdminPage() {
                               severity="info"
                               action={(
                                 <Button color="inherit" size="small" onClick={() => setShowFollowUpComposer(true)}>
-                                  Agregar seguimiento
+                                  Registrar primer seguimiento
                                 </Button>
                               )}
                             >

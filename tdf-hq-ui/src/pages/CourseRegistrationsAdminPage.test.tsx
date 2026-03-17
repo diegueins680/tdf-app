@@ -335,10 +335,11 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(document.body.textContent).not.toContain('0 guardados');
       expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(1);
+      expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(1);
       expect(document.body.textContent).toContain(
         'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
       );
+      expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
       expect(document.body.textContent).not.toContain(
         'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
@@ -351,7 +352,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await act(async () => {
       clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
-      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
       await flushPromises();
       await flushPromises();
     });
@@ -371,7 +372,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(
         'Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y las notas.',
       );
-      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
     });
@@ -771,11 +772,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(1);
+      expect(getButtonByText(document.body, 'Registrar primer seguimiento')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(1);
       expect(document.body.textContent).toContain(
         'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
       );
+      expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
       expect(document.body.textContent).not.toContain(
         'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
@@ -790,7 +792,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
       await flushPromises();
       await flushPromises();
     });
@@ -803,7 +805,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(
         'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
       );
-      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();
