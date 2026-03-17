@@ -1140,60 +1140,65 @@ export default function CourseRegistrationsAdminPage() {
           )
         )}
         {regsQuery.data?.length ? (
-          <Stack divider={<Divider flexItem />} spacing={2}>
-            {regsQuery.data.map((reg) => {
-              const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
-              const rowCohortSlug = reg.crCourseSlug.trim();
-              const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
-              const showRowCohort = selectedSlug ? rowCohortSlug !== selectedSlug : !singleVisibleCohortLabel;
-              const showRowSource = !shouldShowSharedSourceSummary;
-              return (
-                <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <Box sx={{ minWidth: 240 }}>
-                    <Typography variant="subtitle1" fontWeight={700}>
-                      {reg.crFullName ?? 'Sin nombre'}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {reg.crEmail ?? 'Sin correo'}
-                    </Typography>
-                    {reg.crPhoneE164 && (
-                      <Typography variant="body2" color="text.secondary">
-                        {reg.crPhoneE164}
+          <Stack spacing={1.5}>
+            <Typography variant="caption" color="text.secondary">
+              Abre el expediente para notas, comprobantes, seguimiento y correos. Haz clic en el estado actual para ver solo los cambios posibles.
+            </Typography>
+            <Stack divider={<Divider flexItem />} spacing={2}>
+              {regsQuery.data.map((reg) => {
+                const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
+                const rowCohortSlug = reg.crCourseSlug.trim();
+                const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
+                const showRowCohort = selectedSlug ? rowCohortSlug !== selectedSlug : !singleVisibleCohortLabel;
+                const showRowSource = !shouldShowSharedSourceSummary;
+                return (
+                  <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Box sx={{ minWidth: 240 }}>
+                      <Typography variant="subtitle1" fontWeight={700}>
+                        {reg.crFullName ?? 'Sin nombre'}
                       </Typography>
-                    )}
-                    {reg.crAdminNotes && <Chip size="small" label="Con notas" variant="outlined" sx={{ mt: 1 }} />}
-                  </Box>
-                  <Box sx={{ minWidth: 180 }}>
-                    {showRowCohort && (
-                      <Typography variant="body2">Cohorte: {rowCohortLabel}</Typography>
-                    )}
-                    {showRowSource && (
                       <Typography variant="body2" color="text.secondary">
-                        Fuente: {registrationSourceLabel(reg.crSource)}
+                        {reg.crEmail ?? 'Sin correo'}
                       </Typography>
-                    )}
-                    <Typography variant="body2" color="text.secondary">
-                      Creado: {formatDate(reg.crCreatedAt)}
-                    </Typography>
+                      {reg.crPhoneE164 && (
+                        <Typography variant="body2" color="text.secondary">
+                          {reg.crPhoneE164}
+                        </Typography>
+                      )}
+                      {reg.crAdminNotes && <Chip size="small" label="Con notas" variant="outlined" sx={{ mt: 1 }} />}
+                    </Box>
+                    <Box sx={{ minWidth: 180 }}>
+                      {showRowCohort && (
+                        <Typography variant="body2">Cohorte: {rowCohortLabel}</Typography>
+                      )}
+                      {showRowSource && (
+                        <Typography variant="body2" color="text.secondary">
+                          Fuente: {registrationSourceLabel(reg.crSource)}
+                        </Typography>
+                      )}
+                      <Typography variant="body2" color="text.secondary">
+                        Creado: {formatDate(reg.crCreatedAt)}
+                      </Typography>
+                    </Box>
+                    <Button size="small" variant="outlined" onClick={() => handleOpenDossier(reg, 'review')}>
+                      Abrir expediente
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color={registrationStatusButtonColor(reg.crStatus)}
+                      aria-label={`Cambiar estado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
+                      aria-haspopup="menu"
+                      disabled={isUpdating}
+                      onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
+                    >
+                      {registrationStatusLabel(reg.crStatus)}
+                    </Button>
+                    <Box sx={{ flexGrow: 1 }} />
                   </Box>
-                  <Button size="small" variant="outlined" onClick={() => handleOpenDossier(reg, 'review')}>
-                    Abrir expediente
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color={registrationStatusButtonColor(reg.crStatus)}
-                    aria-label={`Cambiar estado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
-                    aria-haspopup="menu"
-                    disabled={isUpdating}
-                    onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
-                  >
-                    Cambiar estado: {registrationStatusLabel(reg.crStatus)}
-                  </Button>
-                  <Box sx={{ flexGrow: 1 }} />
-                </Box>
-              );
-            })}
+                );
+              })}
+            </Stack>
           </Stack>
         ) : null}
       </Paper>

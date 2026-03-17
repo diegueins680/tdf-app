@@ -48,6 +48,7 @@ jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
 const { default: CourseRegistrationsAdminPage } = await import('./CourseRegistrationsAdminPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+const rowActionsHint = 'Abre el expediente para notas, comprobantes, seguimiento y correos. Haz clic en el estado actual para ver solo los cambios posibles.';
 
 const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   let lastError: unknown;
@@ -814,14 +815,14 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).not.toContain(
-        'Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón del estado actual para ver solo los cambios posibles.',
-      );
+      expect(container.textContent).toContain(rowActionsHint);
+      expect(countOccurrences(container, rowActionsHint)).toBe(1);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
-      expect(getButtonByText(container, 'Cambiar estado: Pendiente de pago')).toBeTruthy();
-      expect(getButtonByText(container, 'Cambiar estado: Pagado')).toBeTruthy();
-      expect(getButtonByText(container, 'Cambiar estado: Cancelado')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cancelado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
+      expect(container.textContent).not.toContain('Cambiar estado:');
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).toBeNull();
@@ -1395,9 +1396,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.',
       );
       expect(container.textContent).toContain('No hay inscripciones para esta vista.');
-      expect(container.textContent).not.toContain(
-        'Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón del estado actual para ver solo los cambios posibles.',
-      );
+      expect(container.textContent).not.toContain(rowActionsHint);
       expect(container.textContent).not.toContain('Leyenda de estados:');
       expect(container.textContent).not.toContain('Total: 0');
       expect(container.textContent).not.toContain('Pagadas: 0');
