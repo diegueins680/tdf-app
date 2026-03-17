@@ -10,13 +10,18 @@ import { collectUiFindings, summarizeUiFindings } from './lib/ui-static-audit.mj
 import {
   buildCommitContext,
   expandTemplate,
+  htmlToText,
   parseIdeaMarkdown,
   parseGitHubRemote,
   summarizeCheckRuns,
+  summarizeWorkflowRuns,
   verifyImprovementLoopModel,
 } from './lib/continuous-improvement-loop.mjs';
 
 const execFileAsync = promisify(execFile);
+const GITHUB_API_BASE = (process.env.GITHUB_API_BASE_URL ?? 'https://api.github.com').replace(/\/$/, '');
+const GITHUB_LOG_LINE_LIMIT = 200;
+const GITHUB_LOG_CHAR_LIMIT = 24_000;
 const DEFAULTS = {
   allowDirty: false,
   maxIterations: 0,
@@ -33,6 +38,10 @@ function sleep(milliseconds) {
   return new Promise((resolve) => {
     setTimeout(resolve, milliseconds);
   });
+}
+
+function getGitHubToken() {
+  return process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? process.env.GITHUB_PAT ?? '';
 }
 
 function buildContext(repoRoot, contextDir, iteration) {
@@ -76,6 +85,49 @@ async function execText(command, args, cwd) {
     const details = [error.message, error.stdout, error.stderr].filter(Boolean).join('\n');
     throw new Error(details);
   }
+}
+
+function resolveGitHubApiUrl(endpoint) {
+  if (/^https?:\/\//.test(endpoint)) {
+    return endpoint;
+  }
+  return `${GITHUB_API_BASE}/${String(endpoint).replace(/^\//, '')}`;
+}
+
+async function githubRequest(endpoint, options = {}) {
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'continuous-improvement-loop',
+    ...(options.headers ?? {}),
+  };
+  const token = getGitHubToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(resolveGitHubApiUrl(endpoint), {
+    method: 'GET',
+    redirect: 'follow',
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const payload = await response.text();
+    throw new Error(`GitHub API request failed (${response.status} ${response.statusText}): ${payload}`);
+  }
+
+  return response;
+}
+
+async function githubJson(endpoint, options = {}) {
+  const response = await githubRequest(endpoint, options);
+  return response.json();
+}
+
+async function githubText(endpoint, options = {}) {
+  const response = await githubRequest(endpoint, options);
+  return response.text();
 }
 
 async function runShellCommand(command, repoRoot, context, options = {}) {
@@ -201,6 +253,15 @@ async function getRemoteUrl(repoRoot, remoteName) {
 async function getHeadSha(repoRoot) {
   const { stdout } = await execText('git', ['rev-parse', 'HEAD'], repoRoot);
   return stdout.trim();
+}
+
+async function getGitHubRemote(repoRoot, remoteName) {
+  const remoteUrl = await getRemoteUrl(repoRoot, remoteName);
+  const remote = parseGitHubRemote(remoteUrl);
+  if (!remote) {
+    throw new Error(`Unsupported Git remote for GitHub polling: ${remoteUrl}`);
+  }
+  return remote;
 }
 
 function splitLines(stdout) {
@@ -395,24 +456,135 @@ async function pushHead(repoRoot, remoteName, branchName) {
 }
 
 async function fetchCheckRuns(repoRoot, remoteName, sha) {
-  const remoteUrl = await getRemoteUrl(repoRoot, remoteName);
-  const remote = parseGitHubRemote(remoteUrl);
-  if (!remote) {
-    throw new Error(`Unsupported Git remote for GitHub polling: ${remoteUrl}`);
-  }
-
-  const endpoint = `repos/${remote.owner}/${remote.repo}/commits/${sha}/check-runs`;
-  const { stdout } = await execText(
-    'gh',
-    ['api', '-H', 'Accept: application/vnd.github+json', endpoint],
-    repoRoot,
-  );
-  const payload = JSON.parse(stdout);
+  const remote = await getGitHubRemote(repoRoot, remoteName);
+  const payload = await githubJson(`repos/${remote.owner}/${remote.repo}/commits/${encodeURIComponent(sha)}/check-runs`);
 
   return {
     owner: remote.owner,
     repo: remote.repo,
     checkRuns: payload.check_runs ?? [],
+  };
+}
+
+async function fetchWorkflowRuns(owner, repo, sha) {
+  const payload = await githubJson(
+    `repos/${owner}/${repo}/actions/runs?head_sha=${encodeURIComponent(sha)}&per_page=100`,
+  );
+  return payload.workflow_runs ?? [];
+}
+
+async function fetchWorkflowJobs(owner, repo, runId) {
+  const payload = await githubJson(`repos/${owner}/${repo}/actions/runs/${runId}/jobs?per_page=100`);
+  return payload.jobs ?? [];
+}
+
+function isSuccessfulConclusion(conclusion) {
+  return conclusion === 'success' || conclusion === 'neutral' || conclusion === 'skipped';
+}
+
+function isFailedConclusion(conclusion) {
+  return Boolean(conclusion) && !isSuccessfulConclusion(conclusion);
+}
+
+function trimLogForReport(logText) {
+  const normalized = String(logText ?? '').replace(/\r/g, '');
+  const lines = normalized.split('\n');
+  const tail = lines.slice(-GITHUB_LOG_LINE_LIMIT).join('\n');
+  if (tail.length <= GITHUB_LOG_CHAR_LIMIT && lines.length <= GITHUB_LOG_LINE_LIMIT) {
+    return tail.trim();
+  }
+
+  const clipped = tail.length > GITHUB_LOG_CHAR_LIMIT ? tail.slice(-GITHUB_LOG_CHAR_LIMIT) : tail;
+  return `[truncated to last ${GITHUB_LOG_LINE_LIMIT} lines / ${GITHUB_LOG_CHAR_LIMIT} chars]\n${clipped}`.trim();
+}
+
+async function fetchCheckRunAnnotations(checkRun) {
+  if (!checkRun?.output?.annotations_count || !checkRun.output.annotations_url) {
+    return [];
+  }
+
+  const annotations = await githubJson(checkRun.output.annotations_url);
+  return Array.isArray(annotations) ? annotations.slice(0, 50) : [];
+}
+
+async function fetchFailedCheckDiagnostics(checkRun) {
+  let annotations = [];
+  let annotationError = '';
+  try {
+    annotations = await fetchCheckRunAnnotations(checkRun);
+  } catch (error) {
+    annotationError = error.message;
+  }
+
+  return {
+    id: checkRun.id ?? 0,
+    name: checkRun.name ?? '(unnamed check)',
+    appSlug: checkRun.app?.slug ?? '',
+    appName: checkRun.app?.name ?? '',
+    status: checkRun.status ?? 'unknown',
+    conclusion: checkRun.conclusion ?? 'pending',
+    detailsUrl: checkRun.details_url ?? checkRun.html_url ?? '',
+    htmlUrl: checkRun.html_url ?? '',
+    outputTitle: checkRun.output?.title ?? '',
+    outputSummary: htmlToText(checkRun.output?.summary ?? ''),
+    outputText: htmlToText(checkRun.output?.text ?? ''),
+    annotations: annotations.map((annotation) => ({
+      path: annotation.path ?? '',
+      startLine: annotation.start_line ?? null,
+      endLine: annotation.end_line ?? null,
+      level: annotation.annotation_level ?? '',
+      title: annotation.title ?? '',
+      message: annotation.message ?? '',
+    })),
+    annotationError: annotationError || undefined,
+  };
+}
+
+async function fetchFailedWorkflowDiagnostics(owner, repo, workflowRun) {
+  const jobs = await fetchWorkflowJobs(owner, repo, workflowRun.id);
+  const failingJobs = jobs.filter((job) => job.status !== 'completed' || isFailedConclusion(job.conclusion));
+
+  const jobDiagnostics = await Promise.all(
+    failingJobs.map(async (job) => {
+      let logExcerpt = '';
+      let logError = '';
+      try {
+        logExcerpt = trimLogForReport(
+          await githubText(`repos/${owner}/${repo}/actions/jobs/${job.id}/logs`, {
+            headers: { Accept: 'application/vnd.github+json' },
+          }),
+        );
+      } catch (error) {
+        logError = error.message;
+      }
+
+      return {
+        id: job.id ?? 0,
+        name: job.name ?? '(unnamed job)',
+        status: job.status ?? 'unknown',
+        conclusion: job.conclusion ?? 'pending',
+        htmlUrl: job.html_url ?? '',
+        failedSteps: (job.steps ?? [])
+          .filter((step) => step.status !== 'completed' || isFailedConclusion(step.conclusion))
+          .map((step) => ({
+            number: step.number ?? 0,
+            name: step.name ?? '',
+            status: step.status ?? 'unknown',
+            conclusion: step.conclusion ?? 'pending',
+          })),
+        logExcerpt: logExcerpt || undefined,
+        logError: logError || undefined,
+      };
+    }),
+  );
+
+  return {
+    id: workflowRun.id ?? 0,
+    name: workflowRun.name ?? workflowRun.display_title ?? '(unnamed workflow)',
+    status: workflowRun.status ?? 'unknown',
+    conclusion: workflowRun.conclusion ?? 'pending',
+    htmlUrl: workflowRun.html_url ?? '',
+    jobs: jobDiagnostics,
   };
 }
 
@@ -422,27 +594,44 @@ async function waitForGreenCi(repoRoot, config, sha) {
 
   while (true) {
     const { owner, repo, checkRuns } = await fetchCheckRuns(repoRoot, config.pushRemote, sha);
-    const summary = summarizeCheckRuns(checkRuns);
+    const workflowRuns = await fetchWorkflowRuns(owner, repo, sha);
+    const checkSummary = summarizeCheckRuns(checkRuns);
+    const workflowSummary = summarizeWorkflowRuns(workflowRuns);
+    const failedCheckRuns = checkRuns.filter(
+      (checkRun) => checkRun.status === 'completed' && isFailedConclusion(checkRun.conclusion),
+    );
+    const failedWorkflowRuns = workflowRuns.filter(
+      (workflowRun) => workflowRun.status === 'completed' && isFailedConclusion(workflowRun.conclusion),
+    );
+    const pendingCount = checkSummary.pending.length + workflowSummary.pending.length;
 
-    if (checkRuns.length > 0) {
+    if (checkRuns.length > 0 || workflowRuns.length > 0) {
       sawChecks = true;
     }
 
-    if (summary.failed.length > 0) {
+    if (failedCheckRuns.length > 0 || failedWorkflowRuns.length > 0) {
       return {
         ok: false,
         owner,
         repo,
         sha,
-        summary,
+        summary: {
+          checks: checkSummary,
+          workflows: workflowSummary,
+        },
         checkRuns,
+        workflowRuns,
+        failedChecks: await Promise.all(failedCheckRuns.map((checkRun) => fetchFailedCheckDiagnostics(checkRun))),
+        failedWorkflowRuns: await Promise.all(
+          failedWorkflowRuns.map((workflowRun) => fetchFailedWorkflowDiagnostics(owner, repo, workflowRun)),
+        ),
       };
     }
 
-    if ((summary.pending.length > 0 || !sawChecks) && Date.now() <= deadline) {
+    if ((pendingCount > 0 || !sawChecks) && Date.now() <= deadline) {
       console.log(
         sawChecks
-          ? `Waiting for ${summary.pending.length} GitHub check(s) to finish for ${sha}...`
+          ? `Waiting for ${pendingCount} GitHub check(s) / workflow run(s) to finish for ${sha}...`
           : `Waiting for GitHub check runs to appear for ${sha}...`,
       );
       await sleep(Number(config.pollIntervalSeconds) * 1000);
@@ -455,21 +644,29 @@ async function waitForGreenCi(repoRoot, config, sha) {
         owner,
         repo,
         sha,
-        summary,
+        summary: {
+          checks: checkSummary,
+          workflows: workflowSummary,
+        },
         checkRuns,
+        workflowRuns,
         timeout: true,
         message: 'Timed out waiting for GitHub check runs to appear.',
       };
     }
 
-    if (summary.pending.length > 0) {
+    if (pendingCount > 0) {
       return {
         ok: false,
         owner,
         repo,
         sha,
-        summary,
+        summary: {
+          checks: checkSummary,
+          workflows: workflowSummary,
+        },
         checkRuns,
+        workflowRuns,
         timeout: true,
         message: 'Timed out waiting for GitHub checks to finish.',
       };
@@ -480,8 +677,12 @@ async function waitForGreenCi(repoRoot, config, sha) {
       owner,
       repo,
       sha,
-      summary,
+      summary: {
+        checks: checkSummary,
+        workflows: workflowSummary,
+      },
       checkRuns,
+      workflowRuns,
     };
   }
 }

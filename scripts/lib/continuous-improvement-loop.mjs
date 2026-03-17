@@ -119,6 +119,38 @@ function summarizeIdeaTitle(title, targetPath) {
   return cleanCommitText(summary);
 }
 
+function isGenericIdeaTitle(title) {
+  const normalized = cleanCommitText(title);
+  return normalized === '' || normalized === 'improvement idea' || normalized === 'improvement' || normalized === 'idea';
+}
+
+function summarizeIdeaReason(reason, targetPath) {
+  const normalizedReason = normalizeWhitespace(reason);
+  if (!normalizedReason) return '';
+
+  const area = targetPath ? describeFileArea(targetPath) : '';
+  const lowerReason = normalizedReason.toLowerCase();
+
+  if (/iconbutton\b.*explicit accessible label/.test(lowerReason)) {
+    return area ? `label icon buttons in ${area}` : 'label icon buttons';
+  }
+
+  if (/textfield\b.*visible or programmatic label/.test(lowerReason)) {
+    return area ? `label form fields in ${area}` : 'label form fields';
+  }
+
+  if (/\b(img|image)\b.*\balt\b/.test(lowerReason)) {
+    return area ? `add image alt text in ${area}` : 'add image alt text';
+  }
+
+  if (/build failed/.test(lowerReason)) {
+    return area ? `stabilize build in ${area}` : 'stabilize build';
+  }
+
+  const summary = area ? `${normalizedReason} in ${area}` : normalizedReason;
+  return cleanCommitText(summary);
+}
+
 function inferCommitType(context, stagedFiles) {
   if (stagedFiles.length > 0 && stagedFiles.every(isDocFile)) return 'docs';
   if (stagedFiles.length > 0 && stagedFiles.every(isTestFile)) return 'test';
@@ -226,8 +258,17 @@ export function buildCommitContext(context, stagedFiles) {
   const commitType = inferCommitType(context, stagedFiles);
 
   let commitSummary = '';
-  if (context.idea_title && (!targetPath || matchesTargetPath(stagedFiles, targetPath))) {
+  if (
+    context.idea_title &&
+    !isGenericIdeaTitle(context.idea_title) &&
+    (!targetPath || matchesTargetPath(stagedFiles, targetPath))
+  ) {
     commitSummary = summarizeIdeaTitle(context.idea_title, targetPath);
+  }
+
+  const canUseTargetReason = !targetPath || matchesTargetPath(stagedFiles, targetPath);
+  if (!commitSummary && context.idea_reason && canUseTargetReason) {
+    commitSummary = summarizeIdeaReason(context.idea_reason, targetPath || primaryPath);
   }
 
   if (!commitSummary) {
@@ -414,4 +455,51 @@ export function summarizeCheckRuns(checkRuns) {
   }
 
   return summary;
+}
+
+export function summarizeWorkflowRuns(workflowRuns) {
+  const summary = {
+    pending: [],
+    failed: [],
+    successful: [],
+  };
+
+  for (const workflowRun of workflowRuns) {
+    const record = {
+      id: workflowRun.id ?? 0,
+      name: workflowRun.name ?? workflowRun.display_title ?? '(unnamed workflow)',
+      status: workflowRun.status ?? 'unknown',
+      conclusion: workflowRun.conclusion ?? 'pending',
+      detailsUrl: workflowRun.html_url ?? '',
+    };
+
+    if (record.status !== 'completed' || !workflowRun.conclusion) {
+      summary.pending.push(record);
+      continue;
+    }
+
+    if (SUCCESSFUL_CHECK_CONCLUSIONS.has(workflowRun.conclusion)) {
+      summary.successful.push(record);
+      continue;
+    }
+
+    if (FAILED_CHECK_CONCLUSIONS.has(workflowRun.conclusion) || workflowRun.conclusion) {
+      summary.failed.push(record);
+    }
+  }
+
+  return summary;
+}
+
+export function htmlToText(value) {
+  return normalizeWhitespace(
+    String(value ?? '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'"),
+  );
 }

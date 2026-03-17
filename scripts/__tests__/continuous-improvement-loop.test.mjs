@@ -9,8 +9,10 @@ import { promisify } from 'node:util';
 import {
   buildCommitContext,
   expandTemplate,
+  htmlToText,
   parseIdeaMarkdown,
   parseGitHubRemote,
+  summarizeWorkflowRuns,
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
 import { buildDefaultIdea } from '../lib/discovery.mjs';
@@ -88,6 +90,64 @@ test('buildCommitContext falls back to the staged area when the target does not 
 
   assert.equal(context.commit_type, 'chore');
   assert.equal(context.commit_message, 'chore: update continuous improvement loop');
+});
+
+test('buildCommitContext ignores generic idea titles and uses target plus reason instead', () => {
+  const context = buildCommitContext(
+    {
+      idea_title: 'Improvement Idea',
+      idea_target: 'tdf-hq-ui/src/pages/LabelArtistsPage.tsx:337',
+      idea_reason: 'IconButton is missing an explicit accessible label.',
+    },
+    ['tdf-hq-ui/src/pages/LabelArtistsPage.tsx'],
+  );
+
+  assert.equal(context.commit_type, 'fix');
+  assert.equal(context.commit_summary, 'label icon buttons in label artists page');
+  assert.equal(context.commit_message, 'fix: label icon buttons in label artists page');
+});
+
+test('summarizeWorkflowRuns separates pending, successful, and failed workflow runs', () => {
+  const summary = summarizeWorkflowRuns([
+    { id: 1, name: 'Build Image', status: 'completed', conclusion: 'success', html_url: 'https://example.com/build' },
+    { id: 2, name: 'Deploy', status: 'in_progress', conclusion: null, html_url: 'https://example.com/deploy' },
+    { id: 3, name: 'Smoke', status: 'completed', conclusion: 'failure', html_url: 'https://example.com/smoke' },
+  ]);
+
+  assert.deepEqual(summary.successful, [
+    {
+      id: 1,
+      name: 'Build Image',
+      status: 'completed',
+      conclusion: 'success',
+      detailsUrl: 'https://example.com/build',
+    },
+  ]);
+  assert.deepEqual(summary.pending, [
+    {
+      id: 2,
+      name: 'Deploy',
+      status: 'in_progress',
+      conclusion: 'pending',
+      detailsUrl: 'https://example.com/deploy',
+    },
+  ]);
+  assert.deepEqual(summary.failed, [
+    {
+      id: 3,
+      name: 'Smoke',
+      status: 'completed',
+      conclusion: 'failure',
+      detailsUrl: 'https://example.com/smoke',
+    },
+  ]);
+});
+
+test('htmlToText strips tags and decodes common entities', () => {
+  assert.equal(
+    htmlToText('<table><tr><td>Status:</td><td>🚫&nbsp;Build failed &amp; stopped.</td></tr></table>'),
+    'Status: 🚫 Build failed & stopped.',
+  );
 });
 
 test('verifyImprovementLoopModel passes its own safety checks', () => {
