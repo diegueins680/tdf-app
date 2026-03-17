@@ -376,8 +376,9 @@ describe('PartiesPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Haz clic en el nombre para ver relaciones. Abre Acciones para editar el contacto o crear accesos sin llenar cada fila de iconos.',
+          'Haz clic en el nombre para ver relaciones. Abre Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo muestra.',
         );
+        expect(container.textContent).toContain('Usuario creado');
         expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
         expect(container.querySelector('button[aria-label="Editar contacto Ada Lovelace"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Crear usuario para Ada Lovelace"]')).toBeNull();
@@ -395,13 +396,33 @@ describe('PartiesPage', () => {
       });
 
       await act(async () => {
+        clickButton(getButtonByAriaLabel(container, 'Abrir acciones para Los Navegantes'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getMenuItemByText(document.body, 'Editar contacto')).toBeTruthy();
+        expect(
+          Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+            (element) => buttonText(element) === 'Crear usuario y enviar contraseña',
+          ),
+        ).toBe(false);
+        expect(
+          Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+            (element) => buttonText(element) === 'Usuario ya creado',
+          ),
+        ).toBe(false);
+      });
+
+      await act(async () => {
         clickElement(getMenuItemByText(document.body, 'Editar contacto'));
         await flushPromises();
         await flushPromises();
       });
 
       await waitForExpectation(() => {
-        expect(document.body.textContent).toContain('Editar Ada Lovelace');
+        expect(document.body.textContent).toContain('Editar Los Navegantes');
       });
     } finally {
       await cleanup();

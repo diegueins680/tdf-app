@@ -428,8 +428,8 @@ export default function PartiesPage() {
           <>
             {showTableGuidance && (
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                Haz clic en el nombre para ver relaciones. Abre Acciones para editar el contacto o crear accesos sin
-                llenar cada fila de iconos.
+                Haz clic en el nombre para ver relaciones. Abre Acciones para editar el contacto o crear accesos cuando
+                haga falta; si la cuenta ya existe, la fila lo muestra.
               </Typography>
             )}
             <Table size="small">
@@ -464,6 +464,9 @@ export default function PartiesPage() {
                           </Typography>
                         </Button>
                         {party.isOrg && <Chip label="Empresa" size="small" />}
+                        {party.hasUserAccount && (
+                          <Chip label="Usuario creado" size="small" color="success" variant="outlined" />
+                        )}
                       </Stack>
                     </TableCell>
                     <TableCell>{party.primaryEmail ?? '—'}</TableCell>
@@ -497,13 +500,12 @@ export default function PartiesPage() {
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
           Editar contacto
         </MenuItem>
-        <MenuItem
-          onClick={() => runPartyMenuAction((party) => setUserDialogParty(party))}
-          disabled={Boolean(actionsMenuTarget?.party.hasUserAccount)}
-        >
-          <PersonAddAltIcon fontSize="small" sx={{ mr: 1 }} />
-          {actionsMenuTarget?.party.hasUserAccount ? 'Usuario ya creado' : 'Crear usuario y enviar contraseña'}
-        </MenuItem>
+        {!actionsMenuTarget?.party.hasUserAccount && (
+          <MenuItem onClick={() => runPartyMenuAction((party) => setUserDialogParty(party))}>
+            <PersonAddAltIcon fontSize="small" sx={{ mr: 1 }} />
+            Crear usuario y enviar contraseña
+          </MenuItem>
+        )}
         {canManageRoles && (
           <MenuItem onClick={() => runPartyMenuAction(() => navigate('/configuracion/roles-permisos'))}>
             <SchoolIcon fontSize="small" sx={{ mr: 1 }} />
