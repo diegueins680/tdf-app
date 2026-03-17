@@ -1072,12 +1072,6 @@ export default function CourseRegistrationsAdminPage() {
             ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.'
             : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.'}
         </Typography>
-        {hasVisibleRegistrations && (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
-            Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón
-            del estado actual para ver solo los cambios posibles.
-          </Typography>
-        )}
         {hasCustomFilters && hasVisibleRegistrations && (
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
             <Typography variant="body2" color="text.secondary">
@@ -1194,7 +1188,7 @@ export default function CourseRegistrationsAdminPage() {
                     disabled={isUpdating}
                     onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
                   >
-                    Estado: {registrationStatusLabel(reg.crStatus)}
+                    Cambiar estado: {registrationStatusLabel(reg.crStatus)}
                   </Button>
                   <Box sx={{ flexGrow: 1 }} />
                 </Box>

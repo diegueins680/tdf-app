@@ -807,13 +807,13 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain(
+      expect(container.textContent).not.toContain(
         'Cada fila tiene dos acciones: abre el expediente para notas, comprobantes y seguimiento; usa el botón del estado actual para ver solo los cambios posibles.',
       );
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
-      expect(getButtonByText(container, 'Estado: Pendiente de pago')).toBeTruthy();
-      expect(getButtonByText(container, 'Estado: Pagado')).toBeTruthy();
-      expect(getButtonByText(container, 'Estado: Cancelado')).toBeTruthy();
+      expect(getButtonByText(container, 'Cambiar estado: Pendiente de pago')).toBeTruthy();
+      expect(getButtonByText(container, 'Cambiar estado: Pagado')).toBeTruthy();
+      expect(getButtonByText(container, 'Cambiar estado: Cancelado')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
