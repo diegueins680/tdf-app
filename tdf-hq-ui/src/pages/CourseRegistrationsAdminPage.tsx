@@ -148,6 +148,8 @@ const isRegistrationStatus = (
 const registrationStatusLabel = (status: string) =>
   isRegistrationStatus(status) ? statusFilterLabels[status] : status.trim() || 'Estado desconocido';
 
+const registrationStatusActionLabel = (status: string) => `Estado: ${registrationStatusLabel(status)}`;
+
 const registrationStatusChipColor = (
   status: string,
 ): 'default' | 'success' | 'warning' | 'error' => {
@@ -1161,7 +1163,7 @@ export default function CourseRegistrationsAdminPage() {
         {regsQuery.data?.length ? (
           <Stack spacing={1.5}>
             <Typography variant="caption" color="text.secondary">
-              Abre el expediente para notas, comprobantes, seguimiento y correos. Haz clic en el estado actual para ver solo los cambios posibles.
+              Abre el expediente para notas, comprobantes, seguimiento y correos.
             </Typography>
             <Stack divider={<Divider flexItem />} spacing={2}>
               {regsQuery.data.map((reg) => {
@@ -1211,7 +1213,7 @@ export default function CourseRegistrationsAdminPage() {
                       disabled={isUpdating}
                       onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
                     >
-                      {registrationStatusLabel(reg.crStatus)}
+                      {registrationStatusActionLabel(reg.crStatus)}
                     </Button>
                     <Box sx={{ flexGrow: 1 }} />
                   </Box>
