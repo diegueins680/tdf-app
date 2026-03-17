@@ -129,6 +129,21 @@ function formFromAsset(asset: AssetDTO): AssetFormState {
   };
 }
 
+const getAssetLocationLabels = (asset: AssetDTO, roomMap: Map<string, RoomDTO>) => {
+  if (!asset.location) {
+    return {
+      table: '—',
+      summary: 'Sin sala asignada',
+    };
+  }
+  const room = roomMap.get(asset.location);
+  const label = room?.rName ?? asset.location;
+  return {
+    table: label,
+    summary: label,
+  };
+};
+
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Todos' },
   { value: 'Active', label: 'Activos' },
@@ -429,9 +444,22 @@ export default function LabelAssetsPage() {
     activeFilterLabels.length > 0
       ? `No hay assets con los filtros actuales: ${activeFilterLabels.join(' · ')}. Limpia filtros o ajusta la búsqueda si esperabas resultados.`
       : 'No hay assets con los filtros actuales.';
+  const sharedVisibleLocationSummary = useMemo(() => {
+    if (filteredAssets.length < 2) return '';
+    const uniqueLocations = Array.from(
+      new Set(filteredAssets.map((asset) => getAssetLocationLabels(asset, roomMap).summary)),
+    );
+    if (uniqueLocations.length !== 1) return '';
+    const onlyLocation = uniqueLocations[0];
+    if (!onlyLocation) return '';
+    return onlyLocation === 'Sin sala asignada'
+      ? 'Todos los assets visibles están sin sala asignada.'
+      : `Mostrando una sola ubicación: ${onlyLocation}.`;
+  }, [filteredAssets, roomMap]);
   const showFilterSummary = !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
   const showCategoryColumn = !showSingleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
+  const showLocationColumn = !sharedVisibleLocationSummary;
 
   const handleOpenNew = () => {
     setEditingAsset(null);
@@ -501,11 +529,7 @@ export default function LabelAssetsPage() {
     }
   };
 
-  const displayLocation = (asset: AssetDTO) => {
-    if (!asset.location) return '—';
-    const room = roomMap.get(asset.location);
-    return room?.rName ?? asset.location;
-  };
+  const displayLocation = (asset: AssetDTO) => getAssetLocationLabels(asset, roomMap).table;
 
   const renderStatusChip = (status: string) => {
     const key = status.toLowerCase();
@@ -721,6 +745,11 @@ export default function LabelAssetsPage() {
 
       <Card sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
+          {sharedVisibleLocationSummary && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              {sharedVisibleLocationSummary}
+            </Typography>
+          )}
           {!assetsQuery.isLoading && assets.length > 0 && (
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
               Usa el boton de prestamo o devolucion para registrar movimientos rapidos. Abre Acciones para editar,
@@ -753,7 +782,7 @@ export default function LabelAssetsPage() {
                   <TableCell>Asset</TableCell>
                   {showCategoryColumn && <TableCell>Categoría</TableCell>}
                   {showStatusColumn && <TableCell>Estado</TableCell>}
-                  <TableCell>Ubicación</TableCell>
+                  {showLocationColumn && <TableCell>Ubicación</TableCell>}
                   <TableCell align="right">Acciones</TableCell>
                 </TableRow>
               </TableHead>
@@ -799,7 +828,7 @@ export default function LabelAssetsPage() {
                       </TableCell>
                       {showCategoryColumn && <TableCell>{asset.category}</TableCell>}
                       {showStatusColumn && <TableCell>{renderStatusChip(asset.status)}</TableCell>}
-                      <TableCell>{displayLocation(asset)}</TableCell>
+                      {showLocationColumn && <TableCell>{displayLocation(asset)}</TableCell>}
                       <TableCell align="right">
                         <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
                           {renderMovementAction(asset)}

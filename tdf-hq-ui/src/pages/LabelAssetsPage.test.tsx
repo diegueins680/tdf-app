@@ -89,6 +89,13 @@ const buildAsset = (overrides: Partial<AssetDTO> = {}): AssetDTO => ({
   ...overrides,
 });
 
+const buildRoom = (overrides: Partial<RoomDTO> = {}): RoomDTO => ({
+  roomId: 'room-a',
+  rName: 'Sala A',
+  rBookable: true,
+  ...overrides,
+});
+
 const renderPage = async (container: HTMLElement) => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -351,6 +358,59 @@ describe('LabelAssetsPage', () => {
       expect(countLabelsByText(secondContainer, 'Categoría')).toBe(1);
       expect(secondContainer.textContent).not.toContain('No hace falta filtrarla: es la unica categoria cargada ahora mismo.');
       expect(hasTableHeader(secondContainer, 'Categoría')).toBe(true);
+    });
+
+    await secondRender.cleanup();
+  });
+
+  it('summarizes one shared location once and restores the location column when rows differ again', async () => {
+    listRoomsMock.mockResolvedValue([buildRoom()]);
+    listAssetsMock.mockResolvedValue([
+      buildAsset({ location: 'room-a' }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Bateria Roja',
+        location: 'room-a',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const text = container.textContent ?? '';
+      expect(text).toContain('Mostrando una sola ubicación: Sala A.');
+      expect(countOccurrences(text, 'Sala A')).toBe(1);
+      expect(hasTableHeader(container, 'Ubicación')).toBe(false);
+      expect(text).toContain('Sintetizador Uno');
+      expect(text).toContain('Bateria Roja');
+    });
+
+    await cleanup();
+
+    listRoomsMock.mockResolvedValue([
+      buildRoom(),
+      buildRoom({ roomId: 'room-b', rName: 'Sala B' }),
+    ]);
+    listAssetsMock.mockResolvedValue([
+      buildAsset({ location: 'room-a' }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Bateria Roja',
+        location: 'room-b',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    await waitForExpectation(() => {
+      expect(secondContainer.textContent).not.toContain('Mostrando una sola ubicación:');
+      expect(hasTableHeader(secondContainer, 'Ubicación')).toBe(true);
+      expect(secondContainer.textContent).toContain('Sala A');
+      expect(secondContainer.textContent).toContain('Sala B');
     });
 
     await secondRender.cleanup();
