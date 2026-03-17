@@ -1034,6 +1034,11 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, on
       color: 'error' as const,
     },
   ].filter((chip) => chip.count > 0);
+  const showRepliedAtColumn = loading || messages.some((msg) => Boolean(msg.repliedAt));
+  const showReplyOutcomeColumn = loading || messages.some(
+    (msg) => Boolean(msg.replyError?.trim()) || Boolean(msg.replyText?.trim()),
+  );
+  const visibleColumnCount = 3 + (showRepliedAtColumn ? 1 : 0) + (showReplyOutcomeColumn ? 1 : 0);
 
   return (
     <Paper variant="outlined" sx={{ p: 2, flex: 1, minWidth: 0 }}>
@@ -1056,23 +1061,27 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, on
             <TableHead>
               <TableRow>
                 <TableCell sx={{ width: 160 }}>{reviewMode ? 'Received' : 'Recibido'}</TableCell>
-                <TableCell sx={{ width: 160 }}>{reviewMode ? 'Replied' : 'Respondido'}</TableCell>
+                {showRepliedAtColumn && (
+                  <TableCell sx={{ width: 160 }}>{reviewMode ? 'Replied' : 'Respondido'}</TableCell>
+                )}
                 <TableCell sx={{ width: 200 }}>{reviewMode ? 'Sender' : 'Remitente'}</TableCell>
                 <TableCell>{reviewMode ? 'Message' : 'Mensaje'}</TableCell>
-                <TableCell>{reviewMode ? 'Reply / Error' : 'Respuesta / Error'}</TableCell>
+                {showReplyOutcomeColumn && (
+                  <TableCell>{reviewMode ? 'Reply / Error' : 'Respuesta / Error'}</TableCell>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
               {loading && (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={visibleColumnCount} align="center">
                     <CircularProgress size={22} />
                   </TableCell>
                 </TableRow>
               )}
               {!loading && messages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={visibleColumnCount} align="center">
                     <Typography variant="body2" color="text.secondary">
                       {reviewMode ? 'No messages for this filter.' : 'Sin mensajes para este filtro.'}
                     </Typography>
@@ -1100,9 +1109,11 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, on
                       <TableCell>
                         <Typography variant="body2">{formatTimestamp(msg.createdAt)}</Typography>
                       </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
-                      </TableCell>
+                      {showRepliedAtColumn && (
+                        <TableCell>
+                          <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Typography variant="body2" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>
                           {senderLabel}
@@ -1113,13 +1124,15 @@ const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, on
                           {previewText ? formatBody(previewText) : '—'}
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                          {msg.replyError
-                            ? (summarizeReplyError(msg.replyError, reviewMode)?.headline ?? formatBody(msg.replyError))
-                            : formatBody(msg.replyText)}
-                        </Typography>
-                      </TableCell>
+                      {showReplyOutcomeColumn && (
+                        <TableCell>
+                          <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                            {msg.replyError
+                              ? (summarizeReplyError(msg.replyError, reviewMode)?.headline ?? formatBody(msg.replyError))
+                              : formatBody(msg.replyText)}
+                          </Typography>
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}

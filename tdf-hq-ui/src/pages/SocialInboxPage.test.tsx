@@ -123,6 +123,9 @@ const hasLabel = (root: ParentNode, labelText: string) =>
     return text === labelText;
   });
 
+const hasTableHeader = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
+
 const queryFilterChip = (root: ParentNode, labelText: string) =>
   root.querySelector(`[aria-label="Filter inbox by ${labelText}"]`);
 
@@ -279,6 +282,49 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('Pending');
       expect(container.textContent).toContain('No need to filter it: it is the only inbound status in this view.');
       expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
+    });
+
+    await cleanup();
+  });
+
+  it('hides reply-only columns until the current view actually includes reply data', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage(),
+      buildMessage({
+        externalId: 'msg-2',
+        senderId: 'sender-2',
+        senderName: 'Grace',
+        repliedAt: '2030-01-03T03:04:05.000Z',
+        replyText: 'Done.',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(queryFilterChip(container, 'Pending')).not.toBeNull();
+      expect(hasTableHeader(container, 'Received')).toBe(true);
+      expect(hasTableHeader(container, 'Sender')).toBe(true);
+      expect(hasTableHeader(container, 'Message')).toBe(true);
+      expect(hasTableHeader(container, 'Replied')).toBe(false);
+      expect(hasTableHeader(container, 'Reply / Error')).toBe(false);
+      expect(container.textContent).toContain('Ada');
+      expect(container.textContent).not.toContain('Grace');
+    });
+
+    await act(async () => {
+      queryFilterChip(container, 'Replied')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasTableHeader(container, 'Replied')).toBe(true);
+      expect(hasTableHeader(container, 'Reply / Error')).toBe(true);
+      expect(container.textContent).toContain('Grace');
+      expect(container.textContent).not.toContain('Ada');
     });
 
     await cleanup();
