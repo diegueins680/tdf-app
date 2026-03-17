@@ -8,6 +8,7 @@ import type {
   CourseEmailEventDTO,
   CourseRegistrationDTO,
   CourseRegistrationDossierDTO,
+  CourseRegistrationFollowUpDTO,
   CourseRegistrationReceiptDTO,
 } from '../api/courses';
 
@@ -121,6 +122,24 @@ const buildReceipt = (
   crrUploadedBy: 4,
   crrCreatedAt: '2030-01-02T03:04:05.000Z',
   crrUpdatedAt: '2030-01-02T03:04:05.000Z',
+  ...overrides,
+});
+
+const buildFollowUp = (
+  overrides: Partial<CourseRegistrationFollowUpDTO> = {},
+): CourseRegistrationFollowUpDTO => ({
+  crfId: 401,
+  crfRegistrationId: 101,
+  crfPartyId: 9,
+  crfEntryType: 'call',
+  crfSubject: 'Confirmó transferencia',
+  crfNotes: 'Dijo que enviará el comprobante hoy.',
+  crfAttachmentUrl: null,
+  crfAttachmentName: null,
+  crfNextFollowUpAt: null,
+  crfCreatedBy: 4,
+  crfCreatedAt: '2030-01-04T03:04:05.000Z',
+  crfUpdatedAt: '2030-01-04T03:04:05.000Z',
   ...overrides,
 });
 
@@ -1352,6 +1371,70 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
       expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
+  it('keeps one follow-up actions entry point per saved note and reveals edit only on demand', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdFollowUps: [buildFollowUp()],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(document.body, 'Abrir acciones para seguimiento Confirmó transferencia')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Acciones')).toBe(1);
+      expect(document.body.querySelector('button[aria-label="Editar seguimiento Confirmó transferencia"]')).toBeNull();
+      expect(document.body.querySelector('button[aria-label="Eliminar seguimiento Confirmó transferencia"]')).toBeNull();
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+          (el) => (el.textContent ?? '').trim() === 'Editar seguimiento',
+        ),
+      ).toBe(false);
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Actualizar seguimiento',
+        ),
+      ).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, 'Abrir acciones para seguimiento Confirmó transferencia'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Editar seguimiento')).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Eliminar seguimiento')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, 'Editar seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Actualizar seguimiento')).toBeTruthy();
+      expect(hasLabel(document.body, 'Tipo')).toBe(true);
+      expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
     });
 
     await cleanup();

@@ -27,8 +27,6 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import EditIcon from '@mui/icons-material/Edit';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -206,6 +204,9 @@ const eventTypeLabel = (eventType: string) =>
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (m) => m.toUpperCase());
 
+const followUpActionTargetLabel = (entry: CourseRegistrationFollowUpDTO) =>
+  entry.crfSubject ?? `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`;
+
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
@@ -272,6 +273,10 @@ export default function CourseRegistrationsAdminPage() {
   const [receiptMenuTarget, setReceiptMenuTarget] = useState<{
     anchorEl: HTMLElement;
     receipt: CourseRegistrationReceiptDTO;
+  } | null>(null);
+  const [followUpMenuTarget, setFollowUpMenuTarget] = useState<{
+    anchorEl: HTMLElement;
+    entry: CourseRegistrationFollowUpDTO;
   } | null>(null);
   const [notesDraft, setNotesDraft] = useState('');
   const [showNotesComposer, setShowNotesComposer] = useState(false);
@@ -614,6 +619,7 @@ export default function CourseRegistrationsAdminPage() {
       setDossierFlash(null);
       setShowEmailHistory(false);
       setReceiptMenuTarget(null);
+      setFollowUpMenuTarget(null);
       setNotesDraft('');
       setShowNotesComposer(false);
       setReceiptForm(emptyReceiptForm());
@@ -709,6 +715,14 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleCloseReceiptMenu = () => {
     setReceiptMenuTarget(null);
+  };
+
+  const handleOpenFollowUpMenu = (anchorEl: HTMLElement, entry: CourseRegistrationFollowUpDTO) => {
+    setFollowUpMenuTarget({ anchorEl, entry });
+  };
+
+  const handleCloseFollowUpMenu = () => {
+    setFollowUpMenuTarget(null);
   };
 
   const handleQuickStatus = (reg: CourseRegistrationDTO, newStatus: Exclude<StatusFilter, 'all'>) => {
@@ -900,6 +914,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleEditFollowUp = (entry: CourseRegistrationFollowUpDTO) => {
+    handleCloseFollowUpMenu();
     setShowFollowUpComposer(true);
     setShowFollowUpDetails(true);
     setFollowUpForm({
@@ -916,6 +931,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleDeleteFollowUp = (entry: CourseRegistrationFollowUpDTO) => {
     if (!selectedDossier || selectedDossierId == null) return;
+    handleCloseFollowUpMenu();
     if (!window.confirm('¿Eliminar esta entrada de seguimiento?')) return;
     setDossierFlash(null);
     void deleteFollowUpMutation
@@ -981,6 +997,7 @@ export default function CourseRegistrationsAdminPage() {
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
   const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
+  const followUpMenuEntry = followUpMenuTarget?.entry ?? null;
   const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
     ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
@@ -1381,6 +1398,23 @@ export default function CourseRegistrationsAdminPage() {
         {receiptMenuReceipt && (
           <MenuItem onClick={() => handleDeleteReceipt(receiptMenuReceipt)}>
             Eliminar comprobante
+          </MenuItem>
+        )}
+      </Menu>
+
+      <Menu
+        open={Boolean(followUpMenuTarget)}
+        anchorEl={followUpMenuTarget?.anchorEl ?? null}
+        onClose={handleCloseFollowUpMenu}
+      >
+        {followUpMenuEntry && (
+          <MenuItem onClick={() => handleEditFollowUp(followUpMenuEntry)}>
+            Editar seguimiento
+          </MenuItem>
+        )}
+        {followUpMenuEntry && (
+          <MenuItem onClick={() => handleDeleteFollowUp(followUpMenuEntry)}>
+            Eliminar seguimiento
           </MenuItem>
         )}
       </Menu>
@@ -1924,23 +1958,16 @@ export default function CourseRegistrationsAdminPage() {
                                       />
                                     )}
                                   </Stack>
-                                  <Stack direction="row" spacing={0.5}>
-                                    <IconButton
-                                      size="small"
-                                      aria-label={`Editar seguimiento ${entry.crfSubject ?? `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`}`}
-                                      onClick={() => handleEditFollowUp(entry)}
-                                    >
-                                      <EditIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                      size="small"
-                                      color="error"
-                                      aria-label={`Eliminar seguimiento ${entry.crfSubject ?? `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`}`}
-                                      onClick={() => handleDeleteFollowUp(entry)}
-                                    >
-                                      <DeleteOutlineIcon fontSize="small" />
-                                    </IconButton>
-                                  </Stack>
+                                  <Button
+                                    size="small"
+                                    variant="text"
+                                    endIcon={<ArrowDropDownIcon />}
+                                    aria-label={`Abrir acciones para seguimiento ${followUpActionTargetLabel(entry)}`}
+                                    aria-haspopup="menu"
+                                    onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
+                                  >
+                                    Acciones
+                                  </Button>
                                 </Stack>
                                 {entry.crfSubject && (
                                   <Typography variant="subtitle2">{entry.crfSubject}</Typography>
