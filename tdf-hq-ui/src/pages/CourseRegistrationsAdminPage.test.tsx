@@ -308,7 +308,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain(
+      expect(container.textContent).not.toContain(
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
       );
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
@@ -458,7 +458,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Límite')).toBe(false);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
-      expect(container.textContent).toContain(
+      expect(container.textContent).not.toContain(
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
       );
       expect(container.textContent).not.toContain('Límite activo:');
@@ -476,6 +476,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(secondContainer, 'Límite')).toBe(false);
       expect(getButtonByText(secondContainer, 'Ajustar límite')).toBeTruthy();
+      expect(secondContainer.textContent).toContain(
+        'Esta vista ya está acotada a una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
+      );
     });
 
     await act(async () => {
@@ -1795,6 +1798,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Estado disponible');
+      expect(container.textContent).not.toContain(
+        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
+      );
       expect(container.textContent).not.toContain(
         'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
       );
