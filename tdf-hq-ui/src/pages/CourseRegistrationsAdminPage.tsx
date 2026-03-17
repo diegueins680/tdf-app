@@ -170,6 +170,16 @@ const registrationStatusButtonColor = (
   return 'inherit';
 };
 
+const statusFilterChipLabel = (
+  status: StatusFilter,
+  counts: { total: number; pending_payment: number; paid: number; cancelled: number },
+  includeCounts: boolean,
+) => {
+  const label = statusFilterLabels[status];
+  if (!includeCounts || status === 'all') return label;
+  return `${label} (${counts[status]})`;
+};
+
 const statusChip = (status: string) => {
   return (
     <Chip
@@ -425,29 +435,6 @@ export default function CourseRegistrationsAdminPage() {
       { ...base },
     );
   }, [regsQuery.data]);
-  const visibleStatusSummaryChips = useMemo(() => {
-    const chips = [
-      {
-        key: 'paid',
-        count: statusCounts.paid,
-        label: `Pagadas: ${statusCounts.paid}`,
-        color: 'success' as const,
-      },
-      {
-        key: 'pending_payment',
-        count: statusCounts.pending_payment,
-        label: `Pendientes: ${statusCounts.pending_payment}`,
-        color: 'warning' as const,
-      },
-      {
-        key: 'cancelled',
-        count: statusCounts.cancelled,
-        label: `Canceladas: ${statusCounts.cancelled}`,
-        color: 'error' as const,
-      },
-    ].filter((chip) => chip.count > 0);
-    return chips.length > 1 ? chips : [];
-  }, [statusCounts]);
   const hasVisibleRegistrations = (regsQuery.data?.length ?? 0) > 0;
   const visibleStatusFilters = useMemo<readonly StatusFilter[]>(() => {
     if (!hasVisibleRegistrations) return statusFilters;
@@ -481,7 +468,7 @@ export default function CourseRegistrationsAdminPage() {
     : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
   const canCopyCsv = (regsQuery.data?.length ?? 0) > 1;
   const copyCsvButtonLabel = hasCustomFilters ? 'Copiar CSV filtrado' : 'Copiar CSV de esta vista';
-  const showListUtilitySummary = visibleStatusSummaryChips.length > 0 || canCopyCsv || Boolean(copyMessage);
+  const showListUtilitySummary = canCopyCsv || Boolean(copyMessage);
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
   const shouldShowSharedSourceSummary = hasSharedVisibleSource && !combinedSingleChoiceSourceSummary;
@@ -1054,15 +1041,6 @@ export default function CourseRegistrationsAdminPage() {
           {hasVisibleRegistrations && (
             <>
               {statusCounts.total > 1 && <Chip label={`Total: ${statusCounts.total}`} size="small" />}
-              {visibleStatusSummaryChips.map((chip) => (
-                <Chip
-                  key={chip.key}
-                  label={chip.label}
-                  size="small"
-                  color={chip.color}
-                  variant="outlined"
-                />
-              ))}
             </>
           )}
           <Tooltip title="Refrescar">
@@ -1202,7 +1180,7 @@ export default function CourseRegistrationsAdminPage() {
                               key={value}
                               clickable
                               color={registrationStatusChipColor(value)}
-                              label={statusFilterLabels[value]}
+                              label={statusFilterChipLabel(value, statusCounts, hasVisibleRegistrations)}
                               variant={status === value ? 'filled' : 'outlined'}
                               aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
                               aria-pressed={status === value}
@@ -1276,11 +1254,6 @@ export default function CourseRegistrationsAdminPage() {
             )}
             {hasVisibleRegistrations && showListUtilitySummary && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
-                {visibleStatusSummaryChips.length > 0 && (
-                  <Typography variant="caption" color="text.secondary">
-                    Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.
-                  </Typography>
-                )}
                 {canCopyCsv && (
                   <Button
                     size="small"

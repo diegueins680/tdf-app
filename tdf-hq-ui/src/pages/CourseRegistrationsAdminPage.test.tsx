@@ -1809,6 +1809,43 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('shows status counts on the filter chips instead of a separate totals legend', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'cancelled',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Todos').textContent?.trim()).toBe('Todos');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago').textContent?.trim()).toBe('Pendiente de pago (1)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado').textContent?.trim()).toBe('Cancelado (1)');
+      expect(container.textContent).not.toContain('Pendientes: 1');
+      expect(container.textContent).not.toContain('Pagadas: 1');
+      expect(container.textContent).not.toContain('Canceladas: 1');
+      expect(container.textContent).not.toContain(
+        'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('keeps CSV export focused on real list views and labels filtered exports clearly', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
@@ -1827,10 +1864,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Total: 200');
-      expect(container.textContent).toContain('Pagadas:');
-      expect(container.textContent).toContain('Pendientes:');
-      expect(container.textContent).toContain('Canceladas:');
-      expect(container.textContent).toContain(
+      expect(container.textContent).not.toContain('Pagadas:');
+      expect(container.textContent).not.toContain('Pendientes:');
+      expect(container.textContent).not.toContain('Canceladas:');
+      expect(container.textContent).not.toContain(
         'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
       );
       expect(container.textContent).not.toContain('Leyenda de estados:');
