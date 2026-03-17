@@ -360,7 +360,7 @@ export default function CourseRegistrationsAdminPage() {
     if (!cohortSlug) return '';
     return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
   }, [cohortLabelsBySlug, regsQuery.data, selectedSlug]);
-  const sharedVisibleSourceSummary = useMemo(() => {
+  const singleVisibleSourceLabel = useMemo(() => {
     if (!regsQuery.data || regsQuery.data.length < 2) return '';
     const uniqueSources = Array.from(
       new Set(
@@ -369,10 +369,13 @@ export default function CourseRegistrationsAdminPage() {
       ),
     );
     if (uniqueSources.length !== 1) return '';
-    return uniqueSources[0] === 'Sin fuente'
-      ? 'Todas las inscripciones visibles están sin fuente registrada.'
-      : `Mostrando una sola fuente: ${uniqueSources[0]}.`;
+    return uniqueSources[0] ?? '';
   }, [regsQuery.data]);
+  const sharedVisibleSourceSummary = singleVisibleSourceLabel
+    ? singleVisibleSourceLabel === 'Sin fuente'
+      ? 'Todas las inscripciones visibles están sin fuente registrada.'
+      : `Mostrando una sola fuente: ${singleVisibleSourceLabel}.`
+    : '';
 
   const dossierQuery = useQuery<CourseRegistrationDossierDTO>({
     queryKey: dossierQueryKey,
@@ -460,6 +463,11 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceSummary = singleAvailableCohortLabel && showSingleStatusSummary && singleVisibleStatus
     ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
     : '';
+  const combinedSingleChoiceSourceSummary = combinedSingleChoiceSummary && singleVisibleSourceLabel
+    ? singleVisibleSourceLabel === 'Sin fuente'
+      ? 'Fuente visible: sin fuente registrada.'
+      : `Fuente visible: ${singleVisibleSourceLabel}.`
+    : '';
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
     : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
@@ -467,7 +475,8 @@ export default function CourseRegistrationsAdminPage() {
   const copyCsvButtonLabel = hasCustomFilters ? 'Copiar CSV filtrado' : 'Copiar CSV de esta vista';
   const showListUtilitySummary = visibleStatusSummaryChips.length > 0 || canCopyCsv || Boolean(copyMessage);
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
-  const shouldShowSharedSourceSummary = Boolean(sharedVisibleSourceSummary);
+  const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
+  const shouldShowSharedSourceSummary = hasSharedVisibleSource && !combinedSingleChoiceSourceSummary;
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
@@ -1045,6 +1054,11 @@ export default function CourseRegistrationsAdminPage() {
                     <Typography variant="body2" fontWeight={600}>
                       {combinedSingleChoiceSummary}
                     </Typography>
+                    {combinedSingleChoiceSourceSummary && (
+                      <Typography variant="caption" color="text.secondary">
+                        {combinedSingleChoiceSourceSummary}
+                      </Typography>
+                    )}
                     <Typography variant="caption" color="text.secondary">
                       No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.
                     </Typography>
@@ -1265,7 +1279,7 @@ export default function CourseRegistrationsAdminPage() {
                 const showRowCohort = selectedSlug
                   ? rowCohortSlug !== selectedSlug
                   : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
-                const showRowSource = !shouldShowSharedSourceSummary;
+                const showRowSource = !hasSharedVisibleSource;
                 return (
                   <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                     <Box sx={{ minWidth: 240 }}>
