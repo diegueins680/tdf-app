@@ -48,7 +48,7 @@ jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
 const { default: CourseRegistrationsAdminPage } = await import('./CourseRegistrationsAdminPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
-const rowActionsHint = 'Abre el expediente para notas, comprobantes, seguimiento y correos.';
+const rowActionsHint = 'Abre el expediente para notas, comprobantes, seguimiento y correos. Usa el boton de estado solo para cambios rapidos.';
 
 const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   let lastError: unknown;
@@ -275,8 +275,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.',
+        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote.',
       );
+      expect(container.textContent).toContain(rowActionsHint);
+      expect(countOccurrences(container, rowActionsHint)).toBe(1);
       expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Aplicar filtros');

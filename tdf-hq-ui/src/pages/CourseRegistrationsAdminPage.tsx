@@ -51,6 +51,7 @@ type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
 const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
 const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
+const rowActionsHint = 'Abre el expediente para notas, comprobantes, seguimiento y correos. Usa el boton de estado solo para cambios rapidos.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -1089,7 +1090,7 @@ export default function CourseRegistrationsAdminPage() {
         </Collapse>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
           {hasVisibleRegistrations
-            ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Abre el expediente para gestionar notas, comprobantes, seguimiento y correos. Usa refrescar si necesitas volver a consultar.'
+            ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote.'
             : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Más filtros solo cuando necesites ajustar el tamaño del lote. Ajusta la vista o usa refrescar si esperabas resultados.'}
         </Typography>
         {hasCustomFilters && hasVisibleRegistrations && (
@@ -1163,7 +1164,7 @@ export default function CourseRegistrationsAdminPage() {
         {regsQuery.data?.length ? (
           <Stack spacing={1.5}>
             <Typography variant="caption" color="text.secondary">
-              Abre el expediente para notas, comprobantes, seguimiento y correos.
+              {rowActionsHint}
             </Typography>
             <Stack divider={<Divider flexItem />} spacing={2}>
               {regsQuery.data.map((reg) => {
