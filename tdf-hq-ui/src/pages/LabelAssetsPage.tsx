@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type MouseEvent } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -13,6 +13,7 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
+  Menu,
   MenuItem,
   Stack,
   Table,
@@ -168,6 +169,10 @@ export default function LabelAssetsPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
   const [dialogOpen, setDialogOpen] = useState<'checkout' | 'checkin' | 'qr' | 'form' | null>(null);
+  const [actionsMenuTarget, setActionsMenuTarget] = useState<{
+    anchorEl: HTMLElement;
+    asset: AssetDTO;
+  } | null>(null);
   const [checkoutForm, setCheckoutForm] = useState<AssetCheckoutRequest>({
     coTargetKind: 'party',
     coTargetParty: '',
@@ -417,6 +422,22 @@ export default function LabelAssetsPage() {
     setCategoryFilter('all');
   };
 
+  const openActionsMenu = (event: MouseEvent<HTMLButtonElement>, asset: AssetDTO) => {
+    setActionsMenuTarget({ anchorEl: event.currentTarget, asset });
+  };
+
+  const closeActionsMenu = () => {
+    setActionsMenuTarget(null);
+  };
+
+  const runAssetMenuAction = (action: (asset: AssetDTO) => void) => {
+    const asset = actionsMenuTarget?.asset;
+    closeActionsMenu();
+    if (asset) {
+      action(asset);
+    }
+  };
+
   const handleSaveAsset = () => {
     const trimmedName = assetForm.name.trim();
     const trimmedCategory = assetForm.category.trim();
@@ -611,6 +632,12 @@ export default function LabelAssetsPage() {
 
       <Card sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
+          {!assetsQuery.isLoading && assets.length > 0 && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+              Usa el boton de prestamo o devolucion para registrar movimientos rapidos. Abre Acciones para editar,
+              ver el QR, revisar el historial o eliminar el asset.
+            </Typography>
+          )}
           {assetsQuery.isLoading ? (
             <Typography variant="body2" color="text.secondary">
               Cargando inventario…
@@ -670,40 +697,18 @@ export default function LabelAssetsPage() {
                       <TableCell>{renderStatusChip(asset.status)}</TableCell>
                       <TableCell>{displayLocation(asset)}</TableCell>
                       <TableCell align="right">
-                        <Tooltip title="Editar">
-                          <IconButton
+                        <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
+                          {renderMovementAction(asset)}
+                          <Button
                             size="small"
-                            onClick={() => handleEdit(asset)}
-                            aria-label={`Editar activo ${asset.name}`}
+                            onClick={(event) => openActionsMenu(event, asset)}
+                            aria-label={`Abrir acciones para ${asset.name}`}
+                            aria-haspopup="menu"
+                            aria-expanded={actionsMenuTarget?.asset.assetId === asset.assetId ? 'true' : undefined}
                           >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="QR">
-                          <IconButton
-                            size="small"
-                            onClick={() => void openQr(asset)}
-                            aria-label={`Abrir QR de ${asset.name}`}
-                          >
-                            <QrCodeIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        {renderMovementAction(asset)}
-                        <Button size="small" onClick={() => openHistory(asset)}>
-                          Historial
-                        </Button>
-                        <Tooltip title="Eliminar">
-                          <span>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDelete(asset)}
-                              aria-label={`Eliminar activo ${asset.name}`}
-                              disabled={deleteMutation.isPending}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
+                            Acciones
+                          </Button>
+                        </Stack>
                       </TableCell>
                     </TableRow>
                   );
@@ -722,6 +727,31 @@ export default function LabelAssetsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Menu
+        anchorEl={actionsMenuTarget?.anchorEl ?? null}
+        open={Boolean(actionsMenuTarget)}
+        onClose={closeActionsMenu}
+      >
+        <MenuItem onClick={() => runAssetMenuAction(handleEdit)}>
+          <EditIcon fontSize="small" sx={{ mr: 1 }} />
+          Editar
+        </MenuItem>
+        <MenuItem onClick={() => runAssetMenuAction((asset) => void openQr(asset))}>
+          <QrCodeIcon fontSize="small" sx={{ mr: 1 }} />
+          Ver QR
+        </MenuItem>
+        <MenuItem onClick={() => runAssetMenuAction(openHistory)}>
+          Historial
+        </MenuItem>
+        <MenuItem
+          onClick={() => runAssetMenuAction(handleDelete)}
+          disabled={deleteMutation.isPending}
+        >
+          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+          Eliminar
+        </MenuItem>
+      </Menu>
 
       <CheckoutDialog
         open={dialogOpen === 'checkout'}

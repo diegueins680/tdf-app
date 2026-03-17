@@ -174,6 +174,16 @@ const getButtonByText = (root: ParentNode, labelText: string) => {
   return button;
 };
 
+const getMenuItemByText = (root: ParentNode, labelText: string) => {
+  const item = Array.from(root.querySelectorAll('[role="menuitem"]')).find(
+    (candidate) => (candidate.textContent ?? '').trim() === labelText,
+  );
+  if (!(item instanceof HTMLElement)) {
+    throw new Error(`Menu item not found: ${labelText}`);
+  }
+  return item;
+};
+
 const clickElement = async (element: Element) => {
   await act(async () => {
     element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -246,6 +256,43 @@ describe('LabelAssetsPage', () => {
       expect(container.querySelector('button[aria-label="Abrir devolucion de Microfono Beta"]')).toBeNull();
       expect(container.querySelector('button[aria-label^="Abrir check-out de "]')).toBeNull();
       expect(container.querySelector('button[aria-label^="Abrir check-in de "]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
+  it('keeps one overflow actions entry point per asset row for secondary tasks', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Bateria Roja',
+        status: 'Booked',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Usa el boton de prestamo o devolucion para registrar movimientos rapidos. Abre Acciones para editar, ver el QR, revisar el historial o eliminar el asset.',
+      );
+      expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
+      expect(container.querySelector('button[aria-label="Editar activo Sintetizador Uno"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Abrir QR de Sintetizador Uno"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Eliminar activo Sintetizador Uno"]')).toBeNull();
+      expect(queryButtonByText(container, 'Historial')).toBeNull();
+    });
+
+    await clickElement(getElementByAriaLabel(container, 'Abrir acciones para Sintetizador Uno'));
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Editar')).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Ver QR')).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Historial')).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Eliminar')).toBeTruthy();
     });
 
     await cleanup();
