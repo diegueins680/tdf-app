@@ -607,9 +607,10 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleCopyCsv = async () => {
-    if ((regsQuery.data?.length ?? 0) < 2) return;
+    const registrations = regsQuery.data;
+    if (!registrations || registrations.length < 2) return;
     const header = ['id', 'slug', 'nombre', 'email', 'estado', 'creado'];
-    const rows = regsQuery.data.map((reg) => [
+    const rows = registrations.map((reg) => [
       reg.crId,
       reg.crCourseSlug,
       reg.crFullName ?? '',
