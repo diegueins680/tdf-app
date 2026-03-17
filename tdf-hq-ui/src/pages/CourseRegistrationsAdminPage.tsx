@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditIcon from '@mui/icons-material/Edit';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -148,7 +149,7 @@ const isRegistrationStatus = (
 const registrationStatusLabel = (status: string) =>
   isRegistrationStatus(status) ? statusFilterLabels[status] : status.trim() || 'Estado desconocido';
 
-const registrationStatusActionLabel = (status: string) => `Cambiar estado: ${registrationStatusLabel(status)}`;
+const registrationStatusActionLabel = (status: string) => `Estado: ${registrationStatusLabel(status)}`;
 
 const registrationStatusChipColor = (
   status: string,
@@ -1267,6 +1268,7 @@ export default function CourseRegistrationsAdminPage() {
                       size="small"
                       variant="outlined"
                       color={registrationStatusButtonColor(reg.crStatus)}
+                      endIcon={<ArrowDropDownIcon />}
                       aria-label={`Cambiar estado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
                       aria-haspopup="menu"
                       disabled={isUpdating}
