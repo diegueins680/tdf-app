@@ -424,6 +424,8 @@ export default function LabelAssetsPage() {
   ];
   const filtersActiveCount = activeFilterLabels.length;
   const showFilterSummary = !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
+  const showCategoryColumn = !showSingleCategorySummary && categoryFilter === 'all';
+  const visibleTableColumnCount = showCategoryColumn ? 5 : 4;
 
   const handleOpenNew = () => {
     setEditingAsset(null);
@@ -728,7 +730,7 @@ export default function LabelAssetsPage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Asset</TableCell>
-                  <TableCell>Categoría</TableCell>
+                  {showCategoryColumn && <TableCell>Categoría</TableCell>}
                   <TableCell>Estado</TableCell>
                   <TableCell>Ubicación</TableCell>
                   <TableCell align="right">Acciones</TableCell>
@@ -774,7 +776,7 @@ export default function LabelAssetsPage() {
                           </Stack>
                         </Stack>
                       </TableCell>
-                      <TableCell>{asset.category}</TableCell>
+                      {showCategoryColumn && <TableCell>{asset.category}</TableCell>}
                       <TableCell>{renderStatusChip(asset.status)}</TableCell>
                       <TableCell>{displayLocation(asset)}</TableCell>
                       <TableCell align="right">
@@ -796,7 +798,7 @@ export default function LabelAssetsPage() {
                 })}
                 {filteredAssets.length === 0 && !assetsQuery.isLoading && (
                   <TableRow>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={visibleTableColumnCount}>
                       <Typography variant="body2" color="text.secondary">
                         No hay assets con los filtros actuales.
                       </Typography>

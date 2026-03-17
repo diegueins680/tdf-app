@@ -124,6 +124,9 @@ const renderPage = async (container: HTMLElement) => {
 const countLabelsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('label')).filter((label) => (label.textContent ?? '').trim() === labelText).length;
 
+const hasTableHeader = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
+
 const getInputByLabel = (root: ParentNode, labelText: string) => {
   const labels = Array.from(root.querySelectorAll('label'));
   const label = labels.find((el) => {
@@ -320,6 +323,7 @@ describe('LabelAssetsPage', () => {
       expect(container.textContent).toContain('Categoria disponible');
       expect(container.textContent).toContain('Synth');
       expect(container.textContent).toContain('No hace falta filtrarla: es la unica categoria cargada ahora mismo.');
+      expect(hasTableHeader(container, 'Categoría')).toBe(false);
     });
 
     await cleanup();
@@ -341,6 +345,7 @@ describe('LabelAssetsPage', () => {
     await waitForExpectation(() => {
       expect(countLabelsByText(secondContainer, 'Categoría')).toBe(1);
       expect(secondContainer.textContent).not.toContain('No hace falta filtrarla: es la unica categoria cargada ahora mismo.');
+      expect(hasTableHeader(secondContainer, 'Categoría')).toBe(true);
     });
 
     await secondRender.cleanup();
