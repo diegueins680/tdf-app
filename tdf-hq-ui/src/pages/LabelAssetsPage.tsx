@@ -376,6 +376,20 @@ export default function LabelAssetsPage() {
       return matchesSearch && matchesStatus && matchesCategory;
     });
   }, [assets, search, statusFilter, categoryFilter]);
+  const trimmedSearch = search.trim();
+  const categoryFilterLabel =
+    categoryFilter === 'all'
+      ? null
+      : categoryOptions.find((opt) => opt.value === categoryFilter)?.label ?? categoryFilter;
+  const statusFilterLabel =
+    statusFilter === 'all' ? null : STATUS_OPTIONS.find((opt) => opt.value === statusFilter)?.label ?? statusFilter;
+  const activeFilterLabels = [
+    ...(trimmedSearch ? [`Busca: ${trimmedSearch}`] : []),
+    ...(categoryFilterLabel ? [`Categoría: ${categoryFilterLabel}`] : []),
+    ...(statusFilterLabel ? [`Estado: ${statusFilterLabel}`] : []),
+  ];
+  const filtersActiveCount = activeFilterLabels.length;
+  const showFilterSummary = !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
 
   const handleOpenNew = () => {
     setEditingAsset(null);
@@ -395,6 +409,12 @@ export default function LabelAssetsPage() {
     const confirm = window.confirm(`¿Eliminar ${asset.name}? Esta acción no se puede deshacer.`);
     if (!confirm) return;
     deleteMutation.mutate(asset.assetId);
+  };
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setCategoryFilter('all');
   };
 
   const handleSaveAsset = () => {
@@ -557,6 +577,35 @@ export default function LabelAssetsPage() {
               })}
             </Stack>
           </Stack>
+          {showFilterSummary && (
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={1}
+              mt={2}
+              alignItems={{ xs: 'flex-start', md: 'center' }}
+              justifyContent="space-between"
+            >
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Chip label={`Mostrando ${filteredAssets.length} de ${assets.length} assets`} size="small" />
+                {filtersActiveCount > 0 && (
+                  <Chip
+                    label={`${filtersActiveCount} filtro${filtersActiveCount === 1 ? '' : 's'} activo${filtersActiveCount === 1 ? '' : 's'}`}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+                {activeFilterLabels.map((label) => (
+                  <Chip key={label} label={label} size="small" variant="outlined" />
+                ))}
+              </Stack>
+              {filtersActiveCount > 0 && (
+                <Button size="small" variant="text" onClick={clearFilters}>
+                  Limpiar filtros
+                </Button>
+              )}
+            </Stack>
+          )}
         </CardContent>
       </Card>
 

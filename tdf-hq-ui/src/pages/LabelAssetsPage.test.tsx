@@ -124,12 +124,54 @@ const renderPage = async (container: HTMLElement) => {
 const countLabelsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('label')).filter((label) => (label.textContent ?? '').trim() === labelText).length;
 
+const getInputByLabel = (root: ParentNode, labelText: string) => {
+  const labels = Array.from(root.querySelectorAll('label'));
+  const label = labels.find((el) => {
+    const text = (el.textContent ?? '').replace('*', '').trim();
+    return text === labelText;
+  });
+  if (!label) throw new Error(`Label not found: ${labelText}`);
+  const forId = label.getAttribute('for');
+  if (forId) {
+    const input = document.getElementById(forId);
+    if (input instanceof HTMLInputElement) return input;
+  }
+  const fallback = label.parentElement?.querySelector<HTMLInputElement>('input,textarea');
+  if (!fallback) throw new Error(`Input not found for label: ${labelText}`);
+  return fallback;
+};
+
+const setInputValue = async (input: HTMLInputElement, value: string) => {
+  await act(async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    if (descriptor?.set) {
+      descriptor.set.call(input, value);
+    } else {
+      input.value = value;
+    }
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 const getElementByAriaLabel = (root: ParentNode, labelText: string) => {
   const element = root.querySelector(`[aria-label="${labelText}"]`);
   if (!(element instanceof HTMLElement)) {
     throw new Error(`Element not found: ${labelText}`);
   }
   return element;
+};
+
+const queryButtonByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('button')).find((candidate) => (candidate.textContent ?? '').trim() === labelText) ?? null;
+
+const getButtonByText = (root: ParentNode, labelText: string) => {
+  const button = queryButtonByText(root, labelText);
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${labelText}`);
+  }
+  return button;
 };
 
 const clickElement = async (element: Element) => {
@@ -251,6 +293,61 @@ describe('LabelAssetsPage', () => {
       expect(container.textContent).toContain('Sintetizador Uno');
       expect(container.textContent).toContain('Bateria Roja');
       expect(container.textContent).toContain('Microfono Beta');
+    });
+
+    await cleanup();
+  });
+
+  it('summarizes active filters and clears them in one action', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Bateria Roja',
+        status: 'Booked',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Microfono Beta',
+        status: 'OutForMaintenance',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Mostrando 3 de 3 assets');
+      expect(queryButtonByText(container, 'Limpiar filtros')).toBeNull();
+    });
+
+    await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Beta');
+    await clickElement(getElementByAriaLabel(container, 'Filtrar assets por estado Mantenimiento'));
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Mostrando 1 de 3 assets');
+      expect(container.textContent).toContain('2 filtros activos');
+      expect(container.textContent).toContain('Busca: Beta');
+      expect(container.textContent).toContain('Estado: Mantenimiento');
+      expect(container.textContent).toContain('Microfono Beta');
+      expect(container.textContent).not.toContain('Sintetizador Uno');
+      expect(container.textContent).not.toContain('Bateria Roja');
+      expect(queryButtonByText(container, 'Limpiar filtros')).not.toBeNull();
+    });
+
+    await clickElement(getButtonByText(container, 'Limpiar filtros'));
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, 'Buscar assets').value).toBe('');
+      expect(container.textContent).toContain('Mostrando 3 de 3 assets');
+      expect(container.textContent).toContain('Sintetizador Uno');
+      expect(container.textContent).toContain('Bateria Roja');
+      expect(container.textContent).toContain('Microfono Beta');
+      expect(container.textContent).not.toContain('2 filtros activos');
+      expect(container.textContent).not.toContain('Busca: Beta');
+      expect(container.textContent).not.toContain('Estado: Mantenimiento');
+      expect(queryButtonByText(container, 'Limpiar filtros')).toBeNull();
     });
 
     await cleanup();
