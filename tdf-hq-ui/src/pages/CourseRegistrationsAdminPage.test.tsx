@@ -666,6 +666,31 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces a single real status filter with context copy when the current view does not need status filtering', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.textContent).toContain('Estado disponible');
+      expect(container.textContent).toContain('Pendiente de pago');
+      expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
+      expect(container.textContent).not.toContain('Solo aparecen estados con inscripciones en esta vista.');
+    });
+
+    await cleanup();
+  });
+
   it('shows only meaningful quick status actions for each registration row', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

@@ -409,6 +409,11 @@ export default function CourseRegistrationsAdminPage() {
     return statusFilters.filter((value) => value === 'all' || status === value || statusCounts[value] > 0);
   }, [hasVisibleRegistrations, status, statusCounts]);
   const hasHiddenStatusFilters = visibleStatusFilters.length < statusFilters.length;
+  const singleVisibleStatus = useMemo<Exclude<StatusFilter, 'all'> | null>(() => {
+    if (!hasVisibleRegistrations || status !== 'all') return null;
+    const realStatuses = visibleStatusFilters.filter((value): value is Exclude<StatusFilter, 'all'> => value !== 'all');
+    return realStatuses.length === 1 ? realStatuses[0] : null;
+  }, [hasVisibleRegistrations, status, visibleStatusFilters]);
 
   const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
   const activeFilterSummary = useMemo(
@@ -968,30 +973,55 @@ export default function CourseRegistrationsAdminPage() {
             )}
           </Grid>
           <Grid item xs={12} md={6}>
-            <Stack spacing={1}>
-              <Typography variant="caption" color="text.secondary">
-                Estado
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {visibleStatusFilters.map((value) => (
-                  <Chip
-                    key={value}
-                    clickable
-                    color={registrationStatusChipColor(value)}
-                    label={statusFilterLabels[value]}
-                    variant={status === value ? 'filled' : 'outlined'}
-                    aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
-                    aria-pressed={status === value}
-                    onClick={() => setStatus(value)}
-                  />
-                ))}
-              </Stack>
-              {hasHiddenStatusFilters && (
+            {singleVisibleStatus ? (
+              <Stack
+                spacing={0.5}
+                sx={{
+                  minHeight: 40,
+                  justifyContent: 'center',
+                  px: 1.5,
+                  py: 1.25,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              >
                 <Typography variant="caption" color="text.secondary">
-                  Solo aparecen estados con inscripciones en esta vista.
+                  Estado disponible
                 </Typography>
-              )}
-            </Stack>
+                <Typography variant="body2" fontWeight={600}>
+                  {statusFilterLabels[singleVisibleStatus]}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  No hace falta filtrarlo: es el unico estado presente en esta vista.
+                </Typography>
+              </Stack>
+            ) : (
+              <Stack spacing={1}>
+                <Typography variant="caption" color="text.secondary">
+                  Estado
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {visibleStatusFilters.map((value) => (
+                    <Chip
+                      key={value}
+                      clickable
+                      color={registrationStatusChipColor(value)}
+                      label={statusFilterLabels[value]}
+                      variant={status === value ? 'filled' : 'outlined'}
+                      aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
+                      aria-pressed={status === value}
+                      onClick={() => setStatus(value)}
+                    />
+                  ))}
+                </Stack>
+                {hasHiddenStatusFilters && (
+                  <Typography variant="caption" color="text.secondary">
+                    Solo aparecen estados con inscripciones en esta vista.
+                  </Typography>
+                )}
+              </Stack>
+            )}
           </Grid>
         </Grid>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
