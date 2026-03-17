@@ -994,6 +994,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const hasReceipts = receipts.length > 0;
+  const showReceiptCountChip = receipts.length > 1;
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
   const receiptSectionHelpText = (
     selectedDossier?.intent === 'markPaid'
@@ -1020,6 +1021,7 @@ export default function CourseRegistrationsAdminPage() {
     || followUpForm.nextFollowUpAt.trim() !== ''
   );
   const showFollowUpOptionalFields = showFollowUpDetails || hasFollowUpOptionalDetails;
+  const showFollowUpCountChip = followUps.length > 1;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
   const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
@@ -1660,7 +1662,7 @@ export default function CourseRegistrationsAdminPage() {
                       <Box sx={{ minWidth: 240, flexGrow: 1 }}>
                         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                           <Typography variant="h6">Comprobantes de pago</Typography>
-                          {hasReceipts && (
+                          {showReceiptCountChip && (
                             <Chip size="small" label={`${receipts.length} guardado${receipts.length === 1 ? '' : 's'}`} />
                           )}
                         </Stack>
@@ -1821,7 +1823,7 @@ export default function CourseRegistrationsAdminPage() {
                     <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
                       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                         <Typography variant="h6">Historial de seguimiento</Typography>
-                        {followUps.length > 0 && (
+                        {showFollowUpCountChip && (
                           <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
                         )}
                       </Stack>

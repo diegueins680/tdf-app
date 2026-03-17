@@ -1409,6 +1409,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByAriaLabel(document.body, 'Abrir acciones para seguimiento Confirmó transferencia')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Acciones')).toBe(1);
+      expect(document.body.textContent).not.toContain('1 entrada');
       expect(document.body.querySelector('button[aria-label="Editar seguimiento Confirmó transferencia"]')).toBeNull();
       expect(document.body.querySelector('button[aria-label="Eliminar seguimiento Confirmó transferencia"]')).toBeNull();
       expect(
@@ -1535,6 +1536,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf')).toBeTruthy();
+      expect(document.body.textContent).not.toContain('1 guardado');
       expect(document.body.querySelector('button[aria-label="Editar receipt.pdf"]')).toBeNull();
       expect(document.body.querySelector('button[aria-label="Eliminar receipt.pdf"]')).toBeNull();
       expect(
@@ -1564,6 +1566,43 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Actualizar comprobante')).toBeTruthy();
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+    });
+
+    await cleanup();
+  });
+
+  it('shows dossier count chips only when a section has multiple saved items', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [
+          buildReceipt(),
+          buildReceipt({ crrId: 302, crrFileName: 'receipt-2.pdf' }),
+        ],
+        crdFollowUps: [
+          buildFollowUp(),
+          buildFollowUp({ crfId: 402, crfSubject: 'Pidió confirmación final' }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('2 guardados');
+      expect(document.body.textContent).toContain('2 entradas');
     });
 
     await cleanup();
