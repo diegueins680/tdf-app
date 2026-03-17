@@ -226,6 +226,12 @@ describe('SocialInboxPage', () => {
       expect(queryFilterChip(container, 'Pending')?.textContent).toContain('Pending (1)');
       expect(queryFilterChip(container, 'Replied')?.textContent).toContain('Replied (1)');
       expect(container.textContent).toContain('Only statuses with inbound messages in this view are shown.');
+      expect(container.textContent).toContain('Inbound: 1');
+      expect(container.textContent).toContain('Pending: 1');
+      expect(container.textContent).toContain('Replied: 1');
+      expect(container.textContent).not.toContain('Pending: 0');
+      expect(container.textContent).not.toContain('Replied: 0');
+      expect(container.textContent).not.toContain('Failed: 0');
     });
 
     await cleanup();

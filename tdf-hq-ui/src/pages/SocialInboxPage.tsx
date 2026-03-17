@@ -1012,103 +1012,123 @@ interface ChannelPanelProps {
   onSelect: (selection: SelectedMessage) => void;
 }
 
-const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, onSelect }: ChannelPanelProps) => (
-  <Paper variant="outlined" sx={{ p: 2, flex: 1, minWidth: 0 }}>
-    <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-        <Typography variant="subtitle1" fontWeight={700}>
-          {label}
-        </Typography>
-        <Chip label={`${reviewMode ? 'Inbound' : 'Entrantes'}: ${stats.incoming.length}`} size="small" variant="outlined" />
-      </Stack>
-      <Stack direction="row" spacing={1} flexWrap="wrap">
-        <Chip label={`${reviewMode ? 'Replied' : 'Respondidos'}: ${stats.replied.length}`} size="small" color="success" />
-        <Chip label={`${reviewMode ? 'Pending' : 'Pendientes'}: ${stats.pending.length}`} size="small" color="warning" />
-        <Chip
-          label={`${reviewMode ? 'Failed' : 'Fallidos'}: ${stats.failed.length}`}
-          size="small"
-          color={stats.failed.length > 0 ? 'error' : 'default'}
-          variant={stats.failed.length > 0 ? 'filled' : 'outlined'}
-        />
-      </Stack>
-      <TableContainer sx={{ maxHeight: 440 }}>
-        <Table size="small" stickyHeader>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ width: 160 }}>{reviewMode ? 'Received' : 'Recibido'}</TableCell>
-              <TableCell sx={{ width: 160 }}>{reviewMode ? 'Replied' : 'Respondido'}</TableCell>
-              <TableCell sx={{ width: 200 }}>{reviewMode ? 'Sender' : 'Remitente'}</TableCell>
-              <TableCell>{reviewMode ? 'Message' : 'Mensaje'}</TableCell>
-              <TableCell>{reviewMode ? 'Reply / Error' : 'Respuesta / Error'}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading && (
+const ChannelPanel = ({ label, channel, stats, messages, loading, reviewMode, onSelect }: ChannelPanelProps) => {
+  const visibleStatusChips = [
+    {
+      key: 'replied',
+      label: reviewMode ? 'Replied' : 'Respondidos',
+      count: stats.replied.length,
+      color: 'success' as const,
+    },
+    {
+      key: 'pending',
+      label: reviewMode ? 'Pending' : 'Pendientes',
+      count: stats.pending.length,
+      color: 'warning' as const,
+    },
+    {
+      key: 'failed',
+      label: reviewMode ? 'Failed' : 'Fallidos',
+      count: stats.failed.length,
+      color: 'error' as const,
+    },
+  ].filter((chip) => chip.count > 0);
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2, flex: 1, minWidth: 0 }}>
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+          <Typography variant="subtitle1" fontWeight={700}>
+            {label}
+          </Typography>
+          <Chip label={`${reviewMode ? 'Inbound' : 'Entrantes'}: ${stats.incoming.length}`} size="small" variant="outlined" />
+        </Stack>
+        {visibleStatusChips.length > 0 && (
+          <Stack direction="row" spacing={1} flexWrap="wrap">
+            {visibleStatusChips.map((chip) => (
+              <Chip key={chip.key} label={`${chip.label}: ${chip.count}`} size="small" color={chip.color} />
+            ))}
+          </Stack>
+        )}
+        <TableContainer sx={{ maxHeight: 440 }}>
+          <Table size="small" stickyHeader>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  <CircularProgress size={22} />
-                </TableCell>
+                <TableCell sx={{ width: 160 }}>{reviewMode ? 'Received' : 'Recibido'}</TableCell>
+                <TableCell sx={{ width: 160 }}>{reviewMode ? 'Replied' : 'Respondido'}</TableCell>
+                <TableCell sx={{ width: 200 }}>{reviewMode ? 'Sender' : 'Remitente'}</TableCell>
+                <TableCell>{reviewMode ? 'Message' : 'Mensaje'}</TableCell>
+                <TableCell>{reviewMode ? 'Reply / Error' : 'Respuesta / Error'}</TableCell>
               </TableRow>
-            )}
-            {!loading && messages.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  <Typography variant="body2" color="text.secondary">
-                    {reviewMode ? 'No messages for this filter.' : 'Sin mensajes para este filtro.'}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-            {!loading &&
-              messages.map((msg) => {
-                const senderLabel = resolveSenderName(msg);
-                const attachments = extractAttachments(msg.metadata);
-                const rawBody = (msg.text ?? '').trim();
-                const previewText =
-                  rawBody && rawBody.toLowerCase() !== '[attachment]'
-                    ? rawBody
-                    : attachments.length > 0
-                      ? 'Adjunto'
-                      : '';
-                return (
-                  <TableRow
-                    key={msg.externalId}
-                    hover
-                    onClick={() => onSelect({ channel, message: msg })}
-                    sx={{ cursor: 'pointer' }}
-                  >
-                    <TableCell>
-                      <Typography variant="body2">{formatTimestamp(msg.createdAt)}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>
-                        {senderLabel}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                        {previewText ? formatBody(previewText) : '—'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                        {msg.replyError
-                          ? (summarizeReplyError(msg.replyError, reviewMode)?.headline ?? formatBody(msg.replyError))
-                          : formatBody(msg.replyText)}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Stack>
-  </Paper>
-);
+            </TableHead>
+            <TableBody>
+              {loading && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    <CircularProgress size={22} />
+                  </TableCell>
+                </TableRow>
+              )}
+              {!loading && messages.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    <Typography variant="body2" color="text.secondary">
+                      {reviewMode ? 'No messages for this filter.' : 'Sin mensajes para este filtro.'}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+              {!loading &&
+                messages.map((msg) => {
+                  const senderLabel = resolveSenderName(msg);
+                  const attachments = extractAttachments(msg.metadata);
+                  const rawBody = (msg.text ?? '').trim();
+                  const previewText =
+                    rawBody && rawBody.toLowerCase() !== '[attachment]'
+                      ? rawBody
+                      : attachments.length > 0
+                        ? 'Adjunto'
+                        : '';
+                  return (
+                    <TableRow
+                      key={msg.externalId}
+                      hover
+                      onClick={() => onSelect({ channel, message: msg })}
+                      sx={{ cursor: 'pointer' }}
+                    >
+                      <TableCell>
+                        <Typography variant="body2">{formatTimestamp(msg.createdAt)}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>
+                          {senderLabel}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                          {previewText ? formatBody(previewText) : '—'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                          {msg.replyError
+                            ? (summarizeReplyError(msg.replyError, reviewMode)?.headline ?? formatBody(msg.replyError))
+                            : formatBody(msg.replyText)}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Stack>
+    </Paper>
+  );
+};
 
 export default function SocialInboxPage() {
   const location = useLocation();
