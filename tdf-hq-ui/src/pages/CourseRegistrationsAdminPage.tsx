@@ -404,6 +404,11 @@ export default function CourseRegistrationsAdminPage() {
     [statusCounts],
   );
   const hasVisibleRegistrations = (regsQuery.data?.length ?? 0) > 0;
+  const visibleStatusFilters = useMemo<readonly StatusFilter[]>(() => {
+    if (!hasVisibleRegistrations) return statusFilters;
+    return statusFilters.filter((value) => value === 'all' || status === value || statusCounts[value] > 0);
+  }, [hasVisibleRegistrations, status, statusCounts]);
+  const hasHiddenStatusFilters = visibleStatusFilters.length < statusFilters.length;
 
   const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
   const activeFilterSummary = useMemo(
@@ -967,7 +972,7 @@ export default function CourseRegistrationsAdminPage() {
                 Estado
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {statusFilters.map((value) => (
+                {visibleStatusFilters.map((value) => (
                   <Chip
                     key={value}
                     clickable
@@ -980,6 +985,11 @@ export default function CourseRegistrationsAdminPage() {
                   />
                 ))}
               </Stack>
+              {hasHiddenStatusFilters && (
+                <Typography variant="caption" color="text.secondary">
+                  Solo aparecen estados con inscripciones en esta vista.
+                </Typography>
+              )}
             </Stack>
           </Grid>
         </Grid>

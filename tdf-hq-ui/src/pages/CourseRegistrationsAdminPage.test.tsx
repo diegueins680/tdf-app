@@ -634,6 +634,33 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides zero-result status filters once the current view already has registrations', async () => {
+    const pendingRegistration = buildRegistration();
+    const paidRegistration = buildRegistration({
+      crId: 102,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+      crStatus: 'paid',
+    });
+
+    listRegistrationsMock.mockResolvedValue([pendingRegistration, paidRegistration]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(3);
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Todos"]')).not.toBeNull();
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pendiente de pago"]')).not.toBeNull();
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).not.toBeNull();
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Cancelado"]')).toBeNull();
+      expect(container.textContent).toContain('Solo aparecen estados con inscripciones en esta vista.');
+    });
+
+    await cleanup();
+  });
+
   it('shows only meaningful quick status actions for each registration row', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
