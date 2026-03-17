@@ -919,7 +919,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Katherine Johnson');
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
-      expect(container.textContent).toContain('Vista filtrada: estado pagado.');
+      expect(container.textContent).not.toContain('Vista filtrada: estado pagado.');
       expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
     });
 

@@ -486,6 +486,22 @@ export default function CourseRegistrationsAdminPage() {
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
+  const visibleActiveFilterSummary = useMemo(() => {
+    const parts: string[] = [];
+    const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);
+    const statusAlreadyExplained = Boolean(combinedSingleChoiceSummary || showSingleStatusSummary);
+    if (activeCohortLabel && !cohortAlreadyExplained) parts.push(`cohorte ${activeCohortLabel}`);
+    if (status !== 'all' && !statusAlreadyExplained) parts.push(`estado ${statusFilterLabels[status].toLowerCase()}`);
+    if (limit !== DEFAULT_LIMIT) parts.push(`límite ${limit}`);
+    return parts.join(' · ');
+  }, [
+    activeCohortLabel,
+    combinedSingleChoiceSummary,
+    limit,
+    showSingleStatusSummary,
+    singleAvailableCohortLabel,
+    status,
+  ]);
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
     && !cohortsQuery.isError
@@ -1219,9 +1235,11 @@ export default function CourseRegistrationsAdminPage() {
             </Typography>
             {hasCustomFilters && hasVisibleRegistrations && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
-                <Typography variant="body2" color="text.secondary">
-                  Vista filtrada: {activeFilterSummary}.
-                </Typography>
+                {visibleActiveFilterSummary && (
+                  <Typography variant="body2" color="text.secondary">
+                    Vista filtrada: {visibleActiveFilterSummary}.
+                  </Typography>
+                )}
                 <Button size="small" onClick={handleResetFilters}>
                   Restablecer filtros
                 </Button>
