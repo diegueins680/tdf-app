@@ -518,6 +518,58 @@ describe('LabelAssetsPage', () => {
     await secondRender.cleanup();
   });
 
+  it('summarizes one visible category once after search narrows a mixed catalog and restores the category column when cleared', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Sintetizador Dos',
+        brand: 'Roland',
+        model: 'JD-Xi',
+        status: 'Booked',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Guitarra Clasica',
+        category: 'Guitarras',
+        brand: 'Yamaha',
+        model: 'C40',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasTableHeader(container, 'Categoría')).toBe(true);
+      expect(container.textContent).not.toContain('Mostrando una sola categoría:');
+      expect(container.textContent).toContain('Guitarra Clasica');
+    });
+
+    await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Roland');
+
+    await waitForExpectation(() => {
+      const text = container.textContent ?? '';
+      expect(text).toContain('Mostrando una sola categoría: Synth.');
+      expect(countOccurrences(text, 'Mostrando una sola categoría: Synth.')).toBe(1);
+      expect(hasTableHeader(container, 'Categoría')).toBe(false);
+      expect(text).toContain('Sintetizador Uno');
+      expect(text).toContain('Sintetizador Dos');
+      expect(text).not.toContain('Guitarra Clasica');
+    });
+
+    await setInputValue(getInputByLabel(container, 'Buscar assets'), '');
+
+    await waitForExpectation(() => {
+      expect(container.textContent).not.toContain('Mostrando una sola categoría:');
+      expect(hasTableHeader(container, 'Categoría')).toBe(true);
+      expect(container.textContent).toContain('Guitarra Clasica');
+    });
+
+    await cleanup();
+  });
+
   it('uses one status chip group to filter and reset the asset list', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),

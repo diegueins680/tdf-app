@@ -383,6 +383,13 @@ export default function LabelAssetsPage() {
     });
     return list;
   }, [dropdownOptions, assetCategories]);
+  const categoryLabels = useMemo(() => {
+    const labels = new Map<string, string>();
+    categoryOptions.forEach((option) => {
+      labels.set(option.value, option.label ?? option.value);
+    });
+    return labels;
+  }, [categoryOptions]);
   const filterCategoryOptions = useMemo(
     () => categoryOptions.filter((opt) => assetCategories.includes(opt.value)),
     [categoryOptions, assetCategories],
@@ -445,9 +452,7 @@ export default function LabelAssetsPage() {
   const categoryFilterLabel =
     categoryFilter === 'all'
       ? null
-      : filterCategoryOptions.find((opt) => opt.value === categoryFilter)?.label
-        ?? categoryOptions.find((opt) => opt.value === categoryFilter)?.label
-        ?? categoryFilter;
+      : categoryLabels.get(categoryFilter) ?? categoryFilter;
   const statusFilterLabel =
     statusFilter === 'all' ? null : STATUS_OPTIONS.find((opt) => opt.value === statusFilter)?.label ?? statusFilter;
   const activeFilterLabels = [
@@ -462,6 +467,13 @@ export default function LabelAssetsPage() {
     activeFilterLabels.length > 0
       ? `No hay assets con los filtros actuales: ${activeFilterLabels.join(' · ')}. Limpia filtros o ajusta la búsqueda si esperabas resultados.`
       : 'No hay assets con los filtros actuales.';
+  const sharedVisibleCategorySummary = useMemo(() => {
+    if (categoryFilter !== 'all' || showSingleCategorySummary || filteredAssets.length < 2) return '';
+    const uniqueCategories = Array.from(new Set(filteredAssets.map((asset) => asset.category.trim()).filter(Boolean)));
+    if (uniqueCategories.length !== 1) return '';
+    const onlyCategory = uniqueCategories[0];
+    return `Mostrando una sola categoría: ${categoryLabels.get(onlyCategory) ?? onlyCategory}.`;
+  }, [categoryFilter, categoryLabels, filteredAssets, showSingleCategorySummary]);
   const sharedVisibleLocationSummary = useMemo(() => {
     if (filteredAssets.length < 2) return '';
     const uniqueLocations = Array.from(
@@ -475,7 +487,7 @@ export default function LabelAssetsPage() {
       : `Mostrando una sola ubicación: ${onlyLocation}.`;
   }, [filteredAssets, roomMap]);
   const showFilterSummary = !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
-  const showCategoryColumn = !showSingleCategorySummary && categoryFilter === 'all';
+  const showCategoryColumn = !showSingleCategorySummary && !sharedVisibleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
   const showLocationColumn = !sharedVisibleLocationSummary;
   const showFilterCard = assetsQuery.isLoading || assets.length > 0;
@@ -782,10 +794,19 @@ export default function LabelAssetsPage() {
 
       <Card sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
-          {sharedVisibleLocationSummary && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-              {sharedVisibleLocationSummary}
-            </Typography>
+          {(sharedVisibleCategorySummary || sharedVisibleLocationSummary) && (
+            <Stack spacing={0.5} sx={{ mb: 1.5 }}>
+              {sharedVisibleCategorySummary && (
+                <Typography variant="body2" color="text.secondary">
+                  {sharedVisibleCategorySummary}
+                </Typography>
+              )}
+              {sharedVisibleLocationSummary && (
+                <Typography variant="body2" color="text.secondary">
+                  {sharedVisibleLocationSummary}
+                </Typography>
+              )}
+            </Stack>
           )}
           {!assetsQuery.isLoading && assets.length > 0 && (
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
