@@ -3,17 +3,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { PartyDTO } from '../api/types';
+import type { PartyCreate, PartyDTO, PartyUpdate } from '../api/types';
 
 const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
-const createPartyMock = jest.fn<() => Promise<PartyDTO>>();
-const updatePartyMock = jest.fn<() => Promise<PartyDTO | null>>();
+const createPartyMock = jest.fn<(body: PartyCreate) => Promise<PartyDTO>>();
+const updatePartyMock = jest.fn<(id: number, body: PartyUpdate) => Promise<PartyDTO | null>>();
 
 jest.unstable_mockModule('../api/parties', () => ({
   Parties: {
     list: () => listPartiesMock(),
-    create: (...args: unknown[]) => createPartyMock(...args),
-    update: (...args: unknown[]) => updatePartyMock(...args),
+    create: (body: PartyCreate) => createPartyMock(body),
+    update: (id: number, body: PartyUpdate) => updatePartyMock(id, body),
   },
 }));
 

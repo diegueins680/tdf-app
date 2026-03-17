@@ -1176,7 +1176,7 @@ export default function SocialInboxPage() {
     const realFilters = FILTERS
       .map((item) => item.id)
       .filter((item): item is RealFilterKey => item !== 'all' && filterCounts[item] > 0);
-    return realFilters.length === 1 ? realFilters[0] : null;
+    return realFilters.length === 1 ? (realFilters[0] ?? null) : null;
   }, [filterCounts]);
   const showSingleFilterSummary = Boolean(singleVisibleFilter) && (filter === 'all' || filter === singleVisibleFilter);
   const singleVisibleFilterLabel = singleVisibleFilter ? getFilterLabel(singleVisibleFilter, reviewMode) : '';

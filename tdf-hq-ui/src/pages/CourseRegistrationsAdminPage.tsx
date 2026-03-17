@@ -430,7 +430,7 @@ export default function CourseRegistrationsAdminPage() {
   const singleVisibleStatus = useMemo<Exclude<StatusFilter, 'all'> | null>(() => {
     if (!hasVisibleRegistrations || status !== 'all') return null;
     const realStatuses = visibleStatusFilters.filter((value): value is Exclude<StatusFilter, 'all'> => value !== 'all');
-    return realStatuses.length === 1 ? realStatuses[0] : null;
+    return realStatuses.length === 1 ? (realStatuses[0] ?? null) : null;
   }, [hasVisibleRegistrations, status, visibleStatusFilters]);
 
   const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;

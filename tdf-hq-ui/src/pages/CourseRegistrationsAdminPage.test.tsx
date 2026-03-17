@@ -606,7 +606,7 @@ describe('CourseRegistrationsAdminPage', () => {
         crCourseSlug: 'mixing-bootcamp',
         crFullName: 'Grace Hopper',
         crEmail: 'grace@example.com',
-        crSource: null,
+        crSource: '',
       }),
     ]);
 
@@ -632,13 +632,13 @@ describe('CourseRegistrationsAdminPage', () => {
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
     ]);
     listRegistrationsMock.mockResolvedValue([
-      buildRegistration({ crSource: null }),
+      buildRegistration({ crSource: '' }),
       buildRegistration({
         crId: 102,
         crCourseSlug: 'mixing-bootcamp',
         crFullName: 'Grace Hopper',
         crEmail: 'grace@example.com',
-        crSource: null,
+        crSource: '',
       }),
     ]);
 
