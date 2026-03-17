@@ -288,6 +288,7 @@ export default function InternshipsPage() {
     queryFn: Internships.listPermissions,
     enabled: canAccess,
   });
+  const interns = internsQuery.data ?? [];
 
   useEffect(() => {
     if (!profileQuery.data) return;
@@ -308,6 +309,20 @@ export default function InternshipsPage() {
     });
     setProgressDraft(next);
   }, [tasksQuery.data]);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      if (selectedPartyId !== null) setSelectedPartyId(null);
+      return;
+    }
+    if (interns.length < 2) {
+      if (selectedPartyId !== null) setSelectedPartyId(null);
+      return;
+    }
+    if (selectedPartyId != null && !interns.some((intern) => intern.isPartyId === selectedPartyId)) {
+      setSelectedPartyId(null);
+    }
+  }, [interns, isAdmin, selectedPartyId]);
 
   const profileRequiredHoursError = useMemo(() => {
     const trimmed = profileForm.requiredHours.trim();
@@ -506,7 +521,8 @@ export default function InternshipsPage() {
   const todos = todosQuery.data ?? [];
   const entries = entriesQuery.data ?? [];
   const permissions = permissionsQuery.data ?? [];
-  const interns = internsQuery.data ?? [];
+  const singleAvailableIntern = isAdmin && interns.length === 1 ? interns[0] : null;
+  const showInternFilter = isAdmin && interns.length > 1;
   const sessionPartyId = session?.partyId ?? null;
   const isSelfView = !isAdmin || (selectedPartyId != null && selectedPartyId === sessionPartyId);
   const selectedAssignee = interns.find((intern) => intern.isPartyId === playbookAssigneeId) ?? null;
@@ -816,7 +832,7 @@ export default function InternshipsPage() {
               </Stack>
             </Stack>
 
-            {isAdmin && (
+            {showInternFilter ? (
               <FormControl size="small" sx={{ maxWidth: 320 }}>
                 <InputLabel id="intern-filter-label">Filtrar por pasante</InputLabel>
                 <Select
@@ -831,7 +847,31 @@ export default function InternshipsPage() {
                   ))}
                 </Select>
               </FormControl>
-            )}
+            ) : isAdmin ? (
+              <Stack
+                spacing={0.5}
+                sx={{
+                  maxWidth: 360,
+                  px: 1.5,
+                  py: 1.25,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  {singleAvailableIntern ? 'Pasante disponible' : 'Filtro por pasante'}
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {singleAvailableIntern?.isName ?? 'Aparecerá cuando exista más de un pasante'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {singleAvailableIntern
+                    ? 'No hace falta filtrarlo: solo hay un pasante cargado ahora mismo.'
+                    : 'Cuando tengas más de un pasante, podrás filtrar esta vista desde aquí.'}
+                </Typography>
+              </Stack>
+            ) : null}
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <Button

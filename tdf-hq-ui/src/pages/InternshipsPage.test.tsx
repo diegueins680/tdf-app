@@ -124,6 +124,12 @@ const buildProject = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const buildIntern = (overrides: Record<string, unknown> = {}) => ({
+  isPartyId: 101,
+  isName: 'Ada Lovelace',
+  ...overrides,
+});
+
 const getButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((element) => (element.textContent ?? '').trim() === labelText) as HTMLButtonElement[];
 
@@ -310,6 +316,45 @@ describe('InternshipsPage', () => {
       });
     } finally {
       await cleanup();
+    }
+  });
+
+  it('hides the hour-log intern filter until admins actually have more than one intern to choose from', async () => {
+    listInternsMock.mockResolvedValue([buildIntern()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Jornada y registro de horas');
+        expect(hasLabel(container, 'Filtrar por pasante')).toBe(false);
+        expect(container.textContent).toContain('Pasante disponible');
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).toContain('No hace falta filtrarlo: solo hay un pasante cargado ahora mismo.');
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listInternsMock.mockResolvedValue([
+      buildIntern(),
+      buildIntern({ isPartyId: 102, isName: 'Grace Hopper' }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        expect(hasLabel(secondContainer, 'Filtrar por pasante')).toBe(true);
+        expect(secondContainer.textContent).not.toContain('Pasante disponible');
+        expect(secondContainer.textContent).not.toContain('No hace falta filtrarlo: solo hay un pasante cargado ahora mismo.');
+      });
+    } finally {
+      await secondRender.cleanup();
     }
   });
 });
