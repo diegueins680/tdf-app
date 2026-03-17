@@ -237,6 +237,28 @@ describe('LabelAssetsPage', () => {
     historyMock.mockResolvedValue([]);
   });
 
+  it('replaces empty inventory filter chrome with one first-asset empty state', async () => {
+    listAssetsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Todavía no hay assets. Agrégalos desde Agregar asset; el buscador y los filtros aparecerán cuando exista al menos uno.',
+        );
+        expect(countLabelsByText(container, 'Buscar assets')).toBe(0);
+        expect(countLabelsByText(container, 'Categoría')).toBe(0);
+        expect(queryButtonByText(container, 'Limpiar filtros')).toBeNull();
+        expect(container.querySelector('table')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('renders one movement action per asset and picks the relevant action from status', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),

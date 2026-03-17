@@ -478,6 +478,7 @@ export default function LabelAssetsPage() {
   const showCategoryColumn = !showSingleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
   const showLocationColumn = !sharedVisibleLocationSummary;
+  const showFilterCard = assetsQuery.isLoading || assets.length > 0;
 
   const handleOpenNew = () => {
     setEditingAsset(null);
@@ -621,169 +622,171 @@ export default function LabelAssetsPage() {
       )}
       {assetsQuery.isError && <Alert severity="error" sx={{ mb: 2 }}>No se pudo cargar el inventario.</Alert>}
 
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <TextField
-              fullWidth
-              label="Buscar assets"
-              placeholder="Buscar por nombre, categoría o modelo"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            {combinedSingleChoiceSummary ? null : showSingleCategorySummary ? (
-                <Stack
-                  spacing={0.5}
-                  sx={{
-                    minHeight: 56,
-                    justifyContent: 'center',
-                    minWidth: { md: 240 },
-                    px: 1.5,
-                    py: 1.25,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary">
-                    Categoria disponible
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {singleAvailableCategoryLabel}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    No hace falta filtrarla: es la unica categoria cargada ahora mismo.
-                  </Typography>
-                </Stack>
-              ) : (
-                <TextField
-                  select
-                  label="Categoría"
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  sx={{ minWidth: 180 }}
-                >
-                  <MenuItem value="all">Todas</MenuItem>
-                  {filterCategoryOptions.map((opt) => (
-                    <MenuItem key={opt.value} value={opt.value}>
-                      {opt.label ?? opt.value}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
-          </Stack>
-          {combinedSingleChoiceSummary ? (
-            <Stack
-              spacing={0.5}
-              mt={2}
-              sx={{
-                minHeight: 40,
-                justifyContent: 'center',
-                px: 1.5,
-                py: 1.25,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="caption" color="text.secondary">
-                Vista actual
-              </Typography>
-              <Typography variant="body2" fontWeight={600}>
-                {combinedSingleChoiceSummary}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                No hace falta filtrar categoría ni estado: esta vista solo tiene una categoría y un estado por ahora.
-              </Typography>
-            </Stack>
-          ) : showSingleStatusSummary ? (
-            <Stack
-              spacing={0.5}
-              mt={2}
-              sx={{
-                minHeight: 40,
-                justifyContent: 'center',
-                px: 1.5,
-                py: 1.25,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="caption" color="text.secondary">
-                Estado disponible
-              </Typography>
-              <Typography variant="body2" fontWeight={600}>
-                {singleVisibleStatusOption?.label}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                No hace falta filtrarlo: es el unico estado presente en esta vista.
-              </Typography>
-            </Stack>
-          ) : (
-            <Stack spacing={1} mt={2}>
-              <Typography variant="caption" color="text.secondary">
-                Filtrar por estado
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {visibleStatusOptions.map((opt) => {
-                  const count = opt.value === 'all' ? assetsMatchingSearchAndCategory.length : (visibleStatusCounts[opt.value] ?? 0);
-                  const isActive = statusFilter === opt.value;
-                  const showCount = opt.value === 'all' || count > 0;
-                  return (
-                    <Chip
-                      key={opt.value}
-                      label={`${opt.label}${showCount ? ` (${count})` : ''}`}
-                      onClick={() => setStatusFilter(opt.value)}
-                      variant={isActive ? 'filled' : 'outlined'}
-                      color={isActive ? 'primary' : 'default'}
-                      aria-label={`Filtrar assets por estado ${opt.label}`}
-                      aria-pressed={isActive}
-                      sx={{ textTransform: 'capitalize' }}
-                    />
-                  );
-                })}
-              </Stack>
-            </Stack>
-          )}
-          {showFilterSummary && (
-            <Stack
-              direction={{ xs: 'column', md: 'row' }}
-              spacing={1}
-              mt={2}
-              alignItems={{ xs: 'flex-start', md: 'center' }}
-              justifyContent="space-between"
-            >
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Chip label={`Mostrando ${filteredAssets.length} de ${assets.length} assets`} size="small" />
-                {filtersActiveCount > 0 && (
-                  <Chip
-                    label={`${filtersActiveCount} filtro${filtersActiveCount === 1 ? '' : 's'} activo${filtersActiveCount === 1 ? '' : 's'}`}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
+      {showFilterCard && (
+        <Card sx={{ mb: 2 }}>
+          <CardContent>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+              <TextField
+                fullWidth
+                label="Buscar assets"
+                placeholder="Buscar por nombre, categoría o modelo"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              {combinedSingleChoiceSummary ? null : showSingleCategorySummary ? (
+                  <Stack
+                    spacing={0.5}
+                    sx={{
+                      minHeight: 56,
+                      justifyContent: 'center',
+                      minWidth: { md: 240 },
+                      px: 1.5,
+                      py: 1.25,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Categoria disponible
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {singleAvailableCategoryLabel}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      No hace falta filtrarla: es la unica categoria cargada ahora mismo.
+                    </Typography>
+                  </Stack>
+                ) : (
+                  <TextField
+                    select
+                    label="Categoría"
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    sx={{ minWidth: 180 }}
+                  >
+                    <MenuItem value="all">Todas</MenuItem>
+                    {filterCategoryOptions.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        {opt.label ?? opt.value}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 )}
-                {filterSummaryLabels.map((label) => (
-                  <Chip key={label} label={label} size="small" variant="outlined" />
-                ))}
-              </Stack>
-              {filtersActiveCount > 0 && !showFilteredEmptyState && (
-                <Button size="small" variant="text" onClick={clearFilters}>
-                  Limpiar filtros
-                </Button>
-              )}
             </Stack>
-          )}
-        </CardContent>
-      </Card>
+            {combinedSingleChoiceSummary ? (
+              <Stack
+                spacing={0.5}
+                mt={2}
+                sx={{
+                  minHeight: 40,
+                  justifyContent: 'center',
+                  px: 1.5,
+                  py: 1.25,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Vista actual
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {combinedSingleChoiceSummary}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  No hace falta filtrar categoría ni estado: esta vista solo tiene una categoría y un estado por ahora.
+                </Typography>
+              </Stack>
+            ) : showSingleStatusSummary ? (
+              <Stack
+                spacing={0.5}
+                mt={2}
+                sx={{
+                  minHeight: 40,
+                  justifyContent: 'center',
+                  px: 1.5,
+                  py: 1.25,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Estado disponible
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {singleVisibleStatusOption?.label}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  No hace falta filtrarlo: es el unico estado presente en esta vista.
+                </Typography>
+              </Stack>
+            ) : (
+              <Stack spacing={1} mt={2}>
+                <Typography variant="caption" color="text.secondary">
+                  Filtrar por estado
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {visibleStatusOptions.map((opt) => {
+                    const count = opt.value === 'all' ? assetsMatchingSearchAndCategory.length : (visibleStatusCounts[opt.value] ?? 0);
+                    const isActive = statusFilter === opt.value;
+                    const showCount = opt.value === 'all' || count > 0;
+                    return (
+                      <Chip
+                        key={opt.value}
+                        label={`${opt.label}${showCount ? ` (${count})` : ''}`}
+                        onClick={() => setStatusFilter(opt.value)}
+                        variant={isActive ? 'filled' : 'outlined'}
+                        color={isActive ? 'primary' : 'default'}
+                        aria-label={`Filtrar assets por estado ${opt.label}`}
+                        aria-pressed={isActive}
+                        sx={{ textTransform: 'capitalize' }}
+                      />
+                    );
+                  })}
+                </Stack>
+              </Stack>
+            )}
+            {showFilterSummary && (
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={1}
+                mt={2}
+                alignItems={{ xs: 'flex-start', md: 'center' }}
+                justifyContent="space-between"
+              >
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Chip label={`Mostrando ${filteredAssets.length} de ${assets.length} assets`} size="small" />
+                  {filtersActiveCount > 0 && (
+                    <Chip
+                      label={`${filtersActiveCount} filtro${filtersActiveCount === 1 ? '' : 's'} activo${filtersActiveCount === 1 ? '' : 's'}`}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                  )}
+                  {filterSummaryLabels.map((label) => (
+                    <Chip key={label} label={label} size="small" variant="outlined" />
+                  ))}
+                </Stack>
+                {filtersActiveCount > 0 && !showFilteredEmptyState && (
+                  <Button size="small" variant="text" onClick={clearFilters}>
+                    Limpiar filtros
+                  </Button>
+                )}
+              </Stack>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
@@ -814,9 +817,9 @@ export default function LabelAssetsPage() {
               Cargando inventario…
             </Typography>
           ) : assets.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              No hay assets todavía. Agrega un asset para empezar.
-            </Typography>
+            <Alert severity="info" variant="outlined">
+              Todavía no hay assets. Agrégalos desde Agregar asset; el buscador y los filtros aparecerán cuando exista al menos uno.
+            </Alert>
           ) : (
             <Table size="small">
               <TableHead>
