@@ -550,6 +550,90 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses a status chip group instead of a dropdown and keeps the filter resettable', async () => {
+    const pendingRegistration = buildRegistration();
+    const paidRegistration = buildRegistration({
+      crId: 102,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+      crStatus: 'paid',
+    });
+    const cancelledRegistration = buildRegistration({
+      crId: 103,
+      crFullName: 'Katherine Johnson',
+      crEmail: 'katherine@example.com',
+      crStatus: 'cancelled',
+    });
+
+    listRegistrationsMock.mockImplementation(async (params) => {
+      if (params?.status === 'paid') return [paidRegistration];
+      if (params?.status === 'cancelled') return [cancelledRegistration];
+      if (params?.status === 'pending_payment') return [pendingRegistration];
+      return [pendingRegistration, paidRegistration, cancelledRegistration];
+    });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Estado')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Grace Hopper');
+      expect(container.textContent).toContain('Katherine Johnson');
+      expect(container.textContent).not.toContain('Vista filtrada:');
+    });
+
+    const paidFilter = container.querySelector<HTMLElement>('[aria-label="Filtrar inscripciones por estado Pagado"]');
+    if (!paidFilter) {
+      throw new Error('Status chip not found: Pagado');
+    }
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickElement(paidFilter);
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: 'paid',
+        limit: 200,
+      });
+      expect(container.textContent).toContain('Grace Hopper');
+      expect(container.textContent).not.toContain('Ada Lovelace');
+      expect(container.textContent).not.toContain('Katherine Johnson');
+      expect(container.textContent).toContain('Vista filtrada: estado pagado.');
+      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Restablecer filtros'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 200,
+      });
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Grace Hopper');
+      expect(container.textContent).toContain('Katherine Johnson');
+      expect(container.textContent).not.toContain('Vista filtrada:');
+    });
+
+    await cleanup();
+  });
+
   it('shows only meaningful quick status actions for each registration row', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

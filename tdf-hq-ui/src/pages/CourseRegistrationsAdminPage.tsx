@@ -962,19 +962,25 @@ export default function CourseRegistrationsAdminPage() {
             )}
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              select
-              label="Estado"
-              value={status}
-              onChange={(e) => setStatus(parseStatusFilter(e.target.value))}
-              fullWidth
-              size="small"
-            >
-              <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="pending_payment">Pendiente de pago</MenuItem>
-              <MenuItem value="paid">Pagado</MenuItem>
-              <MenuItem value="cancelled">Cancelado</MenuItem>
-            </TextField>
+            <Stack spacing={1}>
+              <Typography variant="caption" color="text.secondary">
+                Estado
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {statusFilters.map((value) => (
+                  <Chip
+                    key={value}
+                    clickable
+                    color={registrationStatusChipColor(value)}
+                    label={statusFilterLabels[value]}
+                    variant={status === value ? 'filled' : 'outlined'}
+                    aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
+                    aria-pressed={status === value}
+                    onClick={() => setStatus(value)}
+                  />
+                ))}
+              </Stack>
+            </Stack>
           </Grid>
         </Grid>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
