@@ -15,6 +15,7 @@ import {
   summarizeWorkflowRuns,
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
+import { waitForGreenCi } from '../continuous-improvement-loop.mjs';
 import { buildDefaultIdea } from '../lib/discovery.mjs';
 import { auditUiSource } from '../lib/ui-static-audit.mjs';
 
@@ -353,6 +354,81 @@ test('continuous-improvement-loop stages tracked files modified during an iterat
     const fileContents = await fs.readFile(path.join(repoDir, 'tracked.txt'), 'utf8');
     assert.equal(fileContents, 'before\nafter\n');
   } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('waitForGreenCi retries transient GitHub polling fetch failures', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-ci-test-'));
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+  const originalFetch = global.fetch;
+  let requestCount = 0;
+
+  try {
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await git(['remote', 'add', 'origin', 'https://github.com/example/project.git']);
+
+    global.fetch = async (url) => {
+      requestCount += 1;
+
+      if (requestCount === 1) {
+        throw new TypeError('fetch failed');
+      }
+
+      const href = String(url);
+      const payload = href.includes('/check-runs')
+        ? {
+            check_runs: [
+              {
+                id: 1,
+                name: 'Cloudflare Pages',
+                status: 'completed',
+                conclusion: 'success',
+                details_url: 'https://example.com/check',
+                html_url: 'https://example.com/check',
+              },
+            ],
+          }
+        : {
+            workflow_runs: [],
+          };
+
+      return {
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        async json() {
+          return payload;
+        },
+        async text() {
+          return JSON.stringify(payload);
+        },
+      };
+    };
+
+    const result = await waitForGreenCi(
+      repoDir,
+      {
+        ciTimeoutMinutes: 1,
+        pollIntervalSeconds: 0,
+        pushRemote: 'origin',
+      },
+      'deadbeef',
+    );
+
+    assert.equal(result.ok, true);
+    assert.equal(result.summary.checks.successful.length, 1);
+    assert.equal(result.summary.workflows.successful.length, 0);
+    assert.equal(result.pollErrors?.length, 1);
+    assert.match(result.pollErrors?.[0]?.message ?? '', /fetch failed/i);
+    assert.equal(requestCount, 3);
+  } finally {
+    global.fetch = originalFetch;
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 });

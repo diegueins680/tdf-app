@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { execFile, spawn } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { buildDefaultIdea } from './lib/discovery.mjs';
 import { collectUiFindings, summarizeUiFindings } from './lib/ui-static-audit.mjs';
@@ -19,9 +20,18 @@ import {
 } from './lib/continuous-improvement-loop.mjs';
 
 const execFileAsync = promisify(execFile);
-const GITHUB_API_BASE = (process.env.GITHUB_API_BASE_URL ?? 'https://api.github.com').replace(/\/$/, '');
 const GITHUB_LOG_LINE_LIMIT = 200;
 const GITHUB_LOG_CHAR_LIMIT = 24_000;
+
+class GitHubHttpError extends Error {
+  constructor(status, statusText, payload) {
+    super(`GitHub API request failed (${status} ${statusText}): ${payload}`);
+    this.name = 'GitHubHttpError';
+    this.status = status;
+    this.statusText = statusText;
+    this.payload = payload;
+  }
+}
 const DEFAULTS = {
   allowDirty: false,
   maxIterations: 0,
@@ -42,6 +52,10 @@ function sleep(milliseconds) {
 
 function getGitHubToken() {
   return process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? process.env.GITHUB_PAT ?? '';
+}
+
+function getGitHubApiBase() {
+  return (process.env.GITHUB_API_BASE_URL ?? 'https://api.github.com').replace(/\/$/, '');
 }
 
 function buildContext(repoRoot, contextDir, iteration) {
@@ -91,7 +105,7 @@ function resolveGitHubApiUrl(endpoint) {
   if (/^https?:\/\//.test(endpoint)) {
     return endpoint;
   }
-  return `${GITHUB_API_BASE}/${String(endpoint).replace(/^\//, '')}`;
+  return `${getGitHubApiBase()}/${String(endpoint).replace(/^\//, '')}`;
 }
 
 async function githubRequest(endpoint, options = {}) {
@@ -114,7 +128,7 @@ async function githubRequest(endpoint, options = {}) {
 
   if (!response.ok) {
     const payload = await response.text();
-    throw new Error(`GitHub API request failed (${response.status} ${response.statusText}): ${payload}`);
+    throw new GitHubHttpError(response.status, response.statusText, payload);
   }
 
   return response;
@@ -455,15 +469,9 @@ async function pushHead(repoRoot, remoteName, branchName) {
   await execText('git', ['push', remoteName, `HEAD:${branchName}`], repoRoot);
 }
 
-async function fetchCheckRuns(repoRoot, remoteName, sha) {
-  const remote = await getGitHubRemote(repoRoot, remoteName);
-  const payload = await githubJson(`repos/${remote.owner}/${remote.repo}/commits/${encodeURIComponent(sha)}/check-runs`);
-
-  return {
-    owner: remote.owner,
-    repo: remote.repo,
-    checkRuns: payload.check_runs ?? [],
-  };
+async function fetchCheckRuns(owner, repo, sha) {
+  const payload = await githubJson(`repos/${owner}/${repo}/commits/${encodeURIComponent(sha)}/check-runs`);
+  return payload.check_runs ?? [];
 }
 
 async function fetchWorkflowRuns(owner, repo, sha) {
@@ -588,15 +596,112 @@ async function fetchFailedWorkflowDiagnostics(owner, repo, workflowRun) {
   };
 }
 
-async function waitForGreenCi(repoRoot, config, sha) {
+function emptyCiSummary() {
+  return {
+    checks: {
+      pending: [],
+      successful: [],
+      failed: [],
+    },
+    workflows: {
+      pending: [],
+      successful: [],
+      failed: [],
+    },
+  };
+}
+
+function isRetryableGitHubPollingError(error) {
+  if (error instanceof GitHubHttpError) {
+    return error.status === 408 || error.status === 425 || error.status === 429 || error.status >= 500;
+  }
+
+  const message = String(error?.message ?? '');
+  return /\b(fetch failed|network|timeout|timed out|socket hang up|econnreset|enotfound|eai_again|etimedout)\b/i.test(
+    message,
+  );
+}
+
+async function fetchFailedCheckDiagnosticsSafely(checkRun) {
+  try {
+    return await fetchFailedCheckDiagnostics(checkRun);
+  } catch (error) {
+    return {
+      id: checkRun.id ?? 0,
+      name: checkRun.name ?? '(unnamed check)',
+      appSlug: checkRun.app?.slug ?? '',
+      appName: checkRun.app?.name ?? '',
+      status: checkRun.status ?? 'unknown',
+      conclusion: checkRun.conclusion ?? 'pending',
+      detailsUrl: checkRun.details_url ?? checkRun.html_url ?? '',
+      htmlUrl: checkRun.html_url ?? '',
+      diagnosticsError: error.message,
+    };
+  }
+}
+
+async function fetchFailedWorkflowDiagnosticsSafely(owner, repo, workflowRun) {
+  try {
+    return await fetchFailedWorkflowDiagnostics(owner, repo, workflowRun);
+  } catch (error) {
+    return {
+      id: workflowRun.id ?? 0,
+      name: workflowRun.name ?? workflowRun.display_title ?? '(unnamed workflow)',
+      status: workflowRun.status ?? 'unknown',
+      conclusion: workflowRun.conclusion ?? 'pending',
+      htmlUrl: workflowRun.html_url ?? '',
+      diagnosticsError: error.message,
+      jobs: [],
+    };
+  }
+}
+
+export async function waitForGreenCi(repoRoot, config, sha) {
   const deadline = Date.now() + Number(config.ciTimeoutMinutes) * 60_000;
+  const remote = await getGitHubRemote(repoRoot, config.pushRemote);
   let sawChecks = false;
+  const pollErrors = [];
 
   while (true) {
-    const { owner, repo, checkRuns } = await fetchCheckRuns(repoRoot, config.pushRemote, sha);
-    const workflowRuns = await fetchWorkflowRuns(owner, repo, sha);
-    const checkSummary = summarizeCheckRuns(checkRuns);
-    const workflowSummary = summarizeWorkflowRuns(workflowRuns);
+    let checkRuns;
+    let workflowRuns;
+    let checkSummary;
+    let workflowSummary;
+    try {
+      checkRuns = await fetchCheckRuns(remote.owner, remote.repo, sha);
+      workflowRuns = await fetchWorkflowRuns(remote.owner, remote.repo, sha);
+      checkSummary = summarizeCheckRuns(checkRuns);
+      workflowSummary = summarizeWorkflowRuns(workflowRuns);
+    } catch (error) {
+      if (!isRetryableGitHubPollingError(error)) {
+        throw error;
+      }
+
+      const pollError = {
+        at: new Date().toISOString(),
+        message: error.message,
+      };
+      pollErrors.push(pollError);
+      console.warn(`GitHub polling request failed for ${sha}: ${error.message}`);
+
+      if (Date.now() > deadline) {
+        return {
+          ok: false,
+          owner: remote.owner,
+          repo: remote.repo,
+          sha,
+          summary: emptyCiSummary(),
+          checkRuns: [],
+          workflowRuns: [],
+          timeout: true,
+          message: 'Timed out waiting for GitHub checks after repeated polling request failures.',
+          pollErrors,
+        };
+      }
+
+      await sleep(Number(config.pollIntervalSeconds) * 1000);
+      continue;
+    }
     const failedCheckRuns = checkRuns.filter(
       (checkRun) => checkRun.status === 'completed' && isFailedConclusion(checkRun.conclusion),
     );
@@ -612,8 +717,8 @@ async function waitForGreenCi(repoRoot, config, sha) {
     if (failedCheckRuns.length > 0 || failedWorkflowRuns.length > 0) {
       return {
         ok: false,
-        owner,
-        repo,
+        owner: remote.owner,
+        repo: remote.repo,
         sha,
         summary: {
           checks: checkSummary,
@@ -621,9 +726,12 @@ async function waitForGreenCi(repoRoot, config, sha) {
         },
         checkRuns,
         workflowRuns,
-        failedChecks: await Promise.all(failedCheckRuns.map((checkRun) => fetchFailedCheckDiagnostics(checkRun))),
+        pollErrors: pollErrors.length > 0 ? pollErrors : undefined,
+        failedChecks: await Promise.all(failedCheckRuns.map((checkRun) => fetchFailedCheckDiagnosticsSafely(checkRun))),
         failedWorkflowRuns: await Promise.all(
-          failedWorkflowRuns.map((workflowRun) => fetchFailedWorkflowDiagnostics(owner, repo, workflowRun)),
+          failedWorkflowRuns.map((workflowRun) =>
+            fetchFailedWorkflowDiagnosticsSafely(remote.owner, remote.repo, workflowRun)
+          ),
         ),
       };
     }
@@ -641,8 +749,8 @@ async function waitForGreenCi(repoRoot, config, sha) {
     if (!sawChecks) {
       return {
         ok: false,
-        owner,
-        repo,
+        owner: remote.owner,
+        repo: remote.repo,
         sha,
         summary: {
           checks: checkSummary,
@@ -652,14 +760,15 @@ async function waitForGreenCi(repoRoot, config, sha) {
         workflowRuns,
         timeout: true,
         message: 'Timed out waiting for GitHub check runs to appear.',
+        pollErrors: pollErrors.length > 0 ? pollErrors : undefined,
       };
     }
 
     if (pendingCount > 0) {
       return {
         ok: false,
-        owner,
-        repo,
+        owner: remote.owner,
+        repo: remote.repo,
         sha,
         summary: {
           checks: checkSummary,
@@ -669,13 +778,14 @@ async function waitForGreenCi(repoRoot, config, sha) {
         workflowRuns,
         timeout: true,
         message: 'Timed out waiting for GitHub checks to finish.',
+        pollErrors: pollErrors.length > 0 ? pollErrors : undefined,
       };
     }
 
     return {
       ok: true,
-      owner,
-      repo,
+      owner: remote.owner,
+      repo: remote.repo,
       sha,
       summary: {
         checks: checkSummary,
@@ -683,6 +793,7 @@ async function waitForGreenCi(repoRoot, config, sha) {
       },
       checkRuns,
       workflowRuns,
+      pollErrors: pollErrors.length > 0 ? pollErrors : undefined,
     };
   }
 }
@@ -922,7 +1033,17 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error.message);
-  process.exit(1);
-});
+function isCliEntry() {
+  if (!process.argv[1]) {
+    return false;
+  }
+
+  return import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+}
+
+if (isCliEntry()) {
+  main().catch((error) => {
+    console.error(error.message);
+    process.exit(1);
+  });
+}
