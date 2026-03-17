@@ -26,6 +26,7 @@ import ApiErrorNotice from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
 import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 import { CUSTOM_CMS_SLUG_OPTION, DEFAULT_CMS_SLUGS, getCmsSlugFieldState } from './cmsAdminSlugSelection';
+import { getCmsVersionRowActions } from './cmsAdminVersionActions';
 
 const locales = ['es', 'en'];
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
@@ -855,76 +856,86 @@ export default function CmsAdminPage() {
             </Alert>
           )}
           <Stack spacing={1.5}>
-            {safeFilteredVersions.map((v) => (
-              <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={1}
-                  alignItems={{ xs: 'flex-start', sm: 'center' }}
-                >
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography fontWeight={700}>{v.ccdTitle ?? v.ccdSlug}</Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
-                      <Chip label={v.ccdSlug} size="small" />
-                      <Chip label={v.ccdLocale} size="small" />
-                      <Chip label={`v${v.ccdVersion}`} size="small" />
-                      <Chip
-                        label={v.ccdStatus}
-                        size="small"
-                        color={v.ccdStatus === 'published' ? 'success' : 'default'}
-                      />
-                      {v.ccdPublishedAt && (
+            {safeFilteredVersions.map((v) => {
+              const rowActions = getCmsVersionRowActions(v.ccdStatus);
+
+              return (
+                <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={1}
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  >
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography fontWeight={700}>{v.ccdTitle ?? v.ccdSlug}</Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
+                        <Chip label={v.ccdSlug} size="small" />
+                        <Chip label={v.ccdLocale} size="small" />
+                        <Chip label={`v${v.ccdVersion}`} size="small" />
                         <Chip
-                          label={`pub: ${new Date(v.ccdPublishedAt).toLocaleString()}`}
+                          label={v.ccdStatus}
+                          size="small"
+                          color={v.ccdStatus === 'published' ? 'success' : 'default'}
+                        />
+                        {v.ccdPublishedAt && (
+                          <Chip
+                            label={`pub: ${new Date(v.ccdPublishedAt).toLocaleString()}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </Stack>
+                    </Box>
+                    <Stack direction="row" spacing={1}>
+                      {rowActions.showPublish && (
+                        <Button
                           size="small"
                           variant="outlined"
-                        />
+                          onClick={() => publishMutation.mutate(v.ccdId)}
+                          disabled={publishMutation.isPending}
+                        >
+                          Publicar
+                        </Button>
                       )}
+                      {rowActions.showPublishAndView && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          onClick={() => void handlePublishAndView(v)}
+                          disabled={publishMutation.isPending}
+                        >
+                          Publicar y ver
+                        </Button>
+                      )}
+                      {rowActions.showOpenLivePage && (
+                        <Button
+                          size="small"
+                          variant="text"
+                          href={`${PUBLIC_BASE}${livePathForSlug(v.ccdSlug)}${v.ccdLocale ? `?locale=${encodeURIComponent(v.ccdLocale)}` : ''}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Abrir página publicada
+                        </Button>
+                      )}
+                      <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
+                        Editar en formulario
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="text"
+                        color="error"
+                        onClick={() => deleteMutation.mutate(v.ccdId)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        Borrar
+                      </Button>
                     </Stack>
-                  </Box>
-                  <Stack direction="row" spacing={1}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => publishMutation.mutate(v.ccdId)}
-                      disabled={publishMutation.isPending}
-                    >
-                      Publicar
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      color="success"
-                      onClick={() => void handlePublishAndView(v)}
-                      disabled={publishMutation.isPending}
-                    >
-                      Publicar y ver
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="text"
-                      href={`${PUBLIC_BASE}${livePathForSlug(v.ccdSlug)}${v.ccdLocale ? `?locale=${encodeURIComponent(v.ccdLocale)}` : ''}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Ver en vivo
-                    </Button>
-                    <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
-                      Editar en formulario
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="text"
-                      color="error"
-                      onClick={() => deleteMutation.mutate(v.ccdId)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      Borrar
-                    </Button>
                   </Stack>
-                </Stack>
-              </Paper>
-            ))}
+                </Paper>
+              );
+            })}
             {safeFilteredVersions.length === 0 && !listQuery.isLoading && (
               <Typography color="text.secondary">No hay contenido aún.</Typography>
             )}
