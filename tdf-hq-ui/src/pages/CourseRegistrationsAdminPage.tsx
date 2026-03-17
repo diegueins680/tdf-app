@@ -418,6 +418,7 @@ export default function CourseRegistrationsAdminPage() {
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
     : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
+  const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -1038,7 +1039,7 @@ export default function CourseRegistrationsAdminPage() {
             </Button>
           </Stack>
         )}
-        {!hasCustomFilters && singleVisibleCohortLabel && (
+        {shouldShowSharedCohortSummary && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
             Mostrando una sola cohorte: {singleVisibleCohortLabel}.
           </Typography>

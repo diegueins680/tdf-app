@@ -482,6 +482,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain('No hace falta filtrarla: es la unica cohorte disponible ahora mismo.');
+      expect(container.textContent).not.toContain('Mostrando una sola cohorte: Beatmaking 101 (beatmaking-101).');
     });
 
     await cleanup();
@@ -526,7 +527,11 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('summarizes a shared cohort once when every visible row belongs to it', async () => {
+  it('summarizes a shared visible cohort once when the page still offers multiple cohort choices', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
