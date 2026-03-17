@@ -369,7 +369,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
       expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Usar enlace existente en lugar de subir adjunto',
+        ),
+      ).toBe(false);
       expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
       expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
       expect(
@@ -390,10 +395,25 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
+      expect(hasLabel(document.body, 'Asunto')).toBe(false);
+      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(document.body.textContent).toContain('Agrega asunto, recordatorio o evidencia solo si hacen falta.');
     });
 
     await act(async () => {
       clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
+      clickButton(getButtonByText(document.body, 'Agregar detalles opcionales'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
+      expect(hasLabel(document.body, 'Asunto')).toBe(true);
+      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+    });
+
+    await act(async () => {
       clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto'));
       await flushPromises();
       await flushPromises();
@@ -1089,7 +1109,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the follow-up composer collapsed until admins explicitly open it', async () => {
+  it('keeps optional follow-up details collapsed until admins ask for them', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1141,8 +1161,29 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Asunto')).toBe(false);
+      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(document.body.textContent).toContain('Agrega asunto, recordatorio o evidencia solo si hacen falta.');
+      expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Usar enlace existente en lugar de subir adjunto',
+        ),
+      ).toBe(false);
       expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();
       expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar detalles opcionales'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Asunto')).toBe(true);
+      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
     });
 
     await cleanup();

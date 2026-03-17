@@ -264,6 +264,7 @@ export default function CourseRegistrationsAdminPage() {
   const [showReceiptComposer, setShowReceiptComposer] = useState(false);
   const [showReceiptUrlField, setShowReceiptUrlField] = useState(false);
   const [showFollowUpUrlField, setShowFollowUpUrlField] = useState(false);
+  const [showFollowUpDetails, setShowFollowUpDetails] = useState(false);
   const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
   const selectedSlug = slug.trim();
 
@@ -456,6 +457,7 @@ export default function CourseRegistrationsAdminPage() {
   const resetFollowUpComposer = () => {
     setFollowUpForm(emptyFollowUpForm());
     setShowFollowUpUrlField(false);
+    setShowFollowUpDetails(false);
     setShowFollowUpComposer(false);
   };
 
@@ -567,6 +569,7 @@ export default function CourseRegistrationsAdminPage() {
       setShowReceiptComposer(false);
       setFollowUpForm(emptyFollowUpForm());
       setShowFollowUpUrlField(false);
+      setShowFollowUpDetails(false);
       setShowFollowUpComposer(false);
       return;
     }
@@ -578,6 +581,7 @@ export default function CourseRegistrationsAdminPage() {
     setShowReceiptComposer(selectedDossier.intent === 'markPaid');
     setFollowUpForm(emptyFollowUpForm());
     setShowFollowUpUrlField(false);
+    setShowFollowUpDetails(false);
     setShowFollowUpComposer(false);
     setDossierFlash(
       selectedDossier.intent === 'markPaid'
@@ -834,6 +838,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleEditFollowUp = (entry: CourseRegistrationFollowUpDTO) => {
     setShowFollowUpComposer(true);
+    setShowFollowUpDetails(true);
     setFollowUpForm({
       editingId: entry.crfId,
       entryType: entry.crfEntryType,
@@ -901,6 +906,15 @@ export default function CourseRegistrationsAdminPage() {
     || Boolean(trimToNull(receiptForm.fileName))
     || canSubmitReceipt
   );
+  const hasFollowUpOptionalDetails = (
+    followUpForm.editingId != null
+    || showFollowUpUrlField
+    || Boolean(trimToNull(followUpForm.subject))
+    || Boolean(trimToNull(followUpForm.attachmentName))
+    || Boolean(trimToNull(followUpForm.attachmentUrl))
+    || followUpForm.nextFollowUpAt.trim() !== ''
+  );
+  const showFollowUpOptionalFields = showFollowUpDetails || hasFollowUpOptionalDetails;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
   const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
@@ -1671,13 +1685,6 @@ export default function CourseRegistrationsAdminPage() {
                                 ))}
                               </TextField>
                               <TextField
-                                label="Asunto"
-                                value={followUpForm.subject}
-                                onChange={(e) => setFollowUpForm((prev) => ({ ...prev, subject: e.target.value }))}
-                                placeholder="Ej. Confirmó transferencia"
-                                fullWidth
-                              />
-                              <TextField
                                 label="Nota de seguimiento"
                                 value={followUpForm.notes}
                                 onChange={(e) => setFollowUpForm((prev) => ({ ...prev, notes: e.target.value }))}
@@ -1686,43 +1693,69 @@ export default function CourseRegistrationsAdminPage() {
                                 placeholder="Qué pasó, qué se acordó y cuál es el siguiente paso."
                                 fullWidth
                               />
-                              <TextField
-                                label="Próximo seguimiento"
-                                type="datetime-local"
-                                value={followUpForm.nextFollowUpAt}
-                                onChange={(e) => setFollowUpForm((prev) => ({ ...prev, nextFollowUpAt: e.target.value }))}
-                                fullWidth
-                                InputLabelProps={{ shrink: true }}
-                              />
-                              <GoogleDriveUploadWidget
-                                label={
-                                  followUpForm.attachmentName
-                                    ? `Adjunto listo: ${followUpForm.attachmentName}`
-                                    : 'Adjuntar evidencia opcional'
-                                }
-                                helperText="Puedes adjuntar un audio, captura, PDF o imagen."
-                                accept="application/pdf,image/*,audio/*"
-                                multiple={false}
-                                onComplete={handleFollowUpUpload}
-                                dense
-                              />
-                              {!showFollowUpUrlField && (
-                                <Button
-                                  size="small"
-                                  variant="text"
-                                  sx={{ alignSelf: 'flex-start' }}
-                                  onClick={() => setShowFollowUpUrlField(true)}
-                                >
-                                  Usar enlace existente en lugar de subir adjunto
-                                </Button>
+                              {!showFollowUpOptionalFields && (
+                                <Stack spacing={0.75} alignItems="flex-start">
+                                  <Typography variant="caption" color="text.secondary">
+                                    Agrega asunto, recordatorio o evidencia solo si hacen falta.
+                                  </Typography>
+                                  <Button
+                                    size="small"
+                                    variant="text"
+                                    onClick={() => setShowFollowUpDetails(true)}
+                                    aria-expanded={showFollowUpOptionalFields}
+                                  >
+                                    Agregar detalles opcionales
+                                  </Button>
+                                </Stack>
                               )}
-                              <Collapse in={showFollowUpUrlField} unmountOnExit>
-                                <TextField
-                                  label="URL del adjunto"
-                                  value={followUpForm.attachmentUrl}
-                                  onChange={(e) => setFollowUpForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))}
-                                  fullWidth
-                                />
+                              <Collapse in={showFollowUpOptionalFields} unmountOnExit>
+                                <Stack spacing={1.5}>
+                                  <TextField
+                                    label="Asunto"
+                                    value={followUpForm.subject}
+                                    onChange={(e) => setFollowUpForm((prev) => ({ ...prev, subject: e.target.value }))}
+                                    placeholder="Ej. Confirmó transferencia"
+                                    fullWidth
+                                  />
+                                  <TextField
+                                    label="Próximo seguimiento"
+                                    type="datetime-local"
+                                    value={followUpForm.nextFollowUpAt}
+                                    onChange={(e) => setFollowUpForm((prev) => ({ ...prev, nextFollowUpAt: e.target.value }))}
+                                    fullWidth
+                                    InputLabelProps={{ shrink: true }}
+                                  />
+                                  <GoogleDriveUploadWidget
+                                    label={
+                                      followUpForm.attachmentName
+                                        ? `Adjunto listo: ${followUpForm.attachmentName}`
+                                        : 'Adjuntar evidencia opcional'
+                                    }
+                                    helperText="Puedes adjuntar un audio, captura, PDF o imagen."
+                                    accept="application/pdf,image/*,audio/*"
+                                    multiple={false}
+                                    onComplete={handleFollowUpUpload}
+                                    dense
+                                  />
+                                  {!showFollowUpUrlField && (
+                                    <Button
+                                      size="small"
+                                      variant="text"
+                                      sx={{ alignSelf: 'flex-start' }}
+                                      onClick={() => setShowFollowUpUrlField(true)}
+                                    >
+                                      Usar enlace existente en lugar de subir adjunto
+                                    </Button>
+                                  )}
+                                  <Collapse in={showFollowUpUrlField} unmountOnExit>
+                                    <TextField
+                                      label="URL del adjunto"
+                                      value={followUpForm.attachmentUrl}
+                                      onChange={(e) => setFollowUpForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))}
+                                      fullWidth
+                                    />
+                                  </Collapse>
+                                </Stack>
                               </Collapse>
                               <Stack direction="row" spacing={1}>
                                 <Button
