@@ -1211,7 +1211,9 @@ export default function CourseRegistrationsAdminPage() {
                 const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
                 const rowCohortSlug = reg.crCourseSlug.trim();
                 const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
-                const showRowCohort = selectedSlug ? rowCohortSlug !== selectedSlug : !singleVisibleCohortLabel;
+                const showRowCohort = selectedSlug
+                  ? rowCohortSlug !== selectedSlug
+                  : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
                 const showRowSource = !shouldShowSharedSourceSummary;
                 return (
                   <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
