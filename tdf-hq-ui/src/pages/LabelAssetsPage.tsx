@@ -472,6 +472,7 @@ export default function LabelAssetsPage() {
     const uniqueCategories = Array.from(new Set(filteredAssets.map((asset) => asset.category.trim()).filter(Boolean)));
     if (uniqueCategories.length !== 1) return '';
     const onlyCategory = uniqueCategories[0];
+    if (!onlyCategory) return '';
     return `Mostrando una sola categoría: ${categoryLabels.get(onlyCategory) ?? onlyCategory}.`;
   }, [categoryFilter, categoryLabels, filteredAssets, showSingleCategorySummary]);
   const sharedVisibleLocationSummary = useMemo(() => {
