@@ -624,12 +624,14 @@ describe('LabelAssetsPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Mostrando 1 de 3 assets');
-      expect(container.textContent).toContain('2 filtros activos');
       expect(container.textContent).toContain('Busca: Beta');
       expect(container.textContent).toContain('Estado: Mantenimiento');
+      expect(countOccurrences(container.textContent ?? '', 'Busca: Beta')).toBe(1);
+      expect(countOccurrences(container.textContent ?? '', 'Estado: Mantenimiento')).toBe(1);
       expect(container.textContent).toContain('Microfono Beta');
       expect(container.textContent).not.toContain('Sintetizador Uno');
       expect(container.textContent).not.toContain('Bateria Roja');
+      expect(container.textContent).not.toContain('2 filtros activos');
       expect(queryButtonByText(container, 'Limpiar filtros')).not.toBeNull();
     });
 
@@ -680,12 +682,12 @@ describe('LabelAssetsPage', () => {
     await waitForExpectation(() => {
       const text = container.textContent ?? '';
       expect(container.textContent).toContain('Mostrando 0 de 3 assets');
-      expect(container.textContent).toContain('2 filtros activos');
       expect(text).toContain(
         'No hay assets con los filtros actuales: Busca: Nada · Estado: Mantenimiento. Limpia filtros o ajusta la búsqueda si esperabas resultados.',
       );
       expect(countOccurrences(text, 'Busca: Nada')).toBe(1);
       expect(countOccurrences(text, 'Estado: Mantenimiento')).toBe(1);
+      expect(text).not.toContain('2 filtros activos');
       expect(container.querySelector('table')).toBeNull();
       expect(countButtonsByText(container, 'Limpiar filtros')).toBe(1);
     });

@@ -765,14 +765,6 @@ export default function LabelAssetsPage() {
               >
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   <Chip label={`Mostrando ${filteredAssets.length} de ${assets.length} assets`} size="small" />
-                  {filtersActiveCount > 0 && (
-                    <Chip
-                      label={`${filtersActiveCount} filtro${filtersActiveCount === 1 ? '' : 's'} activo${filtersActiveCount === 1 ? '' : 's'}`}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
-                  )}
                   {filterSummaryLabels.map((label) => (
                     <Chip key={label} label={label} size="small" variant="outlined" />
                   ))}
