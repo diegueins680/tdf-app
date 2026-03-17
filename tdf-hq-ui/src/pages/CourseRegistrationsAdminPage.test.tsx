@@ -171,9 +171,9 @@ const getInputByLabel = (container: HTMLElement, labelText: string) => {
   const forId = label.getAttribute('for');
   if (forId) {
     const input = document.getElementById(forId);
-    if (input instanceof HTMLInputElement) return input;
+    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) return input;
   }
-  const fallback = label.parentElement?.querySelector<HTMLInputElement>('input,textarea');
+  const fallback = label.parentElement?.querySelector<HTMLInputElement | HTMLTextAreaElement>('input,textarea');
   if (!fallback) throw new Error(`Input not found for label: ${labelText}`);
   return fallback;
 };
@@ -184,8 +184,9 @@ const hasLabel = (root: ParentNode, labelText: string) =>
     return text === labelText;
   });
 
-const setInputValue = (input: HTMLInputElement, value: string) => {
-  const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+const setInputValue = (input: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  const prototype = input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  const descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
   if (descriptor?.set) {
     descriptor.set.call(input, value);
   } else {
@@ -751,6 +752,66 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Agregar comprobante',
         ),
       ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps empty internal notes collapsed until the admin explicitly opens them', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration({ crAdminNotes: null }),
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+      );
+      expect(hasLabel(document.body, 'Notas internas')).toBe(false);
+      expect(getButtonByText(document.body, 'Agregar notas')).toBeTruthy();
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Guardar notas',
+        ),
+      ).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar notas'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Notas internas')).toBe(true);
+      expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
+      expect(document.body.textContent).toContain('Edita el contenido para habilitar Guardar.');
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(document.body, 'Notas internas'), 'Confirmó pago por WhatsApp.');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(false);
     });
 
     await cleanup();

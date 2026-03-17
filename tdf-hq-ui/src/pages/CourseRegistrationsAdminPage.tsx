@@ -253,6 +253,7 @@ export default function CourseRegistrationsAdminPage() {
     reg: CourseRegistrationDTO;
   } | null>(null);
   const [notesDraft, setNotesDraft] = useState('');
+  const [showNotesComposer, setShowNotesComposer] = useState(false);
   const [receiptForm, setReceiptForm] = useState<ReceiptFormState>(emptyReceiptForm);
   const [followUpForm, setFollowUpForm] = useState<FollowUpFormState>(emptyFollowUpForm);
   const [showReceiptComposer, setShowReceiptComposer] = useState(false);
@@ -527,6 +528,7 @@ export default function CourseRegistrationsAdminPage() {
       setDossierFlash(null);
       setShowEmailHistory(false);
       setNotesDraft('');
+      setShowNotesComposer(false);
       setReceiptForm(emptyReceiptForm());
       setShowReceiptUrlField(false);
       setShowReceiptComposer(false);
@@ -536,6 +538,8 @@ export default function CourseRegistrationsAdminPage() {
       return;
     }
     setShowEmailHistory(false);
+    setNotesDraft(selectedDossier.reg.crAdminNotes ?? '');
+    setShowNotesComposer(false);
     setReceiptForm(emptyReceiptForm());
     setShowReceiptUrlField(false);
     setShowReceiptComposer(selectedDossier.intent === 'markPaid');
@@ -618,6 +622,9 @@ export default function CourseRegistrationsAdminPage() {
     setSelectedDossier({ reg, intent });
   };
 
+  const getPersistedNotesValue = () =>
+    dossierQuery.data?.crdRegistration.crAdminNotes ?? selectedDossier?.reg.crAdminNotes ?? '';
+
   const handleSaveNotes = () => {
     if (!selectedDossier || selectedDossierId == null) return;
     setDossierFlash(null);
@@ -633,6 +640,18 @@ export default function CourseRegistrationsAdminPage() {
       .catch((err: Error) => {
         setDossierFlash({ severity: 'error', message: err.message });
       });
+  };
+
+  const handleOpenNotesComposer = () => {
+    setNotesDraft(getPersistedNotesValue());
+    setShowNotesComposer(true);
+    setDossierFlash(null);
+  };
+
+  const handleHideNotesComposer = () => {
+    setNotesDraft(getPersistedNotesValue());
+    setShowNotesComposer(false);
+    setDossierFlash(null);
   };
 
   const handleReceiptUpload = (files: DriveFileInfo[]) => {
@@ -826,6 +845,9 @@ export default function CourseRegistrationsAdminPage() {
   const activeRegistration = dossierData?.crdRegistration ?? selectedDossier?.reg ?? null;
   const receipts = dossierData?.crdReceipts ?? [];
   const followUps = dossierData?.crdFollowUps ?? [];
+  const persistedNotes = trimToNull(getPersistedNotesValue());
+  const hasSavedNotes = Boolean(persistedNotes);
+  const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const hasReceipts = receipts.length > 0;
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
@@ -1286,25 +1308,53 @@ export default function CourseRegistrationsAdminPage() {
                   <Stack spacing={1.5}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
                       <Typography variant="h6">Notas internas</Typography>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<SaveIcon />}
-                        onClick={handleSaveNotes}
-                        disabled={updateNotesMutation.isPending}
-                      >
-                        Guardar notas
-                      </Button>
+                      {showNotesComposer ? (
+                        <Button variant="text" size="small" onClick={handleHideNotesComposer}>
+                          Ocultar editor
+                        </Button>
+                      ) : (
+                        <Button variant="contained" size="small" onClick={handleOpenNotesComposer}>
+                          {hasSavedNotes ? 'Editar notas' : 'Agregar notas'}
+                        </Button>
+                      )}
                     </Stack>
-                    <TextField
-                      label="Notas internas"
-                      multiline
-                      minRows={4}
-                      value={notesDraft}
-                      onChange={(e) => setNotesDraft(e.target.value)}
-                      placeholder="Contexto interno, acuerdos, bloqueos o próximos pasos."
-                      fullWidth
-                    />
+                    {showNotesComposer ? (
+                      <>
+                        <TextField
+                          label="Notas internas"
+                          multiline
+                          minRows={4}
+                          value={notesDraft}
+                          onChange={(e) => setNotesDraft(e.target.value)}
+                          placeholder="Contexto interno, acuerdos, bloqueos o próximos pasos."
+                          fullWidth
+                        />
+                        <Stack spacing={0.75} alignItems="flex-start">
+                          <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<SaveIcon />}
+                            onClick={handleSaveNotes}
+                            disabled={updateNotesMutation.isPending || !hasNotesDraftChanges}
+                          >
+                            Guardar notas
+                          </Button>
+                          {!hasNotesDraftChanges && (
+                            <Typography variant="caption" color="text.secondary">
+                              Edita el contenido para habilitar Guardar.
+                            </Typography>
+                          )}
+                        </Stack>
+                      </>
+                    ) : hasSavedNotes ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {persistedNotes}
+                      </Typography>
+                    ) : (
+                      <Alert severity="info">
+                        Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.
+                      </Alert>
+                    )}
                   </Stack>
                 </CardContent>
               </Card>
