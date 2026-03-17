@@ -307,6 +307,10 @@ export default function CourseRegistrationsAdminPage() {
     () => Array.from(cohortLabelsBySlug.entries()).map(([value, label]) => ({ value, label })),
     [cohortLabelsBySlug],
   );
+  const singleAvailableCohortLabel = useMemo(() => {
+    if (!cohortsQuery.data || cohortsQuery.isError || cohortOptions.length !== 1) return '';
+    return cohortOptions[0]?.label ?? '';
+  }, [cohortOptions, cohortsQuery.data, cohortsQuery.isError]);
 
   const activeCohortLabel = selectedSlug ? (cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug) : '';
 
@@ -846,29 +850,54 @@ export default function CourseRegistrationsAdminPage() {
       <Paper sx={{ p: 3, borderRadius: 3 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <TextField
-              select
-              label="Curso / cohorte"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              fullWidth
-              size="small"
-              error={cohortsQuery.isError}
-              helperText={
-                cohortsQuery.isError
-                  ? 'No se pudieron cargar cohortes.'
-                  : cohortsQuery.isLoading
-                    ? 'Cargando cohortes…'
-                    : undefined
-              }
-            >
-              <MenuItem value="">Todos</MenuItem>
-              {cohortOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
+            {singleAvailableCohortLabel ? (
+              <Stack
+                spacing={0.5}
+                sx={{
+                  minHeight: 40,
+                  justifyContent: 'center',
+                  px: 1.5,
+                  py: 1.25,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Cohorte disponible
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {singleAvailableCohortLabel}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  No hace falta filtrarla: es la unica cohorte disponible ahora mismo.
+                </Typography>
+              </Stack>
+            ) : (
+              <TextField
+                select
+                label="Curso / cohorte"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                fullWidth
+                size="small"
+                error={cohortsQuery.isError}
+                helperText={
+                  cohortsQuery.isError
+                    ? 'No se pudieron cargar cohortes.'
+                    : cohortsQuery.isLoading
+                      ? 'Cargando cohortes…'
+                      : undefined
+                }
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {cohortOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField

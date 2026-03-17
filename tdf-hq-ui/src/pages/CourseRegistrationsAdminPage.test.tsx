@@ -470,6 +470,37 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces a single cohort selector with context copy and restores it when multiple cohorts exist', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.textContent).toContain('Cohorte disponible');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).toContain('No hace falta filtrarla: es la unica cohorte disponible ahora mismo.');
+    });
+
+    await cleanup();
+
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(secondContainer, 'Curso / cohorte')).toBe(true);
+      expect(secondContainer.textContent).not.toContain('No hace falta filtrarla: es la unica cohorte disponible ahora mismo.');
+    });
+
+    await secondRender.cleanup();
+  });
+
   it('uses the course label inside the dossier instead of raw slug jargon', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
