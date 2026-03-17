@@ -520,19 +520,6 @@ export default function LabelAssetsPage() {
             />
             <TextField
               select
-              label="Estado"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              sx={{ minWidth: 180 }}
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
               label="Categoría"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -546,17 +533,29 @@ export default function LabelAssetsPage() {
               ))}
             </TextField>
           </Stack>
-          <Stack direction="row" spacing={1} mt={2} flexWrap="wrap">
-            {STATUS_OPTIONS.filter((s) => s.value !== 'all').map((opt) => (
-              <Chip
-                key={opt.value}
-                label={`${opt.label} ${statusCounts[opt.value] ? `(${statusCounts[opt.value]})` : ''}`}
-                onClick={() => setStatusFilter(opt.value)}
-                variant={statusFilter === opt.value ? 'filled' : 'outlined'}
-                color={statusFilter === opt.value ? 'primary' : 'default'}
-                sx={{ textTransform: 'capitalize' }}
-              />
-            ))}
+          <Stack spacing={1} mt={2}>
+            <Typography variant="caption" color="text.secondary">
+              Filtrar por estado
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {STATUS_OPTIONS.map((opt) => {
+                const count = opt.value === 'all' ? assets.length : (statusCounts[opt.value] ?? 0);
+                const isActive = statusFilter === opt.value;
+                const showCount = opt.value === 'all' || count > 0;
+                return (
+                  <Chip
+                    key={opt.value}
+                    label={`${opt.label}${showCount ? ` (${count})` : ''}`}
+                    onClick={() => setStatusFilter(opt.value)}
+                    variant={isActive ? 'filled' : 'outlined'}
+                    color={isActive ? 'primary' : 'default'}
+                    aria-label={`Filtrar assets por estado ${opt.label}`}
+                    aria-pressed={isActive}
+                    sx={{ textTransform: 'capitalize' }}
+                  />
+                );
+              })}
+            </Stack>
           </Stack>
         </CardContent>
       </Card>

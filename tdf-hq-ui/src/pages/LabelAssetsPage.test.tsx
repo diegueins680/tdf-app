@@ -121,6 +121,24 @@ const renderPage = async (container: HTMLElement) => {
   };
 };
 
+const countLabelsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('label')).filter((label) => (label.textContent ?? '').trim() === labelText).length;
+
+const getElementByAriaLabel = (root: ParentNode, labelText: string) => {
+  const element = root.querySelector(`[aria-label="${labelText}"]`);
+  if (!(element instanceof HTMLElement)) {
+    throw new Error(`Element not found: ${labelText}`);
+  }
+  return element;
+};
+
+const clickElement = async (element: Element) => {
+  await act(async () => {
+    element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 describe('LabelAssetsPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -186,6 +204,53 @@ describe('LabelAssetsPage', () => {
       expect(container.querySelector('button[aria-label="Abrir devolucion de Microfono Beta"]')).toBeNull();
       expect(container.querySelector('button[aria-label^="Abrir check-out de "]')).toBeNull();
       expect(container.querySelector('button[aria-label^="Abrir check-in de "]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
+  it('uses one status chip group to filter and reset the asset list', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Bateria Roja',
+        status: 'Booked',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Microfono Beta',
+        status: 'OutForMaintenance',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelectorAll('[aria-label^="Filtrar assets por estado "]')).toHaveLength(5);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(container.textContent).toContain('Todos (3)');
+      expect(container.textContent).toContain('Sintetizador Uno');
+      expect(container.textContent).toContain('Bateria Roja');
+      expect(container.textContent).toContain('Microfono Beta');
+    });
+
+    await clickElement(getElementByAriaLabel(container, 'Filtrar assets por estado Prestados'));
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Bateria Roja');
+      expect(container.textContent).not.toContain('Sintetizador Uno');
+      expect(container.textContent).not.toContain('Microfono Beta');
+    });
+
+    await clickElement(getElementByAriaLabel(container, 'Filtrar assets por estado Todos'));
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Sintetizador Uno');
+      expect(container.textContent).toContain('Bateria Roja');
+      expect(container.textContent).toContain('Microfono Beta');
     });
 
     await cleanup();
