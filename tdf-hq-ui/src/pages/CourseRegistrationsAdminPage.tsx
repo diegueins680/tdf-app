@@ -379,6 +379,29 @@ export default function CourseRegistrationsAdminPage() {
       { ...base },
     );
   }, [regsQuery.data]);
+  const visibleStatusSummaryChips = useMemo(
+    () => [
+      {
+        key: 'paid',
+        count: statusCounts.paid,
+        label: `Pagadas: ${statusCounts.paid}`,
+        color: 'success' as const,
+      },
+      {
+        key: 'pending_payment',
+        count: statusCounts.pending_payment,
+        label: `Pendientes: ${statusCounts.pending_payment}`,
+        color: 'warning' as const,
+      },
+      {
+        key: 'cancelled',
+        count: statusCounts.cancelled,
+        label: `Canceladas: ${statusCounts.cancelled}`,
+        color: 'error' as const,
+      },
+    ].filter((chip) => chip.count > 0),
+    [statusCounts],
+  );
   const hasVisibleRegistrations = (regsQuery.data?.length ?? 0) > 0;
 
   const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
@@ -830,9 +853,15 @@ export default function CourseRegistrationsAdminPage() {
           {hasVisibleRegistrations && (
             <>
               <Chip label={`Total: ${statusCounts.total}`} size="small" />
-              <Chip label={`Pagadas: ${statusCounts.paid}`} size="small" color="success" variant="outlined" />
-              <Chip label={`Pendientes: ${statusCounts.pending_payment}`} size="small" color="warning" variant="outlined" />
-              <Chip label={`Canceladas: ${statusCounts.cancelled}`} size="small" color="error" variant="outlined" />
+              {visibleStatusSummaryChips.map((chip) => (
+                <Chip
+                  key={chip.key}
+                  label={chip.label}
+                  size="small"
+                  color={chip.color}
+                  variant="outlined"
+                />
+              ))}
             </>
           )}
           <Tooltip title="Refrescar">

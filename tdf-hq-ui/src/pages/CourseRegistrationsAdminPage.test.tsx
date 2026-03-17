@@ -997,6 +997,28 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides zero-value status totals so the header only shows relevant states', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Total: 1');
+      expect(container.textContent).toContain('Pendientes: 1');
+      expect(container.textContent).not.toContain('Pagadas: 0');
+      expect(container.textContent).not.toContain('Canceladas: 0');
+      expect(container.textContent).toContain(
+        'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('uses the header totals as the only status key while keeping CSV export available', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
