@@ -388,6 +388,7 @@ export default function LabelAssetsPage() {
     [categoryOptions, assetCategories],
   );
   const singleAvailableCategory = filterCategoryOptions.length === 1 ? filterCategoryOptions[0] : null;
+  const singleAvailableCategoryLabel = singleAvailableCategory?.label ?? singleAvailableCategory?.value ?? '';
   const showSingleCategorySummary = Boolean(
     singleAvailableCategory
     && (categoryFilter === 'all' || categoryFilter === singleAvailableCategory.value),
@@ -438,6 +439,9 @@ export default function LabelAssetsPage() {
     singleVisibleStatusOption
     && (statusFilter === 'all' || statusFilter === singleVisibleStatusOption.value),
   );
+  const combinedSingleChoiceSummary = showSingleCategorySummary && showSingleStatusSummary
+    ? `${singleAvailableCategoryLabel} · ${singleVisibleStatusOption?.label ?? ''}`
+    : '';
   const categoryFilterLabel =
     categoryFilter === 'all'
       ? null
@@ -634,48 +638,72 @@ export default function LabelAssetsPage() {
                 ),
               }}
             />
-            {showSingleCategorySummary ? (
-              <Stack
-                spacing={0.5}
-                sx={{
-                  minHeight: 56,
-                  justifyContent: 'center',
-                  minWidth: { md: 240 },
-                  px: 1.5,
-                  py: 1.25,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                }}
-              >
-                <Typography variant="caption" color="text.secondary">
-                  Categoria disponible
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {singleAvailableCategory?.label ?? singleAvailableCategory?.value}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  No hace falta filtrarla: es la unica categoria cargada ahora mismo.
-                </Typography>
-              </Stack>
-            ) : (
-              <TextField
-                select
-                label="Categoría"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                sx={{ minWidth: 180 }}
-              >
-                <MenuItem value="all">Todas</MenuItem>
-                {filterCategoryOptions.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label ?? opt.value}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
+            {combinedSingleChoiceSummary ? null : showSingleCategorySummary ? (
+                <Stack
+                  spacing={0.5}
+                  sx={{
+                    minHeight: 56,
+                    justifyContent: 'center',
+                    minWidth: { md: 240 },
+                    px: 1.5,
+                    py: 1.25,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    Categoria disponible
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {singleAvailableCategoryLabel}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    No hace falta filtrarla: es la unica categoria cargada ahora mismo.
+                  </Typography>
+                </Stack>
+              ) : (
+                <TextField
+                  select
+                  label="Categoría"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  sx={{ minWidth: 180 }}
+                >
+                  <MenuItem value="all">Todas</MenuItem>
+                  {filterCategoryOptions.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      {opt.label ?? opt.value}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
           </Stack>
-          {showSingleStatusSummary ? (
+          {combinedSingleChoiceSummary ? (
+            <Stack
+              spacing={0.5}
+              mt={2}
+              sx={{
+                minHeight: 40,
+                justifyContent: 'center',
+                px: 1.5,
+                py: 1.25,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                Vista actual
+              </Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {combinedSingleChoiceSummary}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                No hace falta filtrar categoría ni estado: esta vista solo tiene una categoría y un estado por ahora.
+              </Typography>
+            </Stack>
+          ) : showSingleStatusSummary ? (
             <Stack
               spacing={0.5}
               mt={2}

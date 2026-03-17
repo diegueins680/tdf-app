@@ -365,7 +365,14 @@ describe('LabelAssetsPage', () => {
         sortOrder: 20,
       },
     ]);
-    listAssetsMock.mockResolvedValue([buildAsset()]);
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Bateria Roja',
+        status: 'Booked',
+      }),
+    ]);
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -402,6 +409,38 @@ describe('LabelAssetsPage', () => {
     });
 
     await secondRender.cleanup();
+  });
+
+  it('combines single category and single status context into one summary block', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Bateria Roja',
+        brand: 'Roland',
+        model: 'JD-Xi',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countLabelsByText(container, 'Categoría')).toBe(0);
+      expect(container.querySelectorAll('[aria-label^="Filtrar assets por estado "]')).toHaveLength(0);
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Synth · Activos');
+      expect(container.textContent).toContain(
+        'No hace falta filtrar categoría ni estado: esta vista solo tiene una categoría y un estado por ahora.',
+      );
+      expect(container.textContent).not.toContain('Categoria disponible');
+      expect(container.textContent).not.toContain('Estado disponible');
+      expect(hasTableHeader(container, 'Categoría')).toBe(false);
+      expect(hasTableHeader(container, 'Estado')).toBe(false);
+    });
+
+    await cleanup();
   });
 
   it('summarizes one shared location once and restores the location column when rows differ again', async () => {
@@ -512,6 +551,7 @@ describe('LabelAssetsPage', () => {
       buildAsset({
         assetId: 'asset-2',
         name: 'Bateria Roja',
+        category: 'Guitarras',
       }),
     ]);
 
@@ -521,9 +561,11 @@ describe('LabelAssetsPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelectorAll('[aria-label^="Filtrar assets por estado "]')).toHaveLength(0);
+      expect(countLabelsByText(container, 'Categoría')).toBe(1);
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Activos');
       expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
+      expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Filtrar por estado');
       expect(hasTableHeader(container, 'Estado')).toBe(false);
     });
