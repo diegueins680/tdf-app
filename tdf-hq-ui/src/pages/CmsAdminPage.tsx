@@ -221,20 +221,6 @@ export default function CmsAdminPage() {
     },
   });
 
-  const handlePublishAndView = async (v: CmsContentDTO) => {
-    try {
-      await publishMutation.mutateAsync(v.ccdId);
-      if (typeof window !== 'undefined') {
-        const url = `${PUBLIC_BASE}${livePathForSlug(v.ccdSlug)}${
-          v.ccdLocale ? `?locale=${encodeURIComponent(v.ccdLocale)}` : ''
-        }`;
-        window.open(url, '_blank', 'noopener');
-      }
-    } catch {
-      // handled by mutation error UI
-    }
-  };
-
   const versions: CmsContentDTO[] = useMemo(
     () => (Array.isArray(listQuery.data) ? listQuery.data : []),
     [listQuery.data],
@@ -895,17 +881,6 @@ export default function CmsAdminPage() {
                           disabled={publishMutation.isPending}
                         >
                           Publicar
-                        </Button>
-                      )}
-                      {rowActions.showPublishAndView && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="success"
-                          onClick={() => void handlePublishAndView(v)}
-                          disabled={publishMutation.isPending}
-                        >
-                          Publicar y ver
                         </Button>
                       )}
                       {rowActions.showOpenLivePage && (
