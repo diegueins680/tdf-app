@@ -487,7 +487,7 @@ export default function LabelAssetsPage() {
       ? 'Todos los assets visibles están sin sala asignada.'
       : `Mostrando una sola ubicación: ${onlyLocation}.`;
   }, [filteredAssets, roomMap]);
-  const showFilterSummary = !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
+  const showFilterSummary = !showFilteredEmptyState && !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
   const showCategoryColumn = !showSingleCategorySummary && !sharedVisibleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
   const showLocationColumn = !sharedVisibleLocationSummary;

@@ -733,7 +733,7 @@ describe('LabelAssetsPage', () => {
 
     await waitForExpectation(() => {
       const text = container.textContent ?? '';
-      expect(container.textContent).toContain('Mostrando 0 de 3 assets');
+      expect(container.textContent).not.toContain('Mostrando 0 de 3 assets');
       expect(text).toContain(
         'No hay assets con los filtros actuales: Busca: Nada · Estado: Mantenimiento. Limpia filtros o ajusta la búsqueda si esperabas resultados.',
       );
