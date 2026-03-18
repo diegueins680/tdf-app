@@ -433,6 +433,7 @@ processInstagramReplies Env{envPool, envConfig} = do
       [ InstagramMessageDirection ==. "incoming"
       , InstagramMessageRepliedAt ==. Nothing
       , InstagramMessageReplyStatus ==. "pending"
+      , InstagramMessageDeletedAt ==. Nothing
       ]
       [Desc InstagramMessageCreatedAt, LimitTo 200])
     envPool
@@ -446,6 +447,7 @@ processFacebookReplies Env{envPool, envConfig} = do
       [ ME.FacebookMessageDirection ==. "incoming"
       , ME.FacebookMessageRepliedAt ==. Nothing
       , ME.FacebookMessageReplyStatus ==. "pending"
+      , ME.FacebookMessageDeletedAt ==. Nothing
       ]
       [Desc ME.FacebookMessageCreatedAt, LimitTo 200])
     envPool
@@ -689,6 +691,7 @@ replyInstagramConversation cfg pool acc senderId = do
       , InstagramMessageDirection ==. "incoming"
       , InstagramMessageRepliedAt ==. Nothing
       , InstagramMessageReplyStatus ==. "pending"
+      , InstagramMessageDeletedAt ==. Nothing
       ]
       [Desc InstagramMessageCreatedAt])
     pool
@@ -698,7 +701,9 @@ replyInstagramConversation cfg pool acc senderId = do
       -- Fetch recent conversation
       recent <- runSqlPool
         (selectList
-          [ InstagramMessageSenderId ==. senderId ]
+          [ InstagramMessageSenderId ==. senderId
+          , InstagramMessageDeletedAt ==. Nothing
+          ]
           [Desc InstagramMessageCreatedAt, LimitTo conversationLimit])
         pool
       let history = reverse recent
@@ -803,6 +808,7 @@ replyInstagramConversation cfg pool acc senderId = do
                                 Nothing
                                 Nothing
                                 Nothing
+                                Nothing
                                 now)
                     )
                     pool
@@ -817,6 +823,7 @@ replyFacebookConversation cfg pool acc senderId = do
       , ME.FacebookMessageDirection ==. "incoming"
       , ME.FacebookMessageRepliedAt ==. Nothing
       , ME.FacebookMessageReplyStatus ==. "pending"
+      , ME.FacebookMessageDeletedAt ==. Nothing
       ]
       [Desc ME.FacebookMessageCreatedAt])
     pool
@@ -825,7 +832,9 @@ replyFacebookConversation cfg pool acc senderId = do
     Just (Entity key msg) -> do
       recent <- runSqlPool
         (selectList
-          [ ME.FacebookMessageSenderId ==. senderId ]
+          [ ME.FacebookMessageSenderId ==. senderId
+          , ME.FacebookMessageDeletedAt ==. Nothing
+          ]
           [Desc ME.FacebookMessageCreatedAt, LimitTo conversationLimit])
         pool
       let history = reverse recent
@@ -926,6 +935,7 @@ replyFacebookConversation cfg pool acc senderId = do
                                 Nothing
                                 (Just now)
                                 1
+                                Nothing
                                 Nothing
                                 Nothing
                                 Nothing

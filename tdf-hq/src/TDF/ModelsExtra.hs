@@ -162,6 +162,7 @@ FacebookMessage
     repliedAt          UTCTime Maybe
     replyText          Text Maybe
     replyError         Text Maybe
+    deletedAt          UTCTime Maybe
     createdAt          UTCTime
     UniqueFacebookMessage externalId
     deriving Show Generic

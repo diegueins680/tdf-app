@@ -221,14 +221,14 @@ adminServer user =
     socialStatusHandler = do
       ensureModule ModuleAdmin user
       ig <- withPool $ do
-        pending <- count [InstagramMessageReplyStatus ==. "pending", InstagramMessageDirection ==. "incoming"]
-        hold <- count [InstagramMessageReplyStatus ==. "hold", InstagramMessageDirection ==. "incoming"]
-        err <- count [InstagramMessageReplyStatus ==. "error", InstagramMessageDirection ==. "incoming"]
+        pending <- count [InstagramMessageReplyStatus ==. "pending", InstagramMessageDirection ==. "incoming", InstagramMessageDeletedAt ==. Nothing]
+        hold <- count [InstagramMessageReplyStatus ==. "hold", InstagramMessageDirection ==. "incoming", InstagramMessageDeletedAt ==. Nothing]
+        err <- count [InstagramMessageReplyStatus ==. "error", InstagramMessageDirection ==. "incoming", InstagramMessageDeletedAt ==. Nothing]
         pure (pending, hold, err)
       fb <- withPool $ do
-        pending <- count [ME.FacebookMessageReplyStatus ==. "pending", ME.FacebookMessageDirection ==. "incoming"]
-        hold <- count [ME.FacebookMessageReplyStatus ==. "hold", ME.FacebookMessageDirection ==. "incoming"]
-        err <- count [ME.FacebookMessageReplyStatus ==. "error", ME.FacebookMessageDirection ==. "incoming"]
+        pending <- count [ME.FacebookMessageReplyStatus ==. "pending", ME.FacebookMessageDirection ==. "incoming", ME.FacebookMessageDeletedAt ==. Nothing]
+        hold <- count [ME.FacebookMessageReplyStatus ==. "hold", ME.FacebookMessageDirection ==. "incoming", ME.FacebookMessageDeletedAt ==. Nothing]
+        err <- count [ME.FacebookMessageReplyStatus ==. "error", ME.FacebookMessageDirection ==. "incoming", ME.FacebookMessageDeletedAt ==. Nothing]
         pure (pending, hold, err)
       wa <- withPool $ do
         pending <- count [ME.WhatsAppMessageReplyStatus ==. "pending", ME.WhatsAppMessageDirection ==. "incoming"]
@@ -250,6 +250,7 @@ adminServer user =
           rows <- withPool $ selectList
             [ InstagramMessageDirection ==. "incoming"
             , InstagramMessageReplyStatus ==. "error"
+            , InstagramMessageDeletedAt ==. Nothing
             ]
             [Desc InstagramMessageCreatedAt, LimitTo limit]
           pure $ object
@@ -266,6 +267,7 @@ adminServer user =
           rows <- withPool $ selectList
             [ ME.FacebookMessageDirection ==. "incoming"
             , ME.FacebookMessageReplyStatus ==. "error"
+            , ME.FacebookMessageDeletedAt ==. Nothing
             ]
             [Desc ME.FacebookMessageCreatedAt, LimitTo limit]
           pure $ object
@@ -328,10 +330,10 @@ adminServer user =
       now <- liftIO getCurrentTime
       mExt <- case channel of
         "instagram" -> withPool $ do
-          mRow <- selectFirst [InstagramMessageSenderId ==. senderId, InstagramMessageReplyStatus ==. "hold", InstagramMessageDirection ==. "incoming"] [Desc InstagramMessageCreatedAt]
+          mRow <- selectFirst [InstagramMessageSenderId ==. senderId, InstagramMessageReplyStatus ==. "hold", InstagramMessageDirection ==. "incoming", InstagramMessageDeletedAt ==. Nothing] [Desc InstagramMessageCreatedAt]
           pure (fmap (instagramMessageExternalId . entityVal) mRow)
         "facebook" -> withPool $ do
-          mRow <- selectFirst [ME.FacebookMessageSenderId ==. senderId, ME.FacebookMessageReplyStatus ==. "hold", ME.FacebookMessageDirection ==. "incoming"] [Desc ME.FacebookMessageCreatedAt]
+          mRow <- selectFirst [ME.FacebookMessageSenderId ==. senderId, ME.FacebookMessageReplyStatus ==. "hold", ME.FacebookMessageDirection ==. "incoming", ME.FacebookMessageDeletedAt ==. Nothing] [Desc ME.FacebookMessageCreatedAt]
           pure (fmap (ME.facebookMessageExternalId . entityVal) mRow)
         "whatsapp" -> withPool $ do
           mRow <- selectFirst [ME.WhatsAppMessageSenderId ==. senderId, ME.WhatsAppMessageReplyStatus ==. "hold", ME.WhatsAppMessageDirection ==. "incoming"] [Desc ME.WhatsAppMessageCreatedAt]

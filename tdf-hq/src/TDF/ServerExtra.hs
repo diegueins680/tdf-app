@@ -1278,6 +1278,7 @@ data IGMessage = IGMessage
   { igMid    :: Maybe Text
   , igText   :: Maybe Text
   , igIsEcho :: Maybe Bool
+  , igIsDeleted :: Maybe Bool
   , igReferral :: Maybe IGReferral
   , igAttachments :: Maybe [A.Value]
   } deriving (Show)
@@ -1309,6 +1310,8 @@ data IGChangeValue = IGChangeValue
   , igChangeFrom :: Maybe IGChangeActor
   , igChangeTimestamp :: Maybe Int
   , igChangeReferral :: Maybe IGReferral
+  , igChangeDeleted :: Maybe Bool
+  , igChangeMid :: Maybe Text
   } deriving (Show)
 
 data IGChangeActor = IGChangeActor
@@ -1338,6 +1341,7 @@ instance A.FromJSON IGMessage where
     igMid <- o .:? "mid"
     igText <- o .:? "text"
     igIsEcho <- o .:? "is_echo"
+    igIsDeleted <- o .:? "is_deleted" <|> o .:? "deleted"
     igReferral <- o .:? "referral"
     igAttachments <- o .:? "attachments"
     pure IGMessage{..}
@@ -1375,6 +1379,8 @@ instance A.FromJSON IGChangeValue where
     rawTs <- o .:? "timestamp"
     igChangeTimestamp <- parseTimestampMaybe rawTs
     igChangeReferral <- o .:? "referral"
+    igChangeDeleted <- o .:? "is_deleted" <|> o .:? "deleted"
+    igChangeMid <- o .:? "mid"
     pure IGChangeValue{..}
 
 instance A.FromJSON IGChangeActor where
@@ -1408,9 +1414,21 @@ data IGInbound = IGInbound
   , igInboundCampaignExternalId :: Maybe Text
   , igInboundCampaignName :: Maybe Text
   , igInboundMetadata   :: Maybe Text
-  } deriving (Show)
+  } deriving (Eq, Show)
 
-extractMetaInbound :: A.Value -> [IGInbound]
+data IGInboundDeleted = IGInboundDeleted
+  { igInboundDeletedExternalId :: Text
+  , igInboundDeletedSenderId :: Text
+  , igInboundDeletedSenderName :: Maybe Text
+  , igInboundDeletedMetadata :: Maybe Text
+  } deriving (Eq, Show)
+
+data MetaInboundEvent
+  = MetaInboundMessage IGInbound
+  | MetaInboundDeleted IGInboundDeleted
+  deriving (Eq, Show)
+
+extractMetaInbound :: A.Value -> [MetaInboundEvent]
 extractMetaInbound payload =
   case parseMaybe A.parseJSON payload of
     Nothing -> []
@@ -1420,35 +1438,64 @@ extractMetaInbound payload =
       mapMaybe (extractMessagingEvent igEntryId) igMessaging <> mapMaybe (extractChangeEvent igEntryId) igChanges
 
     extractMessagingEvent mEntryId IGMessaging{igSender, igRecipient, igMessage, igReferral = eventReferral, igTimestamp} = do
-      IGMessage{igMid, igText, igIsEcho, igReferral = msgReferral, igAttachments} <- igMessage
-      buildInbound
-        (igId igSender)
-        Nothing
-        (igId <$> igRecipient)
-        mEntryId
-        igMid
-        igText
-        igIsEcho
-        (eventReferral <|> msgReferral)
-        igAttachments
-        igTimestamp
+      msg@IGMessage{igMid, igText, igIsEcho, igReferral = msgReferral, igAttachments, igIsDeleted} <- igMessage
+      if fromMaybe False igIsDeleted
+        then buildDeleted
+          (igId igSender)
+          Nothing
+          (igId <$> igRecipient)
+          mEntryId
+          (igMid <|> (stripDeletedMessageId msg))
+          (eventReferral <|> msgReferral)
+          igTimestamp
+        else buildInbound
+          (igId igSender)
+          Nothing
+          (igId <$> igRecipient)
+          mEntryId
+          igMid
+          igText
+          igIsEcho
+          (eventReferral <|> msgReferral)
+          igAttachments
+          igTimestamp
 
     extractChangeEvent mEntryId IGChange{igChangeField, igChangeValue} = do
       guard (maybe True (\raw -> T.toCaseFold (T.strip raw) == "messages") igChangeField)
-      IGChangeValue{igChangeMessage, igChangeFrom, igChangeTimestamp, igChangeReferral} <- igChangeValue
+      IGChangeValue{igChangeMessage, igChangeFrom, igChangeTimestamp, igChangeReferral, igChangeDeleted, igChangeMid} <- igChangeValue
       IGChangeActor{igActorId, igActorName} <- igChangeFrom
-      IGMessage{igMid, igText, igIsEcho, igReferral = msgReferral, igAttachments} <- igChangeMessage
-      buildInbound
-        igActorId
-        igActorName
-        Nothing
-        mEntryId
-        igMid
-        igText
-        igIsEcho
-        (igChangeReferral <|> msgReferral)
-        igAttachments
-        igChangeTimestamp
+      case igChangeMessage of
+        Just msg@IGMessage{igMid, igText, igIsEcho, igReferral = msgReferral, igAttachments, igIsDeleted} ->
+          if fromMaybe False (igIsDeleted <|> igChangeDeleted)
+            then buildDeleted
+              igActorId
+              igActorName
+              Nothing
+              mEntryId
+              (igMid <|> igChangeMid <|> stripDeletedMessageId msg)
+              (igChangeReferral <|> msgReferral)
+              igChangeTimestamp
+            else buildInbound
+              igActorId
+              igActorName
+              Nothing
+              mEntryId
+              igMid
+              igText
+              igIsEcho
+              (igChangeReferral <|> msgReferral)
+              igAttachments
+              igChangeTimestamp
+        Nothing ->
+          guard (fromMaybe False igChangeDeleted) >>
+          buildDeleted
+            igActorId
+            igActorName
+            Nothing
+            mEntryId
+            igChangeMid
+            igChangeReferral
+            igChangeTimestamp
 
     buildInbound senderId senderName mRecipientId mEntryId mMid mText mIsEcho mReferral mAttachments mTs = do
       guard (not (fromMaybe False mIsEcho))
@@ -1456,19 +1503,7 @@ extractMetaInbound payload =
           attachmentPairs = case mAttachments of
             Just xs | not (null xs) -> ["attachments" .= xs]
             _ -> []
-          senderNamePairs = case senderName of
-            Just nm | not (T.null (T.strip nm)) -> ["sender_name" .= nm]
-            _ -> []
-          recipientPairs = case mRecipientId of
-            Just rid | not (T.null (T.strip rid)) -> ["recipient_id" .= rid]
-            _ -> []
-          entryPairs = case mEntryId of
-            Just eid | not (T.null (T.strip eid)) -> ["entry_id" .= eid]
-            _ -> []
-          metaPairs = refMeta ++ attachmentPairs ++ senderNamePairs ++ recipientPairs ++ entryPairs
-          meta = if null metaPairs
-            then Nothing
-            else Just (TE.decodeUtf8 (BL.toStrict (A.encode (object metaPairs))))
+          meta = encodeMeta refMeta senderName mRecipientId mEntryId attachmentPairs
           rawText = fromMaybe "" mText
           body = if not (T.null (T.strip rawText))
             then rawText
@@ -1498,6 +1533,50 @@ extractMetaInbound payload =
         , igInboundCampaignName = campName
         , igInboundMetadata = meta
         }
+
+    buildDeleted senderId senderName mRecipientId mEntryId mMid mReferral _mTs = do
+      externalId <- stripNonEmptyText mMid
+      let (_, _, _, _, refMeta) = toReferralMeta mReferral
+          meta = encodeMeta refMeta senderName mRecipientId mEntryId ["event" .= ("message_deleted" :: Text)]
+      pure (MetaInboundDeleted IGInboundDeleted
+        { igInboundDeletedExternalId = externalId
+        , igInboundDeletedSenderId = senderId
+        , igInboundDeletedSenderName = senderName
+        , igInboundDeletedMetadata = meta
+        })
+
+    encodeMeta refMeta senderName mRecipientId mEntryId extraPairs =
+      let senderNamePairs = case senderName of
+            Just nm | not (T.null (T.strip nm)) -> ["sender_name" .= nm]
+            _ -> []
+          recipientPairs = case mRecipientId of
+            Just rid | not (T.null (T.strip rid)) -> ["recipient_id" .= rid]
+            _ -> []
+          entryPairs = case mEntryId of
+            Just eid | not (T.null (T.strip eid)) -> ["entry_id" .= eid]
+            _ -> []
+          metaPairs = refMeta ++ extraPairs ++ senderNamePairs ++ recipientPairs ++ entryPairs
+      in if null metaPairs
+          then Nothing
+          else Just (TE.decodeUtf8 (BL.toStrict (A.encode (object metaPairs))))
+
+    stripDeletedMessageId IGMessage{igAttachments} =
+      igAttachments >>= extractDeletedMidFromAttachments
+
+    extractDeletedMidFromAttachments [] = Nothing
+    extractDeletedMidFromAttachments (raw:rest) =
+      extractDeletedMid raw <|> extractDeletedMidFromAttachments rest
+
+    extractDeletedMid =
+      parseMaybe $ withObject "IGAttachment" $ \o -> do
+        payload <- o .:? "payload"
+        case payload of
+          Just rawPayload ->
+            withObject "IGAttachmentPayload" (\payloadObj ->
+              payloadObj .:? "mid" <|> payloadObj .:? "message_id" <|> payloadObj .:? "id"
+            ) rawPayload
+          Nothing ->
+            o .:? "mid" <|> o .:? "message_id" <|> o .:? "id"
 
     simpleHash64 = T.foldl' step (14695981039346656037 :: Word64)
       where
@@ -1539,17 +1618,25 @@ persistMetaInbound
   :: MonadIO m
   => MetaChannel
   -> UTCTime
-  -> [IGInbound]
+  -> [MetaInboundEvent]
   -> SqlPersistT m ()
 persistMetaInbound channel now incoming =
-  for_ incoming $ \IGInbound{..} ->
-    case channel of
-      MetaInstagram ->
-        upsertInstagram igInboundExternalId igInboundSenderId igInboundSenderName igInboundText
-          igInboundAdExternalId igInboundAdName igInboundCampaignExternalId igInboundCampaignName igInboundMetadata
-      MetaFacebook ->
-        upsertFacebook igInboundExternalId igInboundSenderId igInboundSenderName igInboundText
-          igInboundAdExternalId igInboundAdName igInboundCampaignExternalId igInboundCampaignName igInboundMetadata
+  for_ incoming $ \event ->
+    case event of
+      MetaInboundMessage IGInbound{..} ->
+        case channel of
+          MetaInstagram ->
+            upsertInstagram igInboundExternalId igInboundSenderId igInboundSenderName igInboundText
+              igInboundAdExternalId igInboundAdName igInboundCampaignExternalId igInboundCampaignName igInboundMetadata
+          MetaFacebook ->
+            upsertFacebook igInboundExternalId igInboundSenderId igInboundSenderName igInboundText
+              igInboundAdExternalId igInboundAdName igInboundCampaignExternalId igInboundCampaignName igInboundMetadata
+      MetaInboundDeleted IGInboundDeleted{..} ->
+        case channel of
+          MetaInstagram ->
+            tombstoneInstagram igInboundDeletedExternalId igInboundDeletedSenderId igInboundDeletedSenderName igInboundDeletedMetadata
+          MetaFacebook ->
+            tombstoneFacebook igInboundDeletedExternalId igInboundDeletedSenderId igInboundDeletedSenderName igInboundDeletedMetadata
   where
     upsertInstagram externalId senderId senderName body adExt adName campExt campName meta = do
       _ <- upsert (M.InstagramMessage externalId
@@ -1570,17 +1657,19 @@ persistMetaInbound channel now incoming =
                     Nothing
                     Nothing
                     Nothing
+                    Nothing
                     now)
-           [ M.InstagramMessageSenderName =. senderName
-           , M.InstagramMessageText =. Just body
-           , M.InstagramMessageDirection =. "incoming"
-           , M.InstagramMessageReplyStatus =. "pending"
-           , M.InstagramMessageAdExternalId =. adExt
-           , M.InstagramMessageAdName =. adName
-           , M.InstagramMessageCampaignExternalId =. campExt
-           , M.InstagramMessageCampaignName =. campName
-           , M.InstagramMessageMetadata =. meta
-           ]
+           ( [ M.InstagramMessageDirection =. "incoming"
+             , M.InstagramMessageReplyStatus =. "pending"
+             , M.InstagramMessageText =. Just body
+             ]
+             ++ maybe [] (\value -> [M.InstagramMessageSenderName =. Just value]) senderName
+             ++ maybe [] (\value -> [M.InstagramMessageAdExternalId =. Just value]) adExt
+             ++ maybe [] (\value -> [M.InstagramMessageAdName =. Just value]) adName
+             ++ maybe [] (\value -> [M.InstagramMessageCampaignExternalId =. Just value]) campExt
+             ++ maybe [] (\value -> [M.InstagramMessageCampaignName =. Just value]) campName
+             ++ maybe [] (\value -> [M.InstagramMessageMetadata =. Just value]) meta
+           )
       pure ()
 
     upsertFacebook externalId senderId senderName body adExt adName campExt campName meta = do
@@ -1602,17 +1691,73 @@ persistMetaInbound channel now incoming =
                     Nothing
                     Nothing
                     Nothing
+                    Nothing
                     now)
-           [ ME.FacebookMessageSenderName =. senderName
-           , ME.FacebookMessageText =. Just body
-           , ME.FacebookMessageDirection =. "incoming"
-           , ME.FacebookMessageReplyStatus =. "pending"
-           , ME.FacebookMessageAdExternalId =. adExt
-           , ME.FacebookMessageAdName =. adName
-           , ME.FacebookMessageCampaignExternalId =. campExt
-           , ME.FacebookMessageCampaignName =. campName
-           , ME.FacebookMessageMetadata =. meta
-           ]
+           ( [ ME.FacebookMessageDirection =. "incoming"
+             , ME.FacebookMessageReplyStatus =. "pending"
+             , ME.FacebookMessageText =. Just body
+             ]
+             ++ maybe [] (\value -> [ME.FacebookMessageSenderName =. Just value]) senderName
+             ++ maybe [] (\value -> [ME.FacebookMessageAdExternalId =. Just value]) adExt
+             ++ maybe [] (\value -> [ME.FacebookMessageAdName =. Just value]) adName
+             ++ maybe [] (\value -> [ME.FacebookMessageCampaignExternalId =. Just value]) campExt
+             ++ maybe [] (\value -> [ME.FacebookMessageCampaignName =. Just value]) campName
+             ++ maybe [] (\value -> [ME.FacebookMessageMetadata =. Just value]) meta
+           )
+      pure ()
+
+    tombstoneInstagram externalId senderId senderName meta = do
+      _ <- upsert (M.InstagramMessage externalId
+                    senderId
+                    senderName
+                    Nothing
+                    "incoming"
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    meta
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
+                    Nothing
+                    Nothing
+                    Nothing
+                    (Just now)
+                    now)
+           ( [ M.InstagramMessageDeletedAt =. Just now ]
+             ++ maybe [] (\value -> [M.InstagramMessageSenderName =. Just value]) senderName
+             ++ maybe [] (\value -> [M.InstagramMessageMetadata =. Just value]) meta
+           )
+      pure ()
+
+    tombstoneFacebook externalId senderId senderName meta = do
+      _ <- upsert (ME.FacebookMessage externalId
+                    senderId
+                    senderName
+                    Nothing
+                    "incoming"
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    meta
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
+                    Nothing
+                    Nothing
+                    Nothing
+                    (Just now)
+                    now)
+           ( [ ME.FacebookMessageDeletedAt =. Just now ]
+             ++ maybe [] (\value -> [ME.FacebookMessageSenderName =. Just value]) senderName
+             ++ maybe [] (\value -> [ME.FacebookMessageMetadata =. Just value]) meta
+           )
       pure ()
 
 verifyMetaWebhook
@@ -1731,12 +1876,14 @@ instagramServer user =
                   Nothing
                   Nothing
                   (either Just (const Nothing) sendResult)
+                  Nothing
                   now)
         for_ mExternalId $ \extId -> do
           let baseFilters =
                 [ M.InstagramMessageExternalId ==. extId
                 , M.InstagramMessageDirection ==. "incoming"
                 , M.InstagramMessageRepliedAt ==. Nothing
+                , M.InstagramMessageDeletedAt ==. Nothing
                 ]
           case sendResult of
             Left err ->
@@ -1764,7 +1911,8 @@ instagramServer user =
       repliedOnly <- parseSocialBoolParam mRepliedOnly
       let filters =
             concat
-              [ maybe [] (\dir -> [M.InstagramMessageDirection ==. dir]) direction
+              [ [M.InstagramMessageDeletedAt ==. Nothing]
+              , maybe [] (\dir -> [M.InstagramMessageDirection ==. dir]) direction
               , if repliedOnly then [M.InstagramMessageRepliedAt !=. Nothing] else []
               ]
       rows <- liftIO $
@@ -1845,12 +1993,14 @@ facebookServer user =
                   Nothing
                   Nothing
                   (either Just (const Nothing) sendResult)
+                  Nothing
                   now)
         for_ mExternalId $ \extId -> do
           let baseFilters =
                 [ ME.FacebookMessageExternalId ==. extId
                 , ME.FacebookMessageDirection ==. "incoming"
                 , ME.FacebookMessageRepliedAt ==. Nothing
+                , ME.FacebookMessageDeletedAt ==. Nothing
                 ]
           case sendResult of
             Left err ->
@@ -1877,7 +2027,8 @@ facebookServer user =
       repliedOnly <- parseSocialBoolParam mRepliedOnly
       let filters =
             concat
-              [ maybe [] (\dir -> [ME.FacebookMessageDirection ==. dir]) direction
+              [ [ME.FacebookMessageDeletedAt ==. Nothing]
+              , maybe [] (\dir -> [ME.FacebookMessageDirection ==. dir]) direction
               , if repliedOnly then [ME.FacebookMessageRepliedAt !=. Nothing] else []
               ]
       rows <- liftIO $

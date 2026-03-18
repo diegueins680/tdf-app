@@ -1189,14 +1189,17 @@ export default function SocialInboxPage() {
   const instagramQuery = useQuery({
     queryKey: ['social-inbox', 'instagram', limit, direction, repliedOnly],
     queryFn: () => SocialInboxAPI.listInstagramMessages({ limit, direction, repliedOnly }),
+    refetchInterval: reviewMode ? 5000 : false,
   });
   const facebookQuery = useQuery({
     queryKey: ['social-inbox', 'facebook', limit, direction, repliedOnly],
     queryFn: () => SocialInboxAPI.listFacebookMessages({ limit, direction, repliedOnly }),
+    refetchInterval: reviewMode ? 5000 : false,
   });
   const whatsappQuery = useQuery({
     queryKey: ['social-inbox', 'whatsapp', limit, direction, repliedOnly],
     queryFn: () => SocialInboxAPI.listWhatsAppMessages({ limit, direction, repliedOnly }),
+    refetchInterval: reviewMode ? 5000 : false,
   });
   const instagramStats = useMemo(() => buildStats(instagramQuery.data), [instagramQuery.data]);
   const facebookStats = useMemo(() => buildStats(facebookQuery.data), [facebookQuery.data]);
@@ -1282,9 +1285,6 @@ export default function SocialInboxPage() {
   const hasChannelLoadErrors = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
   const showUnifiedEmptyState = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
   const showLimitControl = !showUnifiedEmptyState || limit !== DEFAULT_LIMIT;
-  const reviewAssetActionLabel = activeAsset
-    ? 'Change selected asset'
-    : 'Select asset in Instagram setup';
   const refetch = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -1379,7 +1379,7 @@ export default function SocialInboxPage() {
               Recording checklist
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Keep this panel visible and narrate: selected asset, inbound message, send action, and native-client delivery confirmation.
+              Keep this panel visible and narrate: selected Instagram Business account asset, inbound message, send action, deleted-message refresh, and native-client delivery confirmation.
             </Typography>
             {activeAsset ? (
               <Alert severity="success" variant="outlined">
@@ -1392,9 +1392,17 @@ export default function SocialInboxPage() {
                 No asset selected yet. Go to Instagram setup and select the Page/account first.
               </Alert>
             )}
-            <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined">
-              {reviewAssetActionLabel}
-            </Button>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined">
+                Open Instagram setup
+              </Button>
+              <Button component={RouterLink} to="/social/instagram?review=1" variant="text">
+                Re-select asset
+              </Button>
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.
+            </Typography>
           </Stack>
         </Paper>
       )}

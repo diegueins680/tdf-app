@@ -500,6 +500,7 @@ InstagramMessage
     repliedAt          UTCTime Maybe
     replyText          Text Maybe
     replyError         Text Maybe
+    deletedAt          UTCTime Maybe
     createdAt          UTCTime
     UniqueInstagramMessage externalId
     deriving Show Generic

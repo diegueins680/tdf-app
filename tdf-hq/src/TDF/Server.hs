@@ -1338,6 +1338,7 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
                               Nothing
                               Nothing
                               Nothing
+                              Nothing
                               createdAt)
                      [ InstagramMessageSenderName =. senderName
                      , InstagramMessageText =. Just body
@@ -1363,6 +1364,7 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
                               Nothing
                               Nothing
                               0
+                              Nothing
                               Nothing
                               Nothing
                               Nothing

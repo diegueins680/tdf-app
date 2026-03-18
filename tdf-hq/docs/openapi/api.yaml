@@ -229,7 +229,7 @@ paths:
     get:
       tags: [Instagram]
       summary: List Instagram inbox messages
-      description: Returns stored Instagram messages for auto-reply tracking.
+      description: Returns stored Instagram messages for auto-reply tracking. Deleted or unsent inbound messages are excluded from the inbox feed.
       operationId: listInstagramMessages
       security:
         - bearerAuth: [ ]
@@ -343,7 +343,7 @@ paths:
     get:
       tags: [Facebook]
       summary: List Facebook inbox messages
-      description: Returns stored Facebook Messenger messages for inbox tracking.
+      description: Returns stored Facebook Messenger messages for inbox tracking. Deleted or unsent inbound messages are excluded from the inbox feed.
       operationId: listFacebookMessages
       security:
         - bearerAuth: [ ]

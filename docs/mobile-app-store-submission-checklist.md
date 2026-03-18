@@ -2,6 +2,21 @@
 
 This checklist is for the current TDF Records Expo mobile app and the public legal pages added under `tdf-hq-ui/public/mobile-app/`.
 
+## Canonical release identity
+
+Use these repo-backed values as the source of truth for the current mobile release unless the repo is intentionally changed:
+
+- App name: `TDF Records`
+- Expo account/project: `@cuco.saa/tdf-mobile`
+- EAS project ID: `218aca4d-c096-4892-a353-c1dd7df23448`
+- iOS bundle identifier: `com.tdfrecords.app`
+- Android application ID: `com.tdfrecords.app`
+- Primary EAS release build profile: `production`
+- Android submit profile: `production` → Play track `internal`, release status `draft`
+- Runtime/app version source in repo: `app.config.ts` uses `APP_VERSION` with `runtimeVersion = APP_VERSION`
+
+Important: older notes may still reference `com.tdf.records`. Treat that older identifier as stale unless a deliberate repo change says otherwise.
+
 ## Publish the public URLs first
 
 Deploy the existing public web app so these routes are reachable without authentication:
@@ -70,9 +85,9 @@ The current repo-documented public host is `https://tdf-app.pages.dev`, so the s
 
 The repo exposes a public mailing address and several public email aliases, but it does not expose a clearly approved public support phone number. If Apple, Google, local law, or counsel require one for listing compliance, add it before submission rather than inventing one in the public pages.
 
-## Known gap outside this root-repo change
+## Verified in the current app build
 
-Apple and Google both expect privacy information to be reachable from inside the app, not only from the store listing or external website. This change adds the public web destinations, but `tdf-mobile` should still expose an easily reachable in-app link to the privacy policy and support pages before submission.
+The current `tdf-mobile` app already exposes the public support, privacy, terms, and data deletion links from the in-app About / Support and legal section (`app/(tabs)/about.tsx`, `app/about.tsx`, `src/components/PublicLinksSection.tsx`). This is no longer a release blocker, but the links should still be smoke-tested on a real release candidate before submission.
 
 ## Official references checked on 2026-03-13
 

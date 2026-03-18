@@ -41,6 +41,7 @@ import TDF.Server.SocialEventsHandlers (
     parseInvitationIdsEither,
  )
 import qualified TDF.ServerSpec as ServerSpec
+import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
@@ -190,6 +191,7 @@ main = hspec $ do
     APITypesSpec.spec
     ArtistSpec.spec
     ServerSpec.spec
+    ServerExtraSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
     PublicLeadSpec.spec

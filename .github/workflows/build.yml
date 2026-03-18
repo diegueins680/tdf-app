@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - 'tdf-hq/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.npmrc'
       - '.dockerignore'
       - 'fly.toml'
       - '.github/workflows/build.yml'
