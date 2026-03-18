@@ -1617,11 +1617,7 @@ export default function CourseRegistrationsAdminPage() {
                   <Stack spacing={1.5}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
                       <Typography variant="h6">Notas internas</Typography>
-                      {showNotesComposer ? (
-                        <Button variant="text" size="small" onClick={handleHideNotesComposer}>
-                          Ocultar editor
-                        </Button>
-                      ) : hasSavedNotes ? (
+                      {!showNotesComposer && hasSavedNotes ? (
                         <Button variant="contained" size="small" onClick={handleOpenNotesComposer}>
                           Editar notas
                         </Button>
@@ -1639,15 +1635,20 @@ export default function CourseRegistrationsAdminPage() {
                           fullWidth
                         />
                         <Stack spacing={0.75} alignItems="flex-start">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<SaveIcon />}
-                            onClick={handleSaveNotes}
-                            disabled={updateNotesMutation.isPending || !hasNotesDraftChanges}
-                          >
-                            Guardar notas
-                          </Button>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              startIcon={<SaveIcon />}
+                              onClick={handleSaveNotes}
+                              disabled={updateNotesMutation.isPending || !hasNotesDraftChanges}
+                            >
+                              Guardar notas
+                            </Button>
+                            <Button variant="text" size="small" onClick={handleHideNotesComposer}>
+                              Cancelar notas
+                            </Button>
+                          </Stack>
                           {!hasNotesDraftChanges && (
                             <Typography variant="caption" color="text.secondary">
                               Edita el contenido para habilitar Guardar.

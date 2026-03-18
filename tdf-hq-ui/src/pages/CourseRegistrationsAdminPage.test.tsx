@@ -804,6 +804,61 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps notes editor actions beside the form instead of adding a separate header close button', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+      );
+      expect(getButtonByText(document.body, 'Agregar primera nota')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar primera nota'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
+      expect(countButtonsByText(document.body, 'Ocultar editor')).toBe(0);
+      expect(document.body.textContent).not.toContain(
+        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+      );
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Cancelar notas'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+      );
+      expect(countButtonsByText(document.body, 'Cancelar notas')).toBe(0);
+      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('summarizes a shared visible cohort once when the page still offers multiple cohort choices', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
