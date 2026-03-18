@@ -1382,7 +1382,13 @@ describe('CourseRegistrationsAdminPage', () => {
         'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
       expect(hasLabel(document.body, 'Notas internas')).toBe(false);
-      expect(getButtonByText(document.body, 'Agregar notas')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar primera nota')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(1);
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Agregar notas',
+        ),
+      ).toBe(false);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Guardar notas',
@@ -1391,7 +1397,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar notas'));
+      clickButton(getButtonByText(document.body, 'Agregar primera nota'));
       await flushPromises();
       await flushPromises();
     });

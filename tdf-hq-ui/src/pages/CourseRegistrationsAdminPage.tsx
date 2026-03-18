@@ -1618,11 +1618,11 @@ export default function CourseRegistrationsAdminPage() {
                         <Button variant="text" size="small" onClick={handleHideNotesComposer}>
                           Ocultar editor
                         </Button>
-                      ) : (
+                      ) : hasSavedNotes ? (
                         <Button variant="contained" size="small" onClick={handleOpenNotesComposer}>
-                          {hasSavedNotes ? 'Editar notas' : 'Agregar notas'}
+                          Editar notas
                         </Button>
-                      )}
+                      ) : null}
                     </Stack>
                     {showNotesComposer ? (
                       <>
@@ -1657,7 +1657,14 @@ export default function CourseRegistrationsAdminPage() {
                         {persistedNotes}
                       </Typography>
                     ) : (
-                      <Alert severity="info">
+                      <Alert
+                        severity="info"
+                        action={(
+                          <Button color="inherit" size="small" onClick={handleOpenNotesComposer}>
+                            Agregar primera nota
+                          </Button>
+                        )}
+                      >
                         Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.
                       </Alert>
                     )}
