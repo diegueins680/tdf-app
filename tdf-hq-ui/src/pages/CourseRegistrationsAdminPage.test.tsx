@@ -1305,6 +1305,54 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('switches the first-receipt section guidance from empty-state copy to direct form guidance once the composer is open', async () => {
+    const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
+    const firstReceiptComposerHelpText =
+      'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Abrir expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(emptyReceiptHelpText);
+      expect(document.body.textContent).not.toContain(firstReceiptComposerHelpText);
+      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(firstReceiptComposerHelpText);
+      expect(document.body.textContent).not.toContain(emptyReceiptHelpText);
+      expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('opens the receipt composer directly from the mark-paid flow without duplicating the hint', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
