@@ -50,8 +50,7 @@ type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
 const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
 const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
-const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
-const emptyReceiptListStateMessage = 'Cuando guardes el primer comprobante, quedara listado aqui con enlace y acciones para revisarlo despues.';
+const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
 
@@ -1029,9 +1028,9 @@ export default function CourseRegistrationsAdminPage() {
     ? markPaidReceiptSectionHelpText
     : showReceiptComposer && !hasReceipts
       ? firstReceiptComposerHelpText
-    : hasReceipts
-      ? 'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.'
-      : emptyReceiptHelpText;
+      : hasReceipts
+        ? 'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.'
+        : '';
   const showReceiptMetadataFields = (
     selectedDossier?.intent === 'markPaid'
     || receiptForm.editingId != null
@@ -1694,9 +1693,11 @@ export default function CourseRegistrationsAdminPage() {
                             <Chip size="small" label={`${receipts.length} guardado${receipts.length === 1 ? '' : 's'}`} />
                           )}
                         </Stack>
-                        <Typography variant="body2" color="text.secondary">
-                          {receiptSectionHelpText}
-                        </Typography>
+                        {receiptSectionHelpText && (
+                          <Typography variant="body2" color="text.secondary">
+                            {receiptSectionHelpText}
+                          </Typography>
+                        )}
                       </Box>
                       {!showReceiptComposer && hasReceipts && (
                         <Button
@@ -1796,7 +1797,7 @@ export default function CourseRegistrationsAdminPage() {
                                 </Button>
                               )}
                             >
-                              {emptyReceiptListStateMessage}
+                              {emptyReceiptAlertMessage}
                             </Alert>
                           )}
                           {receipts.map((receipt) => (

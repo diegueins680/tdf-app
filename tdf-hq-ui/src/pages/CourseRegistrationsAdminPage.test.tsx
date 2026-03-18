@@ -159,6 +159,9 @@ const buildEmailEvent = (
   ...overrides,
 });
 
+const emptyReceiptAlertMessage =
+  'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -347,7 +350,8 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(
+      expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
+      expect(document.body.textContent).not.toContain(
         'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.',
       );
       expect(document.body.textContent).not.toContain(
@@ -1319,10 +1323,6 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('replaces the empty receipt list area with one guided first-receipt CTA', async () => {
-    const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
-    const emptyReceiptListStateMessage =
-      'Cuando guardes el primer comprobante, quedara listado aqui con enlace y acciones para revisarlo despues.';
-
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
         crdRegistration: buildRegistration(),
@@ -1345,8 +1345,13 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(emptyReceiptHelpText);
-      expect(document.body.textContent).toContain(emptyReceiptListStateMessage);
+      expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
+      expect(document.body.textContent).not.toContain(
+        'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.',
+      );
+      expect(document.body.textContent).not.toContain(
+        'Cuando guardes el primer comprobante, quedara listado aqui con enlace y acciones para revisarlo despues.',
+      );
       expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(1);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
@@ -1361,7 +1366,6 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('switches the first-receipt section guidance from empty-state copy to direct form guidance once the composer is open', async () => {
-    const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
     const firstReceiptComposerHelpText =
       'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 
@@ -1387,7 +1391,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(emptyReceiptHelpText);
+      expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).not.toContain(firstReceiptComposerHelpText);
       expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
     });
@@ -1400,7 +1404,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(firstReceiptComposerHelpText);
-      expect(document.body.textContent).not.toContain(emptyReceiptHelpText);
+      expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
       expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
     });
@@ -1411,7 +1415,6 @@ describe('CourseRegistrationsAdminPage', () => {
   it('opens the receipt composer directly from the mark-paid flow without duplicating the hint', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
-    const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1440,7 +1443,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(markPaidReceiptHint);
       expect(countOccurrences(document.body, markPaidReceiptHint)).toBe(1);
       expect(document.body.textContent).toContain(markPaidReceiptSectionHelpText);
-      expect(document.body.textContent).not.toContain(emptyReceiptHelpText);
+      expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
       expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
@@ -1672,7 +1675,6 @@ describe('CourseRegistrationsAdminPage', () => {
 
   it('shows the mark-paid action only when the dossier can actually use it', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
-    const emptyReceiptHelpText = 'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.';
     const registration = buildRegistration();
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({ crdRegistration: registration, crdCanMarkPaid: false }),
@@ -1693,7 +1695,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(emptyReceiptHelpText);
+      expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).not.toContain(markPaidReceiptHint);
       expect(document.body.textContent).not.toContain('0 guardados');
       expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
