@@ -1,29 +1,38 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Box,
   Button,
   Card,
   CardContent,
   Checkbox,
-  FormControlLabel,
-  Stack,
-  Typography,
   Chip,
-  Tooltip,
+  FormControlLabel,
   IconButton,
+  Stack,
+  Tooltip,
+  Typography,
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link as RouterLink } from 'react-router-dom';
 import { Admin, type AdminUser } from '../api/admin';
 import AdminUserCommunicationDialog from '../components/AdminUserCommunicationDialog';
 
-const summarizeUserContacts = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) => {
-  const preferredPhone = user.whatsapp?.trim() || user.primaryPhone?.trim() || '';
-  const email = user.primaryEmail?.trim() || '';
-  const parts = [preferredPhone, email].filter((value) => value !== '');
-  return parts.length > 0 ? parts.join(' · ') : null;
+const normalizeContactValue = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
 };
+
+const getUserContactSummary = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) => {
+  const preferredPhone = normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
+  const email = normalizeContactValue(user.primaryEmail);
+
+  if (preferredPhone && email) return `${preferredPhone} · ${email}`;
+  return preferredPhone ?? email;
+};
+
+const hasUserContactChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) =>
+  Boolean(getUserContactSummary(user));
 
 export default function AdminUsersPage() {
   const qc = useQueryClient();
@@ -39,53 +48,69 @@ export default function AdminUsersPage() {
     void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
   };
 
+  const usersMissingContactCount = useMemo(
+    () => (usersQuery.data ?? []).filter((user) => !hasUserContactChannel(user)).length,
+    [usersQuery.data],
+  );
+
   return (
     <>
       <Stack spacing={3}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography variant="h4" fontWeight={700}>Usuarios (admin API)</Typography>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={includeInactive}
-                onChange={(e) => setIncludeInactive(e.target.checked)}
+        <Stack spacing={1}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Typography variant="h4" fontWeight={700}>Usuarios (admin API)</Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={includeInactive}
+                    onChange={(event) => setIncludeInactive(event.target.checked)}
+                  />
+                }
+                label="Incluir inactivos"
               />
-            }
-            label="Incluir inactivos"
-          />
-          <Tooltip title="Refrescar">
-            <span>
-              <IconButton
-                aria-label="Refrescar lista de usuarios"
-                onClick={handleRefresh}
-                disabled={usersQuery.isFetching}
-              >
-                <RefreshIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
-        </Stack>
-      </Stack>
-
-      <Card>
-        <CardContent>
-          {usersQuery.isLoading && <Typography>Cargando usuarios…</Typography>}
-          {usersQuery.error && (
-            <Typography color="error">Error al cargar usuarios</Typography>
-          )}
-          {usersQuery.data?.length === 0 && (
-            <Typography color="text.secondary">No hay usuarios.</Typography>
-          )}
-          {usersQuery.data?.length ? (
-            <Stack spacing={1.5}>
-              {usersQuery.data.map((u) => (
-                <UserRow key={u.userId} user={u} onOpenCommunications={() => setSelectedUser(u)} />
-              ))}
+              <Tooltip title="Refrescar">
+                <span>
+                  <IconButton
+                    aria-label="Refrescar lista de usuarios"
+                    onClick={handleRefresh}
+                    disabled={usersQuery.isFetching}
+                  >
+                    <RefreshIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Stack>
-          ) : null}
-        </CardContent>
-      </Card>
+          </Stack>
+          {usersMissingContactCount > 0 && (
+            <Typography variant="body2" color="text.secondary">
+              Comunicación solo aparece cuando el usuario ya tiene WhatsApp, teléfono o correo.
+              {` ${usersMissingContactCount} usuario${usersMissingContactCount === 1 ? '' : 's'} `}
+              siguen sin canal de contacto; complétalo desde Perfil.
+            </Typography>
+          )}
+        </Stack>
+
+        <Card>
+          <CardContent>
+            {usersQuery.isLoading && <Typography>Cargando usuarios…</Typography>}
+            {usersQuery.error && <Typography color="error">Error al cargar usuarios</Typography>}
+            {usersQuery.data?.length === 0 && (
+              <Typography color="text.secondary">No hay usuarios.</Typography>
+            )}
+            {usersQuery.data?.length ? (
+              <Stack spacing={1.5}>
+                {usersQuery.data.map((user) => (
+                  <UserRow
+                    key={user.userId}
+                    user={user}
+                    onOpenCommunications={() => setSelectedUser(user)}
+                  />
+                ))}
+              </Stack>
+            ) : null}
+          </CardContent>
+        </Card>
       </Stack>
       <AdminUserCommunicationDialog
         open={Boolean(selectedUser)}
@@ -97,7 +122,8 @@ export default function AdminUsersPage() {
 }
 
 function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommunications: () => void }) {
-  const contactSummary = summarizeUserContacts(user);
+  const contactSummary = getUserContactSummary(user);
+  const hasContactInfo = Boolean(contactSummary);
 
   return (
     <Box
@@ -124,23 +150,26 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
         )}
       </Box>
       <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />
+      {!hasContactInfo && <Chip label="Falta contacto" color="warning" size="small" variant="outlined" />}
       <Stack direction="row" spacing={0.5} flexWrap="wrap">
-        {user.roles.map((r) => (
-          <Chip key={r} label={r} size="small" variant="outlined" />
+        {user.roles.map((role) => (
+          <Chip key={role} label={role} size="small" variant="outlined" />
         ))}
       </Stack>
       <Stack direction="row" spacing={0.5} flexWrap="wrap">
-        {user.modules.map((m) => (
-          <Chip key={m} label={m} size="small" color="info" variant="outlined" />
+        {user.modules.map((module) => (
+          <Chip key={module} label={module} size="small" color="info" variant="outlined" />
         ))}
       </Stack>
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
         <Button component={RouterLink} to={`/perfil/${user.partyId}`} size="small" variant="outlined">
           Perfil
         </Button>
-        <Button size="small" variant="contained" onClick={onOpenCommunications}>
-          Comunicación
-        </Button>
+        {hasContactInfo && (
+          <Button size="small" variant="contained" onClick={onOpenCommunications}>
+            Comunicación
+          </Button>
+        )}
       </Stack>
     </Box>
   );
