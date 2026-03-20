@@ -72,6 +72,23 @@ Treat iOS build `f326183b-e98d-4c29-b9cf-6737de91275b` as the current build of r
 - iOS credential/setup blocker: `cleared`
 - Engineering blocker before App Store submission: `none known`
 
+## Submission packet freeze
+- **Android submission anchor**: build `96085d99-784f-4d33-a3c7-75dea775b076`
+  - Artifact: `https://expo.dev/artifacts/eas/jwxJytjvDbTXJCkuABix7E.aab`
+  - Promotion rule: do **not** promote queued-only Android build `738e7792-3307-442e-8640-74eacd606c5f` from current evidence.
+- **iOS submission anchor**: build `f326183b-e98d-4c29-b9cf-6737de91275b`
+  - Artifact: `https://expo.dev/artifacts/eas/w2sgPbSdsYFztWQ3y6xUyB.ipa`
+  - App Store Connect app: `6754828747`
+  - Apple team: `83J23NPXG7 (Diego Saa (Individual))`
+- **Review contact**: `Diego Saa` / `0984755301` / `cuco.saa@gmail.com`
+- **Operator inputs still missing**:
+  - reviewer/demo access path or bearer token
+  - final privacy/data-safety sign-off
+  - final Android/iOS screenshots
+  - store credential ownership / handoff
+- **Engineering blocker from build/signing evidence**: none from current readable evidence.
+- **Submission-copy blocker still open**: the repo currently still exposes in-app QR/vCard scanning via `CameraView` + `onBarcodeScanned` in `tdf-mobile/app/(tabs)/vcard.tsx`, so the objective's planned post-scanner wording (`barcode scanning removed` / `manual QR payload import remains`) is **not** source-backed yet. Do not ship that wording until engineering removes the scanner flow or the objective is corrected.
+
 ## App Store review contact card
 
 - First name: `Diego`
@@ -81,7 +98,11 @@ Treat iOS build `f326183b-e98d-4c29-b9cf-6737de91275b` as the current build of r
 
 Enter these values directly in App Store Connect review contact fields for the current submission.
 
-## Paste-ready App Review note
+## Store-copy blocker and paste-ready wording
+
+Before anyone reuses older submission text: **do not claim the scanner was removed or that the vCard flow is manual-import-only.** The current repo still opens `CameraView` and handles `onBarcodeScanned` in `tdf-mobile/app/(tabs)/vcard.tsx`, so any scanner-removed wording would drift from source.
+
+### App Review note
 
 ```text
 TDF Records is intended for internal staff and approved collaborators.
@@ -94,12 +115,52 @@ Review flow:
 3. Verify parties, bookings, pipeline stages, events, social/vCard tools, inventory flows, and venue explorer.
 
 Permissions used by the current build:
-- Camera: QR/vCard scanning and optional inventory photos
-- Photo library: optional inventory image selection
-- Location: optional nearby venue discovery
+- Camera: optional; used to scan vCard QR codes on the social/vCard screen and to capture inventory images
+- Photo library: optional; used to attach inventory images
+- Location: optional foreground-only; used to show nearby venues in venue explorer
 
 If reviewer access to backend endpoints is limited, protected CRM screens may show restricted-access states instead of editable data.
 ```
+
+### Play App Access
+
+```text
+No public sign-up is available. App access is restricted to internal staff and approved collaborators. Reviewers need the review bearer token or equivalent demo access path provided separately with the submission.
+```
+
+### Privacy / data-safety alignment
+
+```text
+Current release-path permissions and features from source:
+- Camera: optional; used to scan vCard QR codes in the social/vCard flow and to capture inventory images
+- Photo library: optional; used to attach inventory images
+- Location: optional foreground-only; used to show nearby venues
+- Microphone/audio recording: not requested in the release config
+```
+
+### Permission explanations
+
+```text
+Camera: Lets staff scan a vCard QR code in the social flow and optionally capture inventory photos.
+Photo library: Lets staff attach an existing image to an inventory item.
+Location: Lets staff find nearby venues in the venue explorer.
+```
+
+### Exact native permission strings
+
+```text
+Camera (expo-camera / image-picker camera): Allow TDF Records to use your camera to scan vCard QR codes and capture inventory images.
+Photo library: Allow TDF Records to access your photos so you can attach inventory images.
+Location: Allow TDF Records to use your location to show nearby venues.
+```
+
+### Do not say
+
+- `com.tdf.records`
+- `barcode scanning was removed`
+- `manual QR payload import only`
+- any claim that camera access is broader than `scan vCard QR codes and capture inventory images`
+- any claim that the app scans broader barcode types; current source-backed behavior is QR-only in the vCard flow
 
 ## Submission blockers now
 Engineering blockers are closed from the current readable evidence. Remaining work is submission operations and external review.
@@ -117,6 +178,14 @@ Release still needs these inputs before Android/iOS submission can be treated as
 - App Store Connect record exists for `TDF Records` at app ID `6754828747`.
 - iOS version `1.0` is currently in `Prepare for Submission`.
 - No build is attached to version `1.0` yet; the version page still shows `Add Build`.
+
+## Source-backed permission and feature truth
+- **Camera** — optional; used for in-app QR scanning on the vCard tab (`tdf-mobile/app/(tabs)/vcard.tsx`) and optional inventory photo capture (`tdf-mobile/app/(tabs)/inventory.tsx`).
+- **Photo library** — optional; used for inventory image selection (`tdf-mobile/app/(tabs)/inventory.tsx`).
+- **Location** — optional foreground-only; used to show nearby venues in venue explorer (`tdf-mobile/app/venueExplorer.tsx`).
+- **Microphone / audio recording** — not part of the current release path; `tdf-mobile/app.config.ts` sets `microphonePermission: false` for `expo-camera` and blocks Android `android.permission.RECORD_AUDIO`.
+
+Use these statements for Play/App Store privacy answers and reviewer notes; they are the current repo-backed truth.
 
 ## Ownership buckets
 ### Engineering-closed
@@ -141,12 +210,12 @@ Release still needs these inputs before Android/iOS submission can be treated as
 
 ## Stale claims to stop repeating
 - Do **not** use the old identifier `com.tdf.records`; the current release identity is `com.tdfrecords.app`.
-- Do **not** say the current release candidate includes in-app barcode scanning; the scanner path was removed from the release build and the vCard flow now relies on manual QR payload import.
+- Do **not** say the scanner was removed or that the vCard flow is manual-import-only; current source still includes in-app QR/vCard scanning on the vCard tab.
 - Do **not** say the app requests `RECORD_AUDIO`; Android release config explicitly blocks that permission.
-- Do **not** describe camera access as broad or always-on; current release-facing camera use is optional and limited to inventory photo capture.
+- Do **not** describe camera access as broad or always-on; current release-facing camera use is optional and limited to QR/vCard scanning plus inventory photo capture.
 
 ## Store-facing delta check
-No new engineering-side store delta was identified in this run. The remaining release risk is operator submission completeness, not app code or signing.
+One release-copy blocker was identified in this run: older handoff text says scanner removal/manual QR import only, but current source still exposes QR/vCard scanning in the vCard tab. Submission wording must stay on the source-backed variant above until engineering changes that flow.
 
 ## Exact next-step sequence (copy/paste handoff)
 1. **Release** — freeze the build-of-record verdicts exactly as follows unless newer terminal evidence is added to the control plane:
