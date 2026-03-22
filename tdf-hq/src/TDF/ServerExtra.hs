@@ -1522,7 +1522,7 @@ extractMetaInbound payload =
             ]
           fallbackId = senderId <> "-" <> toHashText fallbackBase
           externalId = fromMaybe fallbackId mMid
-      pure IGInbound
+      pure (MetaInboundMessage IGInbound
         { igInboundExternalId = externalId
         , igInboundSenderId = senderId
         , igInboundSenderName = senderName
@@ -1532,7 +1532,7 @@ extractMetaInbound payload =
         , igInboundCampaignExternalId = campExt
         , igInboundCampaignName = campName
         , igInboundMetadata = meta
-        }
+        })
 
     buildDeleted senderId senderName mRecipientId mEntryId mMid mReferral _mTs = do
       externalId <- stripNonEmptyText mMid
@@ -1560,24 +1560,27 @@ extractMetaInbound payload =
           then Nothing
           else Just (TE.decodeUtf8 (BL.toStrict (A.encode (object metaPairs))))
 
+    stripDeletedMessageId :: IGMessage -> Maybe Text
     stripDeletedMessageId IGMessage{igAttachments} =
       igAttachments >>= extractDeletedMidFromAttachments
 
+    extractDeletedMidFromAttachments :: [A.Value] -> Maybe Text
     extractDeletedMidFromAttachments [] = Nothing
     extractDeletedMidFromAttachments (raw:rest) =
       extractDeletedMid raw <|> extractDeletedMidFromAttachments rest
 
-    extractDeletedMid =
-      parseMaybe $ withObject "IGAttachment" $ \o -> do
-        payload <- o .:? "payload"
-        case payload of
+    extractDeletedMid :: A.Value -> Maybe Text
+    extractDeletedMid raw =
+      join (parseMaybe (withObject "IGAttachment" (\o -> do
+        attachmentPayload <- o .:? "payload"
+        case attachmentPayload of
           Just rawPayload ->
             withObject "IGAttachmentPayload" (\payloadObj ->
               payloadObj .:? "mid" <|> payloadObj .:? "message_id" <|> payloadObj .:? "id"
             ) rawPayload
           Nothing ->
             o .:? "mid" <|> o .:? "message_id" <|> o .:? "id"
-
+      )) raw)
     simpleHash64 = T.foldl' step (14695981039346656037 :: Word64)
       where
         step h c = (h `xor` fromIntegral (ord c)) * 1099511628211
