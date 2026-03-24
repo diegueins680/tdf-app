@@ -1040,17 +1040,14 @@ export default function InternshipsPage() {
               </Stack>
             )}
 
-            {projects.length === 0 && (
-              <Typography color="text.secondary">
-                {isAdmin && !showProjectComposer
-                  ? 'Todavía no hay proyectos. Crea el primero desde Nuevo proyecto.'
-                  : 'No hay proyectos todavía.'}
-              </Typography>
+            {!isAdmin && projects.length === 0 && (
+              <Typography color="text.secondary">No hay proyectos todavía.</Typography>
             )}
 
             {isAdmin && projects.length === 0 && !showProjectComposer && (
               <Alert severity="info" variant="outlined">
-                Usa proyectos para agrupar tareas y entregables. El formulario se abre solo cuando realmente vayas a crear uno.
+                Todavía no hay proyectos. Crea el primero desde Nuevo proyecto cuando ya tengas tareas o
+                entregables listos para agrupar.
               </Alert>
             )}
 
@@ -1219,27 +1216,21 @@ export default function InternshipsPage() {
               </Stack>
             )}
 
-            {tasks.length === 0 && (
-              <Typography color="text.secondary">
-                {isAdmin && projects.length === 0
-                  ? 'Todavía no hay tareas. Crea primero un proyecto para empezar a asignarlas.'
-                  : isAdmin && projects.length > 0 && !showTaskComposer
-                    ? 'Todavía no hay tareas. Crea la primera desde Nueva tarea.'
-                    : 'No hay tareas todavía.'}
-              </Typography>
+            {!isAdmin && tasks.length === 0 && (
+              <Typography color="text.secondary">No hay tareas todavía.</Typography>
             )}
 
-            {isAdmin && projects.length === 0 && (
+            {isAdmin && projects.length === 0 && tasks.length === 0 && !showTaskComposer && (
               <Alert severity="info" variant="outlined">
-                Las tareas se asignan dentro de un proyecto. Crea el primero en Proyectos y luego aparecera Nueva tarea
-                aqui.
+                Todavía no hay tareas porque primero necesitas un proyecto. Crea el primero en Proyectos y luego
+                aparecera Nueva tarea aqui.
               </Alert>
             )}
 
             {isAdmin && projects.length > 0 && tasks.length === 0 && !showTaskComposer && (
               <Alert severity="info" variant="outlined">
-                Usa tareas para repartir trabajo dentro de un proyecto. El formulario se abre solo cuando realmente
-                vayas a asignar una.
+                Todavía no hay tareas. Crea la primera desde Nueva tarea cuando ya tengas algo listo para asignar
+                dentro de un proyecto.
               </Alert>
             )}
 

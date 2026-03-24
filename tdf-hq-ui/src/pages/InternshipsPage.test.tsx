@@ -204,7 +204,7 @@ describe('InternshipsPage', () => {
     updatePermissionMock.mockResolvedValue({});
   });
 
-  it('keeps the project form collapsed behind one CTA until an admin opens it', async () => {
+  it('keeps the project form collapsed behind one CTA and one contextual empty state until an admin opens it', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -212,10 +212,10 @@ describe('InternshipsPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Proyectos');
-        expect(container.textContent).toContain('Todavía no hay proyectos. Crea el primero desde Nuevo proyecto.');
         expect(container.textContent).toContain(
-          'Usa proyectos para agrupar tareas y entregables. El formulario se abre solo cuando realmente vayas a crear uno.',
+          'Todavía no hay proyectos. Crea el primero desde Nuevo proyecto cuando ya tengas tareas o entregables listos para agrupar.',
         );
+        expect(container.textContent).not.toContain('No hay proyectos todavía.');
         expect(getButtonsByText(container, 'Nuevo proyecto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Guardar proyecto')).toHaveLength(0);
         expect(getButtonsByText(container, 'Cancelar proyecto')).toHaveLength(0);
@@ -230,14 +230,17 @@ describe('InternshipsPage', () => {
         expect(getButtonsByText(container, 'Cancelar proyecto')).toHaveLength(1);
         expect(hasLabel(container, 'Nombre')).toBe(true);
         expect(container.textContent).not.toContain(
-          'Usa proyectos para agrupar tareas y entregables. El formulario se abre solo cuando realmente vayas a crear uno.',
+          'Todavía no hay proyectos. Crea el primero desde Nuevo proyecto cuando ya tengas tareas o entregables listos para agrupar.',
         );
+        expect(container.textContent).not.toContain('No hay proyectos todavía.');
       });
 
       await clickButton(getButtonsByText(container, 'Cancelar proyecto')[0]!);
 
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('Todavía no hay proyectos. Crea el primero desde Nuevo proyecto.');
+        expect(container.textContent).toContain(
+          'Todavía no hay proyectos. Crea el primero desde Nuevo proyecto cuando ya tengas tareas o entregables listos para agrupar.',
+        );
         expect(getButtonsByText(container, 'Nuevo proyecto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Guardar proyecto')).toHaveLength(0);
         expect(getButtonsByText(container, 'Cancelar proyecto')).toHaveLength(0);
@@ -248,7 +251,7 @@ describe('InternshipsPage', () => {
     }
   });
 
-  it('keeps the task form collapsed behind one CTA and replaces the no-project dead end with guidance', async () => {
+  it('keeps the task form collapsed behind one CTA and one contextual empty state', async () => {
     listProjectsMock.mockResolvedValue([buildProject()]);
 
     const container = document.createElement('div');
@@ -258,10 +261,10 @@ describe('InternshipsPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Tareas');
-        expect(container.textContent).toContain('Todavía no hay tareas. Crea la primera desde Nueva tarea.');
         expect(container.textContent).toContain(
-          'Usa tareas para repartir trabajo dentro de un proyecto. El formulario se abre solo cuando realmente vayas a asignar una.',
+          'Todavía no hay tareas. Crea la primera desde Nueva tarea cuando ya tengas algo listo para asignar dentro de un proyecto.',
         );
+        expect(container.textContent).not.toContain('No hay tareas todavía.');
         expect(getButtonsByText(container, 'Nueva tarea')).toHaveLength(1);
         expect(getButtonsByText(container, 'Crear tarea')).toHaveLength(0);
         expect(getButtonsByText(container, 'Cancelar tarea')).toHaveLength(0);
@@ -278,14 +281,17 @@ describe('InternshipsPage', () => {
         expect(hasLabel(container, 'Proyecto')).toBe(true);
         expect(hasLabel(container, 'Título')).toBe(true);
         expect(container.textContent).not.toContain(
-          'Usa tareas para repartir trabajo dentro de un proyecto. El formulario se abre solo cuando realmente vayas a asignar una.',
+          'Todavía no hay tareas. Crea la primera desde Nueva tarea cuando ya tengas algo listo para asignar dentro de un proyecto.',
         );
+        expect(container.textContent).not.toContain('No hay tareas todavía.');
       });
 
       await clickButton(getButtonsByText(container, 'Cancelar tarea')[0]!);
 
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('Todavía no hay tareas. Crea la primera desde Nueva tarea.');
+        expect(container.textContent).toContain(
+          'Todavía no hay tareas. Crea la primera desde Nueva tarea cuando ya tengas algo listo para asignar dentro de un proyecto.',
+        );
         expect(getButtonsByText(container, 'Nueva tarea')).toHaveLength(1);
         expect(getButtonsByText(container, 'Crear tarea')).toHaveLength(0);
         expect(getButtonsByText(container, 'Cancelar tarea')).toHaveLength(0);
@@ -304,10 +310,10 @@ describe('InternshipsPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('Todavía no hay tareas. Crea primero un proyecto para empezar a asignarlas.');
         expect(container.textContent).toContain(
-          'Las tareas se asignan dentro de un proyecto. Crea el primero en Proyectos y luego aparecera Nueva tarea aqui.',
+          'Todavía no hay tareas porque primero necesitas un proyecto. Crea el primero en Proyectos y luego aparecera Nueva tarea aqui.',
         );
+        expect(container.textContent).not.toContain('No hay tareas todavía.');
         expect(getButtonsByText(container, 'Nueva tarea')).toHaveLength(0);
         expect(getButtonsByText(container, 'Crear tarea')).toHaveLength(0);
         expect(getButtonsByText(container, 'Cancelar tarea')).toHaveLength(0);
