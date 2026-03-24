@@ -258,6 +258,14 @@ const getMenuItemByText = (root: ParentNode, labelText: string) => {
   return item;
 };
 
+const getDialog = () => {
+  const dialog = document.body.querySelector('[role="dialog"]');
+  if (!(dialog instanceof HTMLElement)) {
+    throw new Error('Dialog not found');
+  }
+  return dialog;
+};
+
 const countOccurrences = (root: ParentNode, text: string) =>
   (root.textContent ?? '').split(text).length - 1;
 
@@ -788,6 +796,40 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Curso: Beatmaking 101 (beatmaking-101) · Fuente: landing');
       expect(document.body.textContent).not.toContain('Slug: beatmaking-101');
+    });
+
+    await cleanup();
+  });
+
+  it('omits the empty-source placeholder in the dossier header so admins only see real context', async () => {
+    const sourceLessRegistration = buildRegistration({ crSource: null });
+    listRegistrationsMock.mockResolvedValue([sourceLessRegistration]);
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: sourceLessRegistration,
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = getDialog();
+      expect(dialog.textContent).toContain(
+        `Curso: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+      );
+      expect(dialog.textContent).not.toContain('Fuente: Sin fuente');
     });
 
     await cleanup();

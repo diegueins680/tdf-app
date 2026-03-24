@@ -264,6 +264,22 @@ const registrationListContextSummary = ({
   return parts.join(' · ');
 };
 
+const registrationDossierContextSummary = ({
+  courseLabel,
+  createdAt,
+  source,
+}: {
+  courseLabel: string;
+  createdAt: string | null | undefined;
+  source: string | null | undefined;
+}) => {
+  const parts = [`Curso: ${courseLabel}`];
+  const trimmedSource = source?.trim() ?? '';
+  if (trimmedSource) parts.push(`Fuente: ${trimmedSource}`);
+  parts.push(`Creado: ${formatDate(createdAt)}`);
+  return parts.join(' · ');
+};
+
 const trimToNull = (value: string): string | null => {
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
@@ -1064,6 +1080,13 @@ export default function CourseRegistrationsAdminPage() {
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
     ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
     : 'Sin cohorte';
+  const activeRegistrationSummary = activeRegistration
+    ? registrationDossierContextSummary({
+      courseLabel: activeRegistrationCourseLabel,
+      createdAt: activeRegistration.crCreatedAt,
+      source: activeRegistration.crSource,
+    })
+    : '';
   const showPartyIdFallback = Boolean(
     activeRegistration?.crPartyId
     && !activeRegistration?.crFullName?.trim()
@@ -1538,7 +1561,7 @@ export default function CourseRegistrationsAdminPage() {
                     {registrationContactSummary(activeRegistration.crEmail, activeRegistration.crPhoneE164)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Curso: {activeRegistrationCourseLabel} · Fuente: {registrationSourceLabel(activeRegistration.crSource)} · Creado: {formatDate(activeRegistration.crCreatedAt)}
+                    {activeRegistrationSummary}
                   </Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     {canMarkPaid && (
