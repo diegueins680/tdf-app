@@ -26,6 +26,7 @@ import ApiErrorNotice from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
 import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 import { CUSTOM_CMS_SLUG_OPTION, DEFAULT_CMS_SLUGS, getCmsSlugFieldState } from './cmsAdminSlugSelection';
+import { getCmsVersionListUiState } from './cmsAdminVersionListState';
 import { getCmsVersionRowActions } from './cmsAdminVersionActions';
 
 const locales = ['es', 'en'];
@@ -296,6 +297,11 @@ export default function CmsAdminPage() {
     setPendingVersion(v);
   };
 
+  const resetVersionFilters = () => {
+    setStatusFilter('all');
+    setMinVersionFilter(null);
+  };
+
   const handleConfirmLoadVersion = () => {
     if (!pendingVersion) return;
     loadVersionIntoForm(pendingVersion);
@@ -367,6 +373,15 @@ export default function CmsAdminPage() {
   );
   const safeDraftDiff = Array.isArray(draftVsLiveDiff) ? draftVsLiveDiff : [];
   const safeFilteredVersions = Array.isArray(filteredVersions) ? filteredVersions : [];
+  const versionListUiState = useMemo(
+    () => getCmsVersionListUiState({
+      filteredCount: safeFilteredVersions.length,
+      minVersionFilter,
+      statusFilter,
+      totalVersions: versions.length,
+    }),
+    [minVersionFilter, safeFilteredVersions.length, statusFilter, versions.length],
+  );
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -814,15 +829,14 @@ export default function CmsAdminPage() {
                 onChange={(e) => setMinVersionFilter(parseMinVersionFilter(e.target.value))}
                 sx={{ width: 150 }}
               />
-              <Button
-                size="small"
-                onClick={() => {
-                  setStatusFilter('all');
-                  setMinVersionFilter(null);
-                }}
-              >
-                Limpiar filtros
-              </Button>
+              {versionListUiState.showToolbarReset && (
+                <Button
+                  size="small"
+                  onClick={resetVersionFilters}
+                >
+                  Limpiar filtros
+                </Button>
+              )}
             </Stack>
           </Stack>
           {listQuery.isLoading && <LinearProgress />}
@@ -911,8 +925,21 @@ export default function CmsAdminPage() {
                 </Paper>
               );
             })}
-            {safeFilteredVersions.length === 0 && !listQuery.isLoading && (
-              <Typography color="text.secondary">No hay contenido aún.</Typography>
+            {versionListUiState.emptyMessage && !listQuery.isLoading && (
+              versionListUiState.showEmptyReset ? (
+                <Alert
+                  severity="info"
+                  action={(
+                    <Button color="inherit" size="small" onClick={resetVersionFilters}>
+                      Limpiar filtros
+                    </Button>
+                  )}
+                >
+                  {versionListUiState.emptyMessage}
+                </Alert>
+              ) : (
+                <Typography color="text.secondary">{versionListUiState.emptyMessage}</Typography>
+              )
             )}
           </Stack>
         </Stack>
