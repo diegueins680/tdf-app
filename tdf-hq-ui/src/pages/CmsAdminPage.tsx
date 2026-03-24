@@ -811,7 +811,7 @@ export default function CmsAdminPage() {
                 <TextField
                   select
                   size="small"
-                  label="Estado"
+                  label="Estado del historial"
                   value={statusFilter}
                   onChange={(e) => {
                     const next = e.target.value.trim();

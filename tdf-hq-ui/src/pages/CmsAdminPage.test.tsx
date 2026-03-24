@@ -308,6 +308,19 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the editor status field distinct from the versions filter so first-time admins do not see two ambiguous Estado controls', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countLabelsByText(container, 'Estado')).toBe(1);
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the loaded-version context beside save instead of repeating it in the versions header', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
