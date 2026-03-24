@@ -201,14 +201,15 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the live-page action in one place instead of repeating it on every published version row', async () => {
+  it('keeps the live-page action in a single primary place instead of duplicating it in the live summary card', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Abrir página en vivo')).toBe(1);
-      expect(container.textContent).not.toContain('Abrir página publicada');
+      expect(container.textContent).not.toContain('Ver en vivo');
+      expect(container.textContent).toContain('La página pública se abre con el botón principal de arriba.');
       expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
     });
 

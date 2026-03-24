@@ -664,10 +664,10 @@ export default function CmsAdminPage() {
                           <Button size="small" variant="contained" onClick={handleLoadLive} disabled={!liveContent}>
                             Cargar en formulario
                           </Button>
-                          <Button size="small" variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
-                            Ver en vivo
-                          </Button>
                         </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                          La página pública se abre con el botón principal de arriba.
+                        </Typography>
                       </Stack>
                     )}
                   </Stack>
