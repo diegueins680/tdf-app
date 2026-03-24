@@ -1211,6 +1211,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasReceipts = receipts.length > 0;
   const showReceiptCountChip = receipts.length > 1;
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
+  const hasReceiptMetadataDraft = Boolean(trimToNull(receiptForm.fileName)) || Boolean(trimToNull(receiptForm.notes));
   const receiptSectionHelpText = (
     selectedDossier?.intent === 'markPaid'
     && showReceiptComposer
@@ -1222,6 +1223,10 @@ export default function CourseRegistrationsAdminPage() {
       : hasReceipts
         ? 'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.'
         : '';
+  const canHideReceiptUrlField = showReceiptUrlField
+    && receiptForm.editingId == null
+    && !canSubmitReceipt
+    && !hasReceiptMetadataDraft;
   const showReceiptMetadataFields = (
     selectedDossier?.intent === 'markPaid'
     || receiptForm.editingId != null
@@ -1977,19 +1982,33 @@ export default function CourseRegistrationsAdminPage() {
                                 size="small"
                                 variant="text"
                                 sx={{ alignSelf: 'flex-start' }}
+                                aria-expanded={showReceiptUrlField}
                                 onClick={() => setShowReceiptUrlField(true)}
                               >
                                 Usar enlace existente en lugar de subir archivo
                               </Button>
                             )}
                             <Collapse in={showReceiptUrlField} unmountOnExit>
-                              <TextField
-                                label="URL del comprobante"
-                                value={receiptForm.fileUrl}
-                                onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
-                                placeholder="Pega un enlace existente si el archivo ya está cargado"
-                                fullWidth
-                              />
+                              <Stack spacing={1} sx={{ pt: 0.5 }}>
+                                <TextField
+                                  label="URL del comprobante"
+                                  value={receiptForm.fileUrl}
+                                  onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
+                                  placeholder="Pega un enlace existente si el archivo ya está cargado"
+                                  fullWidth
+                                />
+                                {canHideReceiptUrlField && (
+                                  <Button
+                                    size="small"
+                                    variant="text"
+                                    sx={{ alignSelf: 'flex-start' }}
+                                    aria-expanded={showReceiptUrlField}
+                                    onClick={() => setShowReceiptUrlField(false)}
+                                  >
+                                    Ocultar enlace existente
+                                  </Button>
+                                )}
+                              </Stack>
                             </Collapse>
                             {!showReceiptMetadataFields && (
                               <Typography variant="caption" color="text.secondary">

@@ -1755,6 +1755,77 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('lets admins hide an empty receipt URL fallback after opening it by mistake', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo').getAttribute('aria-expanded')).toBe('false');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
+      expect(getButtonByText(document.body, 'Ocultar enlace existente')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Ocultar enlace existente').getAttribute('aria-expanded')).toBe('true');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Ocultar enlace existente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo').getAttribute('aria-expanded')).toBe('false');
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Ocultar enlace existente',
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('opens the receipt composer directly from the mark-paid flow without duplicating the hint', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
