@@ -334,7 +334,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('Cambiar estado:');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe(
-        'Estado',
+        'Cambiar',
       );
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(container.textContent).not.toContain('Ver correos');
@@ -489,7 +489,8 @@ describe('CourseRegistrationsAdminPage', () => {
         'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
       )).toBe(1);
       expect(countButtonsByText(container, 'Expediente')).toBe(2);
-      expect(countButtonsByText(container, 'Estado')).toBe(2);
+      expect(countButtonsByText(container, 'Cambiar')).toBe(2);
+      expect(countButtonsByText(container, 'Estado')).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(2);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(2);
