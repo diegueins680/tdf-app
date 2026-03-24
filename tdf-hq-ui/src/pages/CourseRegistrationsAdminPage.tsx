@@ -1048,7 +1048,7 @@ export default function CourseRegistrationsAdminPage() {
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
-  const notesActionLabel = hasSavedNotes ? 'Editar notas' : 'Agregar nota';
+  const notesActionLabel = hasSavedNotes ? 'Editar notas' : 'Abrir notas';
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const hasReceipts = receipts.length > 0;
   const showReceiptCountChip = receipts.length > 1;
@@ -1673,7 +1673,7 @@ export default function CourseRegistrationsAdminPage() {
                       <Typography variant="h6">Notas internas</Typography>
                       {!showNotesComposer ? (
                         <Button
-                          variant={hasSavedNotes ? 'contained' : 'outlined'}
+                          variant={hasSavedNotes ? 'contained' : 'text'}
                           size="small"
                           onClick={handleOpenNotesComposer}
                         >
@@ -1720,7 +1720,7 @@ export default function CourseRegistrationsAdminPage() {
                       </Typography>
                     ) : (
                       <Typography variant="body2" color="text.secondary">
-                        Aún no hay notas internas. Úsalas solo cuando necesites dejar contexto, acuerdos o próximos pasos.
+                        Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.
                       </Typography>
                     )}
                   </Stack>
