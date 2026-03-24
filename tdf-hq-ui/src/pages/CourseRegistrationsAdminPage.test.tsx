@@ -896,7 +896,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps notes editor actions beside the form instead of adding a separate header close button', async () => {
+  it('keeps the empty notes CTA in the section header instead of inside a separate empty-state action', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -913,13 +913,14 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(
-        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+        'Aún no hay notas internas. Úsalas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
-      expect(getButtonByText(document.body, 'Agregar primera nota')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar nota')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(0);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar primera nota'));
+      clickButton(getButtonByText(document.body, 'Agregar nota'));
       await flushPromises();
       await flushPromises();
     });
@@ -929,8 +930,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
       expect(countButtonsByText(document.body, 'Ocultar editor')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
       expect(document.body.textContent).not.toContain(
-        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+        'Aún no hay notas internas. Úsalas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
     });
 
@@ -942,8 +944,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(
-        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+        'Aún no hay notas internas. Úsalas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
+      expect(getButtonByText(document.body, 'Agregar nota')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Cancelar notas')).toBe(0);
       expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
     });

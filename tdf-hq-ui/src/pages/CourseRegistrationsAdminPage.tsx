@@ -1040,6 +1040,7 @@ export default function CourseRegistrationsAdminPage() {
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
+  const notesActionLabel = hasSavedNotes ? 'Editar notas' : 'Agregar nota';
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const hasReceipts = receipts.length > 0;
   const showReceiptCountChip = receipts.length > 1;
@@ -1655,9 +1656,13 @@ export default function CourseRegistrationsAdminPage() {
                   <Stack spacing={1.5}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
                       <Typography variant="h6">Notas internas</Typography>
-                      {!showNotesComposer && hasSavedNotes ? (
-                        <Button variant="contained" size="small" onClick={handleOpenNotesComposer}>
-                          Editar notas
+                      {!showNotesComposer ? (
+                        <Button
+                          variant={hasSavedNotes ? 'contained' : 'outlined'}
+                          size="small"
+                          onClick={handleOpenNotesComposer}
+                        >
+                          {notesActionLabel}
                         </Button>
                       ) : null}
                     </Stack>
@@ -1699,16 +1704,9 @@ export default function CourseRegistrationsAdminPage() {
                         {persistedNotes}
                       </Typography>
                     ) : (
-                      <Alert
-                        severity="info"
-                        action={(
-                          <Button color="inherit" size="small" onClick={handleOpenNotesComposer}>
-                            Agregar primera nota
-                          </Button>
-                        )}
-                      >
-                        Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.
-                      </Alert>
+                      <Typography variant="body2" color="text.secondary">
+                        Aún no hay notas internas. Úsalas solo cuando necesites dejar contexto, acuerdos o próximos pasos.
+                      </Typography>
                     )}
                   </Stack>
                 </CardContent>
