@@ -993,7 +993,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('summarizes a shared visible cohort once when the page still offers multiple cohort choices', async () => {
+  it('absorbs a shared source into the shared cohort summary when the page still offers multiple cohort choices', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -1004,6 +1004,7 @@ describe('CourseRegistrationsAdminPage', () => {
         crId: 102,
         crFullName: 'Grace Hopper',
         crEmail: 'grace@example.com',
+        crStatus: 'paid',
       }),
     ]);
 
@@ -1012,7 +1013,12 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Mostrando una sola cohorte: Beatmaking 101 (beatmaking-101).');
+      expect(countOccurrences(
+        container,
+        'Mostrando una sola cohorte: Beatmaking 101 (beatmaking-101). Fuente visible: landing.',
+      )).toBe(1);
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: landing.');
+      expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');

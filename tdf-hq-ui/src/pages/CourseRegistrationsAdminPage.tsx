@@ -556,6 +556,11 @@ export default function CourseRegistrationsAdminPage() {
   const shouldShowSharedSourceSummary = hasSharedVisibleSource
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
+  const combinedSharedListContextSummary = shouldShowSharedCohortSummary && shouldShowSharedSourceSummary
+    ? singleVisibleSourceLabel === 'Sin fuente'
+      ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Todas las inscripciones visibles están sin fuente registrada.`
+      : `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
+    : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} con los filtros actuales.`
@@ -1356,15 +1361,23 @@ export default function CourseRegistrationsAdminPage() {
                 </Button>
               </Stack>
             )}
-            {shouldShowSharedCohortSummary && (
+            {combinedSharedListContextSummary ? (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-                Mostrando una sola cohorte: {singleVisibleCohortLabel}.
+                {combinedSharedListContextSummary}
               </Typography>
-            )}
-            {shouldShowSharedSourceSummary && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: shouldShowSharedCohortSummary ? 0.75 : 1.5 }}>
-                {sharedVisibleSourceSummary}
-              </Typography>
+            ) : (
+              <>
+                {shouldShowSharedCohortSummary && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+                    Mostrando una sola cohorte: {singleVisibleCohortLabel}.
+                  </Typography>
+                )}
+                {shouldShowSharedSourceSummary && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: shouldShowSharedCohortSummary ? 0.75 : 1.5 }}>
+                    {sharedVisibleSourceSummary}
+                  </Typography>
+                )}
+              </>
             )}
             {hasVisibleRegistrations && showListUtilitySummary && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
