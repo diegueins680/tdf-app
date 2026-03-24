@@ -321,7 +321,17 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
-      expect(container.textContent).toContain('Abrir expediente');
+      expect(container.textContent).toContain(
+        'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
+      );
+      expect(countOccurrences(
+        container,
+        'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
+      )).toBe(1);
+      expect(container.textContent).not.toContain('Abrir expediente');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe(
+        'Expediente',
+      );
       expect(container.textContent).not.toContain('Cambiar estado:');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe(
         'Estado: Pendiente de pago',
@@ -343,7 +353,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
     });
 
@@ -453,6 +463,33 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('explains the dossier once while keeping each row action shorter', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countOccurrences(
+        container,
+        'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
+      )).toBe(1);
+      expect(countButtonsByText(container, 'Expediente')).toBe(2);
+      expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(2);
+      expect(container.textContent).not.toContain('Abrir expediente');
     });
 
     await cleanup();
@@ -733,11 +770,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -758,11 +795,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -794,11 +831,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -817,11 +854,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1227,11 +1264,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1291,11 +1328,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1340,11 +1377,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1386,11 +1423,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1479,11 +1516,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1539,11 +1576,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1625,11 +1662,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1690,11 +1727,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1722,11 +1759,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const secondRender = await renderPage(secondContainer);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(secondContainer, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(secondContainer, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(secondContainer, 'Abrir expediente'));
+      clickButton(getButtonByText(secondContainer, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1752,11 +1789,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });
@@ -1818,11 +1855,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Abrir expediente')).toBeTruthy();
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Abrir expediente'));
+      clickButton(getButtonByText(container, 'Expediente'));
       await flushPromises();
       await flushPromises();
     });

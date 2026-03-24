@@ -53,6 +53,7 @@ const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para re
 const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
+const dossierScopeHint = 'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -1344,6 +1345,9 @@ export default function CourseRegistrationsAdminPage() {
           )}
           {regsQuery.data?.length ? (
             <Stack spacing={1.5}>
+              <Typography variant="body2" color="text.secondary">
+                {dossierScopeHint}
+              </Typography>
               <Stack divider={<Divider flexItem />} spacing={2}>
                 {regsQuery.data.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
@@ -1376,8 +1380,13 @@ export default function CourseRegistrationsAdminPage() {
                           {rowContextSummary}
                         </Typography>
                       </Box>
-                      <Button size="small" variant="outlined" onClick={() => handleOpenDossier(reg, 'review')}>
-                        Abrir expediente
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        aria-label={`Abrir expediente de ${reg.crFullName ?? reg.crEmail ?? `registro #${reg.crId}`}`}
+                        onClick={() => handleOpenDossier(reg, 'review')}
+                      >
+                        Expediente
                       </Button>
                       <Button
                         size="small"
