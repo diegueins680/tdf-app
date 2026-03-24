@@ -290,11 +290,6 @@ export default function CmsAdminPage() {
     }
   };
 
-  const handleLoadLive = () => {
-    if (!liveContent) return;
-    loadVersionIntoForm(liveContent);
-  };
-
   const handleLoadVersion = (v: CmsContentDTO) => {
     setPendingVersion(v);
   };
@@ -628,7 +623,7 @@ export default function CmsAdminPage() {
                         showCorsHint
                         helper={
                           <Typography variant="caption">
-                            También puedes cargar la última versión publicada con el botón de abajo.
+                            También puedes usar el botón del editor para traer la versión publicada al formulario.
                           </Typography>
                         }
                       />
@@ -660,13 +655,8 @@ export default function CmsAdminPage() {
                           minRows={8}
                           InputProps={{ readOnly: true }}
                         />
-                        <Stack direction="row" spacing={1}>
-                          <Button size="small" variant="contained" onClick={handleLoadLive} disabled={!liveContent}>
-                            Cargar en formulario
-                          </Button>
-                        </Stack>
                         <Typography variant="caption" color="text.secondary">
-                          La página pública se abre con el botón principal de arriba.
+                          La página pública se abre con el botón principal de arriba. Para editar lo publicado, usa el botón del editor para traer la versión en vivo.
                         </Typography>
                       </Stack>
                     )}
@@ -737,16 +727,9 @@ export default function CmsAdminPage() {
                     onClick={() => {
                       void handleFetchLiveNow();
                     }}
-                    disabled={loadingLiveOnDemand}
+                    disabled={loadingLiveOnDemand || !hasSlugSelection}
                   >
-                    {loadingLiveOnDemand ? 'Cargando en vivo...' : 'Cargar última publicada'}
-                  </Button>
-                  <Button
-                    variant="text"
-                    onClick={handleLoadLive}
-                    disabled={!liveContent}
-                  >
-                    Revertir a en vivo
+                    {loadingLiveOnDemand ? 'Cargando versión en vivo...' : 'Usar versión en vivo'}
                   </Button>
                   <Button variant="text" onClick={() => setShowDraftDiff(true)} disabled={!livePayloadPretty}>
                     Comparar con live

@@ -216,6 +216,24 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a single live-to-editor action in the editor instead of repeating load-live buttons across the page', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Cargar en formulario')).toBe(0);
+      expect(container.textContent).not.toContain('Cargar última publicada');
+      expect(container.textContent).not.toContain('Revertir a en vivo');
+      expect(container.textContent).toContain(
+        'Para editar lo publicado, usa el botón del editor para traer la versión en vivo.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('shows shared slug and locale context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
