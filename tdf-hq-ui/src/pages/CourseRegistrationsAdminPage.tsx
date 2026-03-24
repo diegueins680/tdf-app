@@ -53,6 +53,7 @@ const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para re
 const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
+const registrationListHelpText = 'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -150,7 +151,7 @@ const isRegistrationStatus = (
 const registrationStatusLabel = (status: string) =>
   isRegistrationStatus(status) ? statusFilterLabels[status] : status.trim() || 'Estado desconocido';
 
-const registrationStatusActionLabel = (status: string) => `Estado: ${registrationStatusLabel(status)}`;
+const registrationStatusActionLabel = (status: string) => registrationStatusLabel(status);
 
 const registrationStatusChipColor = (
   status: string,
@@ -1344,6 +1345,9 @@ export default function CourseRegistrationsAdminPage() {
           )}
           {regsQuery.data?.length ? (
             <Stack spacing={1.5}>
+              <Typography variant="body2" color="text.secondary">
+                {registrationListHelpText}
+              </Typography>
               <Stack divider={<Divider flexItem />} spacing={2}>
                 {regsQuery.data.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;

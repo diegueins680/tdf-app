@@ -318,10 +318,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Aplicar filtros');
+      expect(container.textContent).toContain(
+        'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
+      );
       expect(container.textContent).toContain('Abrir expediente');
       expect(container.textContent).not.toContain('Cambiar estado:');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe(
-        'Estado: Pendiente de pago',
+        'Pendiente de pago',
       );
       expect(container.textContent).not.toContain('Ver correos');
       expect(hasLabel(container, 'Límite')).toBe(false);
@@ -1155,15 +1158,17 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).not.toContain('Usa el boton de estado solo para cambios rapidos.');
+      expect(container.textContent).toContain(
+        'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
+      );
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Estado: Pendiente de pago');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Estado: Pagado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Estado: Cancelado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cancelado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
       expect(container.textContent).not.toContain('Estado disponible');
       expect(countOccurrences(container, 'Cambiar estado:')).toBe(0);
-      expect(countOccurrences(container, 'Estado:')).toBe(3);
+      expect(countOccurrences(container, 'Estado:')).toBe(0);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).toBeNull();
