@@ -603,7 +603,7 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const visibleRegistrationsSummary = hasCustomFilters
-    ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} con los filtros actuales.`
+    ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
   const copyCsvButtonLabel = hasCustomFilters ? 'Copiar CSV filtrado' : 'Copiar CSV';
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;

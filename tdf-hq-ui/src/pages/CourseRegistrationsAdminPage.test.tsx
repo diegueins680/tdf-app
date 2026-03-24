@@ -2528,7 +2528,8 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 50,
       });
-      expect(container.textContent).toContain('Mostrando 50 inscripciones con los filtros actuales.');
+      expect(container.textContent).toContain('Mostrando 50 inscripciones.');
+      expect(container.textContent).not.toContain('Mostrando 50 inscripciones con los filtros actuales.');
       expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
       expect(
         Array.from(container.querySelectorAll('button')).some(
