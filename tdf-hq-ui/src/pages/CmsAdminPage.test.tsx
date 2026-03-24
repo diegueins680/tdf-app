@@ -234,6 +234,24 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces the duplicate payload preview grid with one compare hint inside the editor', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Payload JSON');
+      expect(container.textContent).toContain('Payload actual');
+      expect(container.textContent).not.toContain('Payload (borrador)');
+      expect(container.textContent).not.toContain('Payload en vivo');
+      expect(container.textContent).toContain(
+        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('shows shared slug and locale context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

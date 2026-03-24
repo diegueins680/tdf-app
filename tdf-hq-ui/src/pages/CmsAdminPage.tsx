@@ -401,6 +401,9 @@ export default function CmsAdminPage() {
     }),
     [minVersionFilter, safeFilteredVersions.length, statusFilter, versions.length],
   );
+  const compareHint = livePayloadPretty
+    ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
+    : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda y podrás compararla desde aquí.';
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -740,6 +743,9 @@ export default function CmsAdminPage() {
                 <Typography variant="caption" color="text.secondary">
                   {draftAutosaveHelperText}
                 </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {compareHint}
+                </Typography>
                 <TextField
                   select
                   label="Estado"
@@ -765,26 +771,6 @@ export default function CmsAdminPage() {
                   )}
                   {createMutation.isSuccess && <Alert severity="success">Versión creada.</Alert>}
                 </Stack>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      label="Payload (borrador)"
-                      value={formattedPayload}
-                      multiline
-                      minRows={8}
-                      InputProps={{ readOnly: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      label="Payload en vivo"
-                      value={livePayloadPretty}
-                      multiline
-                      minRows={8}
-                      InputProps={{ readOnly: true }}
-                    />
-                  </Grid>
-                </Grid>
               </Stack>
             </Grid>
           </Grid>
