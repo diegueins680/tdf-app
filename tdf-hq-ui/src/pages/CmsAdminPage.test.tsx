@@ -263,6 +263,36 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the example action for custom slugs and replaces it with custom-slug guidance', async () => {
+    window.localStorage.setItem(
+      'tdf-cms-admin:last-selection',
+      JSON.stringify({ slug: 'promo-landing', locale: 'es' }),
+    );
+    listMock.mockResolvedValue([
+      buildContent({ ccdSlug: 'promo-landing' }),
+      buildContent({ ccdId: 102, ccdSlug: 'promo-landing', ccdVersion: 3, ccdStatus: 'draft', ccdPublishedAt: null }),
+    ]);
+    getPublicMock.mockResolvedValue(buildContent({ ccdSlug: 'promo-landing' }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(listMock).toHaveBeenCalledWith({ slug: 'promo-landing', locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('promo-landing', 'es');
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(container.textContent).toContain(
+        'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.',
+      );
+      expect(container.textContent).toContain(
+        'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('shows shared slug and locale context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

@@ -406,6 +406,17 @@ export default function CmsAdminPage() {
       ? `Base: v${editingVersion} · ID ${editingFromId}`
       : `Base: ID ${editingFromId}`
     : null;
+  const samplePayload = samplePayloads[normalizedSlugFilter];
+  const payloadHelperText = payloadError
+    ? `Error: ${payloadError}`
+    : schemaHints[normalizedSlugFilter]
+      ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHints[normalizedSlugFilter]?.join(', ')}`
+      : 'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.';
+  const samplePayloadGuidance = samplePayload
+    ? 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
+    : hasSlugSelection
+      ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
+      : 'Elige un slug sugerido o escribe uno para empezar a editar.';
   const compareHint = livePayloadPretty
     ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda y podrás compararla desde aquí.';
@@ -683,7 +694,7 @@ export default function CmsAdminPage() {
                   </Alert>
                 )}
                 <Alert severity="info" sx={{ mb: 1 }}>
-                  Usa el botón &quot;Cargar ejemplo&quot; para ver la estructura sugerida del payload para cada slug (no valida contra un esquema aún).
+                  {samplePayloadGuidance}
                 </Alert>
                 <TextField
                   label="Título"
@@ -698,11 +709,7 @@ export default function CmsAdminPage() {
                   minRows={10}
                   value={payload}
                   onChange={(e) => setPayload(e.target.value)}
-                  helperText={
-                    payloadError
-                      ? `Error: ${payloadError}`
-                      : `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHints[slugFilter]?.join(', ') ?? '—'}`
-                  }
+                  helperText={payloadHelperText}
                   error={Boolean(payloadError)}
                 />
                 <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -716,20 +723,18 @@ export default function CmsAdminPage() {
                   >
                     Limpiar
                   </Button>
-                  <Button
-                    variant="text"
-                    onClick={() => {
-                      const sample = samplePayloads[slugFilter];
-                      if (sample) {
-                        setSlugFilter(slugFilter);
-                        if (sample.locale) setLocaleFilter(sample.locale);
-                        setPayload(JSON.stringify(sample, null, 2));
-                        if (sample.heroTitle) setTitle(sample.heroTitle);
-                      }
-                    }}
-                  >
-                    Cargar ejemplo
-                  </Button>
+                  {samplePayload && (
+                    <Button
+                      variant="text"
+                      onClick={() => {
+                        if (samplePayload.locale) setLocaleFilter(samplePayload.locale);
+                        setPayload(JSON.stringify(samplePayload, null, 2));
+                        if (samplePayload.heroTitle) setTitle(samplePayload.heroTitle);
+                      }}
+                    >
+                      Cargar ejemplo
+                    </Button>
+                  )}
                   <Button
                     variant="outlined"
                     onClick={() => {
