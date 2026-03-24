@@ -523,8 +523,11 @@ export default function InternshipsPage() {
   const showProjectCountChip = projects.length > 0;
   const showTaskCountChip = tasks.length > 0;
   const todos = todosQuery.data ?? [];
+  const pendingTodoCount = todos.filter((todo) => !todo.itdDone).length;
+  const showTodoCountChip = pendingTodoCount > 0;
   const entries = entriesQuery.data ?? [];
   const permissions = permissionsQuery.data ?? [];
+  const showPermissionCountChip = permissions.length > 0;
   const singleAvailableIntern = isAdmin && interns.length === 1 ? interns[0] : null;
   const showInternFilter = isAdmin && interns.length > 1;
   const sessionPartyId = session?.partyId ?? null;
@@ -1346,7 +1349,9 @@ export default function InternshipsPage() {
           <Stack spacing={2}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
               <Typography variant="h6" fontWeight={700}>To-dos personales</Typography>
-              <Chip label={`${todos.length} pendientes`} variant="outlined" />
+              {showTodoCountChip && (
+                <Chip label={formatCountLabel(pendingTodoCount, 'pendiente', 'pendientes')} variant="outlined" />
+              )}
             </Stack>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -1407,7 +1412,9 @@ export default function InternshipsPage() {
           <Stack spacing={2}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
               <Typography variant="h6" fontWeight={700}>Permisos</Typography>
-              <Chip label={`${permissions.length} solicitudes`} variant="outlined" />
+              {showPermissionCountChip && (
+                <Chip label={formatCountLabel(permissions.length, 'solicitud', 'solicitudes')} variant="outlined" />
+              )}
             </Stack>
 
             <Stack spacing={1}>

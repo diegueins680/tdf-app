@@ -144,6 +144,24 @@ const buildIntern = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const buildTodo = (overrides: Record<string, unknown> = {}) => ({
+  itdId: 'todo-1',
+  itdText: 'Preparar onboarding',
+  itdDone: false,
+  ...overrides,
+});
+
+const buildPermission = (overrides: Record<string, unknown> = {}) => ({
+  iprId: 'permission-1',
+  iprCategory: 'Salida médica',
+  iprPartyName: 'Ada Lovelace',
+  iprStartAt: '2026-03-24',
+  iprEndAt: null,
+  iprReason: null,
+  iprStatus: 'pending',
+  ...overrides,
+});
+
 const getButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((element) => (element.textContent ?? '').trim() === labelText) as HTMLButtonElement[];
 
@@ -344,6 +362,42 @@ describe('InternshipsPage', () => {
         expect(secondContainer.textContent).toContain('1 tarea');
         expect(secondContainer.textContent).not.toContain('1 activos');
         expect(secondContainer.textContent).not.toContain('1 tareas');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
+  it('keeps to-do and permission header chips focused on actionable counts instead of zero-state noise', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).not.toContain('0 pendientes');
+        expect(container.textContent).not.toContain('0 solicitudes');
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listTodosMock.mockResolvedValue([
+      buildTodo({ itdId: 'todo-done', itdText: 'Cerrar tarea anterior', itdDone: true }),
+      buildTodo({ itdId: 'todo-pending', itdText: 'Revisar brief', itdDone: false }),
+    ]);
+    listPermissionsMock.mockResolvedValue([buildPermission()]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        expect(secondContainer.textContent).toContain('1 pendiente');
+        expect(secondContainer.textContent).not.toContain('2 pendientes');
+        expect(secondContainer.textContent).toContain('1 solicitud');
+        expect(secondContainer.textContent).not.toContain('1 solicitudes');
       });
     } finally {
       await secondRender.cleanup();
