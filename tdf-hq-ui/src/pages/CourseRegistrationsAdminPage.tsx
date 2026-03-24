@@ -146,6 +146,40 @@ const summarizeActiveFilters = ({
   return parts.join(' · ');
 };
 
+const buildAutomaticFilterHelpText = ({
+  combinedSingleChoiceSummary,
+  hasVisibleRegistrations,
+  showAdvancedLimitControl,
+  showSingleStatusSummary,
+  singleAvailableCohortLabel,
+}: {
+  combinedSingleChoiceSummary: string;
+  hasVisibleRegistrations: boolean;
+  showAdvancedLimitControl: boolean;
+  showSingleStatusSummary: boolean;
+  singleAvailableCohortLabel: string;
+}) => {
+  if (combinedSingleChoiceSummary) {
+    return showAdvancedLimitControl
+      ? 'Esta vista ya está acotada a una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
+      : '';
+  }
+
+  const filterStartingPoint = singleAvailableCohortLabel
+    ? 'Usa Estado.'
+    : showSingleStatusSummary
+      ? 'Usa cohorte.'
+      : 'Empieza por cohorte y estado.';
+  const limitGuidance = showAdvancedLimitControl
+    ? 'Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
+    : 'Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.';
+  const emptySuffix = hasVisibleRegistrations
+    ? ''
+    : ' Ajusta la vista o usa refrescar si esperabas resultados.';
+
+  return `Los filtros se aplican automáticamente al cambiar. ${filterStartingPoint} ${limitGuidance}${emptySuffix}`;
+};
+
 const formatRowCountLabel = (count: number) => `${count} fila${count === 1 ? '' : 's'}`;
 const formatRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
 
@@ -602,17 +636,13 @@ export default function CourseRegistrationsAdminPage() {
     : limit !== DEFAULT_LIMIT
       ? `Ajustar límite (${limit})`
       : 'Ajustar límite';
-  const filtersHelpText = combinedSingleChoiceSummary
-    ? showAdvancedLimitControl
-      ? 'Esta vista ya está acotada a una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
-      : ''
-    : showAdvancedLimitControl
-      ? hasVisibleRegistrations
-        ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto.'
-        : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.'
-      : hasVisibleRegistrations
-      ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.'
-      : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado. Ajusta la vista o usa refrescar si esperabas resultados.';
+  const filtersHelpText = buildAutomaticFilterHelpText({
+    combinedSingleChoiceSummary,
+    hasVisibleRegistrations,
+    showAdvancedLimitControl,
+    showSingleStatusSummary,
+    singleAvailableCohortLabel,
+  });
   const showFilteredEmptyState = !regsQuery.isLoading
     && !regsQuery.isError
     && hasCustomFilters

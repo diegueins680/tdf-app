@@ -721,6 +721,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain('No hace falta filtrarla: es la unica cohorte disponible ahora mismo.');
+      expect(container.textContent).toContain('Los filtros se aplican automáticamente al cambiar. Usa Estado.');
+      expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Mostrando una sola cohorte: Beatmaking 101 (beatmaking-101).');
@@ -743,6 +745,38 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await secondRender.cleanup();
+  });
+
+  it('keeps the helper copy focused on cohort when status is already implied by the current view', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crStatus: 'paid' }),
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'mixing-bootcamp',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.textContent).toContain('Estado disponible');
+      expect(container.textContent).toContain('Pagado');
+      expect(container.textContent).toContain('Los filtros se aplican automáticamente al cambiar. Usa cohorte.');
+      expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
+    });
+
+    await cleanup();
   });
 
   it('absorbs a shared source into the single-cohort summary block instead of adding another summary line', async () => {
