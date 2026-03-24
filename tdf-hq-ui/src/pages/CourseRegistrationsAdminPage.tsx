@@ -57,7 +57,7 @@ const dossierScopeHint = 'Expediente reúne notas, comprobantes, seguimiento y c
 const showSystemEmailsLabel = 'Ver correos del sistema';
 const hideSystemEmailsLabel = 'Ocultar correos del sistema';
 const systemEmailHistoryHelperText = 'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
-const emptySystemEmailHistoryMessage = 'No hay correos del sistema registrados para esta inscripción.';
+const emptySystemEmailHistoryMessage = 'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const followUpComposerHelpText = 'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.';
 
@@ -420,7 +420,6 @@ export default function CourseRegistrationsAdminPage() {
     [slug, status, limit],
   );
 
-  const selectedRegistrationId = showEmailHistory ? (selectedDossier?.reg.crId ?? null) : null;
   const selectedDossierSlug = selectedDossier?.reg.crCourseSlug ?? '';
   const selectedDossierId = selectedDossier?.reg.crId ?? null;
   const dossierQueryKey = useMemo(
@@ -522,11 +521,11 @@ export default function CourseRegistrationsAdminPage() {
   });
 
   const emailEventsQuery = useQuery<CourseEmailEventDTO[]>({
-    queryKey: ['admin', 'course-registration-email-events', selectedRegistrationId],
-    enabled: selectedRegistrationId != null,
+    queryKey: ['admin', 'course-registration-email-events', selectedDossierId],
+    enabled: selectedDossierId != null,
     queryFn: () => {
-      if (selectedRegistrationId == null) return Promise.resolve([]);
-      return Courses.listRegistrationEmails(selectedRegistrationId, 200);
+      if (selectedDossierId == null) return Promise.resolve([]);
+      return Courses.listRegistrationEmails(selectedDossierId, 200);
     },
     staleTime: 30_000,
   });
@@ -647,6 +646,11 @@ export default function CourseRegistrationsAdminPage() {
     && !regsQuery.isError
     && hasCustomFilters
     && !hasVisibleRegistrations;
+  const hasSystemEmailHistory = (emailEventsQuery.data?.length ?? 0) > 0;
+  const showSystemEmailHistoryAction = showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError;
+  const showEmptySystemEmailHistoryHint = !showSystemEmailHistoryAction
+    && !emailEventsQuery.isLoading
+    && selectedDossierId != null;
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -807,7 +811,7 @@ export default function CourseRegistrationsAdminPage() {
   const handleRefreshDossier = () => {
     if (!selectedDossier) return;
     const requests: Array<Promise<unknown>> = [dossierQuery.refetch()];
-    if (showEmailHistory && selectedRegistrationId != null) {
+    if (selectedDossierId != null) {
       requests.push(emailEventsQuery.refetch());
     }
     void Promise.all(requests);
@@ -1679,13 +1683,19 @@ export default function CourseRegistrationsAdminPage() {
                         Marcar pagado
                       </Button>
                     )}
-                    <Button
-                      variant="outlined"
-                      onClick={() => setShowEmailHistory((current) => !current)}
-                      aria-expanded={showEmailHistory}
-                    >
-                      {showEmailHistory ? hideSystemEmailsLabel : showSystemEmailsLabel}
-                    </Button>
+                    {showSystemEmailHistoryAction ? (
+                      <Button
+                        variant="outlined"
+                        onClick={() => setShowEmailHistory((current) => !current)}
+                        aria-expanded={showEmailHistory}
+                      >
+                        {showEmailHistory ? hideSystemEmailsLabel : showSystemEmailsLabel}
+                      </Button>
+                    ) : showEmptySystemEmailHistoryHint ? (
+                      <Typography variant="body2" color="text.secondary">
+                        {emptySystemEmailHistoryMessage}
+                      </Typography>
+                    ) : null}
                   </Stack>
                 </Stack>
               </Paper>

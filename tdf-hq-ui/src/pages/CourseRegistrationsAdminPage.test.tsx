@@ -165,6 +165,8 @@ const showSystemEmailsLabel = 'Ver correos del sistema';
 const hideSystemEmailsLabel = 'Ocultar correos del sistema';
 const systemEmailHistoryHelperText =
   'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
+const emptySystemEmailHistoryMessage =
+  'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const followUpComposerHelpText =
@@ -376,7 +378,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Expediente de inscripción');
-      expect(document.body.textContent).toContain(showSystemEmailsLabel);
+      expect(document.body.textContent).toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
     });
 
     await waitForExpectation(() => {
@@ -1490,7 +1493,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps system-email history distinct from manual follow-up guidance for first-time admins', async () => {
+  it('replaces the empty system-email action with passive guidance for first-time admins', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1506,24 +1509,14 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
+      expect(document.body.textContent).toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain(
         'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
       );
-    });
-
-    await act(async () => {
-      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Correos del sistema');
-      expect(document.body.textContent).toContain(systemEmailHistoryHelperText);
-      expect(document.body.textContent).toContain('No hay correos del sistema registrados para esta inscripción.');
-      expect(document.body.textContent).not.toContain('Historial de correos');
+      expect(document.body.textContent).not.toContain('Correos del sistema');
+      expect(document.body.textContent).not.toContain(systemEmailHistoryHelperText);
     });
 
     await cleanup();
