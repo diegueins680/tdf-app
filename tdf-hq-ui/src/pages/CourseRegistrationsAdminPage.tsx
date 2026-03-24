@@ -140,6 +140,8 @@ const summarizeActiveFilters = ({
   return parts.join(' · ');
 };
 
+const formatRowCountLabel = (count: number) => `${count} fila${count === 1 ? '' : 's'}`;
+
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
 
 const isRegistrationStatus = (
@@ -520,7 +522,6 @@ export default function CourseRegistrationsAdminPage() {
     ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
     : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
   const canCopyCsv = (regsQuery.data?.length ?? 0) > 1;
-  const copyCsvButtonLabel = hasCustomFilters ? 'Copiar CSV filtrado' : 'Copiar CSV de esta vista';
   const showListUtilitySummary = canCopyCsv || Boolean(copyMessage);
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
@@ -528,6 +529,9 @@ export default function CourseRegistrationsAdminPage() {
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
+  const copyCsvButtonLabel = hasCustomFilters
+    ? `Copiar CSV filtrado (${formatRowCountLabel(loadedRegistrationCount)})`
+    : `Copiar CSV (${formatRowCountLabel(loadedRegistrationCount)})`;
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
   const visibleActiveFilterSummary = useMemo(() => {
@@ -756,7 +760,7 @@ export default function CourseRegistrationsAdminPage() {
       .join('\n');
     try {
       await navigator.clipboard.writeText(csv);
-      setCopyMessage(`Copiado CSV (${rows.length} filas)`);
+      setCopyMessage(`Copiado CSV (${formatRowCountLabel(rows.length)})`);
       setTimeout(() => setCopyMessage(null), 2000);
     } catch {
       setCopyMessage('No se pudo copiar el CSV');

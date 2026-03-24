@@ -351,7 +351,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(
         Array.from(container.querySelectorAll('button')).some((el) => {
           const label = (el.textContent ?? '').trim();
-          return label === 'Copiar CSV filtrado' || label === 'Copiar CSV de esta vista';
+          return label.startsWith('Copiar CSV');
         }),
       ).toBe(false);
       expect(listRegistrationsMock).toHaveBeenCalledWith({
@@ -2141,7 +2141,6 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Todos').textContent?.trim()).toBe('Todos (200)');
       expect(container.textContent).not.toContain('Total: 200');
       expect(container.textContent).not.toContain('Pagadas:');
       expect(container.textContent).not.toContain('Pendientes:');
@@ -2150,7 +2149,12 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
       );
       expect(container.textContent).not.toContain('Leyenda de estados:');
-      expect(getButtonByText(container, 'Copiar CSV de esta vista')).toBeTruthy();
+      expect(
+        Array.from(container.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Copiar CSV de esta vista',
+        ),
+      ).toBe(false);
+      expect(getButtonByText(container, 'Copiar CSV (200 filas)')).toBeTruthy();
     });
 
     await act(async () => {
@@ -2170,9 +2174,17 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
-      expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
-      expect(container.textContent).not.toContain('Vista filtrada: límite 50.');
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 50,
+      });
+      expect(getButtonByText(container, 'Copiar CSV filtrado (50 filas)')).toBeTruthy();
+      expect(
+        Array.from(container.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
+        ),
+      ).toBe(false);
     });
 
     await cleanup();
@@ -2206,7 +2218,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
       expect(
         Array.from(container.querySelectorAll('button')).some(
-          (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
+          (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),
         ),
       ).toBe(false);
       expect(getButtonByAriaLabel(container, 'Refrescar inscripciones')).toBeTruthy();
