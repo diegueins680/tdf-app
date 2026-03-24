@@ -154,7 +154,7 @@ const registrationStatusLabel = (status: string) =>
 const registrationStatusButtonLabel = (
   status: string,
   statusAlreadySummarized: boolean,
-) => (statusAlreadySummarized ? 'Cambiar' : `Estado: ${registrationStatusLabel(status)}`);
+) => (statusAlreadySummarized ? 'Cambiar estado' : `Estado: ${registrationStatusLabel(status)}`);
 
 const registrationStatusChipColor = (
   status: string,
