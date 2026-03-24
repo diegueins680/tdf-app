@@ -54,6 +54,12 @@ const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar e
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
 const dossierScopeHint = 'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.';
+const showSystemEmailsLabel = 'Ver correos del sistema';
+const hideSystemEmailsLabel = 'Ocultar correos del sistema';
+const systemEmailHistoryHelperText = 'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
+const emptySystemEmailHistoryMessage = 'No hay correos del sistema registrados para esta inscripción.';
+const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
+const followUpComposerHelpText = 'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -1640,7 +1646,7 @@ export default function CourseRegistrationsAdminPage() {
                       onClick={() => setShowEmailHistory((current) => !current)}
                       aria-expanded={showEmailHistory}
                     >
-                      {showEmailHistory ? 'Ocultar correos' : 'Ver correos'}
+                      {showEmailHistory ? hideSystemEmailsLabel : showSystemEmailsLabel}
                     </Button>
                   </Stack>
                 </Stack>
@@ -1658,10 +1664,9 @@ export default function CourseRegistrationsAdminPage() {
                         useFlexGap
                       >
                         <Box sx={{ minWidth: 240, flexGrow: 1 }}>
-                          <Typography variant="h6">Historial de correos</Typography>
+                          <Typography variant="h6">Correos del sistema</Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Historial persistente por inscripción. Usa el refresco del expediente para volver a
-                            consultarlo.
+                            {systemEmailHistoryHelperText}
                           </Typography>
                         </Box>
                       </Stack>
@@ -1680,7 +1685,7 @@ export default function CourseRegistrationsAdminPage() {
                       )}
 
                       {!emailEventsQuery.isLoading && !emailEventsQuery.isError && (emailEventsQuery.data?.length ?? 0) === 0 && (
-                        <Alert severity="info">No hay correos registrados para esta inscripción.</Alert>
+                        <Alert severity="info">{emptySystemEmailHistoryMessage}</Alert>
                       )}
 
                       {!emailEventsQuery.isLoading && !emailEventsQuery.isError && (emailEventsQuery.data?.length ?? 0) > 0 && (
@@ -1985,8 +1990,7 @@ export default function CourseRegistrationsAdminPage() {
                                 {followUpForm.editingId == null ? 'Registrar seguimiento' : 'Editar seguimiento'}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                Abre el formulario solo cuando necesites documentar una llamada, correo o
-                                próximo paso.
+                                {followUpComposerHelpText}
                               </Typography>
                             </Box>
                             <Stack spacing={1.5} sx={{ pt: 0.5 }}>
@@ -2116,8 +2120,7 @@ export default function CourseRegistrationsAdminPage() {
                                 </Button>
                               )}
                             >
-                              Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde
-                              aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.
+                              {emptyFollowUpAlertMessage}
                             </Alert>
                           )}
                           {followUps.map((entry) => (

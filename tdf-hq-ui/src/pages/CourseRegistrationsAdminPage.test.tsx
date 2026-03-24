@@ -161,6 +161,14 @@ const buildEmailEvent = (
 
 const emptyReceiptAlertMessage =
   'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+const showSystemEmailsLabel = 'Ver correos del sistema';
+const hideSystemEmailsLabel = 'Ocultar correos del sistema';
+const systemEmailHistoryHelperText =
+  'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
+const emptyFollowUpAlertMessage =
+  'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
+const followUpComposerHelpText =
+  'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -345,7 +353,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Cambiar estado',
       );
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
-      expect(container.textContent).not.toContain('Ver correos');
+      expect(container.textContent).not.toContain(showSystemEmailsLabel);
       expect(hasLabel(container, 'Límite')).toBe(false);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(
@@ -368,7 +376,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Expediente de inscripción');
-      expect(document.body.textContent).toContain('Ver correos');
+      expect(document.body.textContent).toContain(showSystemEmailsLabel);
     });
 
     await waitForExpectation(() => {
@@ -382,14 +390,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain('0 guardados');
       expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(1);
-      expect(document.body.textContent).toContain(
-        'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
-      );
+      expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
-      expect(document.body.textContent).not.toContain(
-        'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
-      );
+      expect(document.body.textContent).not.toContain(followUpComposerHelpText);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
@@ -421,12 +425,8 @@ describe('CourseRegistrationsAdminPage', () => {
         ),
       ).toBe(false);
       expect(document.body.textContent).toContain('Registrar seguimiento');
-      expect(document.body.textContent).not.toContain(
-        'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
-      );
-      expect(document.body.textContent).toContain(
-        'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
-      );
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
+      expect(document.body.textContent).toContain(followUpComposerHelpText);
       expect(document.body.textContent).toContain(
         'Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y las notas.',
       );
@@ -1370,31 +1370,27 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, 'Ver correos')).toBeTruthy();
+      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
       expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
-      expect(document.body.textContent).not.toContain(
-        'Historial persistente por inscripción. Usa el refresco del expediente para volver a consultarlo.',
-      );
+      expect(document.body.textContent).not.toContain(systemEmailHistoryHelperText);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Ver correos'));
+      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
       expect(listRegistrationEmailsMock).toHaveBeenCalledWith(101, 200);
-      expect(getButtonByText(document.body, 'Ocultar correos')).toBeTruthy();
+      expect(getButtonByText(document.body, hideSystemEmailsLabel)).toBeTruthy();
       expect(getButtonByAriaLabel(document.body, 'Refrescar expediente y correos')).toBeTruthy();
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Actualizar correos',
         ),
       ).toBe(false);
-      expect(document.body.textContent).toContain(
-        'Historial persistente por inscripción. Usa el refresco del expediente para volver a consultarlo.',
-      );
+      expect(document.body.textContent).toContain(systemEmailHistoryHelperText);
       expect(document.body.textContent).toContain('Recordatorio de pago enviado.');
       expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
     });
@@ -1411,6 +1407,45 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getRegistrationDossierMock).toHaveBeenCalledWith('beatmaking-101', 101);
       expect(listRegistrationEmailsMock).toHaveBeenCalledWith(101, 200);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps system-email history distinct from manual follow-up guidance for first-time admins', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
+      expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
+      expect(document.body.textContent).not.toContain(
+        'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
+      );
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Correos del sistema');
+      expect(document.body.textContent).toContain(systemEmailHistoryHelperText);
+      expect(document.body.textContent).toContain('No hay correos del sistema registrados para esta inscripción.');
+      expect(document.body.textContent).not.toContain('Historial de correos');
     });
 
     await cleanup();
@@ -1456,7 +1491,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Ver correos'));
+      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -1740,14 +1775,10 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Registrar primer seguimiento')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(1);
-      expect(document.body.textContent).toContain(
-        'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
-      );
+      expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
-      expect(document.body.textContent).not.toContain(
-        'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
-      );
+      expect(document.body.textContent).not.toContain(followUpComposerHelpText);
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(false);
       expect(
@@ -1765,12 +1796,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Registrar seguimiento');
-      expect(document.body.textContent).not.toContain(
-        'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
-      );
-      expect(document.body.textContent).toContain(
-        'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
-      );
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
+      expect(document.body.textContent).toContain(followUpComposerHelpText);
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
