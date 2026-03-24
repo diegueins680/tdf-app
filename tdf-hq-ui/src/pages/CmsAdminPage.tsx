@@ -46,6 +46,8 @@ const schemaHints: Record<string, string[]> = {
   'fan-hub': ['heroTitle', 'heroSubtitle', 'ctaWhatsapp', 'sections[]'],
   'course-production': ['heroTitle', 'heroSubtitle', 'bullets[]', 'ctaPrimary', 'sessions[]'],
 };
+const draftAutosaveHelperText =
+  'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas.';
 const samplePayloads: Record<string, SamplePayload> = {
   'records-public': {
     heroTitle: 'Lanzamientos destacados',
@@ -728,21 +730,12 @@ export default function CmsAdminPage() {
                   <Button variant="text" onClick={() => setShowDraftDiff(true)} disabled={!livePayloadPretty}>
                     Comparar con live
                   </Button>
-                  <Button
-                    variant="text"
-                    onClick={() => {
-                      try {
-                        window.localStorage.setItem(draftKey, JSON.stringify({ title, payload, status }));
-                      } catch {
-                        // ignore
-                      }
-                    }}
-                  >
-                    Guardar borrador local
-                  </Button>
                   {liveFetchError && <Chip label={liveFetchError} color="error" variant="outlined" />}
                   {payloadChanged && <Chip label="Payload modificado vs en vivo" size="small" color="warning" />}
                 </Stack>
+                <Typography variant="caption" color="text.secondary">
+                  {draftAutosaveHelperText}
+                </Typography>
                 <TextField
                   select
                   label="Estado"
