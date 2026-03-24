@@ -542,8 +542,12 @@ export default function CourseRegistrationsAdminPage() {
         ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto.'
         : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.'
       : hasVisibleRegistrations
-        ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.'
-        : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado. Ajusta la vista o usa refrescar si esperabas resultados.';
+      ? 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.'
+      : 'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado. Ajusta la vista o usa refrescar si esperabas resultados.';
+  const showFilteredEmptyState = !regsQuery.isLoading
+    && !regsQuery.isError
+    && hasCustomFilters
+    && !hasVisibleRegistrations;
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -1265,7 +1269,7 @@ export default function CourseRegistrationsAdminPage() {
                 />
               </Box>
             </Collapse>
-            {filtersHelpText && (
+            {filtersHelpText && !showFilteredEmptyState && (
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
                 {filtersHelpText}
               </Typography>

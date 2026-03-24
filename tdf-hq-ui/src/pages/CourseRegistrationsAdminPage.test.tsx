@@ -1926,6 +1926,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'No hay inscripciones con los filtros actuales: cohorte Beatmaking 101 (beatmaking-101) · estado pagado · límite 50. Restablece filtros o usa refrescar si esperabas resultados.',
       );
+      expect(container.textContent).not.toContain(
+        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.',
+      );
       expect(container.textContent).not.toContain('Vista filtrada:');
       expect(container.textContent).not.toContain('No hay inscripciones para esta vista.');
       expect(countButtonsByText(container, 'Restablecer filtros')).toBe(1);
