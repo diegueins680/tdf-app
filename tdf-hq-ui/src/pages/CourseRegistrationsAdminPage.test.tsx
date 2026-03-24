@@ -1741,6 +1741,68 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('lets admins close empty optional follow-up details after opening them', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Registrar primer seguimiento')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar detalles opcionales'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Asunto')).toBe(true);
+      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(getButtonByText(document.body, 'Ocultar detalles opcionales')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Ocultar detalles opcionales'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const reopenButton = getButtonByText(document.body, 'Agregar detalles opcionales');
+      expect(reopenButton).toBeTruthy();
+      expect(reopenButton.getAttribute('aria-expanded')).toBe('false');
+      expect(document.body.textContent).toContain('Agrega asunto, recordatorio o evidencia solo si hacen falta.');
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Ocultar detalles opcionales',
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('keeps one follow-up actions entry point per saved note and reveals edit only on demand', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({

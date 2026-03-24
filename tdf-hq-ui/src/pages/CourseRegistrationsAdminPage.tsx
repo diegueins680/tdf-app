@@ -1074,15 +1074,15 @@ export default function CourseRegistrationsAdminPage() {
     || Boolean(trimToNull(receiptForm.fileName))
     || canSubmitReceipt
   );
-  const hasFollowUpOptionalDetails = (
+  const hasFollowUpOptionalDraft = (
     followUpForm.editingId != null
-    || showFollowUpUrlField
     || Boolean(trimToNull(followUpForm.subject))
     || Boolean(trimToNull(followUpForm.attachmentName))
     || Boolean(trimToNull(followUpForm.attachmentUrl))
     || followUpForm.nextFollowUpAt.trim() !== ''
   );
-  const showFollowUpOptionalFields = showFollowUpDetails || hasFollowUpOptionalDetails;
+  const showFollowUpOptionalFields = showFollowUpDetails || showFollowUpUrlField || hasFollowUpOptionalDraft;
+  const canHideFollowUpOptionalFields = showFollowUpOptionalFields && !hasFollowUpOptionalDraft;
   const showFollowUpCountChip = followUps.length > 1;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
@@ -2033,6 +2033,19 @@ export default function CourseRegistrationsAdminPage() {
                                       fullWidth
                                     />
                                   </Collapse>
+                                  {canHideFollowUpOptionalFields && (
+                                    <Button
+                                      size="small"
+                                      variant="text"
+                                      sx={{ alignSelf: 'flex-start' }}
+                                      onClick={() => {
+                                        setShowFollowUpDetails(false);
+                                        setShowFollowUpUrlField(false);
+                                      }}
+                                    >
+                                      Ocultar detalles opcionales
+                                    </Button>
+                                  )}
                                 </Stack>
                               </Collapse>
                               <Stack direction="row" spacing={1}>
