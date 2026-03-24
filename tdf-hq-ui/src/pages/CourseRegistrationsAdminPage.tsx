@@ -306,12 +306,60 @@ const registrationSourceLabel = (source: string | null | undefined) => {
   return trimmed === '' ? 'Sin fuente' : trimmed;
 };
 
+const registrationIdentityDisplay = (
+  fullName: string | null | undefined,
+  email: string | null | undefined,
+  phone: string | null | undefined,
+) => {
+  const trimmedName = fullName?.trim() ?? '';
+  const trimmedEmail = email?.trim() ?? '';
+  const trimmedPhone = phone?.trim() ?? '';
+
+  if (trimmedName) {
+    return {
+      primary: trimmedName,
+      secondary: registrationContactSummary(trimmedEmail, trimmedPhone),
+    };
+  }
+
+  if (trimmedEmail) {
+    return {
+      primary: trimmedEmail,
+      secondary: trimmedPhone,
+    };
+  }
+
+  if (trimmedPhone) {
+    return {
+      primary: trimmedPhone,
+      secondary: '',
+    };
+  }
+
+  return {
+    primary: 'Sin nombre',
+    secondary: 'Sin correo ni teléfono',
+  };
+};
+
 const registrationContactSummary = (email: string | null | undefined, phone: string | null | undefined) => {
   const trimmedEmail = email?.trim() ?? '';
   const trimmedPhone = phone?.trim() ?? '';
   const parts = [trimmedEmail, trimmedPhone].filter((value) => value !== '');
   if (parts.length === 0) return 'Sin correo ni teléfono';
   return parts.join(' · ');
+};
+
+const registrationActionTargetLabel = (
+  reg: Pick<CourseRegistrationDTO, 'crId' | 'crFullName' | 'crEmail' | 'crPhoneE164'>,
+) => {
+  const trimmedName = reg.crFullName?.trim() ?? '';
+  if (trimmedName) return trimmedName;
+  const trimmedEmail = reg.crEmail?.trim() ?? '';
+  if (trimmedEmail) return trimmedEmail;
+  const trimmedPhone = reg.crPhoneE164?.trim() ?? '';
+  if (trimmedPhone) return trimmedPhone;
+  return `registro #${reg.crId}`;
 };
 
 const registrationListContextSummary = ({
@@ -915,7 +963,7 @@ export default function CourseRegistrationsAdminPage() {
       .then(() => {
         setPageFlash({
           severity: 'success',
-          message: `Estado actualizado para ${reg.crFullName ?? `registro #${reg.crId}`}.`,
+          message: `Estado actualizado para ${registrationActionTargetLabel(reg)}.`,
         });
       })
       .catch((err: Error) => {
@@ -1200,6 +1248,13 @@ export default function CourseRegistrationsAdminPage() {
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
     ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
     : 'Sin cohorte';
+  const activeRegistrationIdentity = activeRegistration
+    ? registrationIdentityDisplay(
+      activeRegistration.crFullName,
+      activeRegistration.crEmail,
+      activeRegistration.crPhoneE164,
+    )
+    : { primary: 'Sin nombre', secondary: 'Sin correo ni teléfono' };
   const activeRegistrationSummary = activeRegistration
     ? registrationDossierContextSummary({
       courseLabel: activeRegistrationCourseLabel,
@@ -1520,6 +1575,8 @@ export default function CourseRegistrationsAdminPage() {
               <Stack divider={<Divider flexItem />} spacing={2}>
                 {regsQuery.data.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
+                  const rowIdentity = registrationIdentityDisplay(reg.crFullName, reg.crEmail, reg.crPhoneE164);
+                  const rowActionTarget = registrationActionTargetLabel(reg);
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
                   const hasRowNotes = Boolean(reg.crAdminNotes?.trim());
@@ -1539,11 +1596,13 @@ export default function CourseRegistrationsAdminPage() {
                     <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Box sx={{ minWidth: 240 }}>
                         <Typography variant="subtitle1" fontWeight={700}>
-                          {reg.crFullName ?? 'Sin nombre'}
+                          {rowIdentity.primary}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {registrationContactSummary(reg.crEmail, reg.crPhoneE164)}
-                        </Typography>
+                        {rowIdentity.secondary && (
+                          <Typography variant="body2" color="text.secondary">
+                            {rowIdentity.secondary}
+                          </Typography>
+                        )}
                       </Box>
                       <Box sx={{ minWidth: 180 }}>
                         <Typography variant="body2" color="text.secondary">
@@ -1553,7 +1612,7 @@ export default function CourseRegistrationsAdminPage() {
                       <Button
                         size="small"
                         variant="outlined"
-                        aria-label={`Abrir expediente de ${reg.crFullName ?? reg.crEmail ?? `registro #${reg.crId}`}`}
+                        aria-label={`Abrir expediente de ${rowActionTarget}`}
                         onClick={() => handleOpenDossier(reg, 'review')}
                       >
                         Expediente
@@ -1563,7 +1622,7 @@ export default function CourseRegistrationsAdminPage() {
                         variant="outlined"
                         color={registrationStatusButtonColor(reg.crStatus)}
                         endIcon={<ArrowDropDownIcon />}
-                        aria-label={`Cambiar estado para ${reg.crFullName ?? reg.crEmail ?? 'esta inscripción'}`}
+                        aria-label={`Cambiar estado para ${rowActionTarget}`}
                         aria-haspopup="menu"
                         disabled={isUpdating}
                         onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
@@ -1695,15 +1754,17 @@ export default function CourseRegistrationsAdminPage() {
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Stack spacing={1.5}>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                    <Typography variant="h6">{activeRegistration.crFullName ?? 'Sin nombre'}</Typography>
+                    <Typography variant="h6">{activeRegistrationIdentity.primary}</Typography>
                     {statusChip(activeRegistration.crStatus)}
                     {showPartyIdFallback && (
                       <Chip size="small" label={`Party #${activeRegistration.crPartyId}`} variant="outlined" />
                     )}
                   </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    {registrationContactSummary(activeRegistration.crEmail, activeRegistration.crPhoneE164)}
-                  </Typography>
+                  {activeRegistrationIdentity.secondary && (
+                    <Typography variant="body2" color="text.secondary">
+                      {activeRegistrationIdentity.secondary}
+                    </Typography>
+                  )}
                   <Typography variant="body2" color="text.secondary">
                     {activeRegistrationSummary}
                   </Typography>

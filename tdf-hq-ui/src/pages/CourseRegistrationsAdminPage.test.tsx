@@ -640,6 +640,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses the best available contact as the visible identity when the registration name is blank', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crFullName: '   ',
+        crEmail: 'sin-nombre@example.com',
+        crPhoneE164: '+593999000777',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasExactText(container, 'sin-nombre@example.com')).toBe(true);
+      expect(hasExactText(container, '+593999000777')).toBe(true);
+      expect(countOccurrences(container, 'sin-nombre@example.com')).toBe(1);
+      expect(container.textContent).not.toContain('Sin nombre');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de sin-nombre@example.com')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para sin-nombre@example.com')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de sin-nombre@example.com'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+      expect(dialog?.textContent).toContain('sin-nombre@example.com');
+      expect(dialog?.textContent).toContain('+593999000777');
+      expect(dialog?.textContent).not.toContain('Sin nombre');
+    });
+
+    await cleanup();
+  });
+
   it('condenses row cohort, source, and created metadata into one summary line', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
