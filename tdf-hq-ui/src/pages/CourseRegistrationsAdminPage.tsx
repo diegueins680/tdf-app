@@ -1108,6 +1108,7 @@ export default function CourseRegistrationsAdminPage() {
   );
   const hasFollowUpOptionalDraft = (
     followUpForm.editingId != null
+    || followUpForm.entryType !== 'note'
     || Boolean(trimToNull(followUpForm.subject))
     || Boolean(trimToNull(followUpForm.attachmentName))
     || Boolean(trimToNull(followUpForm.attachmentUrl))
@@ -1990,19 +1991,6 @@ export default function CourseRegistrationsAdminPage() {
                             </Box>
                             <Stack spacing={1.5} sx={{ pt: 0.5 }}>
                               <TextField
-                                select
-                                label="Tipo"
-                                value={followUpForm.entryType}
-                                onChange={(e) => setFollowUpForm((prev) => ({ ...prev, entryType: e.target.value }))}
-                                fullWidth
-                              >
-                                {followUpTypeOptions.map((option) => (
-                                  <MenuItem key={option} value={option}>
-                                    {eventTypeLabel(option)}
-                                  </MenuItem>
-                                ))}
-                              </TextField>
-                              <TextField
                                 label="Nota de seguimiento"
                                 value={followUpForm.notes}
                                 onChange={(e) => setFollowUpForm((prev) => ({ ...prev, notes: e.target.value }))}
@@ -2014,7 +2002,7 @@ export default function CourseRegistrationsAdminPage() {
                               {!showFollowUpOptionalFields && (
                                 <Stack spacing={0.75} alignItems="flex-start">
                                   <Typography variant="caption" color="text.secondary">
-                                    Agrega asunto, recordatorio o evidencia solo si hacen falta.
+                                    Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.
                                   </Typography>
                                   <Button
                                     size="small"
@@ -2028,6 +2016,19 @@ export default function CourseRegistrationsAdminPage() {
                               )}
                               <Collapse in={showFollowUpOptionalFields} unmountOnExit>
                                 <Stack spacing={1.5}>
+                                  <TextField
+                                    select
+                                    label="Tipo"
+                                    value={followUpForm.entryType}
+                                    onChange={(e) => setFollowUpForm((prev) => ({ ...prev, entryType: e.target.value }))}
+                                    fullWidth
+                                  >
+                                    {followUpTypeOptions.map((option) => (
+                                      <MenuItem key={option} value={option}>
+                                        {eventTypeLabel(option)}
+                                      </MenuItem>
+                                    ))}
+                                  </TextField>
                                   <TextField
                                     label="Asunto"
                                     value={followUpForm.subject}

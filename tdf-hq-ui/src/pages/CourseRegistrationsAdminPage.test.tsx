@@ -435,7 +435,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
       expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
-      expect(document.body.textContent).toContain('Agrega asunto, recordatorio o evidencia solo si hacen falta.');
+      expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
     });
 
     await act(async () => {
@@ -1772,11 +1772,11 @@ describe('CourseRegistrationsAdminPage', () => {
         'Abre el formulario solo cuando necesites documentar una llamada, correo o próximo paso.',
       );
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
-      expect(hasLabel(document.body, 'Tipo')).toBe(true);
+      expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
       expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
-      expect(document.body.textContent).toContain('Agrega asunto, recordatorio o evidencia solo si hacen falta.');
+      expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
       expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
@@ -1794,6 +1794,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
       expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
@@ -1853,7 +1854,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const reopenButton = getButtonByText(document.body, 'Agregar detalles opcionales');
       expect(reopenButton).toBeTruthy();
       expect(reopenButton.getAttribute('aria-expanded')).toBe('false');
-      expect(document.body.textContent).toContain('Agrega asunto, recordatorio o evidencia solo si hacen falta.');
+      expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Ocultar detalles opcionales',
