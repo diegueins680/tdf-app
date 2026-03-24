@@ -890,17 +890,6 @@ export default function CmsAdminPage() {
                           Publicar
                         </Button>
                       )}
-                      {rowActions.showOpenLivePage && (
-                        <Button
-                          size="small"
-                          variant="text"
-                          href={`${PUBLIC_BASE}${livePathForSlug(v.ccdSlug)}${v.ccdLocale ? `?locale=${encodeURIComponent(v.ccdLocale)}` : ''}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Abrir página publicada
-                        </Button>
-                      )}
                       <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
                         Editar en formulario
                       </Button>

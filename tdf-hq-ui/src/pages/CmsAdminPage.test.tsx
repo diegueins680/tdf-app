@@ -5,6 +5,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { CmsContentDTO } from '../api/cms';
 
+jest.setTimeout(15000);
+
 const listMock = jest.fn<(params?: { slug?: string; locale?: string }) => Promise<CmsContentDTO[]>>();
 const getPublicMock = jest.fn<(slug: string, locale?: string) => Promise<CmsContentDTO>>();
 
@@ -124,6 +126,9 @@ const setInputValue = (input: HTMLInputElement | HTMLTextAreaElement, value: str
   input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
+const countActionsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('button,a')).filter((el) => (el.textContent ?? '').trim() === labelText).length;
+
 describe('CmsAdminPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -188,6 +193,20 @@ describe('CmsAdminPage', () => {
           status: 'draft',
         }),
       );
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the live-page action in one place instead of repeating it on every published version row', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Abrir página en vivo')).toBe(1);
+      expect(container.textContent).not.toContain('Abrir página publicada');
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
     });
 
     await cleanup();

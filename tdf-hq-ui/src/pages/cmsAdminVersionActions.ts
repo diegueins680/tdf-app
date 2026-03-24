@@ -1,6 +1,5 @@
 export interface CmsVersionRowActions {
   showPublish: boolean;
-  showOpenLivePage: boolean;
 }
 
 export const getCmsVersionRowActions = (status: string): CmsVersionRowActions => {
@@ -8,6 +7,5 @@ export const getCmsVersionRowActions = (status: string): CmsVersionRowActions =>
 
   return {
     showPublish: !isPublished,
-    showOpenLivePage: isPublished,
   };
 };
