@@ -558,6 +558,10 @@ export default function InternshipsPage() {
 
   const openEntry = isSelfView ? (entries.find((entry) => !entry.iteClockOut) ?? null) : null;
   const totalMinutes = entries.reduce((sum, entry) => sum + (resolveEntryMinutes(entry) ?? 0), 0);
+  const showReadOnlyAdminHoursView = isAdmin && !isSelfView;
+  const totalHoursSummaryLabel = showReadOnlyAdminHoursView
+    ? `${minutesToHours(totalMinutes)} h registradas en esta vista`
+    : `${minutesToHours(totalMinutes)} h registradas`;
 
   const signupPath = '/login?signup=1&roles=Intern&redirect=/practicas';
   const signupUrl = typeof window !== 'undefined' ? `${window.location.origin}${signupPath}` : signupPath;
@@ -834,8 +838,12 @@ export default function InternshipsPage() {
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={1}>
               <Typography variant="h6" fontWeight={700}>Jornada y registro de horas</Typography>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Chip label={openEntry ? 'En jornada' : 'Fuera de jornada'} color={openEntry ? 'success' : 'default'} />
-                <Chip label={`${minutesToHours(totalMinutes)} h registradas`} variant="outlined" />
+                {showReadOnlyAdminHoursView ? (
+                  <Chip label="Vista administrativa" variant="outlined" />
+                ) : (
+                  <Chip label={openEntry ? 'En jornada' : 'Fuera de jornada'} color={openEntry ? 'success' : 'default'} />
+                )}
+                <Chip label={totalHoursSummaryLabel} variant="outlined" />
               </Stack>
             </Stack>
 
@@ -880,25 +888,27 @@ export default function InternshipsPage() {
               </Stack>
             ) : null}
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button
-                variant="contained"
-                onClick={() => void clockInMutation.mutateAsync()}
-                disabled={!isSelfView || !!openEntry || clockInMutation.isPending}
-              >
-                {clockInMutation.isPending ? 'Marcando…' : 'Clock-in'}
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => void clockOutMutation.mutateAsync()}
-                disabled={!isSelfView || !openEntry || clockOutMutation.isPending}
-              >
-                {clockOutMutation.isPending ? 'Cerrando…' : 'Clock-out'}
-              </Button>
-            </Stack>
-            {!isSelfView && (
+            {isSelfView && (
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <Button
+                  variant="contained"
+                  onClick={() => void clockInMutation.mutateAsync()}
+                  disabled={!!openEntry || clockInMutation.isPending}
+                >
+                  {clockInMutation.isPending ? 'Marcando…' : 'Clock-in'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => void clockOutMutation.mutateAsync()}
+                  disabled={!openEntry || clockOutMutation.isPending}
+                >
+                  {clockOutMutation.isPending ? 'Cerrando…' : 'Clock-out'}
+                </Button>
+              </Stack>
+            )}
+            {showReadOnlyAdminHoursView && (
               <Typography variant="caption" color="text.secondary">
-                Vista administrativa: el clock-in/out solo aplica a tu propia cuenta.
+                Vista administrativa: el clock-in/out solo aparece cuando estás viendo tu propia cuenta.
               </Typography>
             )}
 

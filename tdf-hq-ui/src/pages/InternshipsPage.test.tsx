@@ -22,7 +22,7 @@ const clockInMock = jest.fn<() => Promise<unknown>>();
 const clockOutMock = jest.fn<() => Promise<unknown>>();
 const createPermissionMock = jest.fn<(payload: unknown) => Promise<unknown>>();
 const updatePermissionMock = jest.fn<(permissionId: string, payload: unknown) => Promise<unknown>>();
-const useSessionMock = jest.fn<() => { session: { roles: string[]; modules: string[] } }>();
+const useSessionMock = jest.fn<() => { session: { roles: string[]; modules: string[]; partyId?: number | null } }>();
 
 jest.unstable_mockModule('../api/internships', () => ({
   Internships: {
@@ -159,6 +159,16 @@ const buildPermission = (overrides: Record<string, unknown> = {}) => ({
   iprEndAt: null,
   iprReason: null,
   iprStatus: 'pending',
+  ...overrides,
+});
+
+const buildTimeEntry = (overrides: Record<string, unknown> = {}) => ({
+  iteId: 'entry-1',
+  itePartyId: 101,
+  itePartyName: 'Ada Lovelace',
+  iteClockIn: '2026-03-24T09:00:00.000Z',
+  iteClockOut: '2026-03-24T10:00:00.000Z',
+  iteDurationMinutes: 60,
   ...overrides,
 });
 
@@ -462,6 +472,32 @@ describe('InternshipsPage', () => {
       });
     } finally {
       await secondRender.cleanup();
+    }
+  });
+
+  it('replaces disabled self-only hour actions with a read-only admin summary when viewing cohort hours', async () => {
+    useSessionMock.mockReturnValue({ session: { roles: ['admin'], modules: ['internships'], partyId: 999 } });
+    listInternsMock.mockResolvedValue([buildIntern()]);
+    listTimeEntriesMock.mockResolvedValue([buildTimeEntry()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Jornada y registro de horas');
+        expect(container.textContent).toContain('Vista administrativa');
+        expect(container.textContent).toContain('1.00 h registradas en esta vista');
+        expect(container.textContent).toContain(
+          'Vista administrativa: el clock-in/out solo aparece cuando estás viendo tu propia cuenta.',
+        );
+        expect(container.textContent).not.toContain('Fuera de jornada');
+        expect(getButtonsByText(container, 'Clock-in')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Clock-out')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
     }
   });
 });
