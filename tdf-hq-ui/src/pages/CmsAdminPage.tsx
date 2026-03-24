@@ -401,6 +401,11 @@ export default function CmsAdminPage() {
     }),
     [minVersionFilter, safeFilteredVersions.length, statusFilter, versions.length],
   );
+  const editingSourceChipLabel = editingFromId
+    ? editingVersion != null
+      ? `Base: v${editingVersion} · ID ${editingFromId}`
+      : `Base: ID ${editingFromId}`
+    : null;
   const compareHint = livePayloadPretty
     ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda y podrás compararla desde aquí.';
@@ -763,7 +768,7 @@ export default function CmsAdminPage() {
                   <Button variant="contained" onClick={handleCreate} disabled={createMutation.isPending}>
                     Guardar versión
                   </Button>
-                  {editingFromId && <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />}
+                  {editingSourceChipLabel && <Chip label={editingSourceChipLabel} size="small" color="info" />}
                   {createMutation.isError && (
                     <Alert severity="error" sx={{ flexGrow: 1 }}>
                       {createMutation.error instanceof Error ? createMutation.error.message : 'Error al crear.'}
@@ -784,9 +789,6 @@ export default function CmsAdminPage() {
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="h6" fontWeight={800}>Versiones</Typography>
                 <Chip label={`${safeFilteredVersions.length}/${versions.length}`} size="small" />
-                {editingFromId && (
-                  <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />
-                )}
               </Stack>
               {sharedVersionContextSummary && (
                 <Typography variant="body2" color="text.secondary">

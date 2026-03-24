@@ -135,6 +135,14 @@ const countExactText = (root: ParentNode, labelText: string) =>
 const countLabelsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('label')).filter((el) => (el.textContent ?? '').replace('*', '').trim() === labelText).length;
 
+const getButtonByText = (root: ParentNode, labelText: string) => {
+  const button = Array.from(root.querySelectorAll('button')).find((el) => (el.textContent ?? '').trim() === labelText);
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${labelText}`);
+  }
+  return button;
+};
+
 describe('CmsAdminPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -265,6 +273,42 @@ describe('CmsAdminPage', () => {
       expect(countExactText(container, 'records-public')).toBe(1);
       expect(countExactText(container, 'es')).toBe(1);
       expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the loaded-version context beside save instead of repeating it in the versions header', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Editar en formulario').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Cargar versión en el formulario');
+      expect(getButtonByText(document.body, 'Cargar en formulario')).toBeTruthy();
+    });
+
+    await act(async () => {
+      getButtonByText(document.body, 'Cargar en formulario').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const pageText = container.textContent ?? '';
+      expect(pageText).toContain('Base: v4 · ID 101');
+      expect(pageText.split('Base: v4 · ID 101').length - 1).toBe(1);
+      expect(pageText).not.toContain('Editando desde ID');
     });
 
     await cleanup();
