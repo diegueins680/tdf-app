@@ -141,6 +141,7 @@ const summarizeActiveFilters = ({
 };
 
 const formatRowCountLabel = (count: number) => `${count} fila${count === 1 ? '' : 's'}`;
+const formatRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
 
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
 
@@ -493,9 +494,6 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleStatusSummary = Boolean(
     singleVisibleStatus && (status === 'all' || status === singleVisibleStatus),
   );
-  const showHeaderTotalChip = hasVisibleRegistrations
-    && statusCounts.total > 1
-    && showSingleStatusSummary;
   const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
   const activeFilterSummary = useMemo(
     () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
@@ -529,9 +527,10 @@ export default function CourseRegistrationsAdminPage() {
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
-  const copyCsvButtonLabel = hasCustomFilters
-    ? `Copiar CSV filtrado (${formatRowCountLabel(loadedRegistrationCount)})`
-    : `Copiar CSV (${formatRowCountLabel(loadedRegistrationCount)})`;
+  const visibleRegistrationsSummary = hasCustomFilters
+    ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} con los filtros actuales.`
+    : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
+  const copyCsvButtonLabel = hasCustomFilters ? 'Copiar CSV filtrado' : 'Copiar CSV';
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
   const visibleActiveFilterSummary = useMemo(() => {
@@ -1113,7 +1112,6 @@ export default function CourseRegistrationsAdminPage() {
           Inscripciones de cursos
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {showHeaderTotalChip && <Chip label={`Total: ${statusCounts.total}`} size="small" />}
           <Tooltip title="Refrescar">
             <span>
               <IconButton aria-label="Refrescar inscripciones" onClick={handleRefresh} disabled={regsQuery.isFetching}>
@@ -1340,6 +1338,9 @@ export default function CourseRegistrationsAdminPage() {
             )}
             {hasVisibleRegistrations && showListUtilitySummary && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+                <Typography variant="body2" color="text.secondary">
+                  {visibleRegistrationsSummary}
+                </Typography>
                 {canCopyCsv && (
                   <Button
                     size="small"

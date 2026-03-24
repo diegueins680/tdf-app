@@ -2086,6 +2086,34 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps multi-row single-status counts in passive list context instead of the header', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).not.toContain('Total: 2');
+      expect(container.textContent).toContain('Mostrando 2 inscripciones en esta vista.');
+      expect(getButtonByText(container, 'Copiar CSV')).toBeTruthy();
+      expect(
+        Array.from(container.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Copiar CSV (2 filas)',
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('shows status counts on the filter chips instead of a separate totals legend', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
@@ -2124,7 +2152,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps CSV export focused on real list views and labels filtered exports clearly', async () => {
+  it('keeps CSV export focused on real list views and leaves row counts in passive context copy', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
         return { crStatus: 'paid' };
@@ -2149,12 +2177,13 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
       );
       expect(container.textContent).not.toContain('Leyenda de estados:');
+      expect(container.textContent).toContain('Mostrando 200 inscripciones en esta vista.');
       expect(
         Array.from(container.querySelectorAll('button')).some(
-          (el) => (el.textContent ?? '').trim() === 'Copiar CSV de esta vista',
+          (el) => (el.textContent ?? '').trim() === 'Copiar CSV (200 filas)',
         ),
       ).toBe(false);
-      expect(getButtonByText(container, 'Copiar CSV (200 filas)')).toBeTruthy();
+      expect(getButtonByText(container, 'Copiar CSV')).toBeTruthy();
     });
 
     await act(async () => {
@@ -2179,10 +2208,11 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 50,
       });
-      expect(getButtonByText(container, 'Copiar CSV filtrado (50 filas)')).toBeTruthy();
+      expect(container.textContent).toContain('Mostrando 50 inscripciones con los filtros actuales.');
+      expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
       expect(
         Array.from(container.querySelectorAll('button')).some(
-          (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
+          (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado (50 filas)',
         ),
       ).toBe(false);
     });
