@@ -1410,6 +1410,61 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('localizes dossier activity labels so admins do not see raw internal event jargon', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdFollowUps: [
+          buildFollowUp({
+            crfEntryType: 'status_change',
+            crfSubject: null,
+          }),
+        ],
+      }),
+    );
+    listRegistrationEmailsMock.mockResolvedValue([
+      buildEmailEvent({
+        ceEventType: 'registration_confirmation',
+        ceStatus: 'skipped',
+        ceMessage: 'No se envío el correo porque ya existía un envío reciente.',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Cambio de estado');
+      expect(document.body.textContent).not.toContain('Status Change');
+      expect(document.body.querySelector('button[aria-label^="Abrir acciones para seguimiento Cambio de estado del "]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Ver correos'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Confirmación de inscripción');
+      expect(document.body.textContent).toContain('Omitido');
+      expect(document.body.textContent).not.toContain('Registration Confirmation');
+      expect(document.body.textContent).not.toContain('skipped');
+    });
+
+    await cleanup();
+  });
+
   it('uses a scoped dossier refresh control instead of a generic footer action', async () => {
     getRegistrationDossierMock.mockResolvedValue(buildDossier());
 

@@ -217,8 +217,35 @@ const eventStatusColor = (
   return 'default';
 };
 
+const eventStatusLabels: Record<string, string> = {
+  sent: 'Enviado',
+  failed: 'Falló',
+  skipped: 'Omitido',
+  queued: 'En cola',
+};
+
+const eventStatusLabel = (status: string) => {
+  const normalized = status.trim().toLowerCase();
+  const trimmed = status.trim();
+  return eventStatusLabels[normalized] ?? (trimmed || 'Estado desconocido');
+};
+
+const eventTypeLabels: Record<string, string> = {
+  note: 'Nota',
+  call: 'Llamada',
+  whatsapp: 'WhatsApp',
+  email: 'Correo',
+  payment_receipt: 'Comprobante de pago',
+  status_change: 'Cambio de estado',
+  registration: 'Inscripción',
+  payment_reminder: 'Recordatorio de pago',
+  registration_confirmation: 'Confirmación de inscripción',
+  welcome_credentials: 'Credenciales de bienvenida',
+};
+
 const eventTypeLabel = (eventType: string) =>
-  eventType
+  eventTypeLabels[eventType.trim().toLowerCase()]
+  ?? eventType
     .trim()
     .toLowerCase()
     .replace(/_/g, ' ')
@@ -1647,7 +1674,7 @@ export default function CourseRegistrationsAdminPage() {
                           {(emailEventsQuery.data ?? []).map((entry) => (
                             <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
                               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
-                                <Chip size="small" label={entry.ceStatus} color={eventStatusColor(entry.ceStatus)} />
+                                <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
                                 <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
                                 <Typography variant="caption" color="text.secondary">
                                   {formatDate(entry.ceCreatedAt)}
