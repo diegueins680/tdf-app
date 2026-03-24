@@ -1656,7 +1656,7 @@ export default function CourseRegistrationsAdminPage() {
               handleOpenDossier(statusMenuReg, 'markPaid');
             }}
           >
-            Subir comprobante para marcar pagado
+            Abrir expediente de pago
           </MenuItem>
         )}
         {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment') && (

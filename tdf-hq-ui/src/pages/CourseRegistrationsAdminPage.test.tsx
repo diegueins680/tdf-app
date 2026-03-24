@@ -171,6 +171,7 @@ const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const followUpComposerHelpText =
   'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.';
+const openPaymentDossierLabel = 'Abrir expediente de pago';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -1440,10 +1441,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Subir comprobante para marcar pagado');
+      expect(document.body.textContent).toContain(openPaymentDossierLabel);
       expect(document.body.textContent).toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Estado actual:');
+      expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
 
     await act(async () => {
@@ -1455,7 +1457,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).toContain('Cancelar inscripción');
-      expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
+      expect(document.body.textContent).not.toContain(openPaymentDossierLabel);
       expect(document.body.textContent).not.toContain('Estado actual:');
     });
 
@@ -1466,10 +1468,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Subir comprobante para marcar pagado');
+      expect(document.body.textContent).toContain(openPaymentDossierLabel);
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Estado actual:');
+      expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
 
     await cleanup();
@@ -1826,7 +1829,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('opens the receipt composer directly from the mark-paid flow without duplicating the hint', async () => {
+  it('opens the payment dossier from the status menu without duplicating the receipt-upload action', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
     const container = document.createElement('div');
@@ -1844,11 +1847,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, 'Subir comprobante para marcar pagado')).toBeTruthy();
+      expect(getMenuItemByText(document.body, openPaymentDossierLabel)).toBeTruthy();
+      expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
 
     await act(async () => {
-      clickElement(getMenuItemByText(document.body, 'Subir comprobante para marcar pagado'));
+      clickElement(getMenuItemByText(document.body, openPaymentDossierLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -1903,11 +1907,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, 'Subir comprobante para marcar pagado')).toBeTruthy();
+      expect(getMenuItemByText(document.body, openPaymentDossierLabel)).toBeTruthy();
+      expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
 
     await act(async () => {
-      clickElement(getMenuItemByText(document.body, 'Subir comprobante para marcar pagado'));
+      clickElement(getMenuItemByText(document.body, openPaymentDossierLabel));
       await flushPromises();
       await flushPromises();
     });
