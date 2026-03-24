@@ -608,6 +608,12 @@ describe('CourseRegistrationsAdminPage', () => {
         crEmail: 'grace@example.com',
         crPhoneE164: null,
       }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: null,
+        crPhoneE164: '+593999000222',
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -618,6 +624,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(container, 'ada@example.com · +593999000111')).toBe(true);
       expect(hasExactText(container, '+593999000111')).toBe(false);
       expect(hasExactText(container, 'grace@example.com')).toBe(true);
+      expect(hasExactText(container, '+593999000222')).toBe(true);
+      expect(hasExactText(container, 'Sin correo · +593999000222')).toBe(false);
     });
 
     await cleanup();
@@ -928,7 +936,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Party #9');
-      expect(document.body.textContent).toContain('Sin correo');
+      expect(document.body.textContent).toContain('Sin correo ni teléfono');
     });
 
     await cleanup();

@@ -275,8 +275,8 @@ const registrationSourceLabel = (source: string | null | undefined) => {
 const registrationContactSummary = (email: string | null | undefined, phone: string | null | undefined) => {
   const trimmedEmail = email?.trim() ?? '';
   const trimmedPhone = phone?.trim() ?? '';
-  const parts = [trimmedEmail || 'Sin correo'];
-  if (trimmedPhone) parts.push(trimmedPhone);
+  const parts = [trimmedEmail, trimmedPhone].filter((value) => value !== '');
+  if (parts.length === 0) return 'Sin correo ni teléfono';
   return parts.join(' · ');
 };
 
