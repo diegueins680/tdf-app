@@ -151,7 +151,10 @@ const isRegistrationStatus = (
 const registrationStatusLabel = (status: string) =>
   isRegistrationStatus(status) ? statusFilterLabels[status] : status.trim() || 'Estado desconocido';
 
-const registrationStatusButtonLabel = (status: string) => `Estado: ${registrationStatusLabel(status)}`;
+const registrationStatusButtonLabel = (
+  status: string,
+  statusAlreadySummarized: boolean,
+) => (statusAlreadySummarized ? 'Estado' : `Estado: ${registrationStatusLabel(status)}`);
 
 const registrationStatusChipColor = (
   status: string,
@@ -1398,7 +1401,7 @@ export default function CourseRegistrationsAdminPage() {
                         disabled={isUpdating}
                         onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
                       >
-                        {registrationStatusButtonLabel(reg.crStatus)}
+                        {registrationStatusButtonLabel(reg.crStatus, showSingleStatusSummary)}
                       </Button>
                       <Box sx={{ flexGrow: 1 }} />
                     </Box>
