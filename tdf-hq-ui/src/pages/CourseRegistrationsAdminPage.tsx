@@ -1298,7 +1298,7 @@ export default function CourseRegistrationsAdminPage() {
                     ) : (
                       <Stack spacing={1}>
                         <Typography variant="caption" color="text.secondary">
-                          Estado
+                          Filtrar por estado
                         </Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                           {visibleStatusFilters.map((value) => (

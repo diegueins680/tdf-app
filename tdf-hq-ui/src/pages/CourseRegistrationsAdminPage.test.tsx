@@ -1212,6 +1212,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('labels the status chip group as a filter so it does not compete with row status actions', async () => {
+    const pendingRegistration = buildRegistration();
+    const paidRegistration = buildRegistration({
+      crId: 102,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+      crStatus: 'paid',
+    });
+    const cancelledRegistration = buildRegistration({
+      crId: 103,
+      crFullName: 'Katherine Johnson',
+      crEmail: 'katherine@example.com',
+      crStatus: 'cancelled',
+    });
+
+    listRegistrationsMock.mockImplementation(async (params) => {
+      if (params?.status === 'paid') return [paidRegistration];
+      if (params?.status === 'cancelled') return [cancelledRegistration];
+      if (params?.status === 'pending_payment') return [pendingRegistration];
+      return [pendingRegistration, paidRegistration, cancelledRegistration];
+    });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasExactText(container, 'Filtrar por estado')).toBe(true);
+      expect(hasExactText(container, 'Estado')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
+      expect(countOccurrences(container, 'Estado:')).toBe(3);
+    });
+
+    await cleanup();
+  });
+
   it('hides zero-result status filters once the current view already has registrations', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({
