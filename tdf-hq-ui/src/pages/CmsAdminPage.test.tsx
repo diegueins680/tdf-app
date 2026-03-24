@@ -129,6 +129,9 @@ const setInputValue = (input: HTMLInputElement | HTMLTextAreaElement, value: str
 const countActionsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button,a')).filter((el) => (el.textContent ?? '').trim() === labelText).length;
 
+const countExactText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('*')).filter((el) => (el.textContent ?? '').trim() === labelText).length;
+
 describe('CmsAdminPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -206,6 +209,21 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Abrir página en vivo')).toBe(1);
       expect(container.textContent).not.toContain('Abrir página publicada');
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+    });
+
+    await cleanup();
+  });
+
+  it('shows shared slug and locale context once above the versions list instead of repeating them on each row', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Contexto compartido: slug records-public · locale es.');
+      expect(countExactText(container, 'records-public')).toBe(1);
+      expect(countExactText(container, 'es')).toBe(1);
       expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
     });
 

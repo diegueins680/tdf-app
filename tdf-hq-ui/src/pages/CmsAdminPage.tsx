@@ -375,6 +375,28 @@ export default function CmsAdminPage() {
   );
   const safeDraftDiff = Array.isArray(draftVsLiveDiff) ? draftVsLiveDiff : [];
   const safeFilteredVersions = Array.isArray(filteredVersions) ? filteredVersions : [];
+  const sharedVersionSlug = useMemo(() => {
+    const slugs = Array.from(new Set(
+      safeFilteredVersions
+        .map((version) => version.ccdSlug.trim())
+        .filter((value) => value !== ''),
+    ));
+    return slugs.length === 1 ? (slugs[0] ?? null) : null;
+  }, [safeFilteredVersions]);
+  const sharedVersionLocale = useMemo(() => {
+    const localesInView = Array.from(new Set(
+      safeFilteredVersions
+        .map((version) => version.ccdLocale.trim())
+        .filter((value) => value !== ''),
+    ));
+    return localesInView.length === 1 ? (localesInView[0] ?? null) : null;
+  }, [safeFilteredVersions]);
+  const sharedVersionContextSummary = useMemo(() => {
+    const parts: string[] = [];
+    if (sharedVersionSlug) parts.push(`slug ${sharedVersionSlug}`);
+    if (sharedVersionLocale) parts.push(`locale ${sharedVersionLocale}`);
+    return parts.join(' · ');
+  }, [sharedVersionLocale, sharedVersionSlug]);
   const versionListUiState = useMemo(
     () => getCmsVersionListUiState({
       filteredCount: safeFilteredVersions.length,
@@ -594,7 +616,6 @@ export default function CmsAdminPage() {
                   <Stack spacing={1.5}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                       <Typography variant="subtitle1" fontWeight={700}>Contenido en vivo</Typography>
-                      <Chip label={localeFilter} size="small" />
                     </Stack>
                     {liveQuery.isLoading && <LinearProgress />}
                     {liveQuery.isError && (
@@ -790,11 +811,18 @@ export default function CmsAdminPage() {
       <Paper variant="outlined" sx={{ p: 2.5 }}>
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="h6" fontWeight={800}>Versiones</Typography>
-              <Chip label={`${safeFilteredVersions.length}/${versions.length}`} size="small" />
-              {editingFromId && (
-                <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />
+            <Stack spacing={0.75}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="h6" fontWeight={800}>Versiones</Typography>
+                <Chip label={`${safeFilteredVersions.length}/${versions.length}`} size="small" />
+                {editingFromId && (
+                  <Chip label={`Editando desde ID ${editingFromId}`} size="small" color="info" />
+                )}
+              </Stack>
+              {sharedVersionContextSummary && (
+                <Typography variant="body2" color="text.secondary">
+                  Contexto compartido: {sharedVersionContextSummary}.
+                </Typography>
               )}
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
@@ -862,8 +890,8 @@ export default function CmsAdminPage() {
                     <Box sx={{ flexGrow: 1 }}>
                       <Typography fontWeight={700}>{v.ccdTitle ?? v.ccdSlug}</Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
-                        <Chip label={v.ccdSlug} size="small" />
-                        <Chip label={v.ccdLocale} size="small" />
+                        {!sharedVersionSlug && <Chip label={v.ccdSlug} size="small" />}
+                        {!sharedVersionLocale && <Chip label={v.ccdLocale} size="small" />}
                         <Chip label={`v${v.ccdVersion}`} size="small" />
                         <Chip
                           label={v.ccdStatus}
