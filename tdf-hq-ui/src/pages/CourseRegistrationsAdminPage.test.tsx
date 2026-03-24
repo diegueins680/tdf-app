@@ -570,7 +570,8 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(hasLabel(thirdContainer, 'Límite')).toBe(false);
       expect(getButtonByText(thirdContainer, 'Ajustar límite (50)')).toBeTruthy();
-      expect(thirdContainer.textContent).toContain('Vista filtrada: límite 50.');
+      expect(thirdContainer.textContent).toContain('Límite actual: hasta 50 inscripciones.');
+      expect(thirdContainer.textContent).not.toContain('Vista filtrada: límite 50.');
       expect(thirdContainer.textContent).not.toContain('Límite activo: 50');
     });
 
@@ -1960,7 +1961,8 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 50,
       });
-      expect(container.textContent).toContain('Vista filtrada: límite 50.');
+      expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
+      expect(container.textContent).not.toContain('Vista filtrada: límite 50.');
       expect(container.textContent).not.toContain('Límite activo: 50');
       expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
     });
@@ -1973,7 +1975,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(container, 'Ajustar límite (50)')).toBeTruthy();
-      expect(container.textContent).toContain('Vista filtrada: límite 50.');
+      expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
+      expect(container.textContent).not.toContain('Vista filtrada: límite 50.');
       expect(container.textContent).not.toContain('Límite activo: 50');
     });
 
@@ -2167,7 +2170,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
-      expect(container.textContent).toContain('Vista filtrada: límite 50.');
+      expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
+      expect(container.textContent).not.toContain('Vista filtrada: límite 50.');
     });
 
     await cleanup();

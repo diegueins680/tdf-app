@@ -502,6 +502,9 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceSummary = singleAvailableCohortLabel && showSingleStatusSummary && singleVisibleStatus
     ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
     : '';
+  const combinedSingleChoiceLimitSummary = combinedSingleChoiceSummary && limit !== DEFAULT_LIMIT
+    ? `Límite actual: hasta ${limit} inscripci${limit === 1 ? 'ón' : 'ones'}.`
+    : '';
   const summarizedVisibleSourceLabel = singleVisibleSourceLabel
     ? singleVisibleSourceLabel === 'Sin fuente'
       ? 'Fuente visible: sin fuente registrada.'
@@ -531,13 +534,15 @@ export default function CourseRegistrationsAdminPage() {
     const parts: string[] = [];
     const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);
     const statusAlreadyExplained = Boolean(combinedSingleChoiceSummary || showSingleStatusSummary);
+    const limitAlreadyExplained = Boolean(combinedSingleChoiceLimitSummary);
     if (activeCohortLabel && !cohortAlreadyExplained) parts.push(`cohorte ${activeCohortLabel}`);
     if (status !== 'all' && !statusAlreadyExplained) parts.push(`estado ${statusFilterLabels[status].toLowerCase()}`);
-    if (limit !== DEFAULT_LIMIT) parts.push(`límite ${limit}`);
+    if (limit !== DEFAULT_LIMIT && !limitAlreadyExplained) parts.push(`límite ${limit}`);
     return parts.join(' · ');
   }, [
     activeCohortLabel,
     combinedSingleChoiceSummary,
+    combinedSingleChoiceLimitSummary,
     limit,
     showSingleStatusSummary,
     singleAvailableCohortLabel,
@@ -1148,6 +1153,11 @@ export default function CourseRegistrationsAdminPage() {
                     {combinedSingleChoiceSourceSummary && (
                       <Typography variant="caption" color="text.secondary">
                         {combinedSingleChoiceSourceSummary}
+                      </Typography>
+                    )}
+                    {combinedSingleChoiceLimitSummary && (
+                      <Typography variant="caption" color="text.secondary">
+                        {combinedSingleChoiceLimitSummary}
                       </Typography>
                     )}
                     <Typography variant="caption" color="text.secondary">
