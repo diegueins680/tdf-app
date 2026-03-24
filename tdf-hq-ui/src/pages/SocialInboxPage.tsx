@@ -1272,13 +1272,13 @@ export default function SocialInboxPage() {
       whatsappStats,
     ],
   );
-  const hasVisibleChannelMessages = channelPanels.some((panel) => panel.messages.length > 0);
+  const hasVisibleChannelMessages = channelPanels.some((panel) => panel.stats.incoming.length > 0);
   const visibleChannelPanels = hasVisibleChannelMessages
-    ? channelPanels.filter((panel) => panel.loading || panel.messages.length > 0)
+    ? channelPanels.filter((panel) => panel.loading || panel.stats.incoming.length > 0)
     : channelPanels;
   const hiddenEmptyChannelLabels = hasVisibleChannelMessages
     ? channelPanels
-        .filter((panel) => !panel.loading && !panel.hasError && panel.messages.length === 0)
+        .filter((panel) => !panel.loading && !panel.hasError && panel.stats.incoming.length === 0)
         .map((panel) => panel.label)
     : [];
   const allChannelsLoaded = !instagramQuery.isLoading && !facebookQuery.isLoading && !whatsappQuery.isLoading;
@@ -1392,14 +1392,9 @@ export default function SocialInboxPage() {
                 No asset selected yet. Go to Instagram setup and select the Page/account first.
               </Alert>
             )}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined">
-                Open Instagram setup
-              </Button>
-              <Button component={RouterLink} to="/social/instagram?review=1" variant="text">
-                Re-select asset
-              </Button>
-            </Stack>
+            <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
+              {activeAsset ? 'Change selected asset' : 'Select asset in Instagram setup'}
+            </Button>
             <Typography variant="caption" color="text.secondary">
               App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.
             </Typography>
