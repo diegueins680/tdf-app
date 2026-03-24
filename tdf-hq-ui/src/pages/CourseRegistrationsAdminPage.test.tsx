@@ -1726,6 +1726,59 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the mark-paid flow focused on the pay action when a saved receipt already unlocks it', async () => {
+    const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
+    const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
+    const registration = buildRegistration();
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: registration,
+        crdReceipts: [buildReceipt({ crrRegistrationId: registration.crId })],
+        crdCanMarkPaid: true,
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Subir comprobante para marcar pagado')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, 'Subir comprobante para marcar pagado'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(markPaidReceiptHint);
+      expect(document.body.textContent).not.toContain(markPaidReceiptSectionHelpText);
+      expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
+      expect(document.body.textContent).toContain('receipt.pdf');
+      expect(
+        Array.from(document.body.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Guardar comprobante',
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('keeps empty internal notes collapsed until the admin explicitly opens them', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({

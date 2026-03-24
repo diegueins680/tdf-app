@@ -1147,6 +1147,14 @@ export default function CourseRegistrationsAdminPage() {
   const isRefreshingDossier = dossierQuery.isFetching || (showEmailHistory && emailEventsQuery.isFetching);
   const dossierRefreshLabel = showEmailHistory ? 'Refrescar expediente y correos' : 'Refrescar expediente';
 
+  useEffect(() => {
+    if (selectedDossier?.intent !== 'markPaid' || !canMarkPaid) return;
+    setShowReceiptComposer(false);
+    setDossierFlash((current) => (
+      current?.message === markPaidReceiptHint ? null : current
+    ));
+  }, [canMarkPaid, selectedDossier?.intent]);
+
   return (
     <Stack spacing={3}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
