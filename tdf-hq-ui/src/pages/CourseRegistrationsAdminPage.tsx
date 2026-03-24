@@ -563,7 +563,9 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleStatusSummary = Boolean(
     singleVisibleStatus && (status === 'all' || status === singleVisibleStatus),
   );
-  const hasCustomFilters = slug.trim() !== '' || status !== 'all' || limit !== DEFAULT_LIMIT;
+  const hasManualFilters = slug.trim() !== '' || status !== 'all';
+  const hasCustomLimit = limit !== DEFAULT_LIMIT;
+  const hasCustomFilters = hasManualFilters || hasCustomLimit;
   const activeFilterSummary = useMemo(
     () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
     [activeCohortLabel, status, limit],
@@ -585,9 +587,24 @@ export default function CourseRegistrationsAdminPage() {
   const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary && (singleAvailableCohortLabel || showSingleStatusSummary)
     ? summarizedVisibleSourceLabel
     : '';
+  const resetViewLabel = hasManualFilters
+    ? hasCustomLimit
+      ? 'Restablecer vista'
+      : 'Restablecer filtros'
+    : 'Restablecer límite';
+  const resetViewInstruction = hasManualFilters
+    ? hasCustomLimit
+      ? 'Restablece la vista o usa refrescar si esperabas resultados.'
+      : 'Restablece filtros o usa refrescar si esperabas resultados.'
+    : 'Restablece el límite o usa refrescar si esperabas resultados.';
+  const filteredEmptyStateScope = hasManualFilters
+    ? hasCustomLimit
+      ? 'en la vista actual'
+      : 'con los filtros actuales'
+    : 'con el límite actual';
   const filteredEmptyStateMessage = activeFilterSummary
-    ? `No hay inscripciones con los filtros actuales: ${activeFilterSummary}. Restablece filtros o usa refrescar si esperabas resultados.`
-    : 'No hay inscripciones con los filtros actuales. Restablece filtros o usa refrescar si esperabas resultados.';
+    ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${resetViewInstruction}`
+    : `No hay inscripciones ${filteredEmptyStateScope}. ${resetViewInstruction}`;
   const canCopyCsv = (regsQuery.data?.length ?? 0) > 1;
   const showListUtilitySummary = canCopyCsv || Boolean(copyMessage);
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
@@ -624,6 +641,24 @@ export default function CourseRegistrationsAdminPage() {
     showSingleStatusSummary,
     singleAvailableCohortLabel,
     status,
+  ]);
+  const activeViewSummaryMessage = useMemo(() => {
+    if (!hasCustomFilters || !hasVisibleRegistrations) return '';
+    if (!hasManualFilters && hasCustomLimit) {
+      return combinedSingleChoiceLimitSummary
+        ? ''
+        : `Límite actual: hasta ${limit} inscripci${limit === 1 ? 'ón' : 'ones'}.`;
+    }
+    if (!visibleActiveFilterSummary) return '';
+    return `Vista filtrada: ${visibleActiveFilterSummary}.`;
+  }, [
+    combinedSingleChoiceLimitSummary,
+    hasCustomFilters,
+    hasCustomLimit,
+    hasManualFilters,
+    hasVisibleRegistrations,
+    limit,
+    visibleActiveFilterSummary,
   ]);
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
@@ -1400,13 +1435,13 @@ export default function CourseRegistrationsAdminPage() {
             )}
             {hasCustomFilters && hasVisibleRegistrations && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
-                {visibleActiveFilterSummary && (
+                {activeViewSummaryMessage && (
                   <Typography variant="body2" color="text.secondary">
-                    Vista filtrada: {visibleActiveFilterSummary}.
+                    {activeViewSummaryMessage}
                   </Typography>
                 )}
                 <Button size="small" onClick={handleResetFilters}>
-                  Restablecer filtros
+                  {resetViewLabel}
                 </Button>
               </Stack>
             )}
@@ -1467,7 +1502,7 @@ export default function CourseRegistrationsAdminPage() {
                 severity="info"
                 action={(
                   <Button color="inherit" size="small" onClick={handleResetFilters}>
-                    Restablecer filtros
+                    {resetViewLabel}
                   </Button>
                 )}
               >

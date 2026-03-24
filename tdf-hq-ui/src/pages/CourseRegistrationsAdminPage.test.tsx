@@ -577,6 +577,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(thirdContainer.textContent).toContain('Límite actual: hasta 50 inscripciones.');
       expect(thirdContainer.textContent).not.toContain('Vista filtrada: límite 50.');
       expect(thirdContainer.textContent).not.toContain('Límite activo: 50');
+      expect(getButtonByText(thirdContainer, 'Restablecer límite')).toBeTruthy();
+      expect(
+        Array.from(thirdContainer.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Restablecer filtros',
+        ),
+      ).toBe(false);
     });
 
     await thirdRender.cleanup();
@@ -2247,6 +2253,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Ajustar límite')).toBeTruthy();
       expect(container.textContent).not.toContain('Vista filtrada:');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
     });
@@ -2278,7 +2285,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
       expect(container.textContent).not.toContain('Vista filtrada: límite 50.');
       expect(container.textContent).not.toContain('Límite activo: 50');
-      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+      expect(getButtonByText(container, 'Restablecer límite')).toBeTruthy();
     });
 
     await act(async () => {
@@ -2297,7 +2304,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Restablecer filtros'));
+      clickButton(getButtonByText(container, 'Restablecer límite'));
       await flushPromises();
       await flushPromises();
     });
@@ -2334,20 +2341,20 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 50,
       });
       expect(container.textContent).toContain(
-        'No hay inscripciones con los filtros actuales: cohorte Beatmaking 101 (beatmaking-101) · estado pagado · límite 50. Restablece filtros o usa refrescar si esperabas resultados.',
+        'No hay inscripciones en la vista actual: cohorte Beatmaking 101 (beatmaking-101) · estado pagado · límite 50. Restablece la vista o usa refrescar si esperabas resultados.',
       );
       expect(container.textContent).not.toContain(
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.',
       );
       expect(container.textContent).not.toContain('Vista filtrada:');
       expect(container.textContent).not.toContain('No hay inscripciones para esta vista.');
-      expect(countButtonsByText(container, 'Restablecer filtros')).toBe(1);
+      expect(countButtonsByText(container, 'Restablecer vista')).toBe(1);
     });
 
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Restablecer filtros'));
+      clickButton(getButtonByText(container, 'Restablecer vista'));
       await flushPromises();
       await flushPromises();
     });
@@ -2521,8 +2528,11 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 50,
       });
+      expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
       expect(container.textContent).toContain('Mostrando 50 inscripciones.');
       expect(container.textContent).not.toContain('Mostrando 50 inscripciones con los filtros actuales.');
+      expect(container.textContent).not.toContain('Vista filtrada: límite 50.');
+      expect(getButtonByText(container, 'Restablecer límite')).toBeTruthy();
       expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
       expect(
         Array.from(container.querySelectorAll('button')).some(
