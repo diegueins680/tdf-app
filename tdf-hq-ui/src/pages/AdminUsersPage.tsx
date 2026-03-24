@@ -18,6 +18,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Admin, type AdminUser } from '../api/admin';
 import AdminUserCommunicationDialog from '../components/AdminUserCommunicationDialog';
 
+const summarizeUserContacts = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) => {
+  const preferredPhone = user.whatsapp?.trim() || user.primaryPhone?.trim() || '';
+  const email = user.primaryEmail?.trim() || '';
+  const parts = [preferredPhone, email].filter((value) => value !== '');
+  return parts.length > 0 ? parts.join(' · ') : null;
+};
+
 export default function AdminUsersPage() {
   const qc = useQueryClient();
   const [includeInactive, setIncludeInactive] = useState(false);
@@ -48,13 +55,15 @@ export default function AdminUsersPage() {
             label="Incluir inactivos"
           />
           <Tooltip title="Refrescar">
-            <IconButton
-              aria-label="Refrescar lista de usuarios"
-              onClick={handleRefresh}
-              disabled={usersQuery.isFetching}
-            >
-              <RefreshIcon />
-            </IconButton>
+            <span>
+              <IconButton
+                aria-label="Refrescar lista de usuarios"
+                onClick={handleRefresh}
+                disabled={usersQuery.isFetching}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </span>
           </Tooltip>
         </Stack>
       </Stack>
@@ -88,10 +97,11 @@ export default function AdminUsersPage() {
 }
 
 function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommunications: () => void }) {
-  const hasContactInfo = Boolean(user.whatsapp ?? user.primaryPhone ?? user.primaryEmail);
+  const contactSummary = summarizeUserContacts(user);
 
   return (
     <Box
+      data-testid={`admin-user-row-${user.userId}`}
       sx={{
         border: '1px solid rgba(148,163,184,0.3)',
         borderRadius: 2,
@@ -107,9 +117,9 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
         <Typography variant="body2" color="text.secondary">
           {user.partyName} · ID {user.partyId}
         </Typography>
-        {hasContactInfo && (
+        {contactSummary && (
           <Typography variant="body2" color="text.secondary">
-            {user.whatsapp ?? user.primaryPhone ?? 'Sin teléfono'} · {user.primaryEmail ?? 'Sin correo'}
+            {contactSummary}
           </Typography>
         )}
       </Box>
