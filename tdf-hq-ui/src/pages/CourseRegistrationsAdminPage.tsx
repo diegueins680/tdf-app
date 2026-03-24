@@ -250,12 +250,14 @@ const registrationContactSummary = (email: string | null | undefined, phone: str
 const registrationListContextSummary = ({
   cohortLabel,
   createdAt,
+  hasNotes,
   showCohort,
   showSource,
   source,
 }: {
   cohortLabel: string;
   createdAt: string | null | undefined;
+  hasNotes: boolean;
   showCohort: boolean;
   showSource: boolean;
   source: string | null | undefined;
@@ -264,6 +266,7 @@ const registrationListContextSummary = ({
   if (showCohort) parts.push(`Cohorte: ${cohortLabel}`);
   if (showSource) parts.push(`Fuente: ${registrationSourceLabel(source)}`);
   parts.push(`Creado: ${formatDate(createdAt)}`);
+  if (hasNotes) parts.push('Notas internas');
   return parts.join(' · ');
 };
 
@@ -1395,6 +1398,7 @@ export default function CourseRegistrationsAdminPage() {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
+                  const hasRowNotes = Boolean(reg.crAdminNotes?.trim());
                   const showRowCohort = selectedSlug
                     ? rowCohortSlug !== selectedSlug
                     : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
@@ -1402,6 +1406,7 @@ export default function CourseRegistrationsAdminPage() {
                   const rowContextSummary = registrationListContextSummary({
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
+                    hasNotes: hasRowNotes,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
                     source: reg.crSource,
@@ -1415,7 +1420,6 @@ export default function CourseRegistrationsAdminPage() {
                         <Typography variant="body2" color="text.secondary">
                           {registrationContactSummary(reg.crEmail, reg.crPhoneE164)}
                         </Typography>
-                        {reg.crAdminNotes && <Chip size="small" label="Con notas" variant="outlined" sx={{ mt: 1 }} />}
                       </Box>
                       <Box sx={{ minWidth: 180 }}>
                         <Typography variant="body2" color="text.secondary">

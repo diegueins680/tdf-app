@@ -657,6 +657,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('folds real admin-note signals into the existing row summary instead of rendering a separate chip', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crAdminNotes: 'Confirmó pago por WhatsApp.' }),
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'mixing-bootcamp',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crAdminNotes: '   ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasExactText(
+        container,
+        `Cohorte: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')} · Notas internas`,
+      )).toBe(true);
+      expect(hasExactText(
+        container,
+        `Cohorte: Mixing Bootcamp (mixing-bootcamp) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+      )).toBe(true);
+      expect(container.textContent).not.toContain('Con notas');
+      expect(countOccurrences(container, 'Notas internas')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('replaces a single cohort selector with context copy and restores it when multiple cohorts exist', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
