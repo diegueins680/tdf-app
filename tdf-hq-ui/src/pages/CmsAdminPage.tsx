@@ -793,41 +793,48 @@ export default function CmsAdminPage() {
                   Contexto compartido: {sharedVersionContextSummary}.
                 </Typography>
               )}
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-              <TextField
-                select
-                size="small"
-                label="Estado"
-                value={statusFilter}
-                onChange={(e) => {
-                  const next = e.target.value.trim();
-                  setStatusFilter(isStatusFilter(next) ? next : 'all');
-                }}
-                sx={{ minWidth: 140 }}
-              >
-                <MenuItem value="all">Todos</MenuItem>
-                <MenuItem value="published">Publicados</MenuItem>
-                <MenuItem value="draft">Borradores</MenuItem>
-                <MenuItem value="archived">Archivados</MenuItem>
-              </TextField>
-              <TextField
-                size="small"
-                type="number"
-                label="Versión mínima"
-                value={minVersionFilter ?? ''}
-                onChange={(e) => setMinVersionFilter(parseMinVersionFilter(e.target.value))}
-                sx={{ width: 150 }}
-              />
-              {versionListUiState.showToolbarReset && (
-                <Button
-                  size="small"
-                  onClick={resetVersionFilters}
-                >
-                  Limpiar filtros
-                </Button>
+              {versionListUiState.toolbarHint && (
+                <Typography variant="body2" color="text.secondary">
+                  {versionListUiState.toolbarHint}
+                </Typography>
               )}
             </Stack>
+            {versionListUiState.showToolbarFilters && (
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                <TextField
+                  select
+                  size="small"
+                  label="Estado"
+                  value={statusFilter}
+                  onChange={(e) => {
+                    const next = e.target.value.trim();
+                    setStatusFilter(isStatusFilter(next) ? next : 'all');
+                  }}
+                  sx={{ minWidth: 140 }}
+                >
+                  <MenuItem value="all">Todos</MenuItem>
+                  <MenuItem value="published">Publicados</MenuItem>
+                  <MenuItem value="draft">Borradores</MenuItem>
+                  <MenuItem value="archived">Archivados</MenuItem>
+                </TextField>
+                <TextField
+                  size="small"
+                  type="number"
+                  label="Versión mínima"
+                  value={minVersionFilter ?? ''}
+                  onChange={(e) => setMinVersionFilter(parseMinVersionFilter(e.target.value))}
+                  sx={{ width: 150 }}
+                />
+                {versionListUiState.showToolbarReset && (
+                  <Button
+                    size="small"
+                    onClick={resetVersionFilters}
+                  >
+                    Limpiar filtros
+                  </Button>
+                )}
+              </Stack>
+            )}
           </Stack>
           {listQuery.isLoading && <LinearProgress />}
                   {listQuery.error && (

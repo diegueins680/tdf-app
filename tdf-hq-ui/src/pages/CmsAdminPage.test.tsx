@@ -132,6 +132,9 @@ const countActionsByText = (root: ParentNode, labelText: string) =>
 const countExactText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('*')).filter((el) => (el.textContent ?? '').trim() === labelText).length;
 
+const countLabelsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('label')).filter((el) => (el.textContent ?? '').replace('*', '').trim() === labelText).length;
+
 describe('CmsAdminPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -262,6 +265,25 @@ describe('CmsAdminPage', () => {
       expect(countExactText(container, 'records-public')).toBe(1);
       expect(countExactText(container, 'es')).toBe(1);
       expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+    });
+
+    await cleanup();
+  });
+
+  it('hides version filters until the CMS history has enough entries to compare', async () => {
+    listMock.mockResolvedValue([buildContent()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Los filtros aparecerán cuando exista más historial para comparar versiones.',
+      );
+      expect(countLabelsByText(container, 'Estado')).toBe(1);
+      expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
+      expect(countActionsByText(container, 'Limpiar filtros')).toBe(0);
     });
 
     await cleanup();

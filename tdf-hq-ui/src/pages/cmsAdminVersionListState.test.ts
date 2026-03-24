@@ -10,7 +10,9 @@ describe('getCmsVersionListUiState', () => {
     })).toEqual({
       emptyMessage: null,
       showEmptyReset: false,
+      showToolbarFilters: true,
       showToolbarReset: false,
+      toolbarHint: null,
     });
   });
 
@@ -23,7 +25,9 @@ describe('getCmsVersionListUiState', () => {
     })).toEqual({
       emptyMessage: null,
       showEmptyReset: false,
+      showToolbarFilters: true,
       showToolbarReset: true,
+      toolbarHint: null,
     });
   });
 
@@ -37,7 +41,9 @@ describe('getCmsVersionListUiState', () => {
       emptyMessage:
         'Ninguna versión coincide con los filtros actuales. Limpia los filtros para volver a ver el historial completo.',
       showEmptyReset: true,
+      showToolbarFilters: true,
       showToolbarReset: false,
+      toolbarHint: null,
     });
   });
 
@@ -50,7 +56,24 @@ describe('getCmsVersionListUiState', () => {
     })).toEqual({
       emptyMessage: 'No hay versiones guardadas todavía.',
       showEmptyReset: false,
+      showToolbarFilters: false,
       showToolbarReset: false,
+      toolbarHint: null,
+    });
+  });
+
+  it('hides version filters until there is enough history to compare', () => {
+    expect(getCmsVersionListUiState({
+      filteredCount: 1,
+      minVersionFilter: null,
+      statusFilter: 'all',
+      totalVersions: 1,
+    })).toEqual({
+      emptyMessage: null,
+      showEmptyReset: false,
+      showToolbarFilters: false,
+      showToolbarReset: false,
+      toolbarHint: 'Los filtros aparecerán cuando exista más historial para comparar versiones.',
     });
   });
 });
