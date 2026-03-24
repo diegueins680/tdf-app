@@ -180,6 +180,8 @@ const resolveEntryMinutes = (entry: InternTimeEntryDTO) => {
 const normalizeTitle = (value: string) => value.trim().toLowerCase();
 
 const minutesToHours = (minutes: number) => (minutes / 60).toFixed(2);
+const formatCountLabel = (count: number, singular: string, plural: string) =>
+  `${count} ${count === 1 ? singular : plural}`;
 const normalizeOptional = (value?: string | null) => {
   const trimmed = value?.trim() ?? '';
   return trimmed === '' ? null : trimmed;
@@ -518,6 +520,8 @@ export default function InternshipsPage() {
 
   const projects = projectsQuery.data ?? [];
   const tasks = tasksQuery.data ?? [];
+  const showProjectCountChip = projects.length > 0;
+  const showTaskCountChip = tasks.length > 0;
   const todos = todosQuery.data ?? [];
   const entries = entriesQuery.data ?? [];
   const permissions = permissionsQuery.data ?? [];
@@ -946,7 +950,9 @@ export default function InternshipsPage() {
             >
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="h6" fontWeight={700}>Proyectos</Typography>
-                <Chip label={`${projects.length} activos`} variant="outlined" />
+                {showProjectCountChip && (
+                  <Chip label={formatCountLabel(projects.length, 'activo', 'activos')} variant="outlined" />
+                )}
               </Stack>
               {isAdmin && !showProjectComposer && (
                 <Button
@@ -1113,7 +1119,9 @@ export default function InternshipsPage() {
             >
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="h6" fontWeight={700}>Tareas</Typography>
-                <Chip label={`${tasks.length} tareas`} variant="outlined" />
+                {showTaskCountChip && (
+                  <Chip label={formatCountLabel(tasks.length, 'tarea', 'tareas')} variant="outlined" />
+                )}
               </Stack>
               {isAdmin && projects.length > 0 && !showTaskComposer && (
                 <Button

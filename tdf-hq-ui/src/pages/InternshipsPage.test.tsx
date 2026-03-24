@@ -124,6 +124,20 @@ const buildProject = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const buildTask = (overrides: Record<string, unknown> = {}) => ({
+  itId: 'task-1',
+  itProjectId: 'project-1',
+  itProjectName: 'Campana de lanzamiento',
+  itTitle: 'Armar calendario editorial',
+  itDescription: 'Definir entregables y responsables.',
+  itDueAt: null,
+  itStatus: 'todo',
+  itProgress: 0,
+  itAssignedTo: null,
+  itAssignedName: null,
+  ...overrides,
+});
+
 const buildIntern = (overrides: Record<string, unknown> = {}) => ({
   isPartyId: 101,
   isName: 'Ada Lovelace',
@@ -300,6 +314,39 @@ describe('InternshipsPage', () => {
       });
     } finally {
       await cleanup();
+    }
+  });
+
+  it('hides zero-count header chips until work exists and uses singular labels for the first project and task', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).not.toContain('0 activos');
+        expect(container.textContent).not.toContain('0 tareas');
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listProjectsMock.mockResolvedValue([buildProject()]);
+    listTasksMock.mockResolvedValue([buildTask()]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        expect(secondContainer.textContent).toContain('1 activo');
+        expect(secondContainer.textContent).toContain('1 tarea');
+        expect(secondContainer.textContent).not.toContain('1 activos');
+        expect(secondContainer.textContent).not.toContain('1 tareas');
+      });
+    } finally {
+      await secondRender.cleanup();
     }
   });
 
