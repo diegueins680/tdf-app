@@ -12,6 +12,10 @@ run_npm() {
     npm "$@"
 }
 
+mobile_workspace_ready() {
+  node "$ROOT/scripts/mobile-workspace-ready.mjs" --quiet
+}
+
 echo "▶ Linting, type-checking and testing tdf-hq-ui"
 echo "▶ Verifying continuous improvement loop invariants"
 run_npm run verify:auto-loop --prefix "$ROOT"
@@ -22,16 +26,16 @@ run_npm run test --workspace=tdf-hq-ui --prefix "$ROOT"
 echo "▶ Building tdf-hq-ui"
 run_npm run build --workspace=tdf-hq-ui --prefix "$ROOT"
 
-if [ -f "$ROOT/tdf-mobile/package.json" ]; then
+if mobile_workspace_ready; then
   echo "▶ Linting, type-checking and testing tdf-mobile"
   run_npm --prefix "$ROOT/tdf-mobile" run lint
   run_npm --prefix "$ROOT/tdf-mobile" run typecheck
   run_npm --prefix "$ROOT/tdf-mobile" run test
 elif [ "${REQUIRE_MOBILE_WORKSPACE:-0}" = "1" ]; then
-  echo "✖ Missing tdf-mobile workspace. Run: git submodule update --init --recursive" >&2
+  echo "✖ Missing or incomplete tdf-mobile install. Run: git submodule update --init --recursive && (cd tdf-mobile && npm install)" >&2
   exit 1
 else
-  echo "▶ Skipping tdf-mobile checks: tdf-mobile/package.json not found"
+  echo "▶ Skipping tdf-mobile checks: workspace missing or install incomplete"
 fi
 
 BACKEND_DIR="$ROOT/tdf-hq"

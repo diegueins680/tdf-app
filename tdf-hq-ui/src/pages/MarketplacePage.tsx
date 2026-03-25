@@ -215,7 +215,8 @@ const resolveMarketplaceInitialViewState = (
     next.search = params.get('q') ?? '';
   }
   if (params.has('cat')) {
-    next.category = params.get('cat') || 'all';
+    const categoryParam = params.get('cat');
+    next.category = categoryParam == null || categoryParam === '' ? 'all' : categoryParam;
   }
   if (params.has('sort')) {
     const sortParam = params.get('sort');
@@ -230,7 +231,8 @@ const resolveMarketplaceInitialViewState = (
     }
   }
   if (params.has('cond')) {
-    next.condition = params.get('cond') || 'all';
+    const conditionParam = params.get('cond');
+    next.condition = conditionParam == null || conditionParam === '' ? 'all' : conditionParam;
   }
 
   return next;
@@ -243,13 +245,18 @@ const normalizeSavedBuyer = (parsed: SavedBuyer | null): SavedBuyer => ({
   pref: parsed?.pref === 'phone' ? 'phone' : 'email',
 });
 
-const hasBuyerInfo = (buyer: SavedBuyer) =>
-  Boolean(buyer.name?.trim() || buyer.email?.trim() || buyer.phone?.trim());
+const hasBuyerInfo = (buyer: SavedBuyer) => {
+  const name = buyer.name?.trim() ?? '';
+  const email = buyer.email?.trim() ?? '';
+  const phone = buyer.phone?.trim() ?? '';
+  return name !== '' || email !== '' || phone !== '';
+};
 
 const parseEnvNumber = (key: string): number | null => {
   const raw = IMPORT_META_ENV[key];
-  if (!raw) return null;
-  const val = Number(raw);
+  const trimmed = raw?.trim();
+  if (trimmed == null || trimmed === '') return null;
+  const val = Number(trimmed);
   return Number.isFinite(val) ? val : null;
 };
 

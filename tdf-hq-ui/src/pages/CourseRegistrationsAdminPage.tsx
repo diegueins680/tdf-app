@@ -893,7 +893,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleRefreshDossier = () => {
     if (!selectedDossier) return;
-    const requests: Array<Promise<unknown>> = [dossierQuery.refetch()];
+    const requests: Promise<unknown>[] = [dossierQuery.refetch()];
     if (selectedDossierId != null) {
       requests.push(emailEventsQuery.refetch());
     }
@@ -1442,6 +1442,8 @@ export default function CourseRegistrationsAdminPage() {
                             <Chip
                               key={value}
                               clickable
+                              component="button"
+                              type="button"
                               color={registrationStatusChipColor(value)}
                               label={statusFilterChipLabel(value, statusCounts, hasVisibleRegistrations)}
                               variant={status === value ? 'filled' : 'outlined'}

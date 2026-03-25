@@ -3,12 +3,15 @@
 module TDF.ServerExtraSpec (spec) where
 
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Logger (NoLoggingT)
+import Control.Monad.Trans.Reader (ReaderT)
+import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson ((.=))
 import qualified Data.Aeson as A
 import Data.Text (Text)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.Persist
-import Database.Persist.Sql (SqlPersistT, rawExecute)
+import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute)
 import Database.Persist.Sqlite (runSqlite)
 import Test.Hspec
 
@@ -46,6 +49,7 @@ spec = describe "Meta inbox deletion handling" $ do
                                         ]
                                 ]
                             ]
+                    ]
             events = extractMetaInbound payload
         case events of
             [MetaInboundDeleted deletedEvent] -> do
@@ -106,15 +110,15 @@ spec = describe "Meta inbox deletion handling" $ do
                     Just (Entity _ row) -> do
                         M.instagramMessageText row `shouldBe` Just "hola de nuevo"
                         M.instagramMessageDeletedAt row `shouldBe` Just deletedAt
-                visible `shouldHaveLength` 0
+                length visible `shouldBe` 0
 
-runMetaInboxSql :: SqlPersistT IO a -> IO a
+runMetaInboxSql :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a
 runMetaInboxSql action =
     runSqlite ":memory:" $ do
         initializeMetaInboxSchema
         action
 
-initializeMetaInboxSchema :: SqlPersistT IO ()
+initializeMetaInboxSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializeMetaInboxSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
     rawExecute

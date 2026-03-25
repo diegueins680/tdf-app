@@ -210,19 +210,20 @@ function parseReportOutput(result, fallbackToolName) {
       };
     }
 
+    const explicitOk = typeof parsed.ok === 'boolean' ? parsed.ok : result.code === 0;
     if (Array.isArray(parsed.findings)) {
       return {
         ...parsed,
-        ok: parsed.findings.length === 0,
+        ok: explicitOk && parsed.findings.length === 0,
         tool: parsed.tool ?? fallbackToolName,
       };
     }
 
     return {
-      ok: result.code === 0,
+      ok: explicitOk,
       findings: [],
       raw: parsed,
-      tool: fallbackToolName,
+      tool: parsed.tool ?? fallbackToolName,
     };
   } catch {
     return {
@@ -248,6 +249,10 @@ function logStep(label) {
 
 function hasFindings(report) {
   return Array.isArray(report.findings) && report.findings.length > 0;
+}
+
+function reportNeedsAttention(report) {
+  return report.ok !== true || hasFindings(report);
 }
 
 function findingKey(finding) {
@@ -904,9 +909,9 @@ async function runIteration(repoRoot, config, iteration) {
 
   logStep(`Iteration ${iteration}: UI audit`);
   let uiReport = await generateUiReport(repoRoot, context, config);
-  if (hasFindings(uiReport)) {
+  if (reportNeedsAttention(uiReport)) {
     if (!config.uiFixCommand) {
-      throw new Error(`UI audit found issues. Configure uiFixCommand or inspect ${context.ui_report_file}.`);
+      throw new Error(`UI audit did not pass. Configure uiFixCommand or inspect ${context.ui_report_file}.`);
     }
 
     logStep(`Iteration ${iteration}: UI fixes`);
@@ -915,17 +920,17 @@ async function runIteration(repoRoot, config, iteration) {
     });
 
     uiReport = await generateUiReport(repoRoot, context, config);
-    if (hasFindings(uiReport)) {
-      throw new Error(`UI findings remain after uiFixCommand. See ${context.ui_report_file}.`);
+    if (reportNeedsAttention(uiReport)) {
+      throw new Error(`UI audit still does not pass after uiFixCommand. See ${context.ui_report_file}.`);
     }
   }
 
   logStep(`Iteration ${iteration}: formal verification`);
   let formalReport = await generateFormalReport(repoRoot, context, config);
-  if (hasFindings(formalReport)) {
+  if (reportNeedsAttention(formalReport)) {
     if (!config.formalFixCommand) {
       throw new Error(
-        `Formal verification found issues. Configure formalFixCommand or inspect ${context.formal_report_file}.`,
+        `Formal verification did not pass. Configure formalFixCommand or inspect ${context.formal_report_file}.`,
       );
     }
 
@@ -935,8 +940,8 @@ async function runIteration(repoRoot, config, iteration) {
     });
 
     formalReport = await generateFormalReport(repoRoot, context, config);
-    if (hasFindings(formalReport)) {
-      throw new Error(`Formal findings remain after formalFixCommand. See ${context.formal_report_file}.`);
+    if (reportNeedsAttention(formalReport)) {
+      throw new Error(`Formal verification still does not pass after formalFixCommand. See ${context.formal_report_file}.`);
     }
   }
 

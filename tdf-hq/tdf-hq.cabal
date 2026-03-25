@@ -211,6 +211,7 @@ test-suite tdf-hq-test
     TDF.Server
     TDF.ServerAdmin
     TDF.ServerExtra
+    TDF.ServerExtraSpec
     TDF.ServerInstagramOAuth
     TDF.ServerInternships
     TDF.ServerProposals

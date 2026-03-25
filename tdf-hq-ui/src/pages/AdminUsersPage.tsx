@@ -20,7 +20,8 @@ import AdminUserCommunicationDialog from '../components/AdminUserCommunicationDi
 
 const normalizeContactValue = (value?: string | null) => {
   const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
+  if (trimmed == null || trimmed === '') return null;
+  return trimmed;
 };
 
 const getUserContactSummary = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) => {
@@ -52,6 +53,7 @@ export default function AdminUsersPage() {
     () => (usersQuery.data ?? []).filter((user) => !hasUserContactChannel(user)).length,
     [usersQuery.data],
   );
+  const usersMissingContactVerb = usersMissingContactCount === 1 ? 'sigue' : 'siguen';
 
   return (
     <>
@@ -86,7 +88,7 @@ export default function AdminUsersPage() {
             <Typography variant="body2" color="text.secondary">
               Comunicación solo aparece cuando el usuario ya tiene WhatsApp, teléfono o correo.
               {` ${usersMissingContactCount} usuario${usersMissingContactCount === 1 ? '' : 's'} `}
-              siguen sin canal de contacto; complétalo desde Perfil.
+              {usersMissingContactVerb} sin canal de contacto; complétalo desde Perfil.
             </Typography>
           )}
         </Stack>

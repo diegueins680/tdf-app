@@ -58,7 +58,15 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
 const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
 
 const getButtonsByText = (root: ParentNode, labelText: string) =>
-  Array.from(root.querySelectorAll('button')).filter((element) => buttonText(element) === labelText) as HTMLButtonElement[];
+  Array.from(root.querySelectorAll('button')).filter((element) => buttonText(element) === labelText);
+
+const getSearchInput = (root: ParentNode) => {
+  const input = root.querySelector('input[aria-label="Buscar contactos"]');
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error('Search input not found');
+  }
+  return input;
+};
 
 const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
   const button = root.querySelector(`button[aria-label="${labelText}"]`);
@@ -250,7 +258,7 @@ describe('PartiesPage', () => {
 
     try {
       await waitForExpectation(() => {
-        const bodyRows = Array.from(container.querySelectorAll('tbody tr')) as HTMLTableRowElement[];
+        const bodyRows = Array.from(container.querySelectorAll<HTMLTableRowElement>('tbody tr'));
         expect(getColumnHeaders(container)).toEqual(['Nombre', 'Email', 'Instagram', 'Acciones']);
         expect(bodyRows).toHaveLength(2);
         expect(container.textContent).toContain('Los Navegantes');
@@ -298,16 +306,15 @@ describe('PartiesPage', () => {
 
     try {
       await waitForExpectation(() => {
-        const searchInput = container.querySelector('input[aria-label="Buscar contactos"]') as HTMLInputElement | null;
-        expect(searchInput).not.toBeNull();
-        expect(searchInput?.getAttribute('placeholder')).toBe('Buscar por nombre, email o Instagram');
+        const searchInput = getSearchInput(container);
+        expect(searchInput.getAttribute('placeholder')).toBe('Buscar por nombre, email o Instagram');
         expect(container.querySelector('table')).not.toBeNull();
         expect(container.textContent).toContain('Los Navegantes');
         expect(container.textContent).toContain('Ada Lovelace');
       });
 
       await act(async () => {
-        setInputValue(container.querySelector('input[aria-label="Buscar contactos"]') as HTMLInputElement, 'ada@example.com');
+        setInputValue(getSearchInput(container), 'ada@example.com');
         await flushPromises();
       });
 
@@ -319,7 +326,7 @@ describe('PartiesPage', () => {
       });
 
       await act(async () => {
-        setInputValue(container.querySelector('input[aria-label="Buscar contactos"]') as HTMLInputElement, 'sin-coincidencias');
+        setInputValue(getSearchInput(container), 'sin-coincidencias');
         await flushPromises();
       });
 
@@ -337,8 +344,7 @@ describe('PartiesPage', () => {
       });
 
       await waitForExpectation(() => {
-        const searchInput = container.querySelector('input[aria-label="Buscar contactos"]') as HTMLInputElement | null;
-        expect(searchInput?.value).toBe('');
+        expect(getSearchInput(container).value).toBe('');
         expect(container.querySelector('table')).not.toBeNull();
         expect(container.textContent).toContain('Los Navegantes');
         expect(container.textContent).toContain('Ada Lovelace');

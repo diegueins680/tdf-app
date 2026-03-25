@@ -531,7 +531,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
 
     const cappedRegistrations = buildRegistrations(200);
-    listRegistrationsMock.mockImplementation(async (params) => cappedRegistrations.slice(0, params?.limit ?? 200));
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(cappedRegistrations.slice(0, params?.limit ?? 200)));
 
     const secondContainer = document.createElement('div');
     document.body.appendChild(secondContainer);
@@ -600,7 +600,8 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 200,
       });
-      expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).toContain('Fuente: landing');
@@ -1137,7 +1138,9 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Mostrando una sola fuente: landing.');
+      expect(container.textContent).toContain('Estado disponible');
+      expect(container.textContent).toContain('Pendiente de pago');
+      expect(container.textContent).toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain('Cohorte: Mixing Bootcamp (mixing-bootcamp)');
@@ -1201,7 +1204,9 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Todas las inscripciones visibles están sin fuente registrada.');
+      expect(container.textContent).toContain('Estado disponible');
+      expect(container.textContent).toContain('Pendiente de pago');
+      expect(container.textContent).toContain('Fuente visible: sin fuente registrada.');
       expect(container.textContent).not.toContain('Mostrando una sola fuente:');
       expect(container.textContent).not.toContain('Fuente: Sin fuente');
       expect(container.textContent).toContain('Ada Lovelace');
@@ -1226,12 +1231,15 @@ describe('CourseRegistrationsAdminPage', () => {
       crStatus: 'cancelled',
     });
 
-    listRegistrationsMock.mockImplementation(async (params) => {
-      if (params?.status === 'paid') return [paidRegistration];
-      if (params?.status === 'cancelled') return [cancelledRegistration];
-      if (params?.status === 'pending_payment') return [pendingRegistration];
-      return [pendingRegistration, paidRegistration, cancelledRegistration];
-    });
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(
+      params?.status === 'paid'
+        ? [paidRegistration]
+        : params?.status === 'cancelled'
+          ? [cancelledRegistration]
+          : params?.status === 'pending_payment'
+            ? [pendingRegistration]
+            : [pendingRegistration, paidRegistration, cancelledRegistration],
+    ));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -1271,8 +1279,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).not.toContain('Ada Lovelace');
       expect(container.textContent).not.toContain('Katherine Johnson');
-      expect(container.textContent).toContain('Estado disponible');
-      expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pagado');
+      expect(container.textContent).toContain(
+        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
+      );
       expect(container.textContent).not.toContain('Vista filtrada: estado pagado.');
       expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
     });
@@ -1317,12 +1328,15 @@ describe('CourseRegistrationsAdminPage', () => {
       crStatus: 'cancelled',
     });
 
-    listRegistrationsMock.mockImplementation(async (params) => {
-      if (params?.status === 'paid') return [paidRegistration];
-      if (params?.status === 'cancelled') return [cancelledRegistration];
-      if (params?.status === 'pending_payment') return [pendingRegistration];
-      return [pendingRegistration, paidRegistration, cancelledRegistration];
-    });
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(
+      params?.status === 'paid'
+        ? [paidRegistration]
+        : params?.status === 'cancelled'
+          ? [cancelledRegistration]
+          : params?.status === 'pending_payment'
+            ? [pendingRegistration]
+            : [pendingRegistration, paidRegistration, cancelledRegistration],
+    ));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -2360,7 +2374,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
   it('shows when the list is filtered and lets admins reset filters in one step', async () => {
     const cappedRegistrations = buildRegistrations(200);
-    listRegistrationsMock.mockImplementation(async (params) => cappedRegistrations.slice(0, params?.limit ?? 200));
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(cappedRegistrations.slice(0, params?.limit ?? 200)));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -2596,7 +2610,7 @@ describe('CourseRegistrationsAdminPage', () => {
       }
       return { crStatus: 'pending_payment' };
     });
-    listRegistrationsMock.mockImplementation(async (params) => registrations.slice(0, params?.limit ?? 200));
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(registrations.slice(0, params?.limit ?? 200)));
 
     const container = document.createElement('div');
     document.body.appendChild(container);

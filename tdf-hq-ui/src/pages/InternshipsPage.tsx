@@ -290,7 +290,7 @@ export default function InternshipsPage() {
     queryFn: Internships.listPermissions,
     enabled: canAccess,
   });
-  const interns = internsQuery.data ?? [];
+  const interns = useMemo(() => internsQuery.data ?? [], [internsQuery.data]);
 
   useEffect(() => {
     if (!profileQuery.data) return;

@@ -369,23 +369,22 @@ export default function CmsAdminPage() {
     [formattedPayload, livePayloadPretty],
   );
   const safeDraftDiff = Array.isArray(draftVsLiveDiff) ? draftVsLiveDiff : [];
-  const safeFilteredVersions = Array.isArray(filteredVersions) ? filteredVersions : [];
   const sharedVersionSlug = useMemo(() => {
     const slugs = Array.from(new Set(
-      safeFilteredVersions
+      filteredVersions
         .map((version) => version.ccdSlug.trim())
         .filter((value) => value !== ''),
     ));
     return slugs.length === 1 ? (slugs[0] ?? null) : null;
-  }, [safeFilteredVersions]);
+  }, [filteredVersions]);
   const sharedVersionLocale = useMemo(() => {
     const localesInView = Array.from(new Set(
-      safeFilteredVersions
+      filteredVersions
         .map((version) => version.ccdLocale.trim())
         .filter((value) => value !== ''),
     ));
     return localesInView.length === 1 ? (localesInView[0] ?? null) : null;
-  }, [safeFilteredVersions]);
+  }, [filteredVersions]);
   const sharedVersionContextSummary = useMemo(() => {
     const parts: string[] = [];
     if (sharedVersionSlug) parts.push(`slug ${sharedVersionSlug}`);
@@ -394,12 +393,12 @@ export default function CmsAdminPage() {
   }, [sharedVersionLocale, sharedVersionSlug]);
   const versionListUiState = useMemo(
     () => getCmsVersionListUiState({
-      filteredCount: safeFilteredVersions.length,
+      filteredCount: filteredVersions.length,
       minVersionFilter,
       statusFilter,
       totalVersions: versions.length,
     }),
-    [minVersionFilter, safeFilteredVersions.length, statusFilter, versions.length],
+    [filteredVersions.length, minVersionFilter, statusFilter, versions.length],
   );
   const editingSourceChipLabel = editingFromId
     ? editingVersion != null
@@ -793,7 +792,7 @@ export default function CmsAdminPage() {
             <Stack spacing={0.75}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="h6" fontWeight={800}>Versiones</Typography>
-                <Chip label={`${safeFilteredVersions.length}/${versions.length}`} size="small" />
+                <Chip label={`${filteredVersions.length}/${versions.length}`} size="small" />
               </Stack>
               {sharedVersionContextSummary && (
                 <Typography variant="body2" color="text.secondary">
@@ -860,7 +859,7 @@ export default function CmsAdminPage() {
             </Alert>
           )}
           <Stack spacing={1.5}>
-            {safeFilteredVersions.map((v) => {
+            {filteredVersions.map((v) => {
               const rowActions = getCmsVersionRowActions(v.ccdStatus);
 
               return (

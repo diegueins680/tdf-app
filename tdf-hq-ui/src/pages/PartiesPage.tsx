@@ -422,7 +422,7 @@ export default function PartiesPage() {
               </Button>
             )}
           >
-            No hay contactos que coincidan con "{trimmedSearch}". Limpia la búsqueda para volver a ver toda la lista.
+            {`No hay contactos que coincidan con "${trimmedSearch}". Limpia la búsqueda para volver a ver toda la lista.`}
           </Alert>
         ) : (
           <>

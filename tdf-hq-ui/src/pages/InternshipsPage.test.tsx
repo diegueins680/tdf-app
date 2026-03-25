@@ -4,7 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
 const listInternsMock = jest.fn<() => Promise<unknown[]>>();
-const getProfileMock = jest.fn<() => Promise<unknown | null>>();
+const getProfileMock = jest.fn<() => Promise<Record<string, unknown> | null>>();
 const listProjectsMock = jest.fn<() => Promise<unknown[]>>();
 const listTasksMock = jest.fn<() => Promise<unknown[]>>();
 const listTodosMock = jest.fn<() => Promise<unknown[]>>();
@@ -163,7 +163,7 @@ const buildPermission = (overrides: Record<string, unknown> = {}) => ({
 });
 
 const getButtonsByText = (root: ParentNode, labelText: string) =>
-  Array.from(root.querySelectorAll('button')).filter((element) => (element.textContent ?? '').trim() === labelText) as HTMLButtonElement[];
+  Array.from(root.querySelectorAll('button')).filter((element) => (element.textContent ?? '').trim() === labelText);
 
 const clickButton = async (button: HTMLButtonElement) => {
   await act(async () => {

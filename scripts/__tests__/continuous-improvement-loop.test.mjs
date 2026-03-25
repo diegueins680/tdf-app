@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -194,6 +195,30 @@ test('auditUiSource does not treat arrow functions as the end of a labeled tag',
   assert.equal(findings.length, 0);
 });
 
+test('auditUiSource ignores commented-out pseudo-tags', () => {
+  const source = `
+    {/* <IconButton onClick={toggleSidebar}><MenuIcon /></IconButton> */}
+    <IconButton aria-label="Open inbox">
+      <MailIcon />
+    </IconButton>
+  `;
+
+  const findings = auditUiSource(source, 'Example.tsx');
+  assert.equal(findings.length, 0);
+});
+
+test('auditUiSource ignores quoted pseudo-tags', () => {
+  const source = `
+    const template = '<IconButton onClick={toggleSidebar}><MenuIcon /></IconButton>';
+    <IconButton aria-label="Open inbox">
+      <MailIcon />
+    </IconButton>
+  `;
+
+  const findings = auditUiSource(source, 'Example.tsx');
+  assert.equal(findings.length, 0);
+});
+
 test('buildDefaultIdea ignores TODO-like code literals and keeps real comment TODOs', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'discovery-test-'));
   const repoDir = path.join(tempRoot, 'repo');
@@ -358,6 +383,109 @@ test('continuous-improvement-loop stages tracked files modified during an iterat
   }
 });
 
+test('continuous-improvement-loop blocks custom UI audit failures even when findings are empty', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-ui-report-test-'));
+  const remoteDir = path.join(tempRoot, 'remote.git');
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '--bare', remoteDir], tempRoot);
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
+    await git(['add', 'tracked.txt']);
+    await git(['commit', '-m', 'initial']);
+    await git(['remote', 'add', 'origin', remoteDir]);
+    await git(['push', '-u', 'origin', 'main']);
+
+    const configPath = path.join(repoDir, 'loop-config.json');
+    await fs.writeFile(
+      configPath,
+      JSON.stringify(
+        {
+          pollGitHub: false,
+          iterationDelaySeconds: 0,
+          ideaCommand:
+            "printf '# UI report test\\nSource: test\\nTarget: tracked.txt:1\\nReason: ui audit failure must stop the loop even when findings are empty.\\n'",
+          implementationCommand: "printf 'after\\n' >> tracked.txt",
+          uiAuditCommand: "printf '{\"ok\":false,\"findings\":[],\"message\":\"blocked\"}\\n'",
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    await git(['add', 'loop-config.json']);
+    await git(['commit', '-m', 'config']);
+
+    await assert.rejects(
+      () => execFileAsync('node', [loopScriptPath, '--config', 'loop-config.json', '--max-iterations', '1'], { cwd: repoDir }),
+      /UI audit did not pass/,
+    );
+
+    const log = await git(['log', '-1', '--pretty=%s']);
+    assert.equal(log.stdout.trim(), 'config');
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('continuous-improvement-loop blocks custom formal failures even when findings are empty', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-formal-report-test-'));
+  const remoteDir = path.join(tempRoot, 'remote.git');
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '--bare', remoteDir], tempRoot);
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
+    await git(['add', 'tracked.txt']);
+    await git(['commit', '-m', 'initial']);
+    await git(['remote', 'add', 'origin', remoteDir]);
+    await git(['push', '-u', 'origin', 'main']);
+
+    const configPath = path.join(repoDir, 'loop-config.json');
+    await fs.writeFile(
+      configPath,
+      JSON.stringify(
+        {
+          pollGitHub: false,
+          iterationDelaySeconds: 0,
+          ideaCommand:
+            "printf '# Formal report test\\nSource: test\\nTarget: tracked.txt:1\\nReason: formal verification failure must stop the loop even when findings are empty.\\n'",
+          implementationCommand: "printf 'after\\n' >> tracked.txt",
+          uiAuditCommand: "printf '[]\\n'",
+          formalVerifyCommand: "printf '{\"ok\":false,\"findings\":[],\"message\":\"blocked\"}\\n'",
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    await git(['add', 'loop-config.json']);
+    await git(['commit', '-m', 'config']);
+
+    await assert.rejects(
+      () => execFileAsync('node', [loopScriptPath, '--config', 'loop-config.json', '--max-iterations', '1'], { cwd: repoDir }),
+      /Formal verification did not pass/,
+    );
+
+    const log = await git(['log', '-1', '--pretty=%s']);
+    assert.equal(log.stdout.trim(), 'config');
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('waitForGreenCi retries transient GitHub polling fetch failures', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-ci-test-'));
   const repoDir = path.join(tempRoot, 'repo');
@@ -431,4 +559,15 @@ test('waitForGreenCi retries transient GitHub polling fetch failures', async () 
     global.fetch = originalFetch;
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('tdf-hq-ui Jest config keeps preset as a preset root specifier', () => {
+  const repoDir = path.resolve(testDir, '..', '..');
+  const uiDir = path.join(repoDir, 'tdf-hq-ui');
+  const requireFromUi = createRequire(path.join(uiDir, 'package.json'));
+  const config = requireFromUi('./jest.config.cjs');
+
+  assert.equal(typeof config.preset, 'string');
+  assert.notEqual(path.basename(config.preset), 'jest-preset.js');
+  assert.ok(requireFromUi.resolve(`${config.preset}/jest-preset.js`).endsWith(path.join('ts-jest', 'presets', 'default-esm', 'jest-preset.js')));
 });

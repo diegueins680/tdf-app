@@ -76,9 +76,9 @@ const renderPage = async (container: HTMLElement) => {
 const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
 
 const getButtonsByText = (root: ParentNode, labelText: string) =>
-  Array.from(root.querySelectorAll('button')).filter((element) => buttonText(element) === labelText) as HTMLButtonElement[];
+  Array.from(root.querySelectorAll<HTMLElement>('button, a')).filter((element) => buttonText(element) === labelText);
 
-const clickButton = async (button: HTMLButtonElement) => {
+const clickButton = async (button: HTMLElement) => {
   await act(async () => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await flushPromises();
