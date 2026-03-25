@@ -22,35 +22,19 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
       - name: Install Koyeb CLI
         run: |
-          set -euo pipefail
           sudo apt-get update -y
           sudo apt-get install -y jq ca-certificates
-          RELEASE_API="https://api.github.com/repos/koyeb/koyeb-cli/releases/latest"
-          CANDIDATES=$(curl -fsSL "$RELEASE_API" | jq -r '.assets[].browser_download_url')
-          LATEST_URL=""
-          for pat in 'linux.*amd64.*\.tar\.gz' 'linux.*x86_64.*\.tar\.gz' 'Linux_x86_64\.tar\.gz' 'linux-amd64\.tar\.gz' 'linux-x86_64\.tar\.gz'; do
-            LATEST_URL=$(echo "$CANDIDATES" | grep -iE "$pat" | head -n1 || true)
-            [ -n "$LATEST_URL" ] && break
-          done
-          if [ -z "$LATEST_URL" ]; then
-            LATEST_URL=$(echo "$CANDIDATES" | grep -iE 'linux.*\.tar\.gz' | head -n1 || true)
-          fi
-          if [ -z "$LATEST_URL" ] || [ "$LATEST_URL" = "null" ]; then
-            echo "Failed to resolve Koyeb CLI download URL" >&2
-            exit 1
-          fi
-          echo "Downloading Koyeb CLI from $LATEST_URL"
-          curl -fsSL "$LATEST_URL" -o /tmp/koyeb.tar.gz
-          tar -xzf /tmp/koyeb.tar.gz -C /tmp
-          BIN_PATH=$(find /tmp -maxdepth 2 -type f -name 'koyeb*' | head -n1 || true)
-          if [ -z "$BIN_PATH" ]; then
-            echo "Koyeb binary not found after extraction" >&2
-            exit 1
-          fi
-          sudo install "$BIN_PATH" /usr/local/bin/koyeb
-          /usr/local/bin/koyeb version
+          node ./scripts/install-koyeb-cli.mjs
       - name: Deploy image to Koyeb
         env:
           KOYEB_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
