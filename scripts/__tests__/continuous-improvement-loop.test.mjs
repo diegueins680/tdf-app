@@ -17,7 +17,12 @@ import {
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
 import { waitForGreenCi } from '../continuous-improvement-loop.mjs';
-import { buildDefaultIdea } from '../lib/discovery.mjs';
+import {
+  buildDefaultIdea,
+  chooseDiscoveryLane,
+  discoverImprovementIdea,
+  verifyDiscoveryPolicyModel,
+} from '../lib/discovery.mjs';
 import { findExtractedKoyebBinary, selectKoyebDownloadUrl } from '../lib/koyeb-cli.mjs';
 import { auditUiSource } from '../lib/ui-static-audit.mjs';
 import { installKoyebCli } from '../install-koyeb-cli.mjs';
@@ -254,6 +259,95 @@ test('verifyImprovementLoopModel passes its own safety checks', () => {
   assert.equal(report.ok, true);
   assert.equal(report.findings.length, 0);
   assert.ok(report.reachableStates.includes('pollCi'));
+  assert.equal(report.discoveryPolicy?.ok, true);
+});
+
+test('verifyDiscoveryPolicyModel passes its own fairness checks', () => {
+  const report = verifyDiscoveryPolicyModel();
+
+  assert.equal(report.ok, true);
+  assert.equal(report.findings.length, 0);
+  assert.ok(report.casesChecked > 0);
+});
+
+test('chooseDiscoveryLane alternates equal-priority lanes and prefers the first tie for backend', () => {
+  const candidates = {
+    ui: { lane: 'ui', priority: 1, idea: { source: 'ui-fallback' } },
+    backend: { lane: 'backend', priority: 1, idea: { source: 'backend-fallback' } },
+  };
+
+  assert.equal(chooseDiscoveryLane(candidates, { lastLane: '' }), 'backend');
+  assert.equal(chooseDiscoveryLane(candidates, { lastLane: 'backend' }), 'ui');
+  assert.equal(chooseDiscoveryLane(candidates, { lastLane: 'ui' }), 'backend');
+});
+
+test('buildDefaultIdea prefers a real UI finding over a backend fallback', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'discovery-priority-test-'));
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(path.join(repoDir, 'tdf-hq-ui', 'src'), { recursive: true });
+  await fs.mkdir(path.join(repoDir, 'tdf-hq', 'app'), { recursive: true });
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init']);
+    await fs.writeFile(
+      path.join(repoDir, 'tdf-hq-ui', 'src', 'Example.tsx'),
+      [
+        'export function Example() {',
+        '  return (',
+        '    <IconButton onClick={toggleSidebar}>',
+        '      <MenuIcon />',
+        '    </IconButton>',
+        '  );',
+        '}',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    await git(['add', 'tdf-hq-ui/src/Example.tsx']);
+
+    const idea = await buildDefaultIdea(repoDir, { lastLane: 'ui' });
+    assert.equal(idea.source, 'builtin-ui-audit');
+    assert.equal(idea.lane, 'ui');
+    assert.match(idea.markdown, /Lane: ui/);
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('discoverImprovementIdea persists backend and ui lane rotation between fallback iterations', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'discovery-rotation-test-'));
+  const repoDir = path.join(tempRoot, 'repo');
+  const statePath = path.join(tempRoot, 'discovery-state.json');
+  await fs.mkdir(path.join(repoDir, 'tdf-hq-ui', 'src'), { recursive: true });
+  await fs.mkdir(path.join(repoDir, 'tdf-hq', 'app'), { recursive: true });
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init']);
+    await fs.writeFile(path.join(repoDir, 'tdf-hq-ui', 'src', 'Clean.tsx'), 'export const ok = true;\n', 'utf8');
+    await fs.writeFile(path.join(repoDir, 'tdf-hq', 'app', 'Main.hs'), 'main = putStrLn "ok"\n', 'utf8');
+    await git(['add', 'tdf-hq-ui/src/Clean.tsx', 'tdf-hq/app/Main.hs']);
+
+    const firstIdea = await discoverImprovementIdea(repoDir, { statePath });
+    assert.equal(firstIdea.lane, 'backend');
+    assert.equal(firstIdea.source, 'builtin-backend-fallback');
+    assert.match(firstIdea.markdown, /Lane: backend/);
+
+    const secondIdea = await discoverImprovementIdea(repoDir, { statePath });
+    assert.equal(secondIdea.lane, 'ui');
+    assert.equal(secondIdea.source, 'builtin-ui-fallback');
+    assert.match(secondIdea.markdown, /Lane: ui/);
+
+    const state = JSON.parse(await fs.readFile(statePath, 'utf8'));
+    assert.equal(state.lastLane, 'ui');
+    assert.equal(state.counts.backend, 1);
+    assert.equal(state.counts.ui, 1);
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test('auditUiSource flags unlabeled icon buttons and unlabeled images', () => {

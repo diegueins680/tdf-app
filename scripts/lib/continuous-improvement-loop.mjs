@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { verifyDiscoveryPolicyModel } from './discovery.mjs';
 
 const SUCCESSFUL_CHECK_CONCLUSIONS = new Set(['success', 'neutral', 'skipped']);
 const FAILED_CHECK_CONCLUSIONS = new Set([
@@ -415,12 +416,18 @@ export function verifyImprovementLoopModel() {
     findings.push('Commit is reachable without a formal verification step.');
   }
 
+  const discoveryPolicy = verifyDiscoveryPolicyModel();
+  if (!discoveryPolicy.ok) {
+    findings.push(...discoveryPolicy.findings.map((finding) => `Discovery policy: ${finding}`));
+  }
+
   return {
     ok: findings.length === 0,
     findings,
     initial: model.initial,
     states,
     reachableStates: [...reachable].sort(),
+    discoveryPolicy,
   };
 }
 

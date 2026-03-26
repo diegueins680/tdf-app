@@ -6,7 +6,7 @@ import process from 'node:process';
 import { execFile, spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
-import { buildDefaultIdea } from './lib/discovery.mjs';
+import { discoverImprovementIdea } from './lib/discovery.mjs';
 import { collectUiFindings, summarizeUiFindings } from './lib/ui-static-audit.mjs';
 import {
   buildCommitContext,
@@ -378,7 +378,7 @@ async function generateIdea(repoRoot, context, config) {
     };
   }
 
-  const idea = await buildDefaultIdea(repoRoot);
+  const idea = await discoverImprovementIdea(repoRoot);
   await fs.writeFile(context.idea_file, idea.markdown, 'utf8');
   const metadata = parseIdeaMarkdown(idea.markdown);
   return {
