@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import PublicBrandBar from '../../components/PublicBrandBar';
+import EnrollmentSuccessDialog from '../../components/EnrollmentSuccessDialog';
 
 export default function InscripcionPage() {
   const { slug } = useParams();
@@ -22,6 +23,7 @@ export default function InscripcionPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function InscripcionPage() {
       const body = (await res.json().catch(() => ({}))) as { ok?: boolean };
       if (body.ok) {
         setDone(true);
+        setShowSuccessDialog(true);
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(storageKey, JSON.stringify({ name, email }));
         }
@@ -122,15 +125,18 @@ export default function InscripcionPage() {
 
   if (done) {
     return renderFrame(
-      <Stack spacing={2}>
-        <Typography variant="h4" fontWeight={800}>
-          ¡Listo! 🎉
-        </Typography>
-        <Typography variant="body1" color="rgba(226,232,240,0.85)">
-          Hemos recibido tus datos para <strong>{title}</strong>. Revisa tu correo y WhatsApp; te enviaremos los
-          siguientes pasos y confirmación de cupo.
-        </Typography>
-      </Stack>,
+      <>
+        <EnrollmentSuccessDialog open={showSuccessDialog} onClose={() => setShowSuccessDialog(false)} />
+        <Stack spacing={2}>
+          <Typography variant="h4" fontWeight={800}>
+            ¡Listo! 🎉
+          </Typography>
+          <Typography variant="body1" color="rgba(226,232,240,0.85)">
+            Hemos recibido tus datos para <strong>{title}</strong>. Revisa tu correo y WhatsApp; te enviaremos los
+            siguientes pasos y confirmación de cupo.
+          </Typography>
+        </Stack>
+      </>,
     );
   }
 
