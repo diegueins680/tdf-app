@@ -1,4 +1,5 @@
 import { get, post } from './client';
+import { assertNever } from '../utils/assertNever';
 
 export interface SocialMessage {
   externalId: string;
@@ -81,32 +82,30 @@ export const SocialInboxAPI = {
 
     const safeExternalId = payload.externalId?.trim();
 
-    let result: ReplyStatusResponse;
-    switch (channel) {
-      case 'instagram':
-        result = await post<ReplyStatusResponse>('/instagram/reply', {
-          irSenderId: senderId,
-          irMessage: message,
-          ...(safeExternalId ? { irExternalId: safeExternalId } : {}),
-        });
-        break;
-      case 'facebook':
-        result = await post<ReplyStatusResponse>('/facebook/reply', {
-          frSenderId: senderId,
-          frMessage: message,
-          ...(safeExternalId ? { frExternalId: safeExternalId } : {}),
-        });
-        break;
-      case 'whatsapp':
-        result = await post<ReplyStatusResponse>('/whatsapp/reply', {
-          wrSenderId: senderId,
-          wrMessage: message,
-          ...(safeExternalId ? { wrExternalId: safeExternalId } : {}),
-        });
-        break;
-      default:
-        throw new Error('Canal no soportado.');
-    }
+    const result = await (async (): Promise<ReplyStatusResponse> => {
+      switch (channel) {
+        case 'instagram':
+          return post<ReplyStatusResponse>('/instagram/reply', {
+            irSenderId: senderId,
+            irMessage: message,
+            ...(safeExternalId ? { irExternalId: safeExternalId } : {}),
+          });
+        case 'facebook':
+          return post<ReplyStatusResponse>('/facebook/reply', {
+            frSenderId: senderId,
+            frMessage: message,
+            ...(safeExternalId ? { frExternalId: safeExternalId } : {}),
+          });
+        case 'whatsapp':
+          return post<ReplyStatusResponse>('/whatsapp/reply', {
+            wrSenderId: senderId,
+            wrMessage: message,
+            ...(safeExternalId ? { wrExternalId: safeExternalId } : {}),
+          });
+      }
+
+      return assertNever(channel, 'social channel');
+    })();
 
     if (result?.status === 'error') {
       throw new Error(result?.message ?? 'No se pudo enviar el mensaje.');

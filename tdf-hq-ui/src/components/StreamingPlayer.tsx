@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Box, Stack, Typography, Button, Chip } from '@mui/material';
 import type { NormalizedStreamingSource, StreamingSource } from '../utils/media';
 import { normalizeStreamingSource } from '../utils/media';
+import { assertNever } from '../utils/assertNever';
 
 export type StreamingPlayerVariant = 'regular' | 'compact';
 
@@ -60,11 +61,15 @@ const renderPrimaryStream = (source: NormalizedStreamingSource, posterUrl?: stri
     );
   }
 
-  return (
-    <Box component="audio" src={source.url} controls preload="metadata" sx={{ width: '100%' }}>
-      Tu navegador no soporta la reproducción de audio.
-    </Box>
-  );
+  if (source.provider === 'audio') {
+    return (
+      <Box component="audio" src={source.url} controls preload="metadata" sx={{ width: '100%' }}>
+        Tu navegador no soporta la reproducción de audio.
+      </Box>
+    );
+  }
+
+  return assertNever(source.provider, 'stream provider');
 };
 
 const getBadgeColor = (provider: NormalizedStreamingSource['provider']) => {
@@ -75,9 +80,11 @@ const getBadgeColor = (provider: NormalizedStreamingSource['provider']) => {
       return 'error';
     case 'spotify':
       return 'success';
-    default:
+    case 'audio':
       return 'default';
   }
+
+  return assertNever(provider, 'stream provider');
 };
 
 export function StreamingPlayer({

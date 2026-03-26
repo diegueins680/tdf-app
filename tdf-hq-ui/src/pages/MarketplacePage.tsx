@@ -55,6 +55,7 @@ import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { useSession } from '../session/SessionContext';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
+import { assertNever } from '../utils/assertNever';
 
 const IMPORT_META_ENV = (import.meta.env ?? {}) as Record<string, string | undefined>;
 
@@ -708,18 +709,19 @@ export default function MarketplacePage() {
   const sortedListings = useMemo(() => {
     const list = [...filteredListings];
     switch (sort) {
+      case 'relevance':
+        return list.sort(
+          (a, b) => computeRelevanceScore(b) - computeRelevanceScore(a) || a.miPriceUsdCents - b.miPriceUsdCents,
+        );
       case 'price-asc':
         return list.sort((a, b) => a.miPriceUsdCents - b.miPriceUsdCents);
       case 'price-desc':
         return list.sort((a, b) => b.miPriceUsdCents - a.miPriceUsdCents);
       case 'title-asc':
         return list.sort((a, b) => a.miTitle.localeCompare(b.miTitle));
-      case 'relevance':
-      default:
-        return list.sort(
-          (a, b) => computeRelevanceScore(b) - computeRelevanceScore(a) || a.miPriceUsdCents - b.miPriceUsdCents,
-        );
     }
+
+    return assertNever(sort, 'marketplace sort');
   }, [computeRelevanceScore, filteredListings, sort]);
   const cartItemCount = cartItems.reduce((acc, it) => acc + it.mciQuantity, 0);
   const hasCartItems = cartItems.length > 0;

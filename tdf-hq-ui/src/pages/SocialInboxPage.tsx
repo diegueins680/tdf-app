@@ -33,6 +33,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { SocialInboxAPI, type SocialChannel, type SocialMessage } from '../api/socialInbox';
+import { assertNever } from '../utils/assertNever';
 import {
   getMetaReviewAssetSelection,
   getStoredInstagramResult,
@@ -80,15 +81,17 @@ const buildStats = (messages: SocialMessage[] | undefined): MessageStats => {
 
 const selectMessages = (stats: MessageStats, filter: FilterKey) => {
   switch (filter) {
+    case 'all':
+      return stats.incoming;
     case 'pending':
       return stats.pending;
     case 'replied':
       return stats.replied;
     case 'failed':
       return stats.failed;
-    default:
-      return stats.incoming;
   }
+
+  return assertNever(filter, 'message filter');
 };
 
 const formatTimestamp = (value?: string | null) => {
@@ -211,9 +214,9 @@ const resolveNativeClientUrl = (channel: SocialChannel, senderId: string) => {
       const normalized = normalizePhoneForWa(senderId);
       return normalized ? `https://wa.me/${normalized}` : 'https://web.whatsapp.com/';
     }
-    default:
-      return '';
   }
+
+  return assertNever(channel, 'social channel');
 };
 
 const extractAttachments = (metadata?: string | null): ParsedAttachment[] => {
@@ -400,9 +403,9 @@ const channelToLabel = (channel: SocialChannel) => {
       return 'Facebook';
     case 'whatsapp':
       return 'WhatsApp';
-    default:
-      return channel;
   }
+
+  return assertNever(channel, 'social channel');
 };
 
 const renderAssetField = (name: string, value?: string | null) =>
