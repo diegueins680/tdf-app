@@ -1,0 +1,77 @@
+{
+  "generatedAt": "2026-03-28T10:43:30Z",
+  "reviewAppSurface": {
+    "setupRoute": "/social/instagram?review=1",
+    "inboxRoute": "/social/inbox?review=1",
+    "providerMapping": {
+      "facebook": [
+        "instagram_basic",
+        "instagram_manage_messages"
+      ],
+      "instagram": [
+        "instagram_business_basic",
+        "instagram_business_manage_messages"
+      ]
+    },
+    "dependencyScopes": [
+      "pages_show_list",
+      "pages_read_engagement"
+    ]
+  },
+  "coverage": {
+    "requestedPermissions": [
+      "instagram_basic",
+      "instagram_manage_messages",
+      "instagram_business_basic",
+      "instagram_business_manage_messages"
+    ],
+    "coveredPermissions": [
+      "instagram_basic",
+      "instagram_manage_messages",
+      "instagram_business_basic",
+      "instagram_business_manage_messages"
+    ],
+    "missingPermissions": []
+  },
+  "videos": [
+    {
+      "flow": "facebook-login",
+      "provider": "facebook",
+      "file": "screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4",
+      "sha256": "156e3081ee519be93c4abaeeae206672c187dc4c53e032dbe9bbbbdb78fb1aab",
+      "sizeBytes": 7741279,
+      "durationSeconds": 179.6,
+      "width": 1920,
+      "height": 1080,
+      "codec": "h264",
+      "permissions": [
+        "instagram_basic",
+        "instagram_manage_messages"
+      ],
+      "dependencyScopes": [
+        "pages_show_list",
+        "pages_read_engagement"
+      ]
+    },
+    {
+      "flow": "instagram-login",
+      "provider": "instagram",
+      "file": "screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4",
+      "sha256": "aef00b419017fad5d65c5c76b559b2a382ac684b92193aec36fd6b78015138fc",
+      "sizeBytes": 4399809,
+      "durationSeconds": 121.633333,
+      "width": 1920,
+      "height": 1080,
+      "codec": "h264",
+      "permissions": [
+        "instagram_business_basic",
+        "instagram_business_manage_messages"
+      ],
+      "dependencyScopes": []
+    }
+  ],
+  "notes": {
+    "reviewerNotesFile": "screencast/meta-app-review/submission-notes.txt",
+    "screencastGuide": "docs/META_APP_REVIEW_SCREENCAST.md"
+  }
+}

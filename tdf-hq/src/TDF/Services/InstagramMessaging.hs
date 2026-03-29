@@ -4,11 +4,10 @@ module TDF.Services.InstagramMessaging
   , sendInstagramTextWithContext
   ) where
 
-import           Control.Applicative ((<|>))
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
 import           Data.List (nub)
-import           Data.Maybe (catMaybes)
+import           Data.Maybe (catMaybes, maybeToList)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -25,40 +24,76 @@ sendInstagramText :: AppConfig -> Text -> Text -> IO (Either Text Text)
 sendInstagramText cfg recipientId body =
   sendInstagramTextWithContext cfg Nothing Nothing recipientId body
 
+data InstagramAttemptSource = InstagramAttemptSource
+  { iasLabel     :: Text
+  , iasToken     :: Text
+  , iasAccountId :: Maybe Text
+  }
+
+data InstagramAttempt = InstagramAttempt
+  { iaLabel :: Text
+  , iaToken :: Text
+  , iaUrl   :: Text
+  }
+
 sendInstagramTextWithContext :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> IO (Either Text Text)
 sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId body =
-  case (mTokenOverride >>= nonEmptyText) <|> (instagramMessagingToken cfg >>= nonEmptyText) of
-    Nothing -> pure (Left "INSTAGRAM_MESSAGING_TOKEN no configurado")
-    Just token -> do
+  case buildAttempts cfg mTokenOverride mAccountIdOverride of
+    [] -> pure (Left "INSTAGRAM_MESSAGING_TOKEN no configurado")
+    attempts -> do
       manager <- newManager tlsManagerSettings
-      let base = T.dropWhileEnd (== '/') (instagramMessagingApiBase cfg)
-          accountIds = nub (catMaybes
-            [ mAccountIdOverride >>= nonEmptyText
-            , instagramMessagingAccountId cfg >>= nonEmptyText
-            ])
-          targetUrls = nub (
-            map (\accountId -> base <> "/" <> accountId <> "/messages") accountIds
-              <> [base <> "/me/messages"]
-            )
-      attempts <- mapM (sendToEndpoint manager token recipientId body) targetUrls
-      pure (pickFirstSuccess targetUrls attempts)
+      runAttempts manager recipientId body attempts []
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText raw =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
-pickFirstSuccess :: [Text] -> [Either Text Text] -> Either Text Text
-pickFirstSuccess [] _ = Left "No Instagram messaging endpoint configured"
-pickFirstSuccess _ [] = Left "No Instagram messaging attempt executed"
-pickFirstSuccess urls results =
-  case [payload | Right payload <- results] of
-    payload : _ -> Right payload
-    [] ->
-      let errors = ["Send failed via " <> url <> ": " <> err | (url, Left err) <- zip urls results]
-      in if null errors
-        then Left "Instagram messaging failed without details"
-        else Left (T.intercalate " | " errors)
+buildAttempts :: AppConfig -> Maybe Text -> Maybe Text -> [InstagramAttempt]
+buildAttempts cfg mTokenOverride mAccountIdOverride =
+  let base = T.dropWhileEnd (== '/') (instagramMessagingApiBase cfg)
+      sources = nubSources (catMaybes
+        [ buildSource "connected asset token" (mTokenOverride >>= nonEmptyText) (mAccountIdOverride >>= nonEmptyText)
+        , buildSource "configured fallback token" (instagramMessagingToken cfg >>= nonEmptyText) (instagramMessagingAccountId cfg >>= nonEmptyText)
+        ])
+  in nubAttempts (concatMap (sourceAttempts base) sources)
+  where
+    buildSource label mToken mAccountId =
+      InstagramAttemptSource label <$> mToken <*> pure mAccountId
+
+nubSources :: [InstagramAttemptSource] -> [InstagramAttemptSource]
+nubSources =
+  nubByText (\src -> iasLabel src <> "|" <> iasToken src <> "|" <> maybe "" id (iasAccountId src))
+
+nubAttempts :: [InstagramAttempt] -> [InstagramAttempt]
+nubAttempts =
+  nubByText (\attempt -> iaLabel attempt <> "|" <> iaToken attempt <> "|" <> iaUrl attempt)
+
+nubByText :: (a -> Text) -> [a] -> [a]
+nubByText toKey = go []
+  where
+    go _ [] = []
+    go seen (x:xs) =
+      let key = toKey x
+      in if key `elem` seen
+        then go seen xs
+        else x : go (key : seen) xs
+
+sourceAttempts :: Text -> InstagramAttemptSource -> [InstagramAttempt]
+sourceAttempts base source =
+  let urls = nub (map (\accountId -> base <> "/" <> accountId <> "/messages") (maybeToList (iasAccountId source)) <> [base <> "/me/messages"])
+  in map (\urlTxt -> InstagramAttempt (iasLabel source) (iasToken source) urlTxt) urls
+
+runAttempts :: Manager -> Text -> Text -> [InstagramAttempt] -> [Text] -> IO (Either Text Text)
+runAttempts _ _ _ [] [] = pure (Left "Instagram messaging failed without details")
+runAttempts _ _ _ [] errors = pure (Left (T.intercalate " | " (reverse errors)))
+runAttempts manager recipientId body (attempt:rest) errors = do
+  result <- sendToEndpoint manager (iaToken attempt) recipientId body (iaUrl attempt)
+  case result of
+    Right payload -> pure (Right payload)
+    Left err ->
+      let labelledError = "Send failed via " <> iaLabel attempt <> " at " <> iaUrl attempt <> ": " <> err
+      in runAttempts manager recipientId body rest (labelledError : errors)
 
 sendToEndpoint
   :: Manager

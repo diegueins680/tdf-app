@@ -9,6 +9,7 @@ const REVIEW_PASS = process.env.TDF_REVIEW_PASSWORD ?? 'password123';
 const ENABLE_SPOTLIGHT = process.env.TDF_REVIEW_SPOTLIGHT !== '0';
 const SPOTLIGHT_MS_RAW = Number.parseInt(process.env.TDF_REVIEW_SPOTLIGHT_MS ?? '1200', 10);
 const SPOTLIGHT_MS = Number.isFinite(SPOTLIGHT_MS_RAW) && SPOTLIGHT_MS_RAW > 0 ? SPOTLIGHT_MS_RAW : 1200;
+const INBOUND_TEXT_OVERRIDE = process.env.TDF_REVIEW_INBOUND_TEXT?.trim() ?? '';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const setupHeadingMatcher = /Meta App Review:\s*Instagram Setup/i;
@@ -146,7 +147,13 @@ async function gotoReviewPage(page, url) {
   await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
 }
 
-async function findFirstInboxConversationRow(page) {
+const normalizeText = (value) => value.replace(/\s+/g, ' ').trim();
+
+function rowLooksFailed(text) {
+  return /delivery blocked|message delivery failed|failed/i.test(text);
+}
+
+async function findPreferredInboxConversationRow(page, preferredInboundText) {
   const refreshBtn = page.getByRole('button', { name: /Refresh/i }).first();
   const allFilterBtn = page.getByRole('button', { name: /^All$/i }).first();
   const instagramTable = page.locator('table').first();
@@ -154,18 +161,28 @@ async function findFirstInboxConversationRow(page) {
 
   const findVisibleConversationRow = async () => {
     const count = await instagramRows.count();
+    let fallbackRow = null;
+    let cleanRow = null;
     for (let index = 0; index < count; index += 1) {
       const row = instagramRows.nth(index);
-      const text = ((await row.textContent()) ?? '').replace(/\s+/g, ' ').trim();
+      const text = normalizeText((await row.textContent()) ?? '');
       if (!text) {
         continue;
       }
       if (/No messages for this filter|Sin mensajes para este filtro/i.test(text)) {
         continue;
       }
-      return row;
+      if (!fallbackRow) {
+        fallbackRow = row;
+      }
+      if (preferredInboundText && text.toLowerCase().includes(preferredInboundText.toLowerCase())) {
+        return row;
+      }
+      if (!cleanRow && !rowLooksFailed(text)) {
+        cleanRow = row;
+      }
     }
-    return null;
+    return cleanRow ?? fallbackRow;
   };
 
   for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -195,7 +212,7 @@ async function findFirstInboxConversationRow(page) {
     await sleep(2_000);
   }
 
-  const tableText = ((await instagramTable.textContent().catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
+  const tableText = normalizeText((await instagramTable.textContent().catch(() => '')) ?? '');
   throw new Error(`No inbound Instagram conversation row became visible. Instagram table text: ${tableText || '(empty)'}`);
 }
 
@@ -290,11 +307,18 @@ const main = async () => {
   await page.getByRole('heading', { name: inboxHeadingMatcher }).waitFor();
   console.log('Reached review messaging inbox screen.');
 
+  const inboundMarker =
+    INBOUND_TEXT_OVERRIDE && INBOUND_TEXT_OVERRIDE.length > 0
+      ? INBOUND_TEXT_OVERRIDE
+      : `Meta review inbound marker ${iso()} - from IG native client`;
+
   // We need an inbound message to reply to. If none, operator should send one to the connected asset.
   await pauseForHuman(
     page,
-    'Ensure there is an INBOUND Instagram message visible in the Inbox list (from @0iego.saa).\n' +
-      'If none, open Instagram and send a message to the business account so it appears here.\n'
+    'Ensure there is a CLEAN INBOUND Instagram message visible in the Inbox list (from @0iego.saa).\n' +
+      `Preferred inbound text for this run:\n${inboundMarker}\n\n` +
+      'Open Instagram and send that exact message to the connected professional/business account.\n' +
+      'Wait until that new row appears here, and avoid reusing an older failed thread if a clean new one is available.\n'
   );
 
   await page.waitForLoadState('networkidle').catch(() => {});
@@ -302,7 +326,7 @@ const main = async () => {
 
   // Prefer the Instagram panel and wait for a real message row instead of a
   // transient empty/loading state.
-  const firstRow = await findFirstInboxConversationRow(page);
+  const firstRow = await findPreferredInboxConversationRow(page, inboundMarker);
   await spotlight(page, firstRow, 'Open inbound conversation');
   await firstRow.click();
 
@@ -337,13 +361,15 @@ const main = async () => {
 
   await pauseForHuman(
     page,
-    'Now switch to the native Instagram client (Android) and verify the SAME message appears in the thread.\n' +
-      `Message to verify:\n${unique}\n\n` +
-      'Record that phone segment separately; we will stitch it in post.\n'
+    'Now switch to the native Instagram client (Android) and capture the same thread.\n' +
+      `Message to verify first:\n${unique}\n\n` +
+      'In that native-client segment, show the delivered message, then delete or unsend that same message.\n' +
+      'Return to TDF HQ, keep the review checklist visible, and wait for the inbox auto-refresh to reflect the deletion without a manual reload.\n' +
+      'Press ENTER only after both the native-client delete/unsend and the in-app deleted-message refresh are captured.\n'
   );
 
-  // Give a little tail for editing
-  await sleep(1500);
+  // Give a little tail for editing once the deleted-message refresh has been captured.
+  await sleep(2500);
 
   await context.close();
   console.log('Done. Video saved under:', OUT_DIR);
