@@ -9,11 +9,21 @@ interface EnrollmentSuccessDialogProps {
 const defaultMessage = 'Felicitaciones, tu inscripción fue recibida exitosamente. Bienvenido a TDF Records!';
 
 export default function EnrollmentSuccessDialog({ open, onClose, message = defaultMessage }: EnrollmentSuccessDialogProps) {
+  const titleId = 'enrollment-success-dialog-title';
+  const descriptionId = 'enrollment-success-dialog-description';
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>¡Inscripción confirmada!</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+    >
+      <DialogTitle id={titleId}>¡Inscripción confirmada!</DialogTitle>
       <DialogContent>
-        <DialogContentText>{message}</DialogContentText>
+        <DialogContentText id={descriptionId}>{message}</DialogContentText>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} variant="contained">
