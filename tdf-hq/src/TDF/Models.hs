@@ -350,6 +350,42 @@ ServiceStatusChange
     changedBy        PartyId Maybe
     createdAt        UTCTime
     deriving Show Generic
+ServiceAd
+    providerPartyId  PartyId
+    serviceCatalogId ServiceCatalogId Maybe
+    roleTag          Text
+    headline         Text
+    description      Text Maybe
+    feeCents         Int
+    currency         Text default='USD'
+    slotMinutes      Int default=60
+    active           Bool default=True
+    createdAt        UTCTime
+    UniqueServiceAd providerPartyId headline
+    deriving Show Generic
+ServiceAdSlot
+    adId             ServiceAdId
+    startsAt         UTCTime
+    endsAt           UTCTime
+    status           Text default='open'
+    createdAt        UTCTime
+    UniqueServiceAdSlot adId startsAt endsAt
+    deriving Show Generic
+ServiceEscrow
+    bookingId        BookingId
+    serviceOrderId   ServiceOrderId
+    adId             ServiceAdId
+    patronPartyId    PartyId
+    providerPartyId  PartyId
+    amountCents      Int
+    currency         Text default='USD'
+    status           Text
+    heldPaymentId    PaymentId Maybe
+    releasedPaymentId PaymentId Maybe
+    heldAt           UTCTime
+    releasedAt       UTCTime Maybe
+    UniqueServiceEscrowBooking bookingId
+    deriving Show Generic
 Resource
     name             Text
     slug             Text

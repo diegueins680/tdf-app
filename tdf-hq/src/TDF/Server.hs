@@ -12,12 +12,12 @@
 module TDF.Server where
 
 import           Control.Applicative ((<|>))
-import           Control.Exception (SomeException, displayException, try)
+import           Control.Exception (SomeException, displayException, throwIO, try)
 import           Control.Concurrent (forkIO)
 import           Control.Monad (foldM, forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.Except (catchError)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader (ReaderT, ask, runReaderT)
+import           Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, isPrefixOf, sortOn)
@@ -1739,6 +1739,7 @@ protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
        partyServer user
   :<|> bookingServer user
+  :<|> serviceMarketplaceServer user
   :<|> proposalsServer user
   :<|> serviceCatalogServer user
   :<|> packageServer user
@@ -5071,6 +5072,274 @@ partyRelated user pidI = do
     , prClassSessions = classSessionsOut
     , prLabelTracks = map toRelatedTrack tracks
     }
+
+-- Service marketplace
+serviceMarketplaceServer :: AuthedUser -> ServerT Api.ServiceMarketplaceAPI AppM
+serviceMarketplaceServer user =
+       listServiceAds
+  :<|> createServiceAd user
+  :<|> listServiceAdSlots
+  :<|> createServiceAdSlot user
+  :<|> createServiceMarketplaceBooking user
+  :<|> completeServiceMarketplaceBooking user
+  :<|> releaseServiceMarketplaceEscrow user
+
+listServiceAds :: AppM [Api.ServiceAdDTO]
+listServiceAds = do
+  pool <- asks envPool
+  liftIO $ flip runSqlPool pool $ do
+    ads <- selectList [ServiceAdActive ==. True] [Desc ServiceAdCreatedAt]
+    let providerIds = map (serviceAdProviderPartyId . entityVal) ads
+    providers <- if null providerIds then pure [] else selectList [PartyId <-. providerIds] []
+    let providerMap = Map.fromList [(entityKey p, partyDisplayName (entityVal p) <|> Just (partyLegalName (entityVal p))) | p <- providers]
+    pure $ map (toServiceAdDTO providerMap) ads
+
+createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
+createServiceAd user Api.ServiceAdCreateReq{..} = do
+  when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
+    throwError err400 { errBody = "roleTag and headline are required" }
+  when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
+  now <- liftIO getCurrentTime
+  pool <- asks envPool
+  when (isNothing sacServiceCatalogId) $ throwError err400 { errBody = "serviceCatalogId is required" }
+  let currency = fromMaybe "USD" (normalizeOptionalInput sacCurrency)
+      slotMinutes = max 15 (fromMaybe 60 sacSlotMinutes)
+      record = ServiceAd
+        { serviceAdProviderPartyId = auPartyId user
+        , serviceAdServiceCatalogId = toSqlKey <$> sacServiceCatalogId
+        , serviceAdRoleTag = T.strip sacRoleTag
+        , serviceAdHeadline = T.strip sacHeadline
+        , serviceAdDescription = normalizeOptionalInput sacDescription
+        , serviceAdFeeCents = sacFeeCents
+        , serviceAdCurrency = currency
+        , serviceAdSlotMinutes = slotMinutes
+        , serviceAdActive = True
+        , serviceAdCreatedAt = now
+        }
+  dto <- liftIO $ flip runSqlPool pool $ do
+    adId <- insert record
+    ent <- getJustEntity adId
+    mProvider <- get (auPartyId user)
+    let providerName = mProvider >>= (\p -> partyDisplayName p <|> Just (partyLegalName p))
+    pure (toServiceAdDTO (Map.singleton (auPartyId user) providerName) ent)
+  pure dto
+
+listServiceAdSlots :: Int64 -> AppM [Api.ServiceAdSlotDTO]
+listServiceAdSlots adId = do
+  pool <- asks envPool
+  liftIO $ flip runSqlPool pool $ do
+    slots <- selectList [ServiceAdSlotAdId ==. toSqlKey adId] [Asc ServiceAdSlotStartsAt]
+    pure (map toServiceAdSlotDTO slots)
+
+createServiceAdSlot :: AuthedUser -> Int64 -> Api.ServiceAdSlotCreateReq -> AppM Api.ServiceAdSlotDTO
+createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
+  when (sascEndsAt <= sascStartsAt) $ throwError err400 { errBody = "Invalid slot range" }
+  pool <- asks envPool
+  liftIO $ flip runSqlPool pool $ do
+    let adKey = toSqlKey adId :: Key ServiceAd
+    mAd <- getEntity adKey
+    ad <- maybe (liftIO $ throwIO err404) pure mAd
+    when (serviceAdProviderPartyId (entityVal ad) /= auPartyId user) $
+      liftIO $ throwIO err403
+    now <- liftIO getCurrentTime
+    slotId <- insert ServiceAdSlot
+      { serviceAdSlotAdId = adKey
+      , serviceAdSlotStartsAt = sascStartsAt
+      , serviceAdSlotEndsAt = sascEndsAt
+      , serviceAdSlotStatus = "open"
+      , serviceAdSlotCreatedAt = now
+      }
+    slot <- getJustEntity slotId
+    pure (toServiceAdSlotDTO slot)
+
+createServiceMarketplaceBooking :: AuthedUser -> Api.ServiceMarketplaceBookingReq -> AppM Api.ServiceMarketplaceBookingDTO
+createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
+  pool <- asks envPool
+  now <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool pool $ do
+    let adKey = toSqlKey smbAdId :: Key ServiceAd
+        slotKey = toSqlKey smbSlotId :: Key ServiceAdSlot
+    adEnt <- getJustEntity adKey
+    slotEnt <- getJustEntity slotKey
+    let ad = entityVal adEnt
+        slot = entityVal slotEnt
+        providerId = serviceAdProviderPartyId ad
+    when (not (serviceAdActive ad)) $ liftIO $ throwIO err409 { errBody = "Service ad is inactive" }
+    when (serviceAdSlotAdId slot /= adKey || serviceAdSlotStatus slot /= "open") $
+      liftIO $ throwIO err409 { errBody = "Slot is not available" }
+    when (providerId == auPartyId user) $ liftIO $ throwIO err400 { errBody = "Cannot book your own service ad" }
+    let orderTitle = fromMaybe (serviceAdHeadline ad) (normalizeOptionalInput smbTitle)
+    catalogId <- maybe (liftIO $ throwIO err409 { errBody = "Service ad is missing catalogId" }) pure (serviceAdServiceCatalogId ad)
+    serviceOrderId <- insert ServiceOrder
+      { serviceOrderCustomerId = auPartyId user
+      , serviceOrderArtistId = Just providerId
+      , serviceOrderCatalogId = catalogId
+      , serviceOrderServiceKind = Recording
+      , serviceOrderTitle = Just orderTitle
+      , serviceOrderDescription = normalizeOptionalInput smbNotes
+      , serviceOrderStatus = "escrow_held"
+      , serviceOrderPriceQuotedCents = Just (serviceAdFeeCents ad)
+      , serviceOrderQuoteSentAt = Just now
+      , serviceOrderScheduledStart = Just (serviceAdSlotStartsAt slot)
+      , serviceOrderScheduledEnd = Just (serviceAdSlotEndsAt slot)
+      , serviceOrderCreatedAt = now
+      }
+    bookingId <- insert Booking
+      { bookingTitle = orderTitle
+      , bookingServiceOrderId = Just serviceOrderId
+      , bookingPartyId = Just (auPartyId user)
+      , bookingServiceType = Just (serviceAdRoleTag ad)
+      , bookingEngineerPartyId = Just providerId
+      , bookingEngineerName = Nothing
+      , bookingStartsAt = serviceAdSlotStartsAt slot
+      , bookingEndsAt = serviceAdSlotEndsAt slot
+      , bookingStatus = Confirmed
+      , bookingCreatedBy = Just (auPartyId user)
+      , bookingNotes = normalizeOptionalInput smbNotes
+      , bookingCreatedAt = now
+      }
+    update slotKey [ServiceAdSlotStatus =. "booked"]
+    paymentId <- insert Payment
+      { paymentInvoiceId = Nothing
+      , paymentOrderId = Just serviceOrderId
+      , paymentPartyId = auPartyId user
+      , paymentMethod = parsePaymentMethodText smbPaymentMethod
+      , paymentAmountCents = serviceAdFeeCents ad
+      , paymentReceivedAt = now
+      , paymentReference = Nothing
+      , paymentConcept = Just "escrow_hold"
+      , paymentPeriod = Nothing
+      , paymentAttachment = Nothing
+      , paymentCreatedBy = Just (auPartyId user)
+      , paymentCreatedAt = Just now
+      }
+    escrowId <- insert ServiceEscrow
+      { serviceEscrowBookingId = bookingId
+      , serviceEscrowServiceOrderId = serviceOrderId
+      , serviceEscrowAdId = adKey
+      , serviceEscrowPatronPartyId = auPartyId user
+      , serviceEscrowProviderPartyId = providerId
+      , serviceEscrowAmountCents = serviceAdFeeCents ad
+      , serviceEscrowCurrency = serviceAdCurrency ad
+      , serviceEscrowStatus = "held"
+      , serviceEscrowHeldPaymentId = Just paymentId
+      , serviceEscrowReleasedPaymentId = Nothing
+      , serviceEscrowHeldAt = now
+      , serviceEscrowReleasedAt = Nothing
+      }
+    pure $ Api.ServiceMarketplaceBookingDTO
+      { Api.smbBookingId = fromSqlKey bookingId
+      , Api.smbServiceOrderId = fromSqlKey serviceOrderId
+      , Api.smbEscrowId = fromSqlKey escrowId
+      , Api.smbEscrowStatus = "held"
+      , Api.smbEscrowAmountCents = serviceAdFeeCents ad
+      , Api.smbEscrowCurrency = serviceAdCurrency ad
+      }
+
+completeServiceMarketplaceBooking :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
+completeServiceMarketplaceBooking user rawBookingId = do
+  pool <- asks envPool
+  liftIO $ flip runSqlPool pool $ do
+    let bookingKey = toSqlKey rawBookingId :: Key Booking
+    booking <- getJustEntity bookingKey
+    escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
+    escrow <- maybe (liftIO $ throwIO err404) pure escrowEnt
+    let canComplete = serviceEscrowProviderPartyId (entityVal escrow) == auPartyId user || hasRole Admin user
+    when (not canComplete) $ liftIO $ throwIO err403
+    update bookingKey [BookingStatus =. Completed]
+    update (serviceEscrowServiceOrderId (entityVal escrow)) [ServiceOrderStatus =. "performed"]
+    pure (mkEscrowBookingDTO escrow)
+
+releaseServiceMarketplaceEscrow :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
+releaseServiceMarketplaceEscrow user rawBookingId = do
+  pool <- asks envPool
+  now <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool pool $ do
+    let bookingKey = toSqlKey rawBookingId :: Key Booking
+    booking <- getJustEntity bookingKey
+    escrowEnt@(Entity escrowKey escrow) <- maybe (liftIO $ throwIO err404) pure =<< getBy (UniqueServiceEscrowBooking bookingKey)
+    let canRelease = serviceEscrowPatronPartyId escrow == auPartyId user || hasRole Admin user
+    when (not canRelease) $ liftIO $ throwIO err403
+    when (bookingStatus (entityVal booking) /= Completed) $
+      liftIO $ throwIO err409 { errBody = "Escrow can only be released after booking completion" }
+    when (not (escrowTransitionAllowed (serviceEscrowStatus escrow) "released")) $
+      liftIO $ throwIO err409 { errBody = "Escrow state transition not allowed" }
+    releasePaymentId <- insert Payment
+      { paymentInvoiceId = Nothing
+      , paymentOrderId = Just (serviceEscrowServiceOrderId escrow)
+      , paymentPartyId = serviceEscrowProviderPartyId escrow
+      , paymentMethod = BankTransferM
+      , paymentAmountCents = serviceEscrowAmountCents escrow
+      , paymentReceivedAt = now
+      , paymentReference = Nothing
+      , paymentConcept = Just "escrow_release"
+      , paymentPeriod = Nothing
+      , paymentAttachment = Nothing
+      , paymentCreatedBy = Just (auPartyId user)
+      , paymentCreatedAt = Just now
+      }
+    update escrowKey
+      [ ServiceEscrowStatus =. "released"
+      , ServiceEscrowReleasedPaymentId =. Just releasePaymentId
+      , ServiceEscrowReleasedAt =. Just now
+      ]
+    update (serviceEscrowServiceOrderId escrow) [ServiceOrderStatus =. "paid_out"]
+    refreshed <- getJustEntity escrowKey
+    pure (mkEscrowBookingDTO refreshed)
+
+escrowTransitionAllowed :: Text -> Text -> Bool
+escrowTransitionAllowed "held" "released" = True
+escrowTransitionAllowed "held" "refunded" = True
+escrowTransitionAllowed fromState toState = fromState == toState
+
+toServiceAdDTO :: Map.Map (Key Party) (Maybe Text) -> Entity ServiceAd -> Api.ServiceAdDTO
+toServiceAdDTO providerMap (Entity adId ad) = Api.ServiceAdDTO
+  { Api.sadId = fromSqlKey adId
+  , Api.sadProviderPartyId = fromSqlKey (serviceAdProviderPartyId ad)
+  , Api.sadProviderName = join (Map.lookup (serviceAdProviderPartyId ad) providerMap)
+  , Api.sadServiceCatalogId = fromSqlKey <$> serviceAdServiceCatalogId ad
+  , Api.sadRoleTag = serviceAdRoleTag ad
+  , Api.sadHeadline = serviceAdHeadline ad
+  , Api.sadDescription = serviceAdDescription ad
+  , Api.sadFeeCents = serviceAdFeeCents ad
+  , Api.sadCurrency = serviceAdCurrency ad
+  , Api.sadSlotMinutes = serviceAdSlotMinutes ad
+  , Api.sadActive = serviceAdActive ad
+  , Api.sadCreatedAt = serviceAdCreatedAt ad
+  }
+
+toServiceAdSlotDTO :: Entity ServiceAdSlot -> Api.ServiceAdSlotDTO
+toServiceAdSlotDTO (Entity slotId slot) = Api.ServiceAdSlotDTO
+  { Api.sasId = fromSqlKey slotId
+  , Api.sasAdId = fromSqlKey (serviceAdSlotAdId slot)
+  , Api.sasStartsAt = serviceAdSlotStartsAt slot
+  , Api.sasEndsAt = serviceAdSlotEndsAt slot
+  , Api.sasStatus = serviceAdSlotStatus slot
+  }
+
+mkEscrowBookingDTO :: Entity ServiceEscrow -> Api.ServiceMarketplaceBookingDTO
+mkEscrowBookingDTO (Entity escrowId escrow) = Api.ServiceMarketplaceBookingDTO
+  { Api.smbBookingId = fromSqlKey (serviceEscrowBookingId escrow)
+  , Api.smbServiceOrderId = fromSqlKey (serviceEscrowServiceOrderId escrow)
+  , Api.smbEscrowId = fromSqlKey escrowId
+  , Api.smbEscrowStatus = serviceEscrowStatus escrow
+  , Api.smbEscrowAmountCents = serviceEscrowAmountCents escrow
+  , Api.smbEscrowCurrency = serviceEscrowCurrency escrow
+  }
+
+parsePaymentMethodText :: Maybe Text -> PaymentMethod
+parsePaymentMethodText mTxt =
+  case T.toLower . T.strip <$> mTxt of
+    Just "cash" -> CashM
+    Just "bank_transfer" -> BankTransferM
+    Just "bank" -> BankTransferM
+    Just "card" -> CardPOSM
+    Just "paypal" -> PayPalM
+    Just "crypto" -> CryptoM
+    Just "stripe" -> StripeM
+    Just "wompi" -> WompiM
+    Just "payphone" -> PayPhoneM
+    _ -> OtherM
 
 -- Bookings
 bookingPublicServer :: ServerT Api.BookingPublicAPI AppM
