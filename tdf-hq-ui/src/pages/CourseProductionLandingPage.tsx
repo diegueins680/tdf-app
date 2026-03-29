@@ -30,6 +30,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
 import { Courses } from '../api/courses';
 import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
+import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
 import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
@@ -148,6 +149,7 @@ export default function CourseProductionLandingPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [howHeard, setHowHeard] = useState('');
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const availableSlugs = useMemo(() => {
     const cleaned = normalizeCourseSlugs(COURSE_COHORTS);
     return cleaned.length ? cleaned : [COURSE_DEFAULTS.slug];
@@ -250,6 +252,9 @@ export default function CourseProductionLandingPage() {
   const submitted = registrationMutation.isSuccess;
   const submitting = registrationMutation.isPending;
   const submitError = registrationMutation.error instanceof Error ? registrationMutation.error.message : null;
+  useEffect(() => {
+    if (submitted) setShowSuccessDialog(true);
+  }, [submitted]);
 
   return (
     <Box
@@ -261,6 +266,7 @@ export default function CourseProductionLandingPage() {
       }}
     >
       <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
+        <EnrollmentSuccessDialog open={showSuccessDialog} onClose={() => setShowSuccessDialog(false)} />
         <Stack spacing={4}>
           {metaQuery.error && (
             <Alert severity="error">
@@ -800,37 +806,6 @@ function FormCard({
           </Button>
         </Stack>
       </Box>
-      {submitted && (
-        <Alert severity="success">
-          <Stack spacing={1}>
-            <Typography fontWeight={700}>¡Inscripción recibida!</Typography>
-            <Typography variant="body2">
-              Te contactaremos por correo/WhatsApp para confirmar tu cupo y pago. Si no ves el mensaje en 5 minutos, escríbenos.
-            </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button
-                variant="contained"
-                startIcon={<WhatsAppIcon />}
-                component="a"
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                disabled={submitting}
-              >
-                Escríbenos por WhatsApp
-              </Button>
-              <Button component={RouterLink} to="/" variant="outlined">
-                Volver al inicio
-              </Button>
-            </Stack>
-            {submitting && (
-              <Typography variant="caption" color="text.secondary">
-                Procesando tu inscripción...
-              </Typography>
-            )}
-          </Stack>
-        </Alert>
-      )}
       {submitError && (
         <Alert severity="error">
           No pudimos registrar tu inscripción. Intenta de nuevo o escríbenos por WhatsApp.

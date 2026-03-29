@@ -26,6 +26,7 @@ import { submitLiveSessionIntake } from '../api/liveSessions';
 import { getStoredSessionToken } from '../session/SessionContext';
 import { Bands } from '../api/bands';
 import { toLocalDateInputValue } from '../utils/dateOnly';
+import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 
 interface MusicianEntry {
   id: string;
@@ -111,6 +112,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
   const [musicians, setMusicians] = useState<MusicianEntry[]>([emptyMusician()]);
   const [setlist, setSetlist] = useState<SongEntry[]>([emptySong()]);
   const [riderFile, setRiderFile] = useState<File | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const mustAcceptTerms = requireTerms ?? variant === 'public';
   const termsVersion = 'TDF Live Sessions v2';
   const draftKey = 'live-session-draft';
@@ -284,6 +286,9 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
       });
       setAcceptedTerms(false);
     },
+    onSuccess: () => {
+      setShowSuccessDialog(true);
+    },
   });
 
   const handleMusicianChange = (id: string, patch: Partial<MusicianEntry>) => {
@@ -337,6 +342,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
 
   return (
     <Stack spacing={3}>
+      <EnrollmentSuccessDialog open={showSuccessDialog} onClose={() => setShowSuccessDialog(false)} />
       <Box>
         <Typography variant="h4" fontWeight={700} gutterBottom>
           {variant === 'public' ? 'Aplicar a TDF Live Sessions' : 'Live Session — Datos de banda'}
@@ -351,7 +357,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
           {mutation.error instanceof Error ? mutation.error.message : 'Ocurrió un error inesperado.'}
         </Alert>
       )}
-      {mutation.isSuccess && <Alert severity="success">Información guardada. ¡Gracias!</Alert>}
+
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={2}>
