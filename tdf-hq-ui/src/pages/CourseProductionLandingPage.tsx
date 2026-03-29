@@ -806,37 +806,6 @@ function FormCard({
           </Button>
         </Stack>
       </Box>
-      {submitted && (
-        <Alert severity="success">
-          <Stack spacing={1}>
-            <Typography fontWeight={700}>¡Inscripción recibida!</Typography>
-            <Typography variant="body2">
-              Te contactaremos por correo/WhatsApp para confirmar tu cupo y pago. Si no ves el mensaje en 5 minutos, escríbenos.
-            </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button
-                variant="contained"
-                startIcon={<WhatsAppIcon />}
-                component="a"
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                disabled={submitting}
-              >
-                Escríbenos por WhatsApp
-              </Button>
-              <Button component={RouterLink} to="/" variant="outlined">
-                Volver al inicio
-              </Button>
-            </Stack>
-            {submitting && (
-              <Typography variant="caption" color="text.secondary">
-                Procesando tu inscripción...
-              </Typography>
-            )}
-          </Stack>
-        </Alert>
-      )}
       {submitError && (
         <Alert severity="error">
           No pudimos registrar tu inscripción. Intenta de nuevo o escríbenos por WhatsApp.

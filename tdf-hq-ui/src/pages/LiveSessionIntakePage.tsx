@@ -357,7 +357,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
           {mutation.error instanceof Error ? mutation.error.message : 'Ocurrió un error inesperado.'}
         </Alert>
       )}
-      {mutation.isSuccess && <Alert severity="success">Información guardada. ¡Gracias!</Alert>}
+
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={2}>
