@@ -378,6 +378,55 @@ describe('PartiesPage', () => {
     }
   });
 
+  it('replaces generic table guidance with active-search context when the list is narrowed', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Los Navegantes',
+        isOrg: true,
+        primaryEmail: 'hola@navegantes.test',
+        instagram: '@navegantes',
+      } satisfies PartyDTO,
+      {
+        partyId: 2,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        primaryEmail: 'ada@example.com',
+        instagram: '@ada',
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo muestra.',
+        );
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+      });
+
+      await act(async () => {
+        setInputValue(getSearchInput(container), 'ada@example.com');
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Mostrando 1 de 2 contactos para "ada@example.com".');
+        expect(container.textContent).not.toContain(
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo muestra.',
+        );
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).not.toContain('Los Navegantes');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps one overflow actions trigger per contact row and moves secondary actions into the menu', async () => {
     listPartiesMock.mockResolvedValue([
       {

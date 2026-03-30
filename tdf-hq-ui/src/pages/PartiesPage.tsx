@@ -67,6 +67,8 @@ const getPartyContactSummary = (party: Pick<PartyDTO, 'primaryEmail' | 'instagra
   return contactParts.length > 0 ? contactParts.join(' · ') : 'Falta correo e Instagram';
 };
 
+const formatPartyCountLabel = (count: number) => `${count} contacto${count === 1 ? '' : 's'}`;
+
 function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
   const [name, setName] = useState('');
@@ -358,6 +360,10 @@ export default function PartiesPage() {
   }, [parties, trimmedSearch]);
   const showSearchEmptyState = !partiesQuery.isLoading && hasContacts && filtered.length === 0 && trimmedSearch !== '';
   const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0;
+  const showSearchContextSummary = !partiesQuery.isLoading && hasContacts && filtered.length > 0 && trimmedSearch !== '';
+  const searchContextSummary = showSearchContextSummary
+    ? `Mostrando ${filtered.length} de ${formatPartyCountLabel(parties.length)} para "${trimmedSearch}".`
+    : '';
 
   const openActionsMenu = (event: MouseEvent<HTMLButtonElement>, party: PartyDTO) => {
     setActionsMenuTarget({ anchorEl: event.currentTarget, party });
@@ -441,11 +447,29 @@ export default function PartiesPage() {
         ) : (
           <>
             {showTableGuidance && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre
-                Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo
-                muestra.
-              </Typography>
+              showSearchContextSummary ? (
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  useFlexGap
+                  sx={{ mb: 1.5 }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    {searchContextSummary}
+                  </Typography>
+                  <Button size="small" onClick={() => setSearch('')}>
+                    Limpiar búsqueda
+                  </Button>
+                </Stack>
+              ) : (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                  Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre
+                  Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo
+                  muestra.
+                </Typography>
+              )
             )}
             <Table size="small">
               <TableHead>
