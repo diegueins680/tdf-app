@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Collapse,
   FormControlLabel,
   Paper,
   Stack,
@@ -22,6 +23,7 @@ import { Admin } from '../api/admin';
 import type { DropdownOptionDTO, DropdownOptionUpdate } from '../api/types';
 
 const DEFAULT_CATEGORIES = ['asset-category', 'band-genre', 'band-role'];
+const emptyNewOption = () => ({ value: '', label: '', sortOrder: '', active: true });
 
 function OptionRow({
   option,
@@ -130,9 +132,10 @@ export default function UxOptionsPage() {
   const initialCategory = requestedCategory !== '' ? requestedCategory : (DEFAULT_CATEGORIES[0] ?? '');
   const [category, setCategory] = useState<string>(initialCategory);
   const [includeInactive, setIncludeInactive] = useState(false);
-  const [newOption, setNewOption] = useState({ value: '', label: '', sortOrder: '', active: true });
+  const [newOption, setNewOption] = useState(emptyNewOption);
   const [optionFilter, setOptionFilter] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   useEffect(() => {
     if (!requestedCategory) return;
@@ -141,6 +144,9 @@ export default function UxOptionsPage() {
 
   useEffect(() => {
     setOptionFilter('');
+    setNewOption(emptyNewOption());
+    setError(null);
+    setShowCreateForm(false);
   }, [category]);
 
   const optionsQuery = useQuery({
@@ -159,8 +165,9 @@ export default function UxOptionsPage() {
         docActive: newOption.active,
       }),
     onSuccess: () => {
-      setNewOption({ value: '', label: '', sortOrder: '', active: true });
+      setNewOption(emptyNewOption());
       setError(null);
+      setShowCreateForm(false);
       void qc.invalidateQueries({ queryKey: ['dropdowns', category] });
     },
     onError: (err) => setError(err instanceof Error ? err.message : 'No se pudo crear la opción.'),
@@ -178,6 +185,8 @@ export default function UxOptionsPage() {
 
   const savingId = (updateMutation.variables as { optionId?: string } | undefined)?.optionId ?? null;
   const options = useMemo(() => optionsQuery.data ?? [], [optionsQuery.data]);
+  const hasLoadedOptions = optionsQuery.isSuccess;
+  const hasOptions = options.length > 0;
   const activeCount = useMemo(
     () => options.filter((option) => option.active).length,
     [options],
@@ -195,6 +204,12 @@ export default function UxOptionsPage() {
     () => filteredOptions.filter((option) => option.active).length,
     [filteredOptions],
   );
+  const isCreateFormVisible = (hasLoadedOptions && !hasOptions) || showCreateForm;
+
+  useEffect(() => {
+    if (!hasLoadedOptions || hasOptions) return;
+    setShowCreateForm(true);
+  }, [hasLoadedOptions, hasOptions]);
 
   const handleCreate = () => {
     const cleanValue = newOption.value.trim();
@@ -253,44 +268,68 @@ export default function UxOptionsPage() {
             </Button>
           </Stack>
           {error && <Alert severity="error">{error}</Alert>}
-          <Typography variant="subtitle1" fontWeight={700}>
-            Nueva opción
-          </Typography>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <TextField
-              label="Valor"
-              value={newOption.value}
-              onChange={(e) => setNewOption((prev) => ({ ...prev, value: e.target.value }))}
-              required
-            />
-            <TextField
-              label="Etiqueta (opcional)"
-              value={newOption.label}
-              onChange={(e) => setNewOption((prev) => ({ ...prev, label: e.target.value }))}
-            />
-            <TextField
-              label="Orden (opcional)"
-              value={newOption.sortOrder}
-              onChange={(e) => setNewOption((prev) => ({ ...prev, sortOrder: e.target.value }))}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={newOption.active}
-                  onChange={(e) => setNewOption((prev) => ({ ...prev, active: e.target.checked }))}
-                />
-              }
-              label="Activo"
-            />
-            <Button
-              variant="contained"
-              onClick={handleCreate}
-              disabled={createMutation.isPending}
-              sx={{ alignSelf: 'center' }}
-            >
-              {createMutation.isPending ? 'Guardando…' : 'Agregar'}
-            </Button>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={1.5}
+            justifyContent="space-between"
+            alignItems={{ md: 'center' }}
+          >
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700}>
+                {hasLoadedOptions && !hasOptions ? 'Primera opción' : 'Nueva opción'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {hasLoadedOptions && !hasOptions
+                  ? 'Esta categoría todavía no tiene opciones. Crea la primera para habilitarla en formularios.'
+                  : 'Abre este formulario solo cuando necesites agregar un valor nuevo a esta categoría.'}
+              </Typography>
+            </Box>
+            {hasLoadedOptions && hasOptions && (
+              <Button
+                variant={isCreateFormVisible ? 'text' : 'outlined'}
+                onClick={() => setShowCreateForm((current) => !current)}
+              >
+                {isCreateFormVisible ? 'Ocultar formulario' : 'Agregar opción'}
+              </Button>
+            )}
           </Stack>
+          <Collapse in={isCreateFormVisible} unmountOnExit>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ pt: 0.5 }}>
+              <TextField
+                label="Valor"
+                value={newOption.value}
+                onChange={(e) => setNewOption((prev) => ({ ...prev, value: e.target.value }))}
+                required
+              />
+              <TextField
+                label="Etiqueta (opcional)"
+                value={newOption.label}
+                onChange={(e) => setNewOption((prev) => ({ ...prev, label: e.target.value }))}
+              />
+              <TextField
+                label="Orden (opcional)"
+                value={newOption.sortOrder}
+                onChange={(e) => setNewOption((prev) => ({ ...prev, sortOrder: e.target.value }))}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={newOption.active}
+                    onChange={(e) => setNewOption((prev) => ({ ...prev, active: e.target.checked }))}
+                  />
+                }
+                label="Activo"
+              />
+              <Button
+                variant="contained"
+                onClick={handleCreate}
+                disabled={createMutation.isPending}
+                sx={{ alignSelf: 'center' }}
+              >
+                {createMutation.isPending ? 'Guardando…' : 'Agregar'}
+              </Button>
+            </Stack>
+          </Collapse>
         </Stack>
       </Paper>
 
