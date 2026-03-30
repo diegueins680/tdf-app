@@ -5,10 +5,11 @@ module TDF.ServerSpec (spec) where
 import Control.Monad (forM_)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Database.Persist.Sql (toSqlKey)
+import qualified Data.Text as T
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..))
-import TDF.Server (normalizeOptionalInput, parseStatusWithDefault, validateServiceMarketplaceCatalog)
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -50,12 +51,22 @@ spec = describe "TDF.Server helpers" $ do
         it "drops strings that only contain whitespace" $
             normalizeOptionalInput (Just "   ") `shouldBe` Nothing
 
-    describe "parseStatusWithDefault" $ do
+    describe "parseBookingStatus" $ do
         it "parses a known status and ignores surrounding whitespace" $
-            parseStatusWithDefault Tentative "  InProgress   " `shouldBe` InProgress
+            parseBookingStatus "  InProgress   " `shouldBe` Right InProgress
 
-        it "falls back to the provided status when parsing fails" $
-            parseStatusWithDefault Confirmed "not-a-status" `shouldBe` Confirmed
+        it "accepts separator and casing variants that normalize to a known status" $ do
+            parseBookingStatus "confirmed" `shouldBe` Right Confirmed
+            parseBookingStatus "no_show" `shouldBe` Right NoShow
+            parseBookingStatus "in progress" `shouldBe` Right InProgress
+
+        it "rejects unknown statuses with the allowed values in the error" $
+            case parseBookingStatus "not-a-status" of
+                Left msg -> do
+                    T.isInfixOf "Tentative" msg `shouldBe` True
+                    T.isInfixOf "Cancelled" msg `shouldBe` True
+                Right statusVal ->
+                    expectationFailure ("Expected an invalid-status error, got: " <> show statusVal)
 
     describe "validateServiceMarketplaceCatalog" $ do
         it "returns the active catalog kind so marketplace bookings inherit the real service kind" $

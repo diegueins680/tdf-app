@@ -5555,8 +5555,8 @@ createBooking user req = do
   Env pool _ <- ask
   now <- liftIO getCurrentTime
 
-  let status'          = parseStatusWithDefault Confirmed (cbStatus req)
-      serviceTypeClean = normalizeOptionalInput (cbServiceType req)
+  status' <- either throwBadRequest pure (parseBookingStatus (cbStatus req))
+  let serviceTypeClean = normalizeOptionalInput (cbServiceType req)
       engineerIdClean  = cbEngineerPartyId req >>= (\i -> if i > 0 then Just i else Nothing)
       engineerNameClean = normalizeOptionalInput (cbEngineerName req)
       partyKey         = fmap (toSqlKey . fromIntegral) (cbPartyId req)
@@ -5641,28 +5641,31 @@ updateBooking user bookingIdI req = do
     case mBooking of
       Nothing -> pure (Left err404)
       Just (Entity _ current) -> do
-        let applyText fallback Nothing = fallback
-            applyText fallback (Just val) =
-              let trimmed = T.strip val
-              in if T.null trimmed then fallback else trimmed
-            applyMaybeText fallback Nothing = fallback
-            applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
-            updated = current
-              { bookingTitle       = applyText (bookingTitle current) (ubTitle req)
-              , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
-              , bookingNotes       = applyMaybeText (bookingNotes current) (ubNotes req)
-              , bookingStatus      = maybe (bookingStatus current) (parseStatusWithDefault (bookingStatus current)) (ubStatus req)
-              , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
-              , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
-              , bookingEngineerPartyId = maybe (bookingEngineerPartyId current) (Just . toSqlKey . fromIntegral) (ubEngineerPartyId req)
-              , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
-              }
-        case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
+        case traverse parseBookingStatus (ubStatus req) of
           Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
-          Right () -> do
-            replace bookingId updated
-            dtos <- buildBookingDTOs [Entity bookingId updated]
-            pure (maybe (Left err500) Right (listToMaybe dtos))
+          Right requestedStatus -> do
+            let applyText fallback Nothing = fallback
+                applyText fallback (Just val) =
+                  let trimmed = T.strip val
+                  in if T.null trimmed then fallback else trimmed
+                applyMaybeText fallback Nothing = fallback
+                applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
+                updated = current
+                  { bookingTitle       = applyText (bookingTitle current) (ubTitle req)
+                  , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
+                  , bookingNotes       = applyMaybeText (bookingNotes current) (ubNotes req)
+                  , bookingStatus      = fromMaybe (bookingStatus current) requestedStatus
+                  , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
+                  , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
+                  , bookingEngineerPartyId = maybe (bookingEngineerPartyId current) (Just . toSqlKey . fromIntegral) (ubEngineerPartyId req)
+                  , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
+                  }
+            case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
+              Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
+              Right () -> do
+                replace bookingId updated
+                dtos <- buildBookingDTOs [Entity bookingId updated]
+                pure (maybe (Left err500) Right (listToMaybe dtos))
   either throwError pure result
 
 
@@ -5755,12 +5758,27 @@ normalizeOptionalInput (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
-parseStatusWithDefault :: BookingStatus -> Text -> BookingStatus
-parseStatusWithDefault fallback raw =
-  let cleaned = T.strip raw
-  in case readMaybe (T.unpack cleaned) of
-       Just s  -> s
-       Nothing -> fallback
+parseBookingStatus :: Text -> Either Text BookingStatus
+parseBookingStatus raw =
+  maybe
+    (Left ("Estado inválido. Usa uno de: " <> bookingStatusOptions))
+    Right
+    (Map.lookup (normalizeBookingStatusToken raw) bookingStatusAliases)
+  where
+    bookingStatusAliases =
+      Map.fromList
+        [ (normalizeBookingStatusToken (T.pack (show statusVal)), statusVal)
+        | statusVal <- ([minBound .. maxBound] :: [BookingStatus])
+        ]
+    bookingStatusOptions =
+      T.intercalate ", "
+        [ T.pack (show statusVal)
+        | statusVal <- ([minBound .. maxBound] :: [BookingStatus])
+        ]
+
+normalizeBookingStatusToken :: Text -> Text
+normalizeBookingStatusToken =
+  T.toLower . T.filter isAlphaNum . T.strip
 
 validateServiceMarketplaceCatalog :: Maybe ServiceCatalog -> Either ServerError ServiceKind
 validateServiceMarketplaceCatalog Nothing =
