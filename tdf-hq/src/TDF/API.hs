@@ -230,6 +230,15 @@ type BookingAPI =
 type BookingPublicAPI =
        "bookings" :> "public" :> ReqBody '[JSON] PublicBookingReq :> Post '[JSON] BookingDTO
 
+type ServiceMarketplaceAPI =
+       "service-marketplace" :> "ads" :> Get '[JSON] [ServiceAdDTO]
+  :<|> "service-marketplace" :> "ads" :> ReqBody '[JSON] ServiceAdCreateReq :> Post '[JSON] ServiceAdDTO
+  :<|> "service-marketplace" :> "ads" :> Capture "adId" Int64 :> "slots" :> Get '[JSON] [ServiceAdSlotDTO]
+  :<|> "service-marketplace" :> "ads" :> Capture "adId" Int64 :> "slots" :> ReqBody '[JSON] ServiceAdSlotCreateReq :> Post '[JSON] ServiceAdSlotDTO
+  :<|> "service-marketplace" :> "bookings" :> ReqBody '[JSON] ServiceMarketplaceBookingReq :> Post '[JSON] ServiceMarketplaceBookingDTO
+  :<|> "service-marketplace" :> "bookings" :> Capture "bookingId" Int64 :> "complete" :> Post '[JSON] ServiceMarketplaceBookingDTO
+  :<|> "service-marketplace" :> "bookings" :> Capture "bookingId" Int64 :> "escrow" :> "release" :> Post '[JSON] ServiceMarketplaceBookingDTO
+
 type PackageAPI =
        "products" :> Get '[JSON] [PackageProductDTO]
   :<|> "purchases" :> ReqBody '[JSON] PackagePurchaseReq :> Post '[JSON] NoContent
@@ -303,6 +312,7 @@ type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
 type ProtectedAPI =
        "parties"  :> PartyAPI
   :<|> "bookings" :> BookingAPI
+  :<|> ServiceMarketplaceAPI
   :<|> ProposalsAPI
   :<|> ServiceCatalogAPI
   :<|> "packages" :> PackageAPI
@@ -427,6 +437,74 @@ data PublicEngineerDTO = PublicEngineerDTO
   , peName :: Text
   } deriving (Show, Generic)
 instance ToJSON PublicEngineerDTO
+
+
+data ServiceAdDTO = ServiceAdDTO
+  { sadId            :: Int64
+  , sadProviderPartyId :: Int64
+  , sadProviderName  :: Maybe Text
+  , sadServiceCatalogId :: Maybe Int64
+  , sadRoleTag       :: Text
+  , sadHeadline      :: Text
+  , sadDescription   :: Maybe Text
+  , sadFeeCents      :: Int
+  , sadCurrency      :: Text
+  , sadSlotMinutes   :: Int
+  , sadActive        :: Bool
+  , sadCreatedAt     :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON ServiceAdDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data ServiceAdCreateReq = ServiceAdCreateReq
+  { sacServiceCatalogId :: Maybe Int64
+  , sacRoleTag          :: Text
+  , sacHeadline         :: Text
+  , sacDescription      :: Maybe Text
+  , sacFeeCents         :: Int
+  , sacCurrency         :: Maybe Text
+  , sacSlotMinutes      :: Maybe Int
+  } deriving (Show, Generic)
+instance FromJSON ServiceAdCreateReq where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data ServiceAdSlotDTO = ServiceAdSlotDTO
+  { sasId       :: Int64
+  , sasAdId     :: Int64
+  , sasStartsAt :: UTCTime
+  , sasEndsAt   :: UTCTime
+  , sasStatus   :: Text
+  } deriving (Show, Generic)
+instance ToJSON ServiceAdSlotDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data ServiceAdSlotCreateReq = ServiceAdSlotCreateReq
+  { sascStartsAt :: UTCTime
+  , sascEndsAt   :: UTCTime
+  } deriving (Show, Generic)
+instance FromJSON ServiceAdSlotCreateReq where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+
+data ServiceMarketplaceBookingReq = ServiceMarketplaceBookingReq
+  { smbAdId         :: Int64
+  , smbSlotId       :: Int64
+  , smbTitle        :: Maybe Text
+  , smbNotes        :: Maybe Text
+  , smbPaymentMethod :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON ServiceMarketplaceBookingReq where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+
+data ServiceMarketplaceBookingDTO = ServiceMarketplaceBookingDTO
+  { smbBookingId         :: Int64
+  , smbServiceOrderId    :: Int64
+  , smbEscrowId          :: Int64
+  , smbEscrowStatus      :: Text
+  , smbEscrowAmountCents :: Int
+  , smbEscrowCurrency    :: Text
+  } deriving (Show, Generic)
+instance ToJSON ServiceMarketplaceBookingDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
 
 data AdsInquiry = AdsInquiry
   { aiName    :: Maybe Text
