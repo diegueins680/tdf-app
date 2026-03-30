@@ -440,7 +440,7 @@ createOrFetchParty mName mEmail mPhone now = do
     Nothing -> liftIO $ throwIO err400 { errBody = "Correo requerido para crear la cuenta" }
     Just e  -> pure e
   let phoneVal = mPhone >>= normalizePhone
-      display = fromMaybe emailVal mName
+      display = fromMaybe emailVal (cleanOptional mName)
   mExisting <- selectFirst [Models.PartyPrimaryEmail ==. Just emailVal] []
   case mExisting of
     Just (Entity pid party) -> do

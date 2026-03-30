@@ -38,6 +38,14 @@ spec = do
       storedName `shouldBe` "Test User"
       storedPhone `shouldBe` Just "+593991234567"
 
+    it "falls back to the normalized email when the provided name is blank" $ do
+      storedName <- runInMemory $ do
+        now <- liftIO getCurrentTime
+        partyId <- createOrFetchParty (Just "   ") (Just " Student@Example.com ") Nothing now
+        Models.partyDisplayName . entityVal <$> getJustEntity partyId
+
+      storedName `shouldBe` "student@example.com"
+
     it "keeps a single fallback party for anonymous interests" $ do
       (firstId, secondId, total) <- runInMemory $ do
         now <- liftIO getCurrentTime
