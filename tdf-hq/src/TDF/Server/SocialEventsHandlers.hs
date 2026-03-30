@@ -9,6 +9,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeInvitationStatus
   , normalizeArtistGenres
   , parseInvitationIdsEither
+  , parseFollowerQueryParamEither
   , followArtistDb
   , normalizeTicketOrderStatus
   , normalizeTicketStatus
@@ -917,9 +918,7 @@ socialEventsServer user = eventsServer
       artistKey <- parseArtistId artistIdStr
       mArtist <- liftIO $ runSqlPool (get artistKey) envPool
       when (isNothing mArtist) $ throwError err404 { errBody = "Artist not found" }
-      followerParty <- case cleanMaybeText mFollower of
-        Nothing -> throwError err400 { errBody = "follower query param is required" }
-        Just t -> pure t
+      followerParty <- either throwError pure (parseFollowerQueryParamEither mFollower)
       liftIO $ runSqlPool
         (deleteWhere [ArtistFollowArtistId ==. artistKey, ArtistFollowFollowerPartyId ==. followerParty])
         envPool
@@ -1878,6 +1877,15 @@ normalizePositivePartyIdText rawPartyId =
   case readMaybe (T.unpack (T.strip rawPartyId)) :: Maybe Int64 of
     Just partyId | partyId > 0 -> Just (T.pack (show partyId))
     _ -> Nothing
+
+parseFollowerQueryParamEither :: Maybe T.Text -> Either ServerError T.Text
+parseFollowerQueryParamEither mFollower =
+  case cleanMaybeText mFollower of
+    Nothing -> Left err400 { errBody = "follower query param is required" }
+    Just rawFollower ->
+      case normalizePositivePartyIdText rawFollower of
+        Nothing -> Left err400 { errBody = "follower query param must be a positive integer" }
+        Just normalized -> Right normalized
 
 -- | Normalize invitation status to a lowercase, non-empty value.
 normalizeInvitationStatus :: Maybe T.Text -> T.Text

@@ -38,6 +38,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeArtistGenres,
     normalizeInvitationStatus,
     normalizePositivePartyIdText,
+    parseFollowerQueryParamEither,
     normalizeTicketOrderStatus,
     normalizeTicketStatus,
     parseInvitationIdsEither,
@@ -92,6 +93,34 @@ main = hspec $ do
         it "rejects blank and non-numeric ids" $ do
             normalizePositivePartyIdText "   " `shouldBe` Nothing
             normalizePositivePartyIdText "abc" `shouldBe` Nothing
+
+    describe "parseFollowerQueryParamEither" $ do
+        it "canonicalizes numeric follower query params before delete lookups" $ do
+            parseFollowerQueryParamEither (Just " 0042 ") `shouldBe` Right "42"
+
+        it "rejects missing or blank follower query params" $ do
+            case parseFollowerQueryParamEither Nothing of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "follower query param is required"
+                Right _ -> expectationFailure "Expected missing follower query param to be rejected"
+            case parseFollowerQueryParamEither (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "follower query param is required"
+                Right _ -> expectationFailure "Expected blank follower query param to be rejected"
+
+        it "rejects non-positive or non-numeric follower query params" $ do
+            case parseFollowerQueryParamEither (Just "abc") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "follower query param must be a positive integer"
+                Right _ -> expectationFailure "Expected invalid follower query param to be rejected"
+            case parseFollowerQueryParamEither (Just "0") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "follower query param must be a positive integer"
+                Right _ -> expectationFailure "Expected non-positive follower query param to be rejected"
 
     describe "parseInvitationIdsEither" $ do
         it "parses numeric ids into typed keys" $ do
