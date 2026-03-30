@@ -27,6 +27,7 @@ import TDF.DTO.SocialEventsDTO
 import TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
+import TDF.ServerAdmin (parseSocialErrorsChannel)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -198,6 +199,30 @@ main = hspec $ do
             case validateHookVerifyRequest Nothing (Just "challenge-123") (Just "secret") (Just "secret") of
                 Left err -> errHTTPCode err `shouldBe` 403
                 Right _ -> expectationFailure "Expected missing hub.mode to be rejected"
+
+    describe "parseSocialErrorsChannel" $ do
+        it "normalizes valid channel values" $ do
+            parseSocialErrorsChannel (Just " WhatsApp ") `shouldBe` Right "whatsapp"
+            parseSocialErrorsChannel (Just "FACEBOOK") `shouldBe` Right "facebook"
+
+        it "rejects missing or blank channels instead of falling back implicitly" $ do
+            case parseSocialErrorsChannel Nothing of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "channel requerido"
+                Right _ -> expectationFailure "Expected missing channel to be rejected"
+            case parseSocialErrorsChannel (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "channel requerido"
+                Right _ -> expectationFailure "Expected blank channel to be rejected"
+
+        it "rejects unknown channel values" $
+            case parseSocialErrorsChannel (Just "telegram") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "channel inválido"
+                Right _ -> expectationFailure "Expected invalid channel to be rejected"
 
     APITypesSpec.spec
     ArtistSpec.spec
