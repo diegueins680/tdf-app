@@ -258,10 +258,39 @@ main = hspec $ do
             validateHookVerifyRequest (Just "SuBsCrIbE") (Just "challenge-123") (Just "secret") (Just "secret")
                 `shouldBe` Right "challenge-123"
 
-        it "rejects verification requests when hub.mode is missing" $ do
+        it "rejects missing verification query params with precise 400s" $ do
             case validateHookVerifyRequest Nothing (Just "challenge-123") (Just "secret") (Just "secret") of
-                Left err -> errHTTPCode err `shouldBe` 403
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "hub.mode is required"
                 Right _ -> expectationFailure "Expected missing hub.mode to be rejected"
+            case validateHookVerifyRequest (Just "subscribe") (Just "   ") (Just "secret") (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "hub.challenge is required"
+                Right _ -> expectationFailure "Expected blank hub.challenge to be rejected"
+            case validateHookVerifyRequest (Just "subscribe") (Just "challenge-123") Nothing (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "hub.verify_token is required"
+                Right _ -> expectationFailure "Expected missing hub.verify_token to be rejected"
+
+        it "distinguishes bad mode, token mismatch, and missing server config" $ do
+            case validateHookVerifyRequest (Just "publish") (Just "challenge-123") (Just "secret") (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "hub.mode must be subscribe"
+                Right _ -> expectationFailure "Expected unsupported hub.mode to be rejected"
+            case validateHookVerifyRequest (Just "subscribe") (Just "challenge-123") (Just "wrong-secret") (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL.unpack (errBody err) `shouldContain` "hub.verify_token mismatch"
+                Right _ -> expectationFailure "Expected mismatched verify token to be rejected"
+            case validateHookVerifyRequest (Just "subscribe") (Just "challenge-123") (Just "secret") Nothing of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 503
+                    BL.unpack (errBody err) `shouldContain` "WhatsApp verify token not configured"
+                Right _ -> expectationFailure "Expected missing verify-token config to be rejected"
 
     describe "parseSocialErrorsChannel" $ do
         it "normalizes valid channel values" $ do
