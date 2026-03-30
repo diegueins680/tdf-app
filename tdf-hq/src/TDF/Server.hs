@@ -3796,7 +3796,16 @@ signup SignupRequest
     Left SignupProfileError ->
       throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
     Right resp -> do
-      liftIO $ EmailSvc.sendWelcome emailSvc displayNameText emailClean emailClean passwordClean
+      welcomeResult <- liftIO $
+        ((try $
+          EmailSvc.sendWelcome emailSvc displayNameText emailClean emailClean passwordClean) :: IO (Either SomeException ()))
+      case welcomeResult of
+        Left err -> do
+          let msg = "[Signup] Account created but welcome email failed for " <> emailClean <> ": " <> T.pack (displayException err)
+          liftIO $ do
+            hPutStrLn stderr (T.unpack msg)
+            LogBuf.addLog LogBuf.LogWarning msg
+        Right () -> pure ()
       pure resp
   where
     runSignupDb
@@ -4031,8 +4040,17 @@ passwordReset PasswordResetRequest{..} = do
   Env pool cfg <- ask
   let emailSvc = EmailSvc.mkEmailService cfg
   mPayload <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
-  for_ mPayload $ \(token, displayName) -> liftIO $
-    EmailSvc.sendPasswordReset emailSvc displayName emailClean token
+  for_ mPayload $ \(token, displayName) -> do
+    resetResult <- liftIO $
+      ((try $
+        EmailSvc.sendPasswordReset emailSvc displayName emailClean token) :: IO (Either SomeException ()))
+    case resetResult of
+      Left err -> do
+        let msg = "[PasswordReset] Failed to email reset link to " <> emailClean <> ": " <> T.pack (displayException err)
+        liftIO $ do
+          hPutStrLn stderr (T.unpack msg)
+          LogBuf.addLog LogBuf.LogWarning msg
+      Right () -> pure ()
   pure NoContent
   where
     runPasswordReset :: Text -> SqlPersistT IO (Maybe (Text, Text))
@@ -5881,15 +5899,23 @@ notifyEngineerIfNeeded booking = do
           startTxt = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" (DTO.startsAt booking))
           customer = DTO.customerName booking <|> DTO.partyDisplayName booking
           noteText = case booking of DTO.BookingDTO{DTO.notes = ns} -> ns
-      liftIO $
-        EmailSvc.sendEngineerBooking
-          emailSvc
-          name
-          engineerEmail
-          subjectSvc
-          startTxt
-          customer
-          noteText
+      notifyResult <- liftIO $
+        ((try $
+          EmailSvc.sendEngineerBooking
+            emailSvc
+            name
+            engineerEmail
+            subjectSvc
+            startTxt
+            customer
+            noteText) :: IO (Either SomeException ()))
+      case notifyResult of
+        Left err -> do
+          let msg = "[Bookings] Failed to notify engineer " <> engineerEmail <> ": " <> T.pack (displayException err)
+          liftIO $ do
+            hPutStrLn stderr (T.unpack msg)
+            LogBuf.addLog LogBuf.LogWarning msg
+        Right () -> pure ()
 
 resolveResourcesForBooking :: Maybe Text -> [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
 resolveResourcesForBooking service requested start end = do
@@ -7410,12 +7436,19 @@ sendAutoReplies pool partyId cfg AdsInquiry{..} mCourse = do
     , case aiEmail of
         Just e -> do
           let svc = EmailSvc.mkEmailService cfg
-          EmailSvc.sendTestEmail svc (fromMaybe "Amigo TDF" aiName) e "Gracias por tu interés en TDF"
-            [ "Paquete 1:1 (16 horas): $480."
-            , "Grupo pequeño: detalles y fechas en " <> courseLanding
-            , "Agenda tu clase de prueba gratis aquí: " <> cta <> "/trials"
-            ] (Just (cta <> "/trials"))
-          pure (Just "email")
+          emailResult <- (try $
+            EmailSvc.sendTestEmail svc (fromMaybe "Amigo TDF" aiName) e "Gracias por tu interés en TDF"
+              [ "Paquete 1:1 (16 horas): $480."
+              , "Grupo pequeño: detalles y fechas en " <> courseLanding
+              , "Agenda tu clase de prueba gratis aquí: " <> cta <> "/trials"
+              ] (Just (cta <> "/trials"))) :: IO (Either SomeException ())
+          case emailResult of
+            Left err -> do
+              let msg = "[AdsInquiry] Failed to send follow-up email to " <> e <> ": " <> T.pack (displayException err)
+              hPutStrLn stderr (T.unpack msg)
+              LogBuf.addLog LogBuf.LogWarning msg
+              pure Nothing
+            Right () -> pure (Just "email")
         Nothing -> pure Nothing
     ]
   pure channels
