@@ -2468,9 +2468,10 @@ listCourseRegistrations
   -> Maybe Int
   -> AppM [DTO.CourseRegistrationDTO]
 listCourseRegistrations mSlug mStatus mLimit = do
+  normalizedStatus <- traverse (either throwError pure . parseCourseRegistrationStatus) (cleanOptional mStatus)
   let filters = catMaybes
         [ (\s -> ME.CourseRegistrationCourseSlug ==. normalizeSlug s) <$> cleanOptional mSlug
-        , (\s -> ME.CourseRegistrationStatus ==. T.toLower (T.strip s)) <$> cleanOptional mStatus
+        , (ME.CourseRegistrationStatus ==.) <$> normalizedStatus
         ]
       capped = max 1 (min 500 (fromMaybe 200 mLimit))
   rows <- runDB $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo capped]
@@ -2691,9 +2692,10 @@ updateCourseRegistrationStatus
   -> CourseRegistrationStatusUpdate
   -> AppM CourseRegistrationResponse
 updateCourseRegistrationStatus user rawSlug regId CourseRegistrationStatusUpdate{..} = do
-  let newStatus = T.toLower (T.strip status)
-  when (T.null newStatus) $
+  let rawStatus = T.strip status
+  when (T.null rawStatus) $
     throwBadRequest "status requerido"
+  newStatus <- either throwError pure (parseCourseRegistrationStatus rawStatus)
   ent <- fetchCourseRegistrationEntity rawSlug regId >>= ensureCourseRegistrationPartyLink
   let regKey = entityKey ent
       reg = entityVal ent
@@ -5779,6 +5781,25 @@ parseBookingStatus raw =
 normalizeBookingStatusToken :: Text -> Text
 normalizeBookingStatusToken =
   T.toLower . T.filter isAlphaNum . T.strip
+
+parseCourseRegistrationStatus :: Text -> Either ServerError Text
+parseCourseRegistrationStatus raw =
+  maybe invalidStatus pure (normalizeCourseRegistrationStatus raw)
+  where
+    invalidStatus =
+      Left err400
+        { errBody =
+            "Invalid course registration status. Allowed values: pending_payment, paid, cancelled"
+        }
+
+normalizeCourseRegistrationStatus :: Text -> Maybe Text
+normalizeCourseRegistrationStatus raw =
+  case normalizeBookingStatusToken raw of
+    "pendingpayment" -> Just "pending_payment"
+    "paid" -> Just "paid"
+    "cancelled" -> Just "cancelled"
+    "canceled" -> Just "cancelled"
+    _ -> Nothing
 
 validateServiceMarketplaceCatalog :: Maybe ServiceCatalog -> Either ServerError ServiceKind
 validateServiceMarketplaceCatalog Nothing =
