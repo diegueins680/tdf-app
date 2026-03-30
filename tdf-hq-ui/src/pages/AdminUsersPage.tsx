@@ -88,6 +88,7 @@ export default function AdminUsersPage() {
   );
   const visibleUsersMissingContactVerb = visibleUsersMissingContactCount === 1 ? 'sigue' : 'siguen';
   const totalUsersCount = usersQuery.data?.length ?? 0;
+  const hasUsers = totalUsersCount > 0;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
 
@@ -103,39 +104,45 @@ export default function AdminUsersPage() {
           >
             <Stack spacing={1} sx={{ minWidth: 0, flex: '1 1 360px' }}>
               <Typography variant="h4" fontWeight={700}>Usuarios (admin API)</Typography>
-              <TextField
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                size="small"
-                fullWidth
-                placeholder="Buscar por usuario, nombre, ID, contacto o acceso"
-                inputProps={{ 'aria-label': 'Buscar usuarios administradores' }}
-              />
-            </Stack>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Chip
-                size="small"
-                color="primary"
-                variant={isFiltered ? 'outlined' : 'filled'}
-                label={isFiltered ? `Mostrando ${visibleUsers.length} de ${totalUsersCount}` : `${visibleUsers.length} usuario${visibleUsers.length === 1 ? '' : 's'}`}
-              />
-              {visibleUsersMissingContactCount > 0 && (
-                <Chip
+              {hasUsers && (
+                <TextField
+                  label="Buscar usuarios"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
                   size="small"
-                  color="warning"
-                  variant="outlined"
-                  label={`${visibleUsersMissingContactCount} sin contacto`}
+                  fullWidth
+                  placeholder="Usuario, nombre, ID, contacto o acceso"
                 />
               )}
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={includeInactive}
-                    onChange={(event) => setIncludeInactive(event.target.checked)}
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              {hasUsers && (
+                <>
+                  <Chip
+                    size="small"
+                    color="primary"
+                    variant={isFiltered ? 'outlined' : 'filled'}
+                    label={isFiltered ? `Mostrando ${visibleUsers.length} de ${totalUsersCount}` : `${visibleUsers.length} usuario${visibleUsers.length === 1 ? '' : 's'}`}
                   />
-                }
-                label="Incluir inactivos"
-              />
+                  {visibleUsersMissingContactCount > 0 && (
+                    <Chip
+                      size="small"
+                      color="warning"
+                      variant="outlined"
+                      label={`${visibleUsersMissingContactCount} sin contacto`}
+                    />
+                  )}
+                  <FormControlLabel
+                    control={(
+                      <Checkbox
+                        checked={includeInactive}
+                        onChange={(event) => setIncludeInactive(event.target.checked)}
+                      />
+                    )}
+                    label="Incluir inactivos"
+                  />
+                </>
+              )}
               <Tooltip title="Refrescar">
                 <span>
                   <IconButton
@@ -149,11 +156,11 @@ export default function AdminUsersPage() {
               </Tooltip>
             </Stack>
           </Stack>
-          {visibleUsersMissingContactCount > 0 && (
+          {hasUsers && visibleUsersMissingContactCount > 0 && (
             <Typography variant="body2" color="text.secondary">
-              Comunicación solo aparece cuando el usuario ya tiene WhatsApp, teléfono o correo.
+              Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.
               {` ${visibleUsersMissingContactCount} usuario${visibleUsersMissingContactCount === 1 ? '' : 's'} `}
-              {visibleUsersMissingContactVerb} sin canal de contacto; complétalo desde Perfil.
+              {visibleUsersMissingContactVerb} sin canal de contacto; usa Completar contacto en esa fila.
             </Typography>
           )}
         </Stack>
@@ -163,7 +170,9 @@ export default function AdminUsersPage() {
             {usersQuery.isLoading && <Typography>Cargando usuarios…</Typography>}
             {usersQuery.error && <Typography color="error">Error al cargar usuarios</Typography>}
             {usersQuery.data?.length === 0 && (
-              <Typography color="text.secondary">No hay usuarios.</Typography>
+              <Typography color="text.secondary">
+                No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.
+              </Typography>
             )}
             {usersQuery.data?.length && visibleUsers.length === 0 ? (
               <Typography color="text.secondary">
@@ -241,7 +250,7 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
       )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
         <Button component={RouterLink} to={`/perfil/${user.partyId}`} size="small" variant="outlined">
-          Perfil
+          {hasContactInfo ? 'Perfil' : 'Completar contacto'}
         </Button>
         {hasContactInfo && (
           <Button size="small" variant="contained" onClick={onOpenCommunications}>

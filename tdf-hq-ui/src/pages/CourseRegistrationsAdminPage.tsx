@@ -48,7 +48,6 @@ type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 type DossierIntent = 'review' | 'markPaid';
 type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
-const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
 const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
 const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
@@ -163,6 +162,10 @@ const buildAutomaticFilterHelpText = ({
     return showAdvancedLimitControl
       ? 'Esta vista ya está acotada a una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
       : '';
+  }
+
+  if (singleAvailableCohortLabel || showSingleStatusSummary) {
+    return '';
   }
 
   const filterStartingPoint = singleAvailableCohortLabel
@@ -718,6 +721,12 @@ export default function CourseRegistrationsAdminPage() {
     : limit !== DEFAULT_LIMIT
       ? `Ajustar límite (${limit})`
       : 'Ajustar límite';
+  const singleAvailableCohortHelperText = showAdvancedLimitControl
+    ? 'No hace falta filtrarla: es la unica cohorte disponible ahora mismo. Usa Estado o Ajustar límite para cambiar la vista.'
+    : 'No hace falta filtrarla: es la unica cohorte disponible ahora mismo. Usa Estado para cambiar la vista.';
+  const singleVisibleStatusHelperText = showAdvancedLimitControl
+    ? 'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte o Ajustar límite para cambiar la vista.'
+    : 'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte para cambiar la vista.';
   const filtersHelpText = buildAutomaticFilterHelpText({
     combinedSingleChoiceSummary,
     hasVisibleRegistrations,
@@ -873,14 +882,7 @@ export default function CourseRegistrationsAdminPage() {
     setShowFollowUpUrlField(false);
     setShowFollowUpDetails(false);
     setShowFollowUpComposer(false);
-    setDossierFlash(
-      selectedDossier.intent === 'markPaid'
-        ? {
-            severity: 'info',
-            message: markPaidReceiptHint,
-          }
-        : null,
-    );
+    setDossierFlash(null);
   }, [selectedDossier]);
 
   useEffect(() => {
@@ -1279,10 +1281,13 @@ export default function CourseRegistrationsAdminPage() {
   useEffect(() => {
     if (selectedDossier?.intent !== 'markPaid' || !canMarkPaid) return;
     setShowReceiptComposer(false);
-    setDossierFlash((current) => (
-      current?.message === markPaidReceiptHint ? null : current
-    ));
   }, [canMarkPaid, selectedDossier?.intent]);
+
+  const dossierDialogTitle = selectedDossier?.intent === 'markPaid'
+    ? canMarkPaid
+      ? 'Confirmar pago de inscripción'
+      : 'Registrar pago de inscripción'
+    : 'Expediente de inscripción';
 
   return (
     <Stack spacing={3}>
@@ -1291,13 +1296,15 @@ export default function CourseRegistrationsAdminPage() {
           Inscripciones de cursos
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Tooltip title="Refrescar">
-            <span>
-              <IconButton aria-label="Refrescar inscripciones" onClick={handleRefresh} disabled={regsQuery.isFetching}>
-                <RefreshIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={regsQuery.isFetching}
+          >
+            Refrescar lista
+          </Button>
         </Stack>
       </Stack>
 
@@ -1374,7 +1381,7 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         )}
                         <Typography variant="caption" color="text.secondary">
-                          No hace falta filtrarla: es la unica cohorte disponible ahora mismo.
+                          {singleAvailableCohortHelperText}
                         </Typography>
                       </Stack>
                     ) : (
@@ -1429,7 +1436,7 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         )}
                         <Typography variant="caption" color="text.secondary">
-                          No hace falta filtrarlo: es el unico estado presente en esta vista.
+                          {singleVisibleStatusHelperText}
                         </Typography>
                       </Stack>
                     ) : (
@@ -1725,7 +1732,7 @@ export default function CourseRegistrationsAdminPage() {
       >
         <DialogTitle>
           <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} useFlexGap>
-            <span>Expediente de inscripción</span>
+            <span>{dossierDialogTitle}</span>
             <Tooltip title={dossierRefreshLabel}>
               <span>
                 <IconButton

@@ -97,6 +97,21 @@ const changeInputValue = async (input: HTMLInputElement, value: string) => {
   });
 };
 
+const getInputByLabelText = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => buttonText(element) === labelText,
+  );
+  if (!label) throw new Error(`Input label not found: ${labelText}`);
+
+  const inputId = label.htmlFor;
+  if (!inputId) throw new Error(`Input label has no associated control: ${labelText}`);
+
+  const input = label.ownerDocument.getElementById(inputId);
+  if (!(input instanceof HTMLInputElement)) throw new Error(`Input not found for label: ${labelText}`);
+
+  return input;
+};
+
 const buildUser = (overrides: Partial<AdminUser> = {}): AdminUser => ({
   userId: 101,
   partyId: 9,
@@ -140,6 +155,28 @@ describe('AdminUsersPage', () => {
   beforeEach(() => {
     listUsersMock.mockReset();
     listUsersMock.mockResolvedValue([]);
+  });
+
+  it('replaces empty list chrome with a first-user empty state', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenCalledWith(false);
+        expect(container.textContent).toContain(
+          'No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.',
+        );
+        expect(container.textContent).not.toContain('Buscar usuarios');
+        expect(container.textContent).not.toContain('0 usuarios');
+        expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
   });
 
   it('shows only real contact channels in each row so partial contact info stays scan-friendly', async () => {
@@ -226,17 +263,20 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
-        expect(getButtonsByText(container, 'Perfil')).toHaveLength(2);
+        expect(getButtonsByText(container, 'Perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
         expect(container.textContent).toContain(
-          'Comunicación solo aparece cuando el usuario ya tiene WhatsApp, teléfono o correo.',
+          'Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.',
         );
         expect(container.textContent).toContain(
-          '1 usuario sigue sin canal de contacto; complétalo desde Perfil.',
+          '1 usuario sigue sin canal de contacto; usa Completar contacto en esa fila.',
         );
 
         const missingContactRow = getRowByUserId(container, 102);
         expect(missingContactRow.textContent).toContain('Falta contacto');
+        expect(missingContactRow.textContent).toContain('Completar contacto');
+        expect(missingContactRow.textContent).not.toContain('Perfil');
         expect(missingContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
       });
 
@@ -313,13 +353,13 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('3 usuarios');
+        expect(container.textContent).toContain('Buscar usuarios');
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
         expect(getRowByUserId(container, 103).textContent).toContain('linus-view');
       });
 
-      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar usuarios administradores"]');
-      if (!searchInput) throw new Error('Search input not found');
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
 
       await changeInputValue(searchInput, 'grace');
 

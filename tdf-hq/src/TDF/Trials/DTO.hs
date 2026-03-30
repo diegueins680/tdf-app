@@ -16,7 +16,7 @@ instance ToJSON PreferredSlot
 instance FromJSON PreferredSlot
 
 data TrialRequestIn = TrialRequestIn
-  { partyId   :: Maybe Int
+  { partyId   :: Maybe Int -- must be omitted on the public endpoint
   , subjectId :: Int
   , preferred :: [PreferredSlot]   -- up to 3
   , notes     :: Maybe Text

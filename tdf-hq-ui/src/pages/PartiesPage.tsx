@@ -53,6 +53,22 @@ interface CreatePartyDialogProps {
   onClose: () => void;
 }
 
+const normalizePartyContactValue = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+};
+
+const getPartyContactSummary = (party: Pick<PartyDTO, 'primaryEmail' | 'instagram'>) => {
+  const contactParts = [
+    normalizePartyContactValue(party.primaryEmail),
+    normalizePartyContactValue(party.instagram),
+  ].filter((value): value is string => Boolean(value));
+
+  return contactParts.length > 0 ? contactParts.join(' · ') : 'Falta correo e Instagram';
+};
+
+const formatPartyCountLabel = (count: number) => `${count} contacto${count === 1 ? '' : 's'}`;
+
 function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
   const [name, setName] = useState('');
@@ -344,6 +360,13 @@ export default function PartiesPage() {
   }, [parties, trimmedSearch]);
   const showSearchEmptyState = !partiesQuery.isLoading && hasContacts && filtered.length === 0 && trimmedSearch !== '';
   const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0;
+  const showSearchContextSummary = !partiesQuery.isLoading && hasContacts && filtered.length > 0 && trimmedSearch !== '';
+  const searchContextSummary = showSearchContextSummary
+    ? `Mostrando ${filtered.length} de ${formatPartyCountLabel(parties.length)} para "${trimmedSearch}".`
+    : '';
+  const tableGuidanceText = canManageRoles
+    ? 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta. Roles y accesos aparece solo cuando ese contacto ya tiene usuario.'
+    : 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.';
 
   const openActionsMenu = (event: MouseEvent<HTMLButtonElement>, party: PartyDTO) => {
     setActionsMenuTarget({ anchorEl: event.currentTarget, party });
@@ -427,24 +450,40 @@ export default function PartiesPage() {
         ) : (
           <>
             {showTableGuidance && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                Haz clic en el nombre para ver relaciones. Abre Acciones para editar el contacto o crear accesos cuando
-                haga falta; si la cuenta ya existe, la fila lo muestra.
-              </Typography>
+              showSearchContextSummary ? (
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  useFlexGap
+                  sx={{ mb: 1.5 }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    {searchContextSummary}
+                  </Typography>
+                  <Button size="small" onClick={() => setSearch('')}>
+                    Limpiar búsqueda
+                  </Button>
+                </Stack>
+              ) : (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                  {tableGuidanceText}
+                </Typography>
+              )
             )}
             <Table size="small">
               <TableHead>
                 <TableRow>
                   <TableCell>Nombre</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Instagram</TableCell>
+                  <TableCell>Contacto</TableCell>
                   <TableCell align="right">Acciones</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {partiesQuery.isLoading && (
                   <TableRow>
-                    <TableCell colSpan={4}>Cargando...</TableCell>
+                    <TableCell colSpan={3}>Cargando...</TableCell>
                   </TableRow>
                 )}
                 {!partiesQuery.isLoading && filtered.map((party) => (
@@ -469,8 +508,7 @@ export default function PartiesPage() {
                         )}
                       </Stack>
                     </TableCell>
-                    <TableCell>{party.primaryEmail ?? '—'}</TableCell>
-                    <TableCell>{party.instagram ?? '—'}</TableCell>
+                    <TableCell>{getPartyContactSummary(party)}</TableCell>
                     <TableCell align="right">
                       <Tooltip title="Acciones">
                         <IconButton
@@ -506,7 +544,7 @@ export default function PartiesPage() {
             Crear usuario y enviar contraseña
           </MenuItem>
         )}
-        {canManageRoles && (
+        {canManageRoles && actionsMenuTarget?.party.hasUserAccount && (
           <MenuItem onClick={() => runPartyMenuAction(() => navigate('/configuracion/roles-permisos'))}>
             <SchoolIcon fontSize="small" sx={{ mr: 1 }} />
             Roles y accesos

@@ -2469,9 +2469,10 @@ listCourseRegistrations
   -> Maybe Int
   -> AppM [DTO.CourseRegistrationDTO]
 listCourseRegistrations mSlug mStatus mLimit = do
+  normalizedStatus <- traverse (either throwError pure . parseCourseRegistrationStatus) (cleanOptional mStatus)
   let filters = catMaybes
         [ (\s -> ME.CourseRegistrationCourseSlug ==. normalizeSlug s) <$> cleanOptional mSlug
-        , (\s -> ME.CourseRegistrationStatus ==. T.toLower (T.strip s)) <$> cleanOptional mStatus
+        , (ME.CourseRegistrationStatus ==.) <$> normalizedStatus
         ]
       capped = max 1 (min 500 (fromMaybe 200 mLimit))
   rows <- runDB $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo capped]
@@ -2589,9 +2590,45 @@ parseOptionalUtcText fieldName mValue =
         Just ts -> pure (Just ts)
         Nothing -> throwBadRequest (fieldName <> " inválido")
 
+courseFollowUpTypeOptions :: [Text]
+courseFollowUpTypeOptions =
+  [ "note"
+  , "call"
+  , "whatsapp"
+  , "email"
+  , "payment_receipt"
+  , "status_change"
+  , "registration"
+  ]
+
+normalizeCourseFollowUpTypeToken :: Text -> Maybe Text
+normalizeCourseFollowUpTypeToken raw =
+  case normalizeBookingStatusToken raw of
+    "note" -> Just "note"
+    "call" -> Just "call"
+    "whatsapp" -> Just "whatsapp"
+    "email" -> Just "email"
+    "paymentreceipt" -> Just "payment_receipt"
+    "statuschange" -> Just "status_change"
+    "registration" -> Just "registration"
+    _ -> Nothing
+
 normalizeCourseFollowUpType :: Maybe Text -> Text
 normalizeCourseFollowUpType =
-  fromMaybe "note" . fmap (T.toLower . T.strip) . cleanOptional
+  fromMaybe "note" . (>>= normalizeCourseFollowUpTypeToken) . cleanOptional
+
+parseCourseFollowUpType :: Maybe Text -> Either ServerError Text
+parseCourseFollowUpType Nothing = Right "note"
+parseCourseFollowUpType (Just raw) =
+  case cleanOptional (Just raw) >>= normalizeCourseFollowUpTypeToken of
+    Just entryTypeVal -> Right entryTypeVal
+    Nothing ->
+      Left err400
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              "Invalid course follow-up entryType. Allowed values: "
+                <> T.intercalate ", " courseFollowUpTypeOptions
+        }
 
 registrationHasReceipts :: Key ME.CourseRegistration -> AppM Bool
 registrationHasReceipts regKey = do
@@ -2692,9 +2729,10 @@ updateCourseRegistrationStatus
   -> CourseRegistrationStatusUpdate
   -> AppM CourseRegistrationResponse
 updateCourseRegistrationStatus user rawSlug regId CourseRegistrationStatusUpdate{..} = do
-  let newStatus = T.toLower (T.strip status)
-  when (T.null newStatus) $
+  let rawStatus = T.strip status
+  when (T.null rawStatus) $
     throwBadRequest "status requerido"
+  newStatus <- either throwError pure (parseCourseRegistrationStatus rawStatus)
   ent <- fetchCourseRegistrationEntity rawSlug regId >>= ensureCourseRegistrationPartyLink
   let regKey = entityKey ent
       reg = entityVal ent
@@ -2857,13 +2895,14 @@ createCourseRegistrationFollowUp user rawSlug regId CourseRegistrationFollowUpCr
   let notesVal = T.strip notes
   when (T.null notesVal) $
     throwBadRequest "notes requerido"
+  entryTypeVal <- either throwError pure (parseCourseFollowUpType entryType)
   mNextFollowUpAt <- parseOptionalUtcText "nextFollowUpAt" nextFollowUpAt
   now <- liftIO getCurrentTime
   followUp <- runDB $ insertCourseRegistrationFollowUp
     (entityKey ent)
     (ME.courseRegistrationPartyId (entityVal ent))
     (Just (auPartyId user))
-    (normalizeCourseFollowUpType entryType)
+    entryTypeVal
     subject
     notesVal
     attachmentUrl
@@ -2888,6 +2927,9 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
       in if T.null trimmed
         then throwBadRequest "notes requerido"
         else pure trimmed
+  entryTypeVal <- case entryType of
+    Nothing -> pure (ME.courseRegistrationFollowUpEntryType followUp)
+    Just raw -> either throwError pure (parseCourseFollowUpType (Just raw))
   mNextFollowUpAt <- case nextFollowUpAt of
     Nothing -> pure (ME.courseRegistrationFollowUpNextFollowUpAt followUp)
     Just raw -> parseOptionalUtcText "nextFollowUpAt" (Just raw)
@@ -2895,8 +2937,7 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
   let updated =
         followUp
           { ME.courseRegistrationFollowUpPartyId = ME.courseRegistrationPartyId (entityVal ent)
-          , ME.courseRegistrationFollowUpEntryType =
-              maybe (ME.courseRegistrationFollowUpEntryType followUp) (T.toLower . T.strip) (cleanOptional entryType)
+          , ME.courseRegistrationFollowUpEntryType = entryTypeVal
           , ME.courseRegistrationFollowUpSubject =
               maybe (ME.courseRegistrationFollowUpSubject followUp) (cleanOptional . Just) subject
           , ME.courseRegistrationFollowUpNotes = notesVal
@@ -5556,8 +5597,8 @@ createBooking user req = do
   Env pool _ <- ask
   now <- liftIO getCurrentTime
 
-  let status'          = parseStatusWithDefault Confirmed (cbStatus req)
-      serviceTypeClean = normalizeOptionalInput (cbServiceType req)
+  status' <- either throwBadRequest pure (parseBookingStatus (cbStatus req))
+  let serviceTypeClean = normalizeOptionalInput (cbServiceType req)
       engineerIdClean  = cbEngineerPartyId req >>= (\i -> if i > 0 then Just i else Nothing)
       engineerNameClean = normalizeOptionalInput (cbEngineerName req)
       partyKey         = fmap (toSqlKey . fromIntegral) (cbPartyId req)
@@ -5642,28 +5683,31 @@ updateBooking user bookingIdI req = do
     case mBooking of
       Nothing -> pure (Left err404)
       Just (Entity _ current) -> do
-        let applyText fallback Nothing = fallback
-            applyText fallback (Just val) =
-              let trimmed = T.strip val
-              in if T.null trimmed then fallback else trimmed
-            applyMaybeText fallback Nothing = fallback
-            applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
-            updated = current
-              { bookingTitle       = applyText (bookingTitle current) (ubTitle req)
-              , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
-              , bookingNotes       = applyMaybeText (bookingNotes current) (ubNotes req)
-              , bookingStatus      = maybe (bookingStatus current) (parseStatusWithDefault (bookingStatus current)) (ubStatus req)
-              , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
-              , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
-              , bookingEngineerPartyId = maybe (bookingEngineerPartyId current) (Just . toSqlKey . fromIntegral) (ubEngineerPartyId req)
-              , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
-              }
-        case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
+        case traverse parseBookingStatus (ubStatus req) of
           Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
-          Right () -> do
-            replace bookingId updated
-            dtos <- buildBookingDTOs [Entity bookingId updated]
-            pure (maybe (Left err500) Right (listToMaybe dtos))
+          Right requestedStatus -> do
+            let applyText fallback Nothing = fallback
+                applyText fallback (Just val) =
+                  let trimmed = T.strip val
+                  in if T.null trimmed then fallback else trimmed
+                applyMaybeText fallback Nothing = fallback
+                applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
+                updated = current
+                  { bookingTitle       = applyText (bookingTitle current) (ubTitle req)
+                  , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
+                  , bookingNotes       = applyMaybeText (bookingNotes current) (ubNotes req)
+                  , bookingStatus      = fromMaybe (bookingStatus current) requestedStatus
+                  , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
+                  , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
+                  , bookingEngineerPartyId = maybe (bookingEngineerPartyId current) (Just . toSqlKey . fromIntegral) (ubEngineerPartyId req)
+                  , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
+                  }
+            case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
+              Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
+              Right () -> do
+                replace bookingId updated
+                dtos <- buildBookingDTOs [Entity bookingId updated]
+                pure (maybe (Left err500) Right (listToMaybe dtos))
   either throwError pure result
 
 
@@ -5756,12 +5800,46 @@ normalizeOptionalInput (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
-parseStatusWithDefault :: BookingStatus -> Text -> BookingStatus
-parseStatusWithDefault fallback raw =
-  let cleaned = T.strip raw
-  in case readMaybe (T.unpack cleaned) of
-       Just s  -> s
-       Nothing -> fallback
+parseBookingStatus :: Text -> Either Text BookingStatus
+parseBookingStatus raw =
+  maybe
+    (Left ("Estado inválido. Usa uno de: " <> bookingStatusOptions))
+    Right
+    (Map.lookup (normalizeBookingStatusToken raw) bookingStatusAliases)
+  where
+    bookingStatusAliases =
+      Map.fromList
+        [ (normalizeBookingStatusToken (T.pack (show statusVal)), statusVal)
+        | statusVal <- ([minBound .. maxBound] :: [BookingStatus])
+        ]
+    bookingStatusOptions =
+      T.intercalate ", "
+        [ T.pack (show statusVal)
+        | statusVal <- ([minBound .. maxBound] :: [BookingStatus])
+        ]
+
+normalizeBookingStatusToken :: Text -> Text
+normalizeBookingStatusToken =
+  T.toLower . T.filter isAlphaNum . T.strip
+
+parseCourseRegistrationStatus :: Text -> Either ServerError Text
+parseCourseRegistrationStatus raw =
+  maybe invalidStatus pure (normalizeCourseRegistrationStatus raw)
+  where
+    invalidStatus =
+      Left err400
+        { errBody =
+            "Invalid course registration status. Allowed values: pending_payment, paid, cancelled"
+        }
+
+normalizeCourseRegistrationStatus :: Text -> Maybe Text
+normalizeCourseRegistrationStatus raw =
+  case normalizeBookingStatusToken raw of
+    "pendingpayment" -> Just "pending_payment"
+    "paid" -> Just "paid"
+    "cancelled" -> Just "cancelled"
+    "canceled" -> Just "cancelled"
+    _ -> Nothing
 
 validateServiceMarketplaceCatalog :: Maybe ServiceCatalog -> Either ServerError ServiceKind
 validateServiceMarketplaceCatalog Nothing =

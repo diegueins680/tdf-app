@@ -10,6 +10,7 @@ import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (..))
 import Test.Hspec
 
+import TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DTO.SocialEventsDTO
@@ -27,6 +28,7 @@ import TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
+import TDF.ServerAdmin (parseSocialErrorsChannel)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -37,8 +39,10 @@ import TDF.Server.SocialEventsHandlers (
     normalizeArtistGenres,
     normalizeInvitationStatus,
     normalizePositivePartyIdText,
+    parseFollowerQueryParamEither,
     normalizeTicketOrderStatus,
     normalizeTicketStatus,
+    parseNearQueryEither,
     parseInvitationIdsEither,
  )
 import qualified TDF.ServerSpec as ServerSpec
@@ -92,6 +96,34 @@ main = hspec $ do
             normalizePositivePartyIdText "   " `shouldBe` Nothing
             normalizePositivePartyIdText "abc" `shouldBe` Nothing
 
+    describe "parseFollowerQueryParamEither" $ do
+        it "canonicalizes numeric follower query params before delete lookups" $ do
+            parseFollowerQueryParamEither (Just " 0042 ") `shouldBe` Right "42"
+
+        it "rejects missing or blank follower query params" $ do
+            case parseFollowerQueryParamEither Nothing of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "follower query param is required"
+                Right _ -> expectationFailure "Expected missing follower query param to be rejected"
+            case parseFollowerQueryParamEither (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "follower query param is required"
+                Right _ -> expectationFailure "Expected blank follower query param to be rejected"
+
+        it "rejects non-positive or non-numeric follower query params" $ do
+            case parseFollowerQueryParamEither (Just "abc") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "follower query param must be a positive integer"
+                Right _ -> expectationFailure "Expected invalid follower query param to be rejected"
+            case parseFollowerQueryParamEither (Just "0") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "follower query param must be a positive integer"
+                Right _ -> expectationFailure "Expected non-positive follower query param to be rejected"
+
     describe "parseInvitationIdsEither" $ do
         it "parses numeric ids into typed keys" $ do
             let expected :: (SocialEventId, EventInvitationId)
@@ -107,6 +139,18 @@ main = hspec $ do
             case parseInvitationIdsEither "0" "-3" of
                 Left err -> BL.unpack (errBody err) `shouldContain` "Invalid event or invitation id"
                 Right _ -> expectationFailure "Expected an error for non-positive ids"
+
+    describe "parseNearQueryEither" $ do
+        it "parses finite coordinates and default radius" $ do
+            parseNearQueryEither "-0.18, -78.48" `shouldBe` Right (-0.18, -78.48, 25)
+
+        it "rejects non-finite coordinates and radius values" $ do
+            case parseNearQueryEither "NaN,-78.48" of
+                Left err -> BL.unpack (errBody err) `shouldContain` "Invalid near latitude"
+                Right _ -> expectationFailure "Expected NaN latitude to be rejected"
+            case parseNearQueryEither "-0.18,-78.48,Infinity" of
+                Left err -> BL.unpack (errBody err) `shouldContain` "Invalid near radiusKm"
+                Right _ -> expectationFailure "Expected Infinity radius to be rejected"
 
     describe "normalizeTicketOrderStatus" $ do
         it "defaults to pending for empty/unknown values" $ do
@@ -188,6 +232,40 @@ main = hspec $ do
 
         it "requires HOLD reason even when NEED exists" $ do
             parseDirective "HOLD:\nNEED: email" `shouldBe` Left "HOLD directive empty"
+
+    describe "validateHookVerifyRequest" $ do
+        it "accepts subscribe verification requests with a matching token" $ do
+            validateHookVerifyRequest (Just "SuBsCrIbE") (Just "challenge-123") (Just "secret") (Just "secret")
+                `shouldBe` Right "challenge-123"
+
+        it "rejects verification requests when hub.mode is missing" $ do
+            case validateHookVerifyRequest Nothing (Just "challenge-123") (Just "secret") (Just "secret") of
+                Left err -> errHTTPCode err `shouldBe` 403
+                Right _ -> expectationFailure "Expected missing hub.mode to be rejected"
+
+    describe "parseSocialErrorsChannel" $ do
+        it "normalizes valid channel values" $ do
+            parseSocialErrorsChannel (Just " WhatsApp ") `shouldBe` Right "whatsapp"
+            parseSocialErrorsChannel (Just "FACEBOOK") `shouldBe` Right "facebook"
+
+        it "rejects missing or blank channels instead of falling back implicitly" $ do
+            case parseSocialErrorsChannel Nothing of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "channel requerido"
+                Right _ -> expectationFailure "Expected missing channel to be rejected"
+            case parseSocialErrorsChannel (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "channel requerido"
+                Right _ -> expectationFailure "Expected blank channel to be rejected"
+
+        it "rejects unknown channel values" $
+            case parseSocialErrorsChannel (Just "telegram") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "channel inválido"
+                Right _ -> expectationFailure "Expected invalid channel to be rejected"
 
     APITypesSpec.spec
     ArtistSpec.spec

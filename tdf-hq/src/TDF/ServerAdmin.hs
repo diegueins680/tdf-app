@@ -8,6 +8,7 @@ module TDF.ServerAdmin
   ( adminServer
   , dedupeAdminEmailRecipients
   , normalizeAdminEmailBodyLines
+  , parseSocialErrorsChannel
   ) where
 
 import           Control.Exception      (SomeException, try)
@@ -249,8 +250,8 @@ adminServer user =
 
     socialErrorsHandler mChannel mLimit = do
       ensureModule ModuleAdmin user
-      let channel = T.toLower (T.strip (fromMaybe "instagram" mChannel))
-          limit = max 1 (min 200 (fromMaybe 50 mLimit))
+      channel <- either throwError pure (parseSocialErrorsChannel mChannel)
+      let limit = max 1 (min 200 (fromMaybe 50 mLimit))
       case channel of
         "instagram" -> do
           rows <- withPool $ selectList
@@ -972,6 +973,20 @@ ensureStrictAdmin
 ensureStrictAdmin user =
   unless (hasStrictAdminAccess user) $
     throwError err403 { errBody = "Admin role required" }
+
+parseSocialErrorsChannel :: Maybe Text -> Either ServerError Text
+parseSocialErrorsChannel mChannel =
+  case fmap (T.toLower . T.strip) mChannel of
+    Just "instagram" -> Right "instagram"
+    Just "facebook" -> Right "facebook"
+    Just "whatsapp" -> Right "whatsapp"
+    Nothing -> missingChannel
+    Just txt
+      | T.null txt -> missingChannel
+      | otherwise -> Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
+  where
+    missingChannel =
+      Left err400 { errBody = "channel requerido (instagram|facebook|whatsapp)" }
 
 loadUserAccount :: Entity UserCredential -> SqlPersistT IO UserAccountDTO
 loadUserAccount (Entity credId cred) = do

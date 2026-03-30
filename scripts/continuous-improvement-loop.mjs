@@ -22,6 +22,7 @@ import {
 const execFileAsync = promisify(execFile);
 const GITHUB_LOG_LINE_LIMIT = 200;
 const GITHUB_LOG_CHAR_LIMIT = 24_000;
+const PUSH_SYNC_MAX_ATTEMPTS = 2;
 
 class GitHubHttpError extends Error {
   constructor(status, statusText, payload) {
@@ -474,6 +475,87 @@ async function pushHead(repoRoot, remoteName, branchName) {
   await execText('git', ['push', remoteName, `HEAD:${branchName}`], repoRoot);
 }
 
+function buildRemoteBranchRef(remoteName, branchName) {
+  return `${remoteName}/${branchName}`;
+}
+
+function isMissingRemoteRefError(message) {
+  return /\bcouldn't find remote ref\b|\bremote ref\b.*\bnot found\b/i.test(String(message ?? ''));
+}
+
+function isNonFastForwardPushError(message) {
+  return /\bnon-fast-forward\b|failed to push some refs|fetch first/i.test(String(message ?? ''));
+}
+
+async function syncWithPushBranch(repoRoot, remoteName, branchName) {
+  const remoteRef = buildRemoteBranchRef(remoteName, branchName);
+  const previousSha = await getHeadSha(repoRoot);
+
+  try {
+    await execText('git', ['fetch', remoteName, branchName], repoRoot);
+  } catch (error) {
+    if (isMissingRemoteRefError(error.message)) {
+      return {
+        remoteExists: false,
+        remoteRef,
+        previousSha,
+        sha: previousSha,
+      };
+    }
+    throw new Error(`Failed to fetch ${remoteName}/${branchName} before push.\n${error.message}`);
+  }
+
+  try {
+    await execText('git', ['rebase', '--autostash', remoteRef], repoRoot);
+  } catch (error) {
+    try {
+      await execText('git', ['rebase', '--abort'], repoRoot);
+    } catch {
+      // ignore abort failures and surface the original rebase error
+    }
+    throw new Error(`Failed to rebase onto ${remoteRef} before push.\n${error.message}`);
+  }
+
+  return {
+    remoteExists: true,
+    remoteRef,
+    previousSha,
+    sha: await getHeadSha(repoRoot),
+  };
+}
+
+async function syncAndPushHead(repoRoot, remoteName, branchName) {
+  let attempt = 1;
+
+  while (attempt <= PUSH_SYNC_MAX_ATTEMPTS) {
+    const syncResult = await syncWithPushBranch(repoRoot, remoteName, branchName);
+
+    if (syncResult.remoteExists && syncResult.sha !== syncResult.previousSha) {
+      console.log(`Rebased onto ${syncResult.remoteRef}; new HEAD ${syncResult.sha}.`);
+    }
+
+    try {
+      await pushHead(repoRoot, remoteName, branchName);
+      return {
+        ...syncResult,
+        attempts: attempt,
+        sha: await getHeadSha(repoRoot),
+      };
+    } catch (error) {
+      if (attempt < PUSH_SYNC_MAX_ATTEMPTS && isNonFastForwardPushError(error.message)) {
+        console.warn(
+          `Push to ${remoteName}/${branchName} lost a race. Refetching and rebasing before retry ${attempt + 1}/${PUSH_SYNC_MAX_ATTEMPTS}.`,
+        );
+        attempt += 1;
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new Error(`Failed to push HEAD to ${remoteName}/${branchName} after ${PUSH_SYNC_MAX_ATTEMPTS} attempts.`);
+}
+
 async function fetchCheckRuns(owner, repo, sha) {
   const payload = await githubJson(`repos/${owner}/${repo}/commits/${encodeURIComponent(sha)}/check-runs`);
   return payload.check_runs ?? [];
@@ -848,31 +930,32 @@ async function finalizeIteration(repoRoot, config, context) {
     }
 
     console.log(`Pushing ${commitResult.sha} to ${config.pushRemote}:${config.pushBranch}`);
-    await pushHead(repoRoot, config.pushRemote, config.pushBranch);
+    const pushResult = await syncAndPushHead(repoRoot, config.pushRemote, config.pushBranch);
+    context.head_sha = pushResult.sha;
 
     if (!config.pollGitHub) {
       return {
         ok: true,
         pushed: true,
-        sha: commitResult.sha,
+        sha: pushResult.sha,
       };
     }
 
-    const ciResult = await waitForGreenCi(repoRoot, config, commitResult.sha);
+    const ciResult = await waitForGreenCi(repoRoot, config, pushResult.sha);
     await writeJson(context.ci_report_file, ciResult);
 
     if (ciResult.ok) {
       return {
         ok: true,
         pushed: true,
-        sha: commitResult.sha,
+        sha: pushResult.sha,
         ciResult,
       };
     }
 
     if (!config.ciRepairCommand) {
       throw new Error(
-        `GitHub checks failed for ${commitResult.sha}. Configure ciRepairCommand or inspect ${context.ci_report_file}.`,
+        `GitHub checks failed for ${pushResult.sha}. Configure ciRepairCommand or inspect ${context.ci_report_file}.`,
       );
     }
 

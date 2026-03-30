@@ -3,7 +3,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module TDF.API.WhatsApp (WhatsAppApi, whatsappServer, LeadsCompleteApi, leadsCompleteServer) where
+module TDF.API.WhatsApp
+  ( WhatsAppApi
+  , whatsappServer
+  , LeadsCompleteApi
+  , leadsCompleteServer
+  , validateHookVerifyRequest
+  ) where
 
 import Servant
 import GHC.Generics (Generic)
@@ -41,10 +47,9 @@ whatsappServer conn =
 hookVerifyH :: Maybe Text -> Maybe Text -> Maybe Text -> Handler Text
 hookVerifyH mmode mchall mtoken = do
   svc <- liftIO mkWhatsAppService
-  let modeOk = maybe True (\m -> T.toLower m == "subscribe") mmode
-  case (modeOk, mchall, mtoken, waVerifyToken (waConfig svc)) of
-    (True, Just c, Just t, Just e) | t == e -> pure c
-    _ -> throwError err403
+  case validateHookVerifyRequest mmode mchall mtoken (waVerifyToken (waConfig svc)) of
+    Right challenge -> pure challenge
+    Left err -> throwError err
 
 hookReceiveH :: Connection -> WAMetaWebhook -> Handler Value
 hookReceiveH conn payload = do
@@ -118,3 +123,10 @@ isValidEmail candidate =
       T.isInfixOf "." domain &&
       T.length domain >= 3
     _ -> False
+
+validateHookVerifyRequest :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Either ServerError Text
+validateHookVerifyRequest mmode mchall mtoken mExpected =
+  case (fmap T.toLower mmode, mchall, mtoken, mExpected) of
+    (Just mode, Just challenge, Just token, Just expected)
+      | mode == "subscribe" && token == expected -> Right challenge
+    _ -> Left err403

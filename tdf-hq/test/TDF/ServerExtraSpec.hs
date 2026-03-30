@@ -8,14 +8,17 @@ import Control.Monad.Trans.Reader (ReaderT)
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson ((.=))
 import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.Persist
 import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute)
 import Database.Persist.Sqlite (runSqlite)
+import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
 import qualified TDF.Models as M
+import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance))
 import TDF.ServerExtra (
     IGInbound (..),
     IGInboundDeleted (..),
@@ -23,10 +26,27 @@ import TDF.ServerExtra (
     MetaInboundEvent (..),
     extractMetaInbound,
     persistMetaInbound,
+    validateAssetStatusUpdate,
  )
 
 spec :: Spec
-spec = describe "Meta inbox deletion handling" $ do
+spec = do
+  describe "validateAssetStatusUpdate" $ do
+    it "accepts supported asset status variants" $ do
+      validateAssetStatusUpdate (Just " booked ") `shouldBe` Right (Just Booked)
+      validateAssetStatusUpdate (Just "out_for_maintenance") `shouldBe` Right (Just OutForMaintenance)
+
+    it "rejects blank or unknown asset statuses instead of silently ignoring them" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "Allowed values: active, booked, out_for_maintenance, retired"
+            Right value ->
+              expectationFailure ("Expected invalid status error, got " <> show value)
+      assertInvalid (validateAssetStatusUpdate (Just "   "))
+      assertInvalid (validateAssetStatusUpdate (Just "on-loan"))
+
+  describe "Meta inbox deletion handling" $ do
     it "parses deleted Instagram webhook events" $ do
         let payload =
                 A.object

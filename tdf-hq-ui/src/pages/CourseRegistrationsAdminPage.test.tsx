@@ -769,8 +769,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(container.textContent).toContain('No hace falta filtrarla: es la unica cohorte disponible ahora mismo.');
-      expect(container.textContent).toContain('Los filtros se aplican automáticamente al cambiar. Usa Estado.');
+      expect(container.textContent).toContain(
+        'No hace falta filtrarla: es la unica cohorte disponible ahora mismo. Usa Estado para cambiar la vista.',
+      );
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Vista actual');
@@ -821,7 +823,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pagado');
-      expect(container.textContent).toContain('Los filtros se aplican automáticamente al cambiar. Usa cohorte.');
+      expect(container.textContent).toContain(
+        'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte para cambiar la vista.',
+      );
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
     });
 
@@ -1401,7 +1406,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pendiente de pago');
-      expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
+      expect(container.textContent).toContain(
+        'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte para cambiar la vista.',
+      );
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Solo aparecen estados con inscripciones en esta vista.');
     });
@@ -1844,7 +1852,6 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('opens the payment dossier from the status menu without duplicating the receipt-upload action', async () => {
-    const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -1872,8 +1879,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(markPaidReceiptHint);
-      expect(countOccurrences(document.body, markPaidReceiptHint)).toBe(1);
+      expect(document.body.textContent).toContain('Registrar pago de inscripción');
+      expect(document.body.textContent).not.toContain('Expediente de inscripción');
+      expect(document.body.textContent).not.toContain(
+        'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.',
+      );
       expect(document.body.textContent).toContain(markPaidReceiptSectionHelpText);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
@@ -1895,8 +1905,6 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('keeps the mark-paid flow focused on the pay action when a saved receipt already unlocks it', async () => {
-    const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
-    const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
     const registration = buildRegistration();
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
@@ -1932,10 +1940,16 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Confirmar pago de inscripción');
+      expect(document.body.textContent).not.toContain('Expediente de inscripción');
       expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
       expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
-      expect(document.body.textContent).not.toContain(markPaidReceiptHint);
-      expect(document.body.textContent).not.toContain(markPaidReceiptSectionHelpText);
+      expect(document.body.textContent).not.toContain(
+        'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.',
+      );
+      expect(document.body.textContent).not.toContain(
+        'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.',
+      );
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).toContain('receipt.pdf');
       expect(
@@ -2698,12 +2712,37 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Pendientes: 0');
       expect(container.textContent).not.toContain('Canceladas: 0');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
+      expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),
         ),
       ).toBe(false);
-      expect(getButtonByAriaLabel(container, 'Refrescar inscripciones')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the list refresh action scope-labeled so it does not blend into dossier refresh', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
+      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Refrescar lista')).toBe(1);
     });
 
     await cleanup();

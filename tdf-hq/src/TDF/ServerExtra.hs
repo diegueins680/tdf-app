@@ -176,7 +176,7 @@ inventoryServer user =
       ensureInventoryAccess
       assetKey    <- parseKey @Asset rawId
       locationKey <- traverse (parseKey @Room) (uLocationId req)
-      let statusValue = uStatus req >>= parseAssetStatus
+      statusValue <- either throwError pure (validateAssetStatusUpdate (uStatus req))
       let updates = catMaybes
             [ (AssetName =.) <$> uName req
             , (AssetCategory =.) <$> uCategory req
@@ -1151,6 +1151,15 @@ parseAssetStatus = lookupStatus . normalise
       "retired"            -> Just Retired
       _                     -> Nothing
     normalise = T.toLower . T.filter (`notElem` [' ', '_'])
+
+validateAssetStatusUpdate :: Maybe Text -> Either ServerError (Maybe AssetStatus)
+validateAssetStatusUpdate Nothing = Right Nothing
+validateAssetStatusUpdate (Just rawStatus) =
+  case parseAssetStatus rawStatus of
+    Just statusValue -> Right (Just statusValue)
+    Nothing -> Left err400
+      { errBody = "Invalid asset status. Allowed values: active, booked, out_for_maintenance, retired"
+      }
 
 parseSessionStatus :: Text -> Maybe SessionStatus
 parseSessionStatus = lookupStatus . normalise

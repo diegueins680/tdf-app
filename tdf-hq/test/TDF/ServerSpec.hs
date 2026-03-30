@@ -5,10 +5,11 @@ module TDF.ServerSpec (spec) where
 import Control.Monad (forM_)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Database.Persist.Sql (toSqlKey)
+import qualified Data.Text as T
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..))
-import TDF.Server (normalizeOptionalInput, parseStatusWithDefault, validateServiceMarketplaceCatalog)
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -50,12 +51,22 @@ spec = describe "TDF.Server helpers" $ do
         it "drops strings that only contain whitespace" $
             normalizeOptionalInput (Just "   ") `shouldBe` Nothing
 
-    describe "parseStatusWithDefault" $ do
+    describe "parseBookingStatus" $ do
         it "parses a known status and ignores surrounding whitespace" $
-            parseStatusWithDefault Tentative "  InProgress   " `shouldBe` InProgress
+            parseBookingStatus "  InProgress   " `shouldBe` Right InProgress
 
-        it "falls back to the provided status when parsing fails" $
-            parseStatusWithDefault Confirmed "not-a-status" `shouldBe` Confirmed
+        it "accepts separator and casing variants that normalize to a known status" $ do
+            parseBookingStatus "confirmed" `shouldBe` Right Confirmed
+            parseBookingStatus "no_show" `shouldBe` Right NoShow
+            parseBookingStatus "in progress" `shouldBe` Right InProgress
+
+        it "rejects unknown statuses with the allowed values in the error" $
+            case parseBookingStatus "not-a-status" of
+                Left msg -> do
+                    T.isInfixOf "Tentative" msg `shouldBe` True
+                    T.isInfixOf "Cancelled" msg `shouldBe` True
+                Right statusVal ->
+                    expectationFailure ("Expected an invalid-status error, got: " <> show statusVal)
 
     describe "validateServiceMarketplaceCatalog" $ do
         it "returns the active catalog kind so marketplace bookings inherit the real service kind" $
@@ -70,6 +81,37 @@ spec = describe "TDF.Server helpers" $ do
             expectCatalogError (validateServiceMarketplaceCatalog (Just (mkCatalog Rehearsal False))) $ \serverErr -> do
                 errHTTPCode serverErr `shouldBe` 409
                 BL8.unpack (errBody serverErr) `shouldContain` "Service catalog is inactive"
+
+    describe "parseCourseRegistrationStatus" $ do
+        it "normalizes supported course registration statuses and canonicalizes canceled" $ do
+            parseCourseRegistrationStatus " Pending Payment " `shouldBe` Right "pending_payment"
+            parseCourseRegistrationStatus "PAID" `shouldBe` Right "paid"
+            parseCourseRegistrationStatus "canceled" `shouldBe` Right "cancelled"
+
+        it "rejects unsupported course registration statuses with the allowed values" $
+            case parseCourseRegistrationStatus "refunded" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "pending_payment, paid, cancelled"
+                Right statusVal ->
+                    expectationFailure ("Expected an invalid course-registration status error, got: " <> show statusVal)
+
+    describe "parseCourseFollowUpType" $ do
+        it "defaults missing values to note and canonicalizes supported variants" $ do
+            parseCourseFollowUpType Nothing `shouldBe` Right "note"
+            parseCourseFollowUpType (Just " Status Change ") `shouldBe` Right "status_change"
+            parseCourseFollowUpType (Just "payment-receipt") `shouldBe` Right "payment_receipt"
+
+        it "rejects blank or unsupported follow-up types with the allowed values" $
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "note, call, whatsapp, email, payment_receipt, status_change, registration"
+                    Right entryType ->
+                        expectationFailure ("Expected an invalid follow-up type error, got: " <> show entryType)
+             in do
+                    assertInvalid (parseCourseFollowUpType (Just "   "))
+                    assertInvalid (parseCourseFollowUpType (Just "telegram"))
 
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $

@@ -65,6 +65,9 @@ maybeKey = fmap intKey
 cleanOptional :: Maybe Text -> Maybe Text
 cleanOptional = (>>= (\txt -> let t = T.strip txt in if T.null t then Nothing else Just t))
 
+normalizeEmail :: Maybe Text -> Maybe Text
+normalizeEmail = fmap T.toLower . cleanOptional
+
 normalizePhone :: Text -> Maybe Text
 normalizePhone raw =
   let trimmed = T.filter (not . isSpace) (T.strip raw)
@@ -294,6 +297,26 @@ recordExists filters = do
 anyM :: Monad m => (a -> m Bool) -> [a] -> m Bool
 anyM f = fmap or . mapM f
 
+validatePreferredSlots :: [PreferredSlot] -> Either ServerError [PreferredSlot]
+validatePreferredSlots [] =
+  Left err400 { errBody = "Need at least one preferred slot" }
+validatePreferredSlots slots
+  | length slots > 3 =
+      Left err400 { errBody = "At most three preferred slots are allowed" }
+  | otherwise =
+      traverse validateSlot slots
+  where
+    validateSlot slot@(PreferredSlot slotStart slotEnd)
+      | slotStart >= slotEnd =
+          Left err400 { errBody = "Preferred slot endAt must be after startAt" }
+      | otherwise =
+          Right slot
+
+validatePublicTrialPartyId :: Maybe Int -> Either ServerError ()
+validatePublicTrialPartyId Nothing = Right ()
+validatePublicTrialPartyId (Just _) =
+  Left err400 { errBody = "partyId is not allowed on public trial requests" }
+
 publicTrialsServer :: ServerT PublicTrialsAPI AppM
 publicTrialsServer =
   signupH
@@ -346,10 +369,9 @@ publicTrialsServer =
       let nameClean  = cleanOptional fullName
           emailClean = cleanOptional email
           phoneClean = cleanOptional phone
-
-      resolvedPartyId <- case partyId of
-        Just pid -> pure (intKey pid)
-        Nothing  -> createOrFetchParty nameClean emailClean phoneClean now
+      either (liftIO . throwIO) pure (validatePublicTrialPartyId partyId)
+      slots <- either (liftIO . throwIO) pure (validatePreferredSlots preferred)
+      resolvedPartyId <- createOrFetchParty nameClean emailClean phoneClean now
 
       mNewCred <- case emailClean of
         Nothing -> pure Nothing
@@ -363,11 +385,9 @@ publicTrialsServer =
               display = fromMaybe addr nameClean
           EmailSvc.sendWelcome svc display addr username password
         _ -> pure ()
-      case preferred of
-        [] -> liftIO $ throwIO err400 { errBody = "Need at least one preferred slot" }
-        (slot1@(PreferredSlot firstStart firstEnd) : rest) -> do
-          let slots = take 3 (slot1 : rest)
-              pref2 = listToMaybe rest
+      case slots of
+        slot1@(PreferredSlot firstStart firstEnd) : rest -> do
+          let pref2 = listToMaybe rest
               pref3 = listToMaybe (drop 1 rest)
               (pref2Start, pref2End) = slotBounds pref2
               (pref3Start, pref3End) = slotBounds pref3
@@ -416,7 +436,7 @@ publicTrialsServer =
 
 createOrFetchParty :: Maybe Text -> Maybe Text -> Maybe Text -> UTCTime -> AppM PartyId
 createOrFetchParty mName mEmail mPhone now = do
-  emailVal <- case cleanOptional mEmail of
+  emailVal <- case normalizeEmail mEmail of
     Nothing -> liftIO $ throwIO err400 { errBody = "Correo requerido para crear la cuenta" }
     Just e  -> pure e
   let phoneVal = mPhone >>= normalizePhone

@@ -743,9 +743,11 @@ export default function CmsAdminPage() {
                   >
                     {loadingLiveOnDemand ? 'Cargando versión en vivo...' : 'Usar versión en vivo'}
                   </Button>
-                  <Button variant="text" onClick={() => setShowDraftDiff(true)} disabled={!livePayloadPretty}>
-                    Comparar con live
-                  </Button>
+                  {livePayloadPretty && (
+                    <Button variant="text" onClick={() => setShowDraftDiff(true)}>
+                      Comparar con live
+                    </Button>
+                  )}
                   {liveFetchError && <Chip label={liveFetchError} color="error" variant="outlined" />}
                   {payloadChanged && <Chip label="Payload modificado vs en vivo" size="small" color="warning" />}
                 </Stack>

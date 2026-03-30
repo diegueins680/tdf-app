@@ -9,6 +9,8 @@ module TDF.Server.SocialEventsHandlers
   , normalizeInvitationStatus
   , normalizeArtistGenres
   , parseInvitationIdsEither
+  , parseFollowerQueryParamEither
+  , parseNearQueryEither
   , followArtistDb
   , normalizeTicketOrderStatus
   , normalizeTicketStatus
@@ -917,9 +919,7 @@ socialEventsServer user = eventsServer
       artistKey <- parseArtistId artistIdStr
       mArtist <- liftIO $ runSqlPool (get artistKey) envPool
       when (isNothing mArtist) $ throwError err404 { errBody = "Artist not found" }
-      followerParty <- case cleanMaybeText mFollower of
-        Nothing -> throwError err400 { errBody = "follower query param is required" }
-        Just t -> pure t
+      followerParty <- either throwError pure (parseFollowerQueryParamEither mFollower)
       liftIO $ runSqlPool
         (deleteWhere [ArtistFollowArtistId ==. artistKey, ArtistFollowFollowerPartyId ==. followerParty])
         envPool
@@ -1879,6 +1879,15 @@ normalizePositivePartyIdText rawPartyId =
     Just partyId | partyId > 0 -> Just (T.pack (show partyId))
     _ -> Nothing
 
+parseFollowerQueryParamEither :: Maybe T.Text -> Either ServerError T.Text
+parseFollowerQueryParamEither mFollower =
+  case cleanMaybeText mFollower of
+    Nothing -> Left err400 { errBody = "follower query param is required" }
+    Just rawFollower ->
+      case normalizePositivePartyIdText rawFollower of
+        Nothing -> Left err400 { errBody = "follower query param must be a positive integer" }
+        Just normalized -> Right normalized
+
 -- | Normalize invitation status to a lowercase, non-empty value.
 normalizeInvitationStatus :: Maybe T.Text -> T.Text
 normalizeInvitationStatus mStatus =
@@ -2093,7 +2102,12 @@ parseInt64Either label raw =
 parseDoubleEither :: T.Text -> T.Text -> Either ServerError Double
 parseDoubleEither label raw =
   case readMaybe (T.unpack (T.strip raw)) :: Maybe Double of
-    Just n -> Right n
+    Just n
+      | isNaN n || isInfinite n ->
+          Left err400
+            { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label))
+            }
+      | otherwise -> Right n
     Nothing ->
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label))

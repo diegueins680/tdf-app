@@ -8,6 +8,7 @@ import type { PartyCreate, PartyDTO, PartyUpdate } from '../api/types';
 const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const createPartyMock = jest.fn<(body: PartyCreate) => Promise<PartyDTO>>();
 const updatePartyMock = jest.fn<(id: number, body: PartyUpdate) => Promise<PartyDTO | null>>();
+const canAccessPathMock = jest.fn<() => boolean>();
 
 jest.unstable_mockModule('../api/parties', () => ({
   Parties: {
@@ -28,7 +29,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../utils/accessControl', () => ({
-  canAccessPath: () => false,
+  canAccessPath: () => canAccessPathMock(),
 }));
 
 jest.unstable_mockModule('../components/PartyRelatedPopover', () => ({
@@ -167,6 +168,7 @@ describe('PartiesPage', () => {
     listPartiesMock.mockReset();
     createPartyMock.mockReset();
     updatePartyMock.mockReset();
+    canAccessPathMock.mockReset();
     listPartiesMock.mockResolvedValue([]);
     createPartyMock.mockResolvedValue({
       partyId: 1,
@@ -174,6 +176,7 @@ describe('PartiesPage', () => {
       isOrg: false,
     } satisfies PartyDTO);
     updatePartyMock.mockResolvedValue(null);
+    canAccessPathMock.mockReturnValue(false);
   });
 
   it('replaces empty CRM chrome with a first-contact empty state', async () => {
@@ -234,7 +237,7 @@ describe('PartiesPage', () => {
     }
   });
 
-  it('uses one plain-language company indicator instead of a duplicated org column', async () => {
+  it('uses one plain-language company indicator and one combined contact column', async () => {
     listPartiesMock.mockResolvedValue([
       {
         partyId: 1,
@@ -250,6 +253,20 @@ describe('PartiesPage', () => {
         primaryEmail: 'ada@example.com',
         instagram: '@ada',
       } satisfies PartyDTO,
+      {
+        partyId: 3,
+        displayName: 'Solo Instagram',
+        isOrg: false,
+        primaryEmail: null,
+        instagram: '@solo',
+      } satisfies PartyDTO,
+      {
+        partyId: 4,
+        displayName: 'Sin canales',
+        isOrg: false,
+        primaryEmail: null,
+        instagram: null,
+      } satisfies PartyDTO,
     ]);
 
     const container = document.createElement('div');
@@ -259,21 +276,30 @@ describe('PartiesPage', () => {
     try {
       await waitForExpectation(() => {
         const bodyRows = Array.from(container.querySelectorAll<HTMLTableRowElement>('tbody tr'));
-        expect(getColumnHeaders(container)).toEqual(['Nombre', 'Email', 'Instagram', 'Acciones']);
-        expect(bodyRows).toHaveLength(2);
+        expect(getColumnHeaders(container)).toEqual(['Nombre', 'Contacto', 'Acciones']);
+        expect(bodyRows).toHaveLength(4);
         expect(container.textContent).toContain('Los Navegantes');
         expect(container.textContent).toContain('Empresa');
         expect(container.textContent).not.toContain('ORG');
+        expect(container.textContent).toContain('Falta correo e Instagram');
         expect(getRowCellTexts(bodyRows[0] ?? document.createElement('tr'))).toEqual([
           'Los NavegantesEmpresa',
-          'hola@navegantes.test',
-          '@navegantes',
+          'hola@navegantes.test · @navegantes',
           '',
         ]);
         expect(getRowCellTexts(bodyRows[1] ?? document.createElement('tr'))).toEqual([
           'Ada Lovelace',
-          'ada@example.com',
-          '@ada',
+          'ada@example.com · @ada',
+          '',
+        ]);
+        expect(getRowCellTexts(bodyRows[2] ?? document.createElement('tr'))).toEqual([
+          'Solo Instagram',
+          '@solo',
+          '',
+        ]);
+        expect(getRowCellTexts(bodyRows[3] ?? document.createElement('tr'))).toEqual([
+          'Sin canales',
+          'Falta correo e Instagram',
           '',
         ]);
       });
@@ -355,7 +381,57 @@ describe('PartiesPage', () => {
     }
   });
 
+  it('replaces generic table guidance with active-search context when the list is narrowed', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Los Navegantes',
+        isOrg: true,
+        primaryEmail: 'hola@navegantes.test',
+        instagram: '@navegantes',
+      } satisfies PartyDTO,
+      {
+        partyId: 2,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        primaryEmail: 'ada@example.com',
+        instagram: '@ada',
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
+        );
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+      });
+
+      await act(async () => {
+        setInputValue(getSearchInput(container), 'ada@example.com');
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Mostrando 1 de 2 contactos para "ada@example.com".');
+        expect(container.textContent).not.toContain(
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
+        );
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).not.toContain('Los Navegantes');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps one overflow actions trigger per contact row and moves secondary actions into the menu', async () => {
+    canAccessPathMock.mockReturnValue(true);
     listPartiesMock.mockResolvedValue([
       {
         partyId: 1,
@@ -382,7 +458,7 @@ describe('PartiesPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Haz clic en el nombre para ver relaciones. Abre Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo muestra.',
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta. Roles y accesos aparece solo cuando ese contacto ya tiene usuario.',
         );
         expect(container.textContent).toContain('Usuario creado');
         expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
@@ -399,6 +475,11 @@ describe('PartiesPage', () => {
       await waitForExpectation(() => {
         expect(getMenuItemByText(document.body, 'Editar contacto')).toBeTruthy();
         expect(getMenuItemByText(document.body, 'Crear usuario y enviar contraseña')).toBeTruthy();
+        expect(
+          Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+            (element) => buttonText(element) === 'Roles y accesos',
+          ),
+        ).toBe(false);
       });
 
       await act(async () => {
@@ -409,6 +490,7 @@ describe('PartiesPage', () => {
 
       await waitForExpectation(() => {
         expect(getMenuItemByText(document.body, 'Editar contacto')).toBeTruthy();
+        expect(getMenuItemByText(document.body, 'Roles y accesos')).toBeTruthy();
         expect(
           Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
             (element) => buttonText(element) === 'Crear usuario y enviar contraseña',

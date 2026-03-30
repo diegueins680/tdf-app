@@ -573,6 +573,70 @@ test('continuous-improvement-loop stages tracked files modified during an iterat
   }
 });
 
+test('continuous-improvement-loop rebases onto the push branch before pushing a stale local branch', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-rebase-push-test-'));
+  const remoteDir = path.join(tempRoot, 'remote.git');
+  const repoDir = path.join(tempRoot, 'repo');
+  const otherDir = path.join(tempRoot, 'other');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '--bare', remoteDir], tempRoot);
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
+    await git(['add', 'tracked.txt']);
+    await git(['commit', '-m', 'initial']);
+    await git(['remote', 'add', 'origin', remoteDir]);
+    await git(['push', '-u', 'origin', 'main']);
+
+    await execFileAsync('git', ['clone', '--branch', 'main', remoteDir, otherDir], { cwd: tempRoot });
+    await execFileAsync('git', ['config', 'user.name', 'Remote Writer'], { cwd: otherDir });
+    await execFileAsync('git', ['config', 'user.email', 'remote@example.com'], { cwd: otherDir });
+    await fs.writeFile(path.join(otherDir, 'remote-only.txt'), 'remote\n', 'utf8');
+    await execFileAsync('git', ['add', 'remote-only.txt'], { cwd: otherDir });
+    await execFileAsync('git', ['commit', '-m', 'remote advance'], { cwd: otherDir });
+    await execFileAsync('git', ['push', 'origin', 'main'], { cwd: otherDir });
+
+    const configPath = path.join(repoDir, 'loop-config.json');
+    await fs.writeFile(
+      configPath,
+      JSON.stringify(
+        {
+          pollGitHub: false,
+          iterationDelaySeconds: 0,
+          ideaCommand:
+            "printf '# Rebase before push test\\nSource: test\\nTarget: tracked.txt:1\\nReason: verify the loop rebases stale local commits onto origin/main before push.\\n'",
+          implementationCommand: "printf 'local\\n' >> tracked.txt",
+          uiAuditCommand: "printf '[]\\n'",
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    await git(['add', 'loop-config.json']);
+    await git(['commit', '-m', 'config']);
+
+    await execFileAsync(
+      'node',
+      [loopScriptPath, '--config', 'loop-config.json', '--max-iterations', '1'],
+      { cwd: repoDir },
+    );
+
+    const localHead = (await git(['rev-parse', 'HEAD'])).stdout.trim();
+    const remoteHead = (await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', 'refs/heads/main'], { cwd: tempRoot })).stdout.trim();
+    assert.equal(localHead, remoteHead);
+    assert.equal(await fs.readFile(path.join(repoDir, 'remote-only.txt'), 'utf8'), 'remote\n');
+    assert.equal(await fs.readFile(path.join(repoDir, 'tracked.txt'), 'utf8'), 'before\nlocal\n');
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('continuous-improvement-loop blocks custom UI audit failures even when findings are empty', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-ui-report-test-'));
   const remoteDir = path.join(tempRoot, 'remote.git');
