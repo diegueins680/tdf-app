@@ -27,6 +27,7 @@ import TDF.DTO.SocialEventsDTO
 import TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
+import TDF.ServerRadio (validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel)
 import TDF.Server.SocialEventsHandlers (
@@ -169,6 +170,25 @@ main = hspec $ do
         it "normalizes alternate ticket status spellings" $ do
             normalizeTicketStatus (Just "checkedin") `shouldBe` "checked_in"
             normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
+
+    describe "validateRadioStreamUrl" $ do
+        it "trims surrounding whitespace and accepts http(s) stream URLs" $
+            validateRadioStreamUrl "  HTTPS://radio.example.com/live  "
+                `shouldBe` Right "HTTPS://radio.example.com/live"
+
+        it "rejects blank stream URLs with a precise 400" $
+            case validateRadioStreamUrl "   " of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl is required"
+                Right _ -> expectationFailure "Expected blank streamUrl to be rejected"
+
+        it "rejects non-http stream URLs before they can be stored" $
+            case validateRadioStreamUrl "ftp://radio.example.com/live" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl must be http(s)"
+                Right _ -> expectationFailure "Expected non-http streamUrl to be rejected"
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do
