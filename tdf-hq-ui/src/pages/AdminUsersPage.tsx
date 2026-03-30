@@ -104,12 +104,12 @@ export default function AdminUsersPage() {
             <Stack spacing={1} sx={{ minWidth: 0, flex: '1 1 360px' }}>
               <Typography variant="h4" fontWeight={700}>Usuarios (admin API)</Typography>
               <TextField
+                label="Buscar usuarios"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 size="small"
                 fullWidth
-                placeholder="Buscar por usuario, nombre, ID, contacto o acceso"
-                inputProps={{ 'aria-label': 'Buscar usuarios administradores' }}
+                placeholder="Usuario, nombre, ID, contacto o acceso"
               />
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>

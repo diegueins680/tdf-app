@@ -97,6 +97,21 @@ const changeInputValue = async (input: HTMLInputElement, value: string) => {
   });
 };
 
+const getInputByLabelText = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => buttonText(element) === labelText,
+  );
+  if (!label) throw new Error(`Input label not found: ${labelText}`);
+
+  const inputId = label.htmlFor;
+  if (!inputId) throw new Error(`Input label has no associated control: ${labelText}`);
+
+  const input = label.ownerDocument.getElementById(inputId);
+  if (!(input instanceof HTMLInputElement)) throw new Error(`Input not found for label: ${labelText}`);
+
+  return input;
+};
+
 const buildUser = (overrides: Partial<AdminUser> = {}): AdminUser => ({
   userId: 101,
   partyId: 9,
@@ -313,13 +328,13 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('3 usuarios');
+        expect(container.textContent).toContain('Buscar usuarios');
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
         expect(getRowByUserId(container, 103).textContent).toContain('linus-view');
       });
 
-      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar usuarios administradores"]');
-      if (!searchInput) throw new Error('Search input not found');
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
 
       await changeInputValue(searchInput, 'grace');
 
