@@ -10,6 +10,7 @@ import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (..))
 import Test.Hspec
 
+import TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DTO.SocialEventsDTO
@@ -187,6 +188,16 @@ main = hspec $ do
 
         it "requires HOLD reason even when NEED exists" $ do
             parseDirective "HOLD:\nNEED: email" `shouldBe` Left "HOLD directive empty"
+
+    describe "validateHookVerifyRequest" $ do
+        it "accepts subscribe verification requests with a matching token" $ do
+            validateHookVerifyRequest (Just "SuBsCrIbE") (Just "challenge-123") (Just "secret") (Just "secret")
+                `shouldBe` Right "challenge-123"
+
+        it "rejects verification requests when hub.mode is missing" $ do
+            case validateHookVerifyRequest Nothing (Just "challenge-123") (Just "secret") (Just "secret") of
+                Left err -> errHTTPCode err `shouldBe` 403
+                Right _ -> expectationFailure "Expected missing hub.mode to be rejected"
 
     APITypesSpec.spec
     ArtistSpec.spec
