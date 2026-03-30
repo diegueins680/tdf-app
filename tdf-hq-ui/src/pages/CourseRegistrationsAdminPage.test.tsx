@@ -1318,6 +1318,56 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the filtered result count visible even when only one registration matches', async () => {
+    const pendingRegistration = buildRegistration();
+    const paidRegistration = buildRegistration({
+      crId: 102,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+      crStatus: 'paid',
+    });
+    const cancelledRegistration = buildRegistration({
+      crId: 103,
+      crFullName: 'Katherine Johnson',
+      crEmail: 'katherine@example.com',
+      crStatus: 'cancelled',
+    });
+
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(
+      params?.status === 'paid'
+        ? [paidRegistration]
+        : params?.status === 'cancelled'
+          ? [cancelledRegistration]
+          : params?.status === 'pending_payment'
+            ? [pendingRegistration]
+            : [pendingRegistration, paidRegistration, cancelledRegistration],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=paid');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: 'paid',
+        limit: 200,
+      });
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pagado');
+      expect(container.textContent).toContain('Mostrando 1 inscripción.');
+      expect(countOccurrences(container, 'Mostrando 1 inscripción.')).toBe(1);
+      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+      expect(
+        Array.from(container.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('labels the status chip group as a filter so it does not compete with row status actions', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({

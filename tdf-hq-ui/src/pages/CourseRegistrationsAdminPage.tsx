@@ -657,7 +657,7 @@ export default function CourseRegistrationsAdminPage() {
     ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${resetViewInstruction}`
     : `No hay inscripciones ${filteredEmptyStateScope}. ${resetViewInstruction}`;
   const canCopyCsv = (regsQuery.data?.length ?? 0) > 1;
-  const showListUtilitySummary = canCopyCsv || Boolean(copyMessage);
+  const showStandaloneListUtilitySummary = !hasCustomFilters && (canCopyCsv || Boolean(copyMessage));
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
   const shouldShowSharedSourceSummary = hasSharedVisibleSource
@@ -1511,9 +1511,26 @@ export default function CourseRegistrationsAdminPage() {
                     {activeViewSummaryMessage}
                   </Typography>
                 )}
+                <Typography variant="body2" color="text.secondary">
+                  {visibleRegistrationsSummary}
+                </Typography>
                 <Button size="small" onClick={handleResetFilters}>
                   {resetViewLabel}
                 </Button>
+                {canCopyCsv && (
+                  <Button
+                    size="small"
+                    startIcon={<ContentCopyIcon fontSize="small" />}
+                    onClick={() => void handleCopyCsv()}
+                  >
+                    {copyCsvButtonLabel}
+                  </Button>
+                )}
+                {copyMessage && (
+                  <Typography variant="caption" color="text.secondary">
+                    {copyMessage}
+                  </Typography>
+                )}
               </Stack>
             )}
             {combinedSharedListContextSummary ? (
@@ -1534,7 +1551,7 @@ export default function CourseRegistrationsAdminPage() {
                 )}
               </>
             )}
-            {hasVisibleRegistrations && showListUtilitySummary && (
+            {hasVisibleRegistrations && showStandaloneListUtilitySummary && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
                 <Typography variant="body2" color="text.secondary">
                   {visibleRegistrationsSummary}
