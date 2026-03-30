@@ -1,5 +1,12 @@
 const normalizeServiceType = (serviceType: string) => serviceType.trim().toLowerCase();
 
+type BookingCustomerFieldState = {
+  helperText: string;
+  dialogTitle: string;
+  quickCreateLabel: string;
+  showQuickCreateAction: boolean;
+};
+
 export const requiresEngineerForService = (serviceType: string) => {
   const lowered = normalizeServiceType(serviceType);
   return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
@@ -46,4 +53,37 @@ export const describeServiceDefaults = (serviceType: string) => {
   }
 
   return details.join(' · ');
+};
+
+export const getBookingCustomerFieldState = ({
+  customerCount,
+  selectedCustomerId,
+}: {
+  customerCount: number;
+  selectedCustomerId: number | null;
+}): BookingCustomerFieldState => {
+  if (selectedCustomerId != null) {
+    return {
+      helperText: 'Cliente asignado. Cambia la selección solo si necesitas reemplazarlo.',
+      dialogTitle: 'Nuevo contacto',
+      quickCreateLabel: 'Crear contacto nuevo',
+      showQuickCreateAction: false,
+    };
+  }
+
+  if (customerCount <= 0) {
+    return {
+      helperText: 'Todavía no hay clientes guardados. Agrega el primero sin salir de esta sesión.',
+      dialogTitle: 'Agregar primer contacto',
+      quickCreateLabel: 'Agregar primer contacto',
+      showQuickCreateAction: true,
+    };
+  }
+
+  return {
+    helperText: 'Selecciona un cliente guardado. Si todavía no existe, créalo aquí.',
+    dialogTitle: 'Nuevo contacto',
+    quickCreateLabel: 'Crear contacto nuevo',
+    showQuickCreateAction: true,
+  };
 };

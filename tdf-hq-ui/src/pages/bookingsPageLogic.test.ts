@@ -1,6 +1,7 @@
 import {
   defaultMinutesForService,
   describeServiceDefaults,
+  getBookingCustomerFieldState,
   requiresEngineerForService,
 } from './bookingsPageLogic';
 
@@ -23,5 +24,32 @@ describe('bookingsPageLogic', () => {
     expect(describeServiceDefaults('Band rehearsal')).toBe(
       'Salas sugeridas: Live Room · Duración sugerida: 90 min',
     );
+  });
+
+  it('uses first-contact copy when the customer catalog is still empty', () => {
+    expect(getBookingCustomerFieldState({ customerCount: 0, selectedCustomerId: null })).toEqual({
+      helperText: 'Todavía no hay clientes guardados. Agrega el primero sin salir de esta sesión.',
+      dialogTitle: 'Agregar primer contacto',
+      quickCreateLabel: 'Agregar primer contacto',
+      showQuickCreateAction: true,
+    });
+  });
+
+  it('keeps one create-contact action available until a customer is selected', () => {
+    expect(getBookingCustomerFieldState({ customerCount: 4, selectedCustomerId: null })).toEqual({
+      helperText: 'Selecciona un cliente guardado. Si todavía no existe, créalo aquí.',
+      dialogTitle: 'Nuevo contacto',
+      quickCreateLabel: 'Crear contacto nuevo',
+      showQuickCreateAction: true,
+    });
+  });
+
+  it('hides the extra create-contact action after a customer is already assigned', () => {
+    expect(getBookingCustomerFieldState({ customerCount: 4, selectedCustomerId: 12 })).toEqual({
+      helperText: 'Cliente asignado. Cambia la selección solo si necesitas reemplazarlo.',
+      dialogTitle: 'Nuevo contacto',
+      quickCreateLabel: 'Crear contacto nuevo',
+      showQuickCreateAction: false,
+    });
   });
 });

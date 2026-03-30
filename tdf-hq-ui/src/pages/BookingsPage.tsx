@@ -31,7 +31,12 @@ import type { RoomDTO } from '../api/types';
 import { Parties } from '../api/parties';
 import { Services } from '../api/services';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { defaultMinutesForService, describeServiceDefaults, requiresEngineerForService } from './bookingsPageLogic';
+import {
+  defaultMinutesForService,
+  describeServiceDefaults,
+  getBookingCustomerFieldState,
+  requiresEngineerForService,
+} from './bookingsPageLogic';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -321,6 +326,10 @@ export default function BookingsPage() {
     [parties],
   );
   const customerOptions = parties;
+  const customerFieldState = useMemo(
+    () => getBookingCustomerFieldState({ customerCount: customerOptions.length, selectedCustomerId: customerPartyId }),
+    [customerOptions.length, customerPartyId],
+  );
   const missingEngineer = requiresEngineerForService(serviceType) && !(engineerName.trim() || engineerPartyId);
   const createPartyMutation = useMutation({
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
@@ -873,7 +882,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       </Dialog>
 
       <Dialog open={createContactOpen} onClose={() => { if (!createPartyMutation.isPending) setCreateContactOpen(false); }} maxWidth="xs" fullWidth>
-        <DialogTitle>Nuevo contacto</DialogTitle>
+        <DialogTitle>{customerFieldState.dialogTitle}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField
@@ -986,26 +995,24 @@ const openDialogForRange = (start: Date, end: Date) => {
                   {...params}
                   label="Cliente"
                   required
-                  helperText={
-                    customerOptions.length === 0
-                      ? 'No hay clientes en el catálogo.'
-                      : 'Selecciona un cliente para la sesión.'
-                  }
+                  helperText={customerFieldState.helperText}
                 />
               )}
               noOptionsText="Sin clientes en el catálogo"
             />
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => {
-                setCreateContactError(null);
-                setCreateContactOpen(true);
-              }}
-              sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-            >
-              Crear contacto rápido
-            </Button>
+            {customerFieldState.showQuickCreateAction && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  setCreateContactError(null);
+                  setCreateContactOpen(true);
+                }}
+                sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
+              >
+                {customerFieldState.quickCreateLabel}
+              </Button>
+            )}
             <TextField
               label="Inicio"
               type="datetime-local"
