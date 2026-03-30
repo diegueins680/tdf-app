@@ -73,3 +73,13 @@ tdf-hq-ui.backup.*/
 
 # Stack (local root)
 .stack/
+
+# Local review and inspection artifacts
+.openclaw/reviewer-access/
+.openclaw/run-*-failed.log
+.tmp-meta-*.js
+tmp-meta-*.png
+tmp-meta-*.json
+screencast/meta-app-review/frame-check/
+screencast/meta-app-review/output/[0-9a-f]*.webm
+screencast/meta-app-review/output/final.mp4
