@@ -35,6 +35,9 @@ const getUserContactSummary = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'
 const hasUserContactChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) =>
   Boolean(getUserContactSummary(user));
 
+const getUserAccessSummary = (values: string[]) =>
+  Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))).join(', ');
+
 export default function AdminUsersPage() {
   const qc = useQueryClient();
   const [includeInactive, setIncludeInactive] = useState(false);
@@ -126,6 +129,8 @@ export default function AdminUsersPage() {
 function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommunications: () => void }) {
   const contactSummary = getUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
+  const rolesSummary = getUserAccessSummary(user.roles);
+  const modulesSummary = getUserAccessSummary(user.modules);
 
   return (
     <Box
@@ -153,16 +158,20 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
       </Box>
       <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />
       {!hasContactInfo && <Chip label="Falta contacto" color="warning" size="small" variant="outlined" />}
-      <Stack direction="row" spacing={0.5} flexWrap="wrap">
-        {user.roles.map((role) => (
-          <Chip key={role} label={role} size="small" variant="outlined" />
-        ))}
-      </Stack>
-      <Stack direction="row" spacing={0.5} flexWrap="wrap">
-        {user.modules.map((module) => (
-          <Chip key={module} label={module} size="small" color="info" variant="outlined" />
-        ))}
-      </Stack>
+      {(rolesSummary || modulesSummary) && (
+        <Box sx={{ minWidth: 220, flex: '1 1 240px' }}>
+          {rolesSummary && (
+            <Typography variant="body2" color="text.secondary">
+              Roles: {rolesSummary}
+            </Typography>
+          )}
+          {modulesSummary && (
+            <Typography variant="body2" color="text.secondary">
+              Módulos: {modulesSummary}
+            </Typography>
+          )}
+        </Box>
+      )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
         <Button component={RouterLink} to={`/perfil/${user.partyId}`} size="small" variant="outlined">
           Perfil

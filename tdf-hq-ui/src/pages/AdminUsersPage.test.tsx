@@ -238,4 +238,30 @@ describe('AdminUsersPage', () => {
       await cleanup();
     }
   });
+
+  it('summarizes repeated roles and modules once per row so access scope is easier to scan', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 103,
+        roles: [' Admin ', '', 'Teacher', 'Admin', 'Teacher'],
+        modules: [' admin ', 'crm', 'crm', ''],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const row = getRowByUserId(container, 103);
+        expect(row.textContent).toContain('Roles: Admin, Teacher');
+        expect(row.textContent).toContain('Módulos: admin, crm');
+        expect(row.textContent).not.toContain('Roles: Admin, Teacher, Admin');
+        expect(row.textContent).not.toContain('Módulos: admin, crm, crm');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
 });
