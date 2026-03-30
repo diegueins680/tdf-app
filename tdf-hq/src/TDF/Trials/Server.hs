@@ -65,6 +65,9 @@ maybeKey = fmap intKey
 cleanOptional :: Maybe Text -> Maybe Text
 cleanOptional = (>>= (\txt -> let t = T.strip txt in if T.null t then Nothing else Just t))
 
+normalizeEmail :: Maybe Text -> Maybe Text
+normalizeEmail = fmap T.toLower . cleanOptional
+
 normalizePhone :: Text -> Maybe Text
 normalizePhone raw =
   let trimmed = T.filter (not . isSpace) (T.strip raw)
@@ -433,7 +436,7 @@ publicTrialsServer =
 
 createOrFetchParty :: Maybe Text -> Maybe Text -> Maybe Text -> UTCTime -> AppM PartyId
 createOrFetchParty mName mEmail mPhone now = do
-  emailVal <- case cleanOptional mEmail of
+  emailVal <- case normalizeEmail mEmail of
     Nothing -> liftIO $ throwIO err400 { errBody = "Correo requerido para crear la cuenta" }
     Just e  -> pure e
   let phoneVal = mPhone >>= normalizePhone

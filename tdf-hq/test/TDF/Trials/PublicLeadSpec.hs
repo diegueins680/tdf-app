@@ -26,14 +26,15 @@ spec :: Spec
 spec = do
   describe "Public trials lead party resolution" $ do
     it "creates/reuses signup party by email" $ do
-      (firstId, secondId, storedName, storedPhone) <- runInMemory $ do
+      (firstId, secondId, storedEmail, storedName, storedPhone) <- runInMemory $ do
         now <- liftIO getCurrentTime
-        firstId <- createOrFetchParty (Just "Test User") (Just "user@example.com") (Just "+593 99 123 4567") now
+        firstId <- createOrFetchParty (Just "Test User") (Just " User@Example.com ") (Just "+593 99 123 4567") now
         secondId <- createOrFetchParty (Just "Another Name") (Just "user@example.com") Nothing now
         Entity _ party <- getJustEntity firstId
-        pure (firstId, secondId, Models.partyDisplayName party, Models.partyPrimaryPhone party)
+        pure (firstId, secondId, Models.partyPrimaryEmail party, Models.partyDisplayName party, Models.partyPrimaryPhone party)
 
       firstId `shouldBe` secondId
+      storedEmail `shouldBe` Just "user@example.com"
       storedName `shouldBe` "Test User"
       storedPhone `shouldBe` Just "+593991234567"
 
