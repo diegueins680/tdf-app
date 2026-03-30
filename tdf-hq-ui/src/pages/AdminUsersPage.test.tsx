@@ -157,6 +157,28 @@ describe('AdminUsersPage', () => {
     listUsersMock.mockResolvedValue([]);
   });
 
+  it('replaces empty list chrome with a first-user empty state', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenCalledWith(false);
+        expect(container.textContent).toContain(
+          'No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.',
+        );
+        expect(container.textContent).not.toContain('Buscar usuarios');
+        expect(container.textContent).not.toContain('0 usuarios');
+        expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows only real contact channels in each row so partial contact info stays scan-friendly', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
