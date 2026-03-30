@@ -222,6 +222,7 @@ test-suite tdf-hq-test
     TDF.ServerFeedback
     TDF.ServerRadio
     TDF.ServerSpec
+    TDF.ServerAdminSpec
     TDF.Social.FollowHandlerSpec
     TDF.Social.FollowSpec
     TDF.Services

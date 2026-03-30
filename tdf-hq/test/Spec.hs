@@ -25,6 +25,7 @@ import TDF.DTO.SocialEventsDTO
       vudContactUpdate )
 import TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
+import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
@@ -191,6 +192,7 @@ main = hspec $ do
     APITypesSpec.spec
     ArtistSpec.spec
     ServerSpec.spec
+    ServerAdminSpec.spec
     ServerExtraSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
