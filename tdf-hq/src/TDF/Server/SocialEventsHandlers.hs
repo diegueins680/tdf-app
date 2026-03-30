@@ -10,6 +10,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeArtistGenres
   , parseInvitationIdsEither
   , parseFollowerQueryParamEither
+  , parseNearQueryEither
   , followArtistDb
   , normalizeTicketOrderStatus
   , normalizeTicketStatus
@@ -2101,7 +2102,12 @@ parseInt64Either label raw =
 parseDoubleEither :: T.Text -> T.Text -> Either ServerError Double
 parseDoubleEither label raw =
   case readMaybe (T.unpack (T.strip raw)) :: Maybe Double of
-    Just n -> Right n
+    Just n
+      | isNaN n || isInfinite n ->
+          Left err400
+            { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label))
+            }
+      | otherwise -> Right n
     Nothing ->
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label))

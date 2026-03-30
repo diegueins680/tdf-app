@@ -41,6 +41,7 @@ import TDF.Server.SocialEventsHandlers (
     parseFollowerQueryParamEither,
     normalizeTicketOrderStatus,
     normalizeTicketStatus,
+    parseNearQueryEither,
     parseInvitationIdsEither,
  )
 import qualified TDF.ServerSpec as ServerSpec
@@ -137,6 +138,18 @@ main = hspec $ do
             case parseInvitationIdsEither "0" "-3" of
                 Left err -> BL.unpack (errBody err) `shouldContain` "Invalid event or invitation id"
                 Right _ -> expectationFailure "Expected an error for non-positive ids"
+
+    describe "parseNearQueryEither" $ do
+        it "parses finite coordinates and default radius" $ do
+            parseNearQueryEither "-0.18, -78.48" `shouldBe` Right (-0.18, -78.48, 25)
+
+        it "rejects non-finite coordinates and radius values" $ do
+            case parseNearQueryEither "NaN,-78.48" of
+                Left err -> BL.unpack (errBody err) `shouldContain` "Invalid near latitude"
+                Right _ -> expectationFailure "Expected NaN latitude to be rejected"
+            case parseNearQueryEither "-0.18,-78.48,Infinity" of
+                Left err -> BL.unpack (errBody err) `shouldContain` "Invalid near radiusKm"
+                Right _ -> expectationFailure "Expected Infinity radius to be rejected"
 
     describe "normalizeTicketOrderStatus" $ do
         it "defaults to pending for empty/unknown values" $ do
