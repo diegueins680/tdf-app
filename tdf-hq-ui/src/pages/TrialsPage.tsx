@@ -29,13 +29,69 @@ interface SlotInput {
   start: string;
 }
 
-const emptySlots: SlotInput[] = [{ start: '' }, { start: '' }, { start: '' }];
+const MAX_SLOT_COUNT = 3;
 
-const parsePositiveSubjectId = (raw: string): number | '' => {
+export const createEmptySlotInputs = (): SlotInput[] =>
+  Array.from({ length: MAX_SLOT_COUNT }, () => ({ start: '' }));
+
+export const parsePositiveSubjectId = (raw: unknown): number | '' => {
+  if (typeof raw === 'number') {
+    return Number.isSafeInteger(raw) && raw > 0 ? raw : '';
+  }
+  if (typeof raw !== 'string') return '';
   const trimmed = raw.trim();
   if (!/^\d+$/.test(trimmed)) return '';
   const parsed = Number(trimmed);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : '';
+};
+
+export const applySuggestedSlot = (slots: readonly SlotInput[], start: string): SlotInput[] => {
+  const trimmed = start.trim();
+  if (!trimmed) return [...slots];
+  if (slots.some((slot) => slot.start === trimmed)) return [...slots];
+
+  const nextSlots = slots.map((slot) => ({ ...slot }));
+  const emptyIndex = nextSlots.findIndex((slot) => slot.start === '');
+  const targetIndex = emptyIndex >= 0 ? emptyIndex : nextSlots.length - 1;
+  nextSlots[targetIndex] = { start: trimmed };
+  return nextSlots;
+};
+
+export const toFriendlyTrialError = (error: unknown): string | null => {
+  if (!(error instanceof Error)) return null;
+  const message = error.message.trim();
+  if (!message) return 'No pudimos enviar la solicitud. Inténtalo de nuevo en un momento.';
+
+  const normalized = message.toLowerCase();
+  if (normalized.includes('correo requerido')) {
+    return 'Déjanos un correo válido para poder confirmar tu clase de prueba.';
+  }
+  if (normalized.includes('need at least one preferred slot')) {
+    return 'Elige al menos un horario preferido para continuar.';
+  }
+  if (normalized.includes('no hay profesores disponibles para esta materia')) {
+    return 'Esta materia no tiene cupos publicados ahora mismo. Escríbenos por WhatsApp y te ayudamos a encontrar una opción.';
+  }
+  if (normalized.includes('no hay profesores disponibles en el horario solicitado')) {
+    return 'Ese horario ya no está disponible. Prueba uno de los sugeridos o agrega otra hora.';
+  }
+  return message;
+};
+
+const getVisibleSlotCount = (slots: readonly SlotInput[]): number => {
+  const lastFilledIndex = slots.reduce((latestIndex, slot, index) => (slot.start ? index : latestIndex), -1);
+  return Math.min(MAX_SLOT_COUNT, Math.max(1, lastFilledIndex + 1));
+};
+
+const toDateTimeLocalValue = (iso: string): string => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const fieldSx = {
@@ -71,7 +127,8 @@ export default function TrialsPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
-  const [slotInputs, setSlotInputs] = useState<SlotInput[]>(emptySlots);
+  const [slotInputs, setSlotInputs] = useState<SlotInput[]>(() => createEmptySlotInputs());
+  const [visibleSlotCount, setVisibleSlotCount] = useState(1);
   const [formError, setFormError] = useState<string | null>(null);
 
   const subjectsQuery = useQuery({
@@ -88,18 +145,79 @@ export default function TrialsPage() {
   const requestMutation = useMutation({
     mutationFn: Trials.createRequest,
     onSuccess: () => {
-      setSlotInputs(emptySlots);
+      setSlotInputs(createEmptySlotInputs());
+      setVisibleSlotCount(1);
     },
   });
 
+  const minimumDateTimeValue = useMemo(() => toDateTimeLocalValue(new Date().toISOString()), []);
+
+  const subjects: TrialSubject[] = useMemo(
+    () => (subjectsQuery.data ?? []).filter((subject) => subject.active),
+    [subjectsQuery.data],
+  );
+
+  const suggestedSlotOptions = useMemo(
+    () =>
+      (slotsQuery.data ?? []).flatMap((teacherAvailability) =>
+        teacherAvailability.slots.map((slot, slotIndex) => {
+          const inputValue = toDateTimeLocalValue(slot.startAt);
+          return {
+            key: `${teacherAvailability.teacherId}-${slot.startAt}-${slotIndex}`,
+            teacherName: teacherAvailability.teacherName,
+            label: formatSlotLabel(slot.startAt, slot.endAt),
+            inputValue,
+            selected: slotInputs.some((candidate) => candidate.start === inputValue),
+          };
+        }),
+      ),
+    [slotInputs, slotsQuery.data],
+  );
+
+  const filledSlotCount = useMemo(
+    () => slotInputs.filter((slot) => slot.start.trim() !== '').length,
+    [slotInputs],
+  );
+
+  const submitting = requestMutation.isPending;
+  const submitted = requestMutation.isSuccess;
+  const submitError = toFriendlyTrialError(requestMutation.error);
+
   const handleSlotChange = (index: number, value: string) => {
-    setSlotInputs((prev) => prev.map((slot, idx) => (idx === index ? { ...slot, start: value } : slot)));
+    setFormError(null);
+    setSlotInputs((prev) => prev.map((slot, currentIndex) => (currentIndex === index ? { ...slot, start: value } : slot)));
+  };
+
+  const handleSubjectChange = (raw: unknown) => {
+    const nextSubjectId = parsePositiveSubjectId(raw);
+    setSubjectId(nextSubjectId);
+    setFormError(null);
+    requestMutation.reset();
+    setSlotInputs(createEmptySlotInputs());
+    setVisibleSlotCount(1);
+  };
+
+  const handleSuggestedSlotClick = (inputValue: string) => {
+    setFormError(null);
+    const nextSlots = applySuggestedSlot(slotInputs, inputValue);
+    setSlotInputs(nextSlots);
+    setVisibleSlotCount(getVisibleSlotCount(nextSlots));
+  };
+
+  const handleAddAlternativeSlot = () => {
+    setVisibleSlotCount((prev) => Math.min(MAX_SLOT_COUNT, prev + 1));
+  };
+
+  const handleClearSlots = () => {
+    setSlotInputs(createEmptySlotInputs());
+    setVisibleSlotCount(1);
+    setFormError(null);
   };
 
   const parseIsoOrNull = (value: string) => {
     if (!value) return null;
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+    const parsedDate = new Date(value);
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -111,9 +229,9 @@ export default function TrialsPage() {
       return;
     }
 
-    const filledSlots = slotInputs.filter((slot) => slot.start);
+    const filledSlots = slotInputs.filter((slot) => slot.start.trim() !== '');
     if (filledSlots.length === 0) {
-      setFormError('Agrega al menos un horario preferido.');
+      setFormError('Elige al menos un horario preferido.');
       return;
     }
 
@@ -125,7 +243,7 @@ export default function TrialsPage() {
         const endAt = new Date(startDate.getTime() + 45 * 60 * 1000).toISOString();
         return { startAt, endAt };
       })
-      .filter(Boolean) as { startAt: string; endAt: string }[];
+      .filter((slot): slot is { startAt: string; endAt: string } => Boolean(slot));
 
     if (!preferred.length) {
       setFormError('Los horarios ingresados no son válidos.');
@@ -141,17 +259,6 @@ export default function TrialsPage() {
       notes: notes.trim() || undefined,
     });
   };
-
-  const subjects: TrialSubject[] = useMemo(
-    () => (subjectsQuery.data ?? []).filter((s) => s.active),
-    [subjectsQuery.data],
-  );
-
-  const suggestedSlots = slotsQuery.data ?? [];
-  const submitting = requestMutation.isPending;
-  const submitted = requestMutation.isSuccess;
-  const submitError =
-    requestMutation.error instanceof Error ? requestMutation.error.message : null;
 
   return (
     <Box
@@ -181,7 +288,7 @@ export default function TrialsPage() {
               Solicita tu clase de prueba
             </Typography>
             <Typography variant="body1" color="rgba(226,232,240,0.8)">
-              Elige la materia, dinos cuándo puedes y te contactamos para agendar.
+              Elige la materia, toca un horario sugerido o propone el tuyo y te contactamos para agendar.
             </Typography>
           </Box>
 
@@ -199,6 +306,9 @@ export default function TrialsPage() {
                   <Stack spacing={2} component="form" onSubmit={handleSubmit}>
                     <Typography variant="h6" fontWeight={700}>
                       Datos de contacto
+                    </Typography>
+                    <Typography variant="body2" color="rgba(226,232,240,0.8)">
+                      Te toma menos de un minuto. Con esto te podemos confirmar la clase sin ir y venir.
                     </Typography>
                     <TextField
                       label="Nombre completo"
@@ -232,13 +342,20 @@ export default function TrialsPage() {
                       Materia y horarios
                     </Typography>
                     <Typography variant="body2" color="rgba(226,232,240,0.8)">
-                      Las clases de prueba duran 45 minutos. Solo elige la hora de inicio.
+                      La clase dura 45 minutos. Te basta con un horario; si tienes flexibilidad, agrega hasta tres opciones.
                     </Typography>
+
+                    {subjectsQuery.error && (
+                      <Alert severity="warning">
+                        No pudimos cargar las materias ahora mismo. Si quieres, avanza por WhatsApp mientras lo resolvemos.
+                      </Alert>
+                    )}
+
                     <TextField
                       label="Materia"
                       select
                       value={subjectId}
-                      onChange={(e) => setSubjectId(parsePositiveSubjectId(e.target.value))}
+                      onChange={(e) => handleSubjectChange(e.target.value)}
                       disabled={subjectsQuery.isLoading}
                       required
                       fullWidth
@@ -250,19 +367,93 @@ export default function TrialsPage() {
                         </MenuItem>
                       ))}
                     </TextField>
-                    <Stack spacing={2}>
-                      {slotInputs.map((slot, idx) => (
+
+                    {typeof subjectId === 'number' && (
+                      <Box
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 2,
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          bgcolor: 'rgba(255,255,255,0.03)',
+                        }}
+                      >
+                        <Stack spacing={1.25}>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Horarios sugeridos
+                          </Typography>
+                          <Typography variant="body2" color="rgba(226,232,240,0.8)">
+                            Toca uno y lo autocompletamos abajo. Luego puedes sumar horarios alternativos si quieres.
+                          </Typography>
+
+                          {slotsQuery.isLoading && (
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <CircularProgress size={18} />
+                              <Typography variant="body2">Buscando horarios sugeridos…</Typography>
+                            </Stack>
+                          )}
+
+                          {!slotsQuery.isLoading && suggestedSlotOptions.length > 0 && (
+                            <Stack direction="row" useFlexGap flexWrap="wrap" gap={1}>
+                              {suggestedSlotOptions.map((slot) => (
+                                <Chip
+                                  key={slot.key}
+                                  clickable
+                                  color={slot.selected ? 'primary' : 'default'}
+                                  onClick={() => handleSuggestedSlotClick(slot.inputValue)}
+                                  label={`${slot.label} · ${slot.teacherName}`}
+                                  sx={{
+                                    bgcolor: slot.selected ? 'rgba(125,211,252,0.18)' : 'rgba(255,255,255,0.08)',
+                                    color: '#e2e8f0',
+                                    border: slot.selected
+                                      ? '1px solid rgba(125,211,252,0.55)'
+                                      : '1px solid rgba(255,255,255,0.08)',
+                                  }}
+                                />
+                              ))}
+                            </Stack>
+                          )}
+
+                          {!slotsQuery.isLoading && !slotsQuery.error && suggestedSlotOptions.length === 0 && (
+                            <Alert severity="info">
+                              Aún no hay horarios sugeridos para esta materia. Igual puedes proponer uno manualmente.
+                            </Alert>
+                          )}
+
+                          {slotsQuery.error && (
+                            <Alert severity="warning">
+                              No pudimos cargar horarios sugeridos. Igual puedes proponer un horario manual.
+                            </Alert>
+                          )}
+                        </Stack>
+                      </Box>
+                    )}
+
+                    <Stack spacing={1.5}>
+                      {slotInputs.slice(0, visibleSlotCount).map((slot, index) => (
                         <TextField
-                          key={idx}
-                          label={`Preferencia ${idx + 1} - inicio`}
+                          key={index}
+                          label={index === 0 ? 'Horario preferido' : `Horario alternativo ${index}`}
                           type="datetime-local"
                           value={slot.start}
-                          onChange={(e) => handleSlotChange(idx, e.target.value)}
+                          onChange={(e) => handleSlotChange(index, e.target.value)}
                           fullWidth
                           InputLabelProps={{ shrink: true }}
+                          inputProps={{ min: minimumDateTimeValue }}
                           sx={fieldSx}
                         />
                       ))}
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        {visibleSlotCount < MAX_SLOT_COUNT && (
+                          <Button type="button" variant="outlined" onClick={handleAddAlternativeSlot}>
+                            Agregar otro horario
+                          </Button>
+                        )}
+                        {filledSlotCount > 0 && (
+                          <Button type="button" variant="text" onClick={handleClearSlots}>
+                            Limpiar horarios
+                          </Button>
+                        )}
+                      </Stack>
                     </Stack>
 
                     <TextField
@@ -288,7 +479,7 @@ export default function TrialsPage() {
                       type="submit"
                       variant="contained"
                       size="large"
-                      disabled={submitting}
+                      disabled={submitting || subjectsQuery.isLoading}
                     >
                       {submitting ? 'Enviando…' : 'Enviar solicitud'}
                     </Button>
@@ -312,8 +503,7 @@ export default function TrialsPage() {
                         ¿Qué sigue?
                       </Typography>
                       <Typography variant="body2" color="rgba(226,232,240,0.8)">
-                        1) Revisamos disponibilidad. 2) Te confirmamos profesor y horario. 3) Toma tu
-                        clase de prueba en TDF Records.
+                        1) Revisamos disponibilidad. 2) Te confirmamos profesor y horario. 3) Tomas tu clase de prueba en TDF Records.
                       </Typography>
                       <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', my: 1 }} />
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -340,7 +530,7 @@ export default function TrialsPage() {
                         </Typography>
                       </Stack>
                       <Typography variant="body2" color="rgba(226,232,240,0.8)">
-                        Escríbenos y comparte tus horarios:
+                        Si quieres resolverlo más rápido, escríbenos y comparte tu materia + horario ideal.
                       </Typography>
                       <Link
                         href={TRIALS_WHATSAPP_URL}
@@ -354,79 +544,6 @@ export default function TrialsPage() {
                     </Stack>
                   </CardContent>
                 </Card>
-
-                {slotsQuery.isLoading && (
-                  <Card
-                    sx={{
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      color: '#e2e8f0',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <CardContent>
-                      <CircularProgress size={24} />
-                      <Typography variant="body2" sx={{ mt: 1 }}>
-                        Buscando horarios sugeridos…
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {suggestedSlots.length > 0 && (
-                  <Card
-                    sx={{
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      color: '#e2e8f0',
-                    }}
-                  >
-                    <CardContent>
-                      <Stack spacing={1}>
-                        <Typography variant="h6" fontWeight={700}>
-                          Horarios sugeridos
-                        </Typography>
-                        <Typography variant="body2" color="rgba(226,232,240,0.8)">
-                          Elige uno parecido en tu solicitud. Mostramos disponibilidad aproximada por
-                          profesor.
-                        </Typography>
-                        <Stack spacing={1} sx={{ mt: 1 }}>
-                          {suggestedSlots.map((slot) => (
-                            <Box
-                              key={`${slot.teacherId}-${slot.subjectId}`}
-                              sx={{
-                                p: 1.2,
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: 1,
-                                bgcolor: 'rgba(15,23,42,0.5)',
-                              }}
-                            >
-                              <Typography variant="subtitle2" fontWeight={700}>
-                                {slot.teacherName}
-                              </Typography>
-                              <Stack direction="row" spacing={1} flexWrap="wrap" mt={0.5}>
-                                {slot.slots.map((s, idx) => (
-                                  <Chip
-                                    key={idx}
-                                    size="small"
-                                    label={formatSlotLabel(s.startAt, s.endAt)}
-                                    sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: '#e2e8f0' }}
-                                  />
-                                ))}
-                              </Stack>
-                            </Box>
-                          ))}
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {slotsQuery.error && (
-                  <Alert severity="warning">
-                    No pudimos cargar horarios sugeridos. Igual puedes enviar tu solicitud.
-                  </Alert>
-                )}
               </Stack>
             </Grid>
           </Grid>

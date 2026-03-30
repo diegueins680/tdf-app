@@ -50,6 +50,7 @@ executable tdf-hq-exe
     TDF.DTO.SocialSyncDTO
     TDF.Email
     TDF.Handlers.InputList
+    TDF.Invoice.SRI
     TDF.LogBuffer
     TDF.Meta
     TDF.Models
@@ -195,6 +196,7 @@ test-suite tdf-hq-test
     TDF.Email
     TDF.Email.Service
     TDF.Handlers.InputList
+    TDF.Invoice.SRI
     TDF.Leads.Model
     TDF.Meta
     TDF.Models
@@ -222,6 +224,7 @@ test-suite tdf-hq-test
     TDF.ServerFeedback
     TDF.ServerRadio
     TDF.ServerSpec
+    TDF.ServerAdminSpec
     TDF.Social.FollowHandlerSpec
     TDF.Social.FollowSpec
     TDF.Services

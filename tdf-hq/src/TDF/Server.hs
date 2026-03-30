@@ -26,7 +26,7 @@ import           Data.Foldable (for_)
 import           Data.Char (isDigit, isAlphaNum, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
-import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), encode, genericParseJSON, genericToJSON)
+import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
 import           Data.Aeson.Types (camelTo2, fieldLabelModifier, parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
@@ -68,6 +68,7 @@ import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
 import           TDF.Config (AppConfig(..), courseInstructorAvatarFallback, courseMapFallback, courseSlugFallback, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
 import           TDF.DB
+import qualified TDF.Invoice.SRI as Sri
 import           TDF.Models
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
@@ -6053,19 +6054,69 @@ invoiceServer user =
   :<|> getInvoiceById user
 
 generateInvoiceForSession :: AuthedUser -> Text -> Value -> AppM Value
-generateInvoiceForSession user sessionId _payload = do
+generateInvoiceForSession user sessionId payload = do
   requireModule user ModuleInvoicing
-  pure (object ["ok" .= True, "sessionId" .= sessionId])
+  sessionKey <- parseSessionKey sessionId
+  req <- case fromJSON payload of
+    Error err -> throwBadRequest ("Invalid generate-invoice payload: " <> T.pack err)
+    Success decoded -> pure decoded
+  Env pool _ <- ask
+  sessionEnt <- liftIO $ flip runSqlPool pool $ getEntity sessionKey
+  session <- maybe (throwError err404 { errBody = "Session not found" }) pure sessionEnt
+  customerKey <- resolveSessionInvoiceCustomer session req
+  now <- liftIO getCurrentTime
+  dto <- createInvoice user (toCreateInvoiceReq customerKey req)
+  let invoiceKey = toSqlKey (invId dto) :: Key Invoice
+  liftIO $ flip runSqlPool pool $ do
+    _ <- insertUnique ME.SessionInvoice
+      { ME.sessionInvoiceSessionId = sessionKey
+      , ME.sessionInvoiceInvoiceId = invoiceKey
+      , ME.sessionInvoiceCreatedAt = now
+      }
+    pure ()
+  sriValue <-
+    if fromMaybe True (gsiIssueSri req)
+      then do
+        customer <- loadCustomerForSri customerKey
+        sriResult <- liftIO (Sri.runSriInvoiceScript (toSriScriptRequest customer req))
+        case sriResult of
+          Left err ->
+            pure (object ["ok" .= False, "error" .= err])
+          Right result -> do
+            when (sirStatus result == "issued") $
+              liftIO $ flip runSqlPool pool $
+                update invoiceKey
+                  [ InvoiceStatus =. Sent
+                  , InvoiceSriDocumentId =. sirAuthorizationNumber result
+                  , InvoiceNumber =. sirInvoiceNumber result
+                  ]
+            pure (toJSON result)
+      else pure Null
+  refreshed <- loadInvoiceDTOOr404 invoiceKey
+  pure $
+    object
+      [ "ok" .= True
+      , "sessionId" .= sessionId
+      , "invoice" .= refreshed
+      , "sri" .= sriValue
+      ]
 
 getInvoicesBySession :: AuthedUser -> Text -> AppM Value
 getInvoicesBySession user sessionId = do
   requireModule user ModuleInvoicing
-  pure (object ["ok" .= True, "sessionId" .= sessionId])
+  sessionKey <- parseSessionKey sessionId
+  Env pool _ <- ask
+  invoices <- liftIO $ flip runSqlPool pool $ do
+    links <- selectList [ME.SessionInvoiceSessionId ==. sessionKey] [Desc ME.SessionInvoiceCreatedAt]
+    let invoiceIds = map (ME.sessionInvoiceInvoiceId . entityVal) links
+    loadInvoiceDTOs invoiceIds
+  pure (toJSON invoices)
 
 getInvoiceById :: AuthedUser -> Int64 -> AppM Value
 getInvoiceById user invoiceId = do
   requireModule user ModuleInvoicing
-  pure (object ["ok" .= True, "invoiceId" .= invoiceId])
+  dto <- loadInvoiceDTOOr404 (toSqlKey invoiceId)
+  pure (toJSON dto)
 
 listInvoices :: AuthedUser -> AppM [InvoiceDTO]
 listInvoices user = do
@@ -6276,6 +6327,120 @@ normalizeOptionalText =
         in if T.null trimmed then Nothing else Just trimmed
   in (>>= clean)
 
+parseSessionKey :: Text -> AppM (Key ME.Session)
+parseSessionKey raw =
+  maybe (throwBadRequest "Invalid session identifier") pure (fromPathPiece raw)
+
+resolveSessionInvoiceCustomer :: Entity ME.Session -> GenerateSessionInvoiceReq -> AppM (Key Party)
+resolveSessionInvoiceCustomer (Entity _ session) req =
+  case gsiCustomerId req of
+    Just cid -> pure (toSqlKey cid)
+    Nothing ->
+      case ME.sessionClientPartyRef session >>= readMaybe . T.unpack of
+        Just cid -> pure (toSqlKey cid)
+        Nothing ->
+          throwBadRequest
+            "Session clientPartyRef is not a numeric party id; provide customerId explicitly."
+
+toCreateInvoiceReq :: Key Party -> GenerateSessionInvoiceReq -> CreateInvoiceReq
+toCreateInvoiceReq customerKey req =
+  CreateInvoiceReq
+    { ciCustomerId = fromSqlKey customerKey
+    , ciCurrency = gsiCurrency req
+    , ciNumber = gsiNumber req
+    , ciNotes = gsiNotes req
+    , ciLineItems = map toLineItem (gsiLineItems req)
+    , ciGenerateReceipt = gsiGenerateReceipt req
+    }
+  where
+    toLineItem GenerateSessionInvoiceLineReq{..} =
+      CreateInvoiceLineReq
+        { cilDescription = gsilDescription
+        , cilQuantity = gsilQuantity
+        , cilUnitCents = gsilUnitCents
+        , cilTaxBps = gsilTaxBps
+        , cilServiceOrderId = gsilServiceOrderId
+        , cilPackagePurchaseId = gsilPackagePurchaseId
+        }
+
+loadCustomerForSri :: Key Party -> AppM Sri.SriScriptCustomer
+loadCustomerForSri partyKey = do
+  Env pool _ <- ask
+  mParty <- liftIO $ flip runSqlPool pool $ get partyKey
+  case mParty of
+    Nothing -> throwError err404 { errBody = "Customer not found" }
+    Just party ->
+      case normalizeOptionalText (partyTaxId party) of
+        Nothing -> throwBadRequest "Customer taxId/RUC is required for SRI emission"
+        Just taxIdVal ->
+          pure Sri.SriScriptCustomer
+            { Sri.ruc = taxIdVal
+            , Sri.legalName =
+                fromMaybe (M.partyDisplayName party) (normalizeOptionalText (partyLegalName party))
+            , Sri.email = normalizeOptionalText (partyPrimaryEmail party)
+            , Sri.phone = normalizeOptionalText (partyPrimaryPhone party)
+            }
+
+toSriScriptRequest :: Sri.SriScriptCustomer -> GenerateSessionInvoiceReq -> Sri.SriScriptRequest
+toSriScriptRequest customer req =
+  Sri.SriScriptRequest
+    { Sri.customer = customer
+    , Sri.lines = map toSriLine (gsiLineItems req)
+    , Sri.establishment = "1"
+    , Sri.emissionPoint = "100"
+    , Sri.paymentMode = "cash"
+    , Sri.signAndSend = fromMaybe True (gsiIssueSri req)
+    , Sri.certificatePassword = normalizeOptionalText (gsiCertificatePassword req)
+    }
+  where
+    toSriLine GenerateSessionInvoiceLineReq{..} =
+      Sri.SriScriptLine
+        { Sri.code = normalizeOptionalText gsilSriCode
+        , Sri.auxiliaryCode = normalizeOptionalText gsilSriAuxiliaryCode
+        , Sri.description = gsilDescription
+        , Sri.quantity = gsilQuantity
+        , Sri.unitCents = gsilUnitCents
+        , Sri.taxBps = gsilTaxBps
+        , Sri.sriAdditionalInfo = normalizeOptionalText gsilSriAdditionalInfo
+        , Sri.sriIvaCode = normalizeOptionalText gsilSriIvaCode
+        }
+
+loadInvoiceDTOOr404 :: Key Invoice -> AppM InvoiceDTO
+loadInvoiceDTOOr404 invoiceKey = do
+  Env pool _ <- ask
+  mDto <- liftIO $ flip runSqlPool pool (loadInvoiceDTO invoiceKey)
+  maybe (throwError err404 { errBody = "Invoice not found" }) pure mDto
+
+loadInvoiceDTO :: Key Invoice -> SqlPersistT IO (Maybe InvoiceDTO)
+loadInvoiceDTO invoiceKey = do
+  mInvoice <- getEntity invoiceKey
+  case mInvoice of
+    Nothing -> pure Nothing
+    Just invEnt -> do
+      invLines <- selectList [InvoiceLineInvoiceId ==. invoiceKey] [Asc InvoiceLineId]
+      mReceipt <- selectFirst [ReceiptInvoiceId ==. invoiceKey] []
+      pure (Just (invoiceToDTO invEnt invLines (entityKey <$> mReceipt)))
+
+loadInvoiceDTOs :: [Key Invoice] -> SqlPersistT IO [InvoiceDTO]
+loadInvoiceDTOs invoiceKeys = do
+  let orderedKeys = nub invoiceKeys
+  if null orderedKeys
+    then pure []
+    else do
+      invoices <- selectList [InvoiceId <-. orderedKeys] []
+      invLines <- selectList [InvoiceLineInvoiceId <-. orderedKeys] [Asc InvoiceLineId]
+      receipts <- selectList [ReceiptInvoiceId <-. orderedKeys] []
+      let invoiceMap = Map.fromList [(entityKey ent, ent) | ent <- invoices]
+          lineMap = Map.fromListWith (++)
+            [(invoiceLineInvoiceId (entityVal ent), [ent]) | ent <- invLines]
+          receiptMap = Map.fromList
+            [(receiptInvoiceId (entityVal ent), entityKey ent) | ent <- receipts]
+      pure
+        [ invoiceToDTO invEnt (Map.findWithDefault [] key lineMap) (Map.lookup key receiptMap)
+        | key <- orderedKeys
+        , Just invEnt <- [Map.lookup key invoiceMap]
+        ]
+
 invoiceToDTO :: Entity Invoice -> [Entity InvoiceLine] -> Maybe (Key Receipt) -> InvoiceDTO
 invoiceToDTO (Entity iid inv) invLines mReceiptKey = InvoiceDTO
   { invId      = fromSqlKey iid
@@ -6286,6 +6451,7 @@ invoiceToDTO (Entity iid inv) invLines mReceiptKey = InvoiceDTO
   , totalC     = invoiceTotalCents inv
   , currency   = invoiceCurrency inv
   , customerId = Just (fromSqlKey (invoiceCustomerId inv))
+  , sriDocumentId = invoiceSriDocumentId inv
   , notes      = invoiceNotes inv
   , receiptId  = fmap fromSqlKey mReceiptKey
   , lineItems  = map invoiceLineToDTO invLines

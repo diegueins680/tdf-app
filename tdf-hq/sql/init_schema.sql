@@ -718,6 +718,16 @@ CREATE TABLE IF NOT EXISTS session_deliverable (
 
 CREATE INDEX idx_session_deliverable_session ON session_deliverable(session_id);
 
+CREATE TABLE IF NOT EXISTS session_invoice (
+    session_id   UUID NOT NULL REFERENCES session(id) ON DELETE CASCADE,
+    invoice_id   BIGINT NOT NULL REFERENCES invoice(id) ON DELETE CASCADE,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (session_id, invoice_id)
+);
+
+CREATE INDEX idx_session_invoice_session ON session_invoice(session_id);
+CREATE INDEX idx_session_invoice_invoice ON session_invoice(invoice_id);
+
 -- ============================================================================
 -- INPUT LISTS
 -- ============================================================================

@@ -47,6 +47,9 @@ type UserCommunicationsAPI =
   :<|> "communications" :> "whatsapp" :> Capture "messageId" Int64 :> "resend"
          :> ReqBody '[JSON] AdminWhatsAppResendRequest
          :> Post '[JSON] AdminWhatsAppSendResponse
+  :<|> "communications" :> "email" :> "registered-users"
+         :> ReqBody '[JSON] AdminEmailBroadcastRequest
+         :> Post '[JSON] AdminEmailBroadcastResponse
 
 type RolesAPI = Get '[JSON] [RoleDetailDTO]
 
@@ -174,6 +177,41 @@ data AdminWhatsAppSendResponse = AdminWhatsAppSendResponse
   } deriving (Show, Generic)
 
 instance ToJSON AdminWhatsAppSendResponse where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+
+data AdminEmailBroadcastRequest = AdminEmailBroadcastRequest
+  { aebrSubject         :: Text
+  , aebrBodyLines       :: [Text]
+  , aebrDryRun          :: Maybe Bool
+  , aebrLimit           :: Maybe Int
+  , aebrIncludeInactive :: Maybe Bool
+  } deriving (Show, Generic)
+
+instance FromJSON AdminEmailBroadcastRequest where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+
+data AdminEmailBroadcastRecipientDTO = AdminEmailBroadcastRecipientDTO
+  { aerdEmail   :: Text
+  , aerdName    :: Text
+  , aerdStatus  :: Text
+  , aerdMessage :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON AdminEmailBroadcastRecipientDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+
+data AdminEmailBroadcastResponse = AdminEmailBroadcastResponse
+  { aersStatus             :: Text
+  , aersDryRun             :: Bool
+  , aersMatchedUsers       :: Int
+  , aersUniqueRecipients   :: Int
+  , aersProcessedRecipients :: Int
+  , aersSentCount          :: Int
+  , aersFailedCount        :: Int
+  , aersRecipients         :: [AdminEmailBroadcastRecipientDTO]
+  } deriving (Show, Generic)
+
+instance ToJSON AdminEmailBroadcastResponse where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
 
 

@@ -6,12 +6,14 @@
 
 module TDF.ServerAdmin
   ( adminServer
+  , dedupeAdminEmailRecipients
+  , normalizeAdminEmailBodyLines
   , parseSocialErrorsChannel
   ) where
 
 import           Control.Exception      (SomeException, try)
 import           Control.Applicative    ((<|>))
-import           Control.Monad          (unless, when)
+import           Control.Monad          (forM, unless, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, asks)
@@ -19,7 +21,7 @@ import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHa
 import           Data.Foldable          (for_)
 import           Data.Char              (isAlphaNum)
 import           Data.List              (nub)
-import           Data.Maybe             (catMaybes, fromMaybe, isJust, listToMaybe)
+import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import           Data.Int               (Int64)
 import qualified Data.Set               as Set
 import           Data.Text              (Text)
@@ -50,6 +52,9 @@ import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
 import           TDF.API.Admin          ( AdminAPI
+                                        , AdminEmailBroadcastRecipientDTO(..)
+                                        , AdminEmailBroadcastRequest(..)
+                                        , AdminEmailBroadcastResponse(..)
                                         , AdminWhatsAppResendRequest(..)
                                         , AdminWhatsAppSendRequest(..)
                                         , AdminWhatsAppSendResponse(..)
@@ -149,6 +154,7 @@ adminServer user =
            userCommunicationHistoryHandler
       :<|> userCommunicationSendHandler
       :<|> userCommunicationResendHandler
+      :<|> registeredUserEmailBroadcastHandler
 
     userById userId =
            getUser userId
@@ -827,6 +833,103 @@ adminServer user =
           sendResult
       pure (buildSendResponse sendResult sentEntity)
 
+    registeredUserEmailBroadcastHandler AdminEmailBroadcastRequest{..} = do
+      ensureStrictAdmin user
+      let subject = T.strip aebrSubject
+          bodyLines = normalizeAdminEmailBodyLines aebrBodyLines
+          dryRun = fromMaybe False aebrDryRun
+          includeInactive = fromMaybe False aebrIncludeInactive
+      when (T.null subject) $
+        throwError err400 { errBody = "Subject must not be empty" }
+      when (null bodyLines) $
+        throwError err400 { errBody = "At least one non-empty body line is required" }
+      limitValue <- case aebrLimit of
+        Nothing -> pure Nothing
+        Just rawLimit
+          | rawLimit <= 0 -> throwError err400 { errBody = "limit must be a positive integer" }
+          | otherwise -> pure (Just (min 5000 rawLimit))
+      cfg <- asks envConfig
+      let emailSvc = EmailSvc.mkEmailService cfg
+      when (not dryRun && isNothing (EmailSvc.esConfig emailSvc)) $
+        throwError err409 { errBody = "SMTP not configured" }
+      rawRecipients <- withPool (loadRegisteredUserEmailRecipients includeInactive)
+      let matchedUsers = length rawRecipients
+          uniqueRecipients = dedupeAdminEmailRecipients rawRecipients
+          recipientsToProcess = maybe uniqueRecipients (`take` uniqueRecipients) limitValue
+          processedRecipients = length recipientsToProcess
+      liftIO $ addLog LogInfo $
+        T.concat
+          [ "[Admin][EmailBroadcast] Starting registered-user broadcast | subject="
+          , subject
+          , " | dryRun="
+          , if dryRun then "true" else "false"
+          , " | matchedUsers="
+          , T.pack (show matchedUsers)
+          , " | uniqueRecipients="
+          , T.pack (show (length uniqueRecipients))
+          , " | processedRecipients="
+          , T.pack (show processedRecipients)
+          ]
+      recipientResults <-
+        if dryRun
+          then pure
+            [ AdminEmailBroadcastRecipientDTO
+                { aerdEmail = emailAddr
+                , aerdName = name
+                , aerdStatus = "dry_run"
+                , aerdMessage = Nothing
+                }
+            | (name, emailAddr) <- recipientsToProcess
+            ]
+          else forM recipientsToProcess $ \(name, emailAddr) -> do
+            sendResult <- liftIO $ try $
+              EmailSvc.sendTestEmail emailSvc name emailAddr subject bodyLines Nothing
+            case sendResult of
+              Left (err :: SomeException) -> do
+                let msg = T.pack (show err)
+                liftIO $ addLog LogError $
+                  "[Admin][EmailBroadcast] Failed for " <> emailAddr <> ": " <> msg
+                pure AdminEmailBroadcastRecipientDTO
+                  { aerdEmail = emailAddr
+                  , aerdName = name
+                  , aerdStatus = "failed"
+                  , aerdMessage = Just msg
+                  }
+              Right () -> do
+                liftIO $ addLog LogInfo $
+                  "[Admin][EmailBroadcast] Sent to " <> emailAddr
+                pure AdminEmailBroadcastRecipientDTO
+                  { aerdEmail = emailAddr
+                  , aerdName = name
+                  , aerdStatus = "sent"
+                  , aerdMessage = Nothing
+                  }
+      let sentCount = length [() | result <- recipientResults, aerdStatus result == "sent"]
+          failedCount = length [() | result <- recipientResults, aerdStatus result == "failed"]
+          finalStatus
+            | failedCount == 0 = "ok"
+            | sentCount == 0 = "error"
+            | otherwise = "partial"
+      liftIO $ addLog LogInfo $
+        T.concat
+          [ "[Admin][EmailBroadcast] Completed registered-user broadcast | status="
+          , finalStatus
+          , " | sent="
+          , T.pack (show sentCount)
+          , " | failed="
+          , T.pack (show failedCount)
+          ]
+      pure AdminEmailBroadcastResponse
+        { aersStatus = finalStatus
+        , aersDryRun = dryRun
+        , aersMatchedUsers = matchedUsers
+        , aersUniqueRecipients = length uniqueRecipients
+        , aersProcessedRecipients = processedRecipients
+        , aersSentCount = sentCount
+        , aersFailedCount = failedCount
+        , aersRecipients = recipientResults
+        }
+
 withPool
   :: (MonadReader Env m, MonadIO m)
   => SqlPersistT IO a
@@ -983,6 +1086,37 @@ buildSendResponse sendResult (Entity msgKey msg) =
     , awspDeliveryStatus = ME.whatsAppMessageDeliveryStatus msg
     , awspMessage = either Just (const (Just "sent")) sendResult
     }
+
+normalizeAdminEmailBodyLines :: [Text] -> [Text]
+normalizeAdminEmailBodyLines =
+  filter (not . T.null) . map T.strip
+
+dedupeAdminEmailRecipients :: [(Text, Text)] -> [(Text, Text)]
+dedupeAdminEmailRecipients = reverse . snd . foldl step (Set.empty, [])
+  where
+    step (seen, acc) (rawName, rawEmail) =
+      let emailAddr = T.toLower (T.strip rawEmail)
+          name = T.strip rawName
+      in if T.null emailAddr || Set.member emailAddr seen
+           then (seen, acc)
+           else (Set.insert emailAddr seen, (name, emailAddr) : acc)
+
+loadRegisteredUserEmailRecipients :: Bool -> SqlPersistT IO [(Text, Text)]
+loadRegisteredUserEmailRecipients includeInactive = do
+  let filters = [UserCredentialActive ==. True | not includeInactive]
+  creds <- selectList filters [Asc UserCredentialId]
+  pairs <- forM creds $ \(Entity _ cred) -> do
+    party <- getJust (userCredentialPartyId cred)
+    pure $
+      case partyPrimaryEmail party of
+        Nothing -> Nothing
+        Just emailAddr ->
+          let normalizedEmail = T.toLower (T.strip emailAddr)
+          in if T.null normalizedEmail
+               then Nothing
+               else Just (partyDisplayName party, normalizedEmail)
+  pure (catMaybes pairs)
+
 setPartyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
 setPartyRoles partyKey rolesList = do
   existing <- selectList [PartyRolePartyId ==. partyKey] []
