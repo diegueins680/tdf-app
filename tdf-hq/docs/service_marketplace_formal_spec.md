@@ -6,8 +6,9 @@ This module models the service marketplace as a finite-state system with explici
 
 - `ServiceAd(active, providerPartyId, feeCents, slotMinutes, serviceCatalogId)`
 - `ServiceAdSlot(status ∈ {open, booked}, adId, startsAt, endsAt)`
+- `ServiceCatalog(active, kind, currency)`
 - `Booking(status ∈ BookingStatus, partyId, engineerPartyId, serviceOrderId)`
-- `ServiceOrder(status ∈ {escrow_held, performed, paid_out}, customerId, artistId, priceQuotedCents)`
+- `ServiceOrder(status ∈ {escrow_held, performed, paid_out}, customerId, artistId, serviceKind, priceQuotedCents)`
 - `ServiceEscrow(status ∈ {held, released, refunded}, bookingId, serviceOrderId, amountCents, heldPaymentId, releasedPaymentId)`
 
 ## Invariants
@@ -19,9 +20,11 @@ This module models the service marketplace as a finite-state system with explici
 3. **Provider/customer consistency**
    - `Booking.engineerPartyId = ServiceEscrow.providerPartyId`
    - `Booking.partyId = ServiceEscrow.patronPartyId`
-4. **Slot exclusivity**
+4. **Catalog-kind consistency**
+   - `ServiceOrder.serviceKind = ServiceCatalog.kind` for the catalog referenced by the originating ad/order.
+5. **Slot exclusivity**
    - `ServiceAdSlot.status = booked` implies at most one escrow references a booking in that slot.
-5. **Release safety**
+6. **Release safety**
    - `ServiceEscrow.status = released` implies `Booking.status = Completed`.
 
 ## Transition System
@@ -29,7 +32,7 @@ This module models the service marketplace as a finite-state system with explici
 ### T1: PostAd
 Preconditions:
 - `feeCents > 0`
-- `serviceCatalogId` exists
+- `serviceCatalogId` exists and references an active `ServiceCatalog`
 - `headline != ""`, `roleTag != ""`
 
 Postconditions:
@@ -47,10 +50,12 @@ Postconditions:
 Preconditions:
 - `ServiceAd.active = true`
 - `ServiceAdSlot.status = open`
+- `ServiceAd.serviceCatalogId` references an active `ServiceCatalog`
 - Booker is not provider
 
 Postconditions:
 - Create `ServiceOrder(status=escrow_held)`
+- `ServiceOrder.serviceKind := ServiceCatalog.kind`
 - Create `Booking(status=Confirmed)`
 - Create patron `Payment(concept=escrow_hold)`
 - Create `ServiceEscrow(status=held)`

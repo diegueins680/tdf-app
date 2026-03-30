@@ -85,6 +85,18 @@ const clickButton = async (button: HTMLElement) => {
   });
 };
 
+const changeInputValue = async (input: HTMLInputElement, value: string) => {
+  const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('HTMLInputElement value setter not found');
+
+  await act(async () => {
+    valueSetter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 const buildUser = (overrides: Partial<AdminUser> = {}): AdminUser => ({
   userId: 101,
   partyId: 9,
@@ -259,6 +271,70 @@ describe('AdminUsersPage', () => {
         expect(row.textContent).toContain('Módulos: admin, crm');
         expect(row.textContent).not.toContain('Roles: Admin, Teacher, Admin');
         expect(row.textContent).not.toContain('Módulos: admin, crm, crm');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('filters the page by search query and reports the visible slice for faster admin scanning', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('3 usuarios');
+        expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
+        expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
+        expect(getRowByUserId(container, 103).textContent).toContain('linus-view');
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar usuarios administradores"]');
+      if (!searchInput) throw new Error('Search input not found');
+
+      await changeInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Mostrando 1 de 3');
+        expect(container.querySelector('[data-testid="admin-user-row-101"]')).toBeNull();
+        expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
+        expect(container.querySelector('[data-testid="admin-user-row-103"]')).toBeNull();
+      });
+
+      await changeInputValue(searchInput, 'sin coincidencias');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No hay coincidencias para este filtro.');
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
     } finally {
       await cleanup();

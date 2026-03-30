@@ -3,10 +3,12 @@
 module TDF.ServerSpec (spec) where
 
 import Control.Monad (forM_)
+import qualified Data.ByteString.Lazy.Char8 as BL8
 import Database.Persist.Sql (toSqlKey)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
-import TDF.Models (BookingStatus (..), RoleEnum (..))
-import TDF.Server (normalizeOptionalInput, parseStatusWithDefault)
+import Servant (ServerError (errBody, errHTTPCode))
+import TDF.Models (BookingStatus (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..))
+import TDF.Server (normalizeOptionalInput, parseStatusWithDefault, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -16,6 +18,25 @@ mkUser roles =
         , auRoles = roles
         , auModules = modulesForRoles roles
         }
+
+mkCatalog :: ServiceKind -> Bool -> ServiceCatalog
+mkCatalog kind active =
+    ServiceCatalog
+        { serviceCatalogName = "Marketplace catalog"
+        , serviceCatalogKind = kind
+        , serviceCatalogPricingModel = Hourly
+        , serviceCatalogDefaultRateCents = Just 9000
+        , serviceCatalogTaxBps = Nothing
+        , serviceCatalogCurrency = "USD"
+        , serviceCatalogBillingUnit = Just "session"
+        , serviceCatalogActive = active
+        }
+
+expectCatalogError :: Either ServerError ServiceKind -> (ServerError -> Expectation) -> Expectation
+expectCatalogError result assertErr =
+    case result of
+        Left serverErr -> assertErr serverErr
+        Right kind -> expectationFailure ("Expected catalog validation error, got kind: " <> show kind)
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
@@ -35,6 +56,20 @@ spec = describe "TDF.Server helpers" $ do
 
         it "falls back to the provided status when parsing fails" $
             parseStatusWithDefault Confirmed "not-a-status" `shouldBe` Confirmed
+
+    describe "validateServiceMarketplaceCatalog" $ do
+        it "returns the active catalog kind so marketplace bookings inherit the real service kind" $
+            validateServiceMarketplaceCatalog (Just (mkCatalog Mixing True)) `shouldBe` Right Mixing
+
+        it "rejects missing catalogs with a 404" $
+            expectCatalogError (validateServiceMarketplaceCatalog Nothing) $ \serverErr -> do
+                errHTTPCode serverErr `shouldBe` 404
+                BL8.unpack (errBody serverErr) `shouldContain` "Service catalog not found"
+
+        it "rejects inactive catalogs before creating ads or bookings" $
+            expectCatalogError (validateServiceMarketplaceCatalog (Just (mkCatalog Rehearsal False))) $ \serverErr -> do
+                errHTTPCode serverErr `shouldBe` 409
+                BL8.unpack (errBody serverErr) `shouldContain` "Service catalog is inactive"
 
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $
