@@ -5091,7 +5091,13 @@ listServiceAds = do
     ads <- selectList [ServiceAdActive ==. True] [Desc ServiceAdCreatedAt]
     let providerIds = map (serviceAdProviderPartyId . entityVal) ads
     providers <- if null providerIds then pure [] else selectList [PartyId <-. providerIds] []
-    let providerMap = Map.fromList [(entityKey p, partyDisplayName (entityVal p) <|> Just (partyLegalName (entityVal p))) | p <- providers]
+    let providerMap =
+          Map.fromList
+            [ ( entityKey p
+              , normalizeOptionalInput (Just (M.partyDisplayName (entityVal p))) <|> M.partyLegalName (entityVal p)
+              )
+            | p <- providers
+            ]
     pure $ map (toServiceAdDTO providerMap) ads
 
 createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
@@ -5102,11 +5108,17 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
   now <- liftIO getCurrentTime
   pool <- asks envPool
   when (isNothing sacServiceCatalogId) $ throwError err400 { errBody = "serviceCatalogId is required" }
+  let catalogKey = toSqlKey <$> sacServiceCatalogId
+  liftIO $ flip runSqlPool pool $ do
+    mCatalog <- maybe (pure Nothing) get catalogKey
+    case validateServiceMarketplaceCatalog mCatalog of
+      Left serverErr -> liftIO $ throwIO serverErr
+      Right _ -> pure ()
   let currency = fromMaybe "USD" (normalizeOptionalInput sacCurrency)
       slotMinutes = max 15 (fromMaybe 60 sacSlotMinutes)
       record = ServiceAd
         { serviceAdProviderPartyId = auPartyId user
-        , serviceAdServiceCatalogId = toSqlKey <$> sacServiceCatalogId
+        , serviceAdServiceCatalogId = catalogKey
         , serviceAdRoleTag = T.strip sacRoleTag
         , serviceAdHeadline = T.strip sacHeadline
         , serviceAdDescription = normalizeOptionalInput sacDescription
@@ -5120,7 +5132,8 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
     adId <- insert record
     ent <- getJustEntity adId
     mProvider <- get (auPartyId user)
-    let providerName = mProvider >>= (\p -> partyDisplayName p <|> Just (partyLegalName p))
+    let providerName =
+          mProvider >>= (\p -> normalizeOptionalInput (Just (M.partyDisplayName p)) <|> M.partyLegalName p)
     pure (toServiceAdDTO (Map.singleton (auPartyId user) providerName) ent)
   pure dto
 
@@ -5170,11 +5183,15 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
     when (providerId == auPartyId user) $ liftIO $ throwIO err400 { errBody = "Cannot book your own service ad" }
     let orderTitle = fromMaybe (serviceAdHeadline ad) (normalizeOptionalInput smbTitle)
     catalogId <- maybe (liftIO $ throwIO err409 { errBody = "Service ad is missing catalogId" }) pure (serviceAdServiceCatalogId ad)
+    catalog <- get catalogId
+    catalogKind <- case validateServiceMarketplaceCatalog catalog of
+      Left serverErr -> liftIO $ throwIO serverErr
+      Right kind -> pure kind
     serviceOrderId <- insert ServiceOrder
       { serviceOrderCustomerId = auPartyId user
       , serviceOrderArtistId = Just providerId
       , serviceOrderCatalogId = catalogId
-      , serviceOrderServiceKind = Recording
+      , serviceOrderServiceKind = catalogKind
       , serviceOrderTitle = Just orderTitle
       , serviceOrderDescription = normalizeOptionalInput smbNotes
       , serviceOrderStatus = "escrow_held"
@@ -5241,7 +5258,7 @@ completeServiceMarketplaceBooking user rawBookingId = do
   pool <- asks envPool
   liftIO $ flip runSqlPool pool $ do
     let bookingKey = toSqlKey rawBookingId :: Key Booking
-    booking <- getJustEntity bookingKey
+    _ <- getJustEntity bookingKey
     escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
     escrow <- maybe (liftIO $ throwIO err404) pure escrowEnt
     let canComplete = serviceEscrowProviderPartyId (entityVal escrow) == auPartyId user || hasRole Admin user
@@ -5257,7 +5274,7 @@ releaseServiceMarketplaceEscrow user rawBookingId = do
   liftIO $ flip runSqlPool pool $ do
     let bookingKey = toSqlKey rawBookingId :: Key Booking
     booking <- getJustEntity bookingKey
-    escrowEnt@(Entity escrowKey escrow) <- maybe (liftIO $ throwIO err404) pure =<< getBy (UniqueServiceEscrowBooking bookingKey)
+    Entity escrowKey escrow <- maybe (liftIO $ throwIO err404) pure =<< getBy (UniqueServiceEscrowBooking bookingKey)
     let canRelease = serviceEscrowPatronPartyId escrow == auPartyId user || hasRole Admin user
     when (not canRelease) $ liftIO $ throwIO err403
     when (bookingStatus (entityVal booking) /= Completed) $
@@ -5744,6 +5761,15 @@ parseStatusWithDefault fallback raw =
   in case readMaybe (T.unpack cleaned) of
        Just s  -> s
        Nothing -> fallback
+
+validateServiceMarketplaceCatalog :: Maybe ServiceCatalog -> Either ServerError ServiceKind
+validateServiceMarketplaceCatalog Nothing =
+  Left err404 { errBody = "Service catalog not found" }
+validateServiceMarketplaceCatalog (Just catalog)
+  | not (serviceCatalogActive catalog) =
+      Left err409 { errBody = "Service catalog is inactive" }
+  | otherwise =
+      Right (serviceCatalogKind catalog)
 
 requiresEngineer :: Maybe Text -> Bool
 requiresEngineer Nothing = False

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   IconButton,
   Stack,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -38,10 +39,35 @@ const hasUserContactChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'
 const getUserAccessSummary = (values: string[]) =>
   Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))).join(', ');
 
+const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
+
+const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
+  const query = normalizeSearchValue(rawQuery);
+  if (!query) return true;
+
+  const searchSpace = [
+    user.username,
+    user.partyName,
+    String(user.userId),
+    String(user.partyId),
+    `id ${user.partyId}`,
+    getUserContactSummary(user) ?? '',
+    getUserAccessSummary(user.roles),
+    getUserAccessSummary(user.modules),
+    user.active ? 'activo' : 'inactivo',
+  ]
+    .map(normalizeSearchValue)
+    .filter(Boolean);
+
+  return searchSpace.some((value) => value.includes(query));
+};
+
 export default function AdminUsersPage() {
   const qc = useQueryClient();
   const [includeInactive, setIncludeInactive] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const usersQuery = useQuery({
     queryKey: ['admin', 'users', includeInactive],
@@ -52,19 +78,55 @@ export default function AdminUsersPage() {
     void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
   };
 
-  const usersMissingContactCount = useMemo(
-    () => (usersQuery.data ?? []).filter((user) => !hasUserContactChannel(user)).length,
-    [usersQuery.data],
+  const visibleUsers = useMemo(
+    () => (usersQuery.data ?? []).filter((user) => matchesUserQuery(user, deferredSearchQuery)),
+    [deferredSearchQuery, usersQuery.data],
   );
-  const usersMissingContactVerb = usersMissingContactCount === 1 ? 'sigue' : 'siguen';
+  const visibleUsersMissingContactCount = useMemo(
+    () => visibleUsers.filter((user) => !hasUserContactChannel(user)).length,
+    [visibleUsers],
+  );
+  const visibleUsersMissingContactVerb = visibleUsersMissingContactCount === 1 ? 'sigue' : 'siguen';
+  const totalUsersCount = usersQuery.data?.length ?? 0;
+  const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
+  const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
 
   return (
     <>
       <Stack spacing={3}>
         <Stack spacing={1}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h4" fontWeight={700}>Usuarios (admin API)</Typography>
-            <Stack direction="row" spacing={1} alignItems="center">
+          <Stack
+            direction={{ xs: 'column', lg: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ xs: 'stretch', lg: 'center' }}
+            spacing={2}
+          >
+            <Stack spacing={1} sx={{ minWidth: 0, flex: '1 1 360px' }}>
+              <Typography variant="h4" fontWeight={700}>Usuarios (admin API)</Typography>
+              <TextField
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                size="small"
+                fullWidth
+                placeholder="Buscar por usuario, nombre, ID, contacto o acceso"
+                inputProps={{ 'aria-label': 'Buscar usuarios administradores' }}
+              />
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Chip
+                size="small"
+                color="primary"
+                variant={isFiltered ? 'outlined' : 'filled'}
+                label={isFiltered ? `Mostrando ${visibleUsers.length} de ${totalUsersCount}` : `${visibleUsers.length} usuario${visibleUsers.length === 1 ? '' : 's'}`}
+              />
+              {visibleUsersMissingContactCount > 0 && (
+                <Chip
+                  size="small"
+                  color="warning"
+                  variant="outlined"
+                  label={`${visibleUsersMissingContactCount} sin contacto`}
+                />
+              )}
               <FormControlLabel
                 control={
                   <Checkbox
@@ -87,11 +149,11 @@ export default function AdminUsersPage() {
               </Tooltip>
             </Stack>
           </Stack>
-          {usersMissingContactCount > 0 && (
+          {visibleUsersMissingContactCount > 0 && (
             <Typography variant="body2" color="text.secondary">
               Comunicación solo aparece cuando el usuario ya tiene WhatsApp, teléfono o correo.
-              {` ${usersMissingContactCount} usuario${usersMissingContactCount === 1 ? '' : 's'} `}
-              {usersMissingContactVerb} sin canal de contacto; complétalo desde Perfil.
+              {` ${visibleUsersMissingContactCount} usuario${visibleUsersMissingContactCount === 1 ? '' : 's'} `}
+              {visibleUsersMissingContactVerb} sin canal de contacto; complétalo desde Perfil.
             </Typography>
           )}
         </Stack>
@@ -103,9 +165,14 @@ export default function AdminUsersPage() {
             {usersQuery.data?.length === 0 && (
               <Typography color="text.secondary">No hay usuarios.</Typography>
             )}
-            {usersQuery.data?.length ? (
+            {usersQuery.data?.length && visibleUsers.length === 0 ? (
+              <Typography color="text.secondary">
+                No hay coincidencias para este filtro.
+              </Typography>
+            ) : null}
+            {visibleUsers.length ? (
               <Stack spacing={1.5}>
-                {usersQuery.data.map((user) => (
+                {visibleUsers.map((user) => (
                   <UserRow
                     key={user.userId}
                     user={user}
