@@ -309,6 +309,11 @@ validatePreferredSlots slots
       | otherwise =
           Right slot
 
+validatePublicTrialPartyId :: Maybe Int -> Either ServerError ()
+validatePublicTrialPartyId Nothing = Right ()
+validatePublicTrialPartyId (Just _) =
+  Left err400 { errBody = "partyId is not allowed on public trial requests" }
+
 publicTrialsServer :: ServerT PublicTrialsAPI AppM
 publicTrialsServer =
   signupH
@@ -361,11 +366,9 @@ publicTrialsServer =
       let nameClean  = cleanOptional fullName
           emailClean = cleanOptional email
           phoneClean = cleanOptional phone
+      either (liftIO . throwIO) pure (validatePublicTrialPartyId partyId)
       slots <- either (liftIO . throwIO) pure (validatePreferredSlots preferred)
-
-      resolvedPartyId <- case partyId of
-        Just pid -> pure (intKey pid)
-        Nothing  -> createOrFetchParty nameClean emailClean phoneClean now
+      resolvedPartyId <- createOrFetchParty nameClean emailClean phoneClean now
 
       mNewCred <- case emailClean of
         Nothing -> pure Nothing

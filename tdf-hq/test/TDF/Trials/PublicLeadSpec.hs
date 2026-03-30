@@ -14,7 +14,12 @@ import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
 import TDF.Trials.DTO (PreferredSlot (..))
-import TDF.Trials.Server (createOrFetchParty, ensurePublicLeadParty, validatePreferredSlots)
+import TDF.Trials.Server
+  ( createOrFetchParty
+  , ensurePublicLeadParty
+  , validatePreferredSlots
+  , validatePublicTrialPartyId
+  )
 import qualified TDF.Models as Models
 
 spec :: Spec
@@ -42,6 +47,18 @@ spec = do
 
       firstId `shouldBe` secondId
       total `shouldBe` 1
+
+  describe "validatePublicTrialPartyId" $ do
+    it "accepts requests that omit partyId" $
+      validatePublicTrialPartyId Nothing `shouldBe` Right ()
+
+    it "rejects caller-supplied party ids on the public endpoint" $
+      case validatePublicTrialPartyId (Just 42) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "partyId is not allowed on public trial requests"
+        Right _ ->
+          expectationFailure "Expected public partyId to be rejected"
 
   describe "validatePreferredSlots" $ do
     it "rejects requests with more than three preferred slots" $ do
