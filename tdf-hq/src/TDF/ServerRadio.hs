@@ -14,6 +14,7 @@ import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
+import           Data.Char              (isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
@@ -62,13 +63,23 @@ validateRadioStreamUrl :: Text -> Either ServerError Text
 validateRadioStreamUrl rawUrl
   | T.null streamUrl =
       Left err400 { errBody = "streamUrl is required" }
-  | not ("http://" `T.isPrefixOf` lowerUrl || "https://" `T.isPrefixOf` lowerUrl) =
+  | T.any isSpace streamUrl =
+      Left err400 { errBody = "streamUrl must not contain whitespace" }
+  | Nothing <- mRemainder =
       Left err400 { errBody = "streamUrl must be http(s)" }
+  | T.null authority =
+      Left err400 { errBody = "streamUrl must include a host" }
   | otherwise =
       Right streamUrl
   where
     streamUrl = T.strip rawUrl
     lowerUrl = T.toLower streamUrl
+    mRemainder
+      | "http://" `T.isPrefixOf` lowerUrl = Just (T.drop 7 streamUrl)
+      | "https://" `T.isPrefixOf` lowerUrl = Just (T.drop 8 streamUrl)
+      | otherwise = Nothing
+    authority =
+      maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
 
 radioServer
   :: forall m.
@@ -132,8 +143,8 @@ radioServer user =
             take cap
               . Map.elems
               . foldl' (\m item -> Map.insertWith (const id) (T.toLower (rsuStreamUrl item)) item m) Map.empty
-              . filter (isStreamUrl . rsuStreamUrl)
-              $ map normalizeUpsert fetched
+              . catMaybes
+              $ map normalizeImportUpsert fetched
       now <- liftIO getCurrentTime
       Env{..} <- ask
       (inserted, updated) <- liftIO $ flip runSqlPool envPool $ do
@@ -264,6 +275,15 @@ radioServer user =
         , rsuCountry   = normalizeMaybe (rsuCountry u)
         , rsuGenre     = normalizeMaybe (rsuGenre u)
         }
+
+    normalizeImportUpsert :: RadioStreamUpsert -> Maybe RadioStreamUpsert
+    normalizeImportUpsert rawUpsert =
+      let normalized = normalizeUpsert rawUpsert
+      in case validateRadioStreamUrl (rsuStreamUrl normalized) of
+          Right validUrl | isStreamUrl validUrl ->
+            Just normalized { rsuStreamUrl = validUrl }
+          _ ->
+            Nothing
 
     defaultSources :: [Text]
     defaultSources =

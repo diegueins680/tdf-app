@@ -183,6 +183,18 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "streamUrl is required"
                 Right _ -> expectationFailure "Expected blank streamUrl to be rejected"
 
+        it "rejects malformed absolute URLs that would fail later in the radio pipeline" $ do
+            case validateRadioStreamUrl "https://" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl must include a host"
+                Right _ -> expectationFailure "Expected hostless streamUrl to be rejected"
+            case validateRadioStreamUrl "https://radio.example.com/live stream" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl must not contain whitespace"
+                Right _ -> expectationFailure "Expected whitespace-containing streamUrl to be rejected"
+
         it "rejects non-http stream URLs before they can be stored" $
             case validateRadioStreamUrl "ftp://radio.example.com/live" of
                 Left err -> do
