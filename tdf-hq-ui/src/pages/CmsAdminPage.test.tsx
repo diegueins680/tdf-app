@@ -293,6 +293,24 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the compare action until a live version exists so new slugs do not show a dead-end control', async () => {
+    getPublicMock.mockImplementation(async () => null as unknown as CmsContentDTO);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Sin contenido publicado');
+      expect(countActionsByText(container, 'Comparar con live')).toBe(0);
+      expect(container.textContent).toContain(
+        'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda y podrás compararla desde aquí.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('shows shared slug and locale context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
