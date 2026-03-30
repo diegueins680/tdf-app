@@ -156,6 +156,28 @@ for d in \
   fi
 done
 
+relay_probe_url="http://127.0.0.1:18792/json/version"
+relay_probe_status="NOT_RUN"
+relay_probe_detail="curl unavailable"
+if command -v curl >/dev/null 2>&1; then
+  relay_probe_raw="$(curl -sS --max-time 3 "$relay_probe_url" 2>&1 || true)"
+  relay_probe_detail="$(printf '%s' "$relay_probe_raw" | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g' | cut -c1-240)"
+  if [[ -z "$relay_probe_raw" ]]; then
+    relay_probe_status="NO_RESPONSE"
+    relay_probe_detail="no response"
+    visibility_blockers+=("Chrome relay raw probe returned no response at $relay_probe_url")
+  elif [[ "$relay_probe_raw" == "Unauthorized" ]]; then
+    relay_probe_status="UNAUTHORIZED"
+  elif [[ "$relay_probe_raw" == \{*\"Browser\"* ]]; then
+    relay_probe_status="RESPONSIVE"
+  else
+    relay_probe_status="UNREACHABLE"
+    visibility_blockers+=("Chrome relay raw probe did not return a usable response at $relay_probe_url: $relay_probe_detail")
+  fi
+else
+  visibility_blockers+=("curl is unavailable, so the local Chrome relay raw probe could not run")
+fi
+
 if [[ ${#chrome_storage_paths[@]} -eq 0 ]]; then
   visibility_blockers+=("No local browser session storage signal found for Chrome/Brave profiles")
 fi
@@ -163,6 +185,8 @@ visibility_blockers+=("Relay-attached signed-in App Store Connect / Play Console
 
 report "- EAS auth/project visibility: ${release_visibility}"
 report "- Browser session storage signals found: ${#chrome_storage_paths[@]} files"
+report "- Chrome relay raw probe (${relay_probe_url}): ${relay_probe_status}"
+report "- Chrome relay raw probe detail: ${relay_probe_detail}"
 report "- Live console audit status: BLOCKED until relay-attached tabs are provided"
 report ""
 report "### Browser session storage signals (filenames only)"
