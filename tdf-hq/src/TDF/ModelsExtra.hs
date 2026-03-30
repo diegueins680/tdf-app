@@ -25,7 +25,7 @@ import           Database.Persist.TH
 import           GHC.Generics       (Generic)
 import           Web.PathPieces     (toPathPiece)
 
-import           TDF.Models         (PartyId, ServiceKind)
+import           TDF.Models         (InvoiceId, PartyId, ServiceKind)
 import           TDF.UUIDInstances  ()
 
 data AssetStatus = Active | Booked | OutForMaintenance | Retired
@@ -472,6 +472,13 @@ SessionDeliverable
     deliveredAt UTCTime Maybe
     approvedAt  UTCTime Maybe
     notes       Text Maybe
+    deriving Show Generic
+
+SessionInvoice
+    sessionId   SessionId
+    invoiceId   InvoiceId
+    createdAt   UTCTime default=now()
+    UniqueSessionInvoice sessionId invoiceId
     deriving Show Generic
 
 InputListTemplate

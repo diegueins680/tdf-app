@@ -5,11 +5,13 @@
 module TDF.DTO where
 
 import           GHC.Generics (Generic)
-import           Data.Aeson (ToJSON, FromJSON)
+import           Data.Aeson (ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON)
+import           Data.Aeson.Types (fieldLabelModifier, omitNothingFields)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Int (Int64)
 import           Data.Time (UTCTime, Day)
+import           Data.Char (toLower)
 
 import           Database.Persist (Entity(..))
 import           Database.Persist.Sql (fromSqlKey)
@@ -506,6 +508,7 @@ data InvoiceDTO = InvoiceDTO
   , totalC       :: Int
   , currency     :: Text
   , customerId   :: Maybe Int64
+  , sriDocumentId :: Maybe Text
   , notes        :: Maybe Text
   , receiptId    :: Maybe Int64
   , lineItems    :: [InvoiceLineDTO]
@@ -531,6 +534,65 @@ data CreateInvoiceReq = CreateInvoiceReq
   , ciGenerateReceipt :: Maybe Bool
   } deriving (Show, Generic)
 instance FromJSON CreateInvoiceReq
+
+data GenerateSessionInvoiceLineReq = GenerateSessionInvoiceLineReq
+  { gsilDescription       :: Text
+  , gsilQuantity          :: Int
+  , gsilUnitCents         :: Int
+  , gsilTaxBps            :: Maybe Int
+  , gsilServiceOrderId    :: Maybe Int64
+  , gsilPackagePurchaseId :: Maybe Int64
+  , gsilSriCode           :: Maybe Text
+  , gsilSriAuxiliaryCode  :: Maybe Text
+  , gsilSriAdditionalInfo :: Maybe Text
+  , gsilSriIvaCode        :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON GenerateSessionInvoiceLineReq where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 4 }
+
+data GenerateSessionInvoiceReq = GenerateSessionInvoiceReq
+  { gsiCustomerId          :: Maybe Int64
+  , gsiCurrency            :: Maybe Text
+  , gsiNumber              :: Maybe Text
+  , gsiNotes               :: Maybe Text
+  , gsiLineItems           :: [GenerateSessionInvoiceLineReq]
+  , gsiGenerateReceipt     :: Maybe Bool
+  , gsiIssueSri            :: Maybe Bool
+  , gsiCertificatePassword :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON GenerateSessionInvoiceReq where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+
+data SriIssueBuyerDTO = SriIssueBuyerDTO
+  { sibRuc       :: Text
+  , sibLegalName :: Text
+  , sibEmail     :: Maybe Text
+  , sibPhone     :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON SriIssueBuyerDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3, omitNothingFields = True }
+instance FromJSON SriIssueBuyerDTO where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+
+data SriIssueResultDTO = SriIssueResultDTO
+  { sirOk                  :: Bool
+  , sirStatus              :: Text
+  , sirTargetId            :: Maybe Text
+  , sirBuyer               :: Maybe SriIssueBuyerDTO
+  , sirTotal               :: Maybe Double
+  , sirAuthorizationNumber :: Maybe Text
+  , sirInvoiceNumber       :: Maybe Text
+  , sirBuyerEmail          :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON SriIssueResultDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3, omitNothingFields = True }
+instance FromJSON SriIssueResultDTO where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+
+dtoCamelDrop :: Int -> String -> String
+dtoCamelDrop n xs = case drop n xs of
+  (c:cs) -> toLower c : cs
+  []     -> []
 
 -- Receipts
 data ReceiptLineDTO = ReceiptLineDTO
