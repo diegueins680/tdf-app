@@ -31,6 +31,7 @@ import { Parties } from '../api/parties';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { toLocalDateInputValue } from '../utils/dateOnly';
+import SessionInvoiceGeneratorCard from '../components/SessionInvoiceGeneratorCard';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'COP'];
@@ -474,7 +475,7 @@ export default function PaymentsPage() {
             Pagos manuales
           </Typography>
           <Typography color="text.secondary">
-            Carga pagos de honorarios directamente al CRM. Filtra por contacto para ver su historial.
+            Registra pagos manuales y genera facturas por sesión desde el mismo módulo financiero.
           </Typography>
         </Box>
         <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
@@ -556,14 +557,17 @@ export default function PaymentsPage() {
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={5}>
-          <PaymentForm
-            onCreated={() => {
-              void paymentsQuery.refetch();
-            }}
-            parties={parties}
-            defaultParty={partyFilter}
-            payments={payments}
-          />
+          <Stack spacing={3}>
+            <PaymentForm
+              onCreated={() => {
+                void paymentsQuery.refetch();
+              }}
+              parties={parties}
+              defaultParty={partyFilter}
+              payments={payments}
+            />
+            <SessionInvoiceGeneratorCard parties={parties} />
+          </Stack>
         </Grid>
         <Grid item xs={12} lg={7}>
           <Paper variant="outlined" sx={{ p: 2 }}>

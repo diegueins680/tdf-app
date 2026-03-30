@@ -29,7 +29,7 @@ const sectionsByModule: Record<string, ManualItem[]> = {
     { title: 'Escuela / Trial queue', path: '/escuela/trial-queue', description: 'Bandeja de solicitudes de prueba. Asigna profesor, agenda y cambia estado.' },
   ],
   invoicing: [
-    { title: 'Finanzas / Pagos', path: '/finanzas/pagos', description: 'Registro de pagos y comprobantes. Soporta concepto, monto, referencia y adjuntos.' },
+    { title: 'Finanzas / Pagos', path: '/finanzas/pagos', description: 'Registro de pagos, comprobantes y facturas por sesión. Soporta concepto, monto, referencia, adjuntos y emisión SRI.' },
   ],
   admin: [
     { title: 'Configuración / Usuarios admin', path: '/configuracion/usuarios-admin', description: 'Altas, bajas y reseteo de accesos administrativos.' },
