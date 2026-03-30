@@ -1844,7 +1844,6 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('opens the payment dossier from the status menu without duplicating the receipt-upload action', async () => {
-    const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -1872,8 +1871,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(markPaidReceiptHint);
-      expect(countOccurrences(document.body, markPaidReceiptHint)).toBe(1);
+      expect(document.body.textContent).toContain('Registrar pago de inscripción');
+      expect(document.body.textContent).not.toContain('Expediente de inscripción');
+      expect(document.body.textContent).not.toContain(
+        'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.',
+      );
       expect(document.body.textContent).toContain(markPaidReceiptSectionHelpText);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
@@ -1895,8 +1897,6 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('keeps the mark-paid flow focused on the pay action when a saved receipt already unlocks it', async () => {
-    const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
-    const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
     const registration = buildRegistration();
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
@@ -1932,10 +1932,16 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Confirmar pago de inscripción');
+      expect(document.body.textContent).not.toContain('Expediente de inscripción');
       expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
       expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
-      expect(document.body.textContent).not.toContain(markPaidReceiptHint);
-      expect(document.body.textContent).not.toContain(markPaidReceiptSectionHelpText);
+      expect(document.body.textContent).not.toContain(
+        'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.',
+      );
+      expect(document.body.textContent).not.toContain(
+        'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.',
+      );
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).toContain('receipt.pdf');
       expect(
