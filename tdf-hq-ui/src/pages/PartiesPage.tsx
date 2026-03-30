@@ -364,6 +364,9 @@ export default function PartiesPage() {
   const searchContextSummary = showSearchContextSummary
     ? `Mostrando ${filtered.length} de ${formatPartyCountLabel(parties.length)} para "${trimmedSearch}".`
     : '';
+  const tableGuidanceText = canManageRoles
+    ? 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta. Roles y accesos aparece solo cuando ese contacto ya tiene usuario.'
+    : 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.';
 
   const openActionsMenu = (event: MouseEvent<HTMLButtonElement>, party: PartyDTO) => {
     setActionsMenuTarget({ anchorEl: event.currentTarget, party });
@@ -465,9 +468,7 @@ export default function PartiesPage() {
                 </Stack>
               ) : (
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                  Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre
-                  Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo
-                  muestra.
+                  {tableGuidanceText}
                 </Typography>
               )
             )}
@@ -543,7 +544,7 @@ export default function PartiesPage() {
             Crear usuario y enviar contraseña
           </MenuItem>
         )}
-        {canManageRoles && (
+        {canManageRoles && actionsMenuTarget?.party.hasUserAccount && (
           <MenuItem onClick={() => runPartyMenuAction(() => navigate('/configuracion/roles-permisos'))}>
             <SchoolIcon fontSize="small" sx={{ mr: 1 }} />
             Roles y accesos

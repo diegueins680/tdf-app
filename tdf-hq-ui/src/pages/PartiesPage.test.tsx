@@ -8,6 +8,7 @@ import type { PartyCreate, PartyDTO, PartyUpdate } from '../api/types';
 const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const createPartyMock = jest.fn<(body: PartyCreate) => Promise<PartyDTO>>();
 const updatePartyMock = jest.fn<(id: number, body: PartyUpdate) => Promise<PartyDTO | null>>();
+const canAccessPathMock = jest.fn<() => boolean>();
 
 jest.unstable_mockModule('../api/parties', () => ({
   Parties: {
@@ -28,7 +29,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../utils/accessControl', () => ({
-  canAccessPath: () => false,
+  canAccessPath: () => canAccessPathMock(),
 }));
 
 jest.unstable_mockModule('../components/PartyRelatedPopover', () => ({
@@ -167,6 +168,7 @@ describe('PartiesPage', () => {
     listPartiesMock.mockReset();
     createPartyMock.mockReset();
     updatePartyMock.mockReset();
+    canAccessPathMock.mockReset();
     listPartiesMock.mockResolvedValue([]);
     createPartyMock.mockResolvedValue({
       partyId: 1,
@@ -174,6 +176,7 @@ describe('PartiesPage', () => {
       isOrg: false,
     } satisfies PartyDTO);
     updatePartyMock.mockResolvedValue(null);
+    canAccessPathMock.mockReturnValue(false);
   });
 
   it('replaces empty CRM chrome with a first-contact empty state', async () => {
@@ -403,7 +406,7 @@ describe('PartiesPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo muestra.',
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
       });
@@ -416,7 +419,7 @@ describe('PartiesPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Mostrando 1 de 2 contactos para "ada@example.com".');
         expect(container.textContent).not.toContain(
-          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo muestra.',
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(container.textContent).toContain('Ada Lovelace');
@@ -428,6 +431,7 @@ describe('PartiesPage', () => {
   });
 
   it('keeps one overflow actions trigger per contact row and moves secondary actions into the menu', async () => {
+    canAccessPathMock.mockReturnValue(true);
     listPartiesMock.mockResolvedValue([
       {
         partyId: 1,
@@ -454,7 +458,7 @@ describe('PartiesPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear accesos cuando haga falta; si la cuenta ya existe, la fila lo muestra.',
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta. Roles y accesos aparece solo cuando ese contacto ya tiene usuario.',
         );
         expect(container.textContent).toContain('Usuario creado');
         expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
@@ -471,6 +475,11 @@ describe('PartiesPage', () => {
       await waitForExpectation(() => {
         expect(getMenuItemByText(document.body, 'Editar contacto')).toBeTruthy();
         expect(getMenuItemByText(document.body, 'Crear usuario y enviar contraseña')).toBeTruthy();
+        expect(
+          Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+            (element) => buttonText(element) === 'Roles y accesos',
+          ),
+        ).toBe(false);
       });
 
       await act(async () => {
@@ -481,6 +490,7 @@ describe('PartiesPage', () => {
 
       await waitForExpectation(() => {
         expect(getMenuItemByText(document.body, 'Editar contacto')).toBeTruthy();
+        expect(getMenuItemByText(document.body, 'Roles y accesos')).toBeTruthy();
         expect(
           Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
             (element) => buttonText(element) === 'Crear usuario y enviar contraseña',
