@@ -1229,6 +1229,7 @@ export default function CourseRegistrationsAdminPage() {
     && receiptForm.editingId == null
     && !canSubmitReceipt
     && !hasReceiptMetadataDraft;
+  const showReceiptReviewPane = hasReceipts || !showReceiptComposer;
   const showReceiptMetadataFields = (
     selectedDossier?.intent === 'markPaid'
     || receiptForm.editingId != null
@@ -1972,7 +1973,7 @@ export default function CourseRegistrationsAdminPage() {
 
                     <Grid container spacing={2}>
                       {showReceiptComposer && (
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} md={showReceiptReviewPane ? 6 : 12} data-testid="course-registration-receipt-composer-pane">
                           <Stack spacing={1.5}>
                             <GoogleDriveUploadWidget
                               label={
@@ -2060,73 +2061,75 @@ export default function CourseRegistrationsAdminPage() {
                           </Stack>
                         </Grid>
                       )}
-                      <Grid item xs={12} md={showReceiptComposer ? 6 : 12}>
-                        <Stack spacing={1.5}>
-                          {receipts.length === 0 && !showReceiptComposer && (
-                            <Alert
-                              severity="info"
-                              action={(
-                                <Button color="inherit" size="small" onClick={() => setShowReceiptComposer(true)}>
-                                  Agregar primer comprobante
-                                </Button>
-                              )}
-                            >
-                              {emptyReceiptAlertMessage}
-                            </Alert>
-                          )}
-                          {receipts.map((receipt) => (
-                            <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
-                              <Stack spacing={1}>
-                                {looksLikeImageResource(receipt.crrFileUrl, receipt.crrFileName) && (
-                                  <Box
-                                    component="img"
-                                    src={receipt.crrFileUrl}
-                                    alt={receipt.crrFileName ?? `Comprobante ${receipt.crrId}`}
-                                    sx={{
-                                      width: '100%',
-                                      maxHeight: 220,
-                                      objectFit: 'cover',
-                                      borderRadius: 1.5,
-                                      bgcolor: 'grey.100',
-                                    }}
-                                  />
-                                )}
-                                <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
-                                  <Box>
-                                    <Typography variant="subtitle2">
-                                      {receipt.crrFileName ?? `Comprobante #${receipt.crrId}`}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                      Subido: {formatDate(receipt.crrCreatedAt)}
-                                    </Typography>
-                                  </Box>
-                                  <Button
-                                    size="small"
-                                    variant="text"
-                                    endIcon={<ArrowDropDownIcon />}
-                                    aria-label={`Abrir acciones para comprobante ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
-                                    aria-haspopup="menu"
-                                    onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
-                                  >
-                                    Acciones
+                      {showReceiptReviewPane && (
+                        <Grid item xs={12} md={showReceiptComposer ? 6 : 12} data-testid="course-registration-receipt-list-pane">
+                          <Stack spacing={1.5}>
+                            {receipts.length === 0 && !showReceiptComposer && (
+                              <Alert
+                                severity="info"
+                                action={(
+                                  <Button color="inherit" size="small" onClick={() => setShowReceiptComposer(true)}>
+                                    Agregar primer comprobante
                                   </Button>
-                                </Stack>
-                                {receipt.crrNotes && (
-                                  <Typography variant="body2" color="text.secondary">
-                                    {receipt.crrNotes}
-                                  </Typography>
                                 )}
-                                <Link href={receipt.crrFileUrl} target="_blank" rel="noreferrer" underline="hover">
-                                  <Stack direction="row" spacing={0.75} alignItems="center">
-                                    <OpenInNewIcon sx={{ fontSize: 16 }} />
-                                    <span>Abrir comprobante</span>
+                              >
+                                {emptyReceiptAlertMessage}
+                              </Alert>
+                            )}
+                            {receipts.map((receipt) => (
+                              <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
+                                <Stack spacing={1}>
+                                  {looksLikeImageResource(receipt.crrFileUrl, receipt.crrFileName) && (
+                                    <Box
+                                      component="img"
+                                      src={receipt.crrFileUrl}
+                                      alt={receipt.crrFileName ?? `Comprobante ${receipt.crrId}`}
+                                      sx={{
+                                        width: '100%',
+                                        maxHeight: 220,
+                                        objectFit: 'cover',
+                                        borderRadius: 1.5,
+                                        bgcolor: 'grey.100',
+                                      }}
+                                    />
+                                  )}
+                                  <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
+                                    <Box>
+                                      <Typography variant="subtitle2">
+                                        {receipt.crrFileName ?? `Comprobante #${receipt.crrId}`}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary">
+                                        Subido: {formatDate(receipt.crrCreatedAt)}
+                                      </Typography>
+                                    </Box>
+                                    <Button
+                                      size="small"
+                                      variant="text"
+                                      endIcon={<ArrowDropDownIcon />}
+                                      aria-label={`Abrir acciones para comprobante ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
+                                      aria-haspopup="menu"
+                                      onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
+                                    >
+                                      Acciones
+                                    </Button>
                                   </Stack>
-                                </Link>
-                              </Stack>
-                            </Paper>
-                          ))}
-                        </Stack>
-                      </Grid>
+                                  {receipt.crrNotes && (
+                                    <Typography variant="body2" color="text.secondary">
+                                      {receipt.crrNotes}
+                                    </Typography>
+                                  )}
+                                  <Link href={receipt.crrFileUrl} target="_blank" rel="noreferrer" underline="hover">
+                                    <Stack direction="row" spacing={0.75} alignItems="center">
+                                      <OpenInNewIcon sx={{ fontSize: 16 }} />
+                                      <span>Abrir comprobante</span>
+                                    </Stack>
+                                  </Link>
+                                </Stack>
+                              </Paper>
+                            ))}
+                          </Stack>
+                        </Grid>
+                      )}
                     </Grid>
                   </Stack>
                 </CardContent>

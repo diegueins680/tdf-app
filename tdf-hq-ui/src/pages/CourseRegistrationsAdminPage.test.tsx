@@ -1780,6 +1780,86 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the first receipt flow focused until there is something saved to review', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [],
+      }),
+    );
+
+    let container = document.createElement('div');
+    document.body.appendChild(container);
+    let page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-list-pane"]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-composer-pane"]')).not.toBeNull();
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-list-pane"]')).toBeNull();
+    });
+
+    await page.cleanup();
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [buildReceipt()],
+      }),
+    );
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-list-pane"]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-composer-pane"]')).not.toBeNull();
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-list-pane"]')).not.toBeNull();
+      expect(document.body.textContent).toContain('receipt.pdf');
+    });
+
+    await page.cleanup();
+  });
+
   it('lets admins hide an empty receipt URL fallback after opening it by mistake', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
