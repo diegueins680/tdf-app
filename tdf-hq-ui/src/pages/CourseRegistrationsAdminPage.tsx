@@ -1284,6 +1284,7 @@ export default function CourseRegistrationsAdminPage() {
     setShowReceiptComposer(false);
   }, [canMarkPaid, selectedDossier?.intent]);
 
+  const prioritizePaymentSection = selectedDossier?.intent === 'markPaid';
   const dossierDialogTitle = selectedDossier?.intent === 'markPaid'
     ? canMarkPaid
       ? 'Confirmar pago de inscripción'
@@ -1875,7 +1876,7 @@ export default function CourseRegistrationsAdminPage() {
                 </Card>
               </Collapse>
 
-              <Card variant="outlined">
+              <Card variant="outlined" sx={{ order: prioritizePaymentSection ? 2 : 1 }}>
                 <CardContent>
                   <Stack spacing={1.5}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
@@ -1936,7 +1937,7 @@ export default function CourseRegistrationsAdminPage() {
                 </CardContent>
               </Card>
 
-              <Card variant="outlined">
+              <Card variant="outlined" sx={{ order: prioritizePaymentSection ? 1 : 2 }}>
                 <CardContent>
                   <Stack spacing={2}>
                     <Stack

@@ -1979,6 +1979,10 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Agregar primer comprobante',
         ),
       ).toBe(false);
+      const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
+      expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeGreaterThan(-1);
+      expect(dialogHeadings.indexOf('Notas internas')).toBeGreaterThan(-1);
+      expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeLessThan(dialogHeadings.indexOf('Notas internas'));
     });
 
     await cleanup();
