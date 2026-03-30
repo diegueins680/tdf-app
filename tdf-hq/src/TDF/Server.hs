@@ -3715,6 +3715,28 @@ lookupByEmail emailAddress = do
   creds <- rawSql query [PersistText emailAddress]
   pure (listToMaybe creds)
 
+resolvePasswordResetDelivery :: Text -> SqlPersistT IO (Maybe (Entity UserCredential, Text, Text))
+resolvePasswordResetDelivery rawEmail = do
+  let emailQuery = T.strip rawEmail
+      query =
+        "SELECT ?? FROM user_credential \
+        \ JOIN party ON user_credential.party_id = party.id \
+        \ WHERE user_credential.active = ? \
+        \   AND lower(trim(party.primary_email)) = lower(?) \
+        \ ORDER BY user_credential.id ASC \
+        \ LIMIT 1"
+  if T.null emailQuery
+    then pure Nothing
+    else do
+      creds <- rawSql query [PersistBool True, PersistText emailQuery]
+      case listToMaybe creds of
+        Nothing -> pure Nothing
+        Just cred@(Entity _ credential) -> do
+          mParty <- get (userCredentialPartyId credential)
+          let mRecipientEmail = mParty >>= cleanOptional . M.partyPrimaryEmail
+              displayName = maybe emailQuery M.partyDisplayName mParty
+          pure ((\recipientEmail -> (cred, recipientEmail, displayName)) <$> mRecipientEmail)
+
 data SignupDbError
   = SignupEmailExists
   | SignupProfileError
@@ -4030,24 +4052,19 @@ passwordReset PasswordResetRequest{..} = do
   Env pool cfg <- ask
   let emailSvc = EmailSvc.mkEmailService cfg
   mPayload <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
-  for_ mPayload $ \(token, displayName) -> liftIO $
-    EmailSvc.sendPasswordReset emailSvc displayName emailClean token
+  for_ mPayload $ \(token, displayName, recipientEmail) -> liftIO $
+    EmailSvc.sendPasswordReset emailSvc displayName recipientEmail token
   pure NoContent
   where
-    runPasswordReset :: Text -> SqlPersistT IO (Maybe (Text, Text))
+    runPasswordReset :: Text -> SqlPersistT IO (Maybe (Text, Text, Text))
     runPasswordReset emailVal = do
-      mCred <- getBy (UniqueCredentialUsername emailVal)
-      case mCred of
+      mDelivery <- resolvePasswordResetDelivery emailVal
+      case mDelivery of
         Nothing -> pure Nothing
-        Just (Entity _ cred)
-          | not (userCredentialActive cred) -> pure Nothing
-          | otherwise -> do
-              deactivatePasswordResetTokens (userCredentialPartyId cred)
-              token <- createPasswordResetToken (userCredentialPartyId cred) emailVal
-              mParty <- get (userCredentialPartyId cred)
-              let displayName =
-                    maybe emailVal M.partyDisplayName mParty
-              pure (Just (token, displayName))
+        Just (Entity _ cred, recipientEmail, displayName) -> do
+          deactivatePasswordResetTokens (userCredentialPartyId cred)
+          token <- createPasswordResetToken (userCredentialPartyId cred) recipientEmail
+          pure (Just (token, displayName, recipientEmail))
 
 passwordResetConfirm :: PasswordResetConfirmRequest -> AppM LoginResponse
 passwordResetConfirm PasswordResetConfirmRequest{..} = do

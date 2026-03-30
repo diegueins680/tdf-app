@@ -3,13 +3,17 @@
 module TDF.ServerSpec (spec) where
 
 import Control.Monad (forM_)
+import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import Database.Persist.Sql (toSqlKey)
 import qualified Data.Text as T
+import Data.Time.Clock (getCurrentTime)
+import Database.Persist (Entity(..), insert)
+import Database.Persist.Sql (SqlPersistT, rawExecute, toSqlKey)
+import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
-import TDF.Models (BookingStatus (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, validateServiceMarketplaceCatalog)
+import TDF.Models (BookingStatus (..), Party (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -50,6 +54,66 @@ spec = describe "TDF.Server helpers" $ do
 
         it "drops strings that only contain whitespace" $
             normalizeOptionalInput (Just "   ") `shouldBe` Nothing
+
+    describe "resolvePasswordResetDelivery" $ do
+        it "resolves active accounts by stored primary email even when the username differs" $ do
+            resolved <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Reset User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "User@Example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                _ <- insert UserCredential
+                    { userCredentialPartyId = partyId
+                    , userCredentialUsername = "custom-handle"
+                    , userCredentialPasswordHash = "hashed"
+                    , userCredentialActive = True
+                    }
+                resolvePasswordResetDelivery "  user@example.com  "
+            case resolved of
+                Just (Entity _ cred, recipientEmail, displayName) -> do
+                    userCredentialUsername cred `shouldBe` "custom-handle"
+                    recipientEmail `shouldBe` "User@Example.com"
+                    displayName `shouldBe` "Reset User"
+                Nothing ->
+                    expectationFailure "Expected password reset delivery to resolve by primary email"
+
+        it "ignores inactive credentials for password reset delivery" $ do
+            resolved <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Inactive User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "inactive@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                _ <- insert UserCredential
+                    { userCredentialPartyId = partyId
+                    , userCredentialUsername = "inactive-user"
+                    , userCredentialPasswordHash = "hashed"
+                    , userCredentialActive = False
+                    }
+                resolvePasswordResetDelivery "inactive@example.com"
+            case resolved of
+                Nothing -> pure ()
+                Just _ ->
+                    expectationFailure "Expected inactive credential to be ignored for password reset delivery"
 
     describe "parseBookingStatus" $ do
         it "parses a known status and ignores surrounding whitespace" $
@@ -162,3 +226,40 @@ spec = describe "TDF.Server helpers" $ do
         it "matches the strict-admin matrix for global sync data" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasSocialSyncAccess (mkUser [role]) `shouldBe` hasStrictAdminAccess (mkUser [role])
+
+runAuthSqlite :: SqlPersistT IO a -> IO a
+runAuthSqlite action =
+    runSqlite ":memory:" $ do
+        initializeAuthSchema
+        action
+
+initializeAuthSchema :: SqlPersistT IO ()
+initializeAuthSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"user_credential\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"username\" VARCHAR NOT NULL,\
+        \\"password_hash\" VARCHAR NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \CONSTRAINT \"unique_credential_username\" UNIQUE (\"username\"),\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
