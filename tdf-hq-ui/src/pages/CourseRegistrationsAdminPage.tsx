@@ -1286,13 +1286,15 @@ export default function CourseRegistrationsAdminPage() {
           Inscripciones de cursos
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Tooltip title="Refrescar">
-            <span>
-              <IconButton aria-label="Refrescar inscripciones" onClick={handleRefresh} disabled={regsQuery.isFetching}>
-                <RefreshIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={regsQuery.isFetching}
+          >
+            Refrescar lista
+          </Button>
         </Stack>
       </Stack>
 

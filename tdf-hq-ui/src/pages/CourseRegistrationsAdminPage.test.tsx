@@ -2704,12 +2704,37 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Pendientes: 0');
       expect(container.textContent).not.toContain('Canceladas: 0');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
+      expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),
         ),
       ).toBe(false);
-      expect(getButtonByAriaLabel(container, 'Refrescar inscripciones')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the list refresh action scope-labeled so it does not blend into dossier refresh', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
+      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Refrescar lista')).toBe(1);
     });
 
     await cleanup();
