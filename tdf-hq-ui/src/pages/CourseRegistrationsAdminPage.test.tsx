@@ -769,8 +769,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(container.textContent).toContain('No hace falta filtrarla: es la unica cohorte disponible ahora mismo.');
-      expect(container.textContent).toContain('Los filtros se aplican automáticamente al cambiar. Usa Estado.');
+      expect(container.textContent).toContain(
+        'No hace falta filtrarla: es la unica cohorte disponible ahora mismo. Usa Estado para cambiar la vista.',
+      );
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Vista actual');
@@ -821,7 +823,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pagado');
-      expect(container.textContent).toContain('Los filtros se aplican automáticamente al cambiar. Usa cohorte.');
+      expect(container.textContent).toContain(
+        'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte para cambiar la vista.',
+      );
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
     });
 
@@ -1401,7 +1406,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pendiente de pago');
-      expect(container.textContent).toContain('No hace falta filtrarlo: es el unico estado presente en esta vista.');
+      expect(container.textContent).toContain(
+        'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte para cambiar la vista.',
+      );
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Solo aparecen estados con inscripciones en esta vista.');
     });

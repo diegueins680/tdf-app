@@ -164,6 +164,10 @@ const buildAutomaticFilterHelpText = ({
       : '';
   }
 
+  if (singleAvailableCohortLabel || showSingleStatusSummary) {
+    return '';
+  }
+
   const filterStartingPoint = singleAvailableCohortLabel
     ? 'Usa Estado.'
     : showSingleStatusSummary
@@ -717,6 +721,12 @@ export default function CourseRegistrationsAdminPage() {
     : limit !== DEFAULT_LIMIT
       ? `Ajustar límite (${limit})`
       : 'Ajustar límite';
+  const singleAvailableCohortHelperText = showAdvancedLimitControl
+    ? 'No hace falta filtrarla: es la unica cohorte disponible ahora mismo. Usa Estado o Ajustar límite para cambiar la vista.'
+    : 'No hace falta filtrarla: es la unica cohorte disponible ahora mismo. Usa Estado para cambiar la vista.';
+  const singleVisibleStatusHelperText = showAdvancedLimitControl
+    ? 'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte o Ajustar límite para cambiar la vista.'
+    : 'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte para cambiar la vista.';
   const filtersHelpText = buildAutomaticFilterHelpText({
     combinedSingleChoiceSummary,
     hasVisibleRegistrations,
@@ -1371,7 +1381,7 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         )}
                         <Typography variant="caption" color="text.secondary">
-                          No hace falta filtrarla: es la unica cohorte disponible ahora mismo.
+                          {singleAvailableCohortHelperText}
                         </Typography>
                       </Stack>
                     ) : (
@@ -1426,7 +1436,7 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         )}
                         <Typography variant="caption" color="text.secondary">
-                          No hace falta filtrarlo: es el unico estado presente en esta vista.
+                          {singleVisibleStatusHelperText}
                         </Typography>
                       </Stack>
                     ) : (
