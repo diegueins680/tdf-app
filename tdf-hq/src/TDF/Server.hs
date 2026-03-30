@@ -2589,9 +2589,45 @@ parseOptionalUtcText fieldName mValue =
         Just ts -> pure (Just ts)
         Nothing -> throwBadRequest (fieldName <> " inválido")
 
+courseFollowUpTypeOptions :: [Text]
+courseFollowUpTypeOptions =
+  [ "note"
+  , "call"
+  , "whatsapp"
+  , "email"
+  , "payment_receipt"
+  , "status_change"
+  , "registration"
+  ]
+
+normalizeCourseFollowUpTypeToken :: Text -> Maybe Text
+normalizeCourseFollowUpTypeToken raw =
+  case normalizeBookingStatusToken raw of
+    "note" -> Just "note"
+    "call" -> Just "call"
+    "whatsapp" -> Just "whatsapp"
+    "email" -> Just "email"
+    "paymentreceipt" -> Just "payment_receipt"
+    "statuschange" -> Just "status_change"
+    "registration" -> Just "registration"
+    _ -> Nothing
+
 normalizeCourseFollowUpType :: Maybe Text -> Text
 normalizeCourseFollowUpType =
-  fromMaybe "note" . fmap (T.toLower . T.strip) . cleanOptional
+  fromMaybe "note" . (>>= normalizeCourseFollowUpTypeToken) . cleanOptional
+
+parseCourseFollowUpType :: Maybe Text -> Either ServerError Text
+parseCourseFollowUpType Nothing = Right "note"
+parseCourseFollowUpType (Just raw) =
+  case cleanOptional (Just raw) >>= normalizeCourseFollowUpTypeToken of
+    Just entryTypeVal -> Right entryTypeVal
+    Nothing ->
+      Left err400
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              "Invalid course follow-up entryType. Allowed values: "
+                <> T.intercalate ", " courseFollowUpTypeOptions
+        }
 
 registrationHasReceipts :: Key ME.CourseRegistration -> AppM Bool
 registrationHasReceipts regKey = do
@@ -2858,13 +2894,14 @@ createCourseRegistrationFollowUp user rawSlug regId CourseRegistrationFollowUpCr
   let notesVal = T.strip notes
   when (T.null notesVal) $
     throwBadRequest "notes requerido"
+  entryTypeVal <- either throwError pure (parseCourseFollowUpType entryType)
   mNextFollowUpAt <- parseOptionalUtcText "nextFollowUpAt" nextFollowUpAt
   now <- liftIO getCurrentTime
   followUp <- runDB $ insertCourseRegistrationFollowUp
     (entityKey ent)
     (ME.courseRegistrationPartyId (entityVal ent))
     (Just (auPartyId user))
-    (normalizeCourseFollowUpType entryType)
+    entryTypeVal
     subject
     notesVal
     attachmentUrl
@@ -2889,6 +2926,9 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
       in if T.null trimmed
         then throwBadRequest "notes requerido"
         else pure trimmed
+  entryTypeVal <- case entryType of
+    Nothing -> pure (ME.courseRegistrationFollowUpEntryType followUp)
+    Just raw -> either throwError pure (parseCourseFollowUpType (Just raw))
   mNextFollowUpAt <- case nextFollowUpAt of
     Nothing -> pure (ME.courseRegistrationFollowUpNextFollowUpAt followUp)
     Just raw -> parseOptionalUtcText "nextFollowUpAt" (Just raw)
@@ -2896,8 +2936,7 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
   let updated =
         followUp
           { ME.courseRegistrationFollowUpPartyId = ME.courseRegistrationPartyId (entityVal ent)
-          , ME.courseRegistrationFollowUpEntryType =
-              maybe (ME.courseRegistrationFollowUpEntryType followUp) (T.toLower . T.strip) (cleanOptional entryType)
+          , ME.courseRegistrationFollowUpEntryType = entryTypeVal
           , ME.courseRegistrationFollowUpSubject =
               maybe (ME.courseRegistrationFollowUpSubject followUp) (cleanOptional . Just) subject
           , ME.courseRegistrationFollowUpNotes = notesVal
