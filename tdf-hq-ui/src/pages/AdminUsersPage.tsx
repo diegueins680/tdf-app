@@ -151,9 +151,9 @@ export default function AdminUsersPage() {
           </Stack>
           {visibleUsersMissingContactCount > 0 && (
             <Typography variant="body2" color="text.secondary">
-              Comunicación solo aparece cuando el usuario ya tiene WhatsApp, teléfono o correo.
+              Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.
               {` ${visibleUsersMissingContactCount} usuario${visibleUsersMissingContactCount === 1 ? '' : 's'} `}
-              {visibleUsersMissingContactVerb} sin canal de contacto; complétalo desde Perfil.
+              {visibleUsersMissingContactVerb} sin canal de contacto; usa Completar contacto en esa fila.
             </Typography>
           )}
         </Stack>
@@ -241,7 +241,7 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
       )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
         <Button component={RouterLink} to={`/perfil/${user.partyId}`} size="small" variant="outlined">
-          Perfil
+          {hasContactInfo ? 'Perfil' : 'Completar contacto'}
         </Button>
         {hasContactInfo && (
           <Button size="small" variant="contained" onClick={onOpenCommunications}>

@@ -241,17 +241,20 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
-        expect(getButtonsByText(container, 'Perfil')).toHaveLength(2);
+        expect(getButtonsByText(container, 'Perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
         expect(container.textContent).toContain(
-          'Comunicación solo aparece cuando el usuario ya tiene WhatsApp, teléfono o correo.',
+          'Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.',
         );
         expect(container.textContent).toContain(
-          '1 usuario sigue sin canal de contacto; complétalo desde Perfil.',
+          '1 usuario sigue sin canal de contacto; usa Completar contacto en esa fila.',
         );
 
         const missingContactRow = getRowByUserId(container, 102);
         expect(missingContactRow.textContent).toContain('Falta contacto');
+        expect(missingContactRow.textContent).toContain('Completar contacto');
+        expect(missingContactRow.textContent).not.toContain('Perfil');
         expect(missingContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
       });
 
