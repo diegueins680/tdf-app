@@ -68,6 +68,42 @@ cleanOptional = (>>= (\txt -> let t = T.strip txt in if T.null t then Nothing el
 normalizeEmail :: Maybe Text -> Maybe Text
 normalizeEmail = fmap T.toLower . cleanOptional
 
+isValidEmail :: Text -> Bool
+isValidEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      not (T.null localPart)
+        && not (T.null domain)
+        && not (T.any isSpace candidate)
+        && not (T.isPrefixOf "." domain)
+        && not (T.isSuffixOf "." domain)
+        && T.isInfixOf "." domain
+    _ -> False
+
+validateOptionalEmail :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalEmail Nothing = Right Nothing
+validateOptionalEmail (Just rawEmail) =
+  case normalizeEmail (Just rawEmail) of
+    Nothing -> Right Nothing
+    Just emailVal ->
+      if isValidEmail emailVal
+           then Right (Just emailVal)
+           else Left err400 { errBody = "email inválido" }
+
+validateEmailUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))
+validateEmailUpdate Nothing = Right Nothing
+validateEmailUpdate (Just rawEmail) =
+  case cleanOptional (Just rawEmail) of
+    Nothing -> Right (Just Nothing)
+    Just _ -> Just <$> validateOptionalEmail (Just rawEmail)
+
+validateRequiredEmail :: Maybe Text -> Either ServerError Text
+validateRequiredEmail mEmail =
+  case validateOptionalEmail mEmail of
+    Left err -> Left err
+    Right Nothing -> Left err400 { errBody = "Correo requerido para crear la cuenta" }
+    Right (Just emailVal) -> Right emailVal
+
 normalizePhone :: Text -> Maybe Text
 normalizePhone raw =
   let trimmed = T.strip raw
@@ -474,9 +510,7 @@ publicTrialsServer =
 
 createOrFetchParty :: Maybe Text -> Maybe Text -> Maybe Text -> UTCTime -> AppM PartyId
 createOrFetchParty mName mEmail mPhone now = do
-  emailVal <- case normalizeEmail mEmail of
-    Nothing -> liftIO $ throwIO err400 { errBody = "Correo requerido para crear la cuenta" }
-    Just e  -> pure e
+  emailVal <- either (liftIO . throwIO) pure (validateRequiredEmail mEmail)
   phoneVal <- either (liftIO . throwIO) pure (validateOptionalPhone mPhone)
   let
       display = fromMaybe emailVal (cleanOptional mName)
@@ -1396,23 +1430,22 @@ privateTrialsServer user@AuthedUser{..} =
           liftIO $ throwIO err403
 
       let nameUpdate = displayName >>= (\txt -> let t = T.strip txt in if T.null t then Nothing else Just t)
-          emailUpdate = case email of
-            Nothing -> Nothing
-            Just raw -> Just (cleanOptional (Just raw))
           notesUpdate = case notes of
             Nothing -> Nothing
             Just raw -> Just (cleanOptional (Just raw))
+      emailUpdate <- either (liftIO . throwIO) pure (validateEmailUpdate email)
       phoneUpdate <- either (liftIO . throwIO) pure (validateOptionalPhone phone)
 
       when (isJust displayName && isNothing nameUpdate) $
         liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
 
-      let updates = catMaybes
-            [ (Models.PartyDisplayName =.) <$> nameUpdate
-            , (Models.PartyPrimaryEmail =.) <$> emailUpdate
-            , if isJust phone then Just (Models.PartyPrimaryPhone =. phoneUpdate) else Nothing
-            , (Models.PartyNotes =.) <$> notesUpdate
-            ]
+      let updates =
+            maybe [] (\emailVal -> [Models.PartyPrimaryEmail =. emailVal]) emailUpdate
+            <> catMaybes
+              [ (Models.PartyDisplayName =.) <$> nameUpdate
+              , if isJust phone then Just (Models.PartyPrimaryPhone =. phoneUpdate) else Nothing
+              , (Models.PartyNotes =.) <$> notesUpdate
+              ]
 
       unless (null updates) $
         update studentKey updates
