@@ -14,7 +14,7 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), Party (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCmsContentStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -55,6 +55,22 @@ spec = describe "TDF.Server helpers" $ do
 
         it "drops strings that only contain whitespace" $
             normalizeOptionalInput (Just "   ") `shouldBe` Nothing
+
+    describe "validateCmsContentStatus" $ do
+        it "defaults omitted status to draft and normalizes supported explicit values" $ do
+            validateCmsContentStatus Nothing `shouldBe` Right "draft"
+            validateCmsContentStatus (Just " Published ") `shouldBe` Right "published"
+            validateCmsContentStatus (Just "ARCHIVED") `shouldBe` Right "archived"
+
+        it "rejects blank or unknown explicit statuses instead of persisting ambiguous CMS versions" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "draft, published, archived"
+                    Right statusVal ->
+                        expectationFailure ("Expected invalid CMS status to be rejected, got: " <> show statusVal)
+            assertInvalid (validateCmsContentStatus (Just "   "))
+            assertInvalid (validateCmsContentStatus (Just "scheduled"))
 
     describe "resolvePasswordResetDelivery" $ do
         it "resolves active accounts by stored primary email even when the username differs" $ do

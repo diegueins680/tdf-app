@@ -5896,6 +5896,15 @@ normalizeOptionalInput (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
+validateCmsContentStatus :: Maybe Text -> Either ServerError Text
+validateCmsContentStatus Nothing = Right "draft"
+validateCmsContentStatus (Just rawStatus) =
+  case T.toCaseFold <$> normalizeOptionalInput (Just rawStatus) of
+    Just "draft" -> Right "draft"
+    Just "published" -> Right "published"
+    Just "archived" -> Right "archived"
+    _ -> Left err400 { errBody = "status must be one of: draft, published, archived" }
+
 validateCourseNonNegativeField :: Text -> Int -> Either ServerError Int
 validateCourseNonNegativeField fieldName value
   | value < 0 =
@@ -8709,9 +8718,9 @@ cmsAdminServer user =
     cmsCreateH CmsContentIn{..} = do
       requireWebmaster
       now <- liftIO getCurrentTime
+      statusVal <- either throwError pure (validateCmsContentStatus cciStatus)
       let slug = cciSlug
           locale = cciLocale
-          statusVal = fromMaybe "draft" cciStatus
       nextVersion <- runDB $ do
         mLatest <- selectFirst
           [ CMS.CmsContentSlug ==. slug
