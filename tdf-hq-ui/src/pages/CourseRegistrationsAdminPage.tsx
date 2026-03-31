@@ -59,7 +59,9 @@ const hideSystemEmailsLabel = 'Ocultar correos del sistema';
 const systemEmailHistoryHelperText = 'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
 const emptySystemEmailHistoryMessage = 'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
-const followUpComposerHelpText = 'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.';
+const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
+const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Guárdalo y aparecerá en el historial para revisarlo después.';
+const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -1251,6 +1253,13 @@ export default function CourseRegistrationsAdminPage() {
   const canHideFollowUpOptionalFields = showFollowUpOptionalFields && !hasFollowUpOptionalDraft;
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
+  const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
+  const followUpComposerTitle = followUpForm.editingId == null ? 'Registrar seguimiento' : 'Editar seguimiento';
+  const followUpComposerSummary = followUpForm.editingId != null
+    ? editingFollowUpComposerHelpText
+    : isCreatingFirstFollowUp
+      ? firstFollowUpComposerHelpText
+      : followUpComposerHelpText;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
   const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
@@ -2191,11 +2200,13 @@ export default function CourseRegistrationsAdminPage() {
                         <Grid item xs={12} md={showFollowUpHistoryPane ? 6 : 12} data-testid="course-registration-follow-up-composer-pane">
                           <Stack spacing={1.5}>
                             <Box sx={{ minWidth: 240, flexGrow: 1 }}>
-                              <Typography variant="subtitle2">
-                                {followUpForm.editingId == null ? 'Registrar seguimiento' : 'Editar seguimiento'}
-                              </Typography>
+                              {!isCreatingFirstFollowUp && (
+                                <Typography variant="subtitle2">
+                                  {followUpComposerTitle}
+                                </Typography>
+                              )}
                               <Typography variant="body2" color="text.secondary">
-                                {followUpComposerHelpText}
+                                {followUpComposerSummary}
                               </Typography>
                             </Box>
                             <Stack spacing={1.5} sx={{ pt: 0.5 }}>

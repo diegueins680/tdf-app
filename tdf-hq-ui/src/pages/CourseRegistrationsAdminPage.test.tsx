@@ -169,8 +169,8 @@ const emptySystemEmailHistoryMessage =
   'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
-const followUpComposerHelpText =
-  'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.';
+const firstFollowUpComposerHelpText =
+  'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
@@ -2204,9 +2204,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Registrar seguimiento');
+      expect(hasExactText(document.body, 'Registrar seguimiento')).toBe(false);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
-      expect(document.body.textContent).toContain(followUpComposerHelpText);
+      expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
+      expect(document.body.textContent).not.toContain(
+        'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.',
+      );
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
