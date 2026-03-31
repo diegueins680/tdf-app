@@ -5305,6 +5305,7 @@ createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
 
 createServiceMarketplaceBooking :: AuthedUser -> Api.ServiceMarketplaceBookingReq -> AppM Api.ServiceMarketplaceBookingDTO
 createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
+  paymentMethodVal <- either throwError pure (parsePaymentMethodText smbPaymentMethod)
   pool <- asks envPool
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
@@ -5358,7 +5359,7 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
       { paymentInvoiceId = Nothing
       , paymentOrderId = Just serviceOrderId
       , paymentPartyId = auPartyId user
-      , paymentMethod = parsePaymentMethodText smbPaymentMethod
+      , paymentMethod = paymentMethodVal
       , paymentAmountCents = serviceAdFeeCents ad
       , paymentReceivedAt = now
       , paymentReference = Nothing
@@ -5482,19 +5483,26 @@ mkEscrowBookingDTO (Entity escrowId escrow) = Api.ServiceMarketplaceBookingDTO
   , Api.smbEscrowCurrency = serviceEscrowCurrency escrow
   }
 
-parsePaymentMethodText :: Maybe Text -> PaymentMethod
+parsePaymentMethodText :: Maybe Text -> Either ServerError PaymentMethod
 parsePaymentMethodText mTxt =
   case T.toLower . T.strip <$> mTxt of
-    Just "cash" -> CashM
-    Just "bank_transfer" -> BankTransferM
-    Just "bank" -> BankTransferM
-    Just "card" -> CardPOSM
-    Just "paypal" -> PayPalM
-    Just "crypto" -> CryptoM
-    Just "stripe" -> StripeM
-    Just "wompi" -> WompiM
-    Just "payphone" -> PayPhoneM
-    _ -> OtherM
+    Nothing -> Right OtherM
+    Just "" -> Right OtherM
+    Just "cash" -> Right CashM
+    Just "bank_transfer" -> Right BankTransferM
+    Just "bank" -> Right BankTransferM
+    Just "card" -> Right CardPOSM
+    Just "paypal" -> Right PayPalM
+    Just "crypto" -> Right CryptoM
+    Just "stripe" -> Right StripeM
+    Just "wompi" -> Right WompiM
+    Just "payphone" -> Right PayPhoneM
+    Just "other" -> Right OtherM
+    _ ->
+      Left err400
+        { errBody =
+            "paymentMethod must be one of: cash, bank_transfer, bank, card, paypal, crypto, stripe, wompi, payphone, other"
+        }
 
 -- Bookings
 bookingPublicServer :: ServerT Api.BookingPublicAPI AppM

@@ -13,8 +13,8 @@ import Database.Persist.Sql (SqlPersistT, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
-import TDF.Models (BookingStatus (..), Party (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCmsContentStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
+import TDF.Models (BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, parsePaymentMethodText, resolvePasswordResetDelivery, validateCmsContentStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -162,6 +162,22 @@ spec = describe "TDF.Server helpers" $ do
             expectCatalogError (validateServiceMarketplaceCatalog (Just (mkCatalog Rehearsal False))) $ \serverErr -> do
                 errHTTPCode serverErr `shouldBe` 409
                 BL8.unpack (errBody serverErr) `shouldContain` "Service catalog is inactive"
+
+    describe "parsePaymentMethodText" $ do
+        it "defaults missing or blank payment methods to OtherM while normalizing supported values" $ do
+            parsePaymentMethodText Nothing `shouldBe` Right OtherM
+            parsePaymentMethodText (Just "   ") `shouldBe` Right OtherM
+            parsePaymentMethodText (Just " PayPal ") `shouldBe` Right PayPalM
+            parsePaymentMethodText (Just "bank") `shouldBe` Right BankTransferM
+            parsePaymentMethodText (Just "other") `shouldBe` Right OtherM
+
+        it "rejects unsupported explicit payment methods instead of silently storing OtherM" $
+            case parsePaymentMethodText (Just "paypol") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "paymentMethod must be one of"
+                Right paymentMethodVal ->
+                    expectationFailure ("Expected invalid payment method to be rejected, got: " <> show paymentMethodVal)
 
     describe "parseCourseRegistrationStatus" $ do
         it "normalizes supported course registration statuses and canonicalizes canceled" $ do
