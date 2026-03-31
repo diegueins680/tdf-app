@@ -7,7 +7,8 @@ module TDF.ServerFeedback
   ( feedbackServer
   ) where
 
-import           Control.Monad              (when)
+import           Control.Exception         (SomeException, displayException, try)
+import           Control.Monad              (forM_, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask)
@@ -20,6 +21,7 @@ import           Servant
 import           Servant.Multipart          (FileData(..), Tmp)
 import           System.Directory           (createDirectoryIfMissing)
 import           System.FilePath            ((</>), takeFileName)
+import           System.IO                  (hPutStrLn, stderr)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.UUID.V4               (nextRandom)
 import           Data.UUID                  (toText)
@@ -114,9 +116,13 @@ notify emailSvc title body mCat mSev mContact attachmentPath = do
         , ("Equipo TDF", "info@tdfrecords.net")
         , ("TDF Estudio", "tdfestudiodegrabacion@gmail.com")
         ]
-  mapM_
-    (\(name, email) -> EmailSvc.sendTestEmail emailSvc name email subject bodyLines Nothing)
-    recipients
+  forM_ recipients $ \(name, email) -> do
+    sendResult <- try $
+      EmailSvc.sendTestEmail emailSvc name email subject bodyLines Nothing
+    case sendResult of
+      Left (err :: SomeException) ->
+        hPutStrLn stderr ("[Feedback] Failed to email " <> T.unpack email <> ": " <> displayException err)
+      Right () -> pure ()
   pure ()
   where
     sanitizeContact :: Maybe Text -> Maybe Text

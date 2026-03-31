@@ -665,13 +665,20 @@ adminServer user =
       account <- withPool $ do
         credEnt <- getJustEntity credId
         loadUserAccount credEnt
-      liftIO $
+      welcomeResult <- liftIO $ try $
         EmailSvc.sendWelcome
           emailSvc
           (partyDisplayName (entityVal partyEnt))
           emailAddress
           uniqueUsername
           tempPassword
+      case welcomeResult of
+        Left (err :: SomeException) -> do
+          let msg = "[Admin][Users] Created account but failed to send welcome email to " <> emailAddress <> ": " <> T.pack (show err)
+          liftIO $ do
+            addLog LogWarning msg
+            hPutStrLn stderr (T.unpack msg)
+        Right () -> pure ()
       pure account
       where
         normalizeUsername :: Text -> Maybe Text

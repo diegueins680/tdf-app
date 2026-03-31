@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeFamilies #-}
 module TDF.Trials.Server where
 
-import           Control.Exception      (throwIO)
+import           Control.Exception      (SomeException, displayException, throwIO, try)
 import           Control.Monad          (forM, forM_, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
@@ -20,6 +20,7 @@ import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (UTCTime, diffUTCTime, getCurrentTime)
+import           System.IO              (hPutStrLn, stderr)
 import           Web.PathPieces         (fromPathPiece, toPathPiece)
 
 import           Network.Wai                     (Request)
@@ -455,7 +456,12 @@ publicTrialsServer =
           cfg <- loadConfig
           let svc = EmailSvc.mkEmailService cfg
               display = fromMaybe addr nameClean
-          EmailSvc.sendWelcome svc display addr username password
+          welcomeResult <- (try $
+            EmailSvc.sendWelcome svc display addr username password) :: IO (Either SomeException ())
+          case welcomeResult of
+            Left err ->
+              hPutStrLn stderr ("[Trials] Failed to send welcome email to " <> T.unpack addr <> ": " <> displayException err)
+            Right () -> pure ()
         _ -> pure ()
       case slots of
         [] ->

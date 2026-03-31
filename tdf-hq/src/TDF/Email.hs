@@ -11,7 +11,7 @@ module TDF.Email
   , sendEngineerBookingEmail
   ) where
 
-import           Control.Exception        (SomeException, try)
+import           Control.Exception        (SomeException, throwIO, try)
 import           Data.Char                (isAlphaNum)
 import qualified Data.ByteString.Base64.URL  as B64
 import           Data.Maybe              (fromMaybe)
@@ -294,6 +294,7 @@ sendMailWithLogging cfg toAddr _subject mail = do
             , T.pack (show (err :: SomeException))
             ]
       BS.hPutStrLn stderr (TE.encodeUtf8 errLine)
+      throwIO err
     Right () ->
       BS.putStrLn (TE.encodeUtf8 ("[Email] Sent registration email to " <> T.pack toEmail))
 
