@@ -1248,6 +1248,7 @@ export default function CourseRegistrationsAdminPage() {
   const showFollowUpOptionalFields = showFollowUpDetails || showFollowUpUrlField || hasFollowUpOptionalDraft;
   const canHideFollowUpOptionalFields = showFollowUpOptionalFields && !hasFollowUpOptionalDraft;
   const showFollowUpCountChip = followUps.length > 1;
+  const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
   const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
@@ -2183,7 +2184,7 @@ export default function CourseRegistrationsAdminPage() {
 
                     <Grid container spacing={2}>
                       {showFollowUpComposer && (
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} md={showFollowUpHistoryPane ? 6 : 12} data-testid="course-registration-follow-up-composer-pane">
                           <Stack spacing={1.5}>
                             <Box sx={{ minWidth: 240, flexGrow: 1 }}>
                               <Typography variant="subtitle2">
@@ -2309,67 +2310,69 @@ export default function CourseRegistrationsAdminPage() {
                           </Stack>
                         </Grid>
                       )}
-                      <Grid item xs={12} md={showFollowUpComposer ? 6 : 12}>
-                        <Stack spacing={1.5}>
-                          {followUps.length === 0 && !showFollowUpComposer && (
-                            <Alert
-                              severity="info"
-                              action={(
-                                <Button color="inherit" size="small" onClick={() => setShowFollowUpComposer(true)}>
-                                  Registrar primer seguimiento
-                                </Button>
-                              )}
-                            >
-                              {emptyFollowUpAlertMessage}
-                            </Alert>
-                          )}
-                          {followUps.map((entry) => (
-                            <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
-                              <Stack spacing={1}>
-                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" useFlexGap>
-                                  <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-                                    <Chip size="small" label={eventTypeLabel(entry.crfEntryType)} variant="outlined" />
-                                    <Typography variant="caption" color="text.secondary">
-                                      {formatDate(entry.crfCreatedAt)}
-                                    </Typography>
-                                    {entry.crfNextFollowUpAt && (
-                                      <Chip
-                                        size="small"
-                                        color="warning"
-                                        label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
-                                      />
-                                    )}
-                                  </Stack>
-                                  <Button
-                                    size="small"
-                                    variant="text"
-                                    endIcon={<ArrowDropDownIcon />}
-                                    aria-label={`Abrir acciones para seguimiento ${followUpActionTargetLabel(entry)}`}
-                                    aria-haspopup="menu"
-                                    onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
-                                  >
-                                    Acciones
+                      {showFollowUpHistoryPane && (
+                        <Grid item xs={12} md={showFollowUpComposer ? 6 : 12} data-testid="course-registration-follow-up-list-pane">
+                          <Stack spacing={1.5}>
+                            {followUps.length === 0 && !showFollowUpComposer && (
+                              <Alert
+                                severity="info"
+                                action={(
+                                  <Button color="inherit" size="small" onClick={() => setShowFollowUpComposer(true)}>
+                                    Registrar primer seguimiento
                                   </Button>
-                                </Stack>
-                                {entry.crfSubject && (
-                                  <Typography variant="subtitle2">{entry.crfSubject}</Typography>
                                 )}
-                                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                                  {entry.crfNotes}
-                                </Typography>
-                                {entry.crfAttachmentUrl && (
-                                  <Link href={entry.crfAttachmentUrl} target="_blank" rel="noreferrer" underline="hover">
-                                    <Stack direction="row" spacing={0.75} alignItems="center">
-                                      <OpenInNewIcon sx={{ fontSize: 16 }} />
-                                      <span>{entry.crfAttachmentName ?? 'Abrir adjunto'}</span>
+                              >
+                                {emptyFollowUpAlertMessage}
+                              </Alert>
+                            )}
+                            {followUps.map((entry) => (
+                              <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
+                                <Stack spacing={1}>
+                                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" useFlexGap>
+                                    <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                                      <Chip size="small" label={eventTypeLabel(entry.crfEntryType)} variant="outlined" />
+                                      <Typography variant="caption" color="text.secondary">
+                                        {formatDate(entry.crfCreatedAt)}
+                                      </Typography>
+                                      {entry.crfNextFollowUpAt && (
+                                        <Chip
+                                          size="small"
+                                          color="warning"
+                                          label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
+                                        />
+                                      )}
                                     </Stack>
-                                  </Link>
-                                )}
-                              </Stack>
-                            </Paper>
-                          ))}
-                        </Stack>
-                      </Grid>
+                                    <Button
+                                      size="small"
+                                      variant="text"
+                                      endIcon={<ArrowDropDownIcon />}
+                                      aria-label={`Abrir acciones para seguimiento ${followUpActionTargetLabel(entry)}`}
+                                      aria-haspopup="menu"
+                                      onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
+                                    >
+                                      Acciones
+                                    </Button>
+                                  </Stack>
+                                  {entry.crfSubject && (
+                                    <Typography variant="subtitle2">{entry.crfSubject}</Typography>
+                                  )}
+                                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    {entry.crfNotes}
+                                  </Typography>
+                                  {entry.crfAttachmentUrl && (
+                                    <Link href={entry.crfAttachmentUrl} target="_blank" rel="noreferrer" underline="hover">
+                                      <Stack direction="row" spacing={0.75} alignItems="center">
+                                        <OpenInNewIcon sx={{ fontSize: 16 }} />
+                                        <span>{entry.crfAttachmentName ?? 'Abrir adjunto'}</span>
+                                      </Stack>
+                                    </Link>
+                                  )}
+                                </Stack>
+                              </Paper>
+                            ))}
+                          </Stack>
+                        </Grid>
+                      )}
                     </Grid>
                   </Stack>
                 </CardContent>

@@ -2241,6 +2241,86 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the first follow-up flow focused until there is something saved to review', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [],
+      }),
+    );
+
+    let container = document.createElement('div');
+    document.body.appendChild(container);
+    let page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-composer-pane"]')).not.toBeNull();
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).toBeNull();
+    });
+
+    await page.cleanup();
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [buildFollowUp()],
+      }),
+    );
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-composer-pane"]')).not.toBeNull();
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).not.toBeNull();
+      expect(document.body.textContent).toContain('Confirmó transferencia');
+    });
+
+    await page.cleanup();
+  });
+
   it('lets admins close empty optional follow-up details after opening them', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
