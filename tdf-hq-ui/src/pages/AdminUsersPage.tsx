@@ -94,7 +94,7 @@ export default function AdminUsersPage() {
   const hasMultipleUsers = totalUsersCount > 1;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = hasMultipleUsers || hasActiveSearch;
-  const showVisibleCountChip = hasMultipleUsers || isFiltered;
+  const showVisibleCountChip = visibleUsers.length > 0 && (hasMultipleUsers || isFiltered);
   const showMissingContactChip = visibleUsersMissingContactCount > 1;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showClearSearchAction = hasUsers && hasActiveSearch && visibleUsers.length === 0;

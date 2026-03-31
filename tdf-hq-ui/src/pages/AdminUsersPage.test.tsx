@@ -402,6 +402,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
     } finally {
@@ -445,6 +446,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Mostrando 0 de 2');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
 
