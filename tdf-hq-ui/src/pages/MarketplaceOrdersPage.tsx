@@ -192,6 +192,8 @@ export default function MarketplaceOrdersPage() {
     visibleOrders: filtered.length,
     activeFilterCount: filtersActiveCount,
   });
+  const showFirstOrderEmptyState = !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 0;
+  const showListChrome = ordersQuery.isLoading || orders.length > 0;
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -408,128 +410,136 @@ export default function MarketplaceOrdersPage() {
         {ordersSummary}
       </Typography>
 
-      <Grid container spacing={2} mb={1}>
-        <Grid item xs={12} md={5} lg={4}>
-          <TextField
-            fullWidth
-            label="Buscar por comprador, email o ID"
-            value={search}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} md={3} lg={3}>
-          <FormControl fullWidth>
-            <InputLabel id="status-filter-label">Estado del listado</InputLabel>
-            <Select
-              labelId="status-filter-label"
-              label="Estado del listado"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <MenuItem value="all">Todos</MenuItem>
-              {STATUS_PRESETS.map((st) => (
-                <MenuItem key={st.value} value={st.value}>
-                  {st.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} md={4} lg={3}>
-          <FormControl fullWidth>
-            <InputLabel id="provider-filter-label">Método de pago</InputLabel>
-            <Select
-              labelId="provider-filter-label"
-              label="Método de pago"
-              value={providerFilter}
-              onChange={(e) => setProviderFilter(e.target.value)}
-            >
-              <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="paypal">PayPal</MenuItem>
-              <MenuItem value="datafast">Tarjeta (Datafast)</MenuItem>
-              <MenuItem value="contact">Manual/otros</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={6} md={6} lg={3}>
-          <TextField
-            label="Desde"
-            type="date"
-            fullWidth
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
-        <Grid item xs={6} md={6} lg={3}>
-          <TextField
-            label="Hasta"
-            type="date"
-            fullWidth
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ min: fromDate }}
-          />
-        </Grid>
-        <Grid item xs={12} md={12} lg={3}>
-          <FormControlLabel
-            control={<Checkbox checked={paidOnly} onChange={(e) => setPaidOnly(e.target.checked)} />}
-            label="Solo con pago registrado"
-          />
-        </Grid>
-      </Grid>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-        Atajos rápidos: cada atajo reemplaza los filtros actuales para dejar una vista limpia antes de revisar resultados.
-      </Typography>
-      <Stack direction="row" spacing={1} mb={2} alignItems="center" flexWrap="wrap">
-        <Button size="small" variant="outlined" onClick={() => applyPreset('last7')}>
-          Últimos 7 días
-        </Button>
-        <Button size="small" variant="outlined" onClick={() => applyPreset('paid')}>
-          Pagado
-        </Button>
-        <Button size="small" variant="outlined" onClick={() => applyPreset('paypal')}>
-          PayPal
-        </Button>
-        <Button size="small" variant="outlined" onClick={() => applyPreset('card')}>
-          Tarjeta pendiente
-        </Button>
-        <Box flex={1} />
-        {filtersActiveCount > 0 && (
-          <Button size="small" onClick={copyFiltersLink}>
-            Copiar enlace de filtros
-          </Button>
-        )}
-        {statusFilter !== 'all' && (
-          <Chip size="small" label={`Estado: ${statusLabel(statusFilter)}`} onDelete={() => setStatusFilter('all')} />
-        )}
-        {providerFilter !== 'all' && (
-          <Chip
-            size="small"
-            label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
-            onDelete={() => setProviderFilter('all')}
-          />
-        )}
-        {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
-        {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
-        {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
-        {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
-        <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">
-          Limpiar filtros
-        </Button>
-      </Stack>
-      {paidTotal > 0 && paidVisible === 0 && filtersDirty && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Hay órdenes pagadas, pero no coinciden con los filtros actuales. Ajusta los filtros o desmarca &quot;Solo con pago&quot;.
-        </Alert>
+      {showListChrome && (
+        <>
+          <Grid container spacing={2} mb={1}>
+            <Grid item xs={12} md={5} lg={4}>
+              <TextField
+                fullWidth
+                label="Buscar por comprador, email o ID"
+                value={search}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} md={3} lg={3}>
+              <FormControl fullWidth>
+                <InputLabel id="status-filter-label">Estado del listado</InputLabel>
+                <Select
+                  labelId="status-filter-label"
+                  label="Estado del listado"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <MenuItem value="all">Todos</MenuItem>
+                  {STATUS_PRESETS.map((st) => (
+                    <MenuItem key={st.value} value={st.value}>
+                      {st.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={4} lg={3}>
+              <FormControl fullWidth>
+                <InputLabel id="provider-filter-label">Método de pago</InputLabel>
+                <Select
+                  labelId="provider-filter-label"
+                  label="Método de pago"
+                  value={providerFilter}
+                  onChange={(e) => setProviderFilter(e.target.value)}
+                >
+                  <MenuItem value="all">Todos</MenuItem>
+                  <MenuItem value="paypal">PayPal</MenuItem>
+                  <MenuItem value="datafast">Tarjeta (Datafast)</MenuItem>
+                  <MenuItem value="contact">Manual/otros</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6} md={6} lg={3}>
+              <TextField
+                label="Desde"
+                type="date"
+                fullWidth
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={6} md={6} lg={3}>
+              <TextField
+                label="Hasta"
+                type="date"
+                fullWidth
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                inputProps={{ min: fromDate }}
+              />
+            </Grid>
+            <Grid item xs={12} md={12} lg={3}>
+              <FormControlLabel
+                control={<Checkbox checked={paidOnly} onChange={(e) => setPaidOnly(e.target.checked)} />}
+                label="Solo con pago registrado"
+              />
+            </Grid>
+          </Grid>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+            Atajos rápidos: cada atajo reemplaza los filtros actuales para dejar una vista limpia antes de revisar resultados.
+          </Typography>
+          <Stack direction="row" spacing={1} mb={2} alignItems="center" flexWrap="wrap">
+            <Button size="small" variant="outlined" onClick={() => applyPreset('last7')}>
+              Últimos 7 días
+            </Button>
+            <Button size="small" variant="outlined" onClick={() => applyPreset('paid')}>
+              Pagado
+            </Button>
+            <Button size="small" variant="outlined" onClick={() => applyPreset('paypal')}>
+              PayPal
+            </Button>
+            <Button size="small" variant="outlined" onClick={() => applyPreset('card')}>
+              Tarjeta pendiente
+            </Button>
+            <Box flex={1} />
+            {filtersActiveCount > 0 && (
+              <Button size="small" onClick={copyFiltersLink}>
+                Copiar enlace de filtros
+              </Button>
+            )}
+            {statusFilter !== 'all' && (
+              <Chip size="small" label={`Estado: ${statusLabel(statusFilter)}`} onDelete={() => setStatusFilter('all')} />
+            )}
+            {providerFilter !== 'all' && (
+              <Chip
+                size="small"
+                label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
+                onDelete={() => setProviderFilter('all')}
+              />
+            )}
+            {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
+            {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
+            {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
+            {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
+            <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">
+              Limpiar filtros
+            </Button>
+          </Stack>
+          {paidTotal > 0 && paidVisible === 0 && filtersDirty && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Hay órdenes pagadas, pero no coinciden con los filtros actuales. Ajusta los filtros o desmarca &quot;Solo con pago&quot;.
+            </Alert>
+          )}
+        </>
       )}
 
       <Card variant="outlined">
         <CardHeader
           title="Pedidos recientes"
-          subheader="Revisa el estado, pagos y detalles de cada pedido."
-          action={
+          subheader={
+            showFirstOrderEmptyState
+              ? 'La primera orden aparecerá aquí junto con su estado, pago y acciones de revisión.'
+              : 'Revisa el estado, pagos y detalles de cada pedido.'
+          }
+          action={showFirstOrderEmptyState ? null : (
             <Stack direction="row" spacing={1}>
               <Chip
                 icon={<CheckCircleIcon />}
@@ -547,12 +557,30 @@ export default function MarketplaceOrdersPage() {
                 Exportar CSV
               </Button>
             </Stack>
-          }
+          )}
         />
         <CardContent>
           {ordersQuery.isError && <Alert severity="error">{ordersQuery.error?.message ?? 'Error al cargar órdenes'}</Alert>}
           {ordersQuery.isLoading && <Typography color="text.secondary">Cargando órdenes...</Typography>}
-          {!ordersQuery.isLoading && filtered.length === 0 && (
+          {showFirstOrderEmptyState && (
+            <Alert
+              severity="info"
+              variant="outlined"
+              action={(
+                <Button
+                  size="small"
+                  variant="outlined"
+                  component={RouterLink}
+                  to="/marketplace"
+                >
+                  Ir al marketplace
+                </Button>
+              )}
+            >
+              Todavía no hay órdenes. Cuando llegue la primera, aquí aparecerán búsqueda, filtros y exportación para revisar la bandeja.
+            </Alert>
+          )}
+          {!showFirstOrderEmptyState && !ordersQuery.isLoading && filtered.length === 0 && (
             <Alert
               severity="info"
               action={

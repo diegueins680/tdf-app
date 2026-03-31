@@ -120,6 +120,11 @@ const countLabelsByText = (root: ParentNode, labelText: string) =>
     return text === labelText;
   }).length;
 
+const queryActionByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('button, a')).find(
+    (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
+  ) ?? null;
+
 const clickFirstOrderRow = async (root: ParentNode) => {
   const row = root.querySelector('tbody tr');
   if (!(row instanceof HTMLElement)) {
@@ -159,6 +164,36 @@ describe('MarketplaceOrdersPage', () => {
     updateOrderMock.mockResolvedValue(buildOrder({ moStatus: 'paid', moPaidAt: '2030-01-01T13:00:00.000Z' }));
   });
 
+  it('replaces the first-order empty view with one guided state instead of list-only filter and export chrome', async () => {
+    listOrdersMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
+        expect(countLabelsByText(container, 'Buscar por comprador, email o ID')).toBe(0);
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(0);
+        expect(countLabelsByText(container, 'Método de pago')).toBe(0);
+        expect(countLabelsByText(container, 'Desde')).toBe(0);
+        expect(countLabelsByText(container, 'Hasta')).toBe(0);
+        expect(container.textContent).toContain(
+          'Todavía no hay órdenes. Cuando llegue la primera, aquí aparecerán búsqueda, filtros y exportación para revisar la bandeja.',
+        );
+        expect(container.textContent).not.toContain('Atajos rápidos');
+        expect(container.textContent).not.toContain('0 pagados');
+        expect(container.textContent).not.toContain('0 pendientes');
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(queryActionByText(container, 'Ir al marketplace')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the list filter label distinct from the order editor status field', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -169,6 +204,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
         expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
         expect(countLabelsByText(container, 'Estado')).toBe(0);
+        expect(container.querySelector('tbody tr')).not.toBeNull();
       });
 
       await clickFirstOrderRow(container);
