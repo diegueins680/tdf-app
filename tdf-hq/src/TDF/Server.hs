@@ -23,7 +23,7 @@ import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, isPrefixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
-import           Data.Char (isDigit, isAlphaNum, toLower)
+import           Data.Char (isDigit, isAlphaNum, isSpace, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
@@ -3124,10 +3124,8 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
       howHeardClean = cleanOptional howHeard
       pendingStatus = "pending_payment"
       (utmSourceVal, utmMediumVal, utmCampaignVal, utmContentVal) = normalizeUtm utm
+  normalizedEmail <- either throwError pure (validateCourseRegistrationEmail email)
   phoneClean <- either throwError pure (validateCourseRegistrationPhoneE164 phoneE164)
-  normalizedEmail <- case cleanOptional email of
-    Nothing -> pure Nothing
-    Just e  -> Just <$> requireEmail e
   either throwError pure (validateCourseRegistrationContactChannels normalizedEmail phoneClean)
   when (sourceClean == "landing" && isNothing nameClean) $
     throwBadRequest "nombre requerido"
@@ -3447,6 +3445,29 @@ validateCourseRegistrationPhoneE164 (Just rawPhone) =
       case normalizePhone rawPhone of
         Just phoneClean -> Right (Just phoneClean)
         Nothing -> Left err400 { errBody = "phoneE164 inválido" }
+
+validateCourseRegistrationEmail :: Maybe Text -> Either ServerError (Maybe Text)
+validateCourseRegistrationEmail Nothing = Right Nothing
+validateCourseRegistrationEmail (Just rawEmail) =
+  case cleanOptional (Just rawEmail) of
+    Nothing -> Right Nothing
+    Just emailVal ->
+      let normalized = T.toLower emailVal
+      in if isValidCourseRegistrationEmail normalized
+        then Right (Just normalized)
+        else Left err400 { errBody = "email inválido" }
+
+isValidCourseRegistrationEmail :: Text -> Bool
+isValidCourseRegistrationEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      not (T.null localPart)
+        && not (T.null domain)
+        && not (T.any isSpace candidate)
+        && not (T.isPrefixOf "." domain)
+        && not (T.isSuffixOf "." domain)
+        && T.isInfixOf "." domain
+    _ -> False
 
 validateCourseRegistrationContactChannels :: Maybe Text -> Maybe Text -> Either ServerError ()
 validateCourseRegistrationContactChannels mEmail mPhone

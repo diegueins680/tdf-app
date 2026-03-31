@@ -14,7 +14,7 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), Party (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -174,6 +174,20 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
                 Right phoneVal ->
                     expectationFailure ("Expected invalid course-registration phone to be rejected, got: " <> show phoneVal)
+
+    describe "validateCourseRegistrationEmail" $ do
+        it "preserves omitted and blank emails while normalizing meaningful values" $ do
+            validateCourseRegistrationEmail Nothing `shouldBe` Right Nothing
+            validateCourseRegistrationEmail (Just "   ") `shouldBe` Right Nothing
+            validateCourseRegistrationEmail (Just " User@Example.com ") `shouldBe` Right (Just "user@example.com")
+
+        it "rejects explicitly invalid email shapes instead of storing unusable addresses" $
+            case validateCourseRegistrationEmail (Just "not-an-email") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "email inválido"
+                Right emailVal ->
+                    expectationFailure ("Expected invalid course-registration email to be rejected, got: " <> show emailVal)
 
     describe "validateCourseRegistrationContactChannels" $ do
         it "accepts registrations with at least one contact channel" $ do
