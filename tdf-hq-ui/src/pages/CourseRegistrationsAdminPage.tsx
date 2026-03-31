@@ -1684,7 +1684,7 @@ export default function CourseRegistrationsAdminPage() {
               handleOpenDossier(statusMenuReg, 'markPaid');
             }}
           >
-            Abrir expediente de pago
+            Registrar pago
           </MenuItem>
         )}
         {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment') && (

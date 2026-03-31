@@ -171,7 +171,7 @@ const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const followUpComposerHelpText =
   'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.';
-const openPaymentDossierLabel = 'Abrir expediente de pago';
+const openPaymentWorkflowLabel = 'Registrar pago';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -1513,9 +1513,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(openPaymentDossierLabel);
+      expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Marcar pendiente');
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).map((element) => (element.textContent ?? '').trim()),
+      ).not.toContain('Abrir expediente de pago');
       expect(document.body.textContent).not.toContain('Estado actual:');
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
@@ -1529,7 +1532,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).toContain('Cancelar inscripción');
-      expect(document.body.textContent).not.toContain(openPaymentDossierLabel);
+      expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).not.toContain('Estado actual:');
     });
 
@@ -1540,7 +1543,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(openPaymentDossierLabel);
+      expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Estado actual:');
@@ -1998,12 +2001,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, openPaymentDossierLabel)).toBeTruthy();
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
 
     await act(async () => {
-      clickElement(getMenuItemByText(document.body, openPaymentDossierLabel));
+      clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -2063,12 +2066,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, openPaymentDossierLabel)).toBeTruthy();
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
 
     await act(async () => {
-      clickElement(getMenuItemByText(document.body, openPaymentDossierLabel));
+      clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
       await flushPromises();
       await flushPromises();
     });
