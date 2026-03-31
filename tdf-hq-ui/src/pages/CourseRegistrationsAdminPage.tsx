@@ -64,6 +64,7 @@ const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta lla
 const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Guárdalo y aparecerá en el historial para revisarlo después.';
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
+const openPaymentWorkflowLabel = 'Registrar pago';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -1972,7 +1973,7 @@ export default function CourseRegistrationsAdminPage() {
               handleOpenDossier(statusMenuReg, 'markPaid');
             }}
           >
-            Abrir expediente de pago
+            {openPaymentWorkflowLabel}
           </MenuItem>
         )}
         {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment') && (
