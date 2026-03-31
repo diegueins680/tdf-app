@@ -175,7 +175,7 @@ const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
-const openPaymentWorkflowLabel = 'Registrar pago';
+const openPaymentWorkflowLabel = 'Abrir expediente de pago';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -1520,7 +1520,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain('Marcar pendiente');
       expect(
         Array.from(document.body.querySelectorAll('[role="menuitem"]')).map((element) => (element.textContent ?? '').trim()),
-      ).not.toContain('Abrir expediente de pago');
+      ).not.toContain('Registrar pago');
       expect(document.body.textContent).not.toContain('Estado actual:');
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
