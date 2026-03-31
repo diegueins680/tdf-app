@@ -3128,6 +3128,7 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
   normalizedEmail <- case cleanOptional email of
     Nothing -> pure Nothing
     Just e  -> Just <$> requireEmail e
+  either throwError pure (validateCourseRegistrationContactChannels normalizedEmail phoneClean)
   when (sourceClean == "landing" && isNothing nameClean) $
     throwBadRequest "nombre requerido"
   when (sourceClean == "landing" && isNothing normalizedEmail) $
@@ -3446,6 +3447,13 @@ validateCourseRegistrationPhoneE164 (Just rawPhone) =
       case normalizePhone rawPhone of
         Just phoneClean -> Right (Just phoneClean)
         Nothing -> Left err400 { errBody = "phoneE164 inválido" }
+
+validateCourseRegistrationContactChannels :: Maybe Text -> Maybe Text -> Either ServerError ()
+validateCourseRegistrationContactChannels mEmail mPhone
+  | isNothing mEmail && isNothing mPhone =
+      Left err400 { errBody = "email o phoneE164 requerido" }
+  | otherwise =
+      Right ()
 
 normalizeUtm :: Maybe UTMTags -> (Maybe Text, Maybe Text, Maybe Text, Maybe Text)
 normalizeUtm Nothing = (Nothing, Nothing, Nothing, Nothing)

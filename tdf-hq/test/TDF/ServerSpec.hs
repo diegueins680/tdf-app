@@ -14,7 +14,7 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), Party (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCourseNonNegativeField, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -174,6 +174,20 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
                 Right phoneVal ->
                     expectationFailure ("Expected invalid course-registration phone to be rejected, got: " <> show phoneVal)
+
+    describe "validateCourseRegistrationContactChannels" $ do
+        it "accepts registrations with at least one contact channel" $ do
+            validateCourseRegistrationContactChannels (Just "user@example.com") Nothing `shouldBe` Right ()
+            validateCourseRegistrationContactChannels Nothing (Just "+593991234567") `shouldBe` Right ()
+            validateCourseRegistrationContactChannels (Just "user@example.com") (Just "+593991234567") `shouldBe` Right ()
+
+        it "rejects registrations that omit both email and phone" $
+            case validateCourseRegistrationContactChannels Nothing Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "email o phoneE164 requerido"
+                Right result ->
+                    expectationFailure ("Expected missing course-registration contact channels to be rejected, got: " <> show result)
 
     describe "parseCourseFollowUpType" $ do
         it "defaults missing values to note and canonicalizes supported variants" $ do
