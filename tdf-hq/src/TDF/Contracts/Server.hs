@@ -3,6 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module TDF.Contracts.Server
   ( server
+  , validateContractId
   ) where
 
 import           Control.Monad.IO.Class (liftIO)
@@ -21,6 +22,7 @@ import           System.FilePath ((</>))
 import           TDF.Contracts.API
 import qualified TDF.Handlers.InputList as InputList
 import           Data.UUID (toText)
+import qualified Data.UUID as UUID
 import           Data.UUID.V4 (nextRandom)
 
 data StoredContract = StoredContract
@@ -76,7 +78,8 @@ server = createH :<|> pdfH :<|> sendH
 
     pdfH :: Text -> Handler BL.ByteString
     pdfH cid = do
-      mStored <- liftIO (loadContract cid)
+      contractId <- either throwError pure (validateContractId cid)
+      mStored <- liftIO (loadContract contractId)
       case mStored of
         Nothing -> throwError err404 { errBody = "Contract not found" }
         Just stored -> do
@@ -88,10 +91,11 @@ server = createH :<|> pdfH :<|> sendH
 
     sendH :: Text -> A.Value -> Handler A.Value
     sendH cid _body = do
-      mStored <- liftIO (loadContract cid)
+      contractId <- either throwError pure (validateContractId cid)
+      mStored <- liftIO (loadContract contractId)
       case mStored of
         Nothing -> throwError err404 { errBody = "Contract not found" }
-        Just _  -> pure (A.object ["status" .= ("sent" :: Text), "id" .= cid])
+        Just _  -> pure (A.object ["status" .= ("sent" :: Text), "id" .= contractId])
 
 persistContract :: StoredContract -> IO ()
 persistContract stored = do
@@ -107,6 +111,15 @@ loadContract cid = do
     else do
       bytes <- BL.readFile path
       pure (A.decode bytes)
+
+validateContractId :: Text -> Either ServerError Text
+validateContractId raw =
+  case UUID.fromText (T.strip raw) of
+    Just uuid -> Right (toText uuid)
+    Nothing ->
+      Left err400
+        { errBody = "Invalid contract id"
+        }
 
 renderContractLatex :: StoredContract -> Text
 renderContractLatex StoredContract{..} =

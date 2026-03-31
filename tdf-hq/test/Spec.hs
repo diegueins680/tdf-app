@@ -34,6 +34,7 @@ import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.ServerRadio (validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel)
+import TDF.Contracts.Server (validateContractId)
 import TDF.ServerProposals (validateTemplateKey)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
@@ -286,6 +287,21 @@ main = hspec $ do
                         expectationFailure ("Expected invalid templateKey to be rejected, got: " <> show value)
             assertInvalid "   " "templateKey required"
             assertInvalid "../proposal" "ASCII letters, numbers, hyphens, or underscores"
+
+    describe "validateContractId" $ do
+        it "accepts UUID-shaped contract ids and canonicalizes surrounding whitespace" $
+            validateContractId " 550e8400-e29b-41d4-a716-446655440000 "
+                `shouldBe` Right "550e8400-e29b-41d4-a716-446655440000"
+
+        it "rejects non-UUID ids with a 400 instead of falling through to ambiguous lookups" $ do
+            let assertInvalid raw = case validateContractId raw of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "Invalid contract id"
+                    Right value ->
+                        expectationFailure ("Expected invalid contract id to be rejected, got: " <> show value)
+            assertInvalid "contract-123"
+            assertInvalid "../contracts/store"
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do
