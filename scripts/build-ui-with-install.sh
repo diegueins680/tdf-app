@@ -7,9 +7,9 @@ set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../tdf-hq-ui"
 
-if ! npm ci --progress=false --no-audit; then
+if ! npm ci --include=dev --progress=false --no-audit; then
   echo "npm ci failed, falling back to npm install..."
-  npm install --progress=false --no-audit
+  npm install --include=dev --progress=false --no-audit
 fi
 
 npm run build
