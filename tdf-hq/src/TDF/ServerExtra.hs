@@ -130,10 +130,12 @@ inventoryServer user =
 
     createAssetH req = do
       ensureInventoryAccess
+      nameClean <- either throwError pure (normalizeAssetName (cName req))
+      categoryClean <- either throwError pure (normalizeAssetCategory (cCategory req))
       entity <- withPool $ do
         newAssetId <- insert Asset
-          { assetName                  = cName req
-          , assetCategory              = cCategory req
+          { assetName                  = nameClean
+          , assetCategory              = categoryClean
           , assetBrand                 = Nothing
           , assetModel                 = Nothing
           , assetSerialNumber          = Nothing
@@ -186,10 +188,12 @@ inventoryServer user =
       ensureInventoryAccess
       assetKey    <- parseKey @Asset rawId
       locationKey <- traverse (parseKey @Room) (uLocationId req)
+      nameUpdate <- either throwError pure (normalizeAssetNameUpdate (uName req))
+      categoryUpdate <- either throwError pure (normalizeAssetCategoryUpdate (uCategory req))
       statusValue <- either throwError pure (validateAssetStatusUpdate (uStatus req))
       let updates = catMaybes
-            [ (AssetName =.) <$> uName req
-            , (AssetCategory =.) <$> uCategory req
+            [ (AssetName =.) <$> nameUpdate
+            , (AssetCategory =.) <$> categoryUpdate
             , (AssetStatus =.) <$> statusValue
             , fmap (\rid -> AssetLocationId =. Just rid) locationKey
             , fmap (\noteTxt -> AssetNotes =. Just noteTxt) (uNotes req)
@@ -942,6 +946,30 @@ normalizeRoomNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizeRoomNameUpdate Nothing = Right Nothing
 normalizeRoomNameUpdate (Just rawName) =
   Just <$> normalizeRoomName rawName
+
+normalizeAssetName :: Text -> Either ServerError Text
+normalizeAssetName rawName =
+  let trimmed = T.strip rawName
+  in if T.null trimmed
+       then Left err400 { errBody = "Asset name is required" }
+       else Right trimmed
+
+normalizeAssetNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+normalizeAssetNameUpdate Nothing = Right Nothing
+normalizeAssetNameUpdate (Just rawName) =
+  Just <$> normalizeAssetName rawName
+
+normalizeAssetCategory :: Text -> Either ServerError Text
+normalizeAssetCategory rawCategory =
+  let trimmed = T.strip rawCategory
+  in if T.null trimmed
+       then Left err400 { errBody = "Asset category is required" }
+       else Right trimmed
+
+normalizeAssetCategoryUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+normalizeAssetCategoryUpdate Nothing = Right Nothing
+normalizeAssetCategoryUpdate (Just rawCategory) =
+  Just <$> normalizeAssetCategory rawCategory
 
 roomsPublicServer
   :: ( MonadReader Env m

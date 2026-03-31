@@ -25,6 +25,10 @@ import TDF.ServerExtra (
     MetaChannel (..),
     MetaInboundEvent (..),
     extractMetaInbound,
+    normalizeAssetCategory,
+    normalizeAssetCategoryUpdate,
+    normalizeAssetName,
+    normalizeAssetNameUpdate,
     normalizeRoomName,
     normalizeRoomNameUpdate,
     parseCheckoutTargetKind,
@@ -40,6 +44,27 @@ import TDF.ServerExtra (
 
 spec :: Spec
 spec = do
+  describe "asset name/category normalization" $ do
+    it "trims meaningful asset names and categories on create and update" $ do
+      normalizeAssetName "  Roland Juno-106  " `shouldBe` Right "Roland Juno-106"
+      normalizeAssetNameUpdate (Just "  Tape Echo  ") `shouldBe` Right (Just "Tape Echo")
+      normalizeAssetNameUpdate Nothing `shouldBe` Right Nothing
+      normalizeAssetCategory "  Synth  " `shouldBe` Right "Synth"
+      normalizeAssetCategoryUpdate (Just "  Outboard  ") `shouldBe` Right (Just "Outboard")
+      normalizeAssetCategoryUpdate Nothing `shouldBe` Right Nothing
+
+    it "rejects explicit blank asset names and categories instead of storing whitespace-only records" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid asset input error, got " <> show value)
+      assertInvalid "Asset name is required" (normalizeAssetName "   ")
+      assertInvalid "Asset name is required" (normalizeAssetNameUpdate (Just "   "))
+      assertInvalid "Asset category is required" (normalizeAssetCategory "   ")
+      assertInvalid "Asset category is required" (normalizeAssetCategoryUpdate (Just "   "))
+
   describe "normalizeRoomName" $ do
     it "trims meaningful room names on create and update" $ do
       normalizeRoomName "  Sala A  " `shouldBe` Right "Sala A"
