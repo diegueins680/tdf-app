@@ -4,6 +4,7 @@ module TDF.ServerSpec (spec) where
 
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Reader (ask, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
 import Data.Time.Clock (getCurrentTime)
@@ -13,7 +14,7 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), Party (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateServiceMarketplaceCatalog)
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCourseNonNegativeField, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -177,6 +178,25 @@ spec = describe "TDF.Server helpers" $ do
                     assertInvalid (parseCourseFollowUpType (Just "   "))
                     assertInvalid (parseCourseFollowUpType (Just "telegram"))
 
+    describe "course upsert numeric validation" $ do
+        it "accepts non-negative required and optional values" $ do
+            validateCourseNonNegativeField "priceCents" 0 `shouldBe` Right 0
+            validateCourseNonNegativeField "capacity" 25 `shouldBe` Right 25
+            validateOptionalCourseNonNegativeField "sessionStartHour" Nothing `shouldBe` Right Nothing
+            validateOptionalCourseNonNegativeField "sessionDurationHours" (Just 3) `shouldBe` Right (Just 3)
+
+        it "rejects negative values instead of silently clamping them to zero" $ do
+            let assertInvalid result fieldName = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` (fieldName <> " must be greater than or equal to 0")
+                    Right value ->
+                        expectationFailure ("Expected a negative " <> fieldName <> " error, got: " <> show value)
+            assertInvalid (validateCourseNonNegativeField "priceCents" (-1)) "priceCents"
+            assertInvalid (validateCourseNonNegativeField "capacity" (-5)) "capacity"
+            assertInvalid (validateOptionalCourseNonNegativeField "sessionStartHour" (Just (-1))) "sessionStartHour"
+            assertInvalid (validateOptionalCourseNonNegativeField "sessionDurationHours" (Just (-2))) "sessionDurationHours"
+
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $
             hasOperationsAccess (mkUser [Fan, Customer]) `shouldBe` False
@@ -230,8 +250,9 @@ spec = describe "TDF.Server helpers" $ do
 runAuthSqlite :: SqlPersistT IO a -> IO a
 runAuthSqlite action =
     runSqlite ":memory:" $ do
-        initializeAuthSchema
-        action
+        backend <- ask
+        liftIO $ runReaderT initializeAuthSchema backend
+        liftIO $ runReaderT action backend
 
 initializeAuthSchema :: SqlPersistT IO ()
 initializeAuthSchema = do

@@ -2338,15 +2338,15 @@ saveCourse Courses.CourseUpsert{..} = do
     throwBadRequest "slug requerido"
   when (T.null titleClean) $
     throwBadRequest "titulo requerido"
+  capacityClean <- either throwError pure (validateCourseNonNegativeField "capacity" capacity)
+  priceCentsClean <- either throwError pure (validateCourseNonNegativeField "priceCents" priceCents)
+  startHourClean <- either throwError pure (validateOptionalCourseNonNegativeField "sessionStartHour" sessionStartHour)
+  durationHoursClean <- either throwError pure (validateOptionalCourseNonNegativeField "sessionDurationHours" sessionDurationHours)
   let
       subtitleClean = cleanOptional subtitle
       formatClean = cleanOptional format
       durationClean = cleanOptional duration
       currencyClean = let cur = T.strip currency in if T.null cur then "USD" else cur
-      capacityClean = max 0 capacity
-      priceCentsClean = max 0 priceCents
-      startHourClean = fmap (max 0) sessionStartHour
-      durationHoursClean = fmap (max 0) sessionDurationHours
       locationLabelClean = cleanOptional locationLabel
       locationMapUrlClean = cleanOptional locationMapUrl
       landingUrlClean = cleanOptional landingUrl
@@ -5816,6 +5816,19 @@ normalizeOptionalInput Nothing = Nothing
 normalizeOptionalInput (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+validateCourseNonNegativeField :: Text -> Int -> Either ServerError Int
+validateCourseNonNegativeField fieldName value
+  | value < 0 =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be greater than or equal to 0"))
+        }
+  | otherwise = Right value
+
+validateOptionalCourseNonNegativeField :: Text -> Maybe Int -> Either ServerError (Maybe Int)
+validateOptionalCourseNonNegativeField fieldName =
+  traverse (validateCourseNonNegativeField fieldName)
 
 parseBookingStatus :: Text -> Either Text BookingStatus
 parseBookingStatus raw =
