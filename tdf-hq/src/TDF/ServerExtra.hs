@@ -1003,10 +1003,9 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       ensureModule ModuleScheduling user
       nameClean <- normalizeName sccName
       currencyClean <- either throwError pure (validateServiceCatalogCurrency sccCurrency)
+      taxClean <- either throwError pure (validateServiceCatalogTaxBps sccTaxBps)
       when (maybe False (< 0) sccRateCents) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
-      when (maybe False (< 0) sccTaxBps) $
-        throwError err400 { errBody = "Impuesto inválido" }
       duplicate <- withPool $ selectFirst [M.ServiceCatalogName ==. nameClean] []
       when (isJust duplicate) $
         throwError err409 { errBody = "Ya existe un servicio con ese nombre" }
@@ -1016,7 +1015,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
               , M.serviceCatalogKind = fromMaybe M.Recording sccKind
               , M.serviceCatalogPricingModel = fromMaybe M.Hourly sccPricingModel
               , M.serviceCatalogDefaultRateCents = sccRateCents
-              , M.serviceCatalogTaxBps = sccTaxBps
+              , M.serviceCatalogTaxBps = taxClean
               , M.serviceCatalogCurrency = currencyClean
               , M.serviceCatalogBillingUnit = normalizeTextMaybe sccBillingUnit
               , M.serviceCatalogActive = fromMaybe True sccActive
@@ -1029,12 +1028,10 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       ensureModule ModuleScheduling user
       let svcKey = toSqlKey rawId :: Key M.ServiceCatalog
       let rateCandidate = join scuRateCents
-          taxCandidate  = join scuTaxBps
       currencyUpdate <- either throwError pure (validateServiceCatalogCurrencyUpdate scuCurrency)
+      taxUpdate <- either throwError pure (validateServiceCatalogTaxBpsUpdate scuTaxBps)
       when (maybe False (< 0) rateCandidate) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
-      when (maybe False (< 0) taxCandidate) $
-        throwError err400 { errBody = "Impuesto inválido" }
       nameClean <- either throwError pure (normalizeServiceCatalogNameUpdate scuName)
       case nameClean of
         Just nm -> do
@@ -1064,7 +1061,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
                   , (M.ServiceCatalogKind =.) <$> scuKind
                   , (M.ServiceCatalogPricingModel =.) <$> scuPricingModel
                   , (M.ServiceCatalogDefaultRateCents =.) <$> scuRateCents
-                  , (M.ServiceCatalogTaxBps =.) <$> scuTaxBps
+                  , (M.ServiceCatalogTaxBps =.) <$> taxUpdate
                   , (M.ServiceCatalogCurrency =.) <$> currencyUpdate
                   , (M.ServiceCatalogBillingUnit =.) <$> billingClean
                   , (M.ServiceCatalogActive =.) <$> scuActive
@@ -1119,6 +1116,22 @@ validateServiceCatalogCurrencyUpdate :: Maybe Text -> Either ServerError (Maybe 
 validateServiceCatalogCurrencyUpdate Nothing = Right Nothing
 validateServiceCatalogCurrencyUpdate (Just rawCurrency) =
   Just <$> validateServiceCatalogCurrency (Just rawCurrency)
+
+validateServiceCatalogTaxBps :: Maybe Int -> Either ServerError (Maybe Int)
+validateServiceCatalogTaxBps Nothing = Right Nothing
+validateServiceCatalogTaxBps (Just rawTaxBps)
+  | rawTaxBps < 0 = invalidTaxBps
+  | rawTaxBps > 10000 = invalidTaxBps
+  | otherwise = Right (Just rawTaxBps)
+  where
+    invalidTaxBps =
+      Left err400 { errBody = "Impuesto inválido. Usa basis points entre 0 y 10000" }
+
+validateServiceCatalogTaxBpsUpdate :: Maybe (Maybe Int) -> Either ServerError (Maybe (Maybe Int))
+validateServiceCatalogTaxBpsUpdate Nothing = Right Nothing
+validateServiceCatalogTaxBpsUpdate (Just Nothing) = Right (Just Nothing)
+validateServiceCatalogTaxBpsUpdate (Just (Just rawTaxBps)) =
+  Just <$> validateServiceCatalogTaxBps (Just rawTaxBps)
 
 serviceCatalogToDTO :: Entity M.ServiceCatalog -> ServiceCatalogDTO
 serviceCatalogToDTO (Entity key svc) = ServiceCatalogDTO

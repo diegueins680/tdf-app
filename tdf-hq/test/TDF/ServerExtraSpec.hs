@@ -29,6 +29,8 @@ import TDF.ServerExtra (
     persistMetaInbound,
     validateServiceCatalogCurrency,
     validateServiceCatalogCurrencyUpdate,
+    validateServiceCatalogTaxBps,
+    validateServiceCatalogTaxBpsUpdate,
     validateAssetStatusUpdate,
  )
 
@@ -91,6 +93,37 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
         Right value ->
           expectationFailure ("Expected invalid currency update error, got " <> show value)
+
+  describe "validateServiceCatalogTaxBps" $ do
+    it "accepts omitted values and basis points within a 0..10000 percentage range" $ do
+      validateServiceCatalogTaxBps Nothing `shouldBe` Right Nothing
+      validateServiceCatalogTaxBps (Just 0) `shouldBe` Right (Just 0)
+      validateServiceCatalogTaxBps (Just 850) `shouldBe` Right (Just 850)
+      validateServiceCatalogTaxBps (Just 10000) `shouldBe` Right (Just 10000)
+
+    it "rejects negative or oversized tax percentages before they can be stored" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "entre 0 y 10000"
+            Right value ->
+              expectationFailure ("Expected invalid tax basis points error, got " <> show value)
+      assertInvalid (validateServiceCatalogTaxBps (Just (-1)))
+      assertInvalid (validateServiceCatalogTaxBps (Just 10001))
+
+  describe "validateServiceCatalogTaxBpsUpdate" $ do
+    it "preserves omitted and explicit-null updates" $ do
+      validateServiceCatalogTaxBpsUpdate Nothing `shouldBe` Right Nothing
+      validateServiceCatalogTaxBpsUpdate (Just Nothing) `shouldBe` Right (Just Nothing)
+      validateServiceCatalogTaxBpsUpdate (Just (Just 1200)) `shouldBe` Right (Just (Just 1200))
+
+    it "rejects invalid update values instead of storing impossible tax percentages" $
+      case validateServiceCatalogTaxBpsUpdate (Just (Just 15000)) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "entre 0 y 10000"
+        Right value ->
+          expectationFailure ("Expected invalid service catalog tax update error, got " <> show value)
 
   describe "Meta inbox deletion handling" $ do
     it "parses deleted Instagram webhook events" $ do
