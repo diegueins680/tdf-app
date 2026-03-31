@@ -90,12 +90,14 @@ export default function AdminUsersPage() {
   const totalUsersCount = usersQuery.data?.length ?? 0;
   const hasUsers = totalUsersCount > 0;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
+  const activeSearchSummary = searchQuery.trim();
   const hasMultipleUsers = totalUsersCount > 1;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = hasMultipleUsers || hasActiveSearch;
   const showVisibleCountChip = hasMultipleUsers || isFiltered;
   const showMissingContactChip = visibleUsersMissingContactCount > 1;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
+  const showClearSearchAction = hasUsers && hasActiveSearch && visibleUsers.length === 0;
 
   return (
     <>
@@ -187,9 +189,18 @@ export default function AdminUsersPage() {
               </Typography>
             )}
             {usersQuery.data?.length && visibleUsers.length === 0 ? (
-              <Typography color="text.secondary">
-                No hay coincidencias para este filtro.
-              </Typography>
+              <Stack spacing={1} alignItems="flex-start">
+                <Typography color="text.secondary">
+                  {activeSearchSummary
+                    ? `No hay coincidencias para "${activeSearchSummary}".`
+                    : 'No hay coincidencias para este filtro.'}
+                </Typography>
+                {showClearSearchAction && (
+                  <Button size="small" onClick={() => setSearchQuery('')}>
+                    Limpiar búsqueda
+                  </Button>
+                )}
+              </Stack>
             ) : null}
             {visibleUsers.length ? (
               <Stack spacing={1.5}>

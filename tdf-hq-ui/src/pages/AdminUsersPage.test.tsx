@@ -400,8 +400,61 @@ describe('AdminUsersPage', () => {
       await changeInputValue(searchInput, 'sin coincidencias');
 
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('No hay coincidencias para este filtro.');
+        expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('offers one clear-search action when a query hides every admin user', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
+        expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'sin coincidencias');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+
+      await clickButton(getButtonsByText(container, 'Limpiar búsqueda')[0]!);
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+        expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
+        expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
       });
     } finally {
       await cleanup();
