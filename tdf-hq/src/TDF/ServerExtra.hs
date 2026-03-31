@@ -84,6 +84,16 @@ parseUTCTimeText t =
   case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
     Just d  -> pure (UTCTime d 0)
     Nothing -> throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
+
+parseCheckoutTargetKind :: Maybe Text -> Either ServerError CheckoutTarget
+parseCheckoutTargetKind Nothing = Right TargetParty
+parseCheckoutTargetKind (Just raw) =
+  case T.toLower (T.strip raw) of
+    "session" -> Right TargetSession
+    "party" -> Right TargetParty
+    "room" -> Right TargetRoom
+    _ -> Left err400 { errBody = "targetKind must be one of: party, room, session" }
+
 inventoryServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -259,8 +269,8 @@ inventoryServer user =
       asset <- withPool $ get assetKey
       _ <- maybe (throwError err404) pure asset
       now <- liftIO getCurrentTime
-      let targetKind = maybe TargetParty parseTarget (coTargetKind req)
-          targetRoomKey = coTargetRoom req >>= parseKeyMaybe @Room
+      targetKind <- either throwError pure (parseCheckoutTargetKind (coTargetKind req))
+      let targetRoomKey = coTargetRoom req >>= parseKeyMaybe @Room
           targetSessionKey = coTargetSession req >>= parseKeyMaybe @ME.Session
           checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
       active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
@@ -325,13 +335,6 @@ inventoryServer user =
       ensureInventoryAccess
       mAsset <- withPool $ selectFirst [AssetQrCode ==. Just token] []
       maybe (throwError err404) (pure . toAssetDTO) mAsset
-
-    parseTarget raw =
-      case T.toLower (T.strip raw) of
-        "session" -> TargetSession
-        "party"   -> TargetParty
-        "room"    -> TargetRoom
-        _         -> TargetParty
 
     parseKeyMaybe
       :: forall record.

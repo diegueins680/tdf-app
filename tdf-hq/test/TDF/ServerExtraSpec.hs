@@ -18,13 +18,14 @@ import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
 import qualified TDF.Models as M
-import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance))
+import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance), CheckoutTarget (TargetParty, TargetRoom, TargetSession))
 import TDF.ServerExtra (
     IGInbound (..),
     IGInboundDeleted (..),
     MetaChannel (..),
     MetaInboundEvent (..),
     extractMetaInbound,
+    parseCheckoutTargetKind,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validateServiceCatalogCurrency,
@@ -50,6 +51,22 @@ spec = do
               expectationFailure ("Expected invalid status error, got " <> show value)
       assertInvalid (validateAssetStatusUpdate (Just "   "))
       assertInvalid (validateAssetStatusUpdate (Just "on-loan"))
+
+  describe "parseCheckoutTargetKind" $ do
+    it "defaults omitted target kinds to party and normalizes supported values" $ do
+      parseCheckoutTargetKind Nothing `shouldBe` Right TargetParty
+      parseCheckoutTargetKind (Just " room ") `shouldBe` Right TargetRoom
+      parseCheckoutTargetKind (Just "SESSION") `shouldBe` Right TargetSession
+
+    it "rejects blank or unknown target kinds instead of silently treating them as party checkouts" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "targetKind must be one of: party, room, session"
+            Right value ->
+              expectationFailure ("Expected invalid checkout target kind error, got " <> show value)
+      assertInvalid (parseCheckoutTargetKind (Just "   "))
+      assertInvalid (parseCheckoutTargetKind (Just "locker"))
 
   describe "normalizeServiceCatalogNameUpdate" $ do
     it "preserves omitted names and trims meaningful updates" $ do
