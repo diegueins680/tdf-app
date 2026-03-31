@@ -419,10 +419,10 @@ export default function MarketplaceOrdersPage() {
         </Grid>
         <Grid item xs={12} md={3} lg={3}>
           <FormControl fullWidth>
-            <InputLabel id="status-filter-label">Estado</InputLabel>
+            <InputLabel id="status-filter-label">Estado del listado</InputLabel>
             <Select
               labelId="status-filter-label"
-              label="Estado"
+              label="Estado del listado"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -778,10 +778,10 @@ export default function MarketplaceOrdersPage() {
                     <CardContent>
                       <Stack spacing={2}>
                         <FormControl fullWidth>
-                          <InputLabel id="status-input-label">Estado</InputLabel>
+                          <InputLabel id="status-input-label">Nuevo estado</InputLabel>
                           <Select
                             labelId="status-input-label"
-                            label="Estado"
+                            label="Nuevo estado"
                             value={statusInput}
                             onChange={(e) => setStatusInput(e.target.value)}
                           >
