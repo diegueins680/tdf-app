@@ -125,6 +125,33 @@ const queryActionByText = (root: ParentNode, labelText: string) =>
     (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
   ) ?? null;
 
+const getInputByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => (element.textContent ?? '').replace('*', '').trim() === labelText,
+  );
+  if (!label) throw new Error(`Label not found: ${labelText}`);
+
+  const inputId = label.htmlFor;
+  if (!inputId) throw new Error(`Label has no associated control: ${labelText}`);
+
+  const input = label.ownerDocument.getElementById(inputId);
+  if (!(input instanceof HTMLInputElement)) throw new Error(`Input not found for label: ${labelText}`);
+
+  return input;
+};
+
+const setInputValue = async (input: HTMLInputElement, value: string) => {
+  const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('HTMLInputElement value setter not found');
+
+  await act(async () => {
+    valueSetter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 const clickFirstOrderRow = async (root: ParentNode) => {
   const row = root.querySelector('tbody tr');
   if (!(row instanceof HTMLElement)) {
@@ -214,6 +241,34 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(document.body, 'Estado del listado')).toBe(1);
         expect(countLabelsByText(document.body, 'Nuevo estado')).toBe(1);
         expect(countLabelsByText(document.body, 'Estado')).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('uses the existing reset-filters control when a search hides the current order list', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
+        expect(container.querySelector('tbody tr')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+      });
+
+      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      await setInputValue(searchInput, 'sin coincidencias');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.',
+        );
+        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+        expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
+        expect(container.querySelector('tbody tr')).toBeNull();
       });
     } finally {
       await cleanup();

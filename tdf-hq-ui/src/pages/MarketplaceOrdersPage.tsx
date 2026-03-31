@@ -581,20 +581,8 @@ export default function MarketplaceOrdersPage() {
             </Alert>
           )}
           {!showFirstOrderEmptyState && !ordersQuery.isLoading && filtered.length === 0 && (
-            <Alert
-              severity="info"
-              action={
-                <Button
-                  size="small"
-                  variant="outlined"
-                  component={RouterLink}
-                  to="/marketplace"
-                >
-                  Ir al marketplace
-                </Button>
-              }
-            >
-              No hay órdenes con estos filtros. Revisa el marketplace si necesitas crear un pedido.
+            <Alert severity="info">
+              No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.
             </Alert>
           )}
           {filtered.length > 0 && (
