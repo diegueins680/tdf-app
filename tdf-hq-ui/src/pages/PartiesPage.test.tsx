@@ -308,6 +308,39 @@ describe('PartiesPage', () => {
     }
   });
 
+  it('keeps the first CRM contact focused on the row instead of showing list search chrome', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        primaryEmail: 'ada@example.com',
+        instagram: '@ada',
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('input[aria-label="Buscar contactos"]')).toBeNull();
+        expect(container.textContent).toContain(
+          'Solo hay un contacto por ahora. Usa su nombre para ver relaciones y abre Acciones para editarlo o gestionar su acceso. El buscador aparecerá cuando exista el segundo contacto.',
+        );
+        expect(container.textContent).not.toContain(
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
+        );
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces a no-match search table with one reset state and restores the full list in one step', async () => {
     listPartiesMock.mockResolvedValue([
       {

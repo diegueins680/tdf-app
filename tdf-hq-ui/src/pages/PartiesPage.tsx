@@ -345,7 +345,6 @@ export default function PartiesPage() {
   } | null>(null);
   const canManageRoles = canAccessPath('/configuracion/roles-permisos', session?.roles, session?.modules);
   const hasContacts = parties.length > 0;
-  const showDirectoryChrome = partiesQuery.isLoading || hasContacts;
   const trimmedSearch = search.trim();
 
   const filtered = useMemo(() => {
@@ -358,12 +357,15 @@ export default function PartiesPage() {
       return haystack.includes(term);
     });
   }, [parties, trimmedSearch]);
+  const showSearchField = partiesQuery.isLoading || parties.length > 1 || trimmedSearch !== '';
   const showSearchEmptyState = !partiesQuery.isLoading && hasContacts && filtered.length === 0 && trimmedSearch !== '';
-  const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0;
+  const showSingleContactGuidance = !partiesQuery.isLoading && parties.length === 1 && trimmedSearch === '';
+  const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0 && !showSingleContactGuidance;
   const showSearchContextSummary = !partiesQuery.isLoading && hasContacts && filtered.length > 0 && trimmedSearch !== '';
   const searchContextSummary = showSearchContextSummary
     ? `Mostrando ${filtered.length} de ${formatPartyCountLabel(parties.length)} para "${trimmedSearch}".`
     : '';
+  const singleContactGuidanceText = 'Solo hay un contacto por ahora. Usa su nombre para ver relaciones y abre Acciones para editarlo o gestionar su acceso. El buscador aparecerá cuando exista el segundo contacto.';
   const tableGuidanceText = canManageRoles
     ? 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta. Roles y accesos aparece solo cuando ese contacto ya tiene usuario.'
     : 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.';
@@ -401,7 +403,7 @@ export default function PartiesPage() {
           spacing={2}
           sx={{ mb: 2 }}
         >
-          {showDirectoryChrome && (
+          {showSearchField && (
             <TextField
               aria-label="Buscar contactos"
               placeholder="Buscar por nombre, email o Instagram"
@@ -449,6 +451,11 @@ export default function PartiesPage() {
           </Alert>
         ) : (
           <>
+            {showSingleContactGuidance && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                {singleContactGuidanceText}
+              </Typography>
+            )}
             {showTableGuidance && (
               showSearchContextSummary ? (
                 <Stack
