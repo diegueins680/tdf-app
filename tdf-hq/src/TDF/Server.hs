@@ -3428,6 +3428,28 @@ sendWhatsAppText waEnv phone msg = liftIO $ sendWhatsAppTextIO waEnv phone msg
 normalizePhone :: Text -> Maybe Text
 normalizePhone = normalizeWhatsAppPhone
 
+normalizeCourseRegistrationPhoneInput :: Text -> Maybe Text
+normalizeCourseRegistrationPhoneInput raw =
+  let trimmed = T.strip raw
+      onlyDigits = T.filter isDigit trimmed
+      plusCount = T.count "+" trimmed
+      plusIndex = T.findIndex (== '+') trimmed
+      firstDigitIndex = T.findIndex isDigit trimmed
+      allowedPhoneChar ch =
+        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
+      plusIsValid =
+        case plusIndex of
+          Nothing -> True
+          Just idx ->
+            case firstDigitIndex of
+              Nothing -> False
+              Just digitIdx -> plusCount == 1 && idx < digitIdx
+  in
+    if T.null onlyDigits || hasInvalidChars || not plusIsValid
+      then Nothing
+      else Just ("+" <> onlyDigits)
+
 normalizeSlug :: Text -> Text
 normalizeSlug = T.toLower . T.strip
 
@@ -3442,7 +3464,7 @@ validateCourseRegistrationPhoneE164 (Just rawPhone) =
   case cleanOptional (Just rawPhone) of
     Nothing -> Right Nothing
     Just _ ->
-      case normalizePhone rawPhone of
+      case normalizeCourseRegistrationPhoneInput rawPhone of
         Just phoneClean -> Right (Just phoneClean)
         Nothing -> Left err400 { errBody = "phoneE164 inválido" }
 

@@ -175,6 +175,14 @@ spec = describe "TDF.Server helpers" $ do
                 Right phoneVal ->
                     expectationFailure ("Expected invalid course-registration phone to be rejected, got: " <> show phoneVal)
 
+        it "rejects free-form text that merely contains digits instead of storing a misleading partial phone" $
+            case validateCourseRegistrationPhoneE164 (Just "call me at 099 123 4567") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
+                Right phoneVal ->
+                    expectationFailure ("Expected mixed text phone input to be rejected, got: " <> show phoneVal)
+
     describe "validateCourseRegistrationEmail" $ do
         it "preserves omitted and blank emails while normalizing meaningful values" $ do
             validateCourseRegistrationEmail Nothing `shouldBe` Right Nothing
