@@ -252,7 +252,14 @@ export default function CmsAdminPage() {
     () => JSON.stringify(liveContent?.ccdPayload ?? {}, null, 2),
     [liveContent],
   );
-  const pendingEqualsLive = pendingVersion ? pendingPayloadPreview === livePayloadPreview : false;
+  const pendingHasLiveComparison = Boolean(pendingVersion && liveContent);
+  const pendingEqualsLive = pendingHasLiveComparison ? pendingPayloadPreview === livePayloadPreview : false;
+  const pendingPayloadLabel = pendingHasLiveComparison ? 'Payload de la versión seleccionada' : 'Payload a cargar';
+  const pendingVersionSummary = pendingHasLiveComparison
+    ? pendingEqualsLive
+      ? 'El payload coincide con la versión en vivo.'
+      : 'Revisa los payloads antes de sobrescribir el editor.'
+    : 'Todavía no hay una versión publicada. Revisa el payload que vas a cargar antes de sobrescribir el editor.';
 
   const handleCreate = () => {
     if (!hasSlugSelection) {
@@ -457,15 +464,16 @@ export default function CmsAdminPage() {
                   ? `v${liveContent.ccdVersion} (${liveContent.ccdStatus} · ${liveContent.ccdLocale})`
                   : 'no hay versión publicada'}
               </Typography>
-              <Typography variant="body2" color={pendingEqualsLive ? 'text.secondary' : 'warning.main'}>
-                {pendingEqualsLive
-                  ? 'El payload coincide con la versión en vivo.'
-                  : 'Revisa los payloads antes de sobrescribir el editor.'}
+              <Typography
+                variant="body2"
+                color={pendingHasLiveComparison && !pendingEqualsLive ? 'warning.main' : 'text.secondary'}
+              >
+                {pendingVersionSummary}
               </Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="caption" color="text.secondary">
-                    Payload de la versión seleccionada
+                    {pendingPayloadLabel}
                   </Typography>
                   <Box
                     component="pre"
@@ -484,27 +492,29 @@ export default function CmsAdminPage() {
                     {pendingPayloadPreview || '{}'}
                   </Box>
                 </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Payload en vivo
-                  </Typography>
-                  <Box
-                    component="pre"
-                    sx={{
-                      mt: 0.5,
-                      p: 1,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      bgcolor: 'rgba(148,163,184,0.04)',
-                      fontSize: 12,
-                      maxHeight: 260,
-                      overflow: 'auto',
-                    }}
-                  >
-                    {livePayloadPreview || '{}'}
+                {pendingHasLiveComparison && (
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Payload en vivo
+                    </Typography>
+                    <Box
+                      component="pre"
+                      sx={{
+                        mt: 0.5,
+                        p: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'rgba(148,163,184,0.04)',
+                        fontSize: 12,
+                        maxHeight: 260,
+                        overflow: 'auto',
+                      }}
+                    >
+                      {livePayloadPreview || '{}'}
+                    </Box>
                   </Box>
-                </Box>
+                )}
               </Stack>
             </Stack>
           )}

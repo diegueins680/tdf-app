@@ -311,6 +311,40 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the load-version dialog single-column when nothing is published yet', async () => {
+    listMock.mockResolvedValue([
+      buildContent({ ccdId: 201, ccdVersion: 1, ccdStatus: 'draft', ccdPublishedAt: null }),
+    ]);
+    getPublicMock.mockImplementation(async () => null as unknown as CmsContentDTO);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Editar en formulario').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Cargar versión en el formulario');
+      expect(document.body.textContent).toContain('Live actual: no hay versión publicada');
+      expect(document.body.textContent).toContain(
+        'Todavía no hay una versión publicada. Revisa el payload que vas a cargar antes de sobrescribir el editor.',
+      );
+      expect(document.body.textContent).toContain('Payload a cargar');
+      expect(document.body.textContent).not.toContain('Payload en vivo');
+      expect(document.body.textContent).not.toContain('El payload coincide con la versión en vivo.');
+    });
+
+    await cleanup();
+  });
+
   it('shows shared slug and locale context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
