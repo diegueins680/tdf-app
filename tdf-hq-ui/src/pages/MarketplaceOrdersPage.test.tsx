@@ -3,15 +3,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { MarketplaceOrderDTO } from '../api/types';
+import type { MarketplaceOrderDTO, MarketplaceOrderUpdatePayload } from '../api/types';
 
 const listOrdersMock = jest.fn<(params?: { status?: string; limit?: number; offset?: number }) => Promise<MarketplaceOrderDTO[]>>();
-const updateOrderMock = jest.fn();
+const updateOrderMock = jest.fn<
+  (orderId: string, payload: MarketplaceOrderUpdatePayload) => Promise<MarketplaceOrderDTO>
+>();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
   Marketplace: {
     listOrders: (params?: { status?: string; limit?: number; offset?: number }) => listOrdersMock(params),
-    updateOrder: (...args: unknown[]) => updateOrderMock(...args),
+    updateOrder: (orderId: string, payload: MarketplaceOrderUpdatePayload) => updateOrderMock(orderId, payload),
   },
 }));
 
