@@ -346,6 +346,7 @@ export default function PartiesPage() {
   const canManageRoles = canAccessPath('/configuracion/roles-permisos', session?.roles, session?.modules);
   const hasContacts = parties.length > 0;
   const trimmedSearch = search.trim();
+  const showInitialLoadingState = partiesQuery.isLoading && partiesQuery.data == null;
 
   const filtered = useMemo(() => {
     const term = trimmedSearch.toLowerCase();
@@ -357,7 +358,7 @@ export default function PartiesPage() {
       return haystack.includes(term);
     });
   }, [parties, trimmedSearch]);
-  const showSearchField = partiesQuery.isLoading || parties.length > 1 || trimmedSearch !== '';
+  const showSearchField = !showInitialLoadingState && (parties.length > 1 || trimmedSearch !== '');
   const showSearchEmptyState = !partiesQuery.isLoading && hasContacts && filtered.length === 0 && trimmedSearch !== '';
   const showSingleContactGuidance = !partiesQuery.isLoading && parties.length === 1 && trimmedSearch === '';
   const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0 && !showSingleContactGuidance;
@@ -433,7 +434,11 @@ export default function PartiesPage() {
 
         {partiesQuery.error && <Alert severity="error">{partiesQuery.error.message}</Alert>}
 
-        {!partiesQuery.isLoading && !partiesQuery.error && !hasContacts ? (
+        {showInitialLoadingState ? (
+          <Alert severity="info" variant="outlined">
+            Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine.
+          </Alert>
+        ) : !partiesQuery.isLoading && !partiesQuery.error && !hasContacts ? (
           <Alert severity="info" variant="outlined">
             Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto.
           </Alert>
