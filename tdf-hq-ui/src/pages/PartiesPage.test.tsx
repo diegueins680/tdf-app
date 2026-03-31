@@ -606,4 +606,62 @@ describe('PartiesPage', () => {
       await cleanup();
     }
   });
+
+  it('renames the user-creation flow when the contact still needs an email first', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Grace Hopper',
+        isOrg: false,
+        primaryEmail: null,
+        instagram: '@grace',
+        hasUserAccount: false,
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Grace Hopper');
+        expect(container.textContent).toContain(
+          'Solo hay un contacto por ahora. Usa su nombre para ver relaciones y abre Acciones para editarlo o gestionar su acceso. El buscador aparecerá cuando exista el segundo contacto.',
+        );
+      });
+
+      await act(async () => {
+        clickButton(getButtonByAriaLabel(container, 'Abrir acciones para Grace Hopper'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getMenuItemByText(document.body, 'Editar contacto')).toBeTruthy();
+        expect(getMenuItemByText(document.body, 'Completar correo y crear usuario')).toBeTruthy();
+        expect(
+          Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+            (element) => buttonText(element) === 'Crear usuario y enviar contraseña',
+          ),
+        ).toBe(false);
+      });
+
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, 'Completar correo y crear usuario'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Completar correo y crear usuario para Grace Hopper');
+        expect(document.body.textContent).toContain(
+          'Este correo se guardará en el contacto y se usará para enviar la contraseña temporal.',
+        );
+        expect(getButtonsByText(document.body, 'Guardar correo y crear usuario')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
 });

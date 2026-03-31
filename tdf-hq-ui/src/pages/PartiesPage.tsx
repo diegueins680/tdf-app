@@ -68,6 +68,8 @@ const getPartyContactSummary = (party: Pick<PartyDTO, 'primaryEmail' | 'instagra
 };
 
 const formatPartyCountLabel = (count: number) => `${count} contacto${count === 1 ? '' : 's'}`;
+const hasPartyPrimaryEmail = (party?: Pick<PartyDTO, 'primaryEmail'> | null) =>
+  normalizePartyContactValue(party?.primaryEmail) != null;
 
 function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
@@ -221,6 +223,8 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
     setSuccess(null);
   }, [party, open]);
 
+  const needsPrimaryEmail = !hasPartyPrimaryEmail(party);
+
   const selectRoles = (value: string | string[]) => normalizeRolesInput(value, ALL_ROLES);
 
   const handleRoleChange = (event: SelectChangeEvent<RoleValue[]>) => {
@@ -256,7 +260,10 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Crear usuario para {party?.displayName}</DialogTitle>
+      <DialogTitle>
+        {needsPrimaryEmail ? 'Completar correo y crear usuario' : 'Crear usuario'}
+        {party?.displayName ? ` para ${party.displayName}` : ''}
+      </DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
           <TextField
@@ -264,7 +271,9 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            helperText="Se actualiza en el contacto antes de crear la cuenta."
+            helperText={needsPrimaryEmail
+              ? 'Este correo se guardará en el contacto y se usará para enviar la contraseña temporal.'
+              : 'Se actualiza en el contacto antes de crear la cuenta.'}
             required
             fullWidth
           />
@@ -316,7 +325,7 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
               Cancelar
             </Button>
             <Button variant="contained" onClick={() => void handleCreateUser()} disabled={loading}>
-              {loading ? 'Creando...' : 'Crear usuario'}
+              {loading ? 'Creando...' : needsPrimaryEmail ? 'Guardar correo y crear usuario' : 'Crear usuario'}
             </Button>
           </>
         )}
@@ -386,6 +395,10 @@ export default function PartiesPage() {
       action(party);
     }
   };
+
+  const createUserActionLabel = hasPartyPrimaryEmail(actionsMenuTarget?.party)
+    ? 'Crear usuario y enviar contraseña'
+    : 'Completar correo y crear usuario';
 
   return (
     <Stack gap={3}>
@@ -553,7 +566,7 @@ export default function PartiesPage() {
         {!actionsMenuTarget?.party.hasUserAccount && (
           <MenuItem onClick={() => runPartyMenuAction((party) => setUserDialogParty(party))}>
             <PersonAddAltIcon fontSize="small" sx={{ mr: 1 }} />
-            Crear usuario y enviar contraseña
+            {createUserActionLabel}
           </MenuItem>
         )}
         {canManageRoles && actionsMenuTarget?.party.hasUserAccount && (
