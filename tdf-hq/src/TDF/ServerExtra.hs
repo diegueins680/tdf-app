@@ -570,7 +570,8 @@ sessionsServer user =
       ensureModule ModuleScheduling user
       roomKeys <- traverse (parseKey @Room) (scRoomIds req)
       bandKey  <- traverse (parseKey @Band) (scBandId req)
-      let statusVal = scStatus req >>= parseSessionStatus
+      statusVal <- either throwError pure (validateSessionStatusInput (scStatus req))
+      let
           status'   = fromMaybe InPrep statusVal
       (sessionEnt, rooms) <- withPool $ do
         newSessionId <- insert Session
@@ -623,7 +624,8 @@ sessionsServer user =
       roomKeysUpdate <- case suRoomIds req of
         Nothing     -> pure Nothing
         Just rooms  -> Just <$> traverse (parseKey @Room) rooms
-      let statusVal   = suStatus req >>= parseSessionStatus
+      statusVal <- either throwError pure (validateSessionStatusInput (suStatus req))
+      let
           updates     = catMaybes
             [ fmap (SessionBookingRef =.)           (suBookingRef req)
             , fmap (SessionBandId =.)               bandUpdate
@@ -1210,6 +1212,15 @@ parseSessionStatus = lookupStatus . normalise
       "closed"     -> Just Closed
       _             -> Nothing
     normalise = T.toLower . T.filter (`notElem` [' ', '_'])
+
+validateSessionStatusInput :: Maybe Text -> Either ServerError (Maybe SessionStatus)
+validateSessionStatusInput Nothing = Right Nothing
+validateSessionStatusInput (Just rawStatus) =
+  case parseSessionStatus rawStatus of
+    Just statusValue -> Right (Just statusValue)
+    Nothing -> Left err400
+      { errBody = "Invalid session status. Allowed values: in_prep, in_session, break, editing, approved, delivered, closed"
+      }
 
 ensureModule
   :: (MonadError ServerError m)

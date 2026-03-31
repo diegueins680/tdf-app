@@ -18,7 +18,7 @@ import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
 import qualified TDF.Models as M
-import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance), CheckoutTarget (TargetParty, TargetRoom, TargetSession))
+import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance), CheckoutTarget (TargetParty, TargetRoom, TargetSession), SessionStatus (InPrep, InSession))
 import TDF.ServerExtra (
     IGInbound (..),
     IGInboundDeleted (..),
@@ -28,6 +28,7 @@ import TDF.ServerExtra (
     parseCheckoutTargetKind,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
+    validateSessionStatusInput,
     validateServiceCatalogCurrency,
     validateServiceCatalogCurrencyUpdate,
     validateServiceCatalogTaxBps,
@@ -67,6 +68,22 @@ spec = do
               expectationFailure ("Expected invalid checkout target kind error, got " <> show value)
       assertInvalid (parseCheckoutTargetKind (Just "   "))
       assertInvalid (parseCheckoutTargetKind (Just "locker"))
+
+  describe "validateSessionStatusInput" $ do
+    it "preserves omitted values and normalizes supported session statuses" $ do
+      validateSessionStatusInput Nothing `shouldBe` Right Nothing
+      validateSessionStatusInput (Just " in_prep ") `shouldBe` Right (Just InPrep)
+      validateSessionStatusInput (Just "In Session") `shouldBe` Right (Just InSession)
+
+    it "rejects blank or unknown session statuses instead of silently defaulting them" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "Allowed values: in_prep, in_session, break, editing, approved, delivered, closed"
+            Right value ->
+              expectationFailure ("Expected invalid session status error, got " <> show value)
+      assertInvalid (validateSessionStatusInput (Just "   "))
+      assertInvalid (validateSessionStatusInput (Just "live"))
 
   describe "normalizeServiceCatalogNameUpdate" $ do
     it "preserves omitted names and trims meaningful updates" $ do
