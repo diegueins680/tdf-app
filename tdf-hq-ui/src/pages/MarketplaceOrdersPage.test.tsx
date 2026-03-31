@@ -284,6 +284,54 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps the header breakdown tied to the visible order list and hides it once search leaves one bucket', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+        moPaymentProvider: 'paypal',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'paypal',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('1 pagados');
+        expect(container.textContent).toContain('1 pendientes');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+      });
+
+      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      await setInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.textContent).not.toContain('1 pagados');
+        expect(container.textContent).not.toContain('1 pendientes');
+        expect(container.textContent).not.toContain('0 pendientes');
+        expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses the existing reset-filters control when a search hides the current order list', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

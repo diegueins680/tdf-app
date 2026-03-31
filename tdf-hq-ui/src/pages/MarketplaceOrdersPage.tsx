@@ -216,6 +216,9 @@ export default function MarketplaceOrdersPage() {
     (fromDate ? 1 : 0) +
     (toDate ? 1 : 0) +
     (paidOnly ? 1 : 0);
+  const visiblePaidCount = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
+  const visiblePendingCount = Math.max(filtered.length - visiblePaidCount, 0);
+  const showVisibleOrderBreakdown = visiblePaidCount > 0 && visiblePendingCount > 0;
   const paidTotal = orders.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const paidVisible = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const ordersSummary = summarizeMarketplaceOrderList({
@@ -587,18 +590,22 @@ export default function MarketplaceOrdersPage() {
           }
           action={showFirstOrderEmptyState ? null : (
             <Stack direction="row" spacing={1}>
-              <Chip
-                icon={<CheckCircleIcon />}
-                label={`${orders.filter((o) => isPaidOrderStatus(o.moStatus)).length} pagados`}
-                color="success"
-                variant="outlined"
-              />
-              <Chip
-                icon={<InventoryIcon />}
-                label={`${orders.filter((o) => !isPaidOrderStatus(o.moStatus)).length} pendientes`}
-                color="warning"
-                variant="outlined"
-              />
+              {showVisibleOrderBreakdown && (
+                <>
+                  <Chip
+                    icon={<CheckCircleIcon />}
+                    label={`${visiblePaidCount} pagados`}
+                    color="success"
+                    variant="outlined"
+                  />
+                  <Chip
+                    icon={<InventoryIcon />}
+                    label={`${visiblePendingCount} pendientes`}
+                    color="warning"
+                    variant="outlined"
+                  />
+                </>
+              )}
               <Button size="small" variant="outlined" onClick={exportCsv} disabled={filtered.length === 0}>
                 Exportar CSV
               </Button>
