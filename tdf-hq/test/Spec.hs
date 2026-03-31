@@ -50,6 +50,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
  )
 import qualified TDF.ServerSpec as ServerSpec
@@ -133,6 +134,30 @@ main = hspec $ do
                 "eventType must be one of: party, concert, festival, conference, showcase, other"
             assertInvalid
                 baseUpdate { emuStatus = FieldValue "sold_out" }
+                "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
+
+    describe "validateEventCreateTypeStatus" $ do
+        it "defaults omitted or blank create values and normalizes supported explicit values" $ do
+            validateEventCreateTypeStatus Nothing Nothing
+                `shouldBe` Right ("party", "planning")
+            validateEventCreateTypeStatus (Just "   ") (Just " canceled ")
+                `shouldBe` Right ("party", "cancelled")
+            validateEventCreateTypeStatus (Just " FESTIVAL ") Nothing
+                `shouldBe` Right ("festival", "planning")
+
+        it "rejects invalid explicit create values instead of silently falling back" $ do
+            let assertInvalid result expected =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure ("Expected invalid event create metadata to be rejected, got " <> show value)
+            assertInvalid
+                (validateEventCreateTypeStatus (Just "warehouse") Nothing)
+                "eventType must be one of: party, concert, festival, conference, showcase, other"
+            assertInvalid
+                (validateEventCreateTypeStatus Nothing (Just "sold_out"))
                 "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
 
     describe "normalizePositivePartyIdText" $ do

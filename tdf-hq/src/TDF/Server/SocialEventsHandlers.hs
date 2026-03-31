@@ -16,6 +16,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeTicketStatus
   , normalizeEventType
   , normalizeEventStatus
+  , validateEventCreateTypeStatus
   , validateEventMetadataUpdate
   , normalizeBudgetLineType
   , normalizeFinanceDirection
@@ -238,6 +239,34 @@ validateEventMetadataUpdate EventMetadataUpdateDTO{..} = do
     , emuBudgetCents = emuBudgetCents
     }
 
+validateCreateNormalizedTextDefault
+  :: BL.ByteString
+  -> (Maybe T.Text -> Maybe T.Text)
+  -> T.Text
+  -> Maybe T.Text
+  -> Either ServerError T.Text
+validateCreateNormalizedTextDefault invalidMessage normalizeValue fallbackValue rawValue =
+  case cleanMaybeText rawValue of
+    Nothing -> Right fallbackValue
+    Just cleaned ->
+      case normalizeValue (Just cleaned) of
+        Just normalized -> Right normalized
+        Nothing -> Left err400 { errBody = invalidMessage }
+
+validateEventCreateTypeStatus :: Maybe T.Text -> Maybe T.Text -> Either ServerError (T.Text, T.Text)
+validateEventCreateTypeStatus mType mStatus = do
+  normalizedType <- validateCreateNormalizedTextDefault
+    "eventType must be one of: party, concert, festival, conference, showcase, other"
+    normalizeEventType
+    "party"
+    mType
+  normalizedStatus <- validateCreateNormalizedTextDefault
+    "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
+    normalizeEventStatus
+    "planning"
+    mStatus
+  pure (normalizedType, normalizedStatus)
+
 applyEventMetadataUpdate :: EventMetadataUpdateDTO -> EventMetadataDTO -> EventMetadataDTO
 applyEventMetadataUpdate EventMetadataUpdateDTO{..} existing = EventMetadataDTO
   { emTicketUrl = applyNullableTextUpdate emuTicketUrl (emTicketUrl existing)
@@ -410,14 +439,15 @@ socialEventsServer user = eventsServer
       when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
       when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
+      (eventTypeVal, eventStatusVal) <- either throwError pure (validateEventCreateTypeStatus (eventType dto) (eventStatus dto))
       let metadataVal =
             encodeEventMetadata
               EventMetadataDTO
                 { emTicketUrl = cleanMaybeText (eventTicketUrl dto)
                 , emImageUrl = cleanMaybeText (eventImageUrl dto)
                 , emIsPublic = eventIsPublic dto <|> Just True
-                , emType = normalizeEventType (eventType dto) <|> Just "party"
-                , emStatus = normalizeEventStatus (eventStatus dto) <|> Just "planning"
+                , emType = Just eventTypeVal
+                , emStatus = Just eventStatusVal
                 , emCurrency = normalizeCurrencyMaybe (eventCurrency dto) <|> Just "USD"
                 , emBudgetCents = normalizeBudgetCentsMaybe (eventBudgetCents dto)
                 }
