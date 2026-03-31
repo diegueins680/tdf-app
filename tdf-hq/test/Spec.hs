@@ -14,7 +14,8 @@ import TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DTO.SocialEventsDTO
-    ( EventUpdateDTO (..),
+    ( EventMetadataUpdateDTO (..),
+      EventUpdateDTO (..),
       InvitationUpdateDTO (..),
       NullableFieldUpdate (..),
       VenueUpdateDTO (..),
@@ -46,6 +47,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    validateEventMetadataUpdate,
  )
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
@@ -89,6 +91,46 @@ main = hspec $ do
                 Left err -> expectationFailure err
                 Right parsed ->
                     iudMessageUpdate parsed `shouldBe` FieldNull
+
+    describe "validateEventMetadataUpdate" $ do
+        let baseUpdate = EventMetadataUpdateDTO
+                { emuTicketUrl = FieldMissing
+                , emuImageUrl = FieldMissing
+                , emuIsPublic = FieldMissing
+                , emuType = FieldMissing
+                , emuStatus = FieldMissing
+                , emuCurrency = FieldMissing
+                , emuBudgetCents = FieldMissing
+                }
+
+        it "normalizes supported event type/status updates and keeps blank values as explicit clears" $ do
+            validateEventMetadataUpdate
+                baseUpdate
+                    { emuType = FieldValue " FESTIVAL "
+                    , emuStatus = FieldValue " canceled "
+                    }
+                `shouldBe` Right
+                    baseUpdate
+                        { emuType = FieldValue "festival"
+                        , emuStatus = FieldValue "cancelled"
+                        }
+            validateEventMetadataUpdate baseUpdate { emuType = FieldValue "   " }
+                `shouldBe` Right baseUpdate { emuType = FieldNull }
+
+        it "rejects invalid explicit event metadata updates instead of silently ignoring them" $ do
+            let assertInvalid updateValue expected =
+                    case validateEventMetadataUpdate updateValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure ("Expected invalid event metadata update to be rejected, got " <> show value)
+            assertInvalid
+                baseUpdate { emuType = FieldValue "warehouse" }
+                "eventType must be one of: party, concert, festival, conference, showcase, other"
+            assertInvalid
+                baseUpdate { emuStatus = FieldValue "sold_out" }
+                "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
 
     describe "normalizePositivePartyIdText" $ do
         it "accepts positive numeric ids and canonicalizes them" $ do

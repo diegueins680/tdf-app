@@ -16,6 +16,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeTicketStatus
   , normalizeEventType
   , normalizeEventStatus
+  , validateEventMetadataUpdate
   , normalizeBudgetLineType
   , normalizeFinanceDirection
   , normalizeFinanceSource
@@ -201,6 +202,41 @@ applyNullableNormalizedTextUpdate normalizeValue field existing =
         Nothing
           | T.null (T.strip value) -> Nothing
           | otherwise -> existing
+
+normalizeNullableTextUpdate
+  :: BL.ByteString
+  -> (Maybe T.Text -> Maybe T.Text)
+  -> NullableFieldUpdate T.Text
+  -> Either ServerError (NullableFieldUpdate T.Text)
+normalizeNullableTextUpdate _ _ FieldMissing = Right FieldMissing
+normalizeNullableTextUpdate _ _ FieldNull = Right FieldNull
+normalizeNullableTextUpdate invalidMessage normalizeValue (FieldValue value) =
+  case cleanMaybeText (Just value) of
+    Nothing -> Right FieldNull
+    Just cleaned ->
+      case normalizeValue (Just cleaned) of
+        Just normalized -> Right (FieldValue normalized)
+        Nothing -> Left err400 { errBody = invalidMessage }
+
+validateEventMetadataUpdate :: EventMetadataUpdateDTO -> Either ServerError EventMetadataUpdateDTO
+validateEventMetadataUpdate EventMetadataUpdateDTO{..} = do
+  normalizedType <- normalizeNullableTextUpdate
+    "eventType must be one of: party, concert, festival, conference, showcase, other"
+    normalizeEventType
+    emuType
+  normalizedStatus <- normalizeNullableTextUpdate
+    "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
+    normalizeEventStatus
+    emuStatus
+  pure EventMetadataUpdateDTO
+    { emuTicketUrl = emuTicketUrl
+    , emuImageUrl = emuImageUrl
+    , emuIsPublic = emuIsPublic
+    , emuType = normalizedType
+    , emuStatus = normalizedStatus
+    , emuCurrency = emuCurrency
+    , emuBudgetCents = emuBudgetCents
+    }
 
 applyEventMetadataUpdate :: EventMetadataUpdateDTO -> EventMetadataDTO -> EventMetadataDTO
 applyEventMetadataUpdate EventMetadataUpdateDTO{..} existing = EventMetadataDTO
@@ -450,8 +486,9 @@ socialEventsServer user = eventsServer
       when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
       when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
+      validatedMetadataUpdate <- either throwError pure (validateEventMetadataUpdate eudMetadataUpdate)
       let existingMetadata = decodeEventMetadata (socialEventMetadata existing)
-          mergedMetadata = applyEventMetadataUpdate eudMetadataUpdate existingMetadata
+          mergedMetadata = applyEventMetadataUpdate validatedMetadataUpdate existingMetadata
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
         Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
