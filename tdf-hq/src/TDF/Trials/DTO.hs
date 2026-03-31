@@ -11,7 +11,7 @@ import Data.Time (UTCTime)
 data PreferredSlot = PreferredSlot
   { startAt :: UTCTime
   , endAt   :: UTCTime
-  } deriving (Show, Generic)
+  } deriving (Eq, Show, Generic)
 instance ToJSON PreferredSlot
 instance FromJSON PreferredSlot
 

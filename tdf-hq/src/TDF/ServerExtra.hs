@@ -20,7 +20,7 @@ import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
-import           Data.Char                  (isAlphaNum, isAscii, isSpace, ord)
+import           Data.Char                  (isAlphaNum, isAscii, isAsciiUpper, isSpace, ord)
 import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -1002,6 +1002,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
     createH ServiceCatalogCreate{..} = do
       ensureModule ModuleScheduling user
       nameClean <- normalizeName sccName
+      currencyClean <- either throwError pure (validateServiceCatalogCurrency sccCurrency)
       when (maybe False (< 0) sccRateCents) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
       when (maybe False (< 0) sccTaxBps) $
@@ -1016,7 +1017,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
               , M.serviceCatalogPricingModel = fromMaybe M.Hourly sccPricingModel
               , M.serviceCatalogDefaultRateCents = sccRateCents
               , M.serviceCatalogTaxBps = sccTaxBps
-              , M.serviceCatalogCurrency = normalizeCurrency (fromMaybe "USD" sccCurrency)
+              , M.serviceCatalogCurrency = currencyClean
               , M.serviceCatalogBillingUnit = normalizeTextMaybe sccBillingUnit
               , M.serviceCatalogActive = fromMaybe True sccActive
               }
@@ -1029,6 +1030,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       let svcKey = toSqlKey rawId :: Key M.ServiceCatalog
       let rateCandidate = join scuRateCents
           taxCandidate  = join scuTaxBps
+      currencyUpdate <- either throwError pure (validateServiceCatalogCurrencyUpdate scuCurrency)
       when (maybe False (< 0) rateCandidate) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
       when (maybe False (< 0) taxCandidate) $
@@ -1063,7 +1065,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
                   , (M.ServiceCatalogPricingModel =.) <$> scuPricingModel
                   , (M.ServiceCatalogDefaultRateCents =.) <$> scuRateCents
                   , (M.ServiceCatalogTaxBps =.) <$> scuTaxBps
-                  , (M.ServiceCatalogCurrency =.) . normalizeCurrency <$> scuCurrency
+                  , (M.ServiceCatalogCurrency =.) <$> currencyUpdate
                   , (M.ServiceCatalogBillingUnit =.) <$> billingClean
                   , (M.ServiceCatalogActive =.) <$> scuActive
                   ]
@@ -1085,10 +1087,6 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       let trimmed = T.strip txt
       in if T.null trimmed then throwError err400 { errBody = "Nombre requerido" } else pure trimmed
 
-    normalizeCurrency txt =
-      let trimmed = T.toUpper (T.strip txt)
-      in if T.null trimmed then "USD" else trimmed
-
     normalizeTextMaybe mTxt = case mTxt of
       Nothing -> Nothing
       Just raw ->
@@ -1102,6 +1100,25 @@ normalizeServiceCatalogNameUpdate (Just rawName) =
   in if T.null trimmed
        then Left err400 { errBody = "Nombre requerido" }
        else Right (Just trimmed)
+
+validateServiceCatalogCurrency :: Maybe Text -> Either ServerError Text
+validateServiceCatalogCurrency Nothing = Right "USD"
+validateServiceCatalogCurrency (Just rawCurrency) =
+  let trimmed = T.toUpper (T.strip rawCurrency)
+  in if T.null trimmed
+       then invalidCurrency
+       else
+         if T.length trimmed == 3 && T.all isAsciiUpper trimmed
+           then Right trimmed
+           else invalidCurrency
+  where
+    invalidCurrency =
+      Left err400 { errBody = "Moneda inválida. Usa un código ISO de 3 letras, por ejemplo USD" }
+
+validateServiceCatalogCurrencyUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+validateServiceCatalogCurrencyUpdate Nothing = Right Nothing
+validateServiceCatalogCurrencyUpdate (Just rawCurrency) =
+  Just <$> validateServiceCatalogCurrency (Just rawCurrency)
 
 serviceCatalogToDTO :: Entity M.ServiceCatalog -> ServiceCatalogDTO
 serviceCatalogToDTO (Entity key svc) = ServiceCatalogDTO

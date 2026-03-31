@@ -27,6 +27,8 @@ import TDF.ServerExtra (
     extractMetaInbound,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
+    validateServiceCatalogCurrency,
+    validateServiceCatalogCurrencyUpdate,
     validateAssetStatusUpdate,
  )
 
@@ -59,6 +61,36 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "Nombre requerido"
         Right value ->
           expectationFailure ("Expected blank service catalog update name to be rejected, got " <> show value)
+
+  describe "validateServiceCatalogCurrency" $ do
+    it "defaults omitted values to USD and normalizes supported ISO codes" $ do
+      validateServiceCatalogCurrency Nothing `shouldBe` Right "USD"
+      validateServiceCatalogCurrency (Just " usd ") `shouldBe` Right "USD"
+      validateServiceCatalogCurrency (Just "eur") `shouldBe` Right "EUR"
+
+    it "rejects blank or malformed currency codes instead of storing ambiguous data" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
+            Right value ->
+              expectationFailure ("Expected invalid currency error, got " <> show value)
+      assertInvalid (validateServiceCatalogCurrency (Just "   "))
+      assertInvalid (validateServiceCatalogCurrency (Just "usdollars"))
+      assertInvalid (validateServiceCatalogCurrency (Just "12$"))
+
+  describe "validateServiceCatalogCurrencyUpdate" $ do
+    it "preserves omitted updates and normalizes meaningful ones" $ do
+      validateServiceCatalogCurrencyUpdate Nothing `shouldBe` Right Nothing
+      validateServiceCatalogCurrencyUpdate (Just " gbp ") `shouldBe` Right (Just "GBP")
+
+    it "rejects explicit blank updates instead of silently resetting the currency" $
+      case validateServiceCatalogCurrencyUpdate (Just "   ") of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
+        Right value ->
+          expectationFailure ("Expected invalid currency update error, got " <> show value)
 
   describe "Meta inbox deletion handling" $ do
     it "parses deleted Instagram webhook events" $ do
