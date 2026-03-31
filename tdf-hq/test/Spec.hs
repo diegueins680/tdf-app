@@ -30,6 +30,7 @@ import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.ServerRadio (validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel)
+import TDF.ServerProposals (validateTemplateKey)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -201,6 +202,20 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must be http(s)"
                 Right _ -> expectationFailure "Expected non-http streamUrl to be rejected"
+
+    describe "validateTemplateKey" $ do
+        it "trims valid proposal template keys before lookup" $
+            validateTemplateKey "  tdf_live_sessions  " `shouldBe` Right "tdf_live_sessions"
+
+        it "rejects blank or unsafe template keys with a 400 instead of a missing-template 404" $ do
+            let assertInvalid raw expected = case validateTemplateKey raw of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid templateKey to be rejected, got: " <> show value)
+            assertInvalid "   " "templateKey required"
+            assertInvalid "../proposal" "ASCII letters, numbers, hyphens, or underscores"
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do
