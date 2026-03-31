@@ -164,8 +164,32 @@ describe('UxOptionsPage', () => {
           'Esta categoría todavía no tiene opciones. Crea la primera para habilitarla en formularios.',
         );
         expect(container.textContent).toContain('No hay opciones aún para esta categoría.');
+        expect(container.textContent).not.toContain('Filtrar opciones');
+        expect(container.textContent).not.toContain('0 totales · 0 activas');
         expect(getButtonsByText(container, 'Agregar opción')).toHaveLength(0);
         expect(getButtonsByText(container, 'Agregar')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides list-only filter chrome until a category has more than one saved option', async () => {
+    listDropdownsMock.mockResolvedValue([buildOption()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Solo hay una opción por ahora. Edítala directo aquí; el filtro aparecerá cuando exista una segunda.',
+        );
+        expect(container.textContent).not.toContain('Filtrar opciones');
+        expect(container.textContent).not.toContain('1 totales · 1 activas');
+        expect(container.textContent).toContain('Valor');
+        expect(container.textContent).toContain('Etiqueta');
       });
     } finally {
       await cleanup();

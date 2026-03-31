@@ -192,6 +192,7 @@ export default function UxOptionsPage() {
     [options],
   );
   const normalizedFilter = optionFilter.trim().toLowerCase();
+  const hasActiveFilter = normalizedFilter !== '';
   const filteredOptions = useMemo(() => {
     if (!normalizedFilter) return options;
     return options.filter((option) => {
@@ -205,6 +206,8 @@ export default function UxOptionsPage() {
     [filteredOptions],
   );
   const isCreateFormVisible = (hasLoadedOptions && !hasOptions) || showCreateForm;
+  const showListChrome = hasOptions && (options.length > 1 || hasActiveFilter);
+  const showSingleOptionGuidance = options.length === 1 && !hasActiveFilter;
 
   useEffect(() => {
     if (!hasLoadedOptions || hasOptions) return;
@@ -344,32 +347,40 @@ export default function UxOptionsPage() {
           <Typography variant="subtitle1" fontWeight={700}>
             Opciones en {category || '—'}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {filteredOptions.length !== options.length
-              ? `${filteredOptions.length} filtradas de ${options.length} · ${filteredActiveCount} activas`
-              : `${options.length} totales · ${activeCount} activas`}
-          </Typography>
-        </Stack>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1 }}>
-          <TextField
-            label="Filtrar opciones"
-            placeholder="Busca por valor o etiqueta"
-            value={optionFilter}
-            onChange={(e) => setOptionFilter(e.target.value)}
-            size="small"
-            sx={{ minWidth: { xs: '100%', sm: 280 } }}
-          />
-          {optionFilter.trim() && (
-            <Button
-              size="small"
-              variant="text"
-              onClick={() => setOptionFilter('')}
-              sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
-            >
-              Limpiar filtro
-            </Button>
+          {showListChrome && (
+            <Typography variant="body2" color="text.secondary">
+              {filteredOptions.length !== options.length
+                ? `${filteredOptions.length} filtradas de ${options.length} · ${filteredActiveCount} activas`
+                : `${options.length} totales · ${activeCount} activas`}
+            </Typography>
           )}
         </Stack>
+        {showListChrome ? (
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1 }}>
+            <TextField
+              label="Filtrar opciones"
+              placeholder="Busca por valor o etiqueta"
+              value={optionFilter}
+              onChange={(e) => setOptionFilter(e.target.value)}
+              size="small"
+              sx={{ minWidth: { xs: '100%', sm: 280 } }}
+            />
+            {optionFilter.trim() && (
+              <Button
+                size="small"
+                variant="text"
+                onClick={() => setOptionFilter('')}
+                sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
+              >
+                Limpiar filtro
+              </Button>
+            )}
+          </Stack>
+        ) : showSingleOptionGuidance ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Solo hay una opción por ahora. Edítala directo aquí; el filtro aparecerá cuando exista una segunda.
+          </Typography>
+        ) : null}
         {optionsQuery.isLoading ? (
           <Typography>Cargando opciones…</Typography>
         ) : options.length === 0 ? (
