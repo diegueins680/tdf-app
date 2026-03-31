@@ -883,7 +883,9 @@ export default function CmsAdminPage() {
           )}
           <Stack spacing={1.5}>
             {filteredVersions.map((v) => {
-              const rowActions = getCmsVersionRowActions(v.ccdStatus);
+              const rowActions = getCmsVersionRowActions(v.ccdStatus, {
+                isLoadedInEditor: editingFromId === v.ccdId,
+              });
 
               return (
                 <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
@@ -923,9 +925,13 @@ export default function CmsAdminPage() {
                           Publicar
                         </Button>
                       )}
-                      <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
-                        Editar en formulario
-                      </Button>
+                      {rowActions.showLoadInEditor ? (
+                        <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
+                          Editar en formulario
+                        </Button>
+                      ) : rowActions.loadedStateLabel ? (
+                        <Chip size="small" color="info" variant="outlined" label={rowActions.loadedStateLabel} />
+                      ) : null}
                       <Button
                         size="small"
                         variant="text"

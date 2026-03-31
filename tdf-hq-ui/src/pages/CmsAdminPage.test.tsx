@@ -409,6 +409,41 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces the duplicate load action with passive row state once a version is already in the editor', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Editar en formulario').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Cargar versión en el formulario');
+      expect(getButtonByText(document.body, 'Cargar en formulario')).toBeTruthy();
+    });
+
+    await act(async () => {
+      getButtonByText(document.body, 'Cargar en formulario').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+      expect(countExactText(container, 'En formulario')).toBe(1);
+      expect(container.textContent).toContain('Base: v4 · ID 101');
+    });
+
+    await cleanup();
+  });
+
   it('replaces fraction-style version counts with plain-language summary text', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
