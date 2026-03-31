@@ -96,30 +96,34 @@ function OptionRow({
         />
       </TableCell>
       <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-        <Button
-          variant="outlined"
-          size="small"
-          disabled={!dirty || sortInvalid || saving}
-          onClick={() => {
-            void onSave(option.optionId, payload);
-          }}
-          sx={{ mr: 1 }}
-        >
-          {saving ? 'Guardando…' : 'Guardar'}
-        </Button>
-        <Button
-          variant="text"
-          size="small"
-          disabled={!dirty || saving}
-          onClick={() => {
-            setValue(option.value);
-            setLabel(option.label ?? '');
-            setSortOrder(option.sortOrder?.toString() ?? '');
-            setActive(option.active);
-          }}
-        >
-          Revertir
-        </Button>
+        {dirty ? (
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              disabled={sortInvalid || saving}
+              onClick={() => {
+                void onSave(option.optionId, payload);
+              }}
+              sx={{ mr: 1 }}
+            >
+              {saving ? 'Guardando…' : 'Guardar'}
+            </Button>
+            <Button
+              variant="text"
+              size="small"
+              disabled={saving}
+              onClick={() => {
+                setValue(option.value);
+                setLabel(option.label ?? '');
+                setSortOrder(option.sortOrder?.toString() ?? '');
+                setActive(option.active);
+              }}
+            >
+              Revertir
+            </Button>
+          </>
+        ) : null}
       </TableCell>
     </TableRow>
   );
@@ -355,6 +359,11 @@ export default function UxOptionsPage() {
             </Typography>
           )}
         </Stack>
+        {hasOptions && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            Guardar y Revertir aparecen solo en la fila que editas.
+          </Typography>
+        )}
         {showListChrome ? (
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1 }}>
             <TextField
