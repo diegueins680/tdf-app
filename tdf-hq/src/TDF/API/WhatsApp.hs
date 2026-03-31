@@ -126,7 +126,29 @@ isValidEmail candidate =
 
 validateHookVerifyRequest :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Either ServerError Text
 validateHookVerifyRequest mmode mchall mtoken mExpected =
-  case (fmap T.toLower mmode, mchall, mtoken, mExpected) of
-    (Just mode, Just challenge, Just token, Just expected)
-      | mode == "subscribe" && token == expected -> Right challenge
-    _ -> Left err403
+  case nonBlank mExpected of
+    Nothing ->
+      Left err503 { errBody = "WhatsApp verify token not configured" }
+    Just expected ->
+      case fmap T.toLower (nonBlank mmode) of
+        Nothing ->
+          Left err400 { errBody = "hub.mode is required" }
+        Just "subscribe" ->
+          case nonBlank mchall of
+            Nothing ->
+              Left err400 { errBody = "hub.challenge is required" }
+            Just challenge ->
+              case nonBlank mtoken of
+                Nothing ->
+                  Left err400 { errBody = "hub.verify_token is required" }
+                Just verifyToken
+                  | verifyToken == expected -> Right challenge
+                  | otherwise -> Left err403 { errBody = "hub.verify_token mismatch" }
+        Just _ ->
+          Left err400 { errBody = "hub.mode must be subscribe" }
+  where
+    nonBlank :: Maybe Text -> Maybe Text
+    nonBlank mTxt =
+      case fmap T.strip mTxt of
+        Just txt | not (T.null txt) -> Just txt
+        _ -> Nothing

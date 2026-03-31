@@ -26,8 +26,19 @@ function createLogger(log) {
   return () => {};
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url, { headers: REQUEST_HEADERS });
+function buildRequestHeaders(githubToken) {
+  if (!githubToken) {
+    return REQUEST_HEADERS;
+  }
+
+  return {
+    ...REQUEST_HEADERS,
+    Authorization: `Bearer ${githubToken}`,
+  };
+}
+
+async function fetchJson(url, githubToken) {
+  const response = await fetch(url, { headers: buildRequestHeaders(githubToken) });
   if (!response.ok) {
     throw new Error(`Failed to fetch Koyeb release metadata (${response.status} ${response.statusText})`);
   }
@@ -49,6 +60,7 @@ export async function installKoyebCli({
   installDir = '/usr/local/bin',
   workDir,
   skipVersionCheck = false,
+  githubToken,
   log = console,
 } = {}) {
   const logger = createLogger(log);
@@ -63,7 +75,7 @@ export async function installKoyebCli({
   await fs.mkdir(installDir, { recursive: true });
 
   try {
-    const release = await fetchJson(releaseApiUrl);
+    const release = await fetchJson(releaseApiUrl, githubToken);
     const assets = Array.isArray(release?.assets) ? release.assets : [];
     const candidateUrls = assets.map((asset) => asset?.browser_download_url);
     const downloadUrl = selectKoyebDownloadUrl(candidateUrls);
@@ -107,6 +119,7 @@ async function main() {
       installDir: process.env.KOYEB_INSTALL_DIR || '/usr/local/bin',
       workDir: process.env.KOYEB_WORK_DIR || undefined,
       skipVersionCheck: process.env.KOYEB_SKIP_VERSION_CHECK === '1',
+      githubToken: process.env.KOYEB_RELEASE_GITHUB_TOKEN || process.env.GITHUB_TOKEN,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

@@ -78,6 +78,36 @@ const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s
 const getButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLButtonElement>('button')).filter((element) => buttonText(element) === labelText);
 
+const getInputByLabel = (container: HTMLElement, labelText: string) => {
+  const label = Array.from(container.querySelectorAll('label')).find(
+    (element) => buttonText(element) === labelText,
+  );
+  if (!label) throw new Error(`Label not found: ${labelText}`);
+
+  const inputId = label.getAttribute('for');
+  if (inputId) {
+    const input = document.getElementById(inputId);
+    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) return input;
+  }
+
+  const fallback = label.parentElement?.querySelector<HTMLInputElement | HTMLTextAreaElement>('input,textarea');
+  if (!fallback) throw new Error(`Input not found for label: ${labelText}`);
+  return fallback;
+};
+
+const setInputValue = (input: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  const prototype =
+    input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  const descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
+  if (descriptor?.set) {
+    descriptor.set.call(input, value);
+  } else {
+    input.value = value;
+  }
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+};
+
 const clickButton = async (button: HTMLButtonElement) => {
   await act(async () => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -164,8 +194,70 @@ describe('UxOptionsPage', () => {
           'Esta categoría todavía no tiene opciones. Crea la primera para habilitarla en formularios.',
         );
         expect(container.textContent).toContain('No hay opciones aún para esta categoría.');
+        expect(container.textContent).not.toContain('Filtrar opciones');
+        expect(container.textContent).not.toContain('0 totales · 0 activas');
         expect(getButtonsByText(container, 'Agregar opción')).toHaveLength(0);
         expect(getButtonsByText(container, 'Agregar')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides list-only filter chrome until a category has more than one saved option', async () => {
+    listDropdownsMock.mockResolvedValue([buildOption()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Solo hay una opción por ahora. Edítala directo aquí; el filtro aparecerá cuando exista una segunda.',
+        );
+        expect(container.textContent).not.toContain('Filtrar opciones');
+        expect(container.textContent).not.toContain('1 totales · 1 activas');
+        expect(container.textContent).toContain('Valor');
+        expect(container.textContent).toContain('Etiqueta');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows row save actions only after a specific option is edited', async () => {
+    listDropdownsMock.mockResolvedValue([buildOption()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Guardar y Revertir aparecen solo en la fila que editas.');
+        expect(getButtonsByText(container, 'Guardar')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Revertir')).toHaveLength(0);
+      });
+
+      const labelInput = getInputByLabel(container, 'Etiqueta');
+
+      await act(async () => {
+        setInputValue(labelInput, 'Rock alternativo');
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Guardar')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revertir')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonsByText(container, 'Revertir')[0]!);
+
+      await waitForExpectation(() => {
+        expect((labelInput as HTMLInputElement | HTMLTextAreaElement).value).toBe('Rock');
+        expect(getButtonsByText(container, 'Guardar')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Revertir')).toHaveLength(0);
       });
     } finally {
       await cleanup();

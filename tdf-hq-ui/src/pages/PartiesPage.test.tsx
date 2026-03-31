@@ -179,6 +179,63 @@ describe('PartiesPage', () => {
     canAccessPathMock.mockReturnValue(false);
   });
 
+  it('keeps the first CRM load focused on a single loading notice instead of showing search and table chrome early', async () => {
+    let resolveParties: ((value: PartyDTO[]) => void) | null = null;
+    const pendingParties = new Promise<PartyDTO[]>((resolve) => {
+      resolveParties = resolve;
+    });
+    listPartiesMock.mockReturnValue(pendingParties);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(document.body, 'Nuevo contacto')).toHaveLength(1);
+        expect(container.textContent).toContain(
+          'Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine.',
+        );
+        expect(container.querySelector('input[aria-label="Buscar contactos"]')).toBeNull();
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).not.toContain(
+          'Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto.',
+        );
+      });
+
+      await act(async () => {
+        resolveParties?.([
+          {
+            partyId: 1,
+            displayName: 'Ada Lovelace',
+            isOrg: false,
+            primaryEmail: 'ada@example.com',
+            instagram: '@ada',
+          } satisfies PartyDTO,
+          {
+            partyId: 2,
+            displayName: 'Los Navegantes',
+            isOrg: true,
+            primaryEmail: 'hola@navegantes.test',
+            instagram: '@navegantes',
+          } satisfies PartyDTO,
+        ]);
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.textContent).not.toContain(
+          'Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine.',
+        );
+        expect(getSearchInput(container).getAttribute('placeholder')).toBe('Buscar por nombre, email o Instagram');
+        expect(container.querySelector('table')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces empty CRM chrome with a first-contact empty state', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -302,6 +359,39 @@ describe('PartiesPage', () => {
           'Falta correo e Instagram',
           '',
         ]);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the first CRM contact focused on the row instead of showing list search chrome', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        primaryEmail: 'ada@example.com',
+        instagram: '@ada',
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('input[aria-label="Buscar contactos"]')).toBeNull();
+        expect(container.textContent).toContain(
+          'Solo hay un contacto por ahora. Usa su nombre para ver relaciones y abre Acciones para editarlo o gestionar su acceso. El buscador aparecerá cuando exista el segundo contacto.',
+        );
+        expect(container.textContent).not.toContain(
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
+        );
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
       });
     } finally {
       await cleanup();

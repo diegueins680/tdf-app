@@ -51,14 +51,19 @@ const DEFAULT_LIMIT = 200;
 const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
 const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
+const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
+const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
 const dossierScopeHint = 'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.';
+const emptyNotesAlertMessage = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
 const hideSystemEmailsLabel = 'Ocultar correos del sistema';
 const systemEmailHistoryHelperText = 'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
 const emptySystemEmailHistoryMessage = 'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
-const followUpComposerHelpText = 'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.';
+const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
+const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Guárdalo y aparecerá en el historial para revisarlo después.';
+const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -657,7 +662,7 @@ export default function CourseRegistrationsAdminPage() {
     ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${resetViewInstruction}`
     : `No hay inscripciones ${filteredEmptyStateScope}. ${resetViewInstruction}`;
   const canCopyCsv = (regsQuery.data?.length ?? 0) > 1;
-  const showListUtilitySummary = canCopyCsv || Boolean(copyMessage);
+  const showStandaloneListUtilitySummary = !hasCustomFilters && (canCopyCsv || Boolean(copyMessage));
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
   const shouldShowSharedSourceSummary = hasSharedVisibleSource
@@ -669,6 +674,7 @@ export default function CourseRegistrationsAdminPage() {
       : `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
+  const showDossierScopeHint = loadedRegistrationCount > 1;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -742,7 +748,8 @@ export default function CourseRegistrationsAdminPage() {
   const showSystemEmailHistoryAction = showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError;
   const showEmptySystemEmailHistoryHint = !showSystemEmailHistoryAction
     && !emailEventsQuery.isLoading
-    && selectedDossierId != null;
+    && selectedDossierId != null
+    && selectedDossier?.intent !== 'markPaid';
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -1208,7 +1215,6 @@ export default function CourseRegistrationsAdminPage() {
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
-  const notesActionLabel = hasSavedNotes ? 'Editar notas' : 'Abrir notas';
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const hasReceipts = receipts.length > 0;
   const showReceiptCountChip = receipts.length > 1;
@@ -1220,15 +1226,18 @@ export default function CourseRegistrationsAdminPage() {
     && !hasReceipts
   )
     ? markPaidReceiptSectionHelpText
+    : showReceiptComposer && receiptForm.editingId != null
+      ? editingReceiptComposerHelpText
     : showReceiptComposer && !hasReceipts
       ? firstReceiptComposerHelpText
-      : hasReceipts
-        ? 'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.'
+      : showReceiptComposer && hasReceipts
+        ? receiptComposerHelpText
         : '';
   const canHideReceiptUrlField = showReceiptUrlField
     && receiptForm.editingId == null
     && !canSubmitReceipt
     && !hasReceiptMetadataDraft;
+  const showReceiptReviewPane = hasReceipts || !showReceiptComposer;
   const showReceiptMetadataFields = (
     selectedDossier?.intent === 'markPaid'
     || receiptForm.editingId != null
@@ -1247,6 +1256,14 @@ export default function CourseRegistrationsAdminPage() {
   const showFollowUpOptionalFields = showFollowUpDetails || showFollowUpUrlField || hasFollowUpOptionalDraft;
   const canHideFollowUpOptionalFields = showFollowUpOptionalFields && !hasFollowUpOptionalDraft;
   const showFollowUpCountChip = followUps.length > 1;
+  const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
+  const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
+  const followUpComposerTitle = followUpForm.editingId == null ? 'Registrar seguimiento' : 'Editar seguimiento';
+  const followUpComposerSummary = followUpForm.editingId != null
+    ? editingFollowUpComposerHelpText
+    : isCreatingFirstFollowUp
+      ? firstFollowUpComposerHelpText
+      : followUpComposerHelpText;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
   const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
@@ -1283,11 +1300,282 @@ export default function CourseRegistrationsAdminPage() {
     setShowReceiptComposer(false);
   }, [canMarkPaid, selectedDossier?.intent]);
 
+  const prioritizePaymentSection = selectedDossier?.intent === 'markPaid';
   const dossierDialogTitle = selectedDossier?.intent === 'markPaid'
     ? canMarkPaid
       ? 'Confirmar pago de inscripción'
       : 'Registrar pago de inscripción'
     : 'Expediente de inscripción';
+  const notesSection = (
+    <Card variant="outlined">
+      <CardContent>
+        <Stack spacing={1.5}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
+            <Typography variant="h6">Notas internas</Typography>
+            {!showNotesComposer && hasSavedNotes ? (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleOpenNotesComposer}
+              >
+                Editar notas
+              </Button>
+            ) : null}
+          </Stack>
+          {showNotesComposer ? (
+            <>
+              <TextField
+                label="Notas internas"
+                multiline
+                minRows={4}
+                value={notesDraft}
+                onChange={(e) => setNotesDraft(e.target.value)}
+                placeholder="Contexto interno, acuerdos, bloqueos o próximos pasos."
+                fullWidth
+              />
+              <Stack spacing={0.75} alignItems="flex-start">
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSaveNotes}
+                    disabled={updateNotesMutation.isPending || !hasNotesDraftChanges}
+                  >
+                    Guardar notas
+                  </Button>
+                  <Button variant="text" size="small" onClick={handleHideNotesComposer}>
+                    Cancelar notas
+                  </Button>
+                </Stack>
+                {!hasNotesDraftChanges && (
+                  <Typography variant="caption" color="text.secondary">
+                    Edita el contenido para habilitar Guardar.
+                  </Typography>
+                )}
+              </Stack>
+            </>
+          ) : hasSavedNotes ? (
+            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+              {persistedNotes}
+            </Typography>
+          ) : (
+            <Alert
+              severity="info"
+              action={(
+                <Button color="inherit" size="small" onClick={handleOpenNotesComposer}>
+                  Agregar primera nota
+                </Button>
+              )}
+            >
+              {emptyNotesAlertMessage}
+            </Alert>
+          )}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+  const receiptsSection = (
+    <Card variant="outlined">
+      <CardContent>
+        <Stack spacing={2}>
+          <Stack
+            direction="row"
+            alignItems="flex-start"
+            justifyContent="space-between"
+            flexWrap="wrap"
+            useFlexGap
+            spacing={1}
+          >
+            <Box sx={{ minWidth: 240, flexGrow: 1 }}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="h6">Comprobantes de pago</Typography>
+                {showReceiptCountChip && (
+                  <Chip size="small" label={`${receipts.length} guardado${receipts.length === 1 ? '' : 's'}`} />
+                )}
+              </Stack>
+              {receiptSectionHelpText && (
+                <Typography variant="body2" color="text.secondary">
+                  {receiptSectionHelpText}
+                </Typography>
+              )}
+            </Box>
+            {!showReceiptComposer && hasReceipts && (
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => setShowReceiptComposer(true)}
+              >
+                Agregar comprobante
+              </Button>
+            )}
+          </Stack>
+
+          <Grid container spacing={2}>
+            {showReceiptComposer && (
+              <Grid item xs={12} md={showReceiptReviewPane ? 6 : 12} data-testid="course-registration-receipt-composer-pane">
+                <Stack spacing={1.5}>
+                  <GoogleDriveUploadWidget
+                    label={
+                      receiptForm.fileName
+                        ? `Archivo listo: ${receiptForm.fileName}`
+                        : 'Subir comprobante (imagen/PDF)'
+                    }
+                    helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
+                    accept="application/pdf,image/*"
+                    multiple={false}
+                    onComplete={handleReceiptUpload}
+                    dense
+                  />
+                  {!showReceiptUrlField && (
+                    <Button
+                      size="small"
+                      variant="text"
+                      sx={{ alignSelf: 'flex-start' }}
+                      aria-expanded={showReceiptUrlField}
+                      onClick={() => setShowReceiptUrlField(true)}
+                    >
+                      Usar enlace existente en lugar de subir archivo
+                    </Button>
+                  )}
+                  <Collapse in={showReceiptUrlField} unmountOnExit>
+                    <Stack spacing={1} sx={{ pt: 0.5 }}>
+                      <TextField
+                        label="URL del comprobante"
+                        value={receiptForm.fileUrl}
+                        onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
+                        placeholder="Pega un enlace existente si el archivo ya está cargado"
+                        fullWidth
+                      />
+                      {canHideReceiptUrlField && (
+                        <Button
+                          size="small"
+                          variant="text"
+                          sx={{ alignSelf: 'flex-start' }}
+                          aria-expanded={showReceiptUrlField}
+                          onClick={() => setShowReceiptUrlField(false)}
+                        >
+                          Ocultar enlace existente
+                        </Button>
+                      )}
+                    </Stack>
+                  </Collapse>
+                  {!showReceiptMetadataFields && (
+                    <Typography variant="caption" color="text.secondary">
+                      Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y
+                      {' '}
+                      las notas.
+                    </Typography>
+                  )}
+                  <Collapse in={showReceiptMetadataFields} unmountOnExit>
+                    <Stack spacing={1.5}>
+                      <TextField
+                        label="Nombre visible"
+                        value={receiptForm.fileName}
+                        onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileName: e.target.value }))}
+                        placeholder="Ej. transferencia-produbanco-marzo.png"
+                        fullWidth
+                      />
+                      <TextField
+                        label="Notas del comprobante"
+                        value={receiptForm.notes}
+                        onChange={(e) => setReceiptForm((prev) => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Referencia, banco, monto o aclaraciones"
+                        fullWidth
+                        multiline
+                        minRows={2}
+                      />
+                    </Stack>
+                  </Collapse>
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      variant="contained"
+                      onClick={handleSubmitReceipt}
+                      disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending || !canSubmitReceipt}
+                    >
+                      {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
+                    </Button>
+                    <Button variant="text" onClick={() => resetReceiptComposer()}>
+                      {receiptForm.editingId == null ? 'Cancelar comprobante' : 'Cancelar edición de comprobante'}
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Grid>
+            )}
+            {showReceiptReviewPane && (
+              <Grid item xs={12} md={showReceiptComposer ? 6 : 12} data-testid="course-registration-receipt-list-pane">
+                <Stack spacing={1.5}>
+                  {receipts.length === 0 && !showReceiptComposer && (
+                    <Alert
+                      severity="info"
+                      action={(
+                        <Button color="inherit" size="small" onClick={() => setShowReceiptComposer(true)}>
+                          Agregar primer comprobante
+                        </Button>
+                      )}
+                    >
+                      {emptyReceiptAlertMessage}
+                    </Alert>
+                  )}
+                  {receipts.map((receipt) => (
+                    <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
+                      <Stack spacing={1}>
+                        {looksLikeImageResource(receipt.crrFileUrl, receipt.crrFileName) && (
+                          <Box
+                            component="img"
+                            src={receipt.crrFileUrl}
+                            alt={receipt.crrFileName ?? `Comprobante ${receipt.crrId}`}
+                            sx={{
+                              width: '100%',
+                              maxHeight: 220,
+                              objectFit: 'cover',
+                              borderRadius: 1.5,
+                              bgcolor: 'grey.100',
+                            }}
+                          />
+                        )}
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
+                          <Box>
+                            <Typography variant="subtitle2">
+                              {receipt.crrFileName ?? `Comprobante #${receipt.crrId}`}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Subido: {formatDate(receipt.crrCreatedAt)}
+                            </Typography>
+                          </Box>
+                          <Button
+                            size="small"
+                            variant="text"
+                            endIcon={<ArrowDropDownIcon />}
+                            aria-label={`Abrir acciones para comprobante ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
+                            aria-haspopup="menu"
+                            onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
+                          >
+                            Acciones
+                          </Button>
+                        </Stack>
+                        {receipt.crrNotes && (
+                          <Typography variant="body2" color="text.secondary">
+                            {receipt.crrNotes}
+                          </Typography>
+                        )}
+                        <Link href={receipt.crrFileUrl} target="_blank" rel="noreferrer" underline="hover">
+                          <Stack direction="row" spacing={0.75} alignItems="center">
+                            <OpenInNewIcon sx={{ fontSize: 16 }} />
+                            <span>Abrir comprobante</span>
+                          </Stack>
+                        </Link>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Grid>
+            )}
+          </Grid>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Stack spacing={3}>
@@ -1509,9 +1797,26 @@ export default function CourseRegistrationsAdminPage() {
                     {activeViewSummaryMessage}
                   </Typography>
                 )}
+                <Typography variant="body2" color="text.secondary">
+                  {visibleRegistrationsSummary}
+                </Typography>
                 <Button size="small" onClick={handleResetFilters}>
                   {resetViewLabel}
                 </Button>
+                {canCopyCsv && (
+                  <Button
+                    size="small"
+                    startIcon={<ContentCopyIcon fontSize="small" />}
+                    onClick={() => void handleCopyCsv()}
+                  >
+                    {copyCsvButtonLabel}
+                  </Button>
+                )}
+                {copyMessage && (
+                  <Typography variant="caption" color="text.secondary">
+                    {copyMessage}
+                  </Typography>
+                )}
               </Stack>
             )}
             {combinedSharedListContextSummary ? (
@@ -1532,7 +1837,7 @@ export default function CourseRegistrationsAdminPage() {
                 )}
               </>
             )}
-            {hasVisibleRegistrations && showListUtilitySummary && (
+            {hasVisibleRegistrations && showStandaloneListUtilitySummary && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
                 <Typography variant="body2" color="text.secondary">
                   {visibleRegistrationsSummary}
@@ -1583,9 +1888,11 @@ export default function CourseRegistrationsAdminPage() {
           )}
           {regsQuery.data?.length ? (
             <Stack spacing={1.5}>
-              <Typography variant="body2" color="text.secondary">
-                {dossierScopeHint}
-              </Typography>
+              {showDossierScopeHint && (
+                <Typography variant="body2" color="text.secondary">
+                  {dossierScopeHint}
+                </Typography>
+              )}
               <Stack divider={<Divider flexItem />} spacing={2}>
                 {regsQuery.data.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
@@ -1665,7 +1972,7 @@ export default function CourseRegistrationsAdminPage() {
               handleOpenDossier(statusMenuReg, 'markPaid');
             }}
           >
-            Abrir expediente de pago
+            Registrar pago
           </MenuItem>
         )}
         {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment') && (
@@ -1874,263 +2181,17 @@ export default function CourseRegistrationsAdminPage() {
                 </Card>
               </Collapse>
 
-              <Card variant="outlined">
-                <CardContent>
-                  <Stack spacing={1.5}>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
-                      <Typography variant="h6">Notas internas</Typography>
-                      {!showNotesComposer ? (
-                        <Button
-                          variant={hasSavedNotes ? 'contained' : 'text'}
-                          size="small"
-                          onClick={handleOpenNotesComposer}
-                        >
-                          {notesActionLabel}
-                        </Button>
-                      ) : null}
-                    </Stack>
-                    {showNotesComposer ? (
-                      <>
-                        <TextField
-                          label="Notas internas"
-                          multiline
-                          minRows={4}
-                          value={notesDraft}
-                          onChange={(e) => setNotesDraft(e.target.value)}
-                          placeholder="Contexto interno, acuerdos, bloqueos o próximos pasos."
-                          fullWidth
-                        />
-                        <Stack spacing={0.75} alignItems="flex-start">
-                          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              startIcon={<SaveIcon />}
-                              onClick={handleSaveNotes}
-                              disabled={updateNotesMutation.isPending || !hasNotesDraftChanges}
-                            >
-                              Guardar notas
-                            </Button>
-                            <Button variant="text" size="small" onClick={handleHideNotesComposer}>
-                              Cancelar notas
-                            </Button>
-                          </Stack>
-                          {!hasNotesDraftChanges && (
-                            <Typography variant="caption" color="text.secondary">
-                              Edita el contenido para habilitar Guardar.
-                            </Typography>
-                          )}
-                        </Stack>
-                      </>
-                    ) : hasSavedNotes ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {persistedNotes}
-                      </Typography>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.
-                      </Typography>
-                    )}
-                  </Stack>
-                </CardContent>
-              </Card>
-
-              <Card variant="outlined">
-                <CardContent>
-                  <Stack spacing={2}>
-                    <Stack
-                      direction="row"
-                      alignItems="flex-start"
-                      justifyContent="space-between"
-                      flexWrap="wrap"
-                      useFlexGap
-                      spacing={1}
-                    >
-                      <Box sx={{ minWidth: 240, flexGrow: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                          <Typography variant="h6">Comprobantes de pago</Typography>
-                          {showReceiptCountChip && (
-                            <Chip size="small" label={`${receipts.length} guardado${receipts.length === 1 ? '' : 's'}`} />
-                          )}
-                        </Stack>
-                        {receiptSectionHelpText && (
-                          <Typography variant="body2" color="text.secondary">
-                            {receiptSectionHelpText}
-                          </Typography>
-                        )}
-                      </Box>
-                      {!showReceiptComposer && hasReceipts && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={() => setShowReceiptComposer(true)}
-                        >
-                          Agregar comprobante
-                        </Button>
-                      )}
-                    </Stack>
-
-                    <Grid container spacing={2}>
-                      {showReceiptComposer && (
-                        <Grid item xs={12} md={6}>
-                          <Stack spacing={1.5}>
-                            <GoogleDriveUploadWidget
-                              label={
-                                receiptForm.fileName
-                                  ? `Archivo listo: ${receiptForm.fileName}`
-                                  : 'Subir comprobante (imagen/PDF)'
-                              }
-                              helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
-                              accept="application/pdf,image/*"
-                              multiple={false}
-                              onComplete={handleReceiptUpload}
-                              dense
-                            />
-                            {!showReceiptUrlField && (
-                              <Button
-                                size="small"
-                                variant="text"
-                                sx={{ alignSelf: 'flex-start' }}
-                                aria-expanded={showReceiptUrlField}
-                                onClick={() => setShowReceiptUrlField(true)}
-                              >
-                                Usar enlace existente en lugar de subir archivo
-                              </Button>
-                            )}
-                            <Collapse in={showReceiptUrlField} unmountOnExit>
-                              <Stack spacing={1} sx={{ pt: 0.5 }}>
-                                <TextField
-                                  label="URL del comprobante"
-                                  value={receiptForm.fileUrl}
-                                  onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
-                                  placeholder="Pega un enlace existente si el archivo ya está cargado"
-                                  fullWidth
-                                />
-                                {canHideReceiptUrlField && (
-                                  <Button
-                                    size="small"
-                                    variant="text"
-                                    sx={{ alignSelf: 'flex-start' }}
-                                    aria-expanded={showReceiptUrlField}
-                                    onClick={() => setShowReceiptUrlField(false)}
-                                  >
-                                    Ocultar enlace existente
-                                  </Button>
-                                )}
-                              </Stack>
-                            </Collapse>
-                            {!showReceiptMetadataFields && (
-                              <Typography variant="caption" color="text.secondary">
-                                Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y
-                                las notas.
-                              </Typography>
-                            )}
-                            <Collapse in={showReceiptMetadataFields} unmountOnExit>
-                              <Stack spacing={1.5}>
-                                <TextField
-                                  label="Nombre visible"
-                                  value={receiptForm.fileName}
-                                  onChange={(e) => setReceiptForm((prev) => ({ ...prev, fileName: e.target.value }))}
-                                  placeholder="Ej. transferencia-produbanco-marzo.png"
-                                  fullWidth
-                                />
-                                <TextField
-                                  label="Notas del comprobante"
-                                  value={receiptForm.notes}
-                                  onChange={(e) => setReceiptForm((prev) => ({ ...prev, notes: e.target.value }))}
-                                  placeholder="Referencia, banco, monto o aclaraciones"
-                                  fullWidth
-                                  multiline
-                                  minRows={2}
-                                />
-                              </Stack>
-                            </Collapse>
-                            <Stack direction="row" spacing={1}>
-                              <Button
-                                variant="contained"
-                                onClick={handleSubmitReceipt}
-                                disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending || !canSubmitReceipt}
-                              >
-                                {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
-                              </Button>
-                              <Button variant="text" onClick={() => resetReceiptComposer()}>
-                                {receiptForm.editingId == null ? 'Cancelar comprobante' : 'Cancelar edición de comprobante'}
-                              </Button>
-                            </Stack>
-                          </Stack>
-                        </Grid>
-                      )}
-                      <Grid item xs={12} md={showReceiptComposer ? 6 : 12}>
-                        <Stack spacing={1.5}>
-                          {receipts.length === 0 && !showReceiptComposer && (
-                            <Alert
-                              severity="info"
-                              action={(
-                                <Button color="inherit" size="small" onClick={() => setShowReceiptComposer(true)}>
-                                  Agregar primer comprobante
-                                </Button>
-                              )}
-                            >
-                              {emptyReceiptAlertMessage}
-                            </Alert>
-                          )}
-                          {receipts.map((receipt) => (
-                            <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
-                              <Stack spacing={1}>
-                                {looksLikeImageResource(receipt.crrFileUrl, receipt.crrFileName) && (
-                                  <Box
-                                    component="img"
-                                    src={receipt.crrFileUrl}
-                                    alt={receipt.crrFileName ?? `Comprobante ${receipt.crrId}`}
-                                    sx={{
-                                      width: '100%',
-                                      maxHeight: 220,
-                                      objectFit: 'cover',
-                                      borderRadius: 1.5,
-                                      bgcolor: 'grey.100',
-                                    }}
-                                  />
-                                )}
-                                <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
-                                  <Box>
-                                    <Typography variant="subtitle2">
-                                      {receipt.crrFileName ?? `Comprobante #${receipt.crrId}`}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                      Subido: {formatDate(receipt.crrCreatedAt)}
-                                    </Typography>
-                                  </Box>
-                                  <Button
-                                    size="small"
-                                    variant="text"
-                                    endIcon={<ArrowDropDownIcon />}
-                                    aria-label={`Abrir acciones para comprobante ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
-                                    aria-haspopup="menu"
-                                    onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
-                                  >
-                                    Acciones
-                                  </Button>
-                                </Stack>
-                                {receipt.crrNotes && (
-                                  <Typography variant="body2" color="text.secondary">
-                                    {receipt.crrNotes}
-                                  </Typography>
-                                )}
-                                <Link href={receipt.crrFileUrl} target="_blank" rel="noreferrer" underline="hover">
-                                  <Stack direction="row" spacing={0.75} alignItems="center">
-                                    <OpenInNewIcon sx={{ fontSize: 16 }} />
-                                    <span>Abrir comprobante</span>
-                                  </Stack>
-                                </Link>
-                              </Stack>
-                            </Paper>
-                          ))}
-                        </Stack>
-                      </Grid>
-                    </Grid>
-                  </Stack>
-                </CardContent>
-              </Card>
+              {prioritizePaymentSection ? (
+                <>
+                  {receiptsSection}
+                  {notesSection}
+                </>
+              ) : (
+                <>
+                  {notesSection}
+                  {receiptsSection}
+                </>
+              )}
 
               <Card variant="outlined">
                 <CardContent>
@@ -2155,14 +2216,16 @@ export default function CourseRegistrationsAdminPage() {
 
                     <Grid container spacing={2}>
                       {showFollowUpComposer && (
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} md={showFollowUpHistoryPane ? 6 : 12} data-testid="course-registration-follow-up-composer-pane">
                           <Stack spacing={1.5}>
                             <Box sx={{ minWidth: 240, flexGrow: 1 }}>
-                              <Typography variant="subtitle2">
-                                {followUpForm.editingId == null ? 'Registrar seguimiento' : 'Editar seguimiento'}
-                              </Typography>
+                              {!isCreatingFirstFollowUp && (
+                                <Typography variant="subtitle2">
+                                  {followUpComposerTitle}
+                                </Typography>
+                              )}
                               <Typography variant="body2" color="text.secondary">
-                                {followUpComposerHelpText}
+                                {followUpComposerSummary}
                               </Typography>
                             </Box>
                             <Stack spacing={1.5} sx={{ pt: 0.5 }}>
@@ -2281,67 +2344,69 @@ export default function CourseRegistrationsAdminPage() {
                           </Stack>
                         </Grid>
                       )}
-                      <Grid item xs={12} md={showFollowUpComposer ? 6 : 12}>
-                        <Stack spacing={1.5}>
-                          {followUps.length === 0 && !showFollowUpComposer && (
-                            <Alert
-                              severity="info"
-                              action={(
-                                <Button color="inherit" size="small" onClick={() => setShowFollowUpComposer(true)}>
-                                  Registrar primer seguimiento
-                                </Button>
-                              )}
-                            >
-                              {emptyFollowUpAlertMessage}
-                            </Alert>
-                          )}
-                          {followUps.map((entry) => (
-                            <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
-                              <Stack spacing={1}>
-                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" useFlexGap>
-                                  <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-                                    <Chip size="small" label={eventTypeLabel(entry.crfEntryType)} variant="outlined" />
-                                    <Typography variant="caption" color="text.secondary">
-                                      {formatDate(entry.crfCreatedAt)}
-                                    </Typography>
-                                    {entry.crfNextFollowUpAt && (
-                                      <Chip
-                                        size="small"
-                                        color="warning"
-                                        label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
-                                      />
-                                    )}
-                                  </Stack>
-                                  <Button
-                                    size="small"
-                                    variant="text"
-                                    endIcon={<ArrowDropDownIcon />}
-                                    aria-label={`Abrir acciones para seguimiento ${followUpActionTargetLabel(entry)}`}
-                                    aria-haspopup="menu"
-                                    onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
-                                  >
-                                    Acciones
+                      {showFollowUpHistoryPane && (
+                        <Grid item xs={12} md={showFollowUpComposer ? 6 : 12} data-testid="course-registration-follow-up-list-pane">
+                          <Stack spacing={1.5}>
+                            {followUps.length === 0 && !showFollowUpComposer && (
+                              <Alert
+                                severity="info"
+                                action={(
+                                  <Button color="inherit" size="small" onClick={() => setShowFollowUpComposer(true)}>
+                                    Registrar primer seguimiento
                                   </Button>
-                                </Stack>
-                                {entry.crfSubject && (
-                                  <Typography variant="subtitle2">{entry.crfSubject}</Typography>
                                 )}
-                                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                                  {entry.crfNotes}
-                                </Typography>
-                                {entry.crfAttachmentUrl && (
-                                  <Link href={entry.crfAttachmentUrl} target="_blank" rel="noreferrer" underline="hover">
-                                    <Stack direction="row" spacing={0.75} alignItems="center">
-                                      <OpenInNewIcon sx={{ fontSize: 16 }} />
-                                      <span>{entry.crfAttachmentName ?? 'Abrir adjunto'}</span>
+                              >
+                                {emptyFollowUpAlertMessage}
+                              </Alert>
+                            )}
+                            {followUps.map((entry) => (
+                              <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
+                                <Stack spacing={1}>
+                                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" useFlexGap>
+                                    <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                                      <Chip size="small" label={eventTypeLabel(entry.crfEntryType)} variant="outlined" />
+                                      <Typography variant="caption" color="text.secondary">
+                                        {formatDate(entry.crfCreatedAt)}
+                                      </Typography>
+                                      {entry.crfNextFollowUpAt && (
+                                        <Chip
+                                          size="small"
+                                          color="warning"
+                                          label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
+                                        />
+                                      )}
                                     </Stack>
-                                  </Link>
-                                )}
-                              </Stack>
-                            </Paper>
-                          ))}
-                        </Stack>
-                      </Grid>
+                                    <Button
+                                      size="small"
+                                      variant="text"
+                                      endIcon={<ArrowDropDownIcon />}
+                                      aria-label={`Abrir acciones para seguimiento ${followUpActionTargetLabel(entry)}`}
+                                      aria-haspopup="menu"
+                                      onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
+                                    >
+                                      Acciones
+                                    </Button>
+                                  </Stack>
+                                  {entry.crfSubject && (
+                                    <Typography variant="subtitle2">{entry.crfSubject}</Typography>
+                                  )}
+                                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    {entry.crfNotes}
+                                  </Typography>
+                                  {entry.crfAttachmentUrl && (
+                                    <Link href={entry.crfAttachmentUrl} target="_blank" rel="noreferrer" underline="hover">
+                                      <Stack direction="row" spacing={0.75} alignItems="center">
+                                        <OpenInNewIcon sx={{ fontSize: 16 }} />
+                                        <span>{entry.crfAttachmentName ?? 'Abrir adjunto'}</span>
+                                      </Stack>
+                                    </Link>
+                                  )}
+                                </Stack>
+                              </Paper>
+                            ))}
+                          </Stack>
+                        </Grid>
+                      )}
                     </Grid>
                   </Stack>
                 </CardContent>

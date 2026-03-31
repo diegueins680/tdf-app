@@ -6,6 +6,7 @@
 
 module TDF.ServerProposals
   ( proposalsServer
+  , validateTemplateKey
   ) where
 
 import           Control.Monad              (unless)
@@ -400,17 +401,31 @@ resolveLatex mLatex mTemplateKey =
   case normalizeLatex mLatex of
     Just latex -> pure latex
     Nothing -> do
-      key <- maybe (throwError err400 { errBody = "latex or templateKey required" }) pure mTemplateKey
+      rawKey <- maybe (throwError err400 { errBody = "latex or templateKey required" }) pure mTemplateKey
+      key <- either throwError pure (validateTemplateKey rawKey)
       mTemplate <- liftIO (loadTemplate key)
       case mTemplate of
         Nothing -> throwError err404 { errBody = "Template not found" }
         Just template -> pure template
 
+validateTemplateKey :: Text -> Either ServerError Text
+validateTemplateKey raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+      then Left err400 { errBody = "templateKey required" }
+      else
+        if isSafeTemplateKey trimmed
+          then Right trimmed
+          else Left err400
+            { errBody = "templateKey must contain only ASCII letters, numbers, hyphens, or underscores"
+            }
+
 loadTemplate :: Text -> IO (Maybe Text)
 loadTemplate key =
-  if isSafeTemplateKey key
+  let trimmed = T.strip key
+  in if isSafeTemplateKey trimmed
     then do
-      let path = templatesDir </> T.unpack key <> ".tex"
+      let path = templatesDir </> T.unpack trimmed <> ".tex"
       exists <- doesFileExist path
       if exists then Just <$> TIO.readFile path else pure Nothing
     else pure Nothing

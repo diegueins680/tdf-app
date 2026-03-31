@@ -2,9 +2,11 @@
 
 module TDF.Trials.PublicLeadSpec (spec) where
 
+import Control.Exception (try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Text (Text)
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist (Entity (..), getJustEntity, selectList, (==.))
@@ -37,6 +39,32 @@ spec = do
       storedEmail `shouldBe` Just "user@example.com"
       storedName `shouldBe` "Test User"
       storedPhone `shouldBe` Just "+593991234567"
+
+    it "falls back to the normalized email when the provided name is blank" $ do
+      storedName <- runInMemory $ do
+        now <- liftIO getCurrentTime
+        partyId <- createOrFetchParty (Just "   ") (Just " Student@Example.com ") Nothing now
+        Models.partyDisplayName . entityVal <$> getJustEntity partyId
+
+      storedName `shouldBe` "student@example.com"
+
+    it "rejects explicitly invalid nonblank phones instead of silently discarding them" $ do
+      result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "---")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "phone"
+        Right _ ->
+          expectationFailure "Expected invalid phone input to be rejected"
+
+    it "rejects free-form text that merely contains digits instead of extracting a misleading partial phone" $ do
+      result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "call me at 099 123 4567")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "phone"
+        Right _ ->
+          expectationFailure "Expected mixed text phone input to be rejected"
 
     it "keeps a single fallback party for anonymous interests" $ do
       (firstId, secondId, total) <- runInMemory $ do
@@ -80,6 +108,18 @@ spec = do
         Right _ ->
           expectationFailure "Expected reversed slot to be rejected"
 
+    it "rejects overlapping or duplicate preferred slots" $ do
+      let overlappingSlot = PreferredSlot (addUTCTime 1800 slotStart) (addUTCTime 5400 slotStart)
+          assertRejected slots =
+            case validatePreferredSlots slots of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "Preferred slots must be distinct non-overlapping windows"
+              Right value ->
+                expectationFailure ("Expected overlapping slots to be rejected, got " <> show value)
+      assertRejected [validSlot, overlappingSlot]
+      assertRejected [validSlot, validSlot]
+
     it "preserves valid slots without truncation or mutation" $
       validatePreferredSlots [validSlot, laterValidSlot] `shouldBe` Right [validSlot, laterValidSlot]
 
@@ -89,6 +129,16 @@ runInMemory action =
     pool <- createSqlitePool ":memory:" 1
     liftIO $ runSqlPool initializePartySchema pool
     liftIO $ runSqlPool action pool
+
+tryCreateOrFetchParty
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> IO (Either ServerError Models.PartyId)
+tryCreateOrFetchParty mName mEmail mPhone =
+  try $ runInMemory $ do
+    now <- liftIO getCurrentTime
+    createOrFetchParty mName mEmail mPhone now
 
 initializePartySchema :: (MonadIO m) => SqlPersistT m ()
 initializePartySchema = do

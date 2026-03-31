@@ -252,7 +252,14 @@ export default function CmsAdminPage() {
     () => JSON.stringify(liveContent?.ccdPayload ?? {}, null, 2),
     [liveContent],
   );
-  const pendingEqualsLive = pendingVersion ? pendingPayloadPreview === livePayloadPreview : false;
+  const pendingHasLiveComparison = Boolean(pendingVersion && liveContent);
+  const pendingEqualsLive = pendingHasLiveComparison ? pendingPayloadPreview === livePayloadPreview : false;
+  const pendingPayloadLabel = pendingHasLiveComparison ? 'Payload de la versión seleccionada' : 'Payload a cargar';
+  const pendingVersionSummary = pendingHasLiveComparison
+    ? pendingEqualsLive
+      ? 'El payload coincide con la versión en vivo.'
+      : 'Revisa los payloads antes de sobrescribir el editor.'
+    : 'Todavía no hay una versión publicada. Revisa el payload que vas a cargar antes de sobrescribir el editor.';
 
   const handleCreate = () => {
     if (!hasSlugSelection) {
@@ -400,6 +407,17 @@ export default function CmsAdminPage() {
     }),
     [filteredVersions.length, minVersionFilter, statusFilter, versions.length],
   );
+  const versionCountLabel = useMemo(() => {
+    const totalVersions = versions.length;
+    const visibleVersions = filteredVersions.length;
+
+    if (totalVersions === 0) return null;
+    if (visibleVersions === totalVersions) {
+      return totalVersions > 1 ? `${totalVersions} versiones` : null;
+    }
+
+    return `${visibleVersions} de ${totalVersions}`;
+  }, [filteredVersions.length, versions.length]);
   const editingSourceChipLabel = editingFromId
     ? editingVersion != null
       ? `Base: v${editingVersion} · ID ${editingFromId}`
@@ -446,15 +464,16 @@ export default function CmsAdminPage() {
                   ? `v${liveContent.ccdVersion} (${liveContent.ccdStatus} · ${liveContent.ccdLocale})`
                   : 'no hay versión publicada'}
               </Typography>
-              <Typography variant="body2" color={pendingEqualsLive ? 'text.secondary' : 'warning.main'}>
-                {pendingEqualsLive
-                  ? 'El payload coincide con la versión en vivo.'
-                  : 'Revisa los payloads antes de sobrescribir el editor.'}
+              <Typography
+                variant="body2"
+                color={pendingHasLiveComparison && !pendingEqualsLive ? 'warning.main' : 'text.secondary'}
+              >
+                {pendingVersionSummary}
               </Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="caption" color="text.secondary">
-                    Payload de la versión seleccionada
+                    {pendingPayloadLabel}
                   </Typography>
                   <Box
                     component="pre"
@@ -473,27 +492,29 @@ export default function CmsAdminPage() {
                     {pendingPayloadPreview || '{}'}
                   </Box>
                 </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Payload en vivo
-                  </Typography>
-                  <Box
-                    component="pre"
-                    sx={{
-                      mt: 0.5,
-                      p: 1,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      bgcolor: 'rgba(148,163,184,0.04)',
-                      fontSize: 12,
-                      maxHeight: 260,
-                      overflow: 'auto',
-                    }}
-                  >
-                    {livePayloadPreview || '{}'}
+                {pendingHasLiveComparison && (
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Payload en vivo
+                    </Typography>
+                    <Box
+                      component="pre"
+                      sx={{
+                        mt: 0.5,
+                        p: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'rgba(148,163,184,0.04)',
+                        fontSize: 12,
+                        maxHeight: 260,
+                        overflow: 'auto',
+                      }}
+                    >
+                      {livePayloadPreview || '{}'}
+                    </Box>
                   </Box>
-                </Box>
+                )}
               </Stack>
             </Stack>
           )}
@@ -794,7 +815,7 @@ export default function CmsAdminPage() {
             <Stack spacing={0.75}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="h6" fontWeight={800}>Versiones</Typography>
-                <Chip label={`${filteredVersions.length}/${versions.length}`} size="small" />
+                {versionCountLabel && <Chip label={versionCountLabel} size="small" />}
               </Stack>
               {sharedVersionContextSummary && (
                 <Typography variant="body2" color="text.secondary">
@@ -862,7 +883,9 @@ export default function CmsAdminPage() {
           )}
           <Stack spacing={1.5}>
             {filteredVersions.map((v) => {
-              const rowActions = getCmsVersionRowActions(v.ccdStatus);
+              const rowActions = getCmsVersionRowActions(v.ccdStatus, {
+                isLoadedInEditor: editingFromId === v.ccdId,
+              });
 
               return (
                 <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
@@ -902,9 +925,13 @@ export default function CmsAdminPage() {
                           Publicar
                         </Button>
                       )}
-                      <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
-                        Editar en formulario
-                      </Button>
+                      {rowActions.showLoadInEditor ? (
+                        <Button size="small" variant="text" onClick={() => handleLoadVersion(v)}>
+                          Editar en formulario
+                        </Button>
+                      ) : rowActions.loadedStateLabel ? (
+                        <Chip size="small" color="info" variant="outlined" label={rowActions.loadedStateLabel} />
+                      ) : null}
                       <Button
                         size="small"
                         variant="text"

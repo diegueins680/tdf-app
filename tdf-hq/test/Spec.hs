@@ -5,16 +5,20 @@ module Main (main) where
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Aeson (eitherDecode)
 import Data.Either (isLeft)
+import Data.Text (Text)
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (..))
+import Servant.Multipart (FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import Test.Hspec
 
+import TDF.API.LiveSessions (LiveSessionIntakePayload (..))
 import TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DTO.SocialEventsDTO
-    ( EventUpdateDTO (..),
+    ( EventMetadataUpdateDTO (..),
+      EventUpdateDTO (..),
       InvitationUpdateDTO (..),
       NullableFieldUpdate (..),
       VenueUpdateDTO (..),
@@ -27,8 +31,10 @@ import TDF.DTO.SocialEventsDTO
 import TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
+import TDF.ServerRadio (validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel)
+import TDF.ServerProposals (validateTemplateKey)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -44,6 +50,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    validateEventMetadataUpdate,
  )
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
@@ -87,6 +94,46 @@ main = hspec $ do
                 Left err -> expectationFailure err
                 Right parsed ->
                     iudMessageUpdate parsed `shouldBe` FieldNull
+
+    describe "validateEventMetadataUpdate" $ do
+        let baseUpdate = EventMetadataUpdateDTO
+                { emuTicketUrl = FieldMissing
+                , emuImageUrl = FieldMissing
+                , emuIsPublic = FieldMissing
+                , emuType = FieldMissing
+                , emuStatus = FieldMissing
+                , emuCurrency = FieldMissing
+                , emuBudgetCents = FieldMissing
+                }
+
+        it "normalizes supported event type/status updates and keeps blank values as explicit clears" $ do
+            validateEventMetadataUpdate
+                baseUpdate
+                    { emuType = FieldValue " FESTIVAL "
+                    , emuStatus = FieldValue " canceled "
+                    }
+                `shouldBe` Right
+                    baseUpdate
+                        { emuType = FieldValue "festival"
+                        , emuStatus = FieldValue "cancelled"
+                        }
+            validateEventMetadataUpdate baseUpdate { emuType = FieldValue "   " }
+                `shouldBe` Right baseUpdate { emuType = FieldNull }
+
+        it "rejects invalid explicit event metadata updates instead of silently ignoring them" $ do
+            let assertInvalid updateValue expected =
+                    case validateEventMetadataUpdate updateValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure ("Expected invalid event metadata update to be rejected, got " <> show value)
+            assertInvalid
+                baseUpdate { emuType = FieldValue "warehouse" }
+                "eventType must be one of: party, concert, festival, conference, showcase, other"
+            assertInvalid
+                baseUpdate { emuStatus = FieldValue "sold_out" }
+                "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
 
     describe "normalizePositivePartyIdText" $ do
         it "accepts positive numeric ids and canonicalizes them" $ do
@@ -170,6 +217,51 @@ main = hspec $ do
             normalizeTicketStatus (Just "checkedin") `shouldBe` "checked_in"
             normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
 
+    describe "validateRadioStreamUrl" $ do
+        it "trims surrounding whitespace and accepts http(s) stream URLs" $
+            validateRadioStreamUrl "  HTTPS://radio.example.com/live  "
+                `shouldBe` Right "HTTPS://radio.example.com/live"
+
+        it "rejects blank stream URLs with a precise 400" $
+            case validateRadioStreamUrl "   " of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl is required"
+                Right _ -> expectationFailure "Expected blank streamUrl to be rejected"
+
+        it "rejects malformed absolute URLs that would fail later in the radio pipeline" $ do
+            case validateRadioStreamUrl "https://" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl must include a host"
+                Right _ -> expectationFailure "Expected hostless streamUrl to be rejected"
+            case validateRadioStreamUrl "https://radio.example.com/live stream" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl must not contain whitespace"
+                Right _ -> expectationFailure "Expected whitespace-containing streamUrl to be rejected"
+
+        it "rejects non-http stream URLs before they can be stored" $
+            case validateRadioStreamUrl "ftp://radio.example.com/live" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl must be http(s)"
+                Right _ -> expectationFailure "Expected non-http streamUrl to be rejected"
+
+    describe "validateTemplateKey" $ do
+        it "trims valid proposal template keys before lookup" $
+            validateTemplateKey "  tdf_live_sessions  " `shouldBe` Right "tdf_live_sessions"
+
+        it "rejects blank or unsafe template keys with a 400 instead of a missing-template 404" $ do
+            let assertInvalid raw expected = case validateTemplateKey raw of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid templateKey to be rejected, got: " <> show value)
+            assertInvalid "   " "templateKey required"
+            assertInvalid "../proposal" "ASCII letters, numbers, hyphens, or underscores"
+
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do
             normalizeEventType (Just " FESTIVAL ") `shouldBe` Just "festival"
@@ -238,10 +330,39 @@ main = hspec $ do
             validateHookVerifyRequest (Just "SuBsCrIbE") (Just "challenge-123") (Just "secret") (Just "secret")
                 `shouldBe` Right "challenge-123"
 
-        it "rejects verification requests when hub.mode is missing" $ do
+        it "rejects missing verification query params with precise 400s" $ do
             case validateHookVerifyRequest Nothing (Just "challenge-123") (Just "secret") (Just "secret") of
-                Left err -> errHTTPCode err `shouldBe` 403
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "hub.mode is required"
                 Right _ -> expectationFailure "Expected missing hub.mode to be rejected"
+            case validateHookVerifyRequest (Just "subscribe") (Just "   ") (Just "secret") (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "hub.challenge is required"
+                Right _ -> expectationFailure "Expected blank hub.challenge to be rejected"
+            case validateHookVerifyRequest (Just "subscribe") (Just "challenge-123") Nothing (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "hub.verify_token is required"
+                Right _ -> expectationFailure "Expected missing hub.verify_token to be rejected"
+
+        it "distinguishes bad mode, token mismatch, and missing server config" $ do
+            case validateHookVerifyRequest (Just "publish") (Just "challenge-123") (Just "secret") (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "hub.mode must be subscribe"
+                Right _ -> expectationFailure "Expected unsupported hub.mode to be rejected"
+            case validateHookVerifyRequest (Just "subscribe") (Just "challenge-123") (Just "wrong-secret") (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL.unpack (errBody err) `shouldContain` "hub.verify_token mismatch"
+                Right _ -> expectationFailure "Expected mismatched verify token to be rejected"
+            case validateHookVerifyRequest (Just "subscribe") (Just "challenge-123") (Just "secret") Nothing of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 503
+                    BL.unpack (errBody err) `shouldContain` "WhatsApp verify token not configured"
+                Right _ -> expectationFailure "Expected missing verify-token config to be rejected"
 
     describe "parseSocialErrorsChannel" $ do
         it "normalizes valid channel values" $ do
@@ -267,6 +388,45 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "channel inválido"
                 Right _ -> expectationFailure "Expected invalid channel to be rejected"
 
+    describe "live session intake multipart parsing" $ do
+        it "normalizes blank optional text fields to Nothing while preserving versioned consent" $ do
+            let parsed = fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "  The House Band  ")
+                    , ("contactEmail", "   ")
+                    , ("acceptedTerms", " yes ")
+                    , ("termsVersion", "  TDF Live Sessions v2  ")
+                    , ("musicians", "[]")
+                    ])
+            case parsed :: Either String LiveSessionIntakePayload of
+                Left err -> expectationFailure err
+                Right payload -> do
+                    lsiBandName payload `shouldBe` "The House Band"
+                    lsiContactEmail payload `shouldBe` Nothing
+                    lsiAcceptedTerms payload `shouldBe` True
+                    lsiTermsVersion payload `shouldBe` Just "TDF Live Sessions v2"
+
+        it "rejects accepted terms without a terms version" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("acceptedTerms", "true")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "termsVersion is required when acceptedTerms is true"
+                Right payload ->
+                    expectationFailure ("Expected missing termsVersion to be rejected, got: " <> show payload)
+
+        it "rejects malformed acceptedTerms values instead of silently coercing them to false" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("acceptedTerms", "maybe")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "acceptedTerms must be a boolean"
+                Right payload ->
+                    expectationFailure ("Expected invalid acceptedTerms to be rejected, got: " <> show payload)
+
     APITypesSpec.spec
     ArtistSpec.spec
     ServerSpec.spec
@@ -275,3 +435,10 @@ main = hspec $ do
     FollowSpec.spec
     FollowHandlerSpec.spec
     PublicLeadSpec.spec
+
+mkLiveSessionMultipart :: [(Text, Text)] -> MultipartData Tmp
+mkLiveSessionMultipart fields =
+    MultipartData
+        { inputs = map (uncurry Input) fields
+        , files = []
+        }

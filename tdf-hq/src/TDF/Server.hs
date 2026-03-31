@@ -23,7 +23,7 @@ import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, isPrefixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
-import           Data.Char (isDigit, isAlphaNum, toLower)
+import           Data.Char (isDigit, isAlphaNum, isSpace, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
@@ -2338,15 +2338,15 @@ saveCourse Courses.CourseUpsert{..} = do
     throwBadRequest "slug requerido"
   when (T.null titleClean) $
     throwBadRequest "titulo requerido"
+  capacityClean <- either throwError pure (validateCourseNonNegativeField "capacity" capacity)
+  priceCentsClean <- either throwError pure (validateCourseNonNegativeField "priceCents" priceCents)
+  startHourClean <- either throwError pure (validateOptionalCourseNonNegativeField "sessionStartHour" sessionStartHour)
+  durationHoursClean <- either throwError pure (validateOptionalCourseNonNegativeField "sessionDurationHours" sessionDurationHours)
   let
       subtitleClean = cleanOptional subtitle
       formatClean = cleanOptional format
       durationClean = cleanOptional duration
       currencyClean = let cur = T.strip currency in if T.null cur then "USD" else cur
-      capacityClean = max 0 capacity
-      priceCentsClean = max 0 priceCents
-      startHourClean = fmap (max 0) sessionStartHour
-      durationHoursClean = fmap (max 0) sessionDurationHours
       locationLabelClean = cleanOptional locationLabel
       locationMapUrlClean = cleanOptional locationMapUrl
       landingUrlClean = cleanOptional landingUrl
@@ -3122,12 +3122,11 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
       nameClean = cleanOptional fullName
       sourceClean = normalizeSource source
       howHeardClean = cleanOptional howHeard
-      phoneClean = phoneE164 >>= normalizePhone
       pendingStatus = "pending_payment"
       (utmSourceVal, utmMediumVal, utmCampaignVal, utmContentVal) = normalizeUtm utm
-  normalizedEmail <- case cleanOptional email of
-    Nothing -> pure Nothing
-    Just e  -> Just <$> requireEmail e
+  normalizedEmail <- either throwError pure (validateCourseRegistrationEmail email)
+  phoneClean <- either throwError pure (validateCourseRegistrationPhoneE164 phoneE164)
+  either throwError pure (validateCourseRegistrationContactChannels normalizedEmail phoneClean)
   when (sourceClean == "landing" && isNothing nameClean) $
     throwBadRequest "nombre requerido"
   when (sourceClean == "landing" && isNothing normalizedEmail) $
@@ -3437,6 +3436,46 @@ normalizeSource raw =
   let trimmed = T.toLower (T.strip raw)
   in if T.null trimmed then "landing" else trimmed
 
+validateCourseRegistrationPhoneE164 :: Maybe Text -> Either ServerError (Maybe Text)
+validateCourseRegistrationPhoneE164 Nothing = Right Nothing
+validateCourseRegistrationPhoneE164 (Just rawPhone) =
+  case cleanOptional (Just rawPhone) of
+    Nothing -> Right Nothing
+    Just _ ->
+      case normalizePhone rawPhone of
+        Just phoneClean -> Right (Just phoneClean)
+        Nothing -> Left err400 { errBody = "phoneE164 inválido" }
+
+validateCourseRegistrationEmail :: Maybe Text -> Either ServerError (Maybe Text)
+validateCourseRegistrationEmail Nothing = Right Nothing
+validateCourseRegistrationEmail (Just rawEmail) =
+  case cleanOptional (Just rawEmail) of
+    Nothing -> Right Nothing
+    Just emailVal ->
+      let normalized = T.toLower emailVal
+      in if isValidCourseRegistrationEmail normalized
+        then Right (Just normalized)
+        else Left err400 { errBody = "email inválido" }
+
+isValidCourseRegistrationEmail :: Text -> Bool
+isValidCourseRegistrationEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      not (T.null localPart)
+        && not (T.null domain)
+        && not (T.any isSpace candidate)
+        && not (T.isPrefixOf "." domain)
+        && not (T.isSuffixOf "." domain)
+        && T.isInfixOf "." domain
+    _ -> False
+
+validateCourseRegistrationContactChannels :: Maybe Text -> Maybe Text -> Either ServerError ()
+validateCourseRegistrationContactChannels mEmail mPhone
+  | isNothing mEmail && isNothing mPhone =
+      Left err400 { errBody = "email o phoneE164 requerido" }
+  | otherwise =
+      Right ()
+
 normalizeUtm :: Maybe UTMTags -> (Maybe Text, Maybe Text, Maybe Text, Maybe Text)
 normalizeUtm Nothing = (Nothing, Nothing, Nothing, Nothing)
 normalizeUtm (Just UTMTags{..}) =
@@ -3715,6 +3754,28 @@ lookupByEmail emailAddress = do
         \ LIMIT 1"
   creds <- rawSql query [PersistText emailAddress]
   pure (listToMaybe creds)
+
+resolvePasswordResetDelivery :: Text -> SqlPersistT IO (Maybe (Entity UserCredential, Text, Text))
+resolvePasswordResetDelivery rawEmail = do
+  let emailQuery = T.strip rawEmail
+      query =
+        "SELECT ?? FROM user_credential \
+        \ JOIN party ON user_credential.party_id = party.id \
+        \ WHERE user_credential.active = ? \
+        \   AND lower(trim(party.primary_email)) = lower(?) \
+        \ ORDER BY user_credential.id ASC \
+        \ LIMIT 1"
+  if T.null emailQuery
+    then pure Nothing
+    else do
+      creds <- rawSql query [PersistBool True, PersistText emailQuery]
+      case listToMaybe creds of
+        Nothing -> pure Nothing
+        Just cred@(Entity _ credential) -> do
+          mParty <- get (userCredentialPartyId credential)
+          let mRecipientEmail = mParty >>= cleanOptional . M.partyPrimaryEmail
+              displayName = maybe emailQuery M.partyDisplayName mParty
+          pure ((\recipientEmail -> (cred, recipientEmail, displayName)) <$> mRecipientEmail)
 
 data SignupDbError
   = SignupEmailExists
@@ -4040,33 +4101,28 @@ passwordReset PasswordResetRequest{..} = do
   Env pool cfg <- ask
   let emailSvc = EmailSvc.mkEmailService cfg
   mPayload <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
-  for_ mPayload $ \(token, displayName) -> do
+  for_ mPayload $ \(token, displayName, recipientEmail) -> do
     resetResult <- liftIO $
       ((try $
-        EmailSvc.sendPasswordReset emailSvc displayName emailClean token) :: IO (Either SomeException ()))
+        EmailSvc.sendPasswordReset emailSvc displayName recipientEmail token) :: IO (Either SomeException ()))
     case resetResult of
       Left err -> do
-        let msg = "[PasswordReset] Failed to email reset link to " <> emailClean <> ": " <> T.pack (displayException err)
+        let msg = "[PasswordReset] Failed to email reset link to " <> recipientEmail <> ": " <> T.pack (displayException err)
         liftIO $ do
           hPutStrLn stderr (T.unpack msg)
           LogBuf.addLog LogBuf.LogWarning msg
       Right () -> pure ()
   pure NoContent
   where
-    runPasswordReset :: Text -> SqlPersistT IO (Maybe (Text, Text))
+    runPasswordReset :: Text -> SqlPersistT IO (Maybe (Text, Text, Text))
     runPasswordReset emailVal = do
-      mCred <- getBy (UniqueCredentialUsername emailVal)
-      case mCred of
+      mDelivery <- resolvePasswordResetDelivery emailVal
+      case mDelivery of
         Nothing -> pure Nothing
-        Just (Entity _ cred)
-          | not (userCredentialActive cred) -> pure Nothing
-          | otherwise -> do
-              deactivatePasswordResetTokens (userCredentialPartyId cred)
-              token <- createPasswordResetToken (userCredentialPartyId cred) emailVal
-              mParty <- get (userCredentialPartyId cred)
-              let displayName =
-                    maybe emailVal M.partyDisplayName mParty
-              pure (Just (token, displayName))
+        Just (Entity _ cred, recipientEmail, displayName) -> do
+          deactivatePasswordResetTokens (userCredentialPartyId cred)
+          token <- createPasswordResetToken (userCredentialPartyId cred) recipientEmail
+          pure (Just (token, displayName, recipientEmail))
 
 passwordResetConfirm :: PasswordResetConfirmRequest -> AppM LoginResponse
 passwordResetConfirm PasswordResetConfirmRequest{..} = do
@@ -5817,6 +5873,19 @@ normalizeOptionalInput Nothing = Nothing
 normalizeOptionalInput (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+validateCourseNonNegativeField :: Text -> Int -> Either ServerError Int
+validateCourseNonNegativeField fieldName value
+  | value < 0 =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be greater than or equal to 0"))
+        }
+  | otherwise = Right value
+
+validateOptionalCourseNonNegativeField :: Text -> Maybe Int -> Either ServerError (Maybe Int)
+validateOptionalCourseNonNegativeField fieldName =
+  traverse (validateCourseNonNegativeField fieldName)
 
 parseBookingStatus :: Text -> Either Text BookingStatus
 parseBookingStatus raw =

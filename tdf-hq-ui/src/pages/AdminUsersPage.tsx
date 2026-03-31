@@ -90,7 +90,14 @@ export default function AdminUsersPage() {
   const totalUsersCount = usersQuery.data?.length ?? 0;
   const hasUsers = totalUsersCount > 0;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
+  const activeSearchSummary = searchQuery.trim();
+  const hasMultipleUsers = totalUsersCount > 1;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
+  const showSearchField = hasMultipleUsers || hasActiveSearch;
+  const showVisibleCountChip = visibleUsers.length > 0 && (hasMultipleUsers || isFiltered);
+  const showMissingContactChip = visibleUsersMissingContactCount > 1;
+  const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
+  const showClearSearchAction = hasUsers && hasActiveSearch && visibleUsers.length === 0;
 
   return (
     <>
@@ -104,7 +111,7 @@ export default function AdminUsersPage() {
           >
             <Stack spacing={1} sx={{ minWidth: 0, flex: '1 1 360px' }}>
               <Typography variant="h4" fontWeight={700}>Usuarios (admin API)</Typography>
-              {hasUsers && (
+              {showSearchField && (
                 <TextField
                   label="Buscar usuarios"
                   value={searchQuery}
@@ -114,17 +121,24 @@ export default function AdminUsersPage() {
                   placeholder="Usuario, nombre, ID, contacto o acceso"
                 />
               )}
+              {showSingleUserGuidance && (
+                <Typography variant="body2" color="text.secondary">
+                  Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.
+                </Typography>
+              )}
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               {hasUsers && (
                 <>
-                  <Chip
-                    size="small"
-                    color="primary"
-                    variant={isFiltered ? 'outlined' : 'filled'}
-                    label={isFiltered ? `Mostrando ${visibleUsers.length} de ${totalUsersCount}` : `${visibleUsers.length} usuario${visibleUsers.length === 1 ? '' : 's'}`}
-                  />
-                  {visibleUsersMissingContactCount > 0 && (
+                  {showVisibleCountChip && (
+                    <Chip
+                      size="small"
+                      color="primary"
+                      variant={isFiltered ? 'outlined' : 'filled'}
+                      label={isFiltered ? `Mostrando ${visibleUsers.length} de ${totalUsersCount}` : `${visibleUsers.length} usuario${visibleUsers.length === 1 ? '' : 's'}`}
+                    />
+                  )}
+                  {showMissingContactChip && (
                     <Chip
                       size="small"
                       color="warning"
@@ -175,9 +189,18 @@ export default function AdminUsersPage() {
               </Typography>
             )}
             {usersQuery.data?.length && visibleUsers.length === 0 ? (
-              <Typography color="text.secondary">
-                No hay coincidencias para este filtro.
-              </Typography>
+              <Stack spacing={1} alignItems="flex-start">
+                <Typography color="text.secondary">
+                  {activeSearchSummary
+                    ? `No hay coincidencias para "${activeSearchSummary}".`
+                    : 'No hay coincidencias para este filtro.'}
+                </Typography>
+                {showClearSearchAction && (
+                  <Button size="small" onClick={() => setSearchQuery('')}>
+                    Limpiar búsqueda
+                  </Button>
+                )}
+              </Stack>
             ) : null}
             {visibleUsers.length ? (
               <Stack spacing={1.5}>

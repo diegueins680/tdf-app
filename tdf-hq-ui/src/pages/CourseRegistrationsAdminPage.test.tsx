@@ -161,6 +161,10 @@ const buildEmailEvent = (
 
 const emptyReceiptAlertMessage =
   'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+const receiptComposerHelpText =
+  'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
+const editingReceiptComposerHelpText =
+  'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
 const hideSystemEmailsLabel = 'Ocultar correos del sistema';
 const systemEmailHistoryHelperText =
@@ -169,9 +173,9 @@ const emptySystemEmailHistoryMessage =
   'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
-const followUpComposerHelpText =
-  'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.';
-const openPaymentDossierLabel = 'Abrir expediente de pago';
+const firstFollowUpComposerHelpText =
+  'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
+const openPaymentWorkflowLabel = 'Registrar pago';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -340,13 +344,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
-      expect(container.textContent).toContain(
+      expect(container.textContent).not.toContain(
         'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
       );
-      expect(countOccurrences(
-        container,
-        'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
-      )).toBe(1);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe(
         'Expediente',
@@ -397,7 +397,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
-      expect(document.body.textContent).not.toContain(followUpComposerHelpText);
+      expect(document.body.textContent).not.toContain(firstFollowUpComposerHelpText);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
@@ -428,9 +428,9 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Cancelar',
         ),
       ).toBe(false);
-      expect(document.body.textContent).toContain('Registrar seguimiento');
+      expect(hasExactText(document.body, 'Registrar seguimiento')).toBe(false);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
-      expect(document.body.textContent).toContain(followUpComposerHelpText);
+      expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
       expect(document.body.textContent).toContain(
         'Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y las notas.',
       );
@@ -1030,7 +1030,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the empty notes CTA lightweight in the header while explaining the editor stays collapsed', async () => {
+  it('moves the first-note CTA into the empty state so the header stays focused on saved notes', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1047,15 +1047,17 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(
-        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+        'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
-      expect(getButtonByText(document.body, 'Abrir notas')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar primera nota')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
-      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(1);
+      expect(countButtonsByText(document.body, 'Abrir notas')).toBe(0);
+      expect(countButtonsByText(document.body, 'Editar notas')).toBe(0);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Abrir notas'));
+      clickButton(getButtonByText(document.body, 'Agregar primera nota'));
       await flushPromises();
       await flushPromises();
     });
@@ -1065,9 +1067,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
       expect(countButtonsByText(document.body, 'Ocultar editor')).toBe(0);
-      expect(countButtonsByText(document.body, 'Abrir notas')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(0);
       expect(document.body.textContent).not.toContain(
-        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+        'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
     });
 
@@ -1079,9 +1081,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(
-        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+        'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
-      expect(getButtonByText(document.body, 'Abrir notas')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar primera nota')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Cancelar notas')).toBe(0);
       expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
     });
@@ -1318,6 +1320,56 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the filtered result count visible even when only one registration matches', async () => {
+    const pendingRegistration = buildRegistration();
+    const paidRegistration = buildRegistration({
+      crId: 102,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+      crStatus: 'paid',
+    });
+    const cancelledRegistration = buildRegistration({
+      crId: 103,
+      crFullName: 'Katherine Johnson',
+      crEmail: 'katherine@example.com',
+      crStatus: 'cancelled',
+    });
+
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(
+      params?.status === 'paid'
+        ? [paidRegistration]
+        : params?.status === 'cancelled'
+          ? [cancelledRegistration]
+          : params?.status === 'pending_payment'
+            ? [pendingRegistration]
+            : [pendingRegistration, paidRegistration, cancelledRegistration],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=paid');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: 'paid',
+        limit: 200,
+      });
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pagado');
+      expect(container.textContent).toContain('Mostrando 1 inscripción.');
+      expect(countOccurrences(container, 'Mostrando 1 inscripción.')).toBe(1);
+      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+      expect(
+        Array.from(container.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('labels the status chip group as a filter so it does not compete with row status actions', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({
@@ -1463,9 +1515,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(openPaymentDossierLabel);
+      expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Marcar pendiente');
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).map((element) => (element.textContent ?? '').trim()),
+      ).not.toContain('Abrir expediente de pago');
       expect(document.body.textContent).not.toContain('Estado actual:');
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
@@ -1479,7 +1534,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).toContain('Cancelar inscripción');
-      expect(document.body.textContent).not.toContain(openPaymentDossierLabel);
+      expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).not.toContain('Estado actual:');
     });
 
@@ -1490,7 +1545,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(openPaymentDossierLabel);
+      expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Estado actual:');
@@ -1780,6 +1835,152 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the first receipt flow focused until there is something saved to review', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [],
+      }),
+    );
+
+    let container = document.createElement('div');
+    document.body.appendChild(container);
+    let page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-list-pane"]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-composer-pane"]')).not.toBeNull();
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-list-pane"]')).toBeNull();
+    });
+
+    await page.cleanup();
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [buildReceipt()],
+      }),
+    );
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-list-pane"]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-composer-pane"]')).not.toBeNull();
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-list-pane"]')).not.toBeNull();
+      expect(document.body.textContent).toContain('receipt.pdf');
+    });
+
+    await page.cleanup();
+  });
+
+  it('keeps saved receipts easy to scan by showing section guidance only when the receipt form is active', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [buildReceipt()],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(receiptComposerHelpText);
+      expect(document.body.textContent).not.toContain(editingReceiptComposerHelpText);
+      expect(document.body.textContent).not.toContain(
+        'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.',
+      );
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-composer-pane"]')).not.toBeNull();
+      expect(document.body.textContent).toContain(receiptComposerHelpText);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Editar comprobante')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, 'Editar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(editingReceiptComposerHelpText);
+      expect(document.body.textContent).not.toContain(receiptComposerHelpText);
+    });
+
+    await cleanup();
+  });
+
   it('lets admins hide an empty receipt URL fallback after opening it by mistake', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
@@ -1868,12 +2069,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, openPaymentDossierLabel)).toBeTruthy();
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
 
     await act(async () => {
-      clickElement(getMenuItemByText(document.body, openPaymentDossierLabel));
+      clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -1884,6 +2085,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain(
         'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.',
       );
+      expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.textContent).toContain(markPaidReceiptSectionHelpText);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
@@ -1899,6 +2102,10 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Agregar primer comprobante',
         ),
       ).toBe(false);
+      const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
+      expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeGreaterThan(-1);
+      expect(dialogHeadings.indexOf('Notas internas')).toBeGreaterThan(-1);
+      expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeLessThan(dialogHeadings.indexOf('Notas internas'));
     });
 
     await cleanup();
@@ -1929,12 +2136,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, openPaymentDossierLabel)).toBeTruthy();
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
     });
 
     await act(async () => {
-      clickElement(getMenuItemByText(document.body, openPaymentDossierLabel));
+      clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -1985,12 +2192,12 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(
-        'Aún no hay notas internas. Ábrelas solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+        'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
       expect(hasLabel(document.body, 'Notas internas')).toBe(false);
-      expect(getButtonByText(document.body, 'Abrir notas')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Abrir notas')).toBe(1);
-      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(0);
+      expect(getButtonByText(document.body, 'Agregar primera nota')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(1);
+      expect(countButtonsByText(document.body, 'Abrir notas')).toBe(0);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Agregar notas',
@@ -2004,7 +2211,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Abrir notas'));
+      clickButton(getButtonByText(document.body, 'Agregar primera nota'));
       await flushPromises();
       await flushPromises();
     });
@@ -2050,7 +2257,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
-      expect(document.body.textContent).not.toContain(followUpComposerHelpText);
+      expect(document.body.textContent).not.toContain(firstFollowUpComposerHelpText);
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(false);
       expect(
@@ -2067,9 +2274,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Registrar seguimiento');
+      expect(hasExactText(document.body, 'Registrar seguimiento')).toBe(false);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
-      expect(document.body.textContent).toContain(followUpComposerHelpText);
+      expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
+      expect(document.body.textContent).not.toContain(
+        'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.',
+      );
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
@@ -2100,6 +2310,86 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await cleanup();
+  });
+
+  it('keeps the first follow-up flow focused until there is something saved to review', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [],
+      }),
+    );
+
+    let container = document.createElement('div');
+    document.body.appendChild(container);
+    let page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-composer-pane"]')).not.toBeNull();
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).toBeNull();
+    });
+
+    await page.cleanup();
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [buildFollowUp()],
+      }),
+    );
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-composer-pane"]')).not.toBeNull();
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).not.toBeNull();
+      expect(document.body.textContent).toContain('Confirmó transferencia');
+    });
+
+    await page.cleanup();
   });
 
   it('lets admins close empty optional follow-up details after opening them', async () => {
@@ -2731,6 +3021,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {

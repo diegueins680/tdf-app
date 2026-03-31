@@ -200,10 +200,12 @@ test('installKoyebCli installs the extracted executable instead of the downloade
     const archiveBytes = await fs.readFile(archivePath);
     const releaseApiUrl = 'https://example.com/releases/latest';
     const tarballUrl = 'https://example.com/koyeb-cli_5.10.1_linux_amd64.tar.gz';
+    const githubToken = 'test-github-token';
 
-    global.fetch = async (input) => {
+    global.fetch = async (input, init = {}) => {
       const href = String(input);
       if (href === releaseApiUrl) {
+        assert.equal(init.headers.Authorization, `Bearer ${githubToken}`);
         return new Response(
           JSON.stringify({
             assets: [
@@ -230,6 +232,7 @@ test('installKoyebCli installs the extracted executable instead of the downloade
     };
 
     const result = await installKoyebCli({
+      githubToken,
       installDir,
       log: () => {},
       releaseApiUrl,

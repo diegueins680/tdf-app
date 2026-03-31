@@ -291,6 +291,33 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps the first admin-user view focused on the lone row instead of showing list search chrome', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'solo-admin',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+        expect(container.textContent).not.toContain('Buscar usuarios');
+        expect(container.textContent).not.toContain('1 usuario');
+        expect(getButtonsByText(container, 'Perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes repeated roles and modules once per row so access scope is easier to scan', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
@@ -373,8 +400,63 @@ describe('AdminUsersPage', () => {
       await changeInputValue(searchInput, 'sin coincidencias');
 
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('No hay coincidencias para este filtro.');
+        expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('offers one clear-search action when a query hides every admin user', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
+        expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'sin coincidencias');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Mostrando 0 de 2');
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+
+      await clickButton(getButtonsByText(container, 'Limpiar búsqueda')[0]!);
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+        expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
+        expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
       });
     } finally {
       await cleanup();

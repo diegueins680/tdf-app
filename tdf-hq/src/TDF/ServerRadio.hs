@@ -5,6 +5,7 @@
 
 module TDF.ServerRadio
   ( radioServer
+  , validateRadioStreamUrl
   ) where
 
 import           Control.Applicative    ((<|>))
@@ -13,6 +14,7 @@ import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
+import           Data.Char              (isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
@@ -57,6 +59,28 @@ lookupHeader key hdrs =
   let target = CI.mk key
   in fmap snd (find (\(k, _) -> k == target) hdrs)
 
+validateRadioStreamUrl :: Text -> Either ServerError Text
+validateRadioStreamUrl rawUrl
+  | T.null streamUrl =
+      Left err400 { errBody = "streamUrl is required" }
+  | T.any isSpace streamUrl =
+      Left err400 { errBody = "streamUrl must not contain whitespace" }
+  | Nothing <- mRemainder =
+      Left err400 { errBody = "streamUrl must be http(s)" }
+  | T.null authority =
+      Left err400 { errBody = "streamUrl must include a host" }
+  | otherwise =
+      Right streamUrl
+  where
+    streamUrl = T.strip rawUrl
+    lowerUrl = T.toLower streamUrl
+    mRemainder
+      | "http://" `T.isPrefixOf` lowerUrl = Just (T.drop 7 streamUrl)
+      | "https://" `T.isPrefixOf` lowerUrl = Just (T.drop 8 streamUrl)
+      | otherwise = Nothing
+    authority =
+      maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
+
 radioServer
   :: forall m.
      ( MonadReader Env m
@@ -90,12 +114,11 @@ radioServer user =
 
     upsertActive :: RadioStreamUpsert -> m RadioStreamDTO
     upsertActive payload = do
-      let streamUrl = T.strip (rsuStreamUrl payload)
-      when (T.null streamUrl) $
-        throwError err400 { errBody = "streamUrl is required" }
+      streamUrl <- either throwError pure (validateRadioStreamUrl (rsuStreamUrl payload))
       now <- liftIO getCurrentTime
       Env{..} <- ask
-      (entity, _) <- liftIO $ flip runSqlPool envPool (saveStream now payload)
+      let normalizedPayload = payload { rsuStreamUrl = streamUrl }
+      (entity, _) <- liftIO $ flip runSqlPool envPool (saveStream now normalizedPayload)
       pure (toDTO entity)
 
     importStreams :: RadioImportRequest -> m RadioImportResult
@@ -120,8 +143,8 @@ radioServer user =
             take cap
               . Map.elems
               . foldl' (\m item -> Map.insertWith (const id) (T.toLower (rsuStreamUrl item)) item m) Map.empty
-              . filter (isStreamUrl . rsuStreamUrl)
-              $ map normalizeUpsert fetched
+              . catMaybes
+              $ map normalizeImportUpsert fetched
       now <- liftIO getCurrentTime
       Env{..} <- ask
       (inserted, updated) <- liftIO $ flip runSqlPool envPool $ do
@@ -179,12 +202,7 @@ radioServer user =
 
     nowPlaying :: RadioNowPlayingRequest -> m RadioNowPlayingResult
     nowPlaying RadioNowPlayingRequest{..} = do
-      let streamUrl = T.strip rnpStreamUrl
-          lowerUrl = T.toLower streamUrl
-      when (T.null streamUrl) $
-        throwError err400 { errBody = "streamUrl is required" }
-      when (not ("http://" `T.isPrefixOf` lowerUrl || "https://" `T.isPrefixOf` lowerUrl)) $
-        throwError err400 { errBody = "streamUrl must be http(s)" }
+      streamUrl <- either throwError pure (validateRadioStreamUrl rnpStreamUrl)
       manager <- liftIO $ newManager tlsManagerSettings
       result <- liftIO $ fetchNowPlaying manager streamUrl
       case result of
@@ -257,6 +275,15 @@ radioServer user =
         , rsuCountry   = normalizeMaybe (rsuCountry u)
         , rsuGenre     = normalizeMaybe (rsuGenre u)
         }
+
+    normalizeImportUpsert :: RadioStreamUpsert -> Maybe RadioStreamUpsert
+    normalizeImportUpsert rawUpsert =
+      let normalized = normalizeUpsert rawUpsert
+      in case validateRadioStreamUrl (rsuStreamUrl normalized) of
+          Right validUrl | isStreamUrl validUrl ->
+            Just normalized { rsuStreamUrl = validUrl }
+          _ ->
+            Nothing
 
     defaultSources :: [Text]
     defaultSources =
@@ -495,11 +522,9 @@ radioServer user =
 
     upsertPresence :: RadioPresenceUpsert -> m RadioPresenceDTO
     upsertPresence RadioPresenceUpsert{..} = do
-      let streamUrl = T.strip rpuStreamUrl
-          name      = normalizeMaybe rpuStationName
+      streamUrl <- either throwError pure (validateRadioStreamUrl rpuStreamUrl)
+      let name      = normalizeMaybe rpuStationName
           stationId = normalizeMaybe rpuStationId
-      when (T.null streamUrl) $
-        throwError err400 { errBody = "streamUrl is required" }
       now <- liftIO getCurrentTime
       Env{..} <- ask
       entity <- liftIO $ flip runSqlPool envPool $ do

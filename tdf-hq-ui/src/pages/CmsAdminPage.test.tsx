@@ -311,6 +311,40 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the load-version dialog single-column when nothing is published yet', async () => {
+    listMock.mockResolvedValue([
+      buildContent({ ccdId: 201, ccdVersion: 1, ccdStatus: 'draft', ccdPublishedAt: null }),
+    ]);
+    getPublicMock.mockImplementation(async () => null as unknown as CmsContentDTO);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Editar en formulario').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Cargar versión en el formulario');
+      expect(document.body.textContent).toContain('Live actual: no hay versión publicada');
+      expect(document.body.textContent).toContain(
+        'Todavía no hay una versión publicada. Revisa el payload que vas a cargar antes de sobrescribir el editor.',
+      );
+      expect(document.body.textContent).toContain('Payload a cargar');
+      expect(document.body.textContent).not.toContain('Payload en vivo');
+      expect(document.body.textContent).not.toContain('El payload coincide con la versión en vivo.');
+    });
+
+    await cleanup();
+  });
+
   it('shows shared slug and locale context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -375,6 +409,54 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces the duplicate load action with passive row state once a version is already in the editor', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Editar en formulario').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Cargar versión en el formulario');
+      expect(getButtonByText(document.body, 'Cargar en formulario')).toBeTruthy();
+    });
+
+    await act(async () => {
+      getButtonByText(document.body, 'Cargar en formulario').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+      expect(countExactText(container, 'En formulario')).toBe(1);
+      expect(container.textContent).toContain('Base: v4 · ID 101');
+    });
+
+    await cleanup();
+  });
+
+  it('replaces fraction-style version counts with plain-language summary text', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('2 versiones');
+      expect(container.textContent).not.toContain('2/2');
+    });
+
+    await cleanup();
+  });
+
   it('hides version filters until the CMS history has enough entries to compare', async () => {
     listMock.mockResolvedValue([buildContent()]);
 
@@ -386,6 +468,8 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).toContain(
         'Los filtros aparecerán cuando exista más historial para comparar versiones.',
       );
+      expect(container.textContent).not.toContain('1/1');
+      expect(container.textContent).not.toContain('1 versión');
       expect(countLabelsByText(container, 'Estado')).toBe(1);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
       expect(countActionsByText(container, 'Limpiar filtros')).toBe(0);

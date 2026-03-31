@@ -90,21 +90,24 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
     musicians <- decodeMusicians musiciansTxt
     setlistTxt <- optionalText "setlist" multipart
     setlist <- maybe (Right []) decodeSetlist setlistTxt
-    pure LiveSessionIntakePayload
-      { lsiBandName     = T.strip bandName
-      , lsiBandDescription = fmap T.strip bandDescription
-      , lsiPrimaryGenre = fmap T.strip primaryGenre
-      , lsiInputList    = fmap T.strip inputList
-      , lsiContactEmail = fmap T.strip contactEmail
-      , lsiContactPhone = fmap T.strip contactPhone
-      , lsiSessionDate  = sessionDate
-      , lsiAvailability = fmap T.strip availability
-      , lsiAcceptedTerms = acceptedTerms
-      , lsiTermsVersion = fmap T.strip termsVersion
-      , lsiMusicians    = musicians
-      , lsiSetlist      = setlist
-      , lsiRider        = riderFile
-      }
+    if acceptedTerms && maybe True T.null termsVersion
+      then Left "Missing field: termsVersion is required when acceptedTerms is true"
+      else
+        pure LiveSessionIntakePayload
+          { lsiBandName     = T.strip bandName
+          , lsiBandDescription = bandDescription
+          , lsiPrimaryGenre = primaryGenre
+          , lsiInputList    = inputList
+          , lsiContactEmail = contactEmail
+          , lsiContactPhone = contactPhone
+          , lsiSessionDate  = sessionDate
+          , lsiAvailability = availability
+          , lsiAcceptedTerms = acceptedTerms
+          , lsiTermsVersion = termsVersion
+          , lsiMusicians    = musicians
+          , lsiSetlist      = setlist
+          , lsiRider        = riderFile
+          }
     where
       lookupInputByName name mp =
         find (\(Input nm _) -> nm == name) (inputs mp)
@@ -113,7 +116,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       optionalText name mp =
         case lookupInputByName name mp of
           Nothing  -> Right Nothing
-          Just inp -> Right (Just (inputValueText inp))
+          Just inp -> Right (normalizeOptionalText (inputValueText inp))
       lookupFile name mp = lookup name [(fdInputName f, f) | f <- files mp]
       optionalDay name mp =
         case lookupInputByName name mp of
@@ -126,9 +129,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       optionalBool name mp =
         case lookupInputByName name mp of
           Nothing -> Right False
-          Just inp ->
-            let txt = T.toLower (T.strip (inputValueText inp))
-            in Right (txt `elem` ["true", "1", "yes", "on", "si", "sí"])
+          Just inp -> parseBoolField name (inputValueText inp)
 
       decodeMusicians txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of
@@ -138,6 +139,26 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid setlist payload: " <> err)
           Right xs -> Right xs
+
+      normalizeOptionalText :: Text -> Maybe Text
+      normalizeOptionalText raw =
+        let trimmed = T.strip raw
+        in if T.null trimmed then Nothing else Just trimmed
+
+      parseBoolField :: Text -> Text -> Either String Bool
+      parseBoolField fieldName raw =
+        case T.toLower (T.strip raw) of
+          "true" -> Right True
+          "1" -> Right True
+          "yes" -> Right True
+          "on" -> Right True
+          "si" -> Right True
+          "sí" -> Right True
+          "false" -> Right False
+          "0" -> Right False
+          "no" -> Right False
+          "off" -> Right False
+          _ -> Left ("Invalid field: " <> T.unpack fieldName <> " must be a boolean")
 
       inputValueText :: Input -> Text
       inputValueText (Input _ value) = value

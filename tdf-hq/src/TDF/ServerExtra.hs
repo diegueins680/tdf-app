@@ -20,7 +20,7 @@ import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
-import           Data.Char                  (isAlphaNum, isAscii, isSpace, ord)
+import           Data.Char                  (isAlphaNum, isAscii, isAsciiUpper, isSpace, ord)
 import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -84,6 +84,16 @@ parseUTCTimeText t =
   case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
     Just d  -> pure (UTCTime d 0)
     Nothing -> throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
+
+parseCheckoutTargetKind :: Maybe Text -> Either ServerError CheckoutTarget
+parseCheckoutTargetKind Nothing = Right TargetParty
+parseCheckoutTargetKind (Just raw) =
+  case T.toLower (T.strip raw) of
+    "session" -> Right TargetSession
+    "party" -> Right TargetParty
+    "room" -> Right TargetRoom
+    _ -> Left err400 { errBody = "targetKind must be one of: party, room, session" }
+
 inventoryServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -120,10 +130,12 @@ inventoryServer user =
 
     createAssetH req = do
       ensureInventoryAccess
+      nameClean <- either throwError pure (normalizeAssetName (cName req))
+      categoryClean <- either throwError pure (normalizeAssetCategory (cCategory req))
       entity <- withPool $ do
         newAssetId <- insert Asset
-          { assetName                  = cName req
-          , assetCategory              = cCategory req
+          { assetName                  = nameClean
+          , assetCategory              = categoryClean
           , assetBrand                 = Nothing
           , assetModel                 = Nothing
           , assetSerialNumber          = Nothing
@@ -176,10 +188,12 @@ inventoryServer user =
       ensureInventoryAccess
       assetKey    <- parseKey @Asset rawId
       locationKey <- traverse (parseKey @Room) (uLocationId req)
+      nameUpdate <- either throwError pure (normalizeAssetNameUpdate (uName req))
+      categoryUpdate <- either throwError pure (normalizeAssetCategoryUpdate (uCategory req))
       statusValue <- either throwError pure (validateAssetStatusUpdate (uStatus req))
       let updates = catMaybes
-            [ (AssetName =.) <$> uName req
-            , (AssetCategory =.) <$> uCategory req
+            [ (AssetName =.) <$> nameUpdate
+            , (AssetCategory =.) <$> categoryUpdate
             , (AssetStatus =.) <$> statusValue
             , fmap (\rid -> AssetLocationId =. Just rid) locationKey
             , fmap (\noteTxt -> AssetNotes =. Just noteTxt) (uNotes req)
@@ -259,10 +273,10 @@ inventoryServer user =
       asset <- withPool $ get assetKey
       _ <- maybe (throwError err404) pure asset
       now <- liftIO getCurrentTime
-      let targetKind = maybe TargetParty parseTarget (coTargetKind req)
-          targetRoomKey = coTargetRoom req >>= parseKeyMaybe @Room
-          targetSessionKey = coTargetSession req >>= parseKeyMaybe @ME.Session
-          checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
+      targetKind <- either throwError pure (parseCheckoutTargetKind (coTargetKind req))
+      targetRoomKey <- either throwError pure (parseOptionalKeyField @Room "targetRoom" (coTargetRoom req))
+      targetSessionKey <- either throwError pure (parseOptionalKeyField @ME.Session "targetSession" (coTargetSession req))
+      let checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
       active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
       when (isJust active) $
         throwError err409 { errBody = "Asset already checked out" }
@@ -325,20 +339,6 @@ inventoryServer user =
       ensureInventoryAccess
       mAsset <- withPool $ selectFirst [AssetQrCode ==. Just token] []
       maybe (throwError err404) (pure . toAssetDTO) mAsset
-
-    parseTarget raw =
-      case T.toLower (T.strip raw) of
-        "session" -> TargetSession
-        "party"   -> TargetParty
-        "room"    -> TargetRoom
-        _         -> TargetParty
-
-    parseKeyMaybe
-      :: forall record.
-         PathPiece (Key record)
-      => Text
-      -> Maybe (Key record)
-    parseKeyMaybe t = fromPathPiece t
 
     validateTargets targetKind mRoom mSession = do
       case targetKind of
@@ -567,7 +567,8 @@ sessionsServer user =
       ensureModule ModuleScheduling user
       roomKeys <- traverse (parseKey @Room) (scRoomIds req)
       bandKey  <- traverse (parseKey @Band) (scBandId req)
-      let statusVal = scStatus req >>= parseSessionStatus
+      statusVal <- either throwError pure (validateSessionStatusInput (scStatus req))
+      let
           status'   = fromMaybe InPrep statusVal
       (sessionEnt, rooms) <- withPool $ do
         newSessionId <- insert Session
@@ -620,7 +621,8 @@ sessionsServer user =
       roomKeysUpdate <- case suRoomIds req of
         Nothing     -> pure Nothing
         Just rooms  -> Just <$> traverse (parseKey @Room) rooms
-      let statusVal   = suStatus req >>= parseSessionStatus
+      statusVal <- either throwError pure (validateSessionStatusInput (suStatus req))
+      let
           updates     = catMaybes
             [ fmap (SessionBookingRef =.)           (suBookingRef req)
             , fmap (SessionBandId =.)               bandUpdate
@@ -889,9 +891,10 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
 
     createRoomH req = do
       ensureModule ModuleScheduling user
+      nameClean <- either throwError pure (normalizeRoomName (rcName req))
       entity <- withPool $ do
         newRoomId <- insert Room
-          { roomName              = rcName req
+          { roomName              = nameClean
           , roomIsBookable        = True
           , roomCapacity          = Nothing
           , roomChannelCount      = Nothing
@@ -904,8 +907,9 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
     patchRoomH rawId req = do
       ensureModule ModuleScheduling user
       roomKey <- parseKey @Room rawId
+      nameUpdate <- either throwError pure (normalizeRoomNameUpdate (ruName req))
       let updates = catMaybes
-            [ (RoomName =.)       <$> ruName req
+            [ (RoomName =.)       <$> nameUpdate
             , (RoomIsBookable =.) <$> ruIsBookable req
             ]
       result <- withPool $ do
@@ -923,6 +927,42 @@ toRoomDTO (Entity key room) = RoomDTO
   , rName     = roomName room
   , rBookable = roomIsBookable room
   }
+
+normalizeRoomName :: Text -> Either ServerError Text
+normalizeRoomName rawName =
+  let trimmed = T.strip rawName
+  in if T.null trimmed
+       then Left err400 { errBody = "Room name is required" }
+       else Right trimmed
+
+normalizeRoomNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+normalizeRoomNameUpdate Nothing = Right Nothing
+normalizeRoomNameUpdate (Just rawName) =
+  Just <$> normalizeRoomName rawName
+
+normalizeAssetName :: Text -> Either ServerError Text
+normalizeAssetName rawName =
+  let trimmed = T.strip rawName
+  in if T.null trimmed
+       then Left err400 { errBody = "Asset name is required" }
+       else Right trimmed
+
+normalizeAssetNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+normalizeAssetNameUpdate Nothing = Right Nothing
+normalizeAssetNameUpdate (Just rawName) =
+  Just <$> normalizeAssetName rawName
+
+normalizeAssetCategory :: Text -> Either ServerError Text
+normalizeAssetCategory rawCategory =
+  let trimmed = T.strip rawCategory
+  in if T.null trimmed
+       then Left err400 { errBody = "Asset category is required" }
+       else Right trimmed
+
+normalizeAssetCategoryUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+normalizeAssetCategoryUpdate Nothing = Right Nothing
+normalizeAssetCategoryUpdate (Just rawCategory) =
+  Just <$> normalizeAssetCategory rawCategory
 
 roomsPublicServer
   :: ( MonadReader Env m
@@ -1002,10 +1042,10 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
     createH ServiceCatalogCreate{..} = do
       ensureModule ModuleScheduling user
       nameClean <- normalizeName sccName
+      currencyClean <- either throwError pure (validateServiceCatalogCurrency sccCurrency)
+      taxClean <- either throwError pure (validateServiceCatalogTaxBps sccTaxBps)
       when (maybe False (< 0) sccRateCents) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
-      when (maybe False (< 0) sccTaxBps) $
-        throwError err400 { errBody = "Impuesto inválido" }
       duplicate <- withPool $ selectFirst [M.ServiceCatalogName ==. nameClean] []
       when (isJust duplicate) $
         throwError err409 { errBody = "Ya existe un servicio con ese nombre" }
@@ -1015,8 +1055,8 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
               , M.serviceCatalogKind = fromMaybe M.Recording sccKind
               , M.serviceCatalogPricingModel = fromMaybe M.Hourly sccPricingModel
               , M.serviceCatalogDefaultRateCents = sccRateCents
-              , M.serviceCatalogTaxBps = sccTaxBps
-              , M.serviceCatalogCurrency = normalizeCurrency (fromMaybe "USD" sccCurrency)
+              , M.serviceCatalogTaxBps = taxClean
+              , M.serviceCatalogCurrency = currencyClean
               , M.serviceCatalogBillingUnit = normalizeTextMaybe sccBillingUnit
               , M.serviceCatalogActive = fromMaybe True sccActive
               }
@@ -1028,17 +1068,11 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       ensureModule ModuleScheduling user
       let svcKey = toSqlKey rawId :: Key M.ServiceCatalog
       let rateCandidate = join scuRateCents
-          taxCandidate  = join scuTaxBps
+      currencyUpdate <- either throwError pure (validateServiceCatalogCurrencyUpdate scuCurrency)
+      taxUpdate <- either throwError pure (validateServiceCatalogTaxBpsUpdate scuTaxBps)
       when (maybe False (< 0) rateCandidate) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
-      when (maybe False (< 0) taxCandidate) $
-        throwError err400 { errBody = "Impuesto inválido" }
-      let nameClean :: Maybe Text
-          nameClean = case scuName of
-            Nothing   -> Nothing
-            Just nm ->
-              let trimmed = T.strip nm
-              in if T.null trimmed then Nothing else Just trimmed
+      nameClean <- either throwError pure (normalizeServiceCatalogNameUpdate scuName)
       case nameClean of
         Just nm -> do
           conflict <- withPool $ selectFirst
@@ -1067,8 +1101,8 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
                   , (M.ServiceCatalogKind =.) <$> scuKind
                   , (M.ServiceCatalogPricingModel =.) <$> scuPricingModel
                   , (M.ServiceCatalogDefaultRateCents =.) <$> scuRateCents
-                  , (M.ServiceCatalogTaxBps =.) <$> scuTaxBps
-                  , (M.ServiceCatalogCurrency =.) . normalizeCurrency <$> scuCurrency
+                  , (M.ServiceCatalogTaxBps =.) <$> taxUpdate
+                  , (M.ServiceCatalogCurrency =.) <$> currencyUpdate
                   , (M.ServiceCatalogBillingUnit =.) <$> billingClean
                   , (M.ServiceCatalogActive =.) <$> scuActive
                   ]
@@ -1090,15 +1124,54 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       let trimmed = T.strip txt
       in if T.null trimmed then throwError err400 { errBody = "Nombre requerido" } else pure trimmed
 
-    normalizeCurrency txt =
-      let trimmed = T.toUpper (T.strip txt)
-      in if T.null trimmed then "USD" else trimmed
-
     normalizeTextMaybe mTxt = case mTxt of
       Nothing -> Nothing
       Just raw ->
         let trimmed = T.strip raw
         in if T.null trimmed then Nothing else Just trimmed
+
+normalizeServiceCatalogNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+normalizeServiceCatalogNameUpdate Nothing = Right Nothing
+normalizeServiceCatalogNameUpdate (Just rawName) =
+  let trimmed = T.strip rawName
+  in if T.null trimmed
+       then Left err400 { errBody = "Nombre requerido" }
+       else Right (Just trimmed)
+
+validateServiceCatalogCurrency :: Maybe Text -> Either ServerError Text
+validateServiceCatalogCurrency Nothing = Right "USD"
+validateServiceCatalogCurrency (Just rawCurrency) =
+  let trimmed = T.toUpper (T.strip rawCurrency)
+  in if T.null trimmed
+       then invalidCurrency
+       else
+         if T.length trimmed == 3 && T.all isAsciiUpper trimmed
+           then Right trimmed
+           else invalidCurrency
+  where
+    invalidCurrency =
+      Left err400 { errBody = "Moneda inválida. Usa un código ISO de 3 letras, por ejemplo USD" }
+
+validateServiceCatalogCurrencyUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+validateServiceCatalogCurrencyUpdate Nothing = Right Nothing
+validateServiceCatalogCurrencyUpdate (Just rawCurrency) =
+  Just <$> validateServiceCatalogCurrency (Just rawCurrency)
+
+validateServiceCatalogTaxBps :: Maybe Int -> Either ServerError (Maybe Int)
+validateServiceCatalogTaxBps Nothing = Right Nothing
+validateServiceCatalogTaxBps (Just rawTaxBps)
+  | rawTaxBps < 0 = invalidTaxBps
+  | rawTaxBps > 10000 = invalidTaxBps
+  | otherwise = Right (Just rawTaxBps)
+  where
+    invalidTaxBps =
+      Left err400 { errBody = "Impuesto inválido. Usa basis points entre 0 y 10000" }
+
+validateServiceCatalogTaxBpsUpdate :: Maybe (Maybe Int) -> Either ServerError (Maybe (Maybe Int))
+validateServiceCatalogTaxBpsUpdate Nothing = Right Nothing
+validateServiceCatalogTaxBpsUpdate (Just Nothing) = Right (Just Nothing)
+validateServiceCatalogTaxBpsUpdate (Just (Just rawTaxBps)) =
+  Just <$> validateServiceCatalogTaxBps (Just rawTaxBps)
 
 serviceCatalogToDTO :: Entity M.ServiceCatalog -> ServiceCatalogDTO
 serviceCatalogToDTO (Entity key svc) = ServiceCatalogDTO
@@ -1141,6 +1214,22 @@ parseKey
 parseKey raw =
   maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece raw)
 
+parseOptionalKeyField
+  :: forall record.
+     PathPiece (Key record)
+  => Text
+  -> Maybe Text
+  -> Either ServerError (Maybe (Key record))
+parseOptionalKeyField _ Nothing = Right Nothing
+parseOptionalKeyField fieldName (Just raw) =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+      then Right Nothing
+      else maybe
+        (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a valid identifier")) })
+        (Right . Just)
+        (fromPathPiece trimmed)
+
 parseAssetStatus :: Text -> Maybe AssetStatus
 parseAssetStatus = lookupStatus . normalise
   where
@@ -1174,6 +1263,15 @@ parseSessionStatus = lookupStatus . normalise
       "closed"     -> Just Closed
       _             -> Nothing
     normalise = T.toLower . T.filter (`notElem` [' ', '_'])
+
+validateSessionStatusInput :: Maybe Text -> Either ServerError (Maybe SessionStatus)
+validateSessionStatusInput Nothing = Right Nothing
+validateSessionStatusInput (Just rawStatus) =
+  case parseSessionStatus rawStatus of
+    Just statusValue -> Right (Just statusValue)
+    Nothing -> Left err400
+      { errBody = "Invalid session status. Allowed values: in_prep, in_session, break, editing, approved, delivered, closed"
+      }
 
 ensureModule
   :: (MonadError ServerError m)

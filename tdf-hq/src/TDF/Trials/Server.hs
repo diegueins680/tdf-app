@@ -15,7 +15,7 @@ import           Data.Char              (isAlphaNum, isDigit, isSpace)
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, maybeToList)
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
-import           Data.List              (foldl')
+import           Data.List              (foldl', sortOn)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
@@ -71,11 +71,35 @@ normalizeEmail = fmap T.toLower . cleanOptional
 
 normalizePhone :: Text -> Maybe Text
 normalizePhone raw =
-  let trimmed = T.filter (not . isSpace) (T.strip raw)
-      digits = T.filter (\c -> isDigit c || c == '+') trimmed
-      withoutPlus = T.dropWhile (== '+') digits
-      onlyDigits = T.filter isDigit withoutPlus
-  in if T.null onlyDigits then Nothing else Just ("+" <> onlyDigits)
+  let trimmed = T.strip raw
+      onlyDigits = T.filter isDigit trimmed
+      plusCount = T.count "+" trimmed
+      plusIndex = T.findIndex (== '+') trimmed
+      firstDigitIndex = T.findIndex isDigit trimmed
+      allowedPhoneChar ch =
+        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
+      plusIsValid =
+        case plusIndex of
+          Nothing -> True
+          Just idx ->
+            case firstDigitIndex of
+              Nothing -> False
+              Just digitIdx -> plusCount == 1 && idx < digitIdx
+  in
+    if T.null onlyDigits || hasInvalidChars || not plusIsValid
+      then Nothing
+      else Just ("+" <> onlyDigits)
+
+validateOptionalPhone :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalPhone Nothing = Right Nothing
+validateOptionalPhone (Just rawPhone) =
+  case cleanOptional (Just rawPhone) of
+    Nothing -> Right Nothing
+    Just _ ->
+      case normalizePhone rawPhone of
+        Just phoneVal -> Right (Just phoneVal)
+        Nothing -> Left err400 { errBody = "phone inválido" }
 
 slugify :: Text -> Text
 slugify =
@@ -305,13 +329,25 @@ validatePreferredSlots slots
   | length slots > 3 =
       Left err400 { errBody = "At most three preferred slots are allowed" }
   | otherwise =
-      traverse validateSlot slots
+      do
+        validated <- traverse validateSlot slots
+        if hasOverlappingSlots validated
+          then Left err400 { errBody = "Preferred slots must be distinct non-overlapping windows" }
+          else Right validated
   where
     validateSlot slot@(PreferredSlot slotStart slotEnd)
       | slotStart >= slotEnd =
           Left err400 { errBody = "Preferred slot endAt must be after startAt" }
       | otherwise =
           Right slot
+
+    hasOverlappingSlots :: [PreferredSlot] -> Bool
+    hasOverlappingSlots slotList =
+      any overlapsAdjacent (zip orderedSlots (drop 1 orderedSlots))
+      where
+        orderedSlots = sortOn (\(PreferredSlot slotStart _) -> slotStart) slotList
+        overlapsAdjacent (PreferredSlot _ leftEnd, PreferredSlot rightStart _) =
+          rightStart < leftEnd
 
 validatePublicTrialPartyId :: Maybe Int -> Either ServerError ()
 validatePublicTrialPartyId Nothing = Right ()
@@ -392,7 +428,9 @@ publicTrialsServer =
             Right () -> pure ()
         _ -> pure ()
       case slots of
-        slot1@(PreferredSlot firstStart firstEnd) : rest -> do
+        [] ->
+          liftIO $ throwIO err500 { errBody = "Validated preferred slots were unexpectedly empty" }
+        PreferredSlot firstStart firstEnd : rest -> do
           let pref2 = listToMaybe rest
               pref3 = listToMaybe (drop 1 rest)
               (pref2Start, pref2End) = slotBounds pref2
@@ -445,8 +483,9 @@ createOrFetchParty mName mEmail mPhone now = do
   emailVal <- case normalizeEmail mEmail of
     Nothing -> liftIO $ throwIO err400 { errBody = "Correo requerido para crear la cuenta" }
     Just e  -> pure e
-  let phoneVal = mPhone >>= normalizePhone
-      display = fromMaybe emailVal mName
+  phoneVal <- either (liftIO . throwIO) pure (validateOptionalPhone mPhone)
+  let
+      display = fromMaybe emailVal (cleanOptional mName)
   mExisting <- selectFirst [Models.PartyPrimaryEmail ==. Just emailVal] []
   case mExisting of
     Just (Entity pid party) -> do
@@ -1366,10 +1405,10 @@ privateTrialsServer user@AuthedUser{..} =
           emailUpdate = case email of
             Nothing -> Nothing
             Just raw -> Just (cleanOptional (Just raw))
-          phoneUpdate = normalizePhone <$> phone
           notesUpdate = case notes of
             Nothing -> Nothing
             Just raw -> Just (cleanOptional (Just raw))
+      phoneUpdate <- either (liftIO . throwIO) pure (validateOptionalPhone phone)
 
       when (isJust displayName && isNothing nameUpdate) $
         liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
@@ -1377,7 +1416,7 @@ privateTrialsServer user@AuthedUser{..} =
       let updates = catMaybes
             [ (Models.PartyDisplayName =.) <$> nameUpdate
             , (Models.PartyPrimaryEmail =.) <$> emailUpdate
-            , (Models.PartyPrimaryPhone =.) <$> phoneUpdate
+            , if isJust phone then Just (Models.PartyPrimaryPhone =. phoneUpdate) else Nothing
             , (Models.PartyNotes =.) <$> notesUpdate
             ]
 

@@ -12,25 +12,76 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.Persist
-import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute)
+import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
 import qualified TDF.Models as M
-import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance))
+import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance), CheckoutTarget (TargetParty, TargetRoom, TargetSession), SessionStatus (InPrep, InSession))
 import TDF.ServerExtra (
     IGInbound (..),
     IGInboundDeleted (..),
     MetaChannel (..),
     MetaInboundEvent (..),
     extractMetaInbound,
+    normalizeAssetCategory,
+    normalizeAssetCategoryUpdate,
+    normalizeAssetName,
+    normalizeAssetNameUpdate,
+    normalizeRoomName,
+    normalizeRoomNameUpdate,
+    parseCheckoutTargetKind,
+    parseOptionalKeyField,
+    normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
+    validateSessionStatusInput,
+    validateServiceCatalogCurrency,
+    validateServiceCatalogCurrencyUpdate,
+    validateServiceCatalogTaxBps,
+    validateServiceCatalogTaxBpsUpdate,
     validateAssetStatusUpdate,
  )
 
 spec :: Spec
 spec = do
+  describe "asset name/category normalization" $ do
+    it "trims meaningful asset names and categories on create and update" $ do
+      normalizeAssetName "  Roland Juno-106  " `shouldBe` Right "Roland Juno-106"
+      normalizeAssetNameUpdate (Just "  Tape Echo  ") `shouldBe` Right (Just "Tape Echo")
+      normalizeAssetNameUpdate Nothing `shouldBe` Right Nothing
+      normalizeAssetCategory "  Synth  " `shouldBe` Right "Synth"
+      normalizeAssetCategoryUpdate (Just "  Outboard  ") `shouldBe` Right (Just "Outboard")
+      normalizeAssetCategoryUpdate Nothing `shouldBe` Right Nothing
+
+    it "rejects explicit blank asset names and categories instead of storing whitespace-only records" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid asset input error, got " <> show value)
+      assertInvalid "Asset name is required" (normalizeAssetName "   ")
+      assertInvalid "Asset name is required" (normalizeAssetNameUpdate (Just "   "))
+      assertInvalid "Asset category is required" (normalizeAssetCategory "   ")
+      assertInvalid "Asset category is required" (normalizeAssetCategoryUpdate (Just "   "))
+
+  describe "normalizeRoomName" $ do
+    it "trims meaningful room names on create and update" $ do
+      normalizeRoomName "  Sala A  " `shouldBe` Right "Sala A"
+      normalizeRoomNameUpdate (Just "  Control Room  ") `shouldBe` Right (Just "Control Room")
+      normalizeRoomNameUpdate Nothing `shouldBe` Right Nothing
+
+    it "rejects explicit blank room names instead of storing whitespace-only records" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "Room name is required"
+            Right value ->
+              expectationFailure ("Expected invalid room name error, got " <> show value)
+      assertInvalid (normalizeRoomName "   ")
+      assertInvalid (normalizeRoomNameUpdate (Just "   "))
+
   describe "validateAssetStatusUpdate" $ do
     it "accepts supported asset status variants" $ do
       validateAssetStatusUpdate (Just " booked ") `shouldBe` Right (Just Booked)
@@ -45,6 +96,129 @@ spec = do
               expectationFailure ("Expected invalid status error, got " <> show value)
       assertInvalid (validateAssetStatusUpdate (Just "   "))
       assertInvalid (validateAssetStatusUpdate (Just "on-loan"))
+
+  describe "parseCheckoutTargetKind" $ do
+    it "defaults omitted target kinds to party and normalizes supported values" $ do
+      parseCheckoutTargetKind Nothing `shouldBe` Right TargetParty
+      parseCheckoutTargetKind (Just " room ") `shouldBe` Right TargetRoom
+      parseCheckoutTargetKind (Just "SESSION") `shouldBe` Right TargetSession
+
+    it "rejects blank or unknown target kinds instead of silently treating them as party checkouts" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "targetKind must be one of: party, room, session"
+            Right value ->
+              expectationFailure ("Expected invalid checkout target kind error, got " <> show value)
+      assertInvalid (parseCheckoutTargetKind (Just "   "))
+      assertInvalid (parseCheckoutTargetKind (Just "locker"))
+
+  describe "parseOptionalKeyField" $ do
+    it "treats missing or blank optional ids as absent and trims valid identifiers" $ do
+      (parseOptionalKeyField "targetRoom" Nothing :: Either ServerError (Maybe (Key M.Party)))
+        `shouldBe` Right Nothing
+      (parseOptionalKeyField "targetRoom" (Just "   ") :: Either ServerError (Maybe (Key M.Party)))
+        `shouldBe` Right Nothing
+      (parseOptionalKeyField "targetRoom" (Just " 42 ") :: Either ServerError (Maybe (Key M.Party)))
+        `shouldBe` Right (Just (toSqlKey 42))
+
+    it "rejects malformed optional ids instead of silently treating them as missing" $
+      case (parseOptionalKeyField "targetSession" (Just "abc") :: Either ServerError (Maybe (Key M.Party))) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "targetSession must be a valid identifier"
+        Right value ->
+          expectationFailure ("Expected invalid optional key input error, got " <> show value)
+
+  describe "validateSessionStatusInput" $ do
+    it "preserves omitted values and normalizes supported session statuses" $ do
+      validateSessionStatusInput Nothing `shouldBe` Right Nothing
+      validateSessionStatusInput (Just " in_prep ") `shouldBe` Right (Just InPrep)
+      validateSessionStatusInput (Just "In Session") `shouldBe` Right (Just InSession)
+
+    it "rejects blank or unknown session statuses instead of silently defaulting them" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "Allowed values: in_prep, in_session, break, editing, approved, delivered, closed"
+            Right value ->
+              expectationFailure ("Expected invalid session status error, got " <> show value)
+      assertInvalid (validateSessionStatusInput (Just "   "))
+      assertInvalid (validateSessionStatusInput (Just "live"))
+
+  describe "normalizeServiceCatalogNameUpdate" $ do
+    it "preserves omitted names and trims meaningful updates" $ do
+      normalizeServiceCatalogNameUpdate Nothing `shouldBe` Right Nothing
+      normalizeServiceCatalogNameUpdate (Just "  Mezcla Full  ") `shouldBe` Right (Just "Mezcla Full")
+
+    it "rejects explicit blank names instead of silently treating them as no-op updates" $
+      case normalizeServiceCatalogNameUpdate (Just "   ") of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Nombre requerido"
+        Right value ->
+          expectationFailure ("Expected blank service catalog update name to be rejected, got " <> show value)
+
+  describe "validateServiceCatalogCurrency" $ do
+    it "defaults omitted values to USD and normalizes supported ISO codes" $ do
+      validateServiceCatalogCurrency Nothing `shouldBe` Right "USD"
+      validateServiceCatalogCurrency (Just " usd ") `shouldBe` Right "USD"
+      validateServiceCatalogCurrency (Just "eur") `shouldBe` Right "EUR"
+
+    it "rejects blank or malformed currency codes instead of storing ambiguous data" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
+            Right value ->
+              expectationFailure ("Expected invalid currency error, got " <> show value)
+      assertInvalid (validateServiceCatalogCurrency (Just "   "))
+      assertInvalid (validateServiceCatalogCurrency (Just "usdollars"))
+      assertInvalid (validateServiceCatalogCurrency (Just "12$"))
+
+  describe "validateServiceCatalogCurrencyUpdate" $ do
+    it "preserves omitted updates and normalizes meaningful ones" $ do
+      validateServiceCatalogCurrencyUpdate Nothing `shouldBe` Right Nothing
+      validateServiceCatalogCurrencyUpdate (Just " gbp ") `shouldBe` Right (Just "GBP")
+
+    it "rejects explicit blank updates instead of silently resetting the currency" $
+      case validateServiceCatalogCurrencyUpdate (Just "   ") of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
+        Right value ->
+          expectationFailure ("Expected invalid currency update error, got " <> show value)
+
+  describe "validateServiceCatalogTaxBps" $ do
+    it "accepts omitted values and basis points within a 0..10000 percentage range" $ do
+      validateServiceCatalogTaxBps Nothing `shouldBe` Right Nothing
+      validateServiceCatalogTaxBps (Just 0) `shouldBe` Right (Just 0)
+      validateServiceCatalogTaxBps (Just 850) `shouldBe` Right (Just 850)
+      validateServiceCatalogTaxBps (Just 10000) `shouldBe` Right (Just 10000)
+
+    it "rejects negative or oversized tax percentages before they can be stored" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "entre 0 y 10000"
+            Right value ->
+              expectationFailure ("Expected invalid tax basis points error, got " <> show value)
+      assertInvalid (validateServiceCatalogTaxBps (Just (-1)))
+      assertInvalid (validateServiceCatalogTaxBps (Just 10001))
+
+  describe "validateServiceCatalogTaxBpsUpdate" $ do
+    it "preserves omitted and explicit-null updates" $ do
+      validateServiceCatalogTaxBpsUpdate Nothing `shouldBe` Right Nothing
+      validateServiceCatalogTaxBpsUpdate (Just Nothing) `shouldBe` Right (Just Nothing)
+      validateServiceCatalogTaxBpsUpdate (Just (Just 1200)) `shouldBe` Right (Just (Just 1200))
+
+    it "rejects invalid update values instead of storing impossible tax percentages" $
+      case validateServiceCatalogTaxBpsUpdate (Just (Just 15000)) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "entre 0 y 10000"
+        Right value ->
+          expectationFailure ("Expected invalid service catalog tax update error, got " <> show value)
 
   describe "Meta inbox deletion handling" $ do
     it "parses deleted Instagram webhook events" $ do
