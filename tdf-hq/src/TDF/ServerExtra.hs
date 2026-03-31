@@ -274,9 +274,9 @@ inventoryServer user =
       _ <- maybe (throwError err404) pure asset
       now <- liftIO getCurrentTime
       targetKind <- either throwError pure (parseCheckoutTargetKind (coTargetKind req))
-      let targetRoomKey = coTargetRoom req >>= parseKeyMaybe @Room
-          targetSessionKey = coTargetSession req >>= parseKeyMaybe @ME.Session
-          checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
+      targetRoomKey <- either throwError pure (parseOptionalKeyField @Room "targetRoom" (coTargetRoom req))
+      targetSessionKey <- either throwError pure (parseOptionalKeyField @ME.Session "targetSession" (coTargetSession req))
+      let checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
       active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
       when (isJust active) $
         throwError err409 { errBody = "Asset already checked out" }
@@ -339,13 +339,6 @@ inventoryServer user =
       ensureInventoryAccess
       mAsset <- withPool $ selectFirst [AssetQrCode ==. Just token] []
       maybe (throwError err404) (pure . toAssetDTO) mAsset
-
-    parseKeyMaybe
-      :: forall record.
-         PathPiece (Key record)
-      => Text
-      -> Maybe (Key record)
-    parseKeyMaybe t = fromPathPiece t
 
     validateTargets targetKind mRoom mSession = do
       case targetKind of
@@ -1220,6 +1213,22 @@ parseKey
   -> m (Key record)
 parseKey raw =
   maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece raw)
+
+parseOptionalKeyField
+  :: forall record.
+     PathPiece (Key record)
+  => Text
+  -> Maybe Text
+  -> Either ServerError (Maybe (Key record))
+parseOptionalKeyField _ Nothing = Right Nothing
+parseOptionalKeyField fieldName (Just raw) =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+      then Right Nothing
+      else maybe
+        (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a valid identifier")) })
+        (Right . Just)
+        (fromPathPiece trimmed)
 
 parseAssetStatus :: Text -> Maybe AssetStatus
 parseAssetStatus = lookupStatus . normalise

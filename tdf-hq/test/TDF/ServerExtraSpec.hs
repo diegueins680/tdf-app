@@ -12,7 +12,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.Persist
-import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute)
+import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
@@ -32,6 +32,7 @@ import TDF.ServerExtra (
     normalizeRoomName,
     normalizeRoomNameUpdate,
     parseCheckoutTargetKind,
+    parseOptionalKeyField,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validateSessionStatusInput,
@@ -111,6 +112,23 @@ spec = do
               expectationFailure ("Expected invalid checkout target kind error, got " <> show value)
       assertInvalid (parseCheckoutTargetKind (Just "   "))
       assertInvalid (parseCheckoutTargetKind (Just "locker"))
+
+  describe "parseOptionalKeyField" $ do
+    it "treats missing or blank optional ids as absent and trims valid identifiers" $ do
+      (parseOptionalKeyField "targetRoom" Nothing :: Either ServerError (Maybe (Key M.Party)))
+        `shouldBe` Right Nothing
+      (parseOptionalKeyField "targetRoom" (Just "   ") :: Either ServerError (Maybe (Key M.Party)))
+        `shouldBe` Right Nothing
+      (parseOptionalKeyField "targetRoom" (Just " 42 ") :: Either ServerError (Maybe (Key M.Party)))
+        `shouldBe` Right (Just (toSqlKey 42))
+
+    it "rejects malformed optional ids instead of silently treating them as missing" $
+      case (parseOptionalKeyField "targetSession" (Just "abc") :: Either ServerError (Maybe (Key M.Party))) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "targetSession must be a valid identifier"
+        Right value ->
+          expectationFailure ("Expected invalid optional key input error, got " <> show value)
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
