@@ -97,6 +97,8 @@ const formatInputDate = (iso?: string | null) => {
 const summarizeItems = (items: MarketplaceOrderDTO['moItems']) =>
   items.map((it) => `${it.moiQuantity} × ${it.moiTitle}`).join(' · ');
 
+const normalizeProviderFilterValue = (value?: string | null) => value?.trim().toLowerCase() ?? '';
+
 export default function MarketplaceOrdersPage() {
   const defaultFilters = createDefaultMarketplaceOrderFilters();
   const { session } = useSession();
@@ -148,16 +150,12 @@ export default function MarketplaceOrdersPage() {
     }
   }, [statusInput, paidAtInput]);
 
-  const filtered = useMemo(() => {
+  const listContextOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
     const fromDt = fromDate ? DateTime.fromISO(fromDate) : null;
     const toDt = toDate ? DateTime.fromISO(toDate).endOf('day') : null;
     return sortedOrders.filter((order) => {
       if (statusFilter !== 'all' && order.moStatus !== statusFilter) return false;
-      if (providerFilter !== 'all') {
-        const provider = order.moPaymentProvider?.toLowerCase() ?? '';
-        if (provider !== providerFilter.toLowerCase()) return false;
-      }
       if (paidOnly && !order.moPaidAt) return false;
       const created = DateTime.fromISO(order.moCreatedAt);
       if (fromDt && created < fromDt) return false;
@@ -174,7 +172,40 @@ export default function MarketplaceOrdersPage() {
         .toLowerCase();
       return haystack.includes(term);
     });
-  }, [sortedOrders, search, providerFilter, statusFilter, fromDate, toDate, paidOnly]);
+  }, [sortedOrders, search, statusFilter, fromDate, toDate, paidOnly]);
+
+  const availableProviderFilters = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          listContextOrders
+            .map((order) => normalizeProviderFilterValue(order.moPaymentProvider))
+            .filter(Boolean),
+        ),
+      ),
+    [listContextOrders],
+  );
+  const hasOrdersWithoutProvider = useMemo(
+    () => listContextOrders.some((order) => !normalizeProviderFilterValue(order.moPaymentProvider)),
+    [listContextOrders],
+  );
+  const showProviderFilter =
+    providerFilter !== 'all' ||
+    availableProviderFilters.length > 1 ||
+    (availableProviderFilters.length === 1 && hasOrdersWithoutProvider);
+  const providerFilterHelperText = (() => {
+    if (providerFilter !== 'all' || listContextOrders.length === 0 || showProviderFilter) return null;
+    if (availableProviderFilters.length === 0) {
+      return 'Los pedidos visibles todavía no tienen método de pago registrado.';
+    }
+    return `Todos los pedidos visibles usan ${getMarketplacePaymentProviderLabel(availableProviderFilters[0] ?? '')}. El filtro de método aparecerá cuando esta vista mezcle más de un canal de pago.`;
+  })();
+  const filtered = useMemo(() => {
+    if (providerFilter === 'all') return listContextOrders;
+    return listContextOrders.filter(
+      (order) => normalizeProviderFilterValue(order.moPaymentProvider) === providerFilter.toLowerCase(),
+    );
+  }, [listContextOrders, providerFilter]);
 
   const filtersDirty =
     statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
@@ -440,20 +471,35 @@ export default function MarketplaceOrdersPage() {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={4} lg={3}>
-              <FormControl fullWidth>
-                <InputLabel id="provider-filter-label">Método de pago</InputLabel>
-                <Select
-                  labelId="provider-filter-label"
-                  label="Método de pago"
-                  value={providerFilter}
-                  onChange={(e) => setProviderFilter(e.target.value)}
+              {showProviderFilter ? (
+                <FormControl fullWidth>
+                  <InputLabel id="provider-filter-label">Método de pago</InputLabel>
+                  <Select
+                    labelId="provider-filter-label"
+                    label="Método de pago"
+                    value={providerFilter}
+                    onChange={(e) => setProviderFilter(e.target.value)}
+                  >
+                    <MenuItem value="all">Todos</MenuItem>
+                    <MenuItem value="paypal">PayPal</MenuItem>
+                    <MenuItem value="datafast">Tarjeta (Datafast)</MenuItem>
+                    <MenuItem value="contact">Manual/otros</MenuItem>
+                  </Select>
+                </FormControl>
+              ) : (
+                <Box
+                  sx={{
+                    height: '100%',
+                    minHeight: 56,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
                 >
-                  <MenuItem value="all">Todos</MenuItem>
-                  <MenuItem value="paypal">PayPal</MenuItem>
-                  <MenuItem value="datafast">Tarjeta (Datafast)</MenuItem>
-                  <MenuItem value="contact">Manual/otros</MenuItem>
-                </Select>
-              </FormControl>
+                  <Typography variant="body2" color="text.secondary">
+                    {providerFilterHelperText}
+                  </Typography>
+                </Box>
+              )}
             </Grid>
             <Grid item xs={6} md={6} lg={3}>
               <TextField

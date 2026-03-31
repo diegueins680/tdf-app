@@ -247,6 +247,43 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('replaces a single real payment-method filter with context copy when the current list already uses one provider', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+        moPaymentProvider: 'paypal',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'paypal',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(countLabelsByText(container, 'Método de pago')).toBe(0);
+        expect(container.textContent).toContain(
+          'Todos los pedidos visibles usan PayPal. El filtro de método aparecerá cuando esta vista mezcle más de un canal de pago.',
+        );
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses the existing reset-filters control when a search hides the current order list', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
