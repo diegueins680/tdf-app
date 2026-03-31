@@ -797,10 +797,11 @@ whatsappReplyServer user WhatsAppReplyReq{..} = do
     throwError err403 { errBody = "Missing required module access" }
   now <- liftIO getCurrentTime
   waEnv <- liftIO loadWhatsAppEnv
-  let recipient = T.strip wrSenderId
+  let recipientRaw = T.strip wrSenderId
       body = T.strip wrMessage
       mExternalId = wrExternalId >>= (\raw -> let trimmed = T.strip raw in if T.null trimmed then Nothing else Just trimmed)
-  when (T.null recipient) $ throwBadRequest "Remitente requerido"
+  when (T.null recipientRaw) $ throwBadRequest "Remitente requerido"
+  recipient <- either throwError pure (validateWhatsAppPhoneInput recipientRaw)
   when (T.null body) $ throwBadRequest "Mensaje vacío"
   sendResult <- sendWhatsAppText waEnv recipient body
   mReplyTarget <- case mExternalId of
@@ -852,9 +853,7 @@ whatsappConsentRoutes defaultSource requireGate =
   :<|> fetchStatus
   where
     normalizePhoneOrFail raw =
-      case normalizePhone raw of
-        Just val -> pure val
-        Nothing -> throwBadRequest "Número de WhatsApp inválido."
+      either throwError pure (validateWhatsAppPhoneInput raw)
 
     toStatus phoneVal mRow =
       case mRow of
@@ -3467,6 +3466,18 @@ validateCourseRegistrationPhoneE164 (Just rawPhone) =
       case normalizeCourseRegistrationPhoneInput rawPhone of
         Just phoneClean -> Right (Just phoneClean)
         Nothing -> Left err400 { errBody = "phoneE164 inválido" }
+
+validateWhatsAppPhoneInput :: Text -> Either ServerError Text
+validateWhatsAppPhoneInput rawPhone =
+  case cleanOptional (Just rawPhone) of
+    Nothing -> invalidWhatsAppPhone
+    Just _ ->
+      case normalizeCourseRegistrationPhoneInput rawPhone of
+        Just phoneClean -> Right phoneClean
+        Nothing -> invalidWhatsAppPhone
+  where
+    invalidWhatsAppPhone =
+      Left err400 { errBody = "Número de WhatsApp inválido." }
 
 validateCourseRegistrationEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationEmail Nothing = Right Nothing

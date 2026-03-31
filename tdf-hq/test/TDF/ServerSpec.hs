@@ -14,7 +14,7 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, parsePaymentMethodText, resolvePasswordResetDelivery, validateCmsContentStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, parsePaymentMethodText, resolvePasswordResetDelivery, validateCmsContentStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog, validateWhatsAppPhoneInput)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -214,6 +214,20 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
                 Right phoneVal ->
                     expectationFailure ("Expected mixed text phone input to be rejected, got: " <> show phoneVal)
+
+    describe "validateWhatsAppPhoneInput" $ do
+        it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $
+            validateWhatsAppPhoneInput " +593 99 123 4567 " `shouldBe` Right "+593991234567"
+
+        it "rejects blank or mixed-text WhatsApp phone inputs instead of extracting misleading digits" $ do
+            let assertInvalid rawPhone = case validateWhatsAppPhoneInput rawPhone of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "WhatsApp"
+                    Right phoneVal ->
+                        expectationFailure ("Expected invalid WhatsApp phone input to be rejected, got: " <> show phoneVal)
+            assertInvalid "   "
+            assertInvalid "call me at 099 123 4567"
 
     describe "validateCourseRegistrationEmail" $ do
         it "preserves omitted and blank emails while normalizing meaningful values" $ do
