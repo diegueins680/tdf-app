@@ -670,6 +670,7 @@ export default function CourseRegistrationsAdminPage() {
       : `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
+  const showDossierScopeHint = loadedRegistrationCount > 1;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -1604,9 +1605,11 @@ export default function CourseRegistrationsAdminPage() {
           )}
           {regsQuery.data?.length ? (
             <Stack spacing={1.5}>
-              <Typography variant="body2" color="text.secondary">
-                {dossierScopeHint}
-              </Typography>
+              {showDossierScopeHint && (
+                <Typography variant="body2" color="text.secondary">
+                  {dossierScopeHint}
+                </Typography>
+              )}
               <Stack divider={<Divider flexItem />} spacing={2}>
                 {regsQuery.data.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;

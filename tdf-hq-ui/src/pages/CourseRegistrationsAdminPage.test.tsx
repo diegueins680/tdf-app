@@ -340,13 +340,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
-      expect(container.textContent).toContain(
+      expect(container.textContent).not.toContain(
         'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
       );
-      expect(countOccurrences(
-        container,
-        'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
-      )).toBe(1);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe(
         'Expediente',
