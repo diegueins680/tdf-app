@@ -11,7 +11,7 @@
     "dev:ui": "npm run dev --workspace=tdf-hq-ui",
     "dev:mobile": "if node scripts/mobile-workspace-ready.mjs --quiet; then npm --prefix tdf-mobile run start; elif [ \"${REQUIRE_MOBILE_WORKSPACE:-0}\" = \"1\" ]; then echo 'Missing or incomplete tdf-mobile install. Run: git submodule update --init --recursive && (cd tdf-mobile && npm install)' >&2; exit 1; else echo 'Skipping mobile dev: workspace missing or install incomplete'; fi",
     "build": "npm run build:ui",
-    "build:ui": "npm run build --workspace=tdf-hq-ui",
+    "build:ui": "sh -c 'if [ -n \"${CI:-}\" ] || [ -n \"${CF_PAGES:-}\" ]; then ./scripts/build-ui-with-install.sh; else npm run build --workspace=tdf-hq-ui; fi'",
     "test": "npm run test:ui && npm run test:mobile",
     "ci:ui": "npm run build:ui && npm run test:ui",
     "build:ui:ci": "./scripts/build-ui-with-install.sh",
