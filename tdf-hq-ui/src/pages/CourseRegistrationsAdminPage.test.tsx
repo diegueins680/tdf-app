@@ -393,7 +393,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
-      expect(document.body.textContent).not.toContain(followUpComposerHelpText);
+      expect(document.body.textContent).not.toContain(firstFollowUpComposerHelpText);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
@@ -424,9 +424,9 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Cancelar',
         ),
       ).toBe(false);
-      expect(document.body.textContent).toContain('Registrar seguimiento');
+      expect(hasExactText(document.body, 'Registrar seguimiento')).toBe(false);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
-      expect(document.body.textContent).toContain(followUpComposerHelpText);
+      expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
       expect(document.body.textContent).toContain(
         'Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y las notas.',
       );
@@ -2187,7 +2187,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
-      expect(document.body.textContent).not.toContain(followUpComposerHelpText);
+      expect(document.body.textContent).not.toContain(firstFollowUpComposerHelpText);
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(false);
       expect(
