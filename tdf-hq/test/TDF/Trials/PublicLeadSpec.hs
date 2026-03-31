@@ -57,6 +57,15 @@ spec = do
         Right _ ->
           expectationFailure "Expected invalid phone input to be rejected"
 
+    it "rejects free-form text that merely contains digits instead of extracting a misleading partial phone" $ do
+      result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "call me at 099 123 4567")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "phone"
+        Right _ ->
+          expectationFailure "Expected mixed text phone input to be rejected"
+
     it "keeps a single fallback party for anonymous interests" $ do
       (firstId, secondId, total) <- runInMemory $ do
         now <- liftIO getCurrentTime
