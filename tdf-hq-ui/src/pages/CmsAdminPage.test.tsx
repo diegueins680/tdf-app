@@ -375,6 +375,19 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces fraction-style version counts with plain-language summary text', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('2 versiones');
+      expect(container.textContent).not.toContain('2/2');
+    });
+
+    await cleanup();
+  });
+
   it('hides version filters until the CMS history has enough entries to compare', async () => {
     listMock.mockResolvedValue([buildContent()]);
 
@@ -386,6 +399,8 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).toContain(
         'Los filtros aparecerán cuando exista más historial para comparar versiones.',
       );
+      expect(container.textContent).not.toContain('1/1');
+      expect(container.textContent).not.toContain('1 versión');
       expect(countLabelsByText(container, 'Estado')).toBe(1);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
       expect(countActionsByText(container, 'Limpiar filtros')).toBe(0);

@@ -400,6 +400,17 @@ export default function CmsAdminPage() {
     }),
     [filteredVersions.length, minVersionFilter, statusFilter, versions.length],
   );
+  const versionCountLabel = useMemo(() => {
+    const totalVersions = versions.length;
+    const visibleVersions = filteredVersions.length;
+
+    if (totalVersions === 0) return null;
+    if (visibleVersions === totalVersions) {
+      return totalVersions > 1 ? `${totalVersions} versiones` : null;
+    }
+
+    return `${visibleVersions} de ${totalVersions}`;
+  }, [filteredVersions.length, versions.length]);
   const editingSourceChipLabel = editingFromId
     ? editingVersion != null
       ? `Base: v${editingVersion} · ID ${editingFromId}`
@@ -794,7 +805,7 @@ export default function CmsAdminPage() {
             <Stack spacing={0.75}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="h6" fontWeight={800}>Versiones</Typography>
-                <Chip label={`${filteredVersions.length}/${versions.length}`} size="small" />
+                {versionCountLabel && <Chip label={versionCountLabel} size="small" />}
               </Stack>
               {sharedVersionContextSummary && (
                 <Typography variant="body2" color="text.secondary">
