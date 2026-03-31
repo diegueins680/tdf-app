@@ -247,7 +247,7 @@ describe('SocialInboxPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Limit')).toBe(true);
+      expect(hasLabel(container, 'Limit')).toBe(false);
       expect(queryFilterChip(container, 'All')).not.toBeNull();
       expect(queryFilterChip(container, 'Pending')).not.toBeNull();
       expect(queryFilterChip(container, 'Replied')).not.toBeNull();
@@ -262,6 +262,32 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).not.toContain('Pending: 0');
       expect(container.textContent).not.toContain('Replied: 0');
       expect(container.textContent).not.toContain('Failed: 0');
+    });
+
+    await cleanup();
+  });
+
+  it('shows the limit control only after the inbox actually reaches the current fetch cap', async () => {
+    listInstagramMessagesMock.mockResolvedValue(
+      Array.from({ length: 100 }, (_, index) =>
+        buildMessage({
+          externalId: `msg-${index + 1}`,
+          senderId: `sender-${index + 1}`,
+          senderName: `Sender ${index + 1}`,
+        })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Limit')).toBe(true);
+      expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
+      expect(container.textContent).toContain('Status available');
+      expect(container.textContent).toContain('Pending');
+      expect(container.textContent).toContain('Instagram');
+      expect(container.textContent).toContain('Inbound: 100');
     });
 
     await cleanup();

@@ -1287,7 +1287,8 @@ export default function SocialInboxPage() {
   const allChannelsLoaded = !instagramQuery.isLoading && !facebookQuery.isLoading && !whatsappQuery.isLoading;
   const hasChannelLoadErrors = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
   const showUnifiedEmptyState = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
-  const showLimitControl = !showUnifiedEmptyState || limit !== DEFAULT_LIMIT;
+  const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
+  const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
   const refetch = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
