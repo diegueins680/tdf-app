@@ -291,6 +291,33 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps the first admin-user view focused on the lone row instead of showing list search chrome', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'solo-admin',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+        expect(container.textContent).not.toContain('Buscar usuarios');
+        expect(container.textContent).not.toContain('1 usuario');
+        expect(getButtonsByText(container, 'Perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes repeated roles and modules once per row so access scope is easier to scan', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
