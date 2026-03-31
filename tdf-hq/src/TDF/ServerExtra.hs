@@ -1033,12 +1033,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
       when (maybe False (< 0) taxCandidate) $
         throwError err400 { errBody = "Impuesto inválido" }
-      let nameClean :: Maybe Text
-          nameClean = case scuName of
-            Nothing   -> Nothing
-            Just nm ->
-              let trimmed = T.strip nm
-              in if T.null trimmed then Nothing else Just trimmed
+      nameClean <- either throwError pure (normalizeServiceCatalogNameUpdate scuName)
       case nameClean of
         Just nm -> do
           conflict <- withPool $ selectFirst
@@ -1099,6 +1094,14 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       Just raw ->
         let trimmed = T.strip raw
         in if T.null trimmed then Nothing else Just trimmed
+
+normalizeServiceCatalogNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+normalizeServiceCatalogNameUpdate Nothing = Right Nothing
+normalizeServiceCatalogNameUpdate (Just rawName) =
+  let trimmed = T.strip rawName
+  in if T.null trimmed
+       then Left err400 { errBody = "Nombre requerido" }
+       else Right (Just trimmed)
 
 serviceCatalogToDTO :: Entity M.ServiceCatalog -> ServiceCatalogDTO
 serviceCatalogToDTO (Entity key svc) = ServiceCatalogDTO

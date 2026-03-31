@@ -25,6 +25,7 @@ import TDF.ServerExtra (
     MetaChannel (..),
     MetaInboundEvent (..),
     extractMetaInbound,
+    normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validateAssetStatusUpdate,
  )
@@ -45,6 +46,19 @@ spec = do
               expectationFailure ("Expected invalid status error, got " <> show value)
       assertInvalid (validateAssetStatusUpdate (Just "   "))
       assertInvalid (validateAssetStatusUpdate (Just "on-loan"))
+
+  describe "normalizeServiceCatalogNameUpdate" $ do
+    it "preserves omitted names and trims meaningful updates" $ do
+      normalizeServiceCatalogNameUpdate Nothing `shouldBe` Right Nothing
+      normalizeServiceCatalogNameUpdate (Just "  Mezcla Full  ") `shouldBe` Right (Just "Mezcla Full")
+
+    it "rejects explicit blank names instead of silently treating them as no-op updates" $
+      case normalizeServiceCatalogNameUpdate (Just "   ") of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Nombre requerido"
+        Right value ->
+          expectationFailure ("Expected blank service catalog update name to be rejected, got " <> show value)
 
   describe "Meta inbox deletion handling" $ do
     it "parses deleted Instagram webhook events" $ do
