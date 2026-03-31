@@ -56,6 +56,7 @@ const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambio
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
 const dossierScopeHint = 'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.';
 const emptyNotesAlertMessage = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
+const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
 const hideSystemEmailsLabel = 'Ocultar correos del sistema';
 const systemEmailHistoryHelperText = 'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
@@ -1218,6 +1219,9 @@ export default function CourseRegistrationsAdminPage() {
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const hasReceipts = receipts.length > 0;
+  const showCompactMarkPaidNotesState = selectedDossier?.intent === 'markPaid'
+    && !showNotesComposer
+    && !hasSavedNotes;
   const showReceiptCountChip = receipts.length > 1;
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
   const hasReceiptMetadataDraft = Boolean(trimToNull(receiptForm.fileName)) || Boolean(trimToNull(receiptForm.notes));
@@ -1312,7 +1316,9 @@ export default function CourseRegistrationsAdminPage() {
       <CardContent>
         <Stack spacing={1.5}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
-            <Typography variant="h6">Notas internas</Typography>
+            <Typography variant="h6">
+              {showCompactMarkPaidNotesState ? 'Notas internas (opcional)' : 'Notas internas'}
+            </Typography>
             {!showNotesComposer && hasSavedNotes ? (
               <Button
                 variant="contained"
@@ -1360,6 +1366,15 @@ export default function CourseRegistrationsAdminPage() {
             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
               {persistedNotes}
             </Typography>
+          ) : showCompactMarkPaidNotesState ? (
+            <Stack spacing={0.75} alignItems="flex-start">
+              <Typography variant="body2" color="text.secondary">
+                {markPaidEmptyNotesHelperText}
+              </Typography>
+              <Button size="small" variant="text" onClick={handleOpenNotesComposer}>
+                Agregar nota opcional
+              </Button>
+            </Stack>
           ) : (
             <Alert
               severity="info"
