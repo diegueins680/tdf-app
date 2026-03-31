@@ -5,11 +5,14 @@ module Main (main) where
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Aeson (eitherDecode)
 import Data.Either (isLeft)
+import Data.Text (Text)
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (..))
+import Servant.Multipart (FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import Test.Hspec
 
+import TDF.API.LiveSessions (LiveSessionIntakePayload (..))
 import TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
@@ -385,6 +388,45 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "channel inválido"
                 Right _ -> expectationFailure "Expected invalid channel to be rejected"
 
+    describe "live session intake multipart parsing" $ do
+        it "normalizes blank optional text fields to Nothing while preserving versioned consent" $ do
+            let parsed = fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "  The House Band  ")
+                    , ("contactEmail", "   ")
+                    , ("acceptedTerms", " yes ")
+                    , ("termsVersion", "  TDF Live Sessions v2  ")
+                    , ("musicians", "[]")
+                    ])
+            case parsed :: Either String LiveSessionIntakePayload of
+                Left err -> expectationFailure err
+                Right payload -> do
+                    lsiBandName payload `shouldBe` "The House Band"
+                    lsiContactEmail payload `shouldBe` Nothing
+                    lsiAcceptedTerms payload `shouldBe` True
+                    lsiTermsVersion payload `shouldBe` Just "TDF Live Sessions v2"
+
+        it "rejects accepted terms without a terms version" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("acceptedTerms", "true")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "termsVersion is required when acceptedTerms is true"
+                Right payload ->
+                    expectationFailure ("Expected missing termsVersion to be rejected, got: " <> show payload)
+
+        it "rejects malformed acceptedTerms values instead of silently coercing them to false" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("acceptedTerms", "maybe")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "acceptedTerms must be a boolean"
+                Right payload ->
+                    expectationFailure ("Expected invalid acceptedTerms to be rejected, got: " <> show payload)
+
     APITypesSpec.spec
     ArtistSpec.spec
     ServerSpec.spec
@@ -393,3 +435,10 @@ main = hspec $ do
     FollowSpec.spec
     FollowHandlerSpec.spec
     PublicLeadSpec.spec
+
+mkLiveSessionMultipart :: [(Text, Text)] -> MultipartData Tmp
+mkLiveSessionMultipart fields =
+    MultipartData
+        { inputs = map (uncurry Input) fields
+        , files = []
+        }
