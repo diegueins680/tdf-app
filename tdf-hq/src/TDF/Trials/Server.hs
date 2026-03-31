@@ -76,6 +76,16 @@ normalizePhone raw =
       onlyDigits = T.filter isDigit withoutPlus
   in if T.null onlyDigits then Nothing else Just ("+" <> onlyDigits)
 
+validateOptionalPhone :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalPhone Nothing = Right Nothing
+validateOptionalPhone (Just rawPhone) =
+  case cleanOptional (Just rawPhone) of
+    Nothing -> Right Nothing
+    Just _ ->
+      case normalizePhone rawPhone of
+        Just phoneVal -> Right (Just phoneVal)
+        Nothing -> Left err400 { errBody = "phone inválido" }
+
 slugify :: Text -> Text
 slugify =
   T.take 60 . T.filter (\c -> isAlphaNum c || c `elem` ("._-" :: String)) . T.toLower . T.strip
@@ -439,7 +449,8 @@ createOrFetchParty mName mEmail mPhone now = do
   emailVal <- case normalizeEmail mEmail of
     Nothing -> liftIO $ throwIO err400 { errBody = "Correo requerido para crear la cuenta" }
     Just e  -> pure e
-  let phoneVal = mPhone >>= normalizePhone
+  phoneVal <- either (liftIO . throwIO) pure (validateOptionalPhone mPhone)
+  let
       display = fromMaybe emailVal (cleanOptional mName)
   mExisting <- selectFirst [Models.PartyPrimaryEmail ==. Just emailVal] []
   case mExisting of
@@ -1360,10 +1371,10 @@ privateTrialsServer user@AuthedUser{..} =
           emailUpdate = case email of
             Nothing -> Nothing
             Just raw -> Just (cleanOptional (Just raw))
-          phoneUpdate = normalizePhone <$> phone
           notesUpdate = case notes of
             Nothing -> Nothing
             Just raw -> Just (cleanOptional (Just raw))
+      phoneUpdate <- either (liftIO . throwIO) pure (validateOptionalPhone phone)
 
       when (isJust displayName && isNothing nameUpdate) $
         liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
@@ -1371,7 +1382,7 @@ privateTrialsServer user@AuthedUser{..} =
       let updates = catMaybes
             [ (Models.PartyDisplayName =.) <$> nameUpdate
             , (Models.PartyPrimaryEmail =.) <$> emailUpdate
-            , (Models.PartyPrimaryPhone =.) <$> phoneUpdate
+            , if isJust phone then Just (Models.PartyPrimaryPhone =. phoneUpdate) else Nothing
             , (Models.PartyNotes =.) <$> notesUpdate
             ]
 

@@ -2,9 +2,11 @@
 
 module TDF.Trials.PublicLeadSpec (spec) where
 
+import Control.Exception (try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Text (Text)
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist (Entity (..), getJustEntity, selectList, (==.))
@@ -45,6 +47,15 @@ spec = do
         Models.partyDisplayName . entityVal <$> getJustEntity partyId
 
       storedName `shouldBe` "student@example.com"
+
+    it "rejects explicitly invalid nonblank phones instead of silently discarding them" $ do
+      result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "---")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "phone"
+        Right _ ->
+          expectationFailure "Expected invalid phone input to be rejected"
 
     it "keeps a single fallback party for anonymous interests" $ do
       (firstId, secondId, total) <- runInMemory $ do
@@ -97,6 +108,16 @@ runInMemory action =
     pool <- createSqlitePool ":memory:" 1
     liftIO $ runSqlPool initializePartySchema pool
     liftIO $ runSqlPool action pool
+
+tryCreateOrFetchParty
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> IO (Either ServerError Models.PartyId)
+tryCreateOrFetchParty mName mEmail mPhone =
+  try $ runInMemory $ do
+    now <- liftIO getCurrentTime
+    createOrFetchParty mName mEmail mPhone now
 
 initializePartySchema :: (MonadIO m) => SqlPersistT m ()
 initializePartySchema = do
