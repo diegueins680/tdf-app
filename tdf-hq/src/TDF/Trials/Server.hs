@@ -15,7 +15,7 @@ import           Data.Char              (isAlphaNum, isDigit, isSpace)
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, maybeToList)
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
-import           Data.List              (foldl')
+import           Data.List              (foldl', sortOn)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
@@ -314,13 +314,25 @@ validatePreferredSlots slots
   | length slots > 3 =
       Left err400 { errBody = "At most three preferred slots are allowed" }
   | otherwise =
-      traverse validateSlot slots
+      do
+        validated <- traverse validateSlot slots
+        if hasOverlappingSlots validated
+          then Left err400 { errBody = "Preferred slots must be distinct non-overlapping windows" }
+          else Right validated
   where
     validateSlot slot@(PreferredSlot slotStart slotEnd)
       | slotStart >= slotEnd =
           Left err400 { errBody = "Preferred slot endAt must be after startAt" }
       | otherwise =
           Right slot
+
+    hasOverlappingSlots :: [PreferredSlot] -> Bool
+    hasOverlappingSlots slotList =
+      any overlapsAdjacent (zip orderedSlots (drop 1 orderedSlots))
+      where
+        orderedSlots = sortOn (\(PreferredSlot slotStart _) -> slotStart) slotList
+        overlapsAdjacent (PreferredSlot _ leftEnd, PreferredSlot rightStart _) =
+          rightStart < leftEnd
 
 validatePublicTrialPartyId :: Maybe Int -> Either ServerError ()
 validatePublicTrialPartyId Nothing = Right ()
@@ -396,7 +408,9 @@ publicTrialsServer =
           EmailSvc.sendWelcome svc display addr username password
         _ -> pure ()
       case slots of
-        slot1@(PreferredSlot firstStart firstEnd) : rest -> do
+        [] ->
+          liftIO $ throwIO err500 { errBody = "Validated preferred slots were unexpectedly empty" }
+        PreferredSlot firstStart firstEnd : rest -> do
           let pref2 = listToMaybe rest
               pref3 = listToMaybe (drop 1 rest)
               (pref2Start, pref2End) = slotBounds pref2

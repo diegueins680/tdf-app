@@ -99,6 +99,18 @@ spec = do
         Right _ ->
           expectationFailure "Expected reversed slot to be rejected"
 
+    it "rejects overlapping or duplicate preferred slots" $ do
+      let overlappingSlot = PreferredSlot (addUTCTime 1800 slotStart) (addUTCTime 5400 slotStart)
+          assertRejected slots =
+            case validatePreferredSlots slots of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "Preferred slots must be distinct non-overlapping windows"
+              Right value ->
+                expectationFailure ("Expected overlapping slots to be rejected, got " <> show value)
+      assertRejected [validSlot, overlappingSlot]
+      assertRejected [validSlot, validSlot]
+
     it "preserves valid slots without truncation or mutation" $
       validatePreferredSlots [validSlot, laterValidSlot] `shouldBe` Right [validSlot, laterValidSlot]
 
