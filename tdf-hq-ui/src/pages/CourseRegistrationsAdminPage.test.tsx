@@ -2019,6 +2019,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain(
         'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.',
       );
+      expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.textContent).toContain(markPaidReceiptSectionHelpText);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(true);

@@ -743,7 +743,8 @@ export default function CourseRegistrationsAdminPage() {
   const showSystemEmailHistoryAction = showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError;
   const showEmptySystemEmailHistoryHint = !showSystemEmailHistoryAction
     && !emailEventsQuery.isLoading
-    && selectedDossierId != null;
+    && selectedDossierId != null
+    && selectedDossier?.intent !== 'markPaid';
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
