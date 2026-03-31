@@ -20,6 +20,7 @@ import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
   , validatePreferredSlots
+  , validatePreferredSlotsAt
   , validatePublicSubjectSelection
   , validatePublicTrialPartyId
   )
@@ -145,6 +146,15 @@ spec = do
                 expectationFailure ("Expected overlapping slots to be rejected, got " <> show value)
       assertRejected [validSlot, overlappingSlot]
       assertRejected [validSlot, validSlot]
+
+    it "rejects preferred slots that start in the past before creating unschedulable requests" $ do
+      let now = addUTCTime 7200 slotStart
+      case validatePreferredSlotsAt now [validSlot] of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Preferred slots must start in the future"
+        Right value ->
+          expectationFailure ("Expected past preferred slot to be rejected, got " <> show value)
 
     it "preserves valid slots without truncation or mutation" $
       validatePreferredSlots [validSlot, laterValidSlot] `shouldBe` Right [validSlot, laterValidSlot]

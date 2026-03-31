@@ -385,6 +385,17 @@ validatePreferredSlots slots
         overlapsAdjacent (PreferredSlot _ leftEnd, PreferredSlot rightStart _) =
           rightStart < leftEnd
 
+validatePreferredSlotsAt :: UTCTime -> [PreferredSlot] -> Either ServerError [PreferredSlot]
+validatePreferredSlotsAt now slots = do
+  validated <- validatePreferredSlots slots
+  traverse validateFutureSlot validated
+  where
+    validateFutureSlot slot@(PreferredSlot slotStart _)
+      | slotStart <= now =
+          Left err400 { errBody = "Preferred slots must start in the future" }
+      | otherwise =
+          Right slot
+
 validatePublicTrialPartyId :: Maybe Int -> Either ServerError ()
 validatePublicTrialPartyId Nothing = Right ()
 validatePublicTrialPartyId (Just _) =
@@ -456,7 +467,7 @@ publicTrialsServer =
           emailClean = cleanOptional email
           phoneClean = cleanOptional phone
       either (liftIO . throwIO) pure (validatePublicTrialPartyId partyId)
-      slots <- either (liftIO . throwIO) pure (validatePreferredSlots preferred)
+      slots <- either (liftIO . throwIO) pure (validatePreferredSlotsAt now preferred)
       subjectKey <- requirePublicActiveSubject subjectId
       resolvedPartyId <- createOrFetchParty nameClean emailClean phoneClean now
 
