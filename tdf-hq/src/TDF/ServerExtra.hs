@@ -894,9 +894,10 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
 
     createRoomH req = do
       ensureModule ModuleScheduling user
+      nameClean <- either throwError pure (normalizeRoomName (rcName req))
       entity <- withPool $ do
         newRoomId <- insert Room
-          { roomName              = rcName req
+          { roomName              = nameClean
           , roomIsBookable        = True
           , roomCapacity          = Nothing
           , roomChannelCount      = Nothing
@@ -909,8 +910,9 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
     patchRoomH rawId req = do
       ensureModule ModuleScheduling user
       roomKey <- parseKey @Room rawId
+      nameUpdate <- either throwError pure (normalizeRoomNameUpdate (ruName req))
       let updates = catMaybes
-            [ (RoomName =.)       <$> ruName req
+            [ (RoomName =.)       <$> nameUpdate
             , (RoomIsBookable =.) <$> ruIsBookable req
             ]
       result <- withPool $ do
@@ -928,6 +930,18 @@ toRoomDTO (Entity key room) = RoomDTO
   , rName     = roomName room
   , rBookable = roomIsBookable room
   }
+
+normalizeRoomName :: Text -> Either ServerError Text
+normalizeRoomName rawName =
+  let trimmed = T.strip rawName
+  in if T.null trimmed
+       then Left err400 { errBody = "Room name is required" }
+       else Right trimmed
+
+normalizeRoomNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+normalizeRoomNameUpdate Nothing = Right Nothing
+normalizeRoomNameUpdate (Just rawName) =
+  Just <$> normalizeRoomName rawName
 
 roomsPublicServer
   :: ( MonadReader Env m

@@ -25,6 +25,8 @@ import TDF.ServerExtra (
     MetaChannel (..),
     MetaInboundEvent (..),
     extractMetaInbound,
+    normalizeRoomName,
+    normalizeRoomNameUpdate,
     parseCheckoutTargetKind,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
@@ -38,6 +40,22 @@ import TDF.ServerExtra (
 
 spec :: Spec
 spec = do
+  describe "normalizeRoomName" $ do
+    it "trims meaningful room names on create and update" $ do
+      normalizeRoomName "  Sala A  " `shouldBe` Right "Sala A"
+      normalizeRoomNameUpdate (Just "  Control Room  ") `shouldBe` Right (Just "Control Room")
+      normalizeRoomNameUpdate Nothing `shouldBe` Right Nothing
+
+    it "rejects explicit blank room names instead of storing whitespace-only records" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "Room name is required"
+            Right value ->
+              expectationFailure ("Expected invalid room name error, got " <> show value)
+      assertInvalid (normalizeRoomName "   ")
+      assertInvalid (normalizeRoomNameUpdate (Just "   "))
+
   describe "validateAssetStatusUpdate" $ do
     it "accepts supported asset status variants" $ do
       validateAssetStatusUpdate (Just " booked ") `shouldBe` Right (Just Booked)
