@@ -14,7 +14,7 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), Party (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCourseNonNegativeField, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, resolvePasswordResetDelivery, validateCourseNonNegativeField, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -160,6 +160,20 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "pending_payment, paid, cancelled"
                 Right statusVal ->
                     expectationFailure ("Expected an invalid course-registration status error, got: " <> show statusVal)
+
+    describe "validateCourseRegistrationPhoneE164" $ do
+        it "preserves omitted and blank phones while normalizing meaningful values" $ do
+            validateCourseRegistrationPhoneE164 Nothing `shouldBe` Right Nothing
+            validateCourseRegistrationPhoneE164 (Just "   ") `shouldBe` Right Nothing
+            validateCourseRegistrationPhoneE164 (Just " +593 99 123 4567 ") `shouldBe` Right (Just "+593991234567")
+
+        it "rejects explicitly invalid phones instead of silently discarding them" $
+            case validateCourseRegistrationPhoneE164 (Just "call-me-maybe") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
+                Right phoneVal ->
+                    expectationFailure ("Expected invalid course-registration phone to be rejected, got: " <> show phoneVal)
 
     describe "parseCourseFollowUpType" $ do
         it "defaults missing values to note and canonicalizes supported variants" $ do

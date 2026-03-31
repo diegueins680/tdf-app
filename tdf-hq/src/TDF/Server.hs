@@ -3122,9 +3122,9 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
       nameClean = cleanOptional fullName
       sourceClean = normalizeSource source
       howHeardClean = cleanOptional howHeard
-      phoneClean = phoneE164 >>= normalizePhone
       pendingStatus = "pending_payment"
       (utmSourceVal, utmMediumVal, utmCampaignVal, utmContentVal) = normalizeUtm utm
+  phoneClean <- either throwError pure (validateCourseRegistrationPhoneE164 phoneE164)
   normalizedEmail <- case cleanOptional email of
     Nothing -> pure Nothing
     Just e  -> Just <$> requireEmail e
@@ -3436,6 +3436,16 @@ normalizeSource :: Text -> Text
 normalizeSource raw =
   let trimmed = T.toLower (T.strip raw)
   in if T.null trimmed then "landing" else trimmed
+
+validateCourseRegistrationPhoneE164 :: Maybe Text -> Either ServerError (Maybe Text)
+validateCourseRegistrationPhoneE164 Nothing = Right Nothing
+validateCourseRegistrationPhoneE164 (Just rawPhone) =
+  case cleanOptional (Just rawPhone) of
+    Nothing -> Right Nothing
+    Just _ ->
+      case normalizePhone rawPhone of
+        Just phoneClean -> Right (Just phoneClean)
+        Nothing -> Left err400 { errBody = "phoneE164 inválido" }
 
 normalizeUtm :: Maybe UTMTags -> (Maybe Text, Maybe Text, Maybe Text, Maybe Text)
 normalizeUtm Nothing = (Nothing, Nothing, Nothing, Nothing)
