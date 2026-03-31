@@ -20,9 +20,11 @@ import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
   , validatePreferredSlots
+  , validatePublicSubjectSelection
   , validatePublicTrialPartyId
   )
 import qualified TDF.Models as Models
+import TDF.Trials.Models (Subject (..))
 
 spec :: Spec
 spec = do
@@ -97,6 +99,21 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "partyId is not allowed on public trial requests"
         Right _ ->
           expectationFailure "Expected public partyId to be rejected"
+
+  describe "validatePublicSubjectSelection" $ do
+    it "accepts active public subjects" $
+      validatePublicSubjectSelection (Just (Subject "Piano" True)) `shouldBe` Right ()
+
+    it "rejects missing or inactive subjects instead of reporting a misleading availability error" $ do
+      let assertRejected candidate =
+            case validatePublicSubjectSelection candidate of
+              Left err -> do
+                errHTTPCode err `shouldBe` 422
+                BL8.unpack (errBody err) `shouldContain` "La materia solicitada no está disponible"
+              Right value ->
+                expectationFailure ("Expected unavailable public subject to be rejected, got " <> show value)
+      assertRejected Nothing
+      assertRejected (Just (Subject "Piano" False))
 
   describe "validatePreferredSlots" $ do
     it "rejects requests with more than three preferred slots" $ do

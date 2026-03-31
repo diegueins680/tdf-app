@@ -390,6 +390,19 @@ validatePublicTrialPartyId Nothing = Right ()
 validatePublicTrialPartyId (Just _) =
   Left err400 { errBody = "partyId is not allowed on public trial requests" }
 
+validatePublicSubjectSelection :: Maybe Subject -> Either ServerError ()
+validatePublicSubjectSelection (Just subject)
+  | subjectActive subject = Right ()
+validatePublicSubjectSelection _ =
+  Left err422 { errBody = "La materia solicitada no está disponible" }
+
+requirePublicActiveSubject :: Int -> AppM SubjectId
+requirePublicActiveSubject subjectIdInt = do
+  let subjectKey = intKey subjectIdInt :: SubjectId
+  mSubject <- get subjectKey
+  either (liftIO . throwIO) pure (validatePublicSubjectSelection mSubject)
+  pure subjectKey
+
 publicTrialsServer :: ServerT PublicTrialsAPI AppM
 publicTrialsServer =
   signupH
@@ -422,8 +435,8 @@ publicTrialsServer =
     interestH :: InterestIn -> AppM InterestOut
     interestH InterestIn{..} = do
       now <- liftIO getCurrentTime
+      subjectKey <- traverse requirePublicActiveSubject subjectId
       partyIdKey <- ensurePublicLeadParty now
-      let subjectKey = maybeKey subjectId
       key <- insert LeadInterest
         { leadInterestPartyId   = partyIdKey
         , leadInterestInterestType = interestType
@@ -444,6 +457,7 @@ publicTrialsServer =
           phoneClean = cleanOptional phone
       either (liftIO . throwIO) pure (validatePublicTrialPartyId partyId)
       slots <- either (liftIO . throwIO) pure (validatePreferredSlots preferred)
+      subjectKey <- requirePublicActiveSubject subjectId
       resolvedPartyId <- createOrFetchParty nameClean emailClean phoneClean now
 
       mNewCred <- case emailClean of
@@ -472,7 +486,6 @@ publicTrialsServer =
               (pref2Start, pref2End) = slotBounds pref2
               (pref3Start, pref3End) = slotBounds pref3
               partyKey = resolvedPartyId
-              subjectKey = intKey subjectId
           ensureSubjectAvailability subjectKey slots
           rid <- insert TrialRequest
             { trialRequestPartyId           = partyKey
@@ -498,7 +511,10 @@ publicTrialsServer =
     publicSubjectsH = listActiveSubjects
 
     publicSlotsH :: Maybe Int -> AppM [TrialSlotDTO]
-    publicSlotsH = trialSlotsForSubject
+    publicSlotsH Nothing = pure []
+    publicSlotsH (Just subjectIdInt) = do
+      _ <- requirePublicActiveSubject subjectIdInt
+      trialSlotsForSubject (Just subjectIdInt)
 
     ensureSubjectAvailability :: Trials.SubjectId -> [PreferredSlot] -> AppM ()
     ensureSubjectAvailability subjectKey slots = do
