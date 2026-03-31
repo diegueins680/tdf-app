@@ -161,6 +161,10 @@ const buildEmailEvent = (
 
 const emptyReceiptAlertMessage =
   'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+const receiptComposerHelpText =
+  'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
+const editingReceiptComposerHelpText =
+  'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
 const hideSystemEmailsLabel = 'Ocultar correos del sistema';
 const systemEmailHistoryHelperText =
@@ -1911,6 +1915,72 @@ describe('CourseRegistrationsAdminPage', () => {
     await page.cleanup();
   });
 
+  it('keeps saved receipts easy to scan by showing section guidance only when the receipt form is active', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [buildReceipt()],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(receiptComposerHelpText);
+      expect(document.body.textContent).not.toContain(editingReceiptComposerHelpText);
+      expect(document.body.textContent).not.toContain(
+        'Abre el formulario solo cuando necesites guardar un comprobante o pegar un enlace existente.',
+      );
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-composer-pane"]')).not.toBeNull();
+      expect(document.body.textContent).toContain(receiptComposerHelpText);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Editar comprobante')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, 'Editar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(editingReceiptComposerHelpText);
+      expect(document.body.textContent).not.toContain(receiptComposerHelpText);
+    });
+
+    await cleanup();
+  });
+
   it('lets admins hide an empty receipt URL fallback after opening it by mistake', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
@@ -2951,6 +3021,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
     });
 
     await act(async () => {
