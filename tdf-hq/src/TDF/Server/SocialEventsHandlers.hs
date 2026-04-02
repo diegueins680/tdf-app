@@ -23,6 +23,10 @@ module TDF.Server.SocialEventsHandlers
   , normalizeFinanceSource
   , normalizeFinanceEntryStatus
   , normalizePositivePartyIdText
+  , normalizeMomentMediaType
+  , normalizeMomentReaction
+  , normalizeMomentCaption
+  , normalizeMomentCommentBody
   ) where
 
 import           Control.Applicative ((<|>))
@@ -73,6 +77,12 @@ import           TDF.DTO.SocialEventsDTO
   , RsvpDTO(..)
   , InvitationDTO(..)
   , InvitationUpdateDTO(..)
+  , EventMomentDTO(..)
+  , EventMomentCreateDTO(..)
+  , EventMomentReactionDTO(..)
+  , EventMomentReactionRequestDTO(..)
+  , EventMomentCommentDTO(..)
+  , EventMomentCommentCreateDTO(..)
   , TicketTierDTO(..)
   , TicketPurchaseRequestDTO(..)
   , TicketOrderStatusUpdateDTO(..)
@@ -363,6 +373,7 @@ socialEventsServer user = eventsServer
                :<|> artistsServer
                :<|> rsvpsServer
                :<|> invitationsServer
+               :<|> momentsServer
                :<|> ticketsServer
                :<|> budgetServer
                :<|> financeServer
@@ -610,6 +621,11 @@ socialEventsServer user = eventsServer
           deleteWhere [EventArtistEventId ==. eventKey]
           deleteWhere [EventRsvpEventId ==. eventKey]
           deleteWhere [EventInvitationEventId ==. eventKey]
+          momentKeys <- selectKeysList [EventMomentEventId ==. eventKey] []
+          unless (null momentKeys) $ do
+            deleteWhere [EventMomentReactionMomentId <-. momentKeys]
+            deleteWhere [EventMomentCommentMomentId <-. momentKeys]
+          deleteWhere [EventMomentEventId ==. eventKey]
           deleteWhere [EventTicketEventId ==. eventKey]
           deleteWhere [EventTicketOrderEventId ==. eventKey]
           deleteWhere [EventTicketTierEventId ==. eventKey]
@@ -1063,6 +1079,12 @@ socialEventsServer user = eventsServer
         :<|> createInvitation eventIdStr
         :<|> updateInvitation eventIdStr
 
+    momentsServer :: ServerT MomentsRoutes AppM
+    momentsServer = listMoments
+               :<|> createMoment
+               :<|> reactToMoment
+               :<|> commentOnMoment
+
     listInvitations :: T.Text -> AppM [InvitationDTO]
     listInvitations eventIdStr = do
       Env{..} <- ask
@@ -1146,6 +1168,93 @@ socialEventsServer user = eventsServer
             , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
             , invitationUpdatedAt = Just now
             }
+
+    -- Moments
+    listMoments :: T.Text -> AppM [EventMomentDTO]
+    listMoments eventIdStr = do
+      Env{..} <- ask
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      _ <- requireExistingEvent envPool eventKey
+      liftIO $ loadEventMoments envPool eventKey
+
+    createMoment :: T.Text -> EventMomentCreateDTO -> AppM EventMomentDTO
+    createMoment eventIdStr EventMomentCreateDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      _ <- requireExistingEvent envPool eventKey
+      mediaUrl <- maybe (throwError err400 { errBody = "Moment media URL is required" }) pure (cleanMaybeText (Just emCreateMediaUrl))
+      mediaType <- maybe (throwError err400 { errBody = "Moment media type must be image or video" }) pure (normalizeMomentMediaType emCreateMediaType)
+      caption <- either throwError pure (normalizeMomentCaption emCreateCaption)
+      let authorName = resolveMomentAuthorName currentPartyId emCreateAuthorName
+          mediaWidth = normalizePositiveIntMaybe emCreateMediaWidth
+          mediaHeight = normalizePositiveIntMaybe emCreateMediaHeight
+          mediaDurationMs = normalizeNonNegativeIntMaybe emCreateMediaDurationMs
+      momentKey <- liftIO $ runSqlPool
+        (insert EventMoment
+          { eventMomentEventId = eventKey
+          , eventMomentAuthorPartyId = Just currentPartyId
+          , eventMomentAuthorName = authorName
+          , eventMomentCaption = caption
+          , eventMomentMediaUrl = mediaUrl
+          , eventMomentMediaType = mediaType
+          , eventMomentMediaWidth = mediaWidth
+          , eventMomentMediaHeight = mediaHeight
+          , eventMomentMediaDurationMs = mediaDurationMs
+          , eventMomentCreatedAt = now
+          , eventMomentUpdatedAt = now
+          })
+        envPool
+      liftIO $ loadMomentDTO envPool momentKey
+
+    reactToMoment :: T.Text -> T.Text -> EventMomentReactionRequestDTO -> AppM EventMomentDTO
+    reactToMoment eventIdStr momentIdStr EventMomentReactionRequestDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      _ <- requireExistingEvent envPool eventKey
+      momentKey <- parseKeyOr400 "moment" momentIdStr
+      _ <- requireMomentForEvent envPool eventKey momentKey
+      reaction <- maybe (throwError err400 { errBody = "Moment reaction must be fire, love, or applause" }) pure (normalizeMomentReaction emrrReaction)
+      let sameReactionKey = EventMomentReactionKey momentKey reaction currentPartyId
+      existingSameReaction <- liftIO $ runSqlPool (get sameReactionKey) envPool
+      liftIO $ runSqlPool
+        (do
+          deleteWhere [EventMomentReactionMomentId ==. momentKey, EventMomentReactionReactorPartyId ==. currentPartyId]
+          when (isNothing existingSameReaction) $
+            insert_ EventMomentReaction
+              { eventMomentReactionMomentId = momentKey
+              , eventMomentReactionReaction = reaction
+              , eventMomentReactionReactorPartyId = currentPartyId
+              , eventMomentReactionCreatedAt = now
+              })
+        envPool
+      liftIO $ loadMomentDTO envPool momentKey
+
+    commentOnMoment :: T.Text -> T.Text -> EventMomentCommentCreateDTO -> AppM EventMomentCommentDTO
+    commentOnMoment eventIdStr momentIdStr EventMomentCommentCreateDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      _ <- requireExistingEvent envPool eventKey
+      momentKey <- parseKeyOr400 "moment" momentIdStr
+      _ <- requireMomentForEvent envPool eventKey momentKey
+      body <- either throwError pure (normalizeMomentCommentBody emccBody)
+      let authorName = resolveMomentAuthorName currentPartyId emccAuthorName
+      commentKey <- liftIO $ runSqlPool
+        (insert EventMomentComment
+          { eventMomentCommentMomentId = momentKey
+          , eventMomentCommentAuthorPartyId = Just currentPartyId
+          , eventMomentCommentAuthorName = authorName
+          , eventMomentCommentBody = body
+          , eventMomentCommentCreatedAt = now
+          , eventMomentCommentUpdatedAt = now
+          })
+        envPool
+      mComment <- liftIO $ runSqlPool (get commentKey) envPool
+      case mComment of
+        Nothing -> throwError err500 { errBody = "Moment comment could not be loaded after insert" }
+        Just commentRow -> pure (momentCommentEntityToDTO commentKey commentRow)
 
     -- Tickets
     ticketsServer :: ServerT TicketsRoutes AppM
@@ -1906,6 +2015,19 @@ socialEventsServer user = eventsServer
       claimed <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
       pure (eventKey, claimed)
 
+    requireExistingEvent :: ConnectionPool -> SocialEventId -> AppM SocialEvent
+    requireExistingEvent pool eventKey = do
+      mEvent <- liftIO $ runSqlPool (get eventKey) pool
+      maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+
+    requireMomentForEvent :: ConnectionPool -> SocialEventId -> EventMomentId -> AppM EventMoment
+    requireMomentForEvent pool eventKey momentKey = do
+      mMoment <- liftIO $ runSqlPool (get momentKey) pool
+      momentRow <- maybe (throwError err404 { errBody = "Moment not found" }) pure mMoment
+      when (eventMomentEventId momentRow /= eventKey) $
+        throwError err400 { errBody = "Moment does not belong to this event" }
+      pure momentRow
+
     parseIds :: T.Text -> T.Text -> AppM (SocialEventId, EventInvitationId)
     parseIds eventIdStr invitationIdStr =
       case parseInvitationIdsEither eventIdStr invitationIdStr of
@@ -2001,6 +2123,61 @@ normalizeEventStatus mStatus =
     Just "cancelled" -> Just "cancelled"
     Just "canceled" -> Just "cancelled"
     Just _ -> Nothing
+
+normalizeMomentMediaType :: T.Text -> Maybe T.Text
+normalizeMomentMediaType raw =
+  case T.toLower (T.strip raw) of
+    "image" -> Just "image"
+    "photo" -> Just "image"
+    "picture" -> Just "image"
+    "video" -> Just "video"
+    "clip" -> Just "video"
+    _ -> Nothing
+
+normalizeMomentReaction :: T.Text -> Maybe T.Text
+normalizeMomentReaction raw =
+  case T.toLower (T.strip raw) of
+    "fire" -> Just "fire"
+    "love" -> Just "love"
+    "heart" -> Just "love"
+    "applause" -> Just "applause"
+    "clap" -> Just "applause"
+    _ -> Nothing
+
+normalizeMomentCaption :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+normalizeMomentCaption mCaption =
+  case cleanMaybeText mCaption of
+    Nothing -> Right Nothing
+    Just captionVal
+      | T.length captionVal > 280 ->
+          Left err400 { errBody = "Moment caption must be 280 characters or less" }
+      | otherwise -> Right (Just captionVal)
+
+normalizeMomentCommentBody :: T.Text -> Either ServerError T.Text
+normalizeMomentCommentBody rawBody =
+  case nonEmptyText rawBody of
+    Nothing ->
+      Left err400 { errBody = "Moment comment body is required" }
+    Just bodyVal
+      | T.length bodyVal > 500 ->
+          Left err400 { errBody = "Moment comment body must be 500 characters or less" }
+      | otherwise -> Right bodyVal
+
+normalizePositiveIntMaybe :: Maybe Int -> Maybe Int
+normalizePositiveIntMaybe mValue =
+  case mValue of
+    Just value | value > 0 -> Just value
+    _ -> Nothing
+
+normalizeNonNegativeIntMaybe :: Maybe Int -> Maybe Int
+normalizeNonNegativeIntMaybe mValue =
+  case mValue of
+    Just value | value >= 0 -> Just value
+    _ -> Nothing
+
+resolveMomentAuthorName :: T.Text -> Maybe T.Text -> T.Text
+resolveMomentAuthorName currentParty mAuthorName =
+  fromMaybe ("Party " <> currentParty) (cleanMaybeText mAuthorName)
 
 normalizeBudgetCentsMaybe :: Maybe Int -> Maybe Int
 normalizeBudgetCentsMaybe mBudget =
@@ -2417,6 +2594,77 @@ loadEventArtists pool eventKey = runSqlPool (do
           , artistCreatedAt = Just (artistProfileCreatedAt a)
           , artistUpdatedAt = Just (artistProfileUpdatedAt a)
           }
+  ) pool
+
+momentReactionEntityToDTO :: Entity EventMomentReaction -> EventMomentReactionDTO
+momentReactionEntityToDTO (Entity _ reactionRow) = EventMomentReactionDTO
+  { emrReaction =
+      fromMaybe
+        (eventMomentReactionReaction reactionRow)
+        (normalizeMomentReaction (eventMomentReactionReaction reactionRow))
+  , emrPartyId = eventMomentReactionReactorPartyId reactionRow
+  , emrCreatedAt = Just (eventMomentReactionCreatedAt reactionRow)
+  }
+
+momentCommentEntityToDTO :: EventMomentCommentId -> EventMomentComment -> EventMomentCommentDTO
+momentCommentEntityToDTO commentKey commentRow = EventMomentCommentDTO
+  { emcId = Just (renderKeyText commentKey)
+  , emcMomentId = Just (renderKeyText (eventMomentCommentMomentId commentRow))
+  , emcAuthorPartyId = eventMomentCommentAuthorPartyId commentRow
+  , emcAuthorName = eventMomentCommentAuthorName commentRow
+  , emcBody = eventMomentCommentBody commentRow
+  , emcCreatedAt = Just (eventMomentCommentCreatedAt commentRow)
+  , emcUpdatedAt = Just (eventMomentCommentUpdatedAt commentRow)
+  }
+
+momentEntityToDTO
+  :: EventMomentId
+  -> EventMoment
+  -> [EventMomentReactionDTO]
+  -> [EventMomentCommentDTO]
+  -> EventMomentDTO
+momentEntityToDTO momentKey momentRow reactions comments = EventMomentDTO
+  { emId = Just (renderKeyText momentKey)
+  , emEventId = Just (renderKeyText (eventMomentEventId momentRow))
+  , emAuthorPartyId = eventMomentAuthorPartyId momentRow
+  , emAuthorName = eventMomentAuthorName momentRow
+  , emCaption = eventMomentCaption momentRow
+  , emMediaUrl = eventMomentMediaUrl momentRow
+  , emMediaType =
+      fromMaybe
+        (eventMomentMediaType momentRow)
+        (normalizeMomentMediaType (eventMomentMediaType momentRow))
+  , emMediaWidth = eventMomentMediaWidth momentRow
+  , emMediaHeight = eventMomentMediaHeight momentRow
+  , emMediaDurationMs = eventMomentMediaDurationMs momentRow
+  , emCreatedAt = Just (eventMomentCreatedAt momentRow)
+  , emUpdatedAt = Just (eventMomentUpdatedAt momentRow)
+  , emReactions = reactions
+  , emComments = comments
+  }
+
+loadMomentDTO :: ConnectionPool -> EventMomentId -> IO EventMomentDTO
+loadMomentDTO pool momentKey = runSqlPool (do
+  mMoment <- get momentKey
+  case mMoment of
+    Nothing -> liftIO (ioError (userError "Moment not found"))
+    Just momentRow -> do
+      reactionRows <- selectList [EventMomentReactionMomentId ==. momentKey] [Asc EventMomentReactionCreatedAt]
+      commentRows <- selectList [EventMomentCommentMomentId ==. momentKey] [Asc EventMomentCommentCreatedAt]
+      let reactions = map momentReactionEntityToDTO reactionRows
+          comments = map (\(Entity commentKey commentRow) -> momentCommentEntityToDTO commentKey commentRow) commentRows
+      pure (momentEntityToDTO momentKey momentRow reactions comments)
+  ) pool
+
+loadEventMoments :: ConnectionPool -> SocialEventId -> IO [EventMomentDTO]
+loadEventMoments pool eventKey = runSqlPool (do
+  momentRows <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt]
+  forM momentRows $ \(Entity momentKey momentRow) -> do
+    reactionRows <- selectList [EventMomentReactionMomentId ==. momentKey] [Asc EventMomentReactionCreatedAt]
+    commentRows <- selectList [EventMomentCommentMomentId ==. momentKey] [Asc EventMomentCommentCreatedAt]
+    let reactions = map momentReactionEntityToDTO reactionRows
+        comments = map (\(Entity commentKey commentRow) -> momentCommentEntityToDTO commentKey commentRow) commentRows
+    pure (momentEntityToDTO momentKey momentRow reactions comments)
   ) pool
 
 eventEntityToDTO :: SocialEventId -> SocialEvent -> [ArtistDTO] -> EventDTO

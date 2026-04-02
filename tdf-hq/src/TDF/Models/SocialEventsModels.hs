@@ -85,6 +85,37 @@ EventInvitation
     updatedAt UTCTime default=now()
     deriving Show Generic
 
+EventMoment
+    eventId SocialEventId
+    authorPartyId Text Maybe
+    authorName Text
+    caption Text Maybe
+    mediaUrl Text
+    mediaType Text
+    mediaWidth Int Maybe
+    mediaHeight Int Maybe
+    mediaDurationMs Int Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
+
+EventMomentReaction
+    momentId EventMomentId
+    reaction Text
+    reactorPartyId Text
+    createdAt UTCTime default=now()
+    Primary momentId reaction reactorPartyId
+    deriving Show Generic
+
+EventMomentComment
+    momentId EventMomentId
+    authorPartyId Text Maybe
+    authorName Text
+    body Text
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
+
 ArtistGenre
     artistId ArtistProfileId
     genre Text

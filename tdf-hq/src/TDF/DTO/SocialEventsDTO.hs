@@ -18,6 +18,12 @@ module TDF.DTO.SocialEventsDTO
   , RsvpDTO(..)
   , InvitationDTO(..)
   , InvitationUpdateDTO(..)
+  , EventMomentDTO(..)
+  , EventMomentCreateDTO(..)
+  , EventMomentReactionDTO(..)
+  , EventMomentReactionRequestDTO(..)
+  , EventMomentCommentDTO(..)
+  , EventMomentCommentCreateDTO(..)
   , TicketTierDTO(..)
   , TicketPurchaseRequestDTO(..)
   , TicketOrderStatusUpdateDTO(..)
@@ -277,6 +283,70 @@ instance FromJSON InvitationUpdateDTO where
       <$> parseJSON value
       <*> (nullableFieldFromParsed <$> (o .:! "invitationMessage"))
   parseJSON _ = fail "InvitationUpdateDTO must be an object"
+
+data EventMomentReactionDTO = EventMomentReactionDTO
+  { emrReaction  :: Text
+  , emrPartyId   :: Text
+  , emrCreatedAt :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventMomentReactionDTO
+instance FromJSON EventMomentReactionDTO
+
+data EventMomentCommentDTO = EventMomentCommentDTO
+  { emcId            :: Maybe Text
+  , emcMomentId      :: Maybe Text
+  , emcAuthorPartyId :: Maybe Text
+  , emcAuthorName    :: Text
+  , emcBody          :: Text
+  , emcCreatedAt     :: Maybe UTCTime
+  , emcUpdatedAt     :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventMomentCommentDTO
+instance FromJSON EventMomentCommentDTO
+
+data EventMomentDTO = EventMomentDTO
+  { emId              :: Maybe Text
+  , emEventId         :: Maybe Text
+  , emAuthorPartyId   :: Maybe Text
+  , emAuthorName      :: Text
+  , emCaption         :: Maybe Text
+  , emMediaUrl        :: Text
+  , emMediaType       :: Text
+  , emMediaWidth      :: Maybe Int
+  , emMediaHeight     :: Maybe Int
+  , emMediaDurationMs :: Maybe Int
+  , emCreatedAt       :: Maybe UTCTime
+  , emUpdatedAt       :: Maybe UTCTime
+  , emReactions       :: [EventMomentReactionDTO]
+  , emComments        :: [EventMomentCommentDTO]
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventMomentDTO
+instance FromJSON EventMomentDTO
+
+data EventMomentCreateDTO = EventMomentCreateDTO
+  { emCreateAuthorName      :: Maybe Text
+  , emCreateCaption         :: Maybe Text
+  , emCreateMediaUrl        :: Text
+  , emCreateMediaType       :: Text
+  , emCreateMediaWidth      :: Maybe Int
+  , emCreateMediaHeight     :: Maybe Int
+  , emCreateMediaDurationMs :: Maybe Int
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventMomentCreateDTO
+instance FromJSON EventMomentCreateDTO
+
+data EventMomentReactionRequestDTO = EventMomentReactionRequestDTO
+  { emrrReaction :: Text
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventMomentReactionRequestDTO
+instance FromJSON EventMomentReactionRequestDTO
+
+data EventMomentCommentCreateDTO = EventMomentCommentCreateDTO
+  { emccAuthorName :: Maybe Text
+  , emccBody       :: Text
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventMomentCommentCreateDTO
+instance FromJSON EventMomentCommentCreateDTO
 
 data TicketTierDTO = TicketTierDTO
   { ticketTierId            :: Maybe Text
