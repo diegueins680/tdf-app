@@ -6,6 +6,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Aeson (eitherDecode)
 import Data.Either (isLeft)
 import Data.Text (Text)
+import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (..))
@@ -44,6 +45,10 @@ import TDF.Server.SocialEventsHandlers (
     normalizeFinanceSource,
     normalizeArtistGenres,
     normalizeInvitationStatus,
+    normalizeMomentCaption,
+    normalizeMomentCommentBody,
+    normalizeMomentMediaType,
+    normalizeMomentReaction,
     normalizePositivePartyIdText,
     parseFollowerQueryParamEither,
     normalizeTicketOrderStatus,
@@ -142,6 +147,40 @@ main = hspec $ do
         it "rejects blank and non-numeric ids" $ do
             normalizePositivePartyIdText "   " `shouldBe` Nothing
             normalizePositivePartyIdText "abc" `shouldBe` Nothing
+
+    describe "moment normalizers" $ do
+        it "normalizes supported media types and reactions" $ do
+            normalizeMomentMediaType " PHOTO " `shouldBe` Just "image"
+            normalizeMomentMediaType "clip" `shouldBe` Just "video"
+            normalizeMomentMediaType "audio" `shouldBe` Nothing
+            normalizeMomentReaction "heart" `shouldBe` Just "love"
+            normalizeMomentReaction "CLAP" `shouldBe` Just "applause"
+            normalizeMomentReaction "wow" `shouldBe` Nothing
+
+        it "accepts blank captions as missing and rejects oversize captions" $ do
+            normalizeMomentCaption (Just "   ") `shouldBe` Right Nothing
+            normalizeMomentCaption (Just "  aftermovie  ") `shouldBe` Right (Just "aftermovie")
+            case normalizeMomentCaption (Just (Data.Text.replicate 281 "a")) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "Moment caption must be 280 characters or less"
+                Right value ->
+                    expectationFailure ("Expected oversize caption to fail, got " <> show value)
+
+        it "requires non-empty comment bodies and enforces comment length" $ do
+            normalizeMomentCommentBody "  impecable set  " `shouldBe` Right "impecable set"
+            case normalizeMomentCommentBody "   " of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "Moment comment body is required"
+                Right value ->
+                    expectationFailure ("Expected blank moment comment to fail, got " <> show value)
+            case normalizeMomentCommentBody (Data.Text.replicate 501 "b") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "Moment comment body must be 500 characters or less"
+                Right value ->
+                    expectationFailure ("Expected oversize moment comment to fail, got " <> show value)
 
     describe "parseFollowerQueryParamEither" $ do
         it "canonicalizes numeric follower query params before delete lookups" $ do

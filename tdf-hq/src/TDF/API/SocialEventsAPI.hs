@@ -11,6 +11,7 @@ module TDF.API.SocialEventsAPI
   , ArtistsRoutes
   , RsvpRoutes
   , InvitationsRoutes
+  , MomentsRoutes
   , TicketsRoutes
   , BudgetRoutes
   , FinanceRoutes
@@ -37,6 +38,11 @@ import TDF.DTO.SocialEventsDTO
   , RsvpDTO
   , InvitationDTO
   , InvitationUpdateDTO
+  , EventMomentDTO
+  , EventMomentCreateDTO
+  , EventMomentReactionRequestDTO
+  , EventMomentCommentDTO
+  , EventMomentCommentCreateDTO
   , TicketTierDTO
   , TicketPurchaseRequestDTO
   , TicketOrderStatusUpdateDTO
@@ -123,6 +129,12 @@ type InvitationsRoutes =
       :<|> Capture "invitationId" Text :> ReqBody '[JSON] InvitationUpdateDTO :> Put '[JSON] InvitationDTO
          )
 
+type MomentsRoutes =
+       "events" :> Capture "eventId" Text :> "moments" :> Get '[JSON] [EventMomentDTO]
+  :<|> "events" :> Capture "eventId" Text :> "moments" :> ReqBody '[JSON] EventMomentCreateDTO :> Post '[JSON] EventMomentDTO
+  :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> "reactions" :> ReqBody '[JSON] EventMomentReactionRequestDTO :> Post '[JSON] EventMomentDTO
+  :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> "comments" :> ReqBody '[JSON] EventMomentCommentCreateDTO :> Post '[JSON] EventMomentCommentDTO
+
 type TicketsRoutes =
        "events" :> Capture "eventId" Text :> "ticket-tiers" :> Get '[JSON] [TicketTierDTO]
   :<|> "events" :> Capture "eventId" Text :> "ticket-tiers" :> ReqBody '[JSON] TicketTierDTO :> Post '[JSON] TicketTierDTO
@@ -159,6 +171,7 @@ type SocialEventsAPI = EventsRoutes
                :<|> ArtistsRoutes
                :<|> RsvpRoutes
                :<|> InvitationsRoutes
+               :<|> MomentsRoutes
                :<|> TicketsRoutes
                :<|> BudgetRoutes
                :<|> FinanceRoutes
