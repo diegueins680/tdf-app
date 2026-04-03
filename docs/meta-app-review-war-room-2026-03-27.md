@@ -18,7 +18,7 @@ All non-Meta work is secondary unless it directly unblocks this approval.
 - Messaging backend: live reply delivery verified on a real Instagram test thread
 - Canonical packet summary: `docs/meta-app-review-submission-packet-2026-03-26.md`
 - Evidence manifest: `screencast/meta-app-review/evidence-manifest.json`
-- Reviewer notes: `screencast/meta-app-review/submission-notes.txt`
+- Reviewer notes: `screencast/meta-app-review/submission-notes.txt` plus the per-permission files under `screencast/meta-app-review/permission-notes/`
 - Browser-control / feedback-page access: recovered on 2026-03-27
 
 ## Current evidence references
@@ -47,7 +47,7 @@ Owner: submission quality / permission-to-evidence mapping / reviewer clarity
 - Ensure the business/professional-account wording is explicit.
 - Ensure delete/unsend evidence is part of the canonical flow.
 Current status: live Meta feedback captured and translated into packet updates; the packet now has a refreshed Facebook Login final plus a historical Instagram Login final selected for reuse.
-Next action: use `screencast/meta-app-review/submission-notes.txt` as the canonical Meta note and submit the refreshed Facebook Login final plus the historical Instagram Login final.
+Next action: use the matching file from `screencast/meta-app-review/permission-notes/` for each permission form, use `screencast/meta-app-review/submission-notes.txt` for any general reviewer instructions field, and submit the refreshed Facebook Login final plus the historical Instagram Login final.
 
 ### Platform
 Owner: artifact integrity / runtime proof / deployment readiness
@@ -64,7 +64,7 @@ Owner: last-mile submission in Meta control plane
 - Paste canonical notes.
 - Submit or re-submit all four permissions.
 Current status: control-plane access is available again and the refreshed evidence route is frozen.
-Next action: attach the refreshed Facebook Login final, attach the historical Instagram Login final, paste the canonical notes, and execute `Request again`.
+Next action: attach the refreshed Facebook Login final, attach the historical Instagram Login final, paste the permission-specific notes plus the combined reviewer narrative where Meta provides a general notes field, and execute `Request again`.
 
 ## Precise blocker log
 ### Blocker 2026-03-27-01
@@ -272,7 +272,7 @@ Does this prove a Meta external blocker?: **No**
 Next action:
 1. Attach `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`.
 2. Attach `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`.
-3. Paste `screencast/meta-app-review/submission-notes.txt` and click `Request again`.
+3. Paste the matching file from `screencast/meta-app-review/permission-notes/` into each permission form, use `screencast/meta-app-review/submission-notes.txt` for any general reviewer notes field, and click `Request again`.
 
 ## Definition of done
 - All four target permissions are resubmitted with the correct evidence attached; or

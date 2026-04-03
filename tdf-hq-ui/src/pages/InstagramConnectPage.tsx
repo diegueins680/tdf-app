@@ -221,6 +221,10 @@ export default function InstagramConnectPage() {
               <Typography variant="body2" color="text.secondary">
                 Select the exact Page/account that will be used to send messages. Keep this selection visible in the screencast.
               </Typography>
+              <Alert severity="info" variant="outlined">
+                Reviewer proof: the Instagram account below is the professional/business messaging account used in this flow.
+                {oauthProvider === 'facebook' ? ' It is linked to the selected Facebook Page shown here.' : ''}
+              </Alert>
               <TextField
                 select
                 label="Messaging asset"
@@ -242,10 +246,13 @@ export default function InstagramConnectPage() {
               </TextField>
               {selectedPage && (
                 <Stack spacing={0.5}>
-                  <Typography variant="body2">Selected Page: {selectedPage.pageName}</Typography>
+                  <Typography variant="body2">
+                    {reviewMode ? 'Selected Facebook Page:' : 'Selected Page:'} {selectedPage.pageName}
+                  </Typography>
                   <Typography variant="body2">Page ID: {selectedPage.pageId}</Typography>
                   <Typography variant="body2">
-                    Instagram account: {selectedPage.instagramUsername ? `@${selectedPage.instagramUsername}` : 'Not linked'}
+                    {reviewMode ? 'Professional/business Instagram account:' : 'Instagram account:'}{' '}
+                    {selectedPage.instagramUsername ? `@${selectedPage.instagramUsername}` : 'Not linked'}
                   </Typography>
                   <Typography variant="body2">Instagram User ID: {selectedPage.instagramUserId ?? '—'}</Typography>
                 </Stack>

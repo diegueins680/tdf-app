@@ -830,7 +830,7 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
                       )}
                       {reviewMode && activeAsset && (
                         <Alert severity="info" variant="outlined">
-                          Active selected asset: {activeAsset.pageName} (Page ID: {activeAsset.pageId}
+                          Active selected professional/business asset: {activeAsset.pageName} (Page ID: {activeAsset.pageId}
                           {activeAsset.instagramUserId ? ` · IG User ID: ${activeAsset.instagramUserId}` : ''})
                         </Alert>
                       )}
@@ -1386,7 +1386,7 @@ export default function SocialInboxPage() {
             </Typography>
             {activeAsset ? (
               <Alert severity="success" variant="outlined">
-                Selected asset: {activeAsset.pageName} (Page ID: {activeAsset.pageId}
+                Selected professional/business Instagram messaging asset: {activeAsset.pageName} (Page ID: {activeAsset.pageId}
                 {activeAsset.instagramUsername ? ` · @${activeAsset.instagramUsername}` : ''}
                 {activeAsset.instagramUserId ? ` · IG User ID: ${activeAsset.instagramUserId}` : ''})
               </Alert>

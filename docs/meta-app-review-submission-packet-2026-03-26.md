@@ -87,8 +87,14 @@ Supporting Facebook Login sources kept for audit and quick review:
 Generated manifest:
 - `screencast/meta-app-review/evidence-manifest.json`
 
-Paste-ready reviewer notes:
+Combined reviewer narrative:
 - `screencast/meta-app-review/submission-notes.txt`
+
+Per-permission form answers for Meta App Review:
+- `screencast/meta-app-review/permission-notes/instagram_basic.txt`
+- `screencast/meta-app-review/permission-notes/instagram_manage_messages.txt`
+- `screencast/meta-app-review/permission-notes/instagram_business_basic.txt`
+- `screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt`
 
 Primary evidence sources for this packet:
 - `docs/META_APP_REVIEW_SCREENCAST.md`
@@ -120,19 +126,19 @@ Primary evidence sources for this packet:
 - [ ] `instagram_basic`
   - Purpose in TDF HQ: lets the Facebook Login review flow identify the connected Instagram messaging account and show the selected asset before entering the inbox reply flow.
   - Reviewer instructions: in `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`, watch the Meta login plus consent dialog, then confirm `/social/instagram?review=1` shows the provider and scope chips, connected status, and the selected professional or business messaging asset with Page ID plus Instagram User ID before the flow continues.
-  - Evidence references: `docs/META_APP_REVIEW_SCREENCAST.md`, `screencast/meta-app-review/submission-notes.txt`, `screencast/meta-app-review/evidence-manifest.json`, `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`
+  - Evidence references: `docs/META_APP_REVIEW_SCREENCAST.md`, `screencast/meta-app-review/permission-notes/instagram_basic.txt`, `screencast/meta-app-review/submission-notes.txt`, `screencast/meta-app-review/evidence-manifest.json`, `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`
 - [ ] `instagram_manage_messages`
   - Purpose in TDF HQ: lets the Facebook Login review flow open an inbound Instagram conversation and send a reply from the TDF HQ inbox UI.
   - Reviewer instructions: in `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`, continue from setup into `/social/inbox?review=1`, open the inbound marker thread, send the test reply, show the exact delivered message in the native Instagram client, then show the delete or unsend of that same message and the deleted-message refresh back in TDF HQ.
-  - Evidence references: `docs/META_APP_REVIEW_SCREENCAST.md`, `screencast/meta-app-review/submission-notes.txt`, `screencast/meta-app-review/evidence-manifest.json`, `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`
+  - Evidence references: `docs/META_APP_REVIEW_SCREENCAST.md`, `screencast/meta-app-review/permission-notes/instagram_manage_messages.txt`, `screencast/meta-app-review/submission-notes.txt`, `screencast/meta-app-review/evidence-manifest.json`, `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`
 - [ ] `instagram_business_basic`
   - Purpose in TDF HQ: lets the Instagram Login review flow identify the connected professional or business Instagram messaging account and show the selected asset before entering the inbox reply flow.
   - Reviewer instructions: in `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`, watch the Meta login plus consent dialog, then confirm `/social/instagram?review=1` shows connected status and the selected professional or business messaging asset before the flow continues.
-  - Evidence references: `docs/META_APP_REVIEW_SCREENCAST.md`, `screencast/meta-app-review/submission-notes.txt`, `screencast/meta-app-review/evidence-manifest.json`, `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`
+  - Evidence references: `docs/META_APP_REVIEW_SCREENCAST.md`, `screencast/meta-app-review/permission-notes/instagram_business_basic.txt`, `screencast/meta-app-review/submission-notes.txt`, `screencast/meta-app-review/evidence-manifest.json`, `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`
 - [ ] `instagram_business_manage_messages`
   - Purpose in TDF HQ: lets the Instagram Login review flow open an inbound Instagram conversation and send a reply from the TDF HQ inbox UI.
   - Reviewer instructions: in `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`, continue from setup into `/social/inbox?review=1`, open the inbound thread, send the test reply, show the exact delivered message in the native Instagram client, then show the delete or unsend of that same message and the deleted-message refresh back in TDF HQ.
-  - Evidence references: `docs/META_APP_REVIEW_SCREENCAST.md`, `screencast/meta-app-review/submission-notes.txt`, `screencast/meta-app-review/evidence-manifest.json`, `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`
+  - Evidence references: `docs/META_APP_REVIEW_SCREENCAST.md`, `screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt`, `screencast/meta-app-review/submission-notes.txt`, `screencast/meta-app-review/evidence-manifest.json`, `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`
 
 ## What the reviewer sees in-app
 Setup flow:
@@ -189,7 +195,8 @@ The browser-control blocker and the Facebook packaging blocker are cleared.
 The remaining work is control-plane submission:
 - attach `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`
 - attach `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`
-- paste `screencast/meta-app-review/submission-notes.txt`
+- paste the matching file from `screencast/meta-app-review/permission-notes/` into each permission form
+- use `screencast/meta-app-review/submission-notes.txt` only for any general reviewer-instructions field
 - click Meta `Request again`
 
 Live submission target remains:
@@ -199,5 +206,10 @@ Manual last mile:
 1. Open the live Meta feedback page above in the correct authenticated session.
 2. Open **Permissions and Features**.
 3. Attach `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4` and `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`.
-4. Paste the notes from `screencast/meta-app-review/submission-notes.txt`.
-5. Submit.
+4. For each permission textarea, paste the matching note file:
+   - `instagram_basic` -> `screencast/meta-app-review/permission-notes/instagram_basic.txt`
+   - `instagram_manage_messages` -> `screencast/meta-app-review/permission-notes/instagram_manage_messages.txt`
+   - `instagram_business_basic` -> `screencast/meta-app-review/permission-notes/instagram_business_basic.txt`
+   - `instagram_business_manage_messages` -> `screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt`
+5. If Meta also shows a general reviewer-instructions field, paste `screencast/meta-app-review/submission-notes.txt` there.
+6. Submit.
