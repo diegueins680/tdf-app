@@ -23,7 +23,7 @@ import type { DropdownOptionDTO, PartyDTO, PartyUpdate } from '../api/types';
 import { Admin } from '../api/admin';
 import type { Role } from '../api/generated/client';
 import { submitLiveSessionIntake } from '../api/liveSessions';
-import { getStoredSessionToken } from '../session/SessionContext';
+import { getStoredSessionToken, useSession } from '../session/SessionContext';
 import { Bands } from '../api/bands';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
@@ -89,7 +89,8 @@ export interface LiveSessionIntakeFormProps {
 
 export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: LiveSessionIntakeFormProps) {
   const qc = useQueryClient();
-  const hasToken = Boolean(getStoredSessionToken());
+  const { session } = useSession();
+  const hasToken = Boolean(session) || Boolean(getStoredSessionToken());
   const { data: parties = [], isLoading: partiesLoading } = useQuery({
     queryKey: ['parties'],
     queryFn: () => Parties.list(),

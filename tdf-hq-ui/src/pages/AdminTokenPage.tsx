@@ -72,7 +72,7 @@ export default function AdminTokenPage() {
     setNotice(null);
     try {
       const response = await loginRequest({ username: trimmedUser, password });
-      setToken(response.token);
+      setToken(response.token ?? null);
       setDetails({
         username: trimmedUser,
         partyId: response.partyId,

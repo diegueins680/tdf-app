@@ -36,7 +36,7 @@ paths:
   /login:
     post:
       summary: Login with username or email
-      description: Authenticates a user and returns a bearer token plus role metadata.
+      description: Authenticates a user, sets a session cookie, and returns a bearer token plus role metadata.
       operationId: login
       security: [ ]
       requestBody:
@@ -48,6 +48,11 @@ paths:
       responses:
         '200':
           description: Authenticated successfully
+          headers:
+            Set-Cookie:
+              description: Session cookie for browser-based clients.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -57,7 +62,7 @@ paths:
   /login/google:
     post:
       summary: Login with Google
-      description: Validates a Google ID token and issues a session. Creates a Customer/Fan account when the email is new.
+      description: Validates a Google ID token, sets a session cookie, and issues a session. Creates a Customer/Fan account when the email is new.
       operationId: loginWithGoogle
       security: [ ]
       requestBody:
@@ -69,6 +74,11 @@ paths:
       responses:
         '200':
           description: Authenticated successfully
+          headers:
+            Set-Cookie:
+              description: Session cookie for browser-based clients.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -78,7 +88,7 @@ paths:
   /signup:
     post:
       summary: Create an account
-      description: Registers a new party + credential pair and returns a ready-to-use token.
+      description: Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
       operationId: signup
       security: [ ]
       requestBody:
@@ -88,14 +98,50 @@ paths:
             schema:
               $ref: '#/components/schemas/SignupRequest'
       responses:
-        '201':
+        '200':
           description: Account created
+          headers:
+            Set-Cookie:
+              description: Session cookie for browser-based clients.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '409':
           description: Email already registered
+  /session:
+    get:
+      summary: Get current session
+      description: Returns the authenticated user snapshot resolved by the backend, including published modules.
+      operationId: getSession
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Current authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          description: Missing or invalid session
+  /session/logout:
+    post:
+      summary: Clear current session
+      description: Clears the browser session cookie for the current user.
+      operationId: logoutSession
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Session cleared
+          headers:
+            Set-Cookie:
+              description: Expired session cookie.
+              schema:
+                type: string
   /public/courses/{slug}:
     parameters:
       - name: slug
@@ -1356,7 +1402,27 @@ components:
       properties:
         token:
           type: string
-          description: Bearer token for authenticated requests.
+          description: Bearer token for authenticated requests when a client is not using cookies.
+        partyId:
+          type: integer
+          format: int64
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        modules:
+          type: array
+          items:
+            type: string
+            description: Enabled modules for the user.
+    SessionResponse:
+      type: object
+      required: [username, displayName, partyId, roles, modules]
+      properties:
+        username:
+          type: string
+        displayName:
+          type: string
         partyId:
           type: integer
           format: int64
@@ -1375,11 +1441,13 @@ components:
       enum:
         - Admin
         - Manager
+        - Studio Manager
         - Intern
         - Engineer
         - Teacher
         - Reception
         - Accounting
+        - Live Sessions Producer
         - Webmaster
         - Artist
         - Artista
@@ -1400,6 +1468,7 @@ components:
         - Vendor
         - Customer
         - Fan
+        - Maintenance
     UserRoleSummary:
       type: object
       properties:

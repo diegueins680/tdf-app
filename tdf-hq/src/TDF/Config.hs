@@ -64,6 +64,12 @@ data AppConfig = AppConfig
   , instagramMessagingAccountId :: Maybe Text
   , instagramMessagingApiBase :: Text
   , instagramVerifyToken :: Maybe Text
+  , sessionCookieName :: Text
+  , sessionCookieDomain :: Maybe Text
+  , sessionCookiePath :: Text
+  , sessionCookieSecure :: Bool
+  , sessionCookieSameSite :: Text
+  , sessionCookieMaxAgeSeconds :: Maybe Int
   } deriving (Show)
 
 openAiEmbedDimensions :: Text -> Maybe Int
@@ -135,9 +141,25 @@ loadConfig = do
   igMsgAccountEnv <- lookupEnv "INSTAGRAM_MESSAGING_ACCOUNT_ID"
   igMsgBaseEnv <- lookupEnv "INSTAGRAM_MESSAGING_API_BASE"
   igVerifyEnv <- lookupEnv "INSTAGRAM_VERIFY_TOKEN" <|> lookupEnv "IG_VERIFY_TOKEN"
+  sessionCookieNameEnv <- lookupEnv "SESSION_COOKIE_NAME"
+  sessionCookieDomainEnv <- lookupEnv "SESSION_COOKIE_DOMAIN"
+  sessionCookiePathEnv <- lookupEnv "SESSION_COOKIE_PATH"
+  sessionCookieSecureEnv <- lookupEnv "SESSION_COOKIE_SECURE"
+  sessionCookieSameSiteEnv <- lookupEnv "SESSION_COOKIE_SAMESITE"
+  sessionCookieMaxAgeEnv <- lookupEnv "SESSION_COOKIE_MAX_AGE"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
   let fbGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
       igGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
+      normalizedAppBase = fmap (T.strip . T.pack) baseUrlEnv >>= nonEmpty
+      cookieSecureDefault =
+        maybe False (\base -> "https://" `T.isPrefixOf` T.toLower base) normalizedAppBase
+      cookieSecure = maybe cookieSecureDefault asBool sessionCookieSecureEnv
+      cookieSameSite =
+        normalizeSameSiteValue $
+          fromMaybe
+            (if cookieSecure then "None" else "Lax")
+            sessionCookieSameSiteEnv
+      cookiePath = fromMaybe "/" (sessionCookiePathEnv >>= nonEmpty . T.pack)
   pure AppConfig
     { dbHost = h
     , dbPort = p
@@ -149,7 +171,7 @@ loadConfig = do
     , seedDatabase = asBool sdb
     , runMigrations = asBool mig
     , seedTriggerToken = mkSeedToken seedEnv
-    , appBaseUrl = fmap (T.strip . T.pack) baseUrlEnv
+    , appBaseUrl = normalizedAppBase
     , assetsBaseUrl = fmap (T.strip . T.pack) assetsBaseEnv
     , assetsRootDir = assetsRoot
     , courseDefaultSlug = maybe "produccion-musical-abr-2026" (T.strip . T.pack) courseSlugEnv
@@ -184,6 +206,12 @@ loadConfig = do
     , instagramMessagingAccountId = fmap (T.strip . T.pack) igMsgAccountEnv
     , instagramMessagingApiBase = maybe "https://graph.facebook.com/v20.0" (T.strip . T.pack) igMsgBaseEnv
     , instagramVerifyToken = fmap (T.strip . T.pack) igVerifyEnv >>= nonEmpty
+    , sessionCookieName = fromMaybe "tdf_session" (sessionCookieNameEnv >>= nonEmpty . T.pack)
+    , sessionCookieDomain = fmap (T.strip . T.pack) sessionCookieDomainEnv >>= nonEmpty
+    , sessionCookiePath = cookiePath
+    , sessionCookieSecure = cookieSecure
+    , sessionCookieSameSite = cookieSameSite
+    , sessionCookieMaxAgeSeconds = parsePositiveInt sessionCookieMaxAgeEnv <|> Just (60 * 60 * 24 * 30)
     }
   where
     get k def = fmap (fromMaybe def) (lookupEnv k)
@@ -197,6 +225,10 @@ loadConfig = do
       case mVal >>= readMaybe of
         Just n | n > 0 -> n
         _ -> def
+    parsePositiveInt mVal =
+      case mVal >>= readMaybe of
+        Just n | n > 0 -> Just n
+        _ -> Nothing
     mkSeedToken mVal =
       case fmap (T.strip . T.pack) mVal of
         Nothing  -> Nothing
@@ -219,6 +251,13 @@ loadConfig = do
         , smtpPassword = pass
         , smtpUseTLS = useTls
         }
+
+normalizeSameSiteValue :: String -> Text
+normalizeSameSiteValue raw =
+  case map toLower (T.unpack (T.strip (T.pack raw))) of
+    "strict" -> "Strict"
+    "none" -> "None"
+    _ -> "Lax"
 
 resolveAssetsRootDir :: Maybe FilePath -> IO FilePath
 resolveAssetsRootDir mEnv = do

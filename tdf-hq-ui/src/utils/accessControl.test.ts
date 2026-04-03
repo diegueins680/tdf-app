@@ -12,9 +12,9 @@ import {
 } from './accessControl';
 
 const BACKEND_ROLE_MODULES: Record<string, readonly string[]> = {
-  Admin: ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships'],
-  Manager: ['crm', 'scheduling', 'packages', 'invoicing', 'internships'],
-  'Studio Manager': ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships'],
+  Admin: ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships', 'ops'],
+  Manager: ['crm', 'scheduling', 'packages', 'invoicing', 'internships', 'ops'],
+  'Studio Manager': ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships', 'ops'],
   Reception: ['crm', 'scheduling'],
   Accounting: ['invoicing'],
   Engineer: ['scheduling'],
@@ -41,7 +41,7 @@ const BACKEND_ROLE_MODULES: Record<string, readonly string[]> = {
   ReadOnly: ['crm'],
   Customer: ['packages'],
   Fan: [],
-  Maintenance: ['packages', 'scheduling'],
+  Maintenance: ['packages', 'scheduling', 'ops'],
 };
 
 const subsetsUpToTwo = <T,>(values: readonly T[]): T[][] => {
@@ -77,7 +77,7 @@ const hasBackendStrictAdminAccess = (roles: readonly string[]) =>
   roles.some((role) => ['Admin'].includes(role));
 
 describe('buildAccessibleModuleSet', () => {
-  it('does not infer staff access from public music-industry roles', () => {
+  it('only trusts modules that the backend explicitly published', () => {
     const modules = buildAccessibleModuleSet(['TourManager', 'LabelRep', 'StageManager'], []);
 
     expect(modules.size).toBe(0);
@@ -102,7 +102,7 @@ describe('buildAccessibleModuleSet', () => {
 
   it('grants operations access only to real operations staff or admins', () => {
     expect(hasOperationsAccess(['Fan', 'Customer'], ['Packages'])).toBe(false);
-    expect(hasOperationsAccess(['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
+    expect(hasOperationsAccess(['Manager'], ['CRM', 'Scheduling', 'Packages', 'Ops'])).toBe(true);
     expect(hasOperationsAccess(['Maintenance'], ['Packages'])).toBe(true);
     expect(hasOperationsAccess([], ['ops'])).toBe(true);
   });
@@ -112,7 +112,7 @@ describe('buildAccessibleModuleSet', () => {
     expect(hasSocialInboxAccess(['ReadOnly'], ['CRM'])).toBe(false);
     expect(hasSocialInboxAccess(['Reception'], ['CRM', 'Scheduling'])).toBe(true);
     expect(hasAiToolingAccess(['Fan', 'Customer'], ['Packages'])).toBe(false);
-    expect(hasAiToolingAccess(['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
+    expect(hasAiToolingAccess(['Manager'], ['CRM', 'Scheduling', 'Packages', 'Ops'])).toBe(true);
     expect(hasAiToolingAccess(['Maintenance'], ['Packages'])).toBe(true);
     expect(hasStrictAdminAccess(['Fan', 'Customer'], ['Packages'])).toBe(false);
     expect(hasStrictAdminAccess(['Admin'], ['admin'])).toBe(true);
@@ -145,7 +145,7 @@ describe('canAccessPath', () => {
     expect(canAccessPath('/social/inbox', ['ReadOnly'], ['CRM'])).toBe(false);
     expect(canAccessPath('/social/inbox', ['Reception'], ['CRM', 'Scheduling'])).toBe(true);
     expect(canAccessPath('/herramientas/chatkit', ['Fan', 'Customer'], ['Packages'])).toBe(false);
-    expect(canAccessPath('/herramientas/chatkit', ['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
+    expect(canAccessPath('/herramientas/chatkit', ['Manager'], ['CRM', 'Scheduling', 'Packages', 'Ops'])).toBe(true);
     expect(canAccessPath('/herramientas/tidal-agent', ['Fan', 'Customer'], ['Packages'])).toBe(false);
     expect(canAccessPath('/configuracion/roles-permisos', ['Fan'], [])).toBe(false);
     expect(canAccessPath('/configuracion/roles-permisos', ['Webmaster'], ['admin'])).toBe(false);
@@ -170,7 +170,7 @@ describe('canAccessPath', () => {
   });
 
   it('matches route-specific backend access rules for operations and label tracks', () => {
-    expect(canAccessPath('/operacion/inventario', ['Manager'], ['CRM', 'Scheduling', 'Packages'])).toBe(true);
+    expect(canAccessPath('/operacion/inventario', ['Manager'], ['CRM', 'Scheduling', 'Packages', 'Ops'])).toBe(true);
     expect(canAccessPath('/label/assets', ['Maintenance'], ['Packages'])).toBe(true);
     expect(canAccessPath('/label/assets', [], ['ops'])).toBe(true);
     expect(canAccessPath('/herramientas/chatkit', [], ['ops'])).toBe(true);

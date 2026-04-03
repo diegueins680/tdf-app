@@ -30,7 +30,7 @@ export default function ArtistPublicPage() {
   const qc = useQueryClient();
   const { session } = useSession();
   const viewerId = session?.partyId ?? null;
-  const hasToken = Boolean(session?.apiToken);
+  const hasToken = Boolean(session);
 
   const segment = (slugOrId ?? '').trim();
   const numericId = useMemo(() => parsePositiveSafeInt(segment), [segment]);

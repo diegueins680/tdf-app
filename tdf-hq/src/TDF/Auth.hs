@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -17,6 +18,8 @@ module TDF.Auth
   , loadAuthedUser
   , lookupUsernameFromToken
   , resolveUsernameFromLabel
+  , sessionCookieHeader
+  , clearSessionCookieHeader
   ) where
 
 import           Control.Applicative        ((<|>))
@@ -24,6 +27,7 @@ import           Control.Monad              (forM_, guard)
 import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.List                  (foldl')
+import           Data.Maybe                 (maybeToList)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
@@ -36,6 +40,7 @@ import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler, AuthServerData)
 
 import           TDF.DB                     (Env(..))
+import           TDF.Config                 (AppConfig(..))
 import           TDF.Models
 
 -- | Enumeration of major application modules.
@@ -46,6 +51,7 @@ data ModuleAccess
   | ModuleInvoicing
   | ModuleAdmin
   | ModuleInternships
+  | ModuleOps
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 moduleName :: ModuleAccess -> Text
@@ -55,6 +61,7 @@ moduleName ModulePackages   = "Packages"
 moduleName ModuleInvoicing  = "Invoicing"
 moduleName ModuleAdmin      = "Admin"
 moduleName ModuleInternships = "Internships"
+moduleName ModuleOps        = "Ops"
 
 -- | Authenticated user with associated module access.
 data AuthedUser = AuthedUser
@@ -102,7 +109,8 @@ hasSocialInboxAccess user@AuthedUser{..} =
 
 authWithToken :: Env -> Request -> Handler AuthedUser
 authWithToken env req = do
-  token <- either throw401 pure (extractToken req)
+  let cfg = envConfig env
+  token <- either throw401 pure (extractToken cfg req)
   mUser <- liftIO . flip runSqlPool (envPool env) $ loadAuthedUser token
   case mUser of
     Nothing   -> throw401 "Invalid or inactive token"
@@ -151,9 +159,9 @@ modulesForRoles :: [RoleEnum] -> Set ModuleAccess
 modulesForRoles = foldl' (flip (Set.union . modulesForRole)) Set.empty
 
 modulesForRole :: RoleEnum -> Set ModuleAccess
-modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships]
-modulesForRole Manager    = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleInternships]
-modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships]
+modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps]
+modulesForRole Manager    = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleInternships, ModuleOps]
+modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps]
 modulesForRole Reception  = Set.fromList [ModuleCRM, ModuleScheduling]
 modulesForRole Accounting = Set.singleton ModuleInvoicing
 modulesForRole Engineer   = Set.singleton ModuleScheduling
@@ -180,7 +188,7 @@ modulesForRole Vendor     = Set.singleton ModulePackages
 modulesForRole Customer   = Set.singleton ModulePackages
 modulesForRole ReadOnly   = Set.singleton ModuleCRM
 modulesForRole Fan        = Set.empty
-modulesForRole Maintenance = Set.fromList [ModulePackages, ModuleScheduling]
+modulesForRole Maintenance = Set.fromList [ModulePackages, ModuleScheduling, ModuleOps]
 
 -- Ensure every authenticated user has baseline Fan and Customer roles active.
 defaultRoles :: [RoleEnum]
@@ -194,17 +202,63 @@ ensureDefaultRoles pid roles = do
     upsert (PartyRole pid r True) [PartyRoleActive =. True]
   pure (roles ++ missing)
 
-extractToken :: Request -> Either Text Text
-extractToken req =
-  case lookup "Authorization" (requestHeaders req) of
-    Nothing   -> Left "Missing Authorization header"
-    Just hdr  -> parseAuthHeader (TE.decodeUtf8' hdr)
+extractToken :: AppConfig -> Request -> Either Text Text
+extractToken cfg req =
+  case extractHeaderToken req <|> extractCookieToken cfg req of
+    Just token -> Right token
+    Nothing -> Left "Missing Authorization header"
   where
-    parseAuthHeader (Left _) = Left "Invalid Authorization header encoding"
+    extractHeaderToken request =
+      lookup "Authorization" (requestHeaders request) >>= parseAuthHeader . TE.decodeUtf8'
+
+    extractCookieToken AppConfig{sessionCookieName} request =
+      lookup "Cookie" (requestHeaders request)
+        >>= either (const Nothing) (lookupCookie sessionCookieName) . TE.decodeUtf8'
+
+    parseAuthHeader (Left _) = Nothing
     parseAuthHeader (Right txt) =
       case T.words txt of
         [scheme, value]
-          | T.toLower scheme == "bearer" -> Right value
-          | otherwise                    -> Left "Unsupported authorization scheme"
-        _ -> Left "Malformed Authorization header"
+          | T.toLower scheme == "bearer" -> Just value
+        _ -> Nothing
+
+lookupCookie :: Text -> Text -> Maybe Text
+lookupCookie cookieName rawHeader =
+  let pairs = map (breakOnEquals . T.strip) (T.splitOn ";" rawHeader)
+      cleaned = do
+        (namePart, valuePart) <- pairs
+        let name = T.strip namePart
+            value = T.strip valuePart
+        guard (not (T.null name) && not (T.null value))
+        pure (name, value)
+  in lookup cookieName cleaned >>= nonEmptyText
+  where
+    breakOnEquals chunk =
+      let (name, rest) = T.breakOn "=" chunk
+      in (name, T.drop 1 rest)
+
+    nonEmptyText txt =
+      let trimmed = T.strip txt
+      in if T.null trimmed then Nothing else Just trimmed
+
+sessionCookieHeader :: AppConfig -> Text -> Text
+sessionCookieHeader cfg token =
+  cookieHeaderWithValue cfg token
+
+clearSessionCookieHeader :: AppConfig -> Text
+clearSessionCookieHeader cfg =
+  cookieHeaderWithValue cfg "" <> "; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+
+cookieHeaderWithValue :: AppConfig -> Text -> Text
+cookieHeaderWithValue AppConfig{..} rawValue =
+  let segments =
+        [ sessionCookieName <> "=" <> rawValue
+        , "Path=" <> sessionCookiePath
+        , "HttpOnly"
+        , "SameSite=" <> sessionCookieSameSite
+        ]
+        <> maybe [] (\domainVal -> ["Domain=" <> domainVal]) sessionCookieDomain
+        <> ["Max-Age=" <> T.pack (show maxAge) | maxAge <- maybeToList sessionCookieMaxAgeSeconds]
+        <> ["Secure" | sessionCookieSecure]
+  in T.intercalate "; " segments
 type instance AuthServerData (AuthProtect "bearer-token") = AuthedUser

@@ -258,16 +258,18 @@ type ReceiptAPI =
 type HealthAPI = Get '[JSON] HealthStatus
 type McpAPI = ReqBody '[JSON] Value :> Post '[JSON] Value
 
-type LoginAPI = ReqBody '[JSON] LoginRequest :> Post '[JSON] LoginResponse
-type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] LoginResponse
+type SessionCookieHeaders = Headers '[Header "Set-Cookie" Text]
 
-type SignupAPI = ReqBody '[JSON] SignupRequest :> Post '[JSON] LoginResponse
+type LoginAPI = ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
+type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
+
+type SignupAPI = ReqBody '[JSON] SignupRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
 type PasswordResetAPI = ReqBody '[JSON] PasswordResetRequest :> Post '[JSON] NoContent
 
-type PasswordResetConfirmAPI = ReqBody '[JSON] PasswordResetConfirmRequest :> Post '[JSON] LoginResponse
+type PasswordResetConfirmAPI = ReqBody '[JSON] PasswordResetConfirmRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
-type PasswordAPI = Header "Authorization" Text :> "change" :> ReqBody '[JSON] ChangePasswordRequest :> Post '[JSON] LoginResponse
+type PasswordAPI = Header "Authorization" Text :> "change" :> ReqBody '[JSON] ChangePasswordRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
 type UserRolesAPI =
        "users" :> Get '[JSON] [UserRoleSummaryDTO]
@@ -309,8 +311,13 @@ type FanSecureAPI =
 
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
 
+type SessionAPI =
+       "session" :> Get '[JSON] SessionResponse
+  :<|> "session" :> "logout" :> Post '[JSON] (SessionCookieHeaders NoContent)
+
 type ProtectedAPI =
-       "parties"  :> PartyAPI
+       SessionAPI
+  :<|> "parties"  :> PartyAPI
   :<|> "bookings" :> BookingAPI
   :<|> ServiceMarketplaceAPI
   :<|> ProposalsAPI

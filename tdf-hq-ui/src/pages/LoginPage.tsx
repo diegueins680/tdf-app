@@ -42,9 +42,10 @@ import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Navigate, useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
-import { useSession } from '../session/SessionContext';
+import { type SessionUser, useSession } from '../session/SessionContext';
 import { useThemeMode } from '../theme/AppThemeProvider';
 import { googleLoginRequest, loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
+import { loadSessionSnapshot } from '../api/session';
 import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
 import { Fans } from '../api/fans';
 import type { ArtistProfileDTO } from '../api/types';
@@ -180,7 +181,7 @@ export default function LoginPage() {
   const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const { session, login } = useSession();
+  const { session, loading, login } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
   const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
@@ -218,6 +219,24 @@ export default function LoginPage() {
     }),
     [],
   );
+
+  const buildResolvedSession = useCallback(async (fallback: SessionUser): Promise<SessionUser> => {
+    try {
+      const snapshot = await loadSessionSnapshot();
+      if (!snapshot) return fallback;
+      return {
+        username: snapshot.username,
+        displayName: snapshot.displayName,
+        roles: Array.from(new Set((snapshot.roles ?? []).map((role) => role.toLowerCase()))),
+        modules: snapshot.modules,
+        partyId: snapshot.partyId,
+        apiToken: fallback.apiToken,
+      };
+    } catch (error) {
+      console.warn('No se pudo cargar la sesión autenticada desde el servidor', error);
+      return fallback;
+    }
+  }, []);
   const dialogFieldSx = useMemo(
     () => ({
       '& .MuiInputLabel-root': {
@@ -409,24 +428,18 @@ export default function LoginPage() {
         username: normalizedIdentifier,
         password: normalizedPassword,
       });
-      const apiToken = response.token;
-      const roles = Array.from(new Set((response.roles ?? []).map((role) => role.toLowerCase())));
-      const modules = response.modules;
-      const partyId = response.partyId;
-      const landingPath = pickLandingPath(roles, modules);
+      const nextSession = await buildResolvedSession({
+        username: normalizedIdentifier,
+        displayName,
+        roles: Array.from(new Set((response.roles ?? []).map((role) => role.toLowerCase()))),
+        apiToken: response.token,
+        modules: response.modules,
+        partyId: response.partyId,
+      });
+      const landingPath = pickLandingPath(nextSession.roles, nextSession.modules);
       const targetPath = redirectPath ?? landingPath;
 
-      login(
-        {
-          username: normalizedIdentifier,
-          displayName,
-          roles,
-          apiToken,
-          modules,
-          partyId,
-        },
-        { remember: rememberDevice },
-      );
+      login(nextSession, { remember: rememberDevice });
       navigate(targetPath, { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
@@ -453,20 +466,17 @@ export default function LoginPage() {
         setGoogleStatus('Conectando con Google…');
         setGoogleError(null);
         const response = await googleLoginMutation.mutateAsync({ idToken: credential });
-        const normalizedRoles = Array.from(new Set((response.roles ?? []).map((role) => role.toLowerCase())));
-        const landingPath = pickLandingPath(normalizedRoles, response.modules);
+        const nextSession = await buildResolvedSession({
+          username: fallbackUsername,
+          displayName: fallbackName,
+          roles: Array.from(new Set((response.roles ?? []).map((role) => role.toLowerCase()))),
+          apiToken: response.token,
+          modules: response.modules,
+          partyId: response.partyId,
+        });
+        const landingPath = pickLandingPath(nextSession.roles, nextSession.modules);
         const targetPath = redirectPath ?? landingPath;
-        login(
-          {
-            username: fallbackUsername,
-            displayName: fallbackName,
-            roles: normalizedRoles,
-            apiToken: response.token,
-            modules: response.modules,
-            partyId: response.partyId,
-          },
-          { remember: rememberDevice },
-        );
+        login(nextSession, { remember: rememberDevice });
         setSignupDialogOpen(false);
         setSignupFeedback(null);
         navigate(targetPath, { replace: true });
@@ -482,7 +492,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [googleLoginMutation, login, navigate, redirectPath, rememberDevice, signupDialogOpen],
+    [buildResolvedSession, googleLoginMutation, login, navigate, redirectPath, rememberDevice, signupDialogOpen],
   );
 
   useEffect(() => {
@@ -674,17 +684,15 @@ export default function LoginPage() {
       const targetPath = redirectPath ?? landingPath;
       const shouldFollowArtists = selectedRoles.includes('Fan') && favoriteArtistIds.length > 0;
       const selectedFanArtistIds = favoriteArtistIds;
-      login(
-        {
-          username: payload.email,
-          displayName: `${payload.firstName} ${payload.lastName}`.trim() || payload.email,
-          roles: effectiveRoles,
-          apiToken: response.token,
-          modules: response.modules,
-          partyId: response.partyId,
-        },
-        { remember: rememberDevice },
-      );
+      const nextSession = await buildResolvedSession({
+        username: payload.email,
+        displayName: `${payload.firstName} ${payload.lastName}`.trim() || payload.email,
+        roles: effectiveRoles,
+        apiToken: response.token,
+        modules: response.modules,
+        partyId: response.partyId,
+      });
+      login(nextSession, { remember: rememberDevice });
       if (shouldFollowArtists) {
         void Promise.all(
           selectedFanArtistIds.map((artistId) =>
@@ -702,6 +710,23 @@ export default function LoginPage() {
       });
     }
   };
+
+  if (loading && !session) {
+    return (
+      <Box
+        component="main"
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #0b1224 0%, #0f172a 35%, #0b1224 100%)',
+        }}
+      >
+        <CircularProgress color="inherit" />
+      </Box>
+    );
+  }
 
   if (session) {
     const landing = redirectPath ?? pickLandingPath(session.roles ?? [], session.modules);

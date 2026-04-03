@@ -1,15 +1,15 @@
 # TDF HQ
 
-A Haskell (Servant + Persistent) backend that powers TDF's internal HQ app for CRM, scheduling, lesson packages, invoicing, inventory, and trial management. The service exposes a JSON API secured with bearer tokens, generates PDFs for operational checklists, and boots with opinionated seeds so the UI can be exercised immediately.
+A Haskell (Servant + Persistent) backend that powers TDF's internal HQ app for CRM, scheduling, lesson packages, invoicing, inventory, and trial management. The service exposes a JSON API secured with bearer tokens and browser session cookies, generates PDFs for operational checklists, and boots with opinionated seeds so the UI can be exercised immediately.
 
 ## Architecture at a Glance
 
-- **Entry point**: [`app/Main.hs`](app/Main.hs) wires configuration, database pooling, migrations, seeding, and the Servant application with CORS middleware.
+- **Entry point**: [`app/Main.hs`](app/Main.hs) is a thin UTF-8 bootstrapper that delegates runtime startup to [`TDF.App.Boot`](src/TDF/App/Boot.hs), where configuration, database pooling, migrations, seeding, and the hot-swap from boot app to Servant app now live.
 - **Environment**: [`TDF.Config`](src/TDF/Config.hs) loads `APP_PORT`, database credentials, and flags for resetting/seeding the database, plus the optional seed trigger token.
 - **Database**: [`TDF.DB`](src/TDF/DB.hs) creates the PostgreSQL pool and exposes the runtime `Env` consumed across handlers. Persistent models live in [`TDF.Models`](src/TDF/Models.hs), [`TDF.ModelsExtra`](src/TDF/ModelsExtra.hs), and [`TDF.Trials.Models`](src/TDF/Trials/Models.hs) with migrations executed on startup.
 - **API surface**: [`TDF.API`](src/TDF/API.hs) defines the main Servant routes. Individual feature areas (CRM parties, bookings, packages, invoices, receipts, bands, inventory, rooms, pipelines, trial lessons, etc.) live in `TDF.API.*` and `TDF.Server*` modules.
 - **Server implementation**: [`TDF.Server`](src/TDF/Server.hs) composes all handlers, enforces seed tokens, renders PDF input lists, and hoists the authenticated sub-API. Trials endpoints (`/trials/*`) are mounted alongside the primary API.
-- **Authentication**: [`TDF.Auth`](src/TDF/Auth.hs) resolves bearer tokens to roles and module permissions, backing Servant's `AuthProtect` machinery. Admin utilities in [`TDF.ServerAdmin`](src/TDF/ServerAdmin.hs) provide seeded dropdowns and user management.
+- **Authentication**: [`TDF.Auth`](src/TDF/Auth.hs) resolves bearer tokens or session cookies to roles and module permissions, backing Servant's `AuthProtect` machinery. [`/session`](docs/openapi/api.yaml) exposes the backend-resolved session snapshot the web and mobile clients use as their permission source of truth. Admin utilities in [`TDF.ServerAdmin`](src/TDF/ServerAdmin.hs) provide seeded dropdowns and user management.
 - **DTOs & contracts**: [`TDF.DTO`](src/TDF/DTO.hs), `TDF.Contracts.*`, and the OpenAPI documents in [`docs/`](docs) define payload shapes shared with the frontend.
 
 ### Repository layout
@@ -52,6 +52,17 @@ DRIVE_UPLOAD_FOLDER_ID=     # Optional Google Drive folder for uploads
 ```
 
 `RESET_DB=true` will drop and recreate the `public` schema on boot; `SEED_DB=false` skips automatic seed data. Setting `SEED_TRIGGER_TOKEN` to a non-empty value enables the unauthenticated `/seed` endpoint; leaving it blank disables it entirely.
+
+Optional browser-session settings:
+
+```env
+SESSION_COOKIE_NAME=tdf_session
+SESSION_COOKIE_DOMAIN=
+SESSION_COOKIE_PATH=/
+SESSION_COOKIE_SECURE=true
+SESSION_COOKIE_SAMESITE=None
+SESSION_COOKIE_MAX_AGE=2592000
+```
 
 ### Drive upload proxy
 
@@ -106,8 +117,8 @@ Override `APP_BASE_URL` when using the `version` Make target, or export environm
 
 ## Authentication & authorization
 
-- Endpoints under `AuthProtect "bearer-token"` require an `Authorization: Bearer <token>` header.
-- Tokens resolve to parties and active roles; modules are derived from roles via `modulesForRoles`.
+- Endpoints under `AuthProtect "bearer-token"` accept either an `Authorization: Bearer <token>` header or the configured browser session cookie.
+- Tokens resolve to parties and active roles; modules are derived on the backend via `modulesForRoles` and exposed back to clients through login responses and `/session`.
 - Handlers enforce module gates using helpers like `hasModuleAccess` and `ensureModule` (see `TDF.ServerAdmin`).
 
 ## Documentation & contracts
@@ -125,7 +136,17 @@ Override `APP_BASE_URL` when using the `version` Make target, or export environm
 
 ## Testing
 
-A formal test suite is not yet wired up. Add Hspec specs under `test/`, update `tdf-hq.cabal` with a `test-suite`, and run via `stack test` when you start adding automated coverage.
+The backend already ships with an Hspec test suite under [`test/`](test/). Run it with:
+
+```bash
+stack test
+```
+
+For a build-only smoke check without running the full suite:
+
+```bash
+stack build tdf-hq:exe:tdf-hq-exe
+```
 
 ## Troubleshooting
 

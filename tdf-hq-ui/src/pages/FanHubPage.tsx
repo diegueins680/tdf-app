@@ -154,7 +154,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   }, [cmsQuery.data]);
   const artistSectionRef = useRef<HTMLDivElement | null>(null);
   const artistSlugTouchedRef = useRef(false);
-  const hasAuthToken = Boolean(session?.apiToken);
+  const hasAuthToken = Boolean(session);
   const isAuthenticated = Boolean(session);
   const canManageReleases = useMemo(
     () => canAccessPath('/label/releases', session?.roles, session?.modules),

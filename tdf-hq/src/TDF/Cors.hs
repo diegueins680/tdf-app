@@ -39,12 +39,9 @@ corsPolicy = do
           then if includeDefaults then defaults else []
           else deduped
       wildcard = allowAll || any (== "*") deduped
-      originSetting =
-        if wildcard
-          then Nothing
-          else Just (map BS.pack effective, True)
+      explicitOriginSetting = Just (map BS.pack effective, True)
       basePolicy = simpleCorsResourcePolicy
-        { corsOrigins            = originSetting
+        { corsOrigins            = explicitOriginSetting
         , corsRequestHeaders     = "authorization":"content-type":"x-requested-with":simpleHeaders
         , corsMethods            = ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
         , corsRequireOrigin      = False
@@ -52,18 +49,18 @@ corsPolicy = do
         }
       allowPagesDevWildcard = True
       allowAllPolicy = basePolicy { corsOrigins = Nothing }
+      allowOriginPolicy origin = basePolicy { corsOrigins = Just ([origin], True) }
       pagesHost origin =
         let lowered = BS.map toLower origin
         in ".pages.dev" `BS.isSuffixOf` lowered || ".vercel.app" `BS.isSuffixOf` lowered
       choosePolicy :: Request -> Maybe CorsResourcePolicy
       choosePolicy req =
-        if allowAll
-          then Just allowAllPolicy
-          else
-            case lookup "origin" (requestHeaders req) of
-              Nothing -> Just allowAllPolicy -- allow health/public probes without CORS failures
-              Just o | allowPagesDevWildcard && pagesHost o -> Just allowAllPolicy
-              _ -> Just basePolicy
+        case lookup "origin" (requestHeaders req) of
+          Nothing -> Just allowAllPolicy -- allow health/public probes without CORS failures
+          Just o
+            | allowAll -> Just (allowOriginPolicy o)
+            | allowPagesDevWildcard && pagesHost o -> Just (allowOriginPolicy o)
+            | otherwise -> Just basePolicy
       originLog =
         if wildcard
           then "*"

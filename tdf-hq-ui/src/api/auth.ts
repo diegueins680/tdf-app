@@ -1,17 +1,16 @@
+import type { components } from './generated/types';
 import type { SignupRole } from '../constants/roles';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
-export interface LoginResponseDTO {
-  token: string;
-  partyId: number;
-  roles: string[];
-  modules: string[];
-}
+type LoginRequestDTO = components['schemas']['LoginRequest'];
+type GoogleLoginRequestDTO = components['schemas']['GoogleLoginRequest'];
+export type LoginResponseDTO = components['schemas']['LoginResponse'];
 
-export async function loginRequest(payload: { username: string; password: string }): Promise<LoginResponseDTO> {
+export async function loginRequest(payload: LoginRequestDTO): Promise<LoginResponseDTO> {
   const res = await fetch(`${API_BASE}/login`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
@@ -23,9 +22,10 @@ export async function loginRequest(payload: { username: string; password: string
   return res.json() as Promise<LoginResponseDTO>;
 }
 
-export async function googleLoginRequest(payload: { idToken: string }): Promise<LoginResponseDTO> {
+export async function googleLoginRequest(payload: GoogleLoginRequestDTO): Promise<LoginResponseDTO> {
   const res = await fetch(`${API_BASE}/login/google`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
@@ -40,6 +40,7 @@ export async function googleLoginRequest(payload: { idToken: string }): Promise<
 export async function requestPasswordReset(email: string): Promise<void> {
   const res = await fetch(`${API_BASE}/v1/password-reset`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
   });
@@ -69,6 +70,7 @@ export interface SignupPayload {
 export async function signupRequest(payload: SignupPayload): Promise<LoginResponseDTO> {
   const res = await fetch(`${API_BASE}/signup`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
