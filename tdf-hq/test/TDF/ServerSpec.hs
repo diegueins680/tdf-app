@@ -13,8 +13,8 @@ import Database.Persist.Sql (SqlPersistT, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
-import TDF.Models (BookingStatus (..), Party (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog)
+import TDF.Models (BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, parsePaymentMethodText, validateCmsContentStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog, validateWhatsAppPhoneInput)
 import TDF.ServerAuth (resolvePasswordResetDelivery)
 import Test.Hspec
 
@@ -56,6 +56,22 @@ spec = describe "TDF.Server helpers" $ do
 
         it "drops strings that only contain whitespace" $
             normalizeOptionalInput (Just "   ") `shouldBe` Nothing
+
+    describe "validateCmsContentStatus" $ do
+        it "defaults omitted status to draft and normalizes supported explicit values" $ do
+            validateCmsContentStatus Nothing `shouldBe` Right "draft"
+            validateCmsContentStatus (Just " Published ") `shouldBe` Right "published"
+            validateCmsContentStatus (Just "ARCHIVED") `shouldBe` Right "archived"
+
+        it "rejects blank or unknown explicit statuses instead of persisting ambiguous CMS versions" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "draft, published, archived"
+                    Right statusVal ->
+                        expectationFailure ("Expected invalid CMS status to be rejected, got: " <> show statusVal)
+            assertInvalid (validateCmsContentStatus (Just "   "))
+            assertInvalid (validateCmsContentStatus (Just "scheduled"))
 
     describe "resolvePasswordResetDelivery" $ do
         it "resolves active accounts by stored primary email even when the username differs" $ do
@@ -148,6 +164,22 @@ spec = describe "TDF.Server helpers" $ do
                 errHTTPCode serverErr `shouldBe` 409
                 BL8.unpack (errBody serverErr) `shouldContain` "Service catalog is inactive"
 
+    describe "parsePaymentMethodText" $ do
+        it "defaults missing or blank payment methods to OtherM while normalizing supported values" $ do
+            parsePaymentMethodText Nothing `shouldBe` Right OtherM
+            parsePaymentMethodText (Just "   ") `shouldBe` Right OtherM
+            parsePaymentMethodText (Just " PayPal ") `shouldBe` Right PayPalM
+            parsePaymentMethodText (Just "bank") `shouldBe` Right BankTransferM
+            parsePaymentMethodText (Just "other") `shouldBe` Right OtherM
+
+        it "rejects unsupported explicit payment methods instead of silently storing OtherM" $
+            case parsePaymentMethodText (Just "paypol") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "paymentMethod must be one of"
+                Right paymentMethodVal ->
+                    expectationFailure ("Expected invalid payment method to be rejected, got: " <> show paymentMethodVal)
+
     describe "parseCourseRegistrationStatus" $ do
         it "normalizes supported course registration statuses and canonicalizes canceled" $ do
             parseCourseRegistrationStatus " Pending Payment " `shouldBe` Right "pending_payment"
@@ -175,6 +207,28 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
                 Right phoneVal ->
                     expectationFailure ("Expected invalid course-registration phone to be rejected, got: " <> show phoneVal)
+
+        it "rejects free-form text that merely contains digits instead of storing a misleading partial phone" $
+            case validateCourseRegistrationPhoneE164 (Just "call me at 099 123 4567") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
+                Right phoneVal ->
+                    expectationFailure ("Expected mixed text phone input to be rejected, got: " <> show phoneVal)
+
+    describe "validateWhatsAppPhoneInput" $ do
+        it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $
+            validateWhatsAppPhoneInput " +593 99 123 4567 " `shouldBe` Right "+593991234567"
+
+        it "rejects blank or mixed-text WhatsApp phone inputs instead of extracting misleading digits" $ do
+            let assertInvalid rawPhone = case validateWhatsAppPhoneInput rawPhone of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "WhatsApp"
+                    Right phoneVal ->
+                        expectationFailure ("Expected invalid WhatsApp phone input to be rejected, got: " <> show phoneVal)
+            assertInvalid "   "
+            assertInvalid "call me at 099 123 4567"
 
     describe "validateCourseRegistrationEmail" $ do
         it "preserves omitted and blank emails while normalizing meaningful values" $ do

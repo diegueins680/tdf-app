@@ -20,9 +20,12 @@ import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
   , validatePreferredSlots
+  , validatePreferredSlotsAt
+  , validatePublicSubjectSelection
   , validatePublicTrialPartyId
   )
 import qualified TDF.Models as Models
+import TDF.Trials.Models (Subject (..))
 
 spec :: Spec
 spec = do
@@ -57,6 +60,15 @@ spec = do
         Right _ ->
           expectationFailure "Expected invalid phone input to be rejected"
 
+    it "rejects malformed emails instead of creating unusable parties" $ do
+      result <- tryCreateOrFetchParty (Just "Test User") (Just "not-an-email") Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "email"
+        Right _ ->
+          expectationFailure "Expected invalid email input to be rejected"
+
     it "rejects free-form text that merely contains digits instead of extracting a misleading partial phone" $ do
       result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "call me at 099 123 4567")
       case result of
@@ -89,6 +101,21 @@ spec = do
         Right _ ->
           expectationFailure "Expected public partyId to be rejected"
 
+  describe "validatePublicSubjectSelection" $ do
+    it "accepts active public subjects" $
+      validatePublicSubjectSelection (Just (Subject "Piano" True)) `shouldBe` Right ()
+
+    it "rejects missing or inactive subjects instead of reporting a misleading availability error" $ do
+      let assertRejected candidate =
+            case validatePublicSubjectSelection candidate of
+              Left err -> do
+                errHTTPCode err `shouldBe` 422
+                BL8.unpack (errBody err) `shouldContain` "La materia solicitada no está disponible"
+              Right value ->
+                expectationFailure ("Expected unavailable public subject to be rejected, got " <> show value)
+      assertRejected Nothing
+      assertRejected (Just (Subject "Piano" False))
+
   describe "validatePreferredSlots" $ do
     it "rejects requests with more than three preferred slots" $ do
       let slots = replicate 4 validSlot
@@ -119,6 +146,15 @@ spec = do
                 expectationFailure ("Expected overlapping slots to be rejected, got " <> show value)
       assertRejected [validSlot, overlappingSlot]
       assertRejected [validSlot, validSlot]
+
+    it "rejects preferred slots that start in the past before creating unschedulable requests" $ do
+      let now = addUTCTime 7200 slotStart
+      case validatePreferredSlotsAt now [validSlot] of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Preferred slots must start in the future"
+        Right value ->
+          expectationFailure ("Expected past preferred slot to be rejected, got " <> show value)
 
     it "preserves valid slots without truncation or mutation" $
       validatePreferredSlots [validSlot, laterValidSlot] `shouldBe` Right [validSlot, laterValidSlot]

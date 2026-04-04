@@ -125,6 +125,33 @@ const queryActionByText = (root: ParentNode, labelText: string) =>
     (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
   ) ?? null;
 
+const getInputByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => (element.textContent ?? '').replace('*', '').trim() === labelText,
+  );
+  if (!label) throw new Error(`Label not found: ${labelText}`);
+
+  const inputId = label.htmlFor;
+  if (!inputId) throw new Error(`Label has no associated control: ${labelText}`);
+
+  const input = label.ownerDocument.getElementById(inputId);
+  if (!(input instanceof HTMLInputElement)) throw new Error(`Input not found for label: ${labelText}`);
+
+  return input;
+};
+
+const setInputValue = async (input: HTMLInputElement, value: string) => {
+  const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('HTMLInputElement value setter not found');
+
+  await act(async () => {
+    valueSetter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 const clickFirstOrderRow = async (root: ParentNode) => {
   const row = root.querySelector('tbody tr');
   if (!(row instanceof HTMLElement)) {
@@ -214,6 +241,119 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(document.body, 'Estado del listado')).toBe(1);
         expect(countLabelsByText(document.body, 'Nuevo estado')).toBe(1);
         expect(countLabelsByText(document.body, 'Estado')).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces a single real payment-method filter with context copy when the current list already uses one provider', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+        moPaymentProvider: 'paypal',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'paypal',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(countLabelsByText(container, 'Método de pago')).toBe(0);
+        expect(container.textContent).toContain(
+          'Todos los pedidos visibles usan PayPal. El filtro de método aparecerá cuando esta vista mezcle más de un canal de pago.',
+        );
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the header breakdown tied to the visible order list and hides it once search leaves one bucket', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+        moPaymentProvider: 'paypal',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'paypal',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('1 pagados');
+        expect(container.textContent).toContain('1 pendientes');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+      });
+
+      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      await setInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.textContent).not.toContain('1 pagados');
+        expect(container.textContent).not.toContain('1 pendientes');
+        expect(container.textContent).not.toContain('0 pendientes');
+        expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('uses the existing reset-filters control when a search hides the current order list', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
+        expect(container.querySelector('tbody tr')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+      });
+
+      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      await setInputValue(searchInput, 'sin coincidencias');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.',
+        );
+        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+        expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
+        expect(container.querySelector('tbody tr')).toBeNull();
       });
     } finally {
       await cleanup();

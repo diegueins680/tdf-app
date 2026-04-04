@@ -171,6 +171,8 @@ const systemEmailHistoryHelperText =
   'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
 const emptySystemEmailHistoryMessage =
   'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
+const markPaidEmptyNotesHelperText =
+  'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const firstFollowUpComposerHelpText =
@@ -2104,8 +2106,60 @@ describe('CourseRegistrationsAdminPage', () => {
       ).toBe(false);
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
       expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeGreaterThan(-1);
-      expect(dialogHeadings.indexOf('Notas internas')).toBeGreaterThan(-1);
-      expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeLessThan(dialogHeadings.indexOf('Notas internas'));
+      expect(dialogHeadings.indexOf('Notas internas (opcional)')).toBeGreaterThan(-1);
+      expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeLessThan(dialogHeadings.indexOf('Notas internas (opcional)'));
+    });
+
+    await cleanup();
+  });
+
+  it('keeps empty notes secondary in the mark-paid flow until the admin explicitly needs them', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(markPaidEmptyNotesHelperText);
+      expect(getButtonByText(document.body, 'Agregar nota opcional')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(0);
+      expect(document.body.textContent).not.toContain(
+        'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+      );
+      expect(hasLabel(document.body, 'Notas internas')).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar nota opcional'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Notas internas')).toBe(true);
+      expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Agregar nota opcional')).toBe(0);
+      expect(document.body.textContent).not.toContain(markPaidEmptyNotesHelperText);
     });
 
     await cleanup();

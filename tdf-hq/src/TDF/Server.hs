@@ -761,10 +761,11 @@ whatsappReplyServer user WhatsAppReplyReq{..} = do
     throwError err403 { errBody = "Missing required module access" }
   now <- liftIO getCurrentTime
   waEnv <- liftIO loadWhatsAppEnv
-  let recipient = T.strip wrSenderId
+  let recipientRaw = T.strip wrSenderId
       body = T.strip wrMessage
       mExternalId = wrExternalId >>= (\raw -> let trimmed = T.strip raw in if T.null trimmed then Nothing else Just trimmed)
-  when (T.null recipient) $ throwBadRequest "Remitente requerido"
+  when (T.null recipientRaw) $ throwBadRequest "Remitente requerido"
+  recipient <- either throwError pure (validateWhatsAppPhoneInput recipientRaw)
   when (T.null body) $ throwBadRequest "Mensaje vacío"
   sendResult <- sendWhatsAppText waEnv recipient body
   mReplyTarget <- case mExternalId of
@@ -816,9 +817,7 @@ whatsappConsentRoutes defaultSource requireGate =
   :<|> fetchStatus
   where
     normalizePhoneOrFail raw =
-      case normalizePhone raw of
-        Just val -> pure val
-        Nothing -> throwBadRequest "Número de WhatsApp inválido."
+      either throwError pure (validateWhatsAppPhoneInput raw)
 
     toStatus phoneVal mRow =
       case mRow of
@@ -3393,6 +3392,28 @@ sendWhatsAppText waEnv phone msg = liftIO $ sendWhatsAppTextIO waEnv phone msg
 normalizePhone :: Text -> Maybe Text
 normalizePhone = normalizeWhatsAppPhone
 
+normalizeCourseRegistrationPhoneInput :: Text -> Maybe Text
+normalizeCourseRegistrationPhoneInput raw =
+  let trimmed = T.strip raw
+      onlyDigits = T.filter isDigit trimmed
+      plusCount = T.count "+" trimmed
+      plusIndex = T.findIndex (== '+') trimmed
+      firstDigitIndex = T.findIndex isDigit trimmed
+      allowedPhoneChar ch =
+        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
+      plusIsValid =
+        case plusIndex of
+          Nothing -> True
+          Just idx ->
+            case firstDigitIndex of
+              Nothing -> False
+              Just digitIdx -> plusCount == 1 && idx < digitIdx
+  in
+    if T.null onlyDigits || hasInvalidChars || not plusIsValid
+      then Nothing
+      else Just ("+" <> onlyDigits)
+
 normalizeSlug :: Text -> Text
 normalizeSlug = T.toLower . T.strip
 
@@ -3407,9 +3428,21 @@ validateCourseRegistrationPhoneE164 (Just rawPhone) =
   case cleanOptional (Just rawPhone) of
     Nothing -> Right Nothing
     Just _ ->
-      case normalizePhone rawPhone of
+      case normalizeCourseRegistrationPhoneInput rawPhone of
         Just phoneClean -> Right (Just phoneClean)
         Nothing -> Left err400 { errBody = "phoneE164 inválido" }
+
+validateWhatsAppPhoneInput :: Text -> Either ServerError Text
+validateWhatsAppPhoneInput rawPhone =
+  case cleanOptional (Just rawPhone) of
+    Nothing -> invalidWhatsAppPhone
+    Just _ ->
+      case normalizeCourseRegistrationPhoneInput rawPhone of
+        Just phoneClean -> Right phoneClean
+        Nothing -> invalidWhatsAppPhone
+  where
+    invalidWhatsAppPhone =
+      Left err400 { errBody = "Número de WhatsApp inválido." }
 
 validateCourseRegistrationEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationEmail Nothing = Right Nothing
@@ -4593,6 +4626,7 @@ createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
 
 createServiceMarketplaceBooking :: AuthedUser -> Api.ServiceMarketplaceBookingReq -> AppM Api.ServiceMarketplaceBookingDTO
 createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
+  paymentMethodVal <- either throwError pure (parsePaymentMethodText smbPaymentMethod)
   pool <- asks envPool
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
@@ -4646,7 +4680,7 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
       { paymentInvoiceId = Nothing
       , paymentOrderId = Just serviceOrderId
       , paymentPartyId = auPartyId user
-      , paymentMethod = parsePaymentMethodText smbPaymentMethod
+      , paymentMethod = paymentMethodVal
       , paymentAmountCents = serviceAdFeeCents ad
       , paymentReceivedAt = now
       , paymentReference = Nothing
@@ -4770,19 +4804,26 @@ mkEscrowBookingDTO (Entity escrowId escrow) = Api.ServiceMarketplaceBookingDTO
   , Api.smbEscrowCurrency = serviceEscrowCurrency escrow
   }
 
-parsePaymentMethodText :: Maybe Text -> PaymentMethod
+parsePaymentMethodText :: Maybe Text -> Either ServerError PaymentMethod
 parsePaymentMethodText mTxt =
   case T.toLower . T.strip <$> mTxt of
-    Just "cash" -> CashM
-    Just "bank_transfer" -> BankTransferM
-    Just "bank" -> BankTransferM
-    Just "card" -> CardPOSM
-    Just "paypal" -> PayPalM
-    Just "crypto" -> CryptoM
-    Just "stripe" -> StripeM
-    Just "wompi" -> WompiM
-    Just "payphone" -> PayPhoneM
-    _ -> OtherM
+    Nothing -> Right OtherM
+    Just "" -> Right OtherM
+    Just "cash" -> Right CashM
+    Just "bank_transfer" -> Right BankTransferM
+    Just "bank" -> Right BankTransferM
+    Just "card" -> Right CardPOSM
+    Just "paypal" -> Right PayPalM
+    Just "crypto" -> Right CryptoM
+    Just "stripe" -> Right StripeM
+    Just "wompi" -> Right WompiM
+    Just "payphone" -> Right PayPhoneM
+    Just "other" -> Right OtherM
+    _ ->
+      Left err400
+        { errBody =
+            "paymentMethod must be one of: cash, bank_transfer, bank, card, paypal, crypto, stripe, wompi, payphone, other"
+        }
 
 -- Bookings
 bookingPublicServer :: ServerT Api.BookingPublicAPI AppM
@@ -5183,6 +5224,15 @@ normalizeOptionalInput Nothing = Nothing
 normalizeOptionalInput (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+validateCmsContentStatus :: Maybe Text -> Either ServerError Text
+validateCmsContentStatus Nothing = Right "draft"
+validateCmsContentStatus (Just rawStatus) =
+  case T.toCaseFold <$> normalizeOptionalInput (Just rawStatus) of
+    Just "draft" -> Right "draft"
+    Just "published" -> Right "published"
+    Just "archived" -> Right "archived"
+    _ -> Left err400 { errBody = "status must be one of: draft, published, archived" }
 
 validateCourseNonNegativeField :: Text -> Int -> Either ServerError Int
 validateCourseNonNegativeField fieldName value
@@ -7997,9 +8047,9 @@ cmsAdminServer user =
     cmsCreateH CmsContentIn{..} = do
       requireWebmaster
       now <- liftIO getCurrentTime
+      statusVal <- either throwError pure (validateCmsContentStatus cciStatus)
       let slug = cciSlug
           locale = cciLocale
-          statusVal = fromMaybe "draft" cciStatus
       nextVersion <- runDB $ do
         mLatest <- selectFirst
           [ CMS.CmsContentSlug ==. slug

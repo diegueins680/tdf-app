@@ -35,6 +35,7 @@ import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.ServerRadio (validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel)
+import TDF.Contracts.Server (validateContractId)
 import TDF.ServerProposals (validateTemplateKey)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
@@ -55,6 +56,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
  )
 import qualified TDF.ServerSpec as ServerSpec
@@ -138,6 +140,30 @@ main = hspec $ do
                 "eventType must be one of: party, concert, festival, conference, showcase, other"
             assertInvalid
                 baseUpdate { emuStatus = FieldValue "sold_out" }
+                "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
+
+    describe "validateEventCreateTypeStatus" $ do
+        it "defaults omitted or blank create values and normalizes supported explicit values" $ do
+            validateEventCreateTypeStatus Nothing Nothing
+                `shouldBe` Right ("party", "planning")
+            validateEventCreateTypeStatus (Just "   ") (Just " canceled ")
+                `shouldBe` Right ("party", "cancelled")
+            validateEventCreateTypeStatus (Just " FESTIVAL ") Nothing
+                `shouldBe` Right ("festival", "planning")
+
+        it "rejects invalid explicit create values instead of silently falling back" $ do
+            let assertInvalid result expected =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure ("Expected invalid event create metadata to be rejected, got " <> show value)
+            assertInvalid
+                (validateEventCreateTypeStatus (Just "warehouse") Nothing)
+                "eventType must be one of: party, concert, festival, conference, showcase, other"
+            assertInvalid
+                (validateEventCreateTypeStatus Nothing (Just "sold_out"))
                 "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
 
     describe "normalizePositivePartyIdText" $ do
@@ -300,6 +326,21 @@ main = hspec $ do
                         expectationFailure ("Expected invalid templateKey to be rejected, got: " <> show value)
             assertInvalid "   " "templateKey required"
             assertInvalid "../proposal" "ASCII letters, numbers, hyphens, or underscores"
+
+    describe "validateContractId" $ do
+        it "accepts UUID-shaped contract ids and canonicalizes surrounding whitespace" $
+            validateContractId " 550e8400-e29b-41d4-a716-446655440000 "
+                `shouldBe` Right "550e8400-e29b-41d4-a716-446655440000"
+
+        it "rejects non-UUID ids with a 400 instead of falling through to ambiguous lookups" $ do
+            let assertInvalid raw = case validateContractId raw of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "Invalid contract id"
+                    Right value ->
+                        expectationFailure ("Expected invalid contract id to be rejected, got: " <> show value)
+            assertInvalid "contract-123"
+            assertInvalid "../contracts/store"
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do
