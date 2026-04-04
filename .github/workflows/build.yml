@@ -50,6 +50,10 @@ jobs:
         run: npm ci
       - name: Install mobile dependencies
         run: npm --prefix tdf-mobile ci
+      - name: Verify generated API clients
+        run: |
+          npm run generate:api
+          git diff --exit-code -- tdf-hq-ui/src/api/generated/types.ts tdf-mobile/src/api/generated/types.ts
       - name: Mobile quality gate
         run: |
           npm run lint:mobile

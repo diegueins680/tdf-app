@@ -9,6 +9,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '..', '..');
 const outputDir = resolve(here, 'output');
 const manifestPath = resolve(here, 'evidence-manifest.json');
+const permissionNotes = {
+  instagram_basic: resolve(here, 'permission-notes', 'instagram_basic.txt'),
+  instagram_manage_messages: resolve(here, 'permission-notes', 'instagram_manage_messages.txt'),
+  instagram_business_basic: resolve(here, 'permission-notes', 'instagram_business_basic.txt'),
+  instagram_business_manage_messages: resolve(here, 'permission-notes', 'instagram_business_manage_messages.txt'),
+};
 
 const videos = [
   {
@@ -119,7 +125,10 @@ async function main() {
     },
     videos: manifestVideos,
     notes: {
-      reviewerNotesFile: relative(repoRoot, resolve(here, 'submission-notes.txt')),
+      combinedReviewerNotesFile: relative(repoRoot, resolve(here, 'submission-notes.txt')),
+      permissionNotes: Object.fromEntries(
+        Object.entries(permissionNotes).map(([permission, filePath]) => [permission, relative(repoRoot, filePath)]),
+      ),
       screencastGuide: relative(repoRoot, resolve(repoRoot, 'docs', 'META_APP_REVIEW_SCREENCAST.md')),
     },
   };

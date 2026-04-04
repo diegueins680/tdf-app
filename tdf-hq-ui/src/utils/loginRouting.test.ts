@@ -7,12 +7,12 @@ import {
 import { canAccessPath } from './accessControl';
 
 describe('pickLandingPath', () => {
-  it('sends interns to the internships panel even without explicit modules', () => {
-    expect(pickLandingPath(['Intern'])).toBe('/practicas');
+  it('sends interns to the internships panel when the backend session publishes that access', () => {
+    expect(pickLandingPath(['Intern'], ['internships'])).toBe('/practicas');
   });
 
   it('routes strict admins to account management without forcing broader admin-module roles there', () => {
-    expect(pickLandingPath(['Admin'])).toBe('/configuracion/roles-permisos');
+    expect(pickLandingPath(['Admin'], ['admin'])).toBe('/configuracion/roles-permisos');
     expect(pickLandingPath(['Webmaster'], ['admin', 'crm'])).toBe('/crm/contactos');
     expect(pickLandingPath(['customer'], ['internships'])).toBe('/fans');
   });

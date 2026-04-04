@@ -59,7 +59,7 @@ const parseTags = (raw: string) =>
 export default function BrainAdminPage() {
   const { session } = useSession();
   const qc = useQueryClient();
-  const hasToken = Boolean(session?.apiToken);
+  const hasToken = Boolean(session);
   const [includeInactive, setIncludeInactive] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);

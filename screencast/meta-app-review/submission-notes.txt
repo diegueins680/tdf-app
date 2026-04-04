@@ -1,3 +1,5 @@
+This file is the combined reviewer narrative for the Meta submission packet. For each permission-specific "Describe how your app uses this permission or feature" field, use the matching file under `screencast/meta-app-review/permission-notes/`.
+
 This resubmission includes one refreshed Facebook Login evidence video plus the existing Instagram Login evidence video because TDF HQ supports two Meta login/provider flows for Instagram messaging.
 
 1) Facebook Login evidence

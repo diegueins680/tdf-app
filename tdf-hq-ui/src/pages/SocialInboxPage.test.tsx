@@ -195,7 +195,9 @@ describe('SocialInboxPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Selected asset: TDF Review Page (Page ID: page-1');
+      expect(container.textContent).toContain(
+        'Selected professional/business Instagram messaging asset: TDF Review Page (Page ID: page-1',
+      );
       expect(container.textContent).toContain('@tdfreview');
       expect(container.textContent).toContain('IG User ID: ig-user-1');
       expect(countInstagramSetupLinks(container)).toBe(1);

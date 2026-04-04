@@ -116,7 +116,12 @@ Before swapping any packet reference away from `screencast/meta-app-review/outpu
 
 Use these files as the primary approval packet:
 
-- Reviewer notes: `screencast/meta-app-review/submission-notes.txt`
+- Combined reviewer notes: `screencast/meta-app-review/submission-notes.txt`
+- Per-permission reviewer notes:
+  - `screencast/meta-app-review/permission-notes/instagram_basic.txt`
+  - `screencast/meta-app-review/permission-notes/instagram_manage_messages.txt`
+  - `screencast/meta-app-review/permission-notes/instagram_business_basic.txt`
+  - `screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt`
 - Evidence manifest: `screencast/meta-app-review/evidence-manifest.json`
 - Packet summary: `docs/meta-app-review-submission-packet-2026-03-26.md`
 - Facebook Login evidence: `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`

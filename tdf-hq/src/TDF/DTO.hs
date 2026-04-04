@@ -687,3 +687,14 @@ data LoginResponse = LoginResponse
   , modules :: [Text]
   } deriving (Show, Generic)
 instance ToJSON LoginResponse
+
+data SessionResponse = SessionResponse
+  { sessionUsername :: Text
+  , sessionDisplayName :: Text
+  , sessionPartyId :: Int64
+  , sessionRoles :: [RoleEnum]
+  , sessionModules :: [Text]
+  } deriving (Show, Generic)
+
+instance ToJSON SessionResponse where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 7 }

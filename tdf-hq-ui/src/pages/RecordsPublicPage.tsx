@@ -846,7 +846,7 @@ export default function RecordsPublicPage() {
   );
 
   useEffect(() => {
-    if (session?.apiToken) {
+    if (session) {
       setTransientApiToken(null);
       return undefined;
     }
@@ -858,7 +858,7 @@ export default function RecordsPublicPage() {
     return () => {
       setTransientApiToken(null);
     };
-  }, [bookingToken, session?.apiToken]);
+  }, [bookingToken, session]);
 
   const sessions: SessionItem[] = useMemo(() => {
     const mapped =

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-28T10:43:30Z",
+  "generatedAt": "2026-04-03T04:22:38.574Z",
   "reviewAppSurface": {
     "setupRoute": "/social/instagram?review=1",
     "inboxRoute": "/social/inbox?review=1",
@@ -71,7 +71,13 @@
     }
   ],
   "notes": {
-    "reviewerNotesFile": "screencast/meta-app-review/submission-notes.txt",
+    "combinedReviewerNotesFile": "screencast/meta-app-review/submission-notes.txt",
+    "permissionNotes": {
+      "instagram_basic": "screencast/meta-app-review/permission-notes/instagram_basic.txt",
+      "instagram_manage_messages": "screencast/meta-app-review/permission-notes/instagram_manage_messages.txt",
+      "instagram_business_basic": "screencast/meta-app-review/permission-notes/instagram_business_basic.txt",
+      "instagram_business_manage_messages": "screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt"
+    },
     "screencastGuide": "docs/META_APP_REVIEW_SCREENCAST.md"
   }
 }

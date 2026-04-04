@@ -133,6 +133,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   try {
     res = await fetch(joinRequestUrl(API_BASE, path), {
       ...init,
+      credentials: 'include',
       headers,
     });
   } catch (err) {

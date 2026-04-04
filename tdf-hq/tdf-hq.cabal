@@ -11,6 +11,7 @@ executable tdf-hq-exe
   main-is:          Main.hs
   hs-source-dirs:   app, src
   other-modules:
+    TDF.App.Boot
     TDF.API.Admin
     TDF.API
     TDF.API.Bands
@@ -68,6 +69,7 @@ executable tdf-hq-exe
     TDF.Routes.Academy
     TDF.Seed
     TDF.Server
+    TDF.ServerAuth
     TDF.ServerAdmin
     TDF.Server.SocialSync
     TDF.ServerExtra
@@ -185,6 +187,7 @@ test-suite tdf-hq-test
     TDF.API.Sessions
     TDF.API.SocialEventsAPI
     TDF.API.Types
+    TDF.API.WhatsApp
     TDF.APITypesSpec
     TDF.Auth
     TDF.Config
@@ -211,6 +214,7 @@ test-suite tdf-hq-test
     TDF.Routes.Courses
     TDF.Seed
     TDF.Server
+    TDF.ServerAuth
     TDF.ServerAdmin
     TDF.ServerExtra
     TDF.ServerExtraSpec

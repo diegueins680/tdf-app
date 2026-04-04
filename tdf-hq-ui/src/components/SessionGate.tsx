@@ -1,6 +1,6 @@
 import { Alert, Button, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { useSession } from '../session/SessionContext';
+import { getStoredSessionToken, useSession } from '../session/SessionContext';
 
 interface SessionGateProps {
   children: React.ReactNode;
@@ -14,8 +14,8 @@ interface SessionGateProps {
  */
 export function SessionGate({ children, message, requireToken = true }: SessionGateProps) {
   const { session } = useSession();
-  const hasToken = Boolean(session?.apiToken);
-  if (requireToken && !hasToken) {
+  const hasAuth = Boolean(session) || Boolean(getStoredSessionToken());
+  if (requireToken && !hasAuth) {
     return (
       <Alert
         severity="info"

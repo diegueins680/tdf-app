@@ -55,7 +55,7 @@ export interface paths {
         put?: never;
         /**
          * Login with username or email
-         * @description Authenticates a user and returns a bearer token plus role metadata.
+         * @description Authenticates a user, sets a session cookie, and returns a bearer token plus role metadata.
          */
         post: operations["login"];
         delete?: never;
@@ -75,7 +75,7 @@ export interface paths {
         put?: never;
         /**
          * Login with Google
-         * @description Validates a Google ID token and issues a session. Creates a Customer/Fan account when the email is new.
+         * @description Validates a Google ID token, sets a session cookie, and issues a session. Creates a Customer/Fan account when the email is new.
          */
         post: operations["loginWithGoogle"];
         delete?: never;
@@ -95,9 +95,49 @@ export interface paths {
         put?: never;
         /**
          * Create an account
-         * @description Registers a new party + credential pair and returns a ready-to-use token.
+         * @description Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
          */
         post: operations["signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current session
+         * @description Returns the authenticated user snapshot resolved by the backend, including published modules.
+         */
+        get: operations["getSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear current session
+         * @description Clears the browser session cookie for the current user.
+         */
+        post: operations["logoutSession"];
         delete?: never;
         options?: never;
         head?: never;
@@ -201,7 +241,7 @@ export interface paths {
         };
         /**
          * List Instagram inbox messages
-         * @description Returns stored Instagram messages for auto-reply tracking.
+         * @description Returns stored Instagram messages for auto-reply tracking. Deleted or unsent inbound messages are excluded from the inbox feed.
          */
         get: operations["listInstagramMessages"];
         put?: never;
@@ -316,7 +356,7 @@ export interface paths {
         };
         /**
          * List Facebook inbox messages
-         * @description Returns stored Facebook Messenger messages for inbox tracking.
+         * @description Returns stored Facebook Messenger messages for inbox tracking. Deleted or unsent inbound messages are excluded from the inbox feed.
          */
         get: operations["listFacebookMessages"];
         put?: never;
@@ -1000,18 +1040,26 @@ export interface components {
             claimArtistId?: number | null;
         };
         LoginResponse: {
-            /** @description Bearer token for authenticated requests. */
+            /** @description Bearer token for authenticated requests when a client is not using cookies. */
             token?: string;
             /** Format: int64 */
             partyId?: number;
             roles?: components["schemas"]["Role"][];
             modules?: string[];
         };
+        SessionResponse: {
+            username: string;
+            displayName: string;
+            /** Format: int64 */
+            partyId: number;
+            roles: components["schemas"]["Role"][];
+            modules: string[];
+        };
         /**
          * @description Assigned platform role.
          * @enum {string}
          */
-        Role: "Admin" | "Manager" | "Intern" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan";
+        Role: "Admin" | "Manager" | "Studio Manager" | "Intern" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Live Sessions Producer" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan" | "Maintenance";
         UserRoleSummary: {
             /** Format: int64 */
             id?: number;
@@ -1076,6 +1124,7 @@ export interface components {
             senderId?: string;
             senderName?: string | null;
             text?: string | null;
+            metadata?: string | null;
             direction?: string;
             /** Format: date-time */
             repliedAt?: string | null;
@@ -1437,6 +1486,8 @@ export interface operations {
             /** @description Authenticated successfully */
             200: {
                 headers: {
+                    /** @description Session cookie for browser-based clients. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1468,6 +1519,8 @@ export interface operations {
             /** @description Authenticated successfully */
             200: {
                 headers: {
+                    /** @description Session cookie for browser-based clients. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1497,8 +1550,10 @@ export interface operations {
         };
         responses: {
             /** @description Account created */
-            201: {
+            200: {
                 headers: {
+                    /** @description Session cookie for browser-based clients. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1508,6 +1563,53 @@ export interface operations {
             /** @description Email already registered */
             409: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authenticated session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            /** @description Missing or invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    logoutSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Session cleared */
+            200: {
+                headers: {
+                    /** @description Expired session cookie. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content?: never;

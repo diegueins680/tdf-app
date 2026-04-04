@@ -80,8 +80,14 @@ Then pass it with `--narration-text`.
 
 Canonical packet files:
 - `screencast/meta-app-review/submission-notes.txt`
+- `screencast/meta-app-review/permission-notes/instagram_basic.txt`
+- `screencast/meta-app-review/permission-notes/instagram_manage_messages.txt`
+- `screencast/meta-app-review/permission-notes/instagram_business_basic.txt`
+- `screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt`
 - `screencast/meta-app-review/evidence-manifest.json`
 - `docs/meta-app-review-submission-packet-2026-03-26.md`
+
+Use `submission-notes.txt` for the combined reviewer narrative. When Meta asks for a per-permission explanation in the App Review form, paste the matching file from `permission-notes/` into that permission's "Describe how your app uses this permission or feature" field.
 
 Regenerate the evidence manifest after replacing the final videos:
 

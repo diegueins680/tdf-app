@@ -14,7 +14,8 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, parsePaymentMethodText, resolvePasswordResetDelivery, validateCmsContentStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog, validateWhatsAppPhoneInput)
+import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, parsePaymentMethodText, validateCmsContentStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog, validateWhatsAppPhoneInput)
+import TDF.ServerAuth (resolvePasswordResetDelivery)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser

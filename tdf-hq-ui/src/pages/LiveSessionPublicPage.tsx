@@ -74,7 +74,7 @@ export default function LiveSessionPublicPage() {
 
   useEffect(() => {
     const code = accessCode.trim();
-    if (session?.apiToken) {
+    if (session) {
       setTransientApiToken(null);
       return undefined;
     }
@@ -86,7 +86,7 @@ export default function LiveSessionPublicPage() {
     return () => {
       setTransientApiToken(null);
     };
-  }, [accessCode, codeStatus, session?.apiToken]);
+  }, [accessCode, codeStatus, session]);
 
   useEffect(() => {
     const code = accessCode.trim();
