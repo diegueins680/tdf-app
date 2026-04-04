@@ -206,7 +206,7 @@ extractToken :: AppConfig -> Request -> Either Text Text
 extractToken cfg req =
   case extractHeaderToken req <|> extractCookieToken cfg req of
     Just token -> Right token
-    Nothing -> Left "Missing Authorization header"
+    Nothing -> Left "Missing or invalid auth token"
   where
     extractHeaderToken request =
       lookup "Authorization" (requestHeaders request) >>= parseAuthHeader . TE.decodeUtf8'
@@ -246,8 +246,17 @@ sessionCookieHeader cfg token =
   cookieHeaderWithValue cfg token
 
 clearSessionCookieHeader :: AppConfig -> Text
-clearSessionCookieHeader cfg =
-  cookieHeaderWithValue cfg "" <> "; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+clearSessionCookieHeader AppConfig{..} =
+  let segments =
+        [ sessionCookieName <> "="
+        , "Path=" <> sessionCookiePath
+        , "HttpOnly"
+        , "SameSite=" <> sessionCookieSameSite
+        , "Max-Age=0"
+        , "Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        ]
+        <> maybe [] (\domainVal -> ["Domain=" <> domainVal]) sessionCookieDomain
+  in T.intercalate "; " segments
 
 cookieHeaderWithValue :: AppConfig -> Text -> Text
 cookieHeaderWithValue AppConfig{..} rawValue =

@@ -187,12 +187,10 @@ interface SessionProviderProps {
   children: ReactNode;
 }
 
-const initialStoredState = readStoredSession();
-
 export function SessionProvider({ children }: SessionProviderProps) {
-  const [session, setSession] = useState<SessionUser | null>(initialStoredState.session);
+  const [session, setSession] = useState<SessionUser | null>(() => readStoredSession().session);
   const [loading, setLoading] = useState(true);
-  const [persistScope, setPersistScope] = useState<SessionStorageScope>(initialStoredState.scope);
+  const [persistScope, setPersistScope] = useState<SessionStorageScope>(() => readStoredSession().scope);
   const sessionVersionRef = useRef(0);
 
   const updateSessionState = useCallback((next: SessionUser | null) => {
