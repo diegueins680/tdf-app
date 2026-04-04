@@ -3,7 +3,8 @@
 module Main (main) where
 
 import qualified Data.ByteString.Lazy.Char8 as BL
-import Data.Aeson (eitherDecode)
+import Data.Aeson (eitherDecode, (.=))
+import qualified Data.Aeson as A
 import Data.Either (isLeft)
 import Data.Text (Text)
 import qualified Data.Text
@@ -35,7 +36,7 @@ import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.ServerRadio (validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel)
-import TDF.Contracts.Server (validateContractId)
+import TDF.Contracts.Server (validateContractId, validateContractPayload)
 import TDF.ServerProposals (validateTemplateKey)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
@@ -341,6 +342,44 @@ main = hspec $ do
                         expectationFailure ("Expected invalid contract id to be rejected, got: " <> show value)
             assertInvalid "contract-123"
             assertInvalid "../contracts/store"
+
+    describe "validateContractPayload" $ do
+        it "requires object payloads and normalizes the stored contract kind" $ do
+            validateContractPayload
+                (A.object
+                    [ "kind" .= ("  event_vendor_contract  " :: Text)
+                    , "amountCents" .= (25000 :: Int)
+                    ]
+                )
+                `shouldBe`
+                Right
+                    ( "event_vendor_contract"
+                    , A.object
+                        [ "kind" .= ("event_vendor_contract" :: Text)
+                        , "amountCents" .= (25000 :: Int)
+                        ]
+                    )
+            validateContractPayload (A.object ["amountCents" .= (25000 :: Int)])
+                `shouldBe`
+                Right
+                    ( "generic"
+                    , A.object
+                        [ "kind" .= ("generic" :: Text)
+                        , "amountCents" .= (25000 :: Int)
+                        ]
+                    )
+
+        it "rejects non-object or malformed kind values instead of silently storing generic contracts" $ do
+            let assertInvalid payload expected = case validateContractPayload payload of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid contract payload to be rejected, got: " <> show value)
+            assertInvalid (A.String "not-an-object") "Contract payload must be a JSON object"
+            assertInvalid (A.object ["kind" .= ("" :: Text)]) "Contract payload kind must be a non-empty string"
+            assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty string"
+            assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty string"
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do

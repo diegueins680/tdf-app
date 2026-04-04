@@ -4,12 +4,14 @@
 module TDF.Contracts.Server
   ( server
   , validateContractId
+  , validateContractPayload
   ) where
 
 import           Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
 import           Data.Aeson ((.=), (.:))
-import           Data.Aeson.Types (parseMaybe, withObject, (.:?))
+import           Data.Aeson.Types (withObject)
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Lazy as BL
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -61,11 +63,12 @@ server = createH :<|> pdfH :<|> sendH
     createH payload = do
       cid <- liftIO (toText <$> nextRandom)
       now <- liftIO getCurrentTime
-      let kindText = extractKind payload
+      (kindText, normalizedPayload) <- either throwError pure (validateContractPayload payload)
+      let
           stored = StoredContract
             { scId = cid
             , scKind = kindText
-            , scPayload = payload
+            , scPayload = normalizedPayload
             , scCreatedAt = now
             }
       liftIO (persistContract stored)
@@ -73,7 +76,7 @@ server = createH :<|> pdfH :<|> sendH
         [ "status" .= ("created" :: Text)
         , "id" .= cid
         , "kind" .= kindText
-        , "payload" .= payload
+        , "payload" .= normalizedPayload
         ])
 
     pdfH :: Text -> Handler BL.ByteString
@@ -121,6 +124,28 @@ validateContractId raw =
         { errBody = "Invalid contract id"
         }
 
+validateContractPayload :: A.Value -> Either ServerError (Text, A.Value)
+validateContractPayload (A.Object payloadObj) =
+  case KM.lookup "kind" payloadObj of
+    Nothing ->
+      Right ("generic", A.Object (KM.insert "kind" (A.String "generic") payloadObj))
+    Just (A.String rawKind) ->
+      let kindText = T.strip rawKind
+      in if T.null kindText
+           then invalidKind
+           else Right (kindText, A.Object (KM.insert "kind" (A.String kindText) payloadObj))
+    Just _ ->
+      invalidKind
+  where
+    invalidKind =
+      Left err400
+        { errBody = "Contract payload kind must be a non-empty string"
+        }
+validateContractPayload _ =
+  Left err400
+    { errBody = "Contract payload must be a JSON object"
+    }
+
 renderContractLatex :: StoredContract -> Text
 renderContractLatex StoredContract{..} =
   let createdTxt = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" scCreatedAt)
@@ -139,12 +164,6 @@ renderContractLatex StoredContract{..} =
         , "\\end{verbatim}"
         , "\\end{document}"
         ]
-
-extractKind :: A.Value -> Text
-extractKind val =
-  case parseMaybe (withObject "payload" (.:? "kind")) val of
-    Just (Just k) | not (T.null (T.strip k)) -> T.strip k
-    _ -> "generic"
 
 latexEscape :: Text -> Text
 latexEscape = T.concatMap escapeChar
