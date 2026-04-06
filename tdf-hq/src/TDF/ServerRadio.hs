@@ -14,7 +14,7 @@ import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
-import           Data.Char              (isSpace)
+import           Data.Char              (isDigit, isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
@@ -69,6 +69,8 @@ validateRadioStreamUrl rawUrl
       Left err400 { errBody = "streamUrl must be http(s)" }
   | T.null authority =
       Left err400 { errBody = "streamUrl must include a host" }
+  | Left authorityErr <- validateRadioAuthority authority =
+      Left authorityErr
   | otherwise =
       Right streamUrl
   where
@@ -80,6 +82,41 @@ validateRadioStreamUrl rawUrl
       | otherwise = Nothing
     authority =
       maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
+
+validateRadioAuthority :: Text -> Either ServerError ()
+validateRadioAuthority rawAuthority
+  | "[" `T.isPrefixOf` rawAuthority =
+      validateBracketedAuthority rawAuthority
+  | T.count ":" rawAuthority > 1 =
+      Left err400 { errBody = "streamUrl must include a valid host" }
+  | otherwise =
+      let (host, portSuffix) = T.breakOn ":" rawAuthority
+      in do
+        validateAuthorityHost host
+        validatePortSuffix portSuffix
+  where
+    validateBracketedAuthority authority = do
+      let (hostPart, rest) = T.breakOn "]" authority
+          host = T.drop 1 hostPart
+      if T.null rest
+        then Left err400 { errBody = "streamUrl must include a valid host" }
+        else do
+          validateAuthorityHost host
+          validatePortSuffix (T.drop 1 rest)
+
+    validateAuthorityHost host
+      | T.null host = Left err400 { errBody = "streamUrl must include a host" }
+      | otherwise = Right ()
+
+    validatePortSuffix suffix
+      | T.null suffix = Right ()
+      | ":" `T.isPrefixOf` suffix =
+          let port = T.drop 1 suffix
+          in if T.null port || T.any (not . isDigit) port
+               then Left err400 { errBody = "streamUrl port must be numeric" }
+               else Right ()
+      | otherwise =
+          Left err400 { errBody = "streamUrl must include a valid host" }
 
 radioServer
   :: forall m.

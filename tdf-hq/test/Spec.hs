@@ -288,6 +288,12 @@ main = hspec $ do
             validateRadioStreamUrl "  HTTPS://radio.example.com/live  "
                 `shouldBe` Right "HTTPS://radio.example.com/live"
 
+        it "accepts explicit numeric ports, including bracketed IPv6 hosts" $ do
+            validateRadioStreamUrl "https://radio.example.com:8443/live"
+                `shouldBe` Right "https://radio.example.com:8443/live"
+            validateRadioStreamUrl "https://[2001:db8::1]:8000/live"
+                `shouldBe` Right "https://[2001:db8::1]:8000/live"
+
         it "rejects blank stream URLs with a precise 400" $
             case validateRadioStreamUrl "   " of
                 Left err -> do
@@ -306,6 +312,23 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must not contain whitespace"
                 Right _ -> expectationFailure "Expected whitespace-containing streamUrl to be rejected"
+
+        it "rejects hostless or malformed-port URLs before they can be stored" $ do
+            case validateRadioStreamUrl "https://:8443/live" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl must include a host"
+                Right _ -> expectationFailure "Expected hostless streamUrl to be rejected"
+            case validateRadioStreamUrl "https://radio.example.com:/live" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl port must be numeric"
+                Right _ -> expectationFailure "Expected empty-port streamUrl to be rejected"
+            case validateRadioStreamUrl "https://radio.example.com:abc/live" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl port must be numeric"
+                Right _ -> expectationFailure "Expected non-numeric port streamUrl to be rejected"
 
         it "rejects non-http stream URLs before they can be stored" $
             case validateRadioStreamUrl "ftp://radio.example.com/live" of
