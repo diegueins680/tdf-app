@@ -4939,8 +4939,10 @@ createPublicBooking PublicBookingReq{..} = do
   when (T.null (T.strip pbEmail)) (throwBadRequest "email requerido")
   let serviceTypeClean = normalizeOptionalInput (Just pbServiceType)
   when (isNothing serviceTypeClean) (throwBadRequest "serviceType requerido")
-  let engineerIdClean  = pbEngineerPartyId >>= (\i -> if i > 0 then Just i else Nothing)
-      engineerNameClean = normalizeOptionalInput pbEngineerName
+  engineerIdClean <-
+    either throwError pure $
+      validateOptionalPositiveIdField "engineerPartyId" pbEngineerPartyId
+  let engineerNameClean = normalizeOptionalInput pbEngineerName
   case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
     Left msg -> throwBadRequest msg
     Right () -> pure ()
@@ -5023,10 +5025,15 @@ createBooking user req = do
   now <- liftIO getCurrentTime
 
   status' <- either throwBadRequest pure (parseBookingStatus (cbStatus req))
+  engineerIdClean <-
+    either throwError pure $
+      validateOptionalPositiveIdField "engineerPartyId" (cbEngineerPartyId req)
+  partyIdClean <-
+    either throwError pure $
+      validateOptionalPositiveIdField "partyId" (cbPartyId req)
   let serviceTypeClean = normalizeOptionalInput (cbServiceType req)
-      engineerIdClean  = cbEngineerPartyId req >>= (\i -> if i > 0 then Just i else Nothing)
       engineerNameClean = normalizeOptionalInput (cbEngineerName req)
-      partyKey         = fmap (toSqlKey . fromIntegral) (cbPartyId req)
+      partyKey         = fmap (toSqlKey . fromIntegral) partyIdClean
       requestedRooms   = fromMaybe [] (cbResourceIds req)
   case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
     Left msg -> throwBadRequest msg
@@ -5102,6 +5109,9 @@ updateBooking :: AuthedUser -> Int64 -> UpdateBookingReq -> AppM BookingDTO
 updateBooking user bookingIdI req = do
   requireModule user ModuleScheduling
   Env pool _ <- ask
+  requestedEngineerId <-
+    either throwError pure $
+      validateOptionalPositiveIdField "engineerPartyId" (ubEngineerPartyId req)
   let bookingId = toSqlKey bookingIdI :: Key Booking
   result <- liftIO $ flip runSqlPool pool $ do
     mBooking <- getEntity bookingId
@@ -5124,7 +5134,11 @@ updateBooking user bookingIdI req = do
                   , bookingStatus      = fromMaybe (bookingStatus current) requestedStatus
                   , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
                   , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
-                  , bookingEngineerPartyId = maybe (bookingEngineerPartyId current) (Just . toSqlKey . fromIntegral) (ubEngineerPartyId req)
+                  , bookingEngineerPartyId =
+                      maybe
+                        (bookingEngineerPartyId current)
+                        (Just . toSqlKey . fromIntegral)
+                        requestedEngineerId
                   , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
                   }
             case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
@@ -5224,6 +5238,16 @@ normalizeOptionalInput Nothing = Nothing
 normalizeOptionalInput (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+validateOptionalPositiveIdField :: Text -> Maybe Int64 -> Either ServerError (Maybe Int64)
+validateOptionalPositiveIdField _ Nothing = Right Nothing
+validateOptionalPositiveIdField fieldName (Just rawId)
+  | rawId <= 0 =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
+        }
+  | otherwise = Right (Just rawId)
 
 validateCmsContentStatus :: Maybe Text -> Either ServerError Text
 validateCmsContentStatus Nothing = Right "draft"

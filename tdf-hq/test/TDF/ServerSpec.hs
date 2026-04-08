@@ -14,7 +14,22 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
-import TDF.Server (normalizeOptionalInput, parseBookingStatus, parseCourseFollowUpType, parseCourseRegistrationStatus, parsePaymentMethodText, validateCmsContentStatus, validateCourseNonNegativeField, validateCourseRegistrationContactChannels, validateCourseRegistrationEmail, validateCourseRegistrationPhoneE164, validateOptionalCourseNonNegativeField, validateServiceMarketplaceCatalog, validateWhatsAppPhoneInput)
+import TDF.Server
+    ( normalizeOptionalInput
+    , parseBookingStatus
+    , parseCourseFollowUpType
+    , parseCourseRegistrationStatus
+    , parsePaymentMethodText
+    , validateCmsContentStatus
+    , validateCourseNonNegativeField
+    , validateCourseRegistrationContactChannels
+    , validateCourseRegistrationEmail
+    , validateCourseRegistrationPhoneE164
+    , validateOptionalCourseNonNegativeField
+    , validateOptionalPositiveIdField
+    , validateServiceMarketplaceCatalog
+    , validateWhatsAppPhoneInput
+    )
 import TDF.ServerAuth (resolvePasswordResetDelivery)
 import Test.Hspec
 
@@ -56,6 +71,22 @@ spec = describe "TDF.Server helpers" $ do
 
         it "drops strings that only contain whitespace" $
             normalizeOptionalInput (Just "   ") `shouldBe` Nothing
+
+    describe "validateOptionalPositiveIdField" $ do
+        it "preserves omitted ids and accepts positive identifiers" $ do
+            validateOptionalPositiveIdField "engineerPartyId" Nothing `shouldBe` Right Nothing
+            validateOptionalPositiveIdField "engineerPartyId" (Just 42) `shouldBe` Right (Just 42)
+
+        it "rejects zero or negative ids instead of accepting invalid booking references" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "engineerPartyId must be a positive integer"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid optional id input to be rejected, got: " <> show value)
+            assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
+            assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
 
     describe "validateCmsContentStatus" $ do
         it "defaults omitted status to draft and normalizes supported explicit values" $ do
