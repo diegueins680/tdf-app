@@ -154,11 +154,11 @@ export default function AdminConsolePage() {
 
   const audits = auditQuery.data ?? [];
   const fallbackCard: AdminConsoleCard = {
-    cardId: 'user-management',
-    title: 'Gestión de usuarios',
+    cardId: 'getting-started',
+    title: 'Primeros pasos',
     body: [
-      'Administra el acceso de los usuarios asignando roles según sus responsabilidades.',
-      'Próximamente aquí se podrá crear usuarios de servicio y tokens API.',
+      'Si es tu primera vez aquí, empieza por validar el estado del servicio para descartar incidentes.',
+      'Después revisa usuarios y auditoría para confirmar si un permiso o cambio ya fue aplicado antes de repetirlo.',
     ],
   };
   const consoleCards: AdminConsoleCard[] = consoleQuery.data?.cards?.length

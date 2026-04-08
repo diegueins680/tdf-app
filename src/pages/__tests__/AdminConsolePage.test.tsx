@@ -115,6 +115,31 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows first-run admin guidance instead of a duplicate user-management card when the console preview is empty', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Si es tu primera vez aquí, empieza por validar el estado del servicio para descartar incidentes\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Después revisa usuarios y auditoría para confirmar si un permiso o cambio ya fue aplicado antes de repetirlo\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Gestión de usuarios')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Administra el acceso de los usuarios asignando roles según sus responsabilidades\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('refreshes every admin dataset from the single panel action', async () => {
     const user = userEvent.setup();
     const { queryClient } = renderPage();
