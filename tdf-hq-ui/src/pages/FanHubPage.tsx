@@ -2177,18 +2177,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           <Grid container spacing={3} id="artist-list">
             {filteredArtists.map((artist) => {
             const spotifyUrl = artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
-<<<<<<< HEAD
             const youtubeUrl =
               artist.apFeaturedVideoUrl ??
               artist.apYoutubeUrl ??
               (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
             const artistProfilePath = artist.apSlug ? `/artista/${artist.apSlug}` : `/artista/${artist.apArtistId}`;
             const isFollowing = follows.some((follow) => follow.ffArtistId === artist.apArtistId);
-=======
-            const youtubeUrl = artist.apYoutubeUrl ?? (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
-            const artistId = artist.apArtistId ?? artist.apId;
-            const isFollowing = artistId ? follows.some((follow) => follow.ffArtistId === artistId) : false;
->>>>>>> origin/problematicMain
             const spotifyButtonProps = spotifyUrl
               ? { component: 'a', href: spotifyUrl, target: '_blank', rel: 'noopener noreferrer' }
               : {};
@@ -2210,7 +2204,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             const latestRelease = latestReleaseByArtist.get(artist.apArtistId);
             const latestLink = latestRelease?.arSpotifyUrl ?? latestRelease?.arYoutubeUrl ?? null;
             return (
-<<<<<<< HEAD
               <Grid item xs={12} md={6} key={artist.apArtistId} id={`artist-${artist.apArtistId}`}>
                 <Card
                   sx={{
@@ -2241,17 +2234,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     }
                   }}
                 >
-=======
-              <Grid item xs={12} md={6} key={artist.apArtistId ?? artist.apId ?? artist.apSlug ?? Math.random()}>
-                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
->>>>>>> origin/problematicMain
                   {artist.apHeroImageUrl && (
-                    <CardMedia
-                      component="img"
-                      height="220"
-                      image={artist.apHeroImageUrl ?? undefined}
-                      alt={artist.apDisplayName ?? 'Artista'}
-                    />
+                    <CardMedia component="img" height="220" image={artist.apHeroImageUrl} alt={artist.apDisplayName} />
                   )}
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Stack
@@ -2340,7 +2324,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           maxWidth: '100%',
                         }}
                       >
-<<<<<<< HEAD
                         <Stack spacing={1}>
                           <Stack direction="row" spacing={1}>
                             <Button
@@ -2409,37 +2392,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             })}
           </Grid>
         )}
-=======
-                        Spotify
-                      </Button>
-                      <Button
-                        {...youtubeButtonProps}
-                        variant="outlined"
-                        size="small"
-                        startIcon={<YouTubeIcon />}
-                        disabled={!youtubeUrl}
-                      >
-                        YouTube
-                      </Button>
-                      {isFan && artistId && (
-                        <Button
-                          variant={isFollowing ? 'outlined' : 'contained'}
-                          color={isFollowing ? 'inherit' : 'secondary'}
-                          size="small"
-                          onClick={() => handleFollowToggle(artistId, isFollowing)}
-                          disabled={followMutation.isPending || unfollowMutation.isPending}
-                        >
-                          {isFollowing ? 'Siguiendo' : 'Seguir'}
-                        </Button>
-                      )}
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
->>>>>>> origin/problematicMain
       </Stack>
       </Box>
       <Dialog open={loginPromptOpen} onClose={() => setLoginPromptOpen(false)}>

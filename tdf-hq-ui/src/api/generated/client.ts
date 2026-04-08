@@ -1,17 +1,13 @@
 // API client for user role management
 import type { components } from './types';
-<<<<<<< HEAD
 import { buildAuthorizationHeader } from '../authHeader';
 import { env } from '../../utils/env';
-=======
->>>>>>> origin/problematicMain
 
 export type Role = components['schemas']['Role'];
 export type UserSummary = components['schemas']['UserRoleSummary'];
 type RoleInput = Role | (string & Record<never, never>);
 export type UserRoleUpdate = { roles: RoleInput[] };
 
-<<<<<<< HEAD
 const API_BASE = env.read('VITE_API_BASE') ?? '';
 const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
 
@@ -89,9 +85,6 @@ const extractErrorDetails = (rawBody: string, contentType: string): string => {
 
   return trimmedBody;
 };
-=======
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
->>>>>>> origin/problematicMain
 
 export class ApiClient {
   private baseUrl: string;
@@ -102,9 +95,8 @@ export class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options?: RequestInit
+    options?: RequestInit,
   ): Promise<T> {
-<<<<<<< HEAD
     const authHeader = buildAuthorizationHeader();
     const headers = buildRequestHeaders(options?.headers, authHeader);
     if (shouldSetJsonContentType(headers, options?.body)) {
@@ -139,19 +131,6 @@ export class ApiClient {
     const trimmedRaw = raw.trim();
     if (!raw || trimmedRaw === '') {
       return undefined as T;
-=======
-    const url = `${this.baseUrl}${endpoint}`;
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
->>>>>>> origin/problematicMain
     }
     const contentType = response.headers.get('content-type') ?? '';
     if (!isJsonContentType(contentType) && !looksLikeJsonPayload(trimmedRaw)) {

@@ -3,15 +3,15 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { loadSessionSnapshot, logoutSessionRequest } from '../api/session';
 
-export type SessionUser = {
+export interface SessionUser {
   username: string;
   displayName: string;
   roles: string[];
-  partyId?: number | null;
+  apiToken?: string | null;
   modules?: string[];
-};
+  partyId?: number;
+}
 
-<<<<<<< HEAD
 export interface LoginOptions {
   remember?: boolean;
 }
@@ -25,24 +25,11 @@ export interface SessionContextValue {
   session: SessionUser | null;
   loading: boolean;
   login: (user: SessionUser, options?: LoginOptions) => void;
-=======
-export type SessionContextValue = {
-  session: SessionUser | null;
-  login: (user: SessionUser) => void;
->>>>>>> origin/problematicMain
   logout: () => void;
-  apiToken: string | null;
   setApiToken: (token: string | null) => void;
-};
+}
 
-<<<<<<< HEAD
 export const SESSION_STORAGE_KEY = 'tdf-hq-ui/session';
-=======
-const SESSION_STORAGE_KEY = 'tdf-hq-ui/session';
-const TOKEN_STORAGE_KEY = 'tdf-hq-ui/api-token';
-const envDemoToken = (import.meta.env.VITE_API_DEMO_TOKEN ?? '').trim();
-export const DEFAULT_DEMO_TOKEN = envDemoToken;
->>>>>>> origin/problematicMain
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
@@ -128,7 +115,6 @@ const sanitizeSessionForStorage = (value: SessionUser): Omit<SessionUser, 'apiTo
 
 export const parseStoredSession = (raw: string): SessionUser | null => {
   try {
-<<<<<<< HEAD
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== 'object') return null;
     const value = parsed as Record<string, unknown>;
@@ -159,12 +145,6 @@ function readStoredSessionFrom(storage: Storage | undefined): SessionUser | null
     }
     return parsed;
   } catch {
-=======
-    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as SessionUser) : null;
-  } catch (error) {
-    console.warn('Failed to parse stored session', error);
->>>>>>> origin/problematicMain
     return null;
   }
 }
@@ -203,25 +183,16 @@ function persistSession(value: SessionUser | null, scope: SessionStorageScope) {
   }
 }
 
-function readStoredApiToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(TOKEN_STORAGE_KEY);
-    if (raw) {
-      const trimmed = raw.trim();
-      return trimmed === '' ? null : trimmed;
-    }
-  } catch (error) {
-    console.warn('Failed to read stored API token', error);
-  }
-  return null;
+interface SessionProviderProps {
+  children: ReactNode;
 }
 
-<<<<<<< HEAD
+const initialStoredState = readStoredSession();
+
 export function SessionProvider({ children }: SessionProviderProps) {
-  const [session, setSession] = useState<SessionUser | null>(() => readStoredSession().session);
+  const [session, setSession] = useState<SessionUser | null>(initialStoredState.session);
   const [loading, setLoading] = useState(true);
-  const [persistScope, setPersistScope] = useState<SessionStorageScope>(() => readStoredSession().scope);
+  const [persistScope, setPersistScope] = useState<SessionStorageScope>(initialStoredState.scope);
   const sessionVersionRef = useRef(0);
 
   const updateSessionState = useCallback((next: SessionUser | null) => {
@@ -312,67 +283,6 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const value = useMemo<SessionContextValue>(
     () => ({ session, loading, login, logout, setApiToken }),
     [session, loading, login, logout, setApiToken],
-=======
-function persistApiToken(token: string | null) {
-  if (typeof window === 'undefined') return;
-  try {
-    if (token && token.trim() !== '') {
-      window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
-    } else {
-      window.localStorage.removeItem(TOKEN_STORAGE_KEY);
-    }
-  } catch (error) {
-    console.warn('Failed to persist API token', error);
-  }
-}
-
-export function getStoredSessionToken(): string | null {
-  const stored = readStoredApiToken();
-  if (stored) {
-    return stored;
-  }
-  return DEFAULT_DEMO_TOKEN !== '' ? DEFAULT_DEMO_TOKEN : null;
-}
-
-export function SessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<SessionUser | null>(() => readStoredSession());
-  const [apiToken, setApiTokenState] = useState<string | null>(() => readStoredApiToken() ?? (DEFAULT_DEMO_TOKEN || null));
-
-  useEffect(() => {
-    persistSession(session);
-  }, [session]);
-
-  useEffect(() => {
-    persistApiToken(apiToken);
-  }, [apiToken]);
-
-  const login = useCallback((user: SessionUser) => {
-    setSession(user);
-    if (!apiToken && DEFAULT_DEMO_TOKEN) {
-      setApiTokenState(DEFAULT_DEMO_TOKEN);
-    }
-  }, [apiToken]);
-
-  const logout = useCallback(() => {
-    setSession(null);
-    setApiTokenState(DEFAULT_DEMO_TOKEN ? DEFAULT_DEMO_TOKEN : null);
-  }, []);
-
-  const setApiToken = useCallback((next: string | null) => {
-    const sanitized = next?.trim();
-    setApiTokenState(sanitized && sanitized.length > 0 ? sanitized : null);
-  }, []);
-
-  const value = useMemo<SessionContextValue>(
-    () => ({
-      session,
-      login,
-      logout,
-      apiToken,
-      setApiToken,
-    }),
-    [session, login, logout, apiToken, setApiToken],
->>>>>>> origin/problematicMain
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
@@ -385,7 +295,6 @@ export function useSession(): SessionContextValue {
   }
   return context;
 }
-<<<<<<< HEAD
 
 export function getStoredSessionToken(): string | null {
   if (currentSession?.apiToken) {
@@ -401,5 +310,3 @@ export function getActiveSession(): SessionUser | null {
 export function setTransientApiToken(token: string | null | undefined): void {
   transientApiToken = normalizeApiToken(token);
 }
-=======
->>>>>>> origin/problematicMain

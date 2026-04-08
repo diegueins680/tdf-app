@@ -11,13 +11,9 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import BrandLogo from './BrandLogo';
-<<<<<<< HEAD
 import SearchIcon from '@mui/icons-material/Search';
 import { NAV_GROUPS } from './SidebarNav';
 import { canAccessPath } from '../utils/accessControl';
-=======
-import ApiStatusChip from './ApiStatusChip';
->>>>>>> origin/problematicMain
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
@@ -430,7 +426,6 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
           alignItems="center"
           sx={{ ml: 'auto' }}
         >
-<<<<<<< HEAD
           <Tooltip title="Cmd/Ctrl + K para saltar a una sección">
             <Button
               color="inherit"
@@ -463,20 +458,6 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
               Recursos
             </Button>
           </Tooltip>
-=======
-          <Button color="inherit" component={RouterLink} to="/docs" sx={{ textTransform: 'none' }}>
-            Docs
-          </Button>
-          <Button color="inherit" component={RouterLink} to="/acerca" sx={{ textTransform: 'none' }}>
-            Acerca de
-          </Button>
-          <Button color="inherit" component={RouterLink} to="/seguridad" sx={{ textTransform: 'none' }}>
-            Seguridad
-          </Button>
-
-          <Chip label="ADMIN" size="small" sx={{ bgcolor: 'rgba(59,130,246,0.15)', color: '#93c5fd' }} />
-          <ApiStatusChip />
->>>>>>> origin/problematicMain
           <Button
             color="inherit"
             component={RouterLink}
