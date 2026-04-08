@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
+import { useAuth } from '../auth/AuthProvider';
 import SideNav from '../components/SideNav';
+import { normalizeRoles } from '../config/menu';
 import MetadataPage from '../pages/Metadata';
 import { METADATA_ROUTES } from '../features/metadata/routes';
 import SessionInputList from '../pages/SessionInputList';
@@ -11,9 +13,21 @@ export type Role =
 
 export interface User { id: string; roles: Role[]; }
 
-// TODO: Reemplazar por hook/auth real
+function normalizeAuthorizedRoles(rawRoles: readonly string[] | undefined): Role[] {
+  // Route protection should fail closed when auth is missing role information.
+  if (!rawRoles || rawRoles.length === 0) return [];
+  return normalizeRoles(rawRoles);
+}
+
 function useCurrentUser(): User | null {
-  return { id: 'demo', roles: ['admin'] };
+  const { user, isAuthenticated } = useAuth();
+
+  if (!isAuthenticated || !user) return null;
+
+  return {
+    id: user.username,
+    roles: normalizeAuthorizedRoles(user.roles),
+  };
 }
 
 function RequireRole(props: { allowed: '*' | Role[]; children: React.ReactNode }) {
