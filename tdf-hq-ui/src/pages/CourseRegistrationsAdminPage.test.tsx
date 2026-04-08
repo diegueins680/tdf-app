@@ -179,7 +179,7 @@ const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const dossierScopeHint =
-  'Empieza por Expediente para revisar notas, pagos, seguimiento y correos. Usa el boton de estado solo para cambios rapidos.';
+  'Empieza por Expediente para revisar notas, pagos, seguimiento y correos. Usa el botón de estado solo para cambios rápidos.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -349,6 +349,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
       expect(container.textContent).not.toContain(dossierScopeHint);
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe(
         'Expediente',
@@ -498,6 +499,9 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        dossierScopeHint,
+      );
       expect(countOccurrences(
         container,
         dossierScopeHint,

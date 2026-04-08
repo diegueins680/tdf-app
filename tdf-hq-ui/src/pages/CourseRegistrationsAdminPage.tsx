@@ -54,7 +54,7 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
-const dossierScopeHint = 'Empieza por Expediente para revisar notas, pagos, seguimiento y correos. Usa el boton de estado solo para cambios rapidos.';
+const dossierScopeHint = 'Empieza por Expediente para revisar notas, pagos, seguimiento y correos. Usa el botón de estado solo para cambios rápidos.';
 const emptyNotesAlertMessage = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
@@ -1602,10 +1602,26 @@ export default function CourseRegistrationsAdminPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
-        <Typography variant="h4" fontWeight={700}>
-          Inscripciones de cursos
-        </Typography>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        spacing={2}
+      >
+        <Stack spacing={0.5} sx={{ minWidth: 0, flex: '1 1 320px' }}>
+          <Typography variant="h4" fontWeight={700}>
+            Inscripciones de cursos
+          </Typography>
+          {showDossierScopeHint && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              data-testid="course-registration-page-intro"
+            >
+              {dossierScopeHint}
+            </Typography>
+          )}
+        </Stack>
         {showListRefreshAction && (
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Button
@@ -1915,11 +1931,6 @@ export default function CourseRegistrationsAdminPage() {
           )}
           {regsQuery.data?.length ? (
             <Stack spacing={1.5}>
-              {showDossierScopeHint && (
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                  {dossierScopeHint}
-                </Typography>
-              )}
               <Stack divider={<Divider flexItem />} spacing={2}>
                 {regsQuery.data.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
