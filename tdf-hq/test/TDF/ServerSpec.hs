@@ -20,6 +20,7 @@ import TDF.Server
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
     , parsePaymentMethodText
+    , validateBookingListFilters
     , validateRolePayload
     , validateServiceAdCurrency
     , validateCmsContentStatus
@@ -95,6 +96,23 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "validateBookingListFilters" $ do
+        it "preserves omitted filters and accepts positive booking list identifiers" $
+            validateBookingListFilters (Just 7) (Just 11) (Just 13)
+                `shouldBe` Right (Just 7, Just 11, Just 13)
+
+        it "rejects invalid booking list filters instead of silently broadening the query" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right filtersVal ->
+                        expectationFailure
+                            ("Expected invalid booking list filters to be rejected, got: " <> show filtersVal)
+            assertInvalid "bookingId must be a positive integer" (validateBookingListFilters (Just 0) Nothing Nothing)
+            assertInvalid "partyId must be a positive integer" (validateBookingListFilters Nothing (Just (-1)) Nothing)
+            assertInvalid "engineerPartyId must be a positive integer" (validateBookingListFilters Nothing Nothing (Just 0))
 
     describe "validateCmsContentStatus" $ do
         it "defaults omitted status to draft and normalizes supported explicit values" $ do

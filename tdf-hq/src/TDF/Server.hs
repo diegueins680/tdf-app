@@ -4867,10 +4867,13 @@ bookingServer user =
 listBookings :: AuthedUser -> Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> AppM [BookingDTO]
 listBookings user mBookingId mPartyId mEngineerPartyId = do
   requireModule user ModuleScheduling
+  (bookingIdFilter, partyIdFilter, engineerPartyIdFilter) <-
+    either throwError pure $
+      validateBookingListFilters mBookingId mPartyId mEngineerPartyId
   Env pool _ <- ask
   liftIO $ do
     dbBookings <- flip runSqlPool pool $ do
-      case mBookingId of
+      case bookingIdFilter of
         Just bid | bid > 0 -> do
           let bookingKey = toSqlKey bid :: Key Booking
           mBooking <- getEntity bookingKey
@@ -4884,16 +4887,16 @@ listBookings user mBookingId mPartyId mEngineerPartyId = do
               loadByEngineer pid = do
                 let pidKey = toSqlKey pid :: Key Party
                 selectList [BookingEngineerPartyId ==. Just pidKey] [Desc BookingStartsAt, LimitTo 500]
-          case (mPartyId, mEngineerPartyId) of
+          case (partyIdFilter, engineerPartyIdFilter) of
             (Nothing, Nothing) -> do
               bookings <- selectList [] [Desc BookingId]
               buildBookingDTOs bookings
             _ -> do
-              byParty <- maybe (pure []) loadByParty mPartyId
-              byEngineer <- maybe (pure []) loadByEngineer mEngineerPartyId
+              byParty <- maybe (pure []) loadByParty partyIdFilter
+              byEngineer <- maybe (pure []) loadByEngineer engineerPartyIdFilter
               let merged = dedupeByKey (byParty ++ byEngineer)
               buildBookingDTOs merged
-    if isJust mBookingId || isJust mPartyId || isJust mEngineerPartyId
+    if isJust bookingIdFilter || isJust partyIdFilter || isJust engineerPartyIdFilter
       then pure dbBookings
       else do
         courseSessions <- flip runSqlPool pool courseCalendarBookings
@@ -5271,6 +5274,13 @@ validateOptionalPositiveIdField fieldName (Just rawId)
             BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
         }
   | otherwise = Right (Just rawId)
+
+validateBookingListFilters :: Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> Either ServerError (Maybe Int64, Maybe Int64, Maybe Int64)
+validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do
+  bookingIdFilter <- validateOptionalPositiveIdField "bookingId" mBookingId
+  partyIdFilter <- validateOptionalPositiveIdField "partyId" mPartyId
+  engineerPartyIdFilter <- validateOptionalPositiveIdField "engineerPartyId" mEngineerPartyId
+  pure (bookingIdFilter, partyIdFilter, engineerPartyIdFilter)
 
 validateCmsContentStatus :: Maybe Text -> Either ServerError Text
 validateCmsContentStatus Nothing = Right "draft"
