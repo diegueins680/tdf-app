@@ -406,6 +406,14 @@ validatePublicTrialPartyId Nothing = Right ()
 validatePublicTrialPartyId (Just _) =
   Left err400 { errBody = "partyId is not allowed on public trial requests" }
 
+validatePublicInterestInput :: InterestIn -> Either ServerError InterestIn
+validatePublicInterestInput (InterestIn rawInterestType subjectId details driveLink) =
+  case cleanOptional (Just rawInterestType) of
+    Nothing ->
+      Left err400 { errBody = "interestType is required" }
+    Just interestTypeVal ->
+      Right (InterestIn interestTypeVal subjectId (cleanOptional details) (cleanOptional driveLink))
+
 validatePublicSubjectSelection :: Maybe Subject -> Either ServerError ()
 validatePublicSubjectSelection (Just subject)
   | subjectActive subject = Right ()
@@ -449,7 +457,8 @@ publicTrialsServer =
       pure (SignupOut True)
 
     interestH :: InterestIn -> AppM InterestOut
-    interestH InterestIn{..} = do
+    interestH rawInput = do
+      InterestIn{..} <- either (liftIO . throwIO) pure (validatePublicInterestInput rawInput)
       now <- liftIO getCurrentTime
       subjectKey <- traverse requirePublicActiveSubject subjectId
       partyIdKey <- ensurePublicLeadParty now

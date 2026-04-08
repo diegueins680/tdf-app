@@ -16,11 +16,13 @@ import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
 import TDF.Trials.DTO (PreferredSlot (..))
+import TDF.Trials.API (InterestIn (..))
 import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
   , validatePreferredSlots
   , validatePreferredSlotsAt
+  , validatePublicInterestInput
   , validatePublicSubjectSelection
   , validatePublicTrialPartyId
   )
@@ -112,6 +114,25 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "partyId is not allowed on public trial requests"
         Right _ ->
           expectationFailure "Expected public partyId to be rejected"
+
+  describe "validatePublicInterestInput" $ do
+    it "rejects blank interest types instead of creating unusable anonymous lead rows" $
+      case validatePublicInterestInput (InterestIn "   " Nothing (Just "Looking for info") (Just "https://example.com")) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "interestType is required"
+        Right _ ->
+          expectationFailure "Expected blank interest type to be rejected"
+
+    it "trims interest types and drops blank optional fields" $
+      case validatePublicInterestInput (InterestIn "  workshop  " (Just 7) (Just "   ") (Just "  https://example.com/file  ")) of
+        Left err ->
+          expectationFailure ("Expected valid interest input to be accepted, got " <> show err)
+        Right (InterestIn interestTypeValue subjectIdValue detailsValue driveLinkValue) -> do
+          interestTypeValue `shouldBe` "workshop"
+          subjectIdValue `shouldBe` Just 7
+          detailsValue `shouldBe` Nothing
+          driveLinkValue `shouldBe` Just "https://example.com/file"
 
   describe "validatePublicSubjectSelection" $ do
     it "accepts active public subjects" $
