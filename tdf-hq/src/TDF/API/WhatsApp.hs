@@ -19,7 +19,7 @@ import Servant
 import GHC.Generics (Generic)
 import Data.Aeson
 import Control.Monad (unless)
-import Data.Char (isDigit)
+import Data.Char (isAlphaNum, isAscii, isDigit)
 import Data.Int (Int64)
 import Data.Maybe (listToMaybe)
 import Data.Text (Text)
@@ -126,11 +126,19 @@ isValidEmail candidate =
       not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate) &&
       not (T.null localPart) &&
       not (T.null domain) &&
-      not (T.isPrefixOf "." domain) &&
-      not (T.isSuffixOf "." domain) &&
       T.isInfixOf "." domain &&
-      T.length domain >= 3
+      all isValidDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidDomainLabel :: Text -> Bool
+isValidDomainLabel label =
+  not (T.null label) &&
+  not (T.isPrefixOf "-" label) &&
+  not (T.isSuffixOf "-" label) &&
+  T.all isValidDomainChar label
+
+isValidDomainChar :: Char -> Bool
+isValidDomainChar c = (isAscii c && isAlphaNum c) || c == '-'
 
 validateLeadCompletionRequest :: CompleteReq -> Either ServerError CompleteReq
 validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
