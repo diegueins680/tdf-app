@@ -168,6 +168,7 @@ export default function AdminConsolePage() {
   const users = usersQuery.data ?? [];
   const isUsersLoading = usersQuery.isLoading;
   const usersError = usersQuery.isError ? (usersQuery.error as Error).message : null;
+  const showUsersTable = isUsersLoading || users.length > 0;
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
@@ -321,74 +322,74 @@ export default function AdminConsolePage() {
             {usersError}
           </Alert>
         )}
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Usuario</TableCell>
-                <TableCell>Roles</TableCell>
-                <TableCell>Último acceso</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell align="right">Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {isUsersLoading && (
+        {showUsersTable ? (
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={5}>
-                    <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ py: 2 }}>
-                      <CircularProgress size={18} />
-                      <Typography variant="body2" color="text.secondary">
-                        Cargando usuarios…
-                      </Typography>
-                    </Stack>
-                  </TableCell>
+                  <TableCell>Usuario</TableCell>
+                  <TableCell>Roles</TableCell>
+                  <TableCell>Último acceso</TableCell>
+                  <TableCell>Estado</TableCell>
+                  <TableCell align="right">Acciones</TableCell>
                 </TableRow>
-              )}
-              {!isUsersLoading && users.length === 0 && !usersError && (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <Typography variant="body2" align="center" color="text.secondary" sx={{ py: 2 }}>
-                      Todavía no hay usuarios administrables.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-              {users.map((user) => {
-                const identity = summarizeAdminUserIdentity(user);
-                return (
-                  <TableRow key={user.userId} hover>
-                    <TableCell>
-                      <Stack spacing={0.25}>
-                        <Typography variant="body2" fontWeight={600}>
-                          {identity.primary}
+              </TableHead>
+              <TableBody>
+                {isUsersLoading && (
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ py: 2 }}>
+                        <CircularProgress size={18} />
+                        <Typography variant="body2" color="text.secondary">
+                          Cargando usuarios…
                         </Typography>
-                        {identity.showUsername && (
-                          <Typography variant="caption" color="text.secondary">
-                            Usuario: {identity.username}
-                          </Typography>
-                        )}
-                        {user.partyId ? (
-                          <Typography variant="caption" color="text.secondary">
-                            Party #{user.partyId}
-                          </Typography>
-                        ) : null}
                       </Stack>
                     </TableCell>
-                    <TableCell>{formatRoleList(user.roles)}</TableCell>
-                    <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
-                    <TableCell>{renderStatus(user.status)}</TableCell>
-                    <TableCell align="right">
-                      <Button size="small" startIcon={<EditIcon />} onClick={() => setEditingUser(user)}>
-                        Editar roles
-                      </Button>
-                    </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                )}
+                {users.map((user) => {
+                  const identity = summarizeAdminUserIdentity(user);
+                  return (
+                    <TableRow key={user.userId} hover>
+                      <TableCell>
+                        <Stack spacing={0.25}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {identity.primary}
+                          </Typography>
+                          {identity.showUsername && (
+                            <Typography variant="caption" color="text.secondary">
+                              Usuario: {identity.username}
+                            </Typography>
+                          )}
+                          {user.partyId ? (
+                            <Typography variant="caption" color="text.secondary">
+                              Party #{user.partyId}
+                            </Typography>
+                          ) : null}
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{formatRoleList(user.roles)}</TableCell>
+                      <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
+                      <TableCell>{renderStatus(user.status)}</TableCell>
+                      <TableCell align="right">
+                        <Button size="small" startIcon={<EditIcon />} onClick={() => setEditingUser(user)}>
+                          Editar roles
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : !usersError ? (
+          <Box sx={{ px: 2, pb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Todavía no hay usuarios administrables. Cuando exista el primero, aquí verás roles, último acceso y el
+              atajo para editar permisos.
+            </Typography>
+          </Box>
+        ) : null}
       </Paper>
 
       <Paper variant="outlined">

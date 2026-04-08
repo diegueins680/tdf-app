@@ -158,6 +158,26 @@ describe('AdminConsolePage', () => {
     });
   });
 
+  it('replaces the empty users grid with first-run guidance instead of showing blank table chrome', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Todavía no hay usuarios administrables\. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar permisos\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
+  });
+
   it('shows the system username only when it adds new identity context in the admin table', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
