@@ -407,6 +407,18 @@ export default function CmsAdminPage() {
     }),
     [filteredVersions.length, minVersionFilter, statusFilter, versions.length],
   );
+  const historyStatuses = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          versions
+            .map((version) => version.ccdStatus.trim())
+            .filter((value) => value !== ''),
+        ),
+      ),
+    [versions],
+  );
+  const showHistoryStatusFilter = historyStatuses.length > 1 || statusFilter !== 'all';
   const versionCountLabel = useMemo(() => {
     const totalVersions = versions.length;
     const visibleVersions = filteredVersions.length;
@@ -830,22 +842,24 @@ export default function CmsAdminPage() {
             </Stack>
             {versionListUiState.showToolbarFilters && (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-                <TextField
-                  select
-                  size="small"
-                  label="Estado del historial"
-                  value={statusFilter}
-                  onChange={(e) => {
-                    const next = e.target.value.trim();
-                    setStatusFilter(isStatusFilter(next) ? next : 'all');
-                  }}
-                  sx={{ minWidth: 140 }}
-                >
-                  <MenuItem value="all">Todos</MenuItem>
-                  <MenuItem value="published">Publicados</MenuItem>
-                  <MenuItem value="draft">Borradores</MenuItem>
-                  <MenuItem value="archived">Archivados</MenuItem>
-                </TextField>
+                {showHistoryStatusFilter && (
+                  <TextField
+                    select
+                    size="small"
+                    label="Estado del historial"
+                    value={statusFilter}
+                    onChange={(e) => {
+                      const next = e.target.value.trim();
+                      setStatusFilter(isStatusFilter(next) ? next : 'all');
+                    }}
+                    sx={{ minWidth: 140 }}
+                  >
+                    <MenuItem value="all">Todos</MenuItem>
+                    <MenuItem value="published">Publicados</MenuItem>
+                    <MenuItem value="draft">Borradores</MenuItem>
+                    <MenuItem value="archived">Archivados</MenuItem>
+                  </TextField>
+                )}
                 <TextField
                   size="small"
                   type="number"
