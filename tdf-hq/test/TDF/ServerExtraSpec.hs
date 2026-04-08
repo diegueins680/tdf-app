@@ -38,6 +38,7 @@ import TDF.ServerExtra (
     parseOptionalKeyField,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
+    validatePaymentMethod,
     validateSessionStatusInput,
     validateSessionTimeRange,
     validateCheckoutTargets,
@@ -208,6 +209,25 @@ spec = do
               expectationFailure ("Expected invalid session time range error, got " <> show value)
       assertInvalid (validateSessionTimeRange startAt startAt)
       assertInvalid (validateSessionTimeRange startAt (addUTCTime (-60) startAt))
+
+  describe "validatePaymentMethod" $ do
+    it "accepts supported manual-payment aliases, including persisted enum labels reused by the UI" $ do
+      validatePaymentMethod " Produbanco " `shouldBe` Right M.BankTransferM
+      validatePaymentMethod "bank_transfer" `shouldBe` Right M.BankTransferM
+      validatePaymentMethod "BankTransferM" `shouldBe` Right M.BankTransferM
+      validatePaymentMethod "Card" `shouldBe` Right M.CardPOSM
+      validatePaymentMethod "PayPalM" `shouldBe` Right M.PayPalM
+      validatePaymentMethod "other" `shouldBe` Right M.OtherM
+
+    it "rejects blank or unknown manual payment methods instead of silently storing them as bank transfers" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "paymentMethod must be one of"
+            Right value ->
+              expectationFailure ("Expected invalid payment method error, got " <> show value)
+      assertInvalid (validatePaymentMethod "   ")
+      assertInvalid (validatePaymentMethod "wire-transfer")
 
   describe "normalizeServiceCatalogNameUpdate" $ do
     it "preserves omitted names and trims meaningful updates" $ do

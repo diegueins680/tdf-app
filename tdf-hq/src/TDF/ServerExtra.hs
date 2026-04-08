@@ -1350,6 +1350,7 @@ paymentsServer user =
     createPaymentH PaymentCreate{..} = do
       ensureModule ModuleAdmin user
       paidAt <- parseUTCTimeText pcPaidAt
+      paymentMethodVal <- either throwError pure (validatePaymentMethod pcMethod)
       now <- liftIO getCurrentTime
       let partyKey   = toSqlKey pcPartyId
           mOrderKey  = toSqlKey <$> pcOrderId
@@ -1359,7 +1360,7 @@ paymentsServer user =
           { paymentInvoiceId   = mInvoiceKey
           , paymentOrderId     = mOrderKey
           , paymentPartyId     = partyKey
-          , paymentMethod      = parseMethod pcMethod
+          , paymentMethod      = paymentMethodVal
           , paymentAmountCents = pcAmountCents
           , paymentReceivedAt  = paidAt
           , paymentReference   = pcReference
@@ -1392,17 +1393,41 @@ paymentsServer user =
       , payAttachment  = paymentAttachment p
       }
 
-parseMethod :: Text -> PaymentMethod
-parseMethod t =
-  case T.toLower (T.strip t) of
-    "bank" -> BankTransferM
-    "banktransfer" -> BankTransferM
-    "transferencia" -> BankTransferM
-    "produbanco" -> BankTransferM
-    "cash" -> CashM
-    "efectivo" -> CashM
-    "crypto" -> CryptoM
-    _ -> BankTransferM
+validatePaymentMethod :: Text -> Either ServerError PaymentMethod
+validatePaymentMethod rawMethod =
+  case normalized of
+    "cash" -> Right CashM
+    "cashm" -> Right CashM
+    "efectivo" -> Right CashM
+    "bank" -> Right BankTransferM
+    "banktransfer" -> Right BankTransferM
+    "banktransferm" -> Right BankTransferM
+    "transferencia" -> Right BankTransferM
+    "produbanco" -> Right BankTransferM
+    "card" -> Right CardPOSM
+    "cardpos" -> Right CardPOSM
+    "cardposm" -> Right CardPOSM
+    "paypal" -> Right PayPalM
+    "paypalm" -> Right PayPalM
+    "stripe" -> Right StripeM
+    "stripem" -> Right StripeM
+    "wompi" -> Right WompiM
+    "wompim" -> Right WompiM
+    "payphone" -> Right PayPhoneM
+    "payphonem" -> Right PayPhoneM
+    "crypto" -> Right CryptoM
+    "cryptom" -> Right CryptoM
+    "other" -> Right OtherM
+    "otherm" -> Right OtherM
+    _ -> invalidPaymentMethod
+  where
+    normalized =
+      T.toLower (T.filter (`notElem` [' ', '_', '-']) (T.strip rawMethod))
+    invalidPaymentMethod =
+      Left err400
+        { errBody =
+            "paymentMethod must be one of: cash, bank_transfer, bank, transferencia, produbanco, card, paypal, stripe, wompi, payphone, crypto, other"
+        }
 
 data MetaChannel = MetaInstagram | MetaFacebook
   deriving (Eq, Show)
