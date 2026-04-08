@@ -39,6 +39,13 @@ import { Health } from '../utilities/health';
 import type { AdminConsoleCard, AdminUserDTO, AdminUserStatus, AuditLogEntry, RoleKey } from '../api/types';
 import { ROLE_OPTIONS, formatRoleList } from '../constants/roles';
 
+const ADMIN_REFRESH_QUERY_KEYS = [
+  ['admin', 'health'],
+  ['admin', 'console'],
+  ['admin', 'users'],
+  ['admin', 'audit'],
+] as const;
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
@@ -150,6 +157,11 @@ export default function AdminConsolePage() {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
   }, [editingUser]);
+  const isRefreshingPanel =
+    healthQuery.isFetching
+    || auditQuery.isFetching
+    || consoleQuery.isFetching
+    || usersQuery.isFetching;
 
   const handleCloseDialog = () => {
     if (updateRolesMutation.isPending) return;
@@ -160,6 +172,12 @@ export default function AdminConsolePage() {
     if (!editingUser) return;
     setDialogError(null);
     updateRolesMutation.mutate({ userId: editingUser.userId, roles: selectedRoles });
+  };
+
+  const handleRefreshPanel = () => {
+    ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
+      void qc.invalidateQueries({ queryKey: [...queryKey] });
+    });
   };
 
   const renderStatus = (status?: AdminUserStatus | null) => {
@@ -173,7 +191,27 @@ export default function AdminConsolePage() {
 
   return (
     <Stack spacing={3}>
-      <Typography variant="h5">Consola de administración</Typography>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+      >
+        <Box>
+          <Typography variant="h5">Consola de administración</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Revisa el estado del sistema, ajusta permisos y valida cambios recientes desde un solo lugar.
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={handleRefreshPanel}
+          disabled={isRefreshingPanel}
+        >
+          {isRefreshingPanel ? 'Actualizando panel…' : 'Actualizar panel'}
+        </Button>
+      </Stack>
 
       {rotationWarning && (
         <Alert severity="warning" onClose={() => setRotationWarning(false)}>
@@ -184,14 +222,7 @@ export default function AdminConsolePage() {
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
           <Card variant="outlined">
-            <CardHeader
-              title="Estado del servicio"
-              action={(
-                <Button size="small" variant="text" startIcon={<RefreshIcon />} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'health'] })}>
-                  Refrescar
-                </Button>
-              )}
-            />
+            <CardHeader title="Estado del servicio" />
             <CardContent>
               <Typography variant="body2">API: {healthQuery.data?.status ?? '—'}</Typography>
               <Typography variant="body2">Base de datos: {healthQuery.data?.db ?? '—'}</Typography>
@@ -261,21 +292,14 @@ export default function AdminConsolePage() {
       </Grid>
 
       <Paper variant="outlined">
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 2, py: 1 }}>
+        <Box sx={{ px: 2, py: 1 }}>
           <Box>
             <Typography variant="h6">Usuarios y roles</Typography>
             <Typography variant="body2" color="text.secondary">
               Consulta y ajusta los permisos del equipo.
             </Typography>
           </Box>
-          <Button
-            startIcon={<RefreshIcon />}
-            onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'users'] })}
-            disabled={isUsersLoading}
-          >
-            Actualizar
-          </Button>
-        </Stack>
+        </Box>
         {usersError && (
           <Alert severity="error" sx={{ mx: 2 }}>
             {usersError}
@@ -347,12 +371,12 @@ export default function AdminConsolePage() {
       </Paper>
 
       <Paper variant="outlined">
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 2, py: 1 }}>
+        <Box sx={{ px: 2, py: 1 }}>
           <Typography variant="h6">Auditoría reciente</Typography>
-          <Button startIcon={<RefreshIcon />} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'audit'] })}>
-            Actualizar
-          </Button>
-        </Stack>
+          <Typography variant="body2" color="text.secondary">
+            Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.
+          </Typography>
+        </Box>
         {auditQuery.isError && (
           <Alert severity="error" sx={{ mx: 2 }}>
             {(auditQuery.error as Error).message}

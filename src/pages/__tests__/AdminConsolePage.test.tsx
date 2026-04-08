@@ -1,0 +1,120 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
+import AdminConsolePage from '../AdminConsolePage';
+
+const mockAuditLogs = vi.fn();
+const mockConsolePreview = vi.fn();
+const mockListUsers = vi.fn();
+const mockSeed = vi.fn();
+const mockUpdateUserRoles = vi.fn();
+const mockHealthFetch = vi.fn();
+
+vi.mock('../../api/admin', () => ({
+  AdminApi: {
+    auditLogs: () => mockAuditLogs(),
+    consolePreview: () => mockConsolePreview(),
+    listUsers: () => mockListUsers(),
+    seed: () => mockSeed(),
+    updateUserRoles: (userId: number, roles: string[]) => mockUpdateUserRoles(userId, roles),
+  },
+}));
+
+vi.mock('../../utilities/health', () => ({
+  Health: {
+    fetch: () => mockHealthFetch(),
+  },
+}));
+
+function createQueryClient() {
+  return new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+}
+
+function renderPage(queryClient = createQueryClient()) {
+  return {
+    queryClient,
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <AdminConsolePage />
+      </QueryClientProvider>,
+    ),
+  };
+}
+
+describe('AdminConsolePage', () => {
+  beforeAll(() => {
+    if (!window.matchMedia) {
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: () => ({
+          matches: false,
+          media: '',
+          onchange: null,
+          addListener: () => undefined,
+          removeListener: () => undefined,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          dispatchEvent: () => false,
+        }),
+      });
+    }
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'ok' });
+    mockAuditLogs.mockResolvedValue([]);
+    mockConsolePreview.mockResolvedValue({ status: 'ok', cards: [] });
+    mockListUsers.mockResolvedValue([]);
+    mockSeed.mockResolvedValue(undefined);
+    mockUpdateUserRoles.mockResolvedValue(undefined);
+  });
+
+  it('uses one page-level refresh action and a clear header description', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          /Revisa el estado del sistema, ajusta permisos y valida cambios recientes desde un solo lugar\./i,
+        ),
+      ).toBeInTheDocument(),
+    );
+
+    expect(
+      screen.getByRole('button', { name: /Actualizar panel/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /^Actualizar$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Refrescar/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('refreshes every admin dataset from the single panel action', async () => {
+    const user = userEvent.setup();
+    const { queryClient } = renderPage();
+    const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: /Actualizar panel/i }),
+      ).toBeEnabled(),
+    );
+
+    await user.click(screen.getByRole('button', { name: /Actualizar panel/i }));
+
+    await waitFor(() => {
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'health'] });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'console'] });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'users'] });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'audit'] });
+    });
+  });
+});
