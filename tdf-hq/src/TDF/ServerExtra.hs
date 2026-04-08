@@ -94,6 +94,29 @@ parseCheckoutTargetKind (Just raw) =
     "room" -> Right TargetRoom
     _ -> Left err400 { errBody = "targetKind must be one of: party, room, session" }
 
+validateCheckoutTargets
+  :: CheckoutTarget
+  -> Maybe (Key Room)
+  -> Maybe (Key ME.Session)
+  -> Either ServerError (Maybe (Key Room), Maybe (Key ME.Session))
+validateCheckoutTargets targetKind mRoom mSession =
+  case targetKind of
+    TargetRoom ->
+      case (mRoom, mSession) of
+        (Nothing, _) -> Left err400 { errBody = "targetRoom required for room checkout" }
+        (Just _, Just _) -> Left err400 { errBody = "targetSession is only allowed for session checkout" }
+        (Just roomKey, Nothing) -> Right (Just roomKey, Nothing)
+    TargetSession ->
+      case (mRoom, mSession) of
+        (_, Nothing) -> Left err400 { errBody = "targetSession required for session checkout" }
+        (Just _, Just _) -> Left err400 { errBody = "targetRoom is only allowed for room checkout" }
+        (Nothing, Just sessionKey) -> Right (Nothing, Just sessionKey)
+    TargetParty ->
+      case (mRoom, mSession) of
+        (Nothing, Nothing) -> Right (Nothing, Nothing)
+        (Just _, _) -> Left err400 { errBody = "targetRoom is only allowed for room checkout" }
+        (_, Just _) -> Left err400 { errBody = "targetSession is only allowed for session checkout" }
+
 inventoryServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -280,7 +303,7 @@ inventoryServer user =
       active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
       when (isJust active) $
         throwError err409 { errBody = "Asset already checked out" }
-      (mRoom, mSession) <- validateTargets targetKind targetRoomKey targetSessionKey
+      (mRoom, mSession) <- either throwError pure (validateCheckoutTargets targetKind targetRoomKey targetSessionKey)
       recEnt <- withPool $ do
         checkoutId <- insert AssetCheckout
           { assetCheckoutAssetId          = assetKey
@@ -339,19 +362,6 @@ inventoryServer user =
       ensureInventoryAccess
       mAsset <- withPool $ selectFirst [AssetQrCode ==. Just token] []
       maybe (throwError err404) (pure . toAssetDTO) mAsset
-
-    validateTargets targetKind mRoom mSession = do
-      case targetKind of
-        TargetRoom ->
-          case mRoom of
-            Nothing -> throwError err400 { errBody = "targetRoom required for room checkout" }
-            Just _  -> pure (mRoom, Nothing)
-        TargetSession ->
-          case mSession of
-            Nothing -> throwError err400 { errBody = "targetSession required for session checkout" }
-            Just _  -> pure (Nothing, mSession)
-        TargetParty ->
-          pure (Nothing, Nothing)
 
     toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
       { checkoutId      = toPathPiece key

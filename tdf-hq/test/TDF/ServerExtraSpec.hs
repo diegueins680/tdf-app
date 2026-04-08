@@ -16,9 +16,10 @@ import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
+import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
-import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance), CheckoutTarget (TargetParty, TargetRoom, TargetSession), SessionStatus (InPrep, InSession))
+import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance), CheckoutTarget (TargetParty, TargetRoom, TargetSession), Room, Session, SessionStatus (InPrep, InSession))
 import TDF.ServerExtra (
     IGInbound (..),
     IGInboundDeleted (..),
@@ -37,6 +38,7 @@ import TDF.ServerExtra (
     persistMetaInbound,
     validateSessionStatusInput,
     validateSessionTimeRange,
+    validateCheckoutTargets,
     validateServiceCatalogCurrency,
     validateServiceCatalogCurrencyUpdate,
     validateServiceCatalogTaxBps,
@@ -130,6 +132,31 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "targetSession must be a valid identifier"
         Right value ->
           expectationFailure ("Expected invalid optional key input error, got " <> show value)
+
+  describe "validateCheckoutTargets" $ do
+    let roomId = case (fromPathPiece "00000000-0000-0000-0000-000000000042" :: Maybe (Key Room)) of
+          Just key -> key
+          Nothing -> error "invalid room fixture key"
+        sessionId = case (fromPathPiece "00000000-0000-0000-0000-000000000084" :: Maybe (Key Session)) of
+          Just key -> key
+          Nothing -> error "invalid session fixture key"
+
+    it "accepts target fields that exactly match the declared checkout target kind" $ do
+      validateCheckoutTargets TargetParty Nothing Nothing `shouldBe` Right (Nothing, Nothing)
+      validateCheckoutTargets TargetRoom (Just roomId) Nothing `shouldBe` Right (Just roomId, Nothing)
+      validateCheckoutTargets TargetSession Nothing (Just sessionId) `shouldBe` Right (Nothing, Just sessionId)
+
+    it "rejects contradictory checkout target fields instead of silently discarding them" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected contradictory checkout target to be rejected, got " <> show value)
+      assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetParty (Just roomId) Nothing)
+      assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetParty Nothing (Just sessionId))
+      assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetRoom (Just roomId) (Just sessionId))
+      assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetSession (Just roomId) (Just sessionId))
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
