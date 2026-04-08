@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+=======
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+>>>>>>> origin/problematicMain
 import { Bookings } from '../api/bookings';
 import type { BookingDTO, PartyCreate, PartyDTO, ServiceCatalogDTO } from '../api/types';
 import {
@@ -49,6 +54,7 @@ const parsePositiveInt = (raw: string | null): number | null => {
 };
 
 export default function BookingsPage() {
+<<<<<<< HEAD
   const location = useLocation();
   const calendarRef = useRef<FullCalendar | null>(null);
   const autoOpenHandled = useRef(false);
@@ -179,6 +185,26 @@ export default function BookingsPage() {
         };
       }),
     [bookings],
+=======
+  const { data, isLoading, error } = useQuery({ queryKey: ['bookings'], queryFn: Bookings.list });
+  const zone = import.meta.env['VITE_TZ'] || 'America/Guayaquil';
+
+  const events = useMemo(
+    () =>
+      (data || [])
+        .map((b: BookingDTO) => {
+          const start = b.startsAt ? DateTime.fromISO(b.startsAt).toISO() ?? undefined : undefined;
+          const end = b.endsAt ? DateTime.fromISO(b.endsAt).toISO() ?? undefined : undefined;
+          return {
+            id: String(b.bookingId),
+            title: b.title ?? 'Booking',
+            start,
+            end,
+          };
+        })
+        .filter((ev) => Boolean(ev.start)),
+    [data],
+>>>>>>> origin/problematicMain
   );
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -730,6 +756,7 @@ const openDialogForRange = (start: Date, end: Date) => {
   return (
     <>
       <Typography variant="h5" gutterBottom>Agenda</Typography>
+<<<<<<< HEAD
       {courseNotice && (
         <Alert severity="info" sx={{ mb: 1 }} onClose={() => setCourseNotice(null)}>
           {courseNotice}
@@ -738,6 +765,10 @@ const openDialogForRange = (start: Date, end: Date) => {
       {calendarError && <Alert severity="warning" sx={{ mb: 1 }}>{calendarError}</Alert>}
       {bookingsQuery.isLoading && <div>Cargando...</div>}
       {bookingsQuery.error && <div>Error: {bookingsQuery.error.message}</div>}
+=======
+      {isLoading && <div>Cargando...</div>}
+      {error && <div>Error: {(error as Error).message}</div>}
+>>>>>>> origin/problematicMain
       <Paper sx={{ p: 1 }}>
         <FullCalendar
           ref={calendarRef}

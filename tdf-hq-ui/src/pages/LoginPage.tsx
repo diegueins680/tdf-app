@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   Alert,
@@ -15,6 +16,14 @@ import {
   DialogTitle,
   Fade,
   FormControl,
+=======
+import React, { useState } from 'react';
+import {
+  Box,
+  Button,
+  Checkbox,
+  Container,
+>>>>>>> origin/problematicMain
   FormControlLabel,
   FormHelperText,
   IconButton,
@@ -29,6 +38,7 @@ import {
   TextField,
   Tooltip,
   Typography,
+<<<<<<< HEAD
   useMediaQuery,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -153,10 +163,17 @@ const parseNonNegativeSafeInt = (value: string): number | undefined => {
   if (!Number.isSafeInteger(parsed) || parsed < 0) return undefined;
   return parsed;
 };
+=======
+} from '@mui/material';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useSession } from '../session/SessionContext';
+import { loginRequest } from '../api/auth';
+>>>>>>> origin/problematicMain
 
 export default function LoginPage() {
-  const [identifier, setIdentifier] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+<<<<<<< HEAD
   const [showPassword, setShowPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
@@ -604,9 +621,31 @@ export default function LoginPage() {
     setResetFeedback(null);
     try {
       await resetMutation.mutateAsync(emailValue);
+=======
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { session, login } = useSession();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    try {
+      const data = await loginRequest({ username, password });
+      login({
+        username,
+        displayName: username || 'Usuario',
+        roles: data.roles ?? [],
+        partyId: data.partyId,
+        modules: data.modules ?? [],
+      });
+      navigate('/crm/contactos', { replace: true });
+>>>>>>> origin/problematicMain
     } catch (err) {
-      console.warn('Password reset request failed (silently returning success)', err);
+      setError(err instanceof Error ? err.message : 'No pudimos iniciar sesión');
     } finally {
+<<<<<<< HEAD
       setResetFeedback({
         type: 'success',
         message: 'Si el correo existe en TDF Records, te enviaremos un enlace para restablecer la contraseña.',
@@ -708,6 +747,9 @@ export default function LoginPage() {
         type: 'error',
         message: err instanceof Error ? err.message : 'No pudimos crear la cuenta. Intenta de nuevo.',
       });
+=======
+      setSubmitting(false);
+>>>>>>> origin/problematicMain
     }
   };
 
@@ -734,6 +776,7 @@ export default function LoginPage() {
   }
 
   return (
+<<<<<<< HEAD
     <Box
       component="main"
       sx={{
@@ -1488,19 +1531,66 @@ export default function LoginPage() {
                 </Stack>
               </Stack>
             </Paper>
-            <Typography variant="body2" color="text.secondary">
-              Al crear la cuenta aceptas los términos de servicio de TDF Records y recibes acceso inmediato al panel.
+=======
+    <Container component="main" maxWidth="xs" sx={{ display: 'flex', alignItems: 'center', minHeight: '100vh' }}>
+      <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+        <Stack spacing={3} component="form" onSubmit={handleSubmit}>
+          <Box>
+            <Typography component="h1" variant="h5" fontWeight={600} gutterBottom>
+              Inicia sesion en TDF Records
             </Typography>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeSignupDialog}>Cancelar</Button>
-          <Button onClick={() => { void handleSignupSubmit(); }} disabled={signupMutation.isPending}>
-            {signupMutation.isPending ? 'Creando…' : 'Crear e ingresar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+>>>>>>> origin/problematicMain
+            <Typography variant="body2" color="text.secondary">
+              Ingresa tus credenciales para continuar.
+            </Typography>
+          </Box>
 
+<<<<<<< HEAD
     </Box>
+=======
+          <TextField
+            label="Nombre de usuario"
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            required
+            fullWidth
+            autoComplete="username"
+          />
+
+          <TextField
+            label="Contrasena"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            fullWidth
+            autoComplete="current-password"
+          />
+
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <FormControlLabel control={<Checkbox />} label="Recordarme" />
+            <Link href="#" variant="body2" underline="hover">
+              Olvido su contrasena?
+            </Link>
+          </Stack>
+
+          <Button variant="contained" type="submit" size="large">
+            {submitting ? 'Ingresando...' : 'Iniciar sesion'}
+          </Button>
+
+          {error && (
+            <Typography variant="body2" color="error" textAlign="center">
+              {error}
+            </Typography>
+          )}
+
+          <Typography variant="caption" color="text.disabled" textAlign="center">
+            Administracion integral de estudios, label, eventos y escuela.
+          </Typography>
+        </Stack>
+      </Paper>
+    </Container>
+>>>>>>> origin/problematicMain
   );
 }

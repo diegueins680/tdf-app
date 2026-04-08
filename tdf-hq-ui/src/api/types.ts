@@ -1,4 +1,4 @@
-export interface PartyDTO {
+export type PartyDTO = {
   partyId: number;
   legalName?: string | null;
   displayName: string;
@@ -12,8 +12,9 @@ export interface PartyDTO {
   emergencyContact?: string | null;
   notes?: string | null;
   hasUserAccount?: boolean;
-}
+};
 
+<<<<<<< HEAD
 export interface SocialPartyProfileDTO {
   sppPartyId: number;
   sppDisplayName: string;
@@ -23,6 +24,9 @@ export interface SocialPartyProfileDTO {
 }
 
 export interface PartyCreate {
+=======
+export type PartyCreate = {
+>>>>>>> origin/problematicMain
   cDisplayName: string;
   cIsOrg: boolean;
   cLegalName?: string | null;
@@ -33,21 +37,22 @@ export interface PartyCreate {
   cTaxId?: string | null;
   cEmergencyContact?: string | null;
   cNotes?: string | null;
-}
+};
 
-export interface PartyUpdate {
-  uDisplayName?: string;
-  uIsOrg?: boolean;
-  uLegalName?: string | null;
-  uPrimaryEmail?: string | null;
-  uPrimaryPhone?: string | null;
-  uWhatsapp?: string | null;
-  uInstagram?: string | null;
-  uTaxId?: string | null;
-  uEmergencyContact?: string | null;
-  uNotes?: string | null;
-}
+export type PartyUpdate = Partial<{
+  uDisplayName: string;
+  uIsOrg: boolean;
+  uLegalName: string | null;
+  uPrimaryEmail: string | null;
+  uPrimaryPhone: string | null;
+  uWhatsapp: string | null;
+  uInstagram: string | null;
+  uTaxId: string | null;
+  uEmergencyContact: string | null;
+  uNotes: string | null;
+}>;
 
+<<<<<<< HEAD
 export interface PartyRelatedBookingDTO {
   prbBookingId: number;
   prbRole: string;
@@ -291,13 +296,24 @@ export interface AssetCheckoutDTO {
 }
 
 export interface BookingDTO {
+=======
+export type BookingResourceDTO = {
+  brResourceId?: number | string | null;
+  brRole?: string | null;
+  brRoomName?: string | null;
+};
+
+export type BookingDTO = {
+>>>>>>> origin/problematicMain
   bookingId: number;
-  title: string;
-  startsAt: string; // ISO
-  endsAt: string;   // ISO
-  status: string;
+  title?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  status?: string | null;
   notes?: string | null;
+  resources?: BookingResourceDTO[];
   partyId?: number | null;
+<<<<<<< HEAD
   engineerPartyId?: number | null;
   engineerName?: string | null;
   serviceType?: string | null;
@@ -312,21 +328,28 @@ export interface BookingDTO {
   courseRemaining?: number | null;
   courseLocation?: string | null;
 }
+=======
+  customerName?: string | null;
+  partyDisplayName?: string | null;
+  serviceOrderId?: number | null;
+  serviceType?: string | null;
+  serviceOrderTitle?: string | null;
+};
+>>>>>>> origin/problematicMain
 
-export interface VersionInfo {
+export type VersionInfo = {
   name: string;
   version: string;
   commit?: string | null;
   buildTime?: string | null;
-}
+};
 
-type HealthState = 'ok' | 'degraded' | (string & Record<never, never>);
-
-export interface HealthStatus {
-  status: HealthState;
+export type HealthStatus = {
+  status: 'ok' | 'degraded' | string;
   version?: string | null;
-}
+};
 
+<<<<<<< HEAD
 export type ServiceKind =
   | 'Recording'
   | 'Mixing'
@@ -407,6 +430,11 @@ export interface PipelineCardUpdate {
 export interface ArtistProfileDTO {
   apArtistId: number;
   apDisplayName: string;
+=======
+export type ArtistProfileDTO = {
+  apId?: number;
+  apArtistId?: number;
+>>>>>>> origin/problematicMain
   apSlug?: string | null;
   apBio?: string | null;
   apCity?: string | null;
@@ -419,21 +447,27 @@ export interface ArtistProfileDTO {
   apFeaturedVideoUrl?: string | null;
   apGenres?: string | null;
   apHighlights?: string | null;
+<<<<<<< HEAD
   apFollowerCount: number;
   apHasUserAccount?: boolean;
 }
+=======
+  apFollowerCount?: number | null;
+  apDisplayName?: string | null;
+  apAvatarUrl?: string | null;
+};
+>>>>>>> origin/problematicMain
 
-export interface ArtistReleaseDTO {
-  arArtistId: number;
-  arReleaseId: number;
-  arTitle: string;
+export type ArtistReleaseDTO = {
+  arId?: number;
+  arTitle?: string | null;
   arReleaseDate?: string | null;
-  arDescription?: string | null;
-  arCoverImageUrl?: string | null;
+  arCoverUrl?: string | null;
   arSpotifyUrl?: string | null;
   arYoutubeUrl?: string | null;
-}
+};
 
+<<<<<<< HEAD
 export interface ArtistReleaseUpsert {
   aruArtistId: number;
   aruTitle: string;
@@ -514,6 +548,9 @@ export interface RadioPresenceUpsert {
 }
 
 export interface ArtistProfileUpsert {
+=======
+export type ArtistProfileUpsert = {
+>>>>>>> origin/problematicMain
   apuArtistId: number;
   apuDisplayName?: string | null;
   apuSlug?: string | null;
@@ -528,6 +565,7 @@ export interface ArtistProfileUpsert {
   apuFeaturedVideoUrl?: string | null;
   apuGenres?: string | null;
   apuHighlights?: string | null;
+<<<<<<< HEAD
 }
 
 export interface PaymentDTO {
@@ -707,3 +745,56 @@ export interface InternPermissionUpdate {
   ipuStatus?: string | null;
   ipuDecisionNotes?: string | null;
 }
+=======
+};
+
+export type FanProfileDTO = {
+  fpDisplayName?: string | null;
+  fpBio?: string | null;
+  fpCity?: string | null;
+  fpFavoriteGenres?: string | null;
+  fpAvatarUrl?: string | null;
+};
+
+export type FanProfileUpdate = {
+  fpuDisplayName?: string | null;
+  fpuBio?: string | null;
+  fpuCity?: string | null;
+  fpuFavoriteGenres?: string | null;
+  fpuAvatarUrl?: string | null;
+};
+
+export type FanFollowDTO = {
+  ffArtistId?: number;
+  ffFollowerId?: number;
+  ffArtistName?: string | null;
+};
+
+export type PipelineCardDTO = {
+  pcId?: string | number;
+  pcTitle?: string | null;
+  pcArtist?: string | null;
+  pcStage: string;
+  pcSortOrder?: number;
+};
+
+export type PipelineCardUpdate = Partial<{
+  pcuStage: string;
+  pcuSortOrder: number;
+}>;
+
+export type RoomDTO = {
+  roomId: string;
+  rName: string;
+  rBookable: boolean;
+};
+
+export type RoomCreate = {
+  rcName: string;
+};
+
+export type RoomUpdate = Partial<{
+  ruName: string;
+  ruIsBookable: boolean;
+}>;
+>>>>>>> origin/problematicMain

@@ -24,6 +24,7 @@ const PublicBookingPage = lazy(() => import('../pages/PublicBookingPage'));
 const PublicWhatsAppConsentPage = lazy(() => import('../pages/PublicWhatsAppConsentPage'));
 const PublicWhatsAppConsentSuccessPage = lazy(() => import('../pages/PublicWhatsAppConsentSuccessPage'));
 const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
+const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const TrialsPage = lazy(() => import('../pages/TrialsPage'));
 
 export function renderPublicRoutes() {
@@ -53,6 +54,7 @@ export function renderPublicRoutes() {
       <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
       <Route path="/reservar" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />
       <Route path="/login" element={<PublicBranding showHeader showLoginButton={false}><LoginPage /></PublicBranding>} />
+      <Route path="/reset" element={<PublicBranding showHeader showLoginButton={false}><ResetPasswordPage /></PublicBranding>} />
       <Route path="/herramientas/creador-musical" element={<PublicBranding><MusicMakerPage /></PublicBranding>} />
       <Route path="*" element={<PublicBranding><NotFoundPage /></PublicBranding>} />
     </>

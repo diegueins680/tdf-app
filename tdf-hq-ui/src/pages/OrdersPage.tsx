@@ -150,7 +150,7 @@ export default function OrdersPage() {
 
       return {
         bookingId: booking.bookingId,
-        schedule: formatScheduleRange(booking.startsAt, booking.endsAt),
+        schedule: formatScheduleRange(booking.startsAt ?? '', booking.endsAt ?? ''),
         service: serviceTitle,
         isRecording,
         bookingPrimary,
@@ -302,7 +302,7 @@ export default function OrdersPage() {
                   </TableCell>
                   <TableCell>{row.engineers}</TableCell>
                   <TableCell>{row.rooms}</TableCell>
-                  <TableCell>{renderStatus(row.status)}</TableCell>
+                  <TableCell>{renderStatus(row.status ?? '')}</TableCell>
                   <TableCell align="right">
                     <Stack direction="row" spacing={1} justifyContent="flex-end">
                       {row.isRecording && (

@@ -51,6 +51,28 @@ export async function requestPasswordReset(email: string): Promise<void> {
   }
 }
 
+export interface PasswordResetConfirmPayload {
+  token: string;
+  newPassword: string;
+}
+
+export async function confirmPasswordReset(
+  payload: PasswordResetConfirmPayload,
+): Promise<LoginResponseDTO> {
+  const res = await fetch(`${API_BASE}/v1/password-reset/confirm`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    const trimmed = text.trim();
+    throw new Error(trimmed === '' ? 'No pudimos restablecer la contraseña.' : trimmed);
+  }
+  return res.json() as Promise<LoginResponseDTO>;
+}
+
 export interface SignupPayload {
   firstName: string;
   lastName: string;

@@ -1404,7 +1404,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(container, 'Filtrar por estado')).toBe(true);
       expect(hasExactText(container, 'Estado')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
-      expect(countOccurrences(container, 'Estado:')).toBe(4);
+      expect(countOccurrences(container, 'Estado:')).toBe(1);
     });
 
     await cleanup();
@@ -1497,13 +1497,13 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).toContain(dossierScopeHint);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Estado: Pendiente de pago');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Estado: Pagado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Estado: Cancelado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cancelado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
       expect(container.textContent).not.toContain('Estado disponible');
       expect(countOccurrences(container, 'Cambiar estado:')).toBe(0);
-      expect(countOccurrences(container, 'Estado:')).toBe(3);
+      expect(countOccurrences(container, 'Estado:')).toBe(1);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).toBeNull();

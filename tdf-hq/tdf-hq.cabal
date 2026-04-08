@@ -1,16 +1,35 @@
-cabal-version:      2.4
-name:               tdf-hq
-version:            0.1.0.0
-synopsis:           TDF HQ - CRM, Scheduling, Packages, Invoicing, Inventory (skeleton)
-license:            MIT
-author:             TDF Records (Diego Saá)
-maintainer:         tdf@example.com
-build-type:         Simple
+cabal-version: 1.12
 
-executable tdf-hq-exe
-  main-is:          Main.hs
-  hs-source-dirs:   app, src
+-- This file has been generated from package.yaml by hpack version 0.38.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           tdf-hq
+version:        1.0.0
+homepage:       https://github.com/diegueins680/tdf-app#readme
+bug-reports:    https://github.com/diegueins680/tdf-app/issues
+author:         TDF Records
+maintainer:     dev@tdfrecords.com
+license:        MIT
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/diegueins680/tdf-app
+
+library
+  exposed-modules:
+      TDF.Models
+      TDF.API
+      TDF.DTO
+      TDF.DB
+      TDF.Server
+      TDF.Config
+      TDF.Cors
+      TDF.ModelsExtra
+      TDF.Seed
   other-modules:
+<<<<<<< HEAD
     TDF.App.Boot
     TDF.API.Admin
     TDF.API
@@ -250,10 +269,86 @@ test-suite tdf-hq-test
     TDF.WhatsApp.Transport
   ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
   default-language:  Haskell2010
+=======
+      TDF.API.Admin
+      TDF.API.Bands
+      TDF.API.Future
+      TDF.API.Inventory
+      TDF.API.Pipelines
+      TDF.API.Rooms
+      TDF.API.Sessions
+      TDF.API.Types
+      TDF.Auth
+      TDF.Contracts.API
+      TDF.Contracts.Server
+      TDF.Contracts.Types
+      TDF.Email
+      TDF.Handlers.InputList
+      TDF.Meta
+      TDF.Pipelines
+      TDF.Profiles.Artist
+      TDF.Routes.Academy
+      TDF.ServerAdmin
+      TDF.ServerExtra
+      TDF.ServerFuture
+      TDF.Trials.API
+      TDF.Trials.DTO
+      TDF.Trials.Models
+      TDF.Trials.Seed
+      TDF.Trials.Server
+      TDF.Version
+      Paths_tdf_hq
+  hs-source-dirs:
+      src
   build-depends:
-      base                 >=4.14 && <5
-    , aeson                >=2.0
+      aeson
+    , base >=4.7 && <5
+    , base64-bytestring
+    , bcrypt
     , bytestring
+    , containers
+    , directory
+    , entropy
+    , file-embed
+    , filepath
+    , gitrev
+    , http-media
+    , http-types
+    , mime-mail
+    , monad-logger
+    , mtl
+    , path-pieces
+    , persistent
+    , persistent-postgresql
+    , persistent-template
+    , process
+    , servant
+    , servant-server
+    , smtp-mail
+    , template-haskell
+    , text
+    , time
+    , transformers
+    , uuid
+    , wai
+    , wai-cors
+  default-language: Haskell2010
+
+executable tdf-hq
+  main-is: Main.hs
+  other-modules:
+      Paths_tdf_hq
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+>>>>>>> origin/problematicMain
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , base64-bytestring
+    , bcrypt
+    , bytestring
+<<<<<<< HEAD
     , case-insensitive
     , case-insensitive
     , text
@@ -297,8 +392,34 @@ test-suite tdf-hq-test
     , process
     , bcrypt
     , path-pieces
-    , uuid
-    , template-haskell
+=======
+    , containers
+    , directory
+    , entropy
     , file-embed
-    , hspec                >=2.7
+    , filepath
+    , gitrev
+    , http-media
+    , http-types
+    , mime-mail
+    , monad-logger
+    , mtl
+    , path-pieces
+    , persistent
+    , persistent-postgresql
+    , persistent-template
+    , process
+    , servant
+    , servant-server
     , smtp-mail
+    , tdf-hq
+    , template-haskell
+    , text
+    , time
+    , transformers
+>>>>>>> origin/problematicMain
+    , uuid
+    , wai
+    , wai-cors
+    , warp
+  default-language: Haskell2010
