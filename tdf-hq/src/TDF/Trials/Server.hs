@@ -413,6 +413,19 @@ validatePublicSubjectIdInput subjectIdInt
   | otherwise =
       Right subjectIdInt
 
+validateTrialScheduleInput :: TrialScheduleIn -> Either ServerError TrialScheduleIn
+validateTrialScheduleInput input@TrialScheduleIn{..}
+  | requestId <= 0 =
+      Left err400 { errBody = "requestId must be a positive integer" }
+  | teacherId <= 0 =
+      Left err400 { errBody = "teacherId must be a positive integer" }
+  | roomId <= 0 =
+      Left err400 { errBody = "roomId must be a positive integer" }
+  | endAt <= startAt =
+      Left err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
+  | otherwise =
+      Right input
+
 validateOptionalDriveLink :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalDriveLink Nothing = Right Nothing
 validateOptionalDriveLink (Just rawDriveLink) =
@@ -800,8 +813,9 @@ privateTrialsServer user@AuthedUser{..} =
           pure (trialRequestOut rid req { trialRequestStatus = statusAssigned })
 
     scheduleH :: TrialScheduleIn -> AppM TrialRequestOut
-    scheduleH TrialScheduleIn{..} = do
+    scheduleH rawInput = do
       ensureSchoolStaffAccess
+      TrialScheduleIn{..} <- either (liftIO . throwIO) pure (validateTrialScheduleInput rawInput)
       let rid       = intKey requestId :: Key TrialRequest
           teacherK  = intKey teacherId :: PartyId
           roomK     = intKey roomId    :: ResourceId

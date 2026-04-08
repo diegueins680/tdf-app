@@ -15,7 +15,7 @@ import Database.Persist.Sqlite (createSqlitePool)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
-import TDF.Trials.DTO (PreferredSlot (..))
+import TDF.Trials.DTO (PreferredSlot (..), TrialScheduleIn (..))
 import TDF.Trials.API (InterestIn (..))
 import TDF.Trials.Server
   ( createOrFetchParty
@@ -26,6 +26,7 @@ import TDF.Trials.Server
   , validatePublicSubjectIdInput
   , validatePublicSubjectSelection
   , validatePublicTrialPartyId
+  , validateTrialScheduleInput
   )
 import qualified TDF.Models as Models
 import TDF.Trials.Models (Subject (..))
@@ -226,6 +227,37 @@ spec = do
 
     it "preserves valid slots without truncation or mutation" $
       validatePreferredSlots [validSlot, laterValidSlot] `shouldBe` Right [validSlot, laterValidSlot]
+
+  describe "validateTrialScheduleInput" $ do
+    let validSchedule = TrialScheduleIn 1 2 slotStart slotEnd 3
+
+    it "accepts positive identifiers and a strictly increasing schedule window" $
+      case validateTrialScheduleInput validSchedule of
+        Left err ->
+          expectationFailure ("Expected valid schedule input to be accepted, got " <> show err)
+        Right (TrialScheduleIn requestIdValue teacherIdValue startValue endValue roomIdValue) -> do
+          requestIdValue `shouldBe` 1
+          teacherIdValue `shouldBe` 2
+          startValue `shouldBe` slotStart
+          endValue `shouldBe` slotEnd
+          roomIdValue `shouldBe` 3
+
+    it "rejects malformed identifiers and impossible time ranges before scheduling a trial" $ do
+      let assertInvalid expectedMessage result =
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid schedule input to be rejected, got " <> show value)
+      assertInvalid "requestId must be a positive integer" $
+        validateTrialScheduleInput (TrialScheduleIn 0 2 slotStart slotEnd 3)
+      assertInvalid "teacherId must be a positive integer" $
+        validateTrialScheduleInput (TrialScheduleIn 1 (-1) slotStart slotEnd 3)
+      assertInvalid "roomId must be a positive integer" $
+        validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotEnd 0)
+      assertInvalid "La hora de fin debe ser mayor a la de inicio" $
+        validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
 
 runInMemory :: SqlPersistT IO a -> IO a
 runInMemory action =
