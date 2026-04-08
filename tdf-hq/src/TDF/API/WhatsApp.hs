@@ -9,18 +9,23 @@ module TDF.API.WhatsApp
   , LeadsCompleteApi
   , leadsCompleteServer
   , validateHookVerifyRequest
+  , validateLeadCompletionRequest
+  , validateLeadCompletionLookup
+  , ensureLeadCompletionUpdated
+  , CompleteReq(..)
   ) where
 
 import Servant
 import GHC.Generics (Generic)
 import Data.Aeson
-import Control.Monad (unless, when)
+import Control.Monad (unless)
 import Data.Char (isDigit)
+import Data.Int (Int64)
 import Data.Maybe (listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Monad.IO.Class (liftIO)
-import Database.PostgreSQL.Simple (Connection, execute)
+import Database.PostgreSQL.Simple (Connection, Only(..), execute, query)
 
 import TDF.WhatsApp.Types
 import TDF.WhatsApp.Service
@@ -89,20 +94,22 @@ type LeadsCompleteApi =
   ReqBody '[JSON] CompleteReq :> Post '[JSON] Value
 
 data CompleteReq = CompleteReq { token :: Text, name :: Text, email :: Text }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 instance FromJSON CompleteReq
 
 leadsCompleteServer :: Connection -> Server LeadsCompleteApi
-leadsCompleteServer conn lid (CompleteReq tok nm em) = do
-  when (T.null nm || T.length nm > 200) $
-    throwError err400 { errBody = "Invalid name: must be 1-200 characters" }
-  unless (isValidEmail em) $
-    throwError err400 { errBody = "Invalid email format" }
+leadsCompleteServer conn lid rawReq = do
+  CompleteReq tok nm em <- either throwError pure (validateLeadCompletionRequest rawReq)
+  existing <- liftIO $ query conn
+      "SELECT status, token FROM lead WHERE id = ? LIMIT 1"
+      (Only lid)
+  either throwError pure (validateLeadCompletionLookup tok (listToMaybe existing))
 
   n <- liftIO $ execute conn
        "UPDATE lead SET display_name=?, email=?, status='COMPLETED', token=NULL WHERE id=? AND token=? AND status != 'COMPLETED'"
        (nm, em, lid, tok)
-  pure $ object ["ok" .= (n == 1)]
+  either throwError pure (ensureLeadCompletionUpdated n)
+  pure $ object ["ok" .= True]
 
 -- Validation helpers ----------------------------------------------------------
 
@@ -116,6 +123,7 @@ isValidEmail :: Text -> Bool
 isValidEmail candidate =
   case T.split (== '@') candidate of
     [localPart, domain] ->
+      not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate) &&
       not (T.null localPart) &&
       not (T.null domain) &&
       not (T.isPrefixOf "." domain) &&
@@ -123,6 +131,39 @@ isValidEmail candidate =
       T.isInfixOf "." domain &&
       T.length domain >= 3
     _ -> False
+
+validateLeadCompletionRequest :: CompleteReq -> Either ServerError CompleteReq
+validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
+  | T.null tokenValue =
+      Left err400 { errBody = "Completion token is required" }
+  | T.null nameValue || T.length nameValue > 200 =
+      Left err400 { errBody = "Invalid name: must be 1-200 characters" }
+  | not (isValidEmail emailValue) =
+      Left err400 { errBody = "Invalid email format" }
+  | otherwise =
+      Right (CompleteReq tokenValue nameValue emailValue)
+  where
+    tokenValue = T.strip rawToken
+    nameValue = T.strip rawName
+    emailValue = T.strip rawEmail
+
+validateLeadCompletionLookup :: Text -> Maybe (Text, Maybe Text) -> Either ServerError ()
+validateLeadCompletionLookup _ Nothing =
+  Left err404 { errBody = "Lead not found" }
+validateLeadCompletionLookup suppliedToken (Just (status, mStoredToken))
+  | T.toUpper (T.strip status) == "COMPLETED" =
+      Left err409 { errBody = "Lead already completed" }
+  | mStoredToken /= Just suppliedToken =
+      Left err403 { errBody = "Invalid completion token" }
+  | otherwise =
+      Right ()
+
+ensureLeadCompletionUpdated :: Int64 -> Either ServerError ()
+ensureLeadCompletionUpdated updatedRows
+  | updatedRows == 1 =
+      Right ()
+  | otherwise =
+      Left err409 { errBody = "Lead completion could not be applied" }
 
 validateHookVerifyRequest :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Either ServerError Text
 validateHookVerifyRequest mmode mchall mtoken mExpected =

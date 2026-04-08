@@ -15,7 +15,12 @@ import Servant.Multipart (FromMultipart (fromMultipart), Input (..), MultipartDa
 import Test.Hspec
 
 import TDF.API.LiveSessions (LiveSessionIntakePayload (..))
-import TDF.API.WhatsApp (validateHookVerifyRequest)
+import TDF.API.WhatsApp
+    ( CompleteReq (..),
+      ensureLeadCompletionUpdated,
+      validateHookVerifyRequest,
+      validateLeadCompletionLookup,
+      validateLeadCompletionRequest )
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DTO.SocialEventsDTO
@@ -516,6 +521,56 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 503
                     BL.unpack (errBody err) `shouldContain` "WhatsApp verify token not configured"
                 Right _ -> expectationFailure "Expected missing verify-token config to be rejected"
+
+    describe "validateLeadCompletionRequest" $ do
+        it "trims meaningful lead-completion payload fields before persistence" $ do
+            validateLeadCompletionRequest (CompleteReq " token-123 " " Ada Lovelace " " ada@example.com ")
+                `shouldBe` Right (CompleteReq "token-123" "Ada Lovelace" "ada@example.com")
+
+        it "rejects blank tokens, blank names, and malformed emails with precise 400s" $ do
+            let assertInvalid payload expected = case validateLeadCompletionRequest payload of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid lead completion payload to be rejected, got " <> show value)
+            assertInvalid (CompleteReq "   " "Ada Lovelace" "ada@example.com") "Completion token is required"
+            assertInvalid (CompleteReq "token-123" "   " "ada@example.com") "Invalid name: must be 1-200 characters"
+            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada @example.com") "Invalid email format"
+
+    describe "validateLeadCompletionLookup" $ do
+        it "allows only matching non-completed lead records" $ do
+            validateLeadCompletionLookup "token-123" (Just ("LINK_SENT", Just "token-123"))
+                `shouldBe` Right ()
+
+        it "returns explicit 404/403/409 errors for missing, invalid-token, and completed links" $ do
+            let assertLookupFailure result expectedStatus expectedBody = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` expectedStatus
+                        BL.unpack (errBody err) `shouldContain` expectedBody
+                    Right _ ->
+                        expectationFailure ("Expected lookup failure with body containing " <> show expectedBody)
+            assertLookupFailure
+                (validateLeadCompletionLookup "token-123" Nothing)
+                404
+                "Lead not found"
+            assertLookupFailure
+                (validateLeadCompletionLookup "token-123" (Just ("LINK_SENT", Just "other-token")))
+                403
+                "Invalid completion token"
+            assertLookupFailure
+                (validateLeadCompletionLookup "token-123" (Just ("completed", Nothing)))
+                409
+                "Lead already completed"
+
+    describe "ensureLeadCompletionUpdated" $ do
+        it "requires the completion update to affect exactly one row" $ do
+            ensureLeadCompletionUpdated 1 `shouldBe` Right ()
+            case ensureLeadCompletionUpdated 0 of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err) `shouldContain` "Lead completion could not be applied"
+                Right _ -> expectationFailure "Expected zero-row lead completion update to be rejected"
 
     describe "parseSocialErrorsChannel" $ do
         it "normalizes valid channel values" $ do
