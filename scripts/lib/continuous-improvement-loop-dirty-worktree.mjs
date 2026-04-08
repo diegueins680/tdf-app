@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import path from 'node:path';
 
 function sanitizeGitRefFragment(raw, fallback = 'unknown') {
   const text = String(raw ?? '')
@@ -64,9 +65,49 @@ export function analyzeDirtyWorktree(paths, currentBranch) {
   };
 }
 
-export async function checkpointDirtyWorktree({ repoRoot, currentBranch } = {}) {
-  const dirtyStatus = runGit(repoRoot, ['status', '--porcelain'], { trimOutput: false });
-  const dirtyPaths = parseGitStatusPaths(dirtyStatus);
+function isNestedGitRepo(repoRoot, relPath) {
+  const candidate = path.resolve(repoRoot, relPath);
+  try {
+    const nestedRoot = runGit(candidate, ['rev-parse', '--show-toplevel']);
+    return path.resolve(nestedRoot) === candidate;
+  } catch {
+    return false;
+  }
+}
+
+async function checkpointDirtySubmodules({ repoRoot, dirtyPaths, visited }) {
+  const recoveries = [];
+  for (const relPath of dirtyPaths) {
+    if (!isNestedGitRepo(repoRoot, relPath)) continue;
+    const nestedRoot = path.resolve(repoRoot, relPath);
+    const nestedResult = await checkpointDirtyWorktree({ repoRoot: nestedRoot, visited });
+    recoveries.push({ path: relPath, result: nestedResult });
+    if (!nestedResult.recovered && !nestedResult.clean) {
+      return {
+        ok: false,
+        recoveries,
+        reason: `nested dirty worktree at ${relPath}: ${nestedResult.reason}`,
+      };
+    }
+  }
+  return { ok: true, recoveries };
+}
+
+export async function checkpointDirtyWorktree({ repoRoot, currentBranch, visited = new Set() } = {}) {
+  const normalizedRoot = path.resolve(repoRoot);
+  if (visited.has(normalizedRoot)) {
+    return {
+      recovered: false,
+      clean: false,
+      paths: [],
+      reason: `dirty worktree checkpoint recursion detected at ${normalizedRoot}`,
+      summary: 'dirty worktree checkpoint failed',
+    };
+  }
+  visited.add(normalizedRoot);
+
+  let dirtyStatus = runGit(normalizedRoot, ['status', '--porcelain'], { trimOutput: false });
+  let dirtyPaths = parseGitStatusPaths(dirtyStatus);
   if (dirtyPaths.length === 0) {
     return {
       recovered: false,
@@ -77,7 +118,37 @@ export async function checkpointDirtyWorktree({ repoRoot, currentBranch } = {}) 
     };
   }
 
-  const loopBranch = currentBranch || runGit(repoRoot, ['branch', '--show-current']) || 'main';
+  const nestedRecovery = await checkpointDirtySubmodules({
+    repoRoot: normalizedRoot,
+    dirtyPaths,
+    visited,
+  });
+  if (!nestedRecovery.ok) {
+    return {
+      recovered: false,
+      clean: false,
+      paths: dirtyPaths,
+      reason: nestedRecovery.reason,
+      summary: 'dirty worktree checkpoint failed',
+    };
+  }
+
+  dirtyStatus = runGit(normalizedRoot, ['status', '--porcelain'], { trimOutput: false });
+  dirtyPaths = parseGitStatusPaths(dirtyStatus);
+  if (dirtyPaths.length === 0) {
+    return {
+      recovered: true,
+      clean: false,
+      paths: [],
+      reason: nestedRecovery.recoveries.map((item) => item.result.summary).filter(Boolean).join('; '),
+      summary:
+        nestedRecovery.recoveries.length > 0
+          ? `checkpointed nested dirty worktrees: ${nestedRecovery.recoveries.map((item) => item.path).join(', ')}`
+          : 'checkpointed nested dirty worktrees',
+    };
+  }
+
+  const loopBranch = currentBranch || runGit(normalizedRoot, ['branch', '--show-current']) || 'main';
   const checkpointBranch = buildDirtyCheckpointBranchName({
     currentBranch: loopBranch,
     timestamp: new Date().toISOString(),
@@ -92,18 +163,18 @@ export async function checkpointDirtyWorktree({ repoRoot, currentBranch } = {}) 
   ].join('\n');
 
   try {
-    runGit(repoRoot, ['config', 'user.name', 'continuous-improvement-loop[bot]'], { capture: false });
-    runGit(repoRoot, ['config', 'user.email', 'continuous-improvement-loop[bot]@users.noreply.github.com'], {
+    runGit(normalizedRoot, ['config', 'user.name', 'continuous-improvement-loop[bot]'], { capture: false });
+    runGit(normalizedRoot, ['config', 'user.email', 'continuous-improvement-loop[bot]@users.noreply.github.com'], {
       capture: false,
     });
-    runGit(repoRoot, ['checkout', '-b', checkpointBranch], { capture: false });
-    runGit(repoRoot, ['add', '-A'], { capture: false });
-    runGit(repoRoot, ['commit', '-m', analysis.commitMessage, '-m', commitBody], { capture: false });
-    runGit(repoRoot, ['push', '-u', 'origin', `${checkpointBranch}:refs/heads/${checkpointBranch}`], {
+    runGit(normalizedRoot, ['checkout', '-b', checkpointBranch], { capture: false });
+    runGit(normalizedRoot, ['add', '-A'], { capture: false });
+    runGit(normalizedRoot, ['commit', '-m', analysis.commitMessage, '-m', commitBody], { capture: false });
+    runGit(normalizedRoot, ['push', '-u', 'origin', `${checkpointBranch}:refs/heads/${checkpointBranch}`], {
       capture: false,
     });
-    const commit = runGit(repoRoot, ['rev-parse', 'HEAD']);
-    runGit(repoRoot, ['checkout', loopBranch], { capture: false });
+    const commit = runGit(normalizedRoot, ['rev-parse', 'HEAD']);
+    runGit(normalizedRoot, ['checkout', loopBranch], { capture: false });
     return {
       recovered: true,
       clean: false,
@@ -116,9 +187,9 @@ export async function checkpointDirtyWorktree({ repoRoot, currentBranch } = {}) 
     };
   } catch (error) {
     try {
-      const branchAfterError = runGit(repoRoot, ['branch', '--show-current']);
+      const branchAfterError = runGit(normalizedRoot, ['branch', '--show-current']);
       if (branchAfterError && branchAfterError !== loopBranch) {
-        runGit(repoRoot, ['checkout', loopBranch], { capture: false });
+        runGit(normalizedRoot, ['checkout', loopBranch], { capture: false });
       }
     } catch {}
     return {
