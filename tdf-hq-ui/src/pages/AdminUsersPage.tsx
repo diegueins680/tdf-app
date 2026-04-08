@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
+  Link,
   Stack,
   TextField,
   Tooltip,
@@ -299,6 +300,17 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
             {contactSummary}
           </Typography>
         )}
+        {hasContactInfo && (
+          <Link
+            component={RouterLink}
+            to={profilePath}
+            underline="hover"
+            variant="body2"
+            sx={{ display: 'inline-flex', mt: 0.5 }}
+          >
+            Abrir perfil
+          </Link>
+        )}
       </Box>
       <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />
       {(rolesSummary || modulesSummary) && (
@@ -316,12 +328,13 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
         </Box>
       )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
-        <Button component={RouterLink} to={profilePath} size="small" variant="outlined">
-          {hasContactInfo ? 'Ver perfil' : 'Completar contacto'}
-        </Button>
-        {hasContactInfo && (
+        {hasContactInfo ? (
           <Button size="small" variant="contained" onClick={onOpenCommunications}>
             Comunicación
+          </Button>
+        ) : (
+          <Button component={RouterLink} to={profilePath} size="small" variant="outlined">
+            Completar contacto
           </Button>
         )}
       </Stack>

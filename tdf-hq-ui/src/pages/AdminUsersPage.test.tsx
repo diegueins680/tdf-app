@@ -318,7 +318,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
-        expect(getButtonsByText(container, 'Ver perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(1);
         expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
         expect(container.textContent).toContain(
@@ -328,18 +328,19 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain('1 sin contacto');
 
         const readyContactRow = getRowByUserId(container, 101);
-        expect(readyContactRow.textContent).toContain('Ver perfil');
+        expect(readyContactRow.textContent).toContain('Abrir perfil');
+        expect(readyContactRow.textContent).not.toContain('Ver perfil');
         expect(readyContactRow.textContent).not.toContain('Perfil y contacto');
         expect(readyContactRow.querySelectorAll('button')).toHaveLength(1);
         expect(
           Array.from(readyContactRow.querySelectorAll<HTMLAnchorElement>('a')).some(
-            (link) => buttonText(link) === 'Ver perfil' && link.getAttribute('href') === '/perfil/9',
+            (link) => buttonText(link) === 'Abrir perfil' && link.getAttribute('href') === '/perfil/9',
           ),
         ).toBe(true);
 
         const missingContactRow = getRowByUserId(container, 102);
         expect(missingContactRow.textContent).toContain('Completar contacto');
-        expect(missingContactRow.textContent).not.toContain('Ver perfil');
+        expect(missingContactRow.textContent).not.toContain('Abrir perfil');
         expect(missingContactRow.textContent).not.toContain('Falta contacto');
         expect(missingContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
         expect(missingContactRow.querySelectorAll('button')).toHaveLength(0);
@@ -424,14 +425,14 @@ describe('AdminUsersPage', () => {
         );
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(container.textContent).not.toContain('1 usuario');
-        expect(getButtonsByText(container, 'Ver perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(1);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
 
         const loneRow = getRowByUserId(container, 101);
         expect(loneRow.querySelectorAll('button')).toHaveLength(1);
         expect(
           Array.from(loneRow.querySelectorAll<HTMLAnchorElement>('a')).some(
-            (link) => buttonText(link) === 'Ver perfil' && link.getAttribute('href') === '/perfil/9',
+            (link) => buttonText(link) === 'Abrir perfil' && link.getAttribute('href') === '/perfil/9',
           ),
         ).toBe(true);
       });
