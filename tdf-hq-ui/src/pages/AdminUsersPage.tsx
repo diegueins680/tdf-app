@@ -43,6 +43,22 @@ const getUserAccessSummary = (values: string[]) =>
 
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 
+const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
+  const displayName = user.partyName.trim();
+  const username = user.username.trim();
+  const primary = displayName || username;
+  const showUsername = displayName !== '' && displayName.toLowerCase() !== username.toLowerCase();
+  const secondaryParts: string[] = [];
+
+  if (showUsername) secondaryParts.push(`Usuario: ${username}`);
+  secondaryParts.push(`ID ${user.partyId}`);
+
+  return {
+    primary,
+    secondary: secondaryParts.join(' · '),
+  };
+};
+
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const query = normalizeSearchValue(rawQuery);
   if (!query) return true;
@@ -240,6 +256,7 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
   const hasContactInfo = Boolean(contactSummary);
   const rolesSummary = getUserAccessSummary(user.roles);
   const modulesSummary = getUserAccessSummary(user.modules);
+  const identity = summarizeUserIdentity(user);
   const profilePath = `/perfil/${user.partyId}`;
 
   return (
@@ -256,9 +273,9 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
       }}
     >
       <Box sx={{ minWidth: 180 }}>
-        <Typography variant="subtitle1" fontWeight={700}>{user.username}</Typography>
+        <Typography variant="subtitle1" fontWeight={700}>{identity.primary}</Typography>
         <Typography variant="body2" color="text.secondary">
-          {user.partyName} · ID {user.partyId}
+          {identity.secondary}
         </Typography>
         {contactSummary && (
           <Typography variant="body2" color="text.secondary">

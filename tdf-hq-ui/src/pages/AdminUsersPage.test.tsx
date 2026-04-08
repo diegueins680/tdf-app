@@ -75,6 +75,11 @@ const renderPage = async (container: HTMLElement) => {
 
 const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
 
+const hasExactText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('*')).some(
+    (element) => buttonText(element) === labelText,
+  );
+
 const getButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLElement>('button, a')).filter(
     (element) => buttonText(element) === labelText || element.getAttribute('aria-label') === labelText,
@@ -239,6 +244,53 @@ describe('AdminUsersPage', () => {
         expect(noContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
         expect(noContactRow.textContent).toContain('Completar contacto');
         expect(noContactRow.textContent).not.toContain('Falta contacto');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows the person name first and only keeps the system username when it adds identity context', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        partyName: 'Ada Lovelace',
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'grace',
+        username: 'grace',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: '   ',
+        username: 'linus-view',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const namedRow = getRowByUserId(container, 101);
+        expect(hasExactText(namedRow, 'Ada Lovelace')).toBe(true);
+        expect(hasExactText(namedRow, 'Usuario: ada-admin · ID 9')).toBe(true);
+
+        const sameIdentityRow = getRowByUserId(container, 102);
+        expect(hasExactText(sameIdentityRow, 'grace')).toBe(true);
+        expect(hasExactText(sameIdentityRow, 'ID 10')).toBe(true);
+        expect(sameIdentityRow.textContent).not.toContain('Usuario: grace');
+
+        const usernameOnlyRow = getRowByUserId(container, 103);
+        expect(hasExactText(usernameOnlyRow, 'linus-view')).toBe(true);
+        expect(hasExactText(usernameOnlyRow, 'ID 11')).toBe(true);
+        expect(usernameOnlyRow.textContent).not.toContain('Usuario: linus-view');
       });
     } finally {
       await cleanup();
