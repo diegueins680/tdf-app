@@ -142,21 +142,26 @@ spec = do
           Nothing -> error "invalid session fixture key"
 
     it "accepts target fields that exactly match the declared checkout target kind" $ do
-      validateCheckoutTargets TargetParty Nothing Nothing `shouldBe` Right (Nothing, Nothing)
-      validateCheckoutTargets TargetRoom (Just roomId) Nothing `shouldBe` Right (Just roomId, Nothing)
-      validateCheckoutTargets TargetSession Nothing (Just sessionId) `shouldBe` Right (Nothing, Just sessionId)
+      validateCheckoutTargets TargetParty (Just "  Backline Crew  ") Nothing Nothing
+        `shouldBe` Right (Just "Backline Crew", Nothing, Nothing)
+      validateCheckoutTargets TargetRoom (Just "stale party") (Just roomId) Nothing
+        `shouldBe` Right (Nothing, Just roomId, Nothing)
+      validateCheckoutTargets TargetSession (Just "stale party") Nothing (Just sessionId)
+        `shouldBe` Right (Nothing, Nothing, Just sessionId)
 
-    it "rejects contradictory checkout target fields instead of silently discarding them" $ do
+    it "rejects contradictory or destination-less checkout targets instead of creating ambiguous checkout rows" $ do
       let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
               BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected contradictory checkout target to be rejected, got " <> show value)
-      assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetParty (Just roomId) Nothing)
-      assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetParty Nothing (Just sessionId))
-      assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetRoom (Just roomId) (Just sessionId))
-      assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetSession (Just roomId) (Just sessionId))
+      assertInvalid "targetParty required for party checkout" (validateCheckoutTargets TargetParty Nothing Nothing Nothing)
+      assertInvalid "targetParty required for party checkout" (validateCheckoutTargets TargetParty (Just "   ") Nothing Nothing)
+      assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetParty (Just "Crew") (Just roomId) Nothing)
+      assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetParty (Just "Crew") Nothing (Just sessionId))
+      assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetRoom Nothing (Just roomId) (Just sessionId))
+      assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetSession Nothing (Just roomId) (Just sessionId))
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do

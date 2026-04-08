@@ -96,26 +96,35 @@ parseCheckoutTargetKind (Just raw) =
 
 validateCheckoutTargets
   :: CheckoutTarget
+  -> Maybe Text
   -> Maybe (Key Room)
   -> Maybe (Key ME.Session)
-  -> Either ServerError (Maybe (Key Room), Maybe (Key ME.Session))
-validateCheckoutTargets targetKind mRoom mSession =
+  -> Either ServerError (Maybe Text, Maybe (Key Room), Maybe (Key ME.Session))
+validateCheckoutTargets targetKind mTargetParty mRoom mSession =
   case targetKind of
     TargetRoom ->
       case (mRoom, mSession) of
         (Nothing, _) -> Left err400 { errBody = "targetRoom required for room checkout" }
         (Just _, Just _) -> Left err400 { errBody = "targetSession is only allowed for session checkout" }
-        (Just roomKey, Nothing) -> Right (Just roomKey, Nothing)
+        (Just roomKey, Nothing) -> Right (Nothing, Just roomKey, Nothing)
     TargetSession ->
       case (mRoom, mSession) of
         (_, Nothing) -> Left err400 { errBody = "targetSession required for session checkout" }
         (Just _, Just _) -> Left err400 { errBody = "targetRoom is only allowed for room checkout" }
-        (Nothing, Just sessionKey) -> Right (Nothing, Just sessionKey)
+        (Nothing, Just sessionKey) -> Right (Nothing, Nothing, Just sessionKey)
     TargetParty ->
-      case (mRoom, mSession) of
-        (Nothing, Nothing) -> Right (Nothing, Nothing)
-        (Just _, _) -> Left err400 { errBody = "targetRoom is only allowed for room checkout" }
-        (_, Just _) -> Left err400 { errBody = "targetSession is only allowed for session checkout" }
+      case (normalizedTargetParty, mRoom, mSession) of
+        (Nothing, _, _) -> Left err400 { errBody = "targetParty required for party checkout" }
+        (_, Just _, _) -> Left err400 { errBody = "targetRoom is only allowed for room checkout" }
+        (_, _, Just _) -> Left err400 { errBody = "targetSession is only allowed for session checkout" }
+        (Just targetParty, Nothing, Nothing) -> Right (Just targetParty, Nothing, Nothing)
+  where
+    normalizedTargetParty =
+      case mTargetParty of
+        Nothing -> Nothing
+        Just rawTargetParty ->
+          let trimmed = T.strip rawTargetParty
+          in if T.null trimmed then Nothing else Just trimmed
 
 inventoryServer
   :: ( MonadReader Env m
@@ -303,13 +312,14 @@ inventoryServer user =
       active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
       when (isJust active) $
         throwError err409 { errBody = "Asset already checked out" }
-      (mRoom, mSession) <- either throwError pure (validateCheckoutTargets targetKind targetRoomKey targetSessionKey)
+      (mTargetParty, mRoom, mSession) <-
+        either throwError pure (validateCheckoutTargets targetKind (coTargetParty req) targetRoomKey targetSessionKey)
       recEnt <- withPool $ do
         checkoutId <- insert AssetCheckout
           { assetCheckoutAssetId          = assetKey
           , assetCheckoutTargetKind       = targetKind
           , assetCheckoutTargetSessionId  = mSession
-          , assetCheckoutTargetPartyRef   = coTargetParty req
+          , assetCheckoutTargetPartyRef   = mTargetParty
           , assetCheckoutTargetRoomId     = mRoom
           , assetCheckoutCheckedOutByRef  = checkedOutBy
           , assetCheckoutCheckedOutAt     = now
