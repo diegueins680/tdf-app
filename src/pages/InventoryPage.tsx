@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Menu,
   MenuItem,
   Paper,
   Stack,
@@ -217,8 +216,6 @@ function printQr(asset: AssetDTO) {
 export default function InventoryPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<AssetDTO | null>(null);
-  const [menuAsset, setMenuAsset] = useState<AssetDTO | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -295,17 +292,21 @@ export default function InventoryPage() {
                     <TableCell>{asset.location ?? '—'}</TableCell>
                     <TableCell>
                       <Tooltip title="Editar activo">
-                        <IconButton size="small" onClick={() => setEditing(asset)}>
+                        <IconButton size="small" aria-label={`Editar activo ${asset.name}`} onClick={() => setEditing(asset)}>
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Eliminar">
-                        <IconButton size="small" onClick={() => handleDelete(asset)}>
+                        <IconButton size="small" aria-label={`Eliminar activo ${asset.name}`} onClick={() => handleDelete(asset)}>
                           <DeleteOutlineIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Imprimir QR">
-                        <IconButton size="small" onClick={(event) => { setAnchorEl(event.currentTarget); setMenuAsset(asset); }}>
+                        <IconButton
+                          size="small"
+                          aria-label={`Imprimir QR de ${asset.name}`}
+                          onClick={() => printQr(asset)}
+                        >
                           <QrCode2Icon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -329,39 +330,6 @@ export default function InventoryPage() {
 
       <CreateAssetDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       <EditAssetDialog asset={editing} open={!!editing} onClose={() => setEditing(null)} />
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => {
-          setAnchorEl(null);
-          setMenuAsset(null);
-        }}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <MenuItem
-          onClick={() => {
-            if (menuAsset) {
-              printQr(menuAsset);
-            }
-            setAnchorEl(null);
-            setMenuAsset(null);
-          }}
-        >
-          Imprimir QR
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (menuAsset) {
-              setEditing(menuAsset);
-            }
-            setAnchorEl(null);
-            setMenuAsset(null);
-          }}
-        >
-          Editar…
-        </MenuItem>
-      </Menu>
     </Stack>
   );
 }
