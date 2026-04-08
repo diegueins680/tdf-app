@@ -96,6 +96,14 @@ const resolveSenderName = (msg: SocialMessage) => {
   return 'Sin nombre';
 };
 
+const getRepliedHistoryGuidance = (stats: MessageStats) => {
+  if (stats.incoming.length === 0) {
+    return 'Todavía no hay mensajes entrantes en este canal.';
+  }
+
+  return 'El historial detallado aparecerá aquí cuando exista al menos un mensaje respondido.';
+};
+
 export default function AdminDiagnosticsPage() {
   const missingEnv =
     typeof window !== 'undefined'
@@ -219,35 +227,27 @@ export default function AdminDiagnosticsPage() {
                       variant={stats.failed.length > 0 ? 'filled' : 'outlined'}
                     />
                   </Stack>
-                  <TableContainer sx={{ maxHeight: 320 }}>
-                    <Table size="small" stickyHeader>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell sx={{ width: 170 }}>Respondido</TableCell>
-                          <TableCell sx={{ width: 180 }}>Remitente</TableCell>
-                          <TableCell>Mensaje</TableCell>
-                          <TableCell>Respuesta</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {loading && (
+                  {loading ? (
+                    <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 120 }}>
+                      <CircularProgress size={22} />
+                    </Stack>
+                  ) : stats.replied.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      {getRepliedHistoryGuidance(stats)}
+                    </Typography>
+                  ) : (
+                    <TableContainer sx={{ maxHeight: 320 }}>
+                      <Table size="small" stickyHeader>
+                        <TableHead>
                           <TableRow>
-                            <TableCell colSpan={4} align="center">
-                              <CircularProgress size={22} />
-                            </TableCell>
+                            <TableCell sx={{ width: 170 }}>Respondido</TableCell>
+                            <TableCell sx={{ width: 180 }}>Remitente</TableCell>
+                            <TableCell>Mensaje</TableCell>
+                            <TableCell>Respuesta</TableCell>
                           </TableRow>
-                        )}
-                        {!loading && stats.replied.length === 0 && (
-                          <TableRow>
-                            <TableCell colSpan={4} align="center">
-                              <Typography variant="body2" color="text.secondary">
-                                Sin mensajes respondidos.
-                              </Typography>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                        {!loading &&
-                          stats.replied.map((msg) => {
+                        </TableHead>
+                        <TableBody>
+                          {stats.replied.map((msg) => {
                             const senderLabel = resolveSenderName(msg);
                             return (
                               <TableRow key={msg.externalId} hover>
@@ -278,9 +278,10 @@ export default function AdminDiagnosticsPage() {
                               </TableRow>
                             );
                           })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
                 </Stack>
               </Paper>
             ))}
