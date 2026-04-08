@@ -82,27 +82,36 @@ async function emitLoopStatus(patch = {}) {
 
 let cachedGitHubToken = null;
 
+function buildSanitizedGhAuthEnv() {
+  return {
+    ...process.env,
+    GH_TOKEN: '',
+    GITHUB_TOKEN: '',
+    GITHUB_PAT: '',
+  };
+}
+
 function getGitHubToken() {
   if (cachedGitHubToken !== null) {
-    return cachedGitHubToken;
-  }
-
-  const envToken = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? process.env.GITHUB_PAT ?? '';
-  if (envToken) {
-    cachedGitHubToken = envToken;
     return cachedGitHubToken;
   }
 
   try {
     cachedGitHubToken = execFileSync('gh', ['auth', 'token'], {
       cwd: process.cwd(),
+      env: buildSanitizedGhAuthEnv(),
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
     }).trim();
+    if (cachedGitHubToken) {
+      return cachedGitHubToken;
+    }
   } catch {
-    cachedGitHubToken = '';
+    cachedGitHubToken = null;
   }
 
+  // Prefer the stored gh login when local shells leak a stale GH_TOKEN.
+  cachedGitHubToken = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? process.env.GITHUB_PAT ?? '';
   return cachedGitHubToken;
 }
 

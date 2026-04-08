@@ -882,6 +882,14 @@ test('continuous-improvement-loop repairs the latest remote CI failure before id
   assert.match(script, /if \(!repairLatestCommitOnly\) \{/);
 });
 
+test('continuous-improvement-loop prefers the stored gh login over a stale GH_TOKEN environment value', async () => {
+  const script = await fs.readFile(loopScriptPath, 'utf8');
+  assert.match(script, /function buildSanitizedGhAuthEnv\(\)/);
+  assert.match(script, /env: buildSanitizedGhAuthEnv\(\),/);
+  assert.match(script, /execFileSync\('gh', \['auth', 'token'\], \{/);
+  assert.match(script, /cachedGitHubToken = process\.env\.GITHUB_TOKEN \?\? process\.env\.GH_TOKEN \?\? process\.env\.GITHUB_PAT \?\? '';/);
+});
+
 test('tdf-hq-ui Jest config keeps preset as a preset root specifier', () => {
   const repoDir = path.resolve(testDir, '..', '..');
   const uiDir = path.join(repoDir, 'tdf-hq-ui');
