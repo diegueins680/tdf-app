@@ -681,6 +681,7 @@ export default function CourseRegistrationsAdminPage() {
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
   const copyCsvButtonLabel = hasCustomFilters ? 'Copiar CSV filtrado' : 'Copiar CSV';
+  const showVisibleRegistrationsSummary = loadedRegistrationCount > 1 || canCopyCsv || Boolean(copyMessage);
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
   const visibleActiveFilterSummary = useMemo(() => {
@@ -1821,9 +1822,11 @@ export default function CourseRegistrationsAdminPage() {
                     {activeViewSummaryMessage}
                   </Typography>
                 )}
-                <Typography variant="body2" color="text.secondary">
-                  {visibleRegistrationsSummary}
-                </Typography>
+                {showVisibleRegistrationsSummary && (
+                  <Typography variant="body2" color="text.secondary">
+                    {visibleRegistrationsSummary}
+                  </Typography>
+                )}
                 <Button size="small" onClick={handleResetFilters}>
                   {resetViewLabel}
                 </Button>

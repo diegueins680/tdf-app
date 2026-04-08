@@ -1322,7 +1322,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the filtered result count visible even when only one registration matches', async () => {
+  it('keeps a single filtered result focused on shared context instead of repeating an obvious count', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({
       crId: 102,
@@ -1359,8 +1359,7 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pagado');
-      expect(container.textContent).toContain('Mostrando 1 inscripción.');
-      expect(countOccurrences(container, 'Mostrando 1 inscripción.')).toBe(1);
+      expect(container.textContent).not.toContain('Mostrando 1 inscripción.');
       expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
       expect(
         Array.from(container.querySelectorAll('button')).some(
