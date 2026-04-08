@@ -406,13 +406,22 @@ validatePublicTrialPartyId Nothing = Right ()
 validatePublicTrialPartyId (Just _) =
   Left err400 { errBody = "partyId is not allowed on public trial requests" }
 
+validatePublicSubjectIdInput :: Int -> Either ServerError Int
+validatePublicSubjectIdInput subjectIdInt
+  | subjectIdInt <= 0 =
+      Left err400 { errBody = "subjectId must be a positive integer" }
+  | otherwise =
+      Right subjectIdInt
+
 validatePublicInterestInput :: InterestIn -> Either ServerError InterestIn
-validatePublicInterestInput (InterestIn rawInterestType subjectId details driveLink) =
+validatePublicInterestInput (InterestIn rawInterestType rawSubjectId details driveLink) =
   case cleanOptional (Just rawInterestType) of
     Nothing ->
       Left err400 { errBody = "interestType is required" }
     Just interestTypeVal ->
-      Right (InterestIn interestTypeVal subjectId (cleanOptional details) (cleanOptional driveLink))
+      do
+        subjectId <- traverse validatePublicSubjectIdInput rawSubjectId
+        Right (InterestIn interestTypeVal subjectId (cleanOptional details) (cleanOptional driveLink))
 
 validatePublicSubjectSelection :: Maybe Subject -> Either ServerError ()
 validatePublicSubjectSelection (Just subject)
@@ -422,7 +431,8 @@ validatePublicSubjectSelection _ =
 
 requirePublicActiveSubject :: Int -> AppM SubjectId
 requirePublicActiveSubject subjectIdInt = do
-  let subjectKey = intKey subjectIdInt :: SubjectId
+  normalizedSubjectId <- either (liftIO . throwIO) pure (validatePublicSubjectIdInput subjectIdInt)
+  let subjectKey = intKey normalizedSubjectId :: SubjectId
   mSubject <- get subjectKey
   either (liftIO . throwIO) pure (validatePublicSubjectSelection mSubject)
   pure subjectKey

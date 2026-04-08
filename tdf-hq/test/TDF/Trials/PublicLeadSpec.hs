@@ -23,6 +23,7 @@ import TDF.Trials.Server
   , validatePreferredSlots
   , validatePreferredSlotsAt
   , validatePublicInterestInput
+  , validatePublicSubjectIdInput
   , validatePublicSubjectSelection
   , validatePublicTrialPartyId
   )
@@ -133,6 +134,29 @@ spec = do
           subjectIdValue `shouldBe` Just 7
           detailsValue `shouldBe` Nothing
           driveLinkValue `shouldBe` Just "https://example.com/file"
+
+    it "rejects non-positive subject ids instead of treating them as unavailable subjects" $
+      case validatePublicInterestInput (InterestIn "workshop" (Just 0) Nothing Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "subjectId must be a positive integer"
+        Right _ ->
+          expectationFailure "Expected invalid subjectId to be rejected"
+
+  describe "validatePublicSubjectIdInput" $ do
+    it "accepts positive subject ids" $
+      validatePublicSubjectIdInput 7 `shouldBe` Right 7
+
+    it "rejects zero or negative subject ids before database lookup" $ do
+      let assertRejected rawSubjectId =
+            case validatePublicSubjectIdInput rawSubjectId of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "subjectId must be a positive integer"
+              Right value ->
+                expectationFailure ("Expected invalid subjectId to be rejected, got " <> show value)
+      assertRejected 0
+      assertRejected (-3)
 
   describe "validatePublicSubjectSelection" $ do
     it "accepts active public subjects" $
