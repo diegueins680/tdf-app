@@ -219,13 +219,27 @@ npm run loop:idea
 npm run audit:ui:static
 npm run verify:auto-loop
 npm run loop:improve -- --config scripts/continuous-improvement-loop.example.json
+npm run loop:start
+npm run loop:status
+npm run loop:tail
+npm run loop:stop
+npm run loop:install-launchd
 ```
 
+Forever-runner contract:
+- `npm run loop:start` launches a dedicated supervisor (`scripts/continuous-improvement-loop-supervisor.sh`), not just one backgrounded Node process.
+- The supervisor enforces a single-instance lock, restarts the loop if the child exits, watches the heartbeat emitted by `scripts/continuous-improvement-loop.mjs`, and restarts stale children after the configured timeout.
+- Operator-visible state lives in `tmp/continuous-improvement-loop/status.json` with PID, child PID, phase, heartbeat, restart counters, and last-exit details.
+- Logs stay in `tmp/continuous-improvement-loop.log` and remain tail-able with `npm run loop:tail`.
+- Stop the runner cleanly with `npm run loop:stop`; a stop file is used so the supervisor exits intentionally instead of immediately respawning.
+- `scripts/install-continuous-improvement-loop-launchd.sh` installs a macOS LaunchAgent with `RunAtLoad` + `KeepAlive`, which is the durable contract for always-on execution across crashes and reboots.
+
 Notes:
-- Start from a clean worktree unless you intentionally pass `--allow-dirty`.
+- When the forever runner encounters a dirty worktree, it now checkpoints that work onto a pushed `continuous-improvement-loop/dirty/<base-branch>/...` branch, returns the loop branch to clean state, and only blocks if that checkpoint recovery fails.
 - `loop:improve` is agent-agnostic: wire `implementationCommand`, `uiFixCommand`, `formalFixCommand`, and `ciRepairCommand` to your preferred coding worker.
 - `commitMessageTemplate` defaults to `{commit_message}` and can use `{commit_type}`, `{commit_summary}`, `{primary_path}`, and `{files_changed}` if you want a custom format.
 - GitHub polling uses `gh api`, so run `gh auth status` first and ensure the repo remote points at GitHub.
+- Tuning knobs for the forever runner: `CONTINUOUS_LOOP_HEARTBEAT_TIMEOUT_SECONDS`, `CONTINUOUS_LOOP_RESTART_DELAY_SECONDS`, `CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS`, `CONTINUOUS_LOOP_LOG_FILE`, and `CONTINUOUS_LOOP_STATE_DIR`.
 
 ### Build for Production
 

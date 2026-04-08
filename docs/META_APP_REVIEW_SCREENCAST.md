@@ -114,8 +114,14 @@ Before swapping any packet reference away from `screencast/meta-app-review/outpu
 
 ## Canonical Submission Artifacts
 
-Use these files as the primary approval packet:
+Use the frozen current-chat upload bundle first for the next `Request again` attempt:
 
+- Packet-of-record handoff: `/Users/diegosaa/.openclaw/workspace/tdf-label-meta-permissions-handoff.md`
+- Authoritative feedback URL: `https://developers.facebook.com/apps/1098715965613487/app-review/submissions/feedback/?submission_id=1148115637340186&business_id=171424997819091`
+- Authoritative submission id: `1148115637340186`
+- Primary reviewer video: `/Users/diegosaa/.openclaw/media/inbound/file_2---f9b3a254-c56b-434b-a00f-31ad19b0c4c8.mp4`
+- Supporting reviewer video: `/Users/diegosaa/.openclaw/media/inbound/file_0---897b03ee-8915-48b1-94b3-3297b40b05de.mp4`
+- Backup still only: `/Users/diegosaa/.openclaw/media/inbound/file_1---50bbbdeb-66c4-46d5-ae57-004bfb20a67b.jpg`
 - Combined reviewer notes: `screencast/meta-app-review/submission-notes.txt`
 - Per-permission reviewer notes:
   - `screencast/meta-app-review/permission-notes/instagram_basic.txt`
@@ -124,10 +130,12 @@ Use these files as the primary approval packet:
   - `screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt`
 - Evidence manifest: `screencast/meta-app-review/evidence-manifest.json`
 - Packet summary: `docs/meta-app-review-submission-packet-2026-03-26.md`
-- Facebook Login evidence: `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`
-- Instagram Login evidence: `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`
 
-These two videos cover all four requested permissions only after the reviewer-visible business-account wording, live consent step, and delete/unsend evidence are present in the refreshed final cut.
+Historical repo renders remain supporting/internal fallback context only:
+- `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`
+- `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`
+
+For the next `Request again` attempt, the reviewer-facing artifact set is the frozen current-chat upload bundle above; keep the historical repo renders only as internal context unless Meta names one exact proof gap.
 
 ## Submission Notes Template
 

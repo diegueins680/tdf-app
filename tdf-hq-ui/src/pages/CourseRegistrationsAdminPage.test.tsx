@@ -178,6 +178,7 @@ const emptyFollowUpAlertMessage =
 const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const openPaymentWorkflowLabel = 'Registrar pago';
+const dossierScopeHint = 'Expediente: notas, pagos, seguimiento y correos. Estado: cambios rápidos.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -346,9 +347,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
-      expect(container.textContent).not.toContain(
-        'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
-      );
+      expect(container.textContent).not.toContain(dossierScopeHint);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe(
         'Expediente',
@@ -500,7 +499,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countOccurrences(
         container,
-        'Expediente reúne notas, comprobantes, seguimiento y correos. Usa Estado solo para cambios rápidos.',
+        dossierScopeHint,
       )).toBe(1);
       expect(countButtonsByText(container, 'Expediente')).toBe(2);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(2);
@@ -1405,7 +1404,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(container, 'Filtrar por estado')).toBe(true);
       expect(hasExactText(container, 'Estado')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
-      expect(countOccurrences(container, 'Estado:')).toBe(3);
+      expect(countOccurrences(container, 'Estado:')).toBe(4);
     });
 
     await cleanup();
@@ -1496,6 +1495,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
+      expect(container.textContent).toContain(dossierScopeHint);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Estado: Pendiente de pago');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Estado: Pagado');
