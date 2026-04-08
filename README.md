@@ -236,6 +236,7 @@ Forever-runner contract:
 
 Notes:
 - When the forever runner encounters a dirty worktree, it now checkpoints that work onto a pushed `continuous-improvement-loop/dirty/<base-branch>/...` branch, returns the loop branch to clean state, and only blocks if that checkpoint recovery fails.
+- Before each new improvement idea, the loop syncs to the latest pushed branch head, polls GitHub Actions for that exact commit, and routes any failing workflow logs through `ciRepairCommand` before starting fresh discovery.
 - `loop:improve` is agent-agnostic: wire `implementationCommand`, `uiFixCommand`, `formalFixCommand`, and `ciRepairCommand` to your preferred coding worker.
 - `commitMessageTemplate` defaults to `{commit_message}` and can use `{commit_type}`, `{commit_summary}`, `{primary_path}`, and `{files_changed}` if you want a custom format.
 - GitHub polling uses `gh api`, so run `gh auth status` first and ensure the repo remote points at GitHub.

@@ -936,6 +936,40 @@ export async function waitForGreenCi(repoRoot, config, sha) {
   }
 }
 
+export async function syncAndPollLatestRemoteCi(repoRoot, config, context = null) {
+  const pushBranch = config.pushBranch || (await getCurrentBranch(repoRoot));
+  if (!pushBranch) {
+    throw new Error('Unable to determine current branch for latest-commit GitHub polling.');
+  }
+
+  const syncResult = await syncWithPushBranch(repoRoot, config.pushRemote, pushBranch);
+  const sha = syncResult.sha;
+  if (context) {
+    context.head_sha = sha;
+  }
+
+  if (!config.pollGitHub) {
+    return {
+      pushBranch,
+      sha,
+      syncResult,
+      ciResult: null,
+    };
+  }
+
+  const ciResult = await waitForGreenCi(repoRoot, config, sha);
+  if (context) {
+    await writeJson(context.ci_report_file, ciResult);
+  }
+
+  return {
+    pushBranch,
+    sha,
+    syncResult,
+    ciResult,
+  };
+}
+
 async function finalizeIteration(repoRoot, config, context) {
   if (config.dryRun) {
     const trackedChanges = filterTrackedChanges(
@@ -1024,24 +1058,59 @@ async function finalizeIteration(repoRoot, config, context) {
 async function runIteration(repoRoot, config, iteration) {
   const contextDir = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-'));
   const context = buildContext(repoRoot, contextDir, iteration);
+  const latestRemote = await syncAndPollLatestRemoteCi(repoRoot, config, context);
+  config.pushBranch = latestRemote.pushBranch;
 
-  await emitLoopStatus({ state: 'running', phase: 'idea-discovery', currentIteration: iteration, contextDir });
-  logStep(`Iteration ${iteration}: idea discovery`);
-  const idea = await generateIdea(repoRoot, context, config);
-  context.idea_source = idea.source ?? '';
-  context.idea_title = idea.title ?? '';
-  context.idea_target = idea.target ?? '';
-  context.idea_reason = idea.reason ?? '';
+  let repairLatestCommitOnly = false;
+  if (latestRemote.ciResult && !latestRemote.ciResult.ok) {
+    if (!config.ciRepairCommand) {
+      throw new Error(
+        `Latest pushed commit ${latestRemote.sha} has failing GitHub checks. Configure ciRepairCommand or inspect ${context.ci_report_file}.`,
+      );
+    }
 
-  if (!config.implementationCommand) {
-    throw new Error('implementationCommand is required to run the loop unattended.');
+    repairLatestCommitOnly = true;
+    context.idea_source = 'github-ci';
+    context.idea_title = `Repair GitHub CI for ${latestRemote.sha.slice(0, 7)}`;
+    context.idea_target = config.pushBranch ?? '';
+    context.idea_reason = `Fix failing GitHub Actions on latest remote commit ${latestRemote.sha}.`;
+
+    await emitLoopStatus({
+      state: 'running',
+      phase: 'latest-commit-ci-repair',
+      currentIteration: iteration,
+      contextDir,
+      ideaTitle: context.idea_title,
+    });
+    logStep(`Iteration ${iteration}: latest remote commit CI repair`);
+    await runShellCommand(config.ciRepairCommand, repoRoot, context, {
+      stepName: 'Latest commit CI repair',
+    });
+
+    if (!(await hasCommitCandidateChanges(repoRoot, config.initialUntracked, config.initialTrackedPaths))) {
+      throw new Error('ciRepairCommand completed without creating changes for the latest remote commit failure.');
+    }
   }
 
-  await emitLoopStatus({ state: 'running', phase: 'implementation', currentIteration: iteration, ideaTitle: context.idea_title });
-  logStep(`Iteration ${iteration}: implementation`);
-  await runShellCommand(config.implementationCommand, repoRoot, context, {
-    stepName: 'Implementation',
-  });
+  if (!repairLatestCommitOnly) {
+    await emitLoopStatus({ state: 'running', phase: 'idea-discovery', currentIteration: iteration, contextDir });
+    logStep(`Iteration ${iteration}: idea discovery`);
+    const idea = await generateIdea(repoRoot, context, config);
+    context.idea_source = idea.source ?? '';
+    context.idea_title = idea.title ?? '';
+    context.idea_target = idea.target ?? '';
+    context.idea_reason = idea.reason ?? '';
+
+    if (!config.implementationCommand) {
+      throw new Error('implementationCommand is required to run the loop unattended.');
+    }
+
+    await emitLoopStatus({ state: 'running', phase: 'implementation', currentIteration: iteration, ideaTitle: context.idea_title });
+    logStep(`Iteration ${iteration}: implementation`);
+    await runShellCommand(config.implementationCommand, repoRoot, context, {
+      stepName: 'Implementation',
+    });
+  }
 
   await emitLoopStatus({ state: 'running', phase: 'ui-audit', currentIteration: iteration, ideaTitle: context.idea_title });
   logStep(`Iteration ${iteration}: UI audit`);

@@ -17,7 +17,7 @@ import {
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
 import { checkpointDirtyWorktree } from '../lib/continuous-improvement-loop-dirty-worktree.mjs';
-import { waitForGreenCi } from '../continuous-improvement-loop.mjs';
+import { syncAndPollLatestRemoteCi, waitForGreenCi } from '../continuous-improvement-loop.mjs';
 import {
   buildDefaultIdea,
   chooseDiscoveryLane,
@@ -865,6 +865,21 @@ test('waitForGreenCi retries transient GitHub polling fetch failures', async () 
     global.fetch = originalFetch;
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('continuous-improvement-loop repairs the latest remote CI failure before idea discovery', async () => {
+  const script = await fs.readFile(loopScriptPath, 'utf8');
+  assert.equal(typeof syncAndPollLatestRemoteCi, 'function');
+  assert.match(script, /export async function syncAndPollLatestRemoteCi\(repoRoot, config, context = null\)/);
+  assert.match(script, /const latestRemote = await syncAndPollLatestRemoteCi\(repoRoot, config, context\);/);
+  assert.match(script, /if \(latestRemote\.ciResult && !latestRemote\.ciResult\.ok\)/);
+  assert.match(script, /phase: 'latest-commit-ci-repair'/);
+  assert.match(script, /await runShellCommand\(config\.ciRepairCommand, repoRoot, context,/);
+  assert.match(
+    script,
+    /if \(!\(await hasCommitCandidateChanges\(repoRoot, config\.initialUntracked, config\.initialTrackedPaths\)\)\) \{/,
+  );
+  assert.match(script, /if \(!repairLatestCommitOnly\) \{/);
 });
 
 test('tdf-hq-ui Jest config keeps preset as a preset root specifier', () => {
