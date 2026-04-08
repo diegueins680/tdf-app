@@ -54,7 +54,7 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
-const dossierScopeHint = 'Expediente: notas, pagos, seguimiento y correos. Estado: cambios rápidos.';
+const dossierScopeHint = 'Empieza por Expediente para revisar notas, pagos, seguimiento y correos. Usa el boton de estado solo para cambios rapidos.';
 const emptyNotesAlertMessage = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
@@ -1959,7 +1959,7 @@ export default function CourseRegistrationsAdminPage() {
                       </Button>
                       <Button
                         size="small"
-                        variant="outlined"
+                        variant="text"
                         color={registrationStatusButtonColor(reg.crStatus)}
                         endIcon={<ArrowDropDownIcon />}
                         aria-label={`Cambiar estado para ${rowActionTarget}`}

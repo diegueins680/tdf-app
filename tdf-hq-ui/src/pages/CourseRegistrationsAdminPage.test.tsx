@@ -178,7 +178,8 @@ const emptyFollowUpAlertMessage =
 const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const openPaymentWorkflowLabel = 'Registrar pago';
-const dossierScopeHint = 'Expediente: notas, pagos, seguimiento y correos. Estado: cambios rápidos.';
+const dossierScopeHint =
+  'Empieza por Expediente para revisar notas, pagos, seguimiento y correos. Usa el boton de estado solo para cambios rapidos.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -1404,7 +1405,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(container, 'Filtrar por estado')).toBe(true);
       expect(hasExactText(container, 'Estado')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
-      expect(countOccurrences(container, 'Estado:')).toBe(1);
+      expect(countOccurrences(container, 'Estado:')).toBe(0);
     });
 
     await cleanup();
@@ -1496,6 +1497,8 @@ describe('CourseRegistrationsAdminPage', () => {
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
       expect(container.textContent).toContain(dossierScopeHint);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').className).toContain('MuiButton-outlined');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').className).toContain('MuiButton-text');
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
@@ -1503,7 +1506,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
       expect(container.textContent).not.toContain('Estado disponible');
       expect(countOccurrences(container, 'Cambiar estado:')).toBe(0);
-      expect(countOccurrences(container, 'Estado:')).toBe(1);
+      expect(countOccurrences(container, 'Estado:')).toBe(0);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).toBeNull();
@@ -3087,7 +3090,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
       expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Refrescar lista')).toBe(1);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
     });
 
     await cleanup();
