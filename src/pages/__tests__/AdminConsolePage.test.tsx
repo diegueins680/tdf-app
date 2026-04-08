@@ -110,6 +110,9 @@ describe('AdminConsolePage', () => {
     expect(
       screen.queryByRole('button', { name: /Refrescar/i }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Al terminar, el panel se actualiza automáticamente para evitar un refresco manual extra\./i),
+    ).toBeInTheDocument();
   });
 
   it('refreshes every admin dataset from the single panel action', async () => {
@@ -126,6 +129,28 @@ describe('AdminConsolePage', () => {
     await user.click(screen.getByRole('button', { name: /Actualizar panel/i }));
 
     await waitFor(() => {
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'health'] });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'console'] });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'users'] });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'audit'] });
+    });
+  });
+
+  it('refreshes the full admin panel after seeding demo data', async () => {
+    const user = userEvent.setup();
+    const { queryClient } = renderPage();
+    const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: /Seed demo data/i }),
+      ).toBeEnabled(),
+    );
+
+    await user.click(screen.getByRole('button', { name: /Seed demo data/i }));
+
+    await waitFor(() => {
+      expect(mockSeed).toHaveBeenCalledTimes(1);
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'health'] });
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'console'] });
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'users'] });

@@ -33,7 +33,7 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import EditIcon from '@mui/icons-material/Edit';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { AdminApi } from '../api/admin';
 import { Health } from '../utilities/health';
 import type { AdminConsoleCard, AdminUserDTO, AdminUserStatus, AuditLogEntry, RoleKey } from '../api/types';
@@ -45,6 +45,12 @@ const ADMIN_REFRESH_QUERY_KEYS = [
   ['admin', 'users'],
   ['admin', 'audit'],
 ] as const;
+
+function invalidateAdminPanelQueries(queryClient: QueryClient) {
+  ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
+    void queryClient.invalidateQueries({ queryKey: [...queryKey] });
+  });
+}
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -110,7 +116,7 @@ export default function AdminConsolePage() {
   const seedMutation = useMutation({
     mutationFn: AdminApi.seed,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin', 'audit'] });
+      invalidateAdminPanelQueries(qc);
     },
   });
 
@@ -184,9 +190,7 @@ export default function AdminConsolePage() {
   };
 
   const handleRefreshPanel = () => {
-    ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
-      void qc.invalidateQueries({ queryKey: [...queryKey] });
-    });
+    invalidateAdminPanelQueries(qc);
   };
 
   const renderStatus = (status?: AdminUserStatus | null) => {
@@ -260,6 +264,9 @@ export default function AdminConsolePage() {
               >
                 {seedMutation.isPending ? 'Sembrando…' : 'Seed demo data'}
               </Button>
+              <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 1 }}>
+                Al terminar, el panel se actualiza automáticamente para evitar un refresco manual extra.
+              </Typography>
               {seedMutation.isSuccess && (
                 <Alert severity="success" sx={{ mt: 2 }}>
                   Datos de demo regenerados correctamente.
