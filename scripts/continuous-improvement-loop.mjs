@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
-import { execFile, spawn } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { discoverImprovementIdea } from './lib/discovery.mjs';
@@ -45,14 +45,65 @@ const DEFAULTS = {
   commitMessageTemplate: '{commit_message}',
 };
 
+const SUPERVISOR_STATUS_FILE = process.env.CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE ?? '';
+
 function sleep(milliseconds) {
   return new Promise((resolve) => {
     setTimeout(resolve, milliseconds);
   });
 }
 
+async function emitLoopStatus(patch = {}) {
+  if (!SUPERVISOR_STATUS_FILE) return;
+
+  try {
+    let current = {};
+    try {
+      const raw = await fs.readFile(SUPERVISOR_STATUS_FILE, 'utf8');
+      current = JSON.parse(raw);
+    } catch {
+      current = {};
+    }
+
+    const next = {
+      ...current,
+      ...patch,
+      runnerPid: process.pid,
+      lastHeartbeat: new Date().toISOString(),
+    };
+
+    const tmpFile = `${SUPERVISOR_STATUS_FILE}.tmp`;
+    await fs.writeFile(tmpFile, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+    await fs.rename(tmpFile, SUPERVISOR_STATUS_FILE);
+  } catch {
+    // Status emission is best-effort and must not break the loop.
+  }
+}
+
+let cachedGitHubToken = null;
+
 function getGitHubToken() {
-  return process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? process.env.GITHUB_PAT ?? '';
+  if (cachedGitHubToken !== null) {
+    return cachedGitHubToken;
+  }
+
+  const envToken = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? process.env.GITHUB_PAT ?? '';
+  if (envToken) {
+    cachedGitHubToken = envToken;
+    return cachedGitHubToken;
+  }
+
+  try {
+    cachedGitHubToken = execFileSync('gh', ['auth', 'token'], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    cachedGitHubToken = '';
+  }
+
+  return cachedGitHubToken;
 }
 
 function getGitHubApiBase() {
@@ -974,6 +1025,7 @@ async function runIteration(repoRoot, config, iteration) {
   const contextDir = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-'));
   const context = buildContext(repoRoot, contextDir, iteration);
 
+  await emitLoopStatus({ state: 'running', phase: 'idea-discovery', currentIteration: iteration, contextDir });
   logStep(`Iteration ${iteration}: idea discovery`);
   const idea = await generateIdea(repoRoot, context, config);
   context.idea_source = idea.source ?? '';
@@ -985,11 +1037,13 @@ async function runIteration(repoRoot, config, iteration) {
     throw new Error('implementationCommand is required to run the loop unattended.');
   }
 
+  await emitLoopStatus({ state: 'running', phase: 'implementation', currentIteration: iteration, ideaTitle: context.idea_title });
   logStep(`Iteration ${iteration}: implementation`);
   await runShellCommand(config.implementationCommand, repoRoot, context, {
     stepName: 'Implementation',
   });
 
+  await emitLoopStatus({ state: 'running', phase: 'ui-audit', currentIteration: iteration, ideaTitle: context.idea_title });
   logStep(`Iteration ${iteration}: UI audit`);
   let uiReport = await generateUiReport(repoRoot, context, config);
   if (reportNeedsAttention(uiReport)) {
@@ -997,6 +1051,7 @@ async function runIteration(repoRoot, config, iteration) {
       throw new Error(`UI audit did not pass. Configure uiFixCommand or inspect ${context.ui_report_file}.`);
     }
 
+    await emitLoopStatus({ state: 'running', phase: 'ui-fixes', currentIteration: iteration, ideaTitle: context.idea_title });
     logStep(`Iteration ${iteration}: UI fixes`);
     await runShellCommand(config.uiFixCommand, repoRoot, context, {
       stepName: 'UI fixes',
@@ -1008,6 +1063,7 @@ async function runIteration(repoRoot, config, iteration) {
     }
   }
 
+  await emitLoopStatus({ state: 'running', phase: 'formal-verification', currentIteration: iteration, ideaTitle: context.idea_title });
   logStep(`Iteration ${iteration}: formal verification`);
   let formalReport = await generateFormalReport(repoRoot, context, config);
   if (reportNeedsAttention(formalReport)) {
@@ -1017,6 +1073,7 @@ async function runIteration(repoRoot, config, iteration) {
       );
     }
 
+    await emitLoopStatus({ state: 'running', phase: 'formal-fixes', currentIteration: iteration, ideaTitle: context.idea_title });
     logStep(`Iteration ${iteration}: formal fixes`);
     await runShellCommand(config.formalFixCommand, repoRoot, context, {
       stepName: 'Formal fixes',
@@ -1028,8 +1085,11 @@ async function runIteration(repoRoot, config, iteration) {
     }
   }
 
+  await emitLoopStatus({ state: 'running', phase: 'commit-push-ci', currentIteration: iteration, ideaTitle: context.idea_title });
   logStep(`Iteration ${iteration}: commit, push, and CI polling`);
-  return finalizeIteration(repoRoot, config, context);
+  const result = await finalizeIteration(repoRoot, config, context);
+  await emitLoopStatus({ state: 'running', phase: 'iteration-complete', currentIteration: iteration, lastIterationResult: result.ok ? 'ok' : 'attention' });
+  return result;
 }
 
 function printHelp() {
@@ -1070,6 +1130,7 @@ async function main() {
   }
 
   const repoRoot = process.cwd();
+  await emitLoopStatus({ state: 'running', phase: 'startup', repoRoot, currentIteration: 0 });
   const fileConfig = await readConfig(values.config);
   const config = {
     ...DEFAULTS,
@@ -1115,10 +1176,13 @@ async function main() {
     }
     if (Number(config.iterationDelaySeconds) > 0) {
       console.log(`Sleeping ${config.iterationDelaySeconds}s before the next iteration...`);
+      await emitLoopStatus({ state: 'running', phase: 'sleeping', currentIteration: iteration });
       await sleep(Number(config.iterationDelaySeconds) * 1000);
     }
     iteration += 1;
   }
+
+  await emitLoopStatus({ state: 'exited', phase: 'completed', currentIteration: iteration - 1 });
 }
 
 function isCliEntry() {
@@ -1130,7 +1194,12 @@ function isCliEntry() {
 }
 
 if (isCliEntry()) {
-  main().catch((error) => {
+  main().catch(async (error) => {
+    await emitLoopStatus({
+      state: 'crashed',
+      phase: 'error',
+      lastError: error.message,
+    });
     console.error(error.message);
     process.exit(1);
   });

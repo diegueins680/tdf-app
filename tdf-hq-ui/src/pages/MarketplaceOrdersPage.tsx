@@ -227,7 +227,9 @@ export default function MarketplaceOrdersPage() {
     activeFilterCount: filtersActiveCount,
   });
   const showFirstOrderEmptyState = !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 0;
-  const showListChrome = ordersQuery.isLoading || orders.length > 0;
+  const showSingleOrderFocusedState =
+    !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
+  const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -586,9 +588,11 @@ export default function MarketplaceOrdersPage() {
           subheader={
             showFirstOrderEmptyState
               ? 'La primera orden aparecerá aquí junto con su estado, pago y acciones de revisión.'
-              : 'Revisa el estado, pagos y detalles de cada pedido.'
+              : showSingleOrderFocusedState
+                ? 'Solo hay una orden por ahora. Ábrela para revisar estado, pago y datos del comprador. Cuando llegue la segunda, aquí aparecerán filtros y exportación.'
+                : 'Revisa el estado, pagos y detalles de cada pedido.'
           }
-          action={showFirstOrderEmptyState ? null : (
+          action={showFirstOrderEmptyState || showSingleOrderFocusedState ? null : (
             <Stack direction="row" spacing={1}>
               {showVisibleOrderBreakdown && (
                 <>

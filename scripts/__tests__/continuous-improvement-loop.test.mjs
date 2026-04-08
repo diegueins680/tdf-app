@@ -16,6 +16,7 @@ import {
   summarizeWorkflowRuns,
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
+import { checkpointDirtyWorktree } from '../lib/continuous-improvement-loop-dirty-worktree.mjs';
 import { waitForGreenCi } from '../continuous-improvement-loop.mjs';
 import {
   buildDefaultIdea,
@@ -518,6 +519,54 @@ test('continuous-improvement-loop honors --allow-dirty for tracked baseline chan
     const status = await git(['status', '--short']);
     assert.match(status.stdout, /^ M existing\.txt$/m);
     assert.doesNotMatch(status.stdout, /^M  existing\.txt$/m);
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('dirty-worktree checkpoint helper pushes a rescue branch and restores the loop branch clean', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-dirty-checkpoint-test-'));
+  const remoteDir = path.join(tempRoot, 'remote.git');
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '--bare', remoteDir], tempRoot);
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
+    await git(['add', 'tracked.txt']);
+    await git(['commit', '-m', 'initial']);
+    await git(['remote', 'add', 'origin', remoteDir]);
+    await git(['push', '-u', 'origin', 'main']);
+
+    const mainHead = (await git(['rev-parse', 'HEAD'])).stdout.trim();
+    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\ndirty tracked change\n', 'utf8');
+    await fs.writeFile(path.join(repoDir, 'untracked.txt'), 'dirty untracked change\n', 'utf8');
+
+    const result = await checkpointDirtyWorktree({ repoRoot: repoDir, currentBranch: 'main' });
+
+    assert.equal(result.recovered, true);
+    assert.match(result.branch, /^continuous-improvement-loop\/dirty\/main\/dirty-worktree-/);
+    assert.equal((await git(['branch', '--show-current'])).stdout.trim(), 'main');
+    assert.equal((await git(['rev-parse', 'HEAD'])).stdout.trim(), mainHead);
+    assert.equal((await git(['status', '--short'])).stdout.trim(), '');
+
+    const remoteCheckpoint = await execFileAsync(
+      'git',
+      ['--git-dir', remoteDir, 'rev-parse', `refs/heads/${result.branch}`],
+      { cwd: tempRoot },
+    );
+    assert.equal(remoteCheckpoint.stdout.trim(), result.commit);
+
+    const checkpointLog = await git(['log', '-1', '--pretty=%s%n%b', result.commit]);
+    assert.match(checkpointLog.stdout, /^chore\(loop\): checkpoint dirty worktree/m);
+    assert.match(checkpointLog.stdout, /Dirty worktree analysis:/);
+    assert.match(checkpointLog.stdout, /tracked\.txt/);
+    assert.match(checkpointLog.stdout, /untracked\.txt/);
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }

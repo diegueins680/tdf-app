@@ -221,6 +221,34 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps the first marketplace order focused on the lone row instead of showing list filter chrome', async () => {
+    listOrdersMock.mockResolvedValue([buildOrder()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
+        expect(countLabelsByText(container, 'Buscar por comprador, email o ID')).toBe(0);
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(0);
+        expect(countLabelsByText(container, 'Método de pago')).toBe(0);
+        expect(countLabelsByText(container, 'Desde')).toBe(0);
+        expect(countLabelsByText(container, 'Hasta')).toBe(0);
+        expect(container.textContent).toContain(
+          'Solo hay una orden por ahora. Ábrela para revisar estado, pago y datos del comprador. Cuando llegue la segunda, aquí aparecerán filtros y exportación.',
+        );
+        expect(container.textContent).not.toContain('Atajos rápidos');
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the list filter label distinct from the order editor status field', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
