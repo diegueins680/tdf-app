@@ -46,32 +46,10 @@ dependencies:
   - text
   - time
   - transformers
-<<<<<<< HEAD
   - unordered-containers
   - uuid
   - uuid-types
   - vector
-=======
-  - mtl
-  - monad-logger
-  - bytestring
-  - containers
-  - base64-bytestring
-  - http-types
-  - http-media
-  - file-embed
-  - path-pieces
-  - uuid
-  - mime-mail
-  - smtp-mail
-  - entropy
-  - bcrypt
-  - directory
-  - filepath
-  - process
-  - gitrev
-  - template-haskell
->>>>>>> origin/problematicMain
   - wai
   - wai-cors
   - warp
@@ -81,7 +59,6 @@ extra-source-files:
 
 library:
   source-dirs: src
-<<<<<<< HEAD
   ghc-options:
     - -Wall
     - -Wcompat
@@ -90,8 +67,6 @@ library:
     - -Wredundant-constraints
     - -Wmissing-signatures
     - -Wmissing-export-lists
-=======
->>>>>>> origin/problematicMain
   exposed-modules:
     - TDF.Models
     - TDF.API
