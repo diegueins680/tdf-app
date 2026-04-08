@@ -43,6 +43,8 @@ const getUserAccessSummary = (values: string[]) =>
 
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 
+const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
+
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();
   const username = user.username.trim();
@@ -109,7 +111,6 @@ export default function AdminUsersPage() {
     [visibleUsers],
   );
   const visibleUsersWithContactCount = visibleUsers.length - visibleUsersMissingContactCount;
-  const visibleUsersMissingContactVerb = visibleUsersMissingContactCount === 1 ? 'sigue' : 'siguen';
   const totalUsersCount = usersQuery.data?.length ?? 0;
   const hasUsers = totalUsersCount > 0;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
@@ -117,11 +118,45 @@ export default function AdminUsersPage() {
   const hasMultipleUsers = totalUsersCount > 1;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = hasMultipleUsers || hasActiveSearch;
-  const showVisibleCountChip = visibleUsers.length > 0 && (hasMultipleUsers || isFiltered);
   const showMixedContactStateGuidance = visibleUsersMissingContactCount > 0 && visibleUsersWithContactCount > 0;
-  const showMissingContactChip = showMixedContactStateGuidance && visibleUsersMissingContactCount > 1;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showClearSearchAction = showSearchField && hasActiveSearch;
+  const visibleUsersSummary = useMemo(() => {
+    if (!hasUsers || showSingleUserGuidance || visibleUsers.length === 0) return '';
+
+    const parts: string[] = [];
+
+    if (isFiltered) {
+      parts.push(`Mostrando ${visibleUsers.length} de ${totalUsersCount} usuarios.`);
+    } else if (hasMultipleUsers) {
+      parts.push(`${formatUserCountLabel(visibleUsers.length)} en esta vista.`);
+    }
+
+    if (showSearchField && !hasActiveSearch) {
+      parts.push('Busca por nombre, ID, contacto o acceso.');
+    }
+
+    if (showMixedContactStateGuidance) {
+      parts.push(
+        `${visibleUsersWithContactCount} ${visibleUsersWithContactCount === 1 ? 'listo' : 'listos'} para comunicación y `
+        + `${visibleUsersMissingContactCount} ${visibleUsersMissingContactCount === 1 ? 'pendiente' : 'pendientes'} de contacto.`,
+      );
+    }
+
+    return parts.join(' ');
+  }, [
+    hasActiveSearch,
+    hasMultipleUsers,
+    hasUsers,
+    isFiltered,
+    showMixedContactStateGuidance,
+    showSearchField,
+    showSingleUserGuidance,
+    totalUsersCount,
+    visibleUsers.length,
+    visibleUsersMissingContactCount,
+    visibleUsersWithContactCount,
+  ]);
 
   return (
     <>
@@ -159,26 +194,15 @@ export default function AdminUsersPage() {
                   Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.
                 </Typography>
               )}
+              {visibleUsersSummary && (
+                <Typography variant="body2" color="text.secondary">
+                  {visibleUsersSummary}
+                </Typography>
+              )}
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               {hasUsers && (
                 <>
-                  {showVisibleCountChip && (
-                    <Chip
-                      size="small"
-                      color="primary"
-                      variant={isFiltered ? 'outlined' : 'filled'}
-                      label={isFiltered ? `Mostrando ${visibleUsers.length} de ${totalUsersCount}` : `${visibleUsers.length} usuario${visibleUsers.length === 1 ? '' : 's'}`}
-                    />
-                  )}
-                  {showMissingContactChip && (
-                    <Chip
-                      size="small"
-                      color="warning"
-                      variant="outlined"
-                      label={`${visibleUsersMissingContactCount} sin contacto`}
-                    />
-                  )}
                   <FormControlLabel
                     control={(
                       <Checkbox
@@ -203,13 +227,6 @@ export default function AdminUsersPage() {
               </Tooltip>
             </Stack>
           </Stack>
-          {hasUsers && showMixedContactStateGuidance && (
-            <Typography variant="body2" color="text.secondary">
-              Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.
-              {` ${visibleUsersMissingContactCount} usuario${visibleUsersMissingContactCount === 1 ? '' : 's'} `}
-              {visibleUsersMissingContactVerb} sin canal de contacto; usa Completar contacto en esa fila.
-            </Typography>
-          )}
         </Stack>
 
         <Card>

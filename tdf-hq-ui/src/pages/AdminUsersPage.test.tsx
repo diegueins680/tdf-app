@@ -297,7 +297,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps one clear missing-contact action per row instead of repeating the same warning as extra chrome', async () => {
+  it('keeps one clear missing-contact action per row and summarizes readiness once in the header', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),
       buildUser({
@@ -322,11 +322,10 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
         expect(container.textContent).toContain(
-          'Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.',
+          '2 usuarios en esta vista. Busca por nombre, ID, contacto o acceso. 1 listo para comunicación y 1 pendiente de contacto.',
         );
-        expect(container.textContent).toContain(
-          '1 usuario sigue sin canal de contacto; usa Completar contacto en esa fila.',
-        );
+        expect(container.textContent).not.toContain('1 usuario sigue sin canal de contacto');
+        expect(container.textContent).not.toContain('1 sin contacto');
 
         const readyContactRow = getRowByUserId(container, 101);
         expect(readyContactRow.textContent).toContain('Ver perfil');
@@ -502,7 +501,7 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('3 usuarios');
+        expect(container.textContent).toContain('3 usuarios en esta vista. Busca por nombre, ID, contacto o acceso.');
         expect(container.textContent).toContain('Buscar usuarios');
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
