@@ -5,6 +5,7 @@
 
 module TDF.ServerFeedback
   ( feedbackServer
+  , normalizeOptionalFeedbackText
   ) where
 
 import           Control.Exception         (SomeException, displayException, try)
@@ -46,6 +47,9 @@ feedbackServer user = submitFeedback
     submitFeedback FeedbackPayload{..} = do
       let title = T.strip fpTitle
           body  = T.strip fpDescription
+          category = normalizeOptionalFeedbackText fpCategory
+          severity = normalizeOptionalFeedbackText fpSeverity
+          contactEmail = normalizeOptionalFeedbackText fpContactEmail
       when (T.null title) $
         throwError err400 { errBody = "title is required" }
       when (T.null body) $
@@ -61,9 +65,9 @@ feedbackServer user = submitFeedback
         (insert Feedback
           { feedbackTitle        = title
           , feedbackDescription  = body
-          , feedbackCategory     = T.strip <$> fpCategory
-          , feedbackSeverity     = T.strip <$> fpSeverity
-          , feedbackContactEmail = sanitizeContact fpContactEmail
+          , feedbackCategory     = category
+          , feedbackSeverity     = severity
+          , feedbackContactEmail = contactEmail
           , feedbackAttachment   = fmap T.pack attachmentPath
           , feedbackConsent      = fpConsent
           , feedbackCreatedBy    = Just (auPartyId user)
@@ -71,15 +75,9 @@ feedbackServer user = submitFeedback
           })
         envPool
 
-      liftIO $ notify emailSvc title body fpCategory fpSeverity fpContactEmail attachmentPath
+      liftIO $ notify emailSvc title body category severity contactEmail attachmentPath
 
       pure NoContent
-
-    sanitizeContact :: Maybe Text -> Maybe Text
-    sanitizeContact mVal =
-      case fmap T.strip mVal of
-        Just txt | T.null txt -> Nothing
-        other                 -> other
 
     storeAttachment :: FileData Tmp -> IO FilePath
     storeAttachment FileData{..} = do
@@ -94,12 +92,18 @@ feedbackServer user = submitFeedback
     sanitize :: Text -> Text
     sanitize = T.filter (\c -> c /= '/' && c /= '\\')
 
+normalizeOptionalFeedbackText :: Maybe Text -> Maybe Text
+normalizeOptionalFeedbackText mVal =
+  case fmap T.strip mVal of
+    Just txt | T.null txt -> Nothing
+    other                 -> other
+
 notify :: EmailSvc.EmailService -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe FilePath -> IO ()
 notify emailSvc title body mCat mSev mContact attachmentPath = do
   let subject = "[TDF Feedback] " <> title
       catLine = maybe "" (\c -> "Categoría: " <> c) mCat
       sevLine = maybe "" (\s -> "Severidad: " <> s) mSev
-      contactLine = maybe "Contacto: (no especificado)" (\c -> "Contacto: " <> c) (sanitizeContact mContact)
+      contactLine = maybe "Contacto: (no especificado)" (\c -> "Contacto: " <> c) (normalizeOptionalFeedbackText mContact)
       attachmentLine = maybe "Adjunto: (ninguno)" (\p -> "Adjunto: " <> T.pack p) attachmentPath
       bodyLines =
         filter (not . T.null)
@@ -124,12 +128,3 @@ notify emailSvc title body mCat mSev mContact attachmentPath = do
         hPutStrLn stderr ("[Feedback] Failed to email " <> T.unpack email <> ": " <> displayException err)
       Right () -> pure ()
   pure ()
-  where
-    sanitizeContact :: Maybe Text -> Maybe Text
-    sanitizeContact = sanitizeMaybe
-
-    sanitizeMaybe :: Maybe Text -> Maybe Text
-    sanitizeMaybe mVal =
-      case fmap T.strip mVal of
-        Just txt | T.null txt -> Nothing
-        other                 -> other

@@ -38,6 +38,7 @@ import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel)
 import TDF.Contracts.Server (validateContractId, validateContractPayload)
 import TDF.ServerProposals (validateTemplateKey)
+import TDF.ServerFeedback (normalizeOptionalFeedbackText)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -68,6 +69,16 @@ import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 
 main :: IO ()
 main = hspec $ do
+    describe "normalizeOptionalFeedbackText" $ do
+        it "trims meaningful optional feedback metadata values" $ do
+            normalizeOptionalFeedbackText (Just "  bug ") `shouldBe` Just "bug"
+            normalizeOptionalFeedbackText (Just " P2 ") `shouldBe` Just "P2"
+            normalizeOptionalFeedbackText (Just " user@example.com ") `shouldBe` Just "user@example.com"
+
+        it "drops explicit blank feedback metadata values instead of storing ambiguous empty strings" $ do
+            normalizeOptionalFeedbackText Nothing `shouldBe` Nothing
+            normalizeOptionalFeedbackText (Just "   ") `shouldBe` Nothing
+
     describe "normalizeInvitationStatus" $ do
         it "falls back to pending when missing" $ do
             normalizeInvitationStatus Nothing `shouldBe` "pending"
