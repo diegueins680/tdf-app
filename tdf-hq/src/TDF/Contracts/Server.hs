@@ -13,6 +13,7 @@ import           Data.Aeson ((.=), (.:))
 import           Data.Aeson.Types (withObject)
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Lazy as BL
+import           Data.Char (isAsciiLower, isDigit)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -130,21 +131,37 @@ validateContractPayload (A.Object payloadObj) =
     Nothing ->
       Right ("generic", A.Object (KM.insert "kind" (A.String "generic") payloadObj))
     Just (A.String rawKind) ->
-      let kindText = T.strip rawKind
-      in if T.null kindText
-           then invalidKind
-           else Right (kindText, A.Object (KM.insert "kind" (A.String kindText) payloadObj))
+      case normalizeContractKind rawKind of
+        Left err -> Left err
+        Right kindText ->
+          Right (kindText, A.Object (KM.insert "kind" (A.String kindText) payloadObj))
     Just _ ->
       invalidKind
   where
     invalidKind =
       Left err400
-        { errBody = "Contract payload kind must be a non-empty string"
+        { errBody = "Contract payload kind must be a non-empty slug using ASCII letters, numbers, hyphens, or underscores"
         }
 validateContractPayload _ =
   Left err400
     { errBody = "Contract payload must be a JSON object"
     }
+
+normalizeContractKind :: Text -> Either ServerError Text
+normalizeContractKind rawKind
+  | T.null kindText =
+      Left err400
+        { errBody = "Contract payload kind must be a non-empty slug using ASCII letters, numbers, hyphens, or underscores"
+        }
+  | T.all validKindChar kindText =
+      Right kindText
+  | otherwise =
+      Left err400
+        { errBody = "Contract payload kind must be a non-empty slug using ASCII letters, numbers, hyphens, or underscores"
+        }
+  where
+    kindText = T.toLower (T.strip rawKind)
+    validKindChar c = isAsciiLower c || isDigit c || c == '-' || c == '_'
 
 renderContractLatex :: StoredContract -> Text
 renderContractLatex StoredContract{..} =

@@ -386,7 +386,7 @@ main = hspec $ do
         it "requires object payloads and normalizes the stored contract kind" $ do
             validateContractPayload
                 (A.object
-                    [ "kind" .= ("  event_vendor_contract  " :: Text)
+                    [ "kind" .= ("  Event_Vendor_Contract  " :: Text)
                     , "amountCents" .= (25000 :: Int)
                     ]
                 )
@@ -416,9 +416,10 @@ main = hspec $ do
                     Right value ->
                         expectationFailure ("Expected invalid contract payload to be rejected, got: " <> show value)
             assertInvalid (A.String "not-an-object") "Contract payload must be a JSON object"
-            assertInvalid (A.object ["kind" .= ("" :: Text)]) "Contract payload kind must be a non-empty string"
-            assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty string"
-            assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty string"
+            assertInvalid (A.object ["kind" .= ("" :: Text)]) "Contract payload kind must be a non-empty slug"
+            assertInvalid (A.object ["kind" .= ("event vendor" :: Text)]) "Contract payload kind must be a non-empty slug"
+            assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
+            assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty slug"
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do
