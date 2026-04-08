@@ -3030,7 +3030,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides result-only summaries when the current view has no registrations', async () => {
+  it('keeps the first-run empty state focused on onboarding guidance instead of list actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
     const container = document.createElement('div');
@@ -3056,7 +3056,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Pendientes: 0');
       expect(container.textContent).not.toContain('Canceladas: 0');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
-      expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
+      expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Refrescar lista')).toBe(false);
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),

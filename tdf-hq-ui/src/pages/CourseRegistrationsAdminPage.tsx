@@ -724,6 +724,7 @@ export default function CourseRegistrationsAdminPage() {
     && !cohortsQuery.isError
     && !hasCustomFilters
     && !hasVisibleRegistrations;
+  const showListRefreshAction = !showInitialFilterGuidance;
   const limitToggleLabel = showAdvancedFilters
     ? 'Ocultar límite'
     : limit !== DEFAULT_LIMIT
@@ -1599,17 +1600,19 @@ export default function CourseRegistrationsAdminPage() {
         <Typography variant="h4" fontWeight={700}>
           Inscripciones de cursos
         </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={handleRefresh}
-            disabled={regsQuery.isFetching}
-          >
-            Refrescar lista
-          </Button>
-        </Stack>
+        {showListRefreshAction && (
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleRefresh}
+              disabled={regsQuery.isFetching}
+            >
+              Refrescar lista
+            </Button>
+          </Stack>
+        )}
       </Stack>
 
       {pageFlash && <Alert severity={pageFlash.severity}>{pageFlash.message}</Alert>}
