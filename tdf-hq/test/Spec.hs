@@ -63,6 +63,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    validateRsvpStatus,
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
  )
@@ -93,6 +94,22 @@ main = hspec $ do
 
         it "treats blank strings as pending" $ do
             normalizeInvitationStatus (Just "   ") `shouldBe` "pending"
+
+    describe "validateRsvpStatus" $ do
+        it "trims and canonicalizes supported RSVP states" $ do
+            validateRsvpStatus " Accepted " `shouldBe` Right "accepted"
+            validateRsvpStatus "DECLINED" `shouldBe` Right "declined"
+            validateRsvpStatus "maybe" `shouldBe` Right "maybe"
+
+        it "rejects blank or unknown RSVP states instead of persisting arbitrary labels" $ do
+            let assertInvalid raw = case validateRsvpStatus raw of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "accepted, declined, maybe"
+                    Right value ->
+                        expectationFailure ("Expected invalid RSVP status to be rejected, got " <> show value)
+            assertInvalid "   "
+            assertInvalid "interested"
 
     describe "normalizeArtistGenres" $ do
         it "trims genres, drops blanks, and deduplicates case-insensitively" $ do

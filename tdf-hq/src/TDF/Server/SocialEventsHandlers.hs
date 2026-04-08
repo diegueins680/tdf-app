@@ -6,6 +6,7 @@
 
 module TDF.Server.SocialEventsHandlers
   ( socialEventsServer
+  , validateRsvpStatus
   , normalizeInvitationStatus
   , normalizeArtistGenres
   , parseInvitationIdsEither
@@ -1035,6 +1036,7 @@ socialEventsServer user = eventsServer
       eventKey <- parseKeyOr400 "event" eventIdStr
       mEvent <- liftIO $ runSqlPool (get eventKey) envPool
       when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
+      statusVal <- either throwError pure (validateRsvpStatus (rsvpStatus dto))
       partyIdVal <-
         case normalizePositivePartyIdText (rsvpPartyId dto) of
           Nothing -> throwError err400 { errBody = "rsvpPartyId must be a positive integer" }
@@ -1049,7 +1051,7 @@ socialEventsServer user = eventsServer
           key <- liftIO $ runSqlPool (insert EventRsvp
             { eventRsvpEventId = eventKey
             , eventRsvpPartyId = partyIdVal
-            , eventRsvpStatus = rsvpStatus dto
+            , eventRsvpStatus = statusVal
             , eventRsvpMetadata = Nothing
             , eventRsvpCreatedAt = now
             , eventRsvpUpdatedAt = now
@@ -1057,17 +1059,19 @@ socialEventsServer user = eventsServer
           pure dto
             { rsvpId = Just (renderKeyText key)
             , rsvpPartyId = partyIdVal
+            , rsvpStatus = statusVal
             , rsvpCreatedAt = Just now
             , rsvpUpdatedAt = Just now
             }
         (Entity existingKey existing : _) -> do
           liftIO $ runSqlPool (update existingKey
-            [ EventRsvpStatus =. rsvpStatus dto
+            [ EventRsvpStatus =. statusVal
             , EventRsvpUpdatedAt =. now
             ]) envPool
           pure dto
             { rsvpId = Just (renderKeyText existingKey)
             , rsvpPartyId = partyIdVal
+            , rsvpStatus = statusVal
             , rsvpCreatedAt = Just (eventRsvpCreatedAt existing)
             , rsvpUpdatedAt = Just now
             }
@@ -2076,6 +2080,14 @@ parseFollowerQueryParamEither mFollower =
       case normalizePositivePartyIdText rawFollower of
         Nothing -> Left err400 { errBody = "follower query param must be a positive integer" }
         Just normalized -> Right normalized
+
+validateRsvpStatus :: T.Text -> Either ServerError T.Text
+validateRsvpStatus raw =
+  case T.toLower (T.strip raw) of
+    "accepted" -> Right "accepted"
+    "declined" -> Right "declined"
+    "maybe" -> Right "maybe"
+    _ -> Left err400 { errBody = "rsvpStatus must be one of: accepted, declined, maybe" }
 
 -- | Normalize invitation status to a lowercase, non-empty value.
 normalizeInvitationStatus :: Maybe T.Text -> T.Text
