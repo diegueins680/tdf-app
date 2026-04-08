@@ -24,7 +24,7 @@ import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, isPrefixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
-import           Data.Char (isDigit, isAlphaNum, isSpace, toLower)
+import           Data.Char (isDigit, isAlphaNum, isAsciiUpper, isSpace, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
@@ -4564,6 +4564,7 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
   when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
     throwError err400 { errBody = "roleTag and headline are required" }
   when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
+  currency <- either throwError pure (validateServiceAdCurrency sacCurrency)
   now <- liftIO getCurrentTime
   pool <- asks envPool
   when (isNothing sacServiceCatalogId) $ throwError err400 { errBody = "serviceCatalogId is required" }
@@ -4573,8 +4574,7 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
     case validateServiceMarketplaceCatalog mCatalog of
       Left serverErr -> liftIO $ throwIO serverErr
       Right _ -> pure ()
-  let currency = fromMaybe "USD" (normalizeOptionalInput sacCurrency)
-      slotMinutes = max 15 (fromMaybe 60 sacSlotMinutes)
+  let slotMinutes = max 15 (fromMaybe 60 sacSlotMinutes)
       record = ServiceAd
         { serviceAdProviderPartyId = auPartyId user
         , serviceAdServiceCatalogId = catalogKey
@@ -5320,6 +5320,18 @@ validateServiceMarketplaceCatalog (Just catalog)
       Left err409 { errBody = "Service catalog is inactive" }
   | otherwise =
       Right (serviceCatalogKind catalog)
+
+validateServiceAdCurrency :: Maybe Text -> Either ServerError Text
+validateServiceAdCurrency Nothing = Right "USD"
+validateServiceAdCurrency (Just rawCurrency) =
+  case normalizeOptionalInput (Just rawCurrency) of
+    Nothing ->
+      Left err400 { errBody = "currency must be a 3-letter ISO code" }
+    Just currency ->
+      let normalized = T.toUpper currency
+      in if T.length normalized == 3 && T.all isAsciiUpper normalized
+           then Right normalized
+           else Left err400 { errBody = "currency must be a 3-letter ISO code" }
 
 requiresEngineer :: Maybe Text -> Bool
 requiresEngineer Nothing = False

@@ -20,6 +20,7 @@ import TDF.Server
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
     , parsePaymentMethodText
+    , validateServiceAdCurrency
     , validateCmsContentStatus
     , validateCourseNonNegativeField
     , validateCourseRegistrationContactChannels
@@ -194,6 +195,23 @@ spec = describe "TDF.Server helpers" $ do
             expectCatalogError (validateServiceMarketplaceCatalog (Just (mkCatalog Rehearsal False))) $ \serverErr -> do
                 errHTTPCode serverErr `shouldBe` 409
                 BL8.unpack (errBody serverErr) `shouldContain` "Service catalog is inactive"
+
+    describe "validateServiceAdCurrency" $ do
+        it "defaults omitted values to USD and normalizes explicit ISO codes" $ do
+            validateServiceAdCurrency Nothing `shouldBe` Right "USD"
+            validateServiceAdCurrency (Just " usd ") `shouldBe` Right "USD"
+            validateServiceAdCurrency (Just "eur") `shouldBe` Right "EUR"
+
+        it "rejects blank or malformed ad currencies instead of storing ambiguous pricing data" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "3-letter ISO code"
+                    Right currencyVal ->
+                        expectationFailure ("Expected invalid ad currency error, got: " <> show currencyVal)
+            assertInvalid (validateServiceAdCurrency (Just "   "))
+            assertInvalid (validateServiceAdCurrency (Just "usdollars"))
+            assertInvalid (validateServiceAdCurrency (Just "12$"))
 
     describe "parsePaymentMethodText" $ do
         it "defaults missing or blank payment methods to OtherM while normalizing supported values" $ do
