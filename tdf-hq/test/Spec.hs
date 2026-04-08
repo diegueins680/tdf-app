@@ -42,6 +42,10 @@ import TDF.ServerRadio (validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel)
 import TDF.Contracts.Server (validateContractId, validateContractPayload)
+import TDF.ServerInternships
+    ( validateInternProjectStatusInput,
+      validateOptionalInternProjectStatusInput,
+      validateOptionalInternTaskStatusInput )
 import TDF.ServerProposals (validateTemplateKey)
 import TDF.ServerFeedback (normalizeOptionalFeedbackText)
 import TDF.Server.SocialEventsHandlers (
@@ -437,6 +441,34 @@ main = hspec $ do
             assertInvalid (A.object ["kind" .= ("event vendor" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty slug"
+
+    describe "internship status validation" $ do
+        it "defaults omitted project statuses and normalizes supported explicit values" $ do
+            validateInternProjectStatusInput Nothing `shouldBe` Right "active"
+            validateInternProjectStatusInput (Just " COMPLETED ") `shouldBe` Right "completed"
+            validateOptionalInternProjectStatusInput Nothing `shouldBe` Right Nothing
+            validateOptionalInternProjectStatusInput (Just " paused ")
+                `shouldBe` Right (Just "paused")
+            validateOptionalInternTaskStatusInput Nothing `shouldBe` Right Nothing
+            validateOptionalInternTaskStatusInput (Just " DOING ")
+                `shouldBe` Right (Just "doing")
+
+        it "rejects blank or unknown internship statuses instead of storing values the UI cannot map" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship status to be rejected, got " <> show value)
+            assertInvalid
+                (validateInternProjectStatusInput (Just "   "))
+                "projectStatus must be one of: active, paused, completed"
+            assertInvalid
+                (validateOptionalInternProjectStatusInput (Just "archived"))
+                "projectStatus must be one of: active, paused, completed"
+            assertInvalid
+                (validateOptionalInternTaskStatusInput (Just "review"))
+                "taskStatus must be one of: todo, doing, blocked, done"
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do

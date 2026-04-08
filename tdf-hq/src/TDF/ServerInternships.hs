@@ -11,12 +11,14 @@ import           Control.Monad              (unless, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
+import qualified Data.ByteString.Lazy       as BL
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust)
 import qualified Data.Map.Strict            as Map
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
+import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (diffUTCTime, getCurrentTime)
 import           Database.Persist           (Entity(..), Key, SelectOpt(..), delete, getBy, getEntity, getJustEntity, insert, selectFirst, selectList, update, (==.), (=.), (<-.))
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
@@ -29,6 +31,41 @@ import           TDF.Auth                   (AuthedUser(..))
 import           TDF.DB                     (Env(..))
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra            as ME
+
+internProjectStatuses :: [Text]
+internProjectStatuses = ["active", "paused", "completed"]
+
+internTaskStatuses :: [Text]
+internTaskStatuses = ["todo", "doing", "blocked", "done"]
+
+validateInternProjectStatusInput :: Maybe Text -> Either ServerError Text
+validateInternProjectStatusInput Nothing = Right "active"
+validateInternProjectStatusInput (Just rawStatus) =
+  validateInternStatusValue "projectStatus" internProjectStatuses rawStatus
+
+validateOptionalInternProjectStatusInput :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalInternProjectStatusInput Nothing = Right Nothing
+validateOptionalInternProjectStatusInput (Just rawStatus) =
+  Just <$> validateInternStatusValue "projectStatus" internProjectStatuses rawStatus
+
+validateOptionalInternTaskStatusInput :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalInternTaskStatusInput Nothing = Right Nothing
+validateOptionalInternTaskStatusInput (Just rawStatus) =
+  Just <$> validateInternStatusValue "taskStatus" internTaskStatuses rawStatus
+
+validateInternStatusValue :: Text -> [Text] -> Text -> Either ServerError Text
+validateInternStatusValue fieldName allowedStatuses rawStatus
+  | T.null canonical =
+      Left err400 { errBody = invalidStatusMessage }
+  | canonical `elem` allowedStatuses =
+      Right canonical
+  | otherwise =
+      Left err400 { errBody = invalidStatusMessage }
+  where
+    canonical = T.toLower (T.strip rawStatus)
+    invalidStatusMessage =
+      BL.fromStrict . TE.encodeUtf8 $
+        fieldName <> " must be one of: " <> T.intercalate ", " allowedStatuses
 
 internshipsServer
   :: ( MonadReader Env m
@@ -168,7 +205,7 @@ internshipsServer user =
     createProjectH InternProjectCreate{..} = do
       ensureAdmin
       now <- liftIO getCurrentTime
-      let statusVal = fromMaybe "active" ipcStatus
+      statusVal <- either throwError pure (validateInternProjectStatusInput ipcStatus)
       ent <- withPool $ do
         newId <- insert ME.InternProject
           { ME.internProjectTitle       = ipcTitle
@@ -188,10 +225,11 @@ internshipsServer user =
       ensureAdmin
       projectKey <- parseKey @ME.InternProject rawId
       now <- liftIO getCurrentTime
+      statusUpdate <- either throwError pure (validateOptionalInternProjectStatusInput ipuStatus)
       let updates = catMaybes
             [ fmap (ME.InternProjectTitle =.) ipuTitle
             , fmap (ME.InternProjectDescription =.) ipuDescription
-            , fmap (ME.InternProjectStatus =.) ipuStatus
+            , fmap (ME.InternProjectStatus =.) statusUpdate
             , fmap (ME.InternProjectStartAt =.) ipuStartAt
             , fmap (ME.InternProjectDueAt =.) ipuDueAt
             ]
@@ -256,6 +294,7 @@ internshipsServer user =
           isAdminUser = isAdmin user
       unless (isAdminUser || isOwner) $
         throwError err403 { errBody = "Only admins or assignees can update tasks" }
+      statusUpdate <- either throwError pure (validateOptionalInternTaskStatusInput ituStatus)
       let safeProgress = fmap (clamp 0 100) ituProgress
           adminUpdates =
             [ fmap (ME.InternTaskTitle =.) ituTitle
@@ -264,7 +303,7 @@ internshipsServer user =
             , fmap (ME.InternTaskDueAt =.) ituDueAt
             ]
           commonUpdates =
-            [ fmap (ME.InternTaskStatus =.) ituStatus
+            [ fmap (ME.InternTaskStatus =.) statusUpdate
             , fmap (ME.InternTaskProgress =.) safeProgress
             ]
           updates =
