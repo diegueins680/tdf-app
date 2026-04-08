@@ -291,6 +291,49 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('hides the page-level missing-contact warning when every visible row already needs the same fix', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 201,
+        partyId: 21,
+        username: 'ada-no-contact',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 202,
+        partyId: 22,
+        username: 'grace-no-contact',
+        primaryEmail: '   ',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).not.toContain(
+          'Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.',
+        );
+        expect(container.textContent).not.toContain('2 sin contacto');
+        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(2);
+        expect(getButtonsByText(container, 'Comunicación')).toHaveLength(0);
+
+        const firstRow = getRowByUserId(container, 201);
+        const secondRow = getRowByUserId(container, 202);
+        expect(firstRow.textContent).toContain('Falta contacto');
+        expect(secondRow.textContent).toContain('Falta contacto');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the first admin-user view focused on the lone row instead of showing list search chrome', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

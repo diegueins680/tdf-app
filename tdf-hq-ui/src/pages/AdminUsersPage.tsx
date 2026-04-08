@@ -86,6 +86,7 @@ export default function AdminUsersPage() {
     () => visibleUsers.filter((user) => !hasUserContactChannel(user)).length,
     [visibleUsers],
   );
+  const visibleUsersWithContactCount = visibleUsers.length - visibleUsersMissingContactCount;
   const visibleUsersMissingContactVerb = visibleUsersMissingContactCount === 1 ? 'sigue' : 'siguen';
   const totalUsersCount = usersQuery.data?.length ?? 0;
   const hasUsers = totalUsersCount > 0;
@@ -95,7 +96,8 @@ export default function AdminUsersPage() {
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = hasMultipleUsers || hasActiveSearch;
   const showVisibleCountChip = visibleUsers.length > 0 && (hasMultipleUsers || isFiltered);
-  const showMissingContactChip = visibleUsersMissingContactCount > 1;
+  const showMixedContactStateGuidance = visibleUsersMissingContactCount > 0 && visibleUsersWithContactCount > 0;
+  const showMissingContactChip = showMixedContactStateGuidance && visibleUsersMissingContactCount > 1;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showClearSearchAction = hasUsers && hasActiveSearch && visibleUsers.length === 0;
 
@@ -170,7 +172,7 @@ export default function AdminUsersPage() {
               </Tooltip>
             </Stack>
           </Stack>
-          {hasUsers && visibleUsersMissingContactCount > 0 && (
+          {hasUsers && showMixedContactStateGuidance && (
             <Typography variant="body2" color="text.secondary">
               Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.
               {` ${visibleUsersMissingContactCount} usuario${visibleUsersMissingContactCount === 1 ? '' : 's'} `}
