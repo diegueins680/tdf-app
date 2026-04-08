@@ -612,7 +612,7 @@ describe('PartiesPage', () => {
     }
   });
 
-  it('renames the user-creation flow when the contact still needs an email first', async () => {
+  it('replaces the missing-email user action with one clear contact-completion step', async () => {
     listPartiesMock.mockResolvedValue([
       {
         partyId: 1,
@@ -643,8 +643,12 @@ describe('PartiesPage', () => {
       });
 
       await waitForExpectation(() => {
-        expect(getMenuItemByText(document.body, 'Editar contacto')).toBeTruthy();
-        expect(getMenuItemByText(document.body, 'Completar correo y crear usuario')).toBeTruthy();
+        expect(getMenuItemByText(document.body, 'Completar contacto')).toBeTruthy();
+        expect(
+          Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+            (element) => buttonText(element) === 'Editar contacto',
+          ),
+        ).toBe(false);
         expect(
           Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
             (element) => buttonText(element) === 'Crear usuario y enviar contraseña',
@@ -653,17 +657,17 @@ describe('PartiesPage', () => {
       });
 
       await act(async () => {
-        clickElement(getMenuItemByText(document.body, 'Completar correo y crear usuario'));
+        clickElement(getMenuItemByText(document.body, 'Completar contacto'));
         await flushPromises();
         await flushPromises();
       });
 
       await waitForExpectation(() => {
-        expect(document.body.textContent).toContain('Completar correo y crear usuario para Grace Hopper');
+        expect(document.body.textContent).toContain('Editar Grace Hopper');
         expect(document.body.textContent).toContain(
-          'Este correo se guardará en el contacto y se usará para enviar la contraseña temporal.',
+          'Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones.',
         );
-        expect(getButtonsByText(document.body, 'Guardar correo y crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(document.body, 'Guardar')).toHaveLength(1);
       });
     } finally {
       await cleanup();

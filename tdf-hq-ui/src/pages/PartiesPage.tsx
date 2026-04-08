@@ -165,7 +165,7 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            helperText="Se usa como contacto principal y para crear accesos de usuario."
+            helperText="Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones."
           />
           <TextField label="Instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
           <TextField label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -388,9 +388,8 @@ export default function PartiesPage() {
     }
   };
 
-  const createUserActionLabel = hasPartyPrimaryEmail(actionsMenuTarget?.party)
-    ? 'Crear usuario y enviar contraseña'
-    : 'Completar correo y crear usuario';
+  const missingPrimaryEmail = !hasPartyPrimaryEmail(actionsMenuTarget?.party);
+  const editContactActionLabel = missingPrimaryEmail ? 'Completar contacto' : 'Editar contacto';
 
   return (
     <Stack gap={3}>
@@ -553,12 +552,12 @@ export default function PartiesPage() {
       >
         <MenuItem onClick={() => runPartyMenuAction((party) => setEditing(party))}>
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
-          Editar contacto
+          {editContactActionLabel}
         </MenuItem>
-        {!actionsMenuTarget?.party.hasUserAccount && (
+        {!actionsMenuTarget?.party.hasUserAccount && !missingPrimaryEmail && (
           <MenuItem onClick={() => runPartyMenuAction((party) => setUserDialogParty(party))}>
             <PersonAddAltIcon fontSize="small" sx={{ mr: 1 }} />
-            {createUserActionLabel}
+            Crear usuario y enviar contraseña
           </MenuItem>
         )}
         {canManageRoles && actionsMenuTarget?.party.hasUserAccount && (
