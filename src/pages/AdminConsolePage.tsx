@@ -169,6 +169,7 @@ export default function AdminConsolePage() {
   const isUsersLoading = usersQuery.isLoading;
   const usersError = usersQuery.isError ? (usersQuery.error as Error).message : null;
   const showUsersTable = isUsersLoading || users.length > 0;
+  const showAuditTable = auditQuery.isLoading || audits.length > 0;
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
@@ -404,43 +405,51 @@ export default function AdminConsolePage() {
             {(auditQuery.error as Error).message}
           </Alert>
         )}
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Fecha</TableCell>
-                <TableCell>Entidad</TableCell>
-                <TableCell>Acción</TableCell>
-                <TableCell>Actor</TableCell>
-                <TableCell>Detalle</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {audits.map((entry: AuditLogEntry, index: number) => (
-                <TableRow key={`${entry.entity}-${entry.entityId}-${index}`}>
-                  <TableCell>{formatDate(entry.createdAt)}</TableCell>
-                  <TableCell>{entry.entity} · {entry.entityId}</TableCell>
-                  <TableCell>{entry.action}</TableCell>
-                  <TableCell>{entry.actorId ?? 'Sistema'}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
-                      {entry.diff ?? '—'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {audits.length === 0 && (
+        {showAuditTable ? (
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={5}>
-                    <Typography variant="body2" align="center" color="text.secondary" sx={{ py: 2 }}>
-                      Sin eventos de auditoría todavía.
-                    </Typography>
-                  </TableCell>
+                  <TableCell>Fecha</TableCell>
+                  <TableCell>Entidad</TableCell>
+                  <TableCell>Acción</TableCell>
+                  <TableCell>Actor</TableCell>
+                  <TableCell>Detalle</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {audits.map((entry: AuditLogEntry, index: number) => (
+                  <TableRow key={`${entry.entity}-${entry.entityId}-${index}`}>
+                    <TableCell>{formatDate(entry.createdAt)}</TableCell>
+                    <TableCell>{entry.entity} · {entry.entityId}</TableCell>
+                    <TableCell>{entry.action}</TableCell>
+                    <TableCell>{entry.actorId ?? 'Sistema'}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
+                        {entry.diff ?? '—'}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {auditQuery.isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <Typography variant="body2" align="center" color="text.secondary" sx={{ py: 2 }}>
+                        Cargando auditoría…
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : !auditQuery.isError ? (
+          <Box sx={{ px: 2, pb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Todavía no hay eventos de auditoría. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo.
+            </Typography>
+          </Box>
+        ) : null}
       </Paper>
 
       <Dialog open={!!editingUser} onClose={handleCloseDialog} fullWidth maxWidth="sm">

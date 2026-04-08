@@ -178,6 +178,26 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
   });
 
+  it('replaces the empty audit table with first-run guidance instead of blank table chrome', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Todavía no hay eventos de auditoría\. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Entidad$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Actor$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
+  });
+
   it('shows the system username only when it adds new identity context in the admin table', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
