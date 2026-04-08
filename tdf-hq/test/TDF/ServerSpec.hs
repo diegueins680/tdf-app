@@ -29,6 +29,7 @@ import TDF.Server
     , validateCourseRegistrationPhoneE164
     , validateOptionalCourseNonNegativeField
     , validateOptionalPositiveIdField
+    , validatePublicBookingContactDetails
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     )
@@ -394,6 +395,24 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "email inválido"
                 Right emailVal ->
                     expectationFailure ("Expected invalid course-registration email to be rejected, got: " <> show emailVal)
+
+    describe "validatePublicBookingContactDetails" $ do
+        it "normalizes the public-booking email and optional phone before party creation" $
+            validatePublicBookingContactDetails
+                " User@Example.com "
+                (Just " +593 99 123 4567 ")
+                `shouldBe` Right ("user@example.com", Just "+593991234567")
+
+        it "rejects invalid explicit public-booking contact data instead of silently degrading the booking" $ do
+            let assertInvalid rawEmail rawPhone expected = case validatePublicBookingContactDetails rawEmail rawPhone of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expected
+                    Right contactVal ->
+                        expectationFailure ("Expected invalid public-booking contact data to be rejected, got: " <> show contactVal)
+            assertInvalid "   " Nothing "email requerido"
+            assertInvalid "not-an-email" Nothing "email inválido"
+            assertInvalid "user@example.com" (Just "call me at 099 123 4567") "phoneE164 inválido"
 
     describe "validateCourseRegistrationContactChannels" $ do
         it "accepts registrations with at least one contact channel" $ do

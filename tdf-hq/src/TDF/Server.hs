@@ -3444,6 +3444,20 @@ validateWhatsAppPhoneInput rawPhone =
     invalidWhatsAppPhone =
       Left err400 { errBody = "Número de WhatsApp inválido." }
 
+validatePublicBookingContactDetails :: Text -> Maybe Text -> Either ServerError (Text, Maybe Text)
+validatePublicBookingContactDetails rawEmail rawPhone = do
+  emailClean <-
+    case cleanOptional (Just rawEmail) of
+      Nothing ->
+        Left err400 { errBody = "email requerido" }
+      Just _ -> do
+        normalizedEmail <- validateCourseRegistrationEmail (Just rawEmail)
+        case normalizedEmail of
+          Just emailVal -> Right emailVal
+          Nothing -> Left err400 { errBody = "email requerido" }
+  phoneClean <- validateCourseRegistrationPhoneE164 rawPhone
+  pure (emailClean, phoneClean)
+
 validateCourseRegistrationEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationEmail Nothing = Right Nothing
 validateCourseRegistrationEmail (Just rawEmail) =
@@ -4943,7 +4957,9 @@ courseCalendarBookings = do
 createPublicBooking :: PublicBookingReq -> AppM BookingDTO
 createPublicBooking PublicBookingReq{..} = do
   when (T.null (T.strip pbFullName)) (throwBadRequest "nombre requerido")
-  when (T.null (T.strip pbEmail)) (throwBadRequest "email requerido")
+  (emailClean, phoneClean) <-
+    either throwError pure $
+      validatePublicBookingContactDetails pbEmail pbPhone
   let serviceTypeClean = normalizeOptionalInput (Just pbServiceType)
   when (isNothing serviceTypeClean) (throwBadRequest "serviceType requerido")
   engineerIdClean <-
@@ -4956,7 +4972,7 @@ createPublicBooking PublicBookingReq{..} = do
   let durationMins = max 30 (fromMaybe 60 pbDurationMinutes)
       endsAt       = addUTCTime (fromIntegral durationMins * 60) pbStartsAt
       notesClean   = normalizeOptionalInput pbNotes
-  (partyId, _) <- ensurePartyWithAccount (Just (T.strip pbFullName)) (T.strip pbEmail) pbPhone
+  (partyId, _) <- ensurePartyWithAccount (Just (T.strip pbFullName)) emailClean phoneClean
   Env pool _ <- ask
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) pbStartsAt endsAt
