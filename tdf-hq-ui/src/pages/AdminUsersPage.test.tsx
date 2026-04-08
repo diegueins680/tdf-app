@@ -76,7 +76,9 @@ const renderPage = async (container: HTMLElement) => {
 const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
 
 const getButtonsByText = (root: ParentNode, labelText: string) =>
-  Array.from(root.querySelectorAll<HTMLElement>('button, a')).filter((element) => buttonText(element) === labelText);
+  Array.from(root.querySelectorAll<HTMLElement>('button, a')).filter(
+    (element) => buttonText(element) === labelText || element.getAttribute('aria-label') === labelText,
+  );
 
 const clickButton = async (button: HTMLElement) => {
   await act(async () => {
@@ -461,6 +463,7 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Mostrando 1 de 3');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(container.querySelector('[data-testid="admin-user-row-101"]')).toBeNull();
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
         expect(container.querySelector('[data-testid="admin-user-row-103"]')).toBeNull();

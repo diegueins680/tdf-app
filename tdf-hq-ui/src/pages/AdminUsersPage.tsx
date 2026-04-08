@@ -8,11 +8,13 @@ import {
   Chip,
   FormControlLabel,
   IconButton,
+  InputAdornment,
   Stack,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
+import ClearIcon from '@mui/icons-material/Clear';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
@@ -78,6 +80,10 @@ export default function AdminUsersPage() {
     void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
   };
 
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
   const visibleUsers = useMemo(
     () => (usersQuery.data ?? []).filter((user) => matchesUserQuery(user, deferredSearchQuery)),
     [deferredSearchQuery, usersQuery.data],
@@ -99,7 +105,7 @@ export default function AdminUsersPage() {
   const showMixedContactStateGuidance = visibleUsersMissingContactCount > 0 && visibleUsersWithContactCount > 0;
   const showMissingContactChip = showMixedContactStateGuidance && visibleUsersMissingContactCount > 1;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
-  const showClearSearchAction = hasUsers && hasActiveSearch && visibleUsers.length === 0;
+  const showClearSearchAction = showSearchField && hasActiveSearch;
 
   return (
     <>
@@ -121,6 +127,15 @@ export default function AdminUsersPage() {
                   size="small"
                   fullWidth
                   placeholder="Usuario, nombre, ID, contacto o acceso"
+                  InputProps={{
+                    endAdornment: showClearSearchAction ? (
+                      <InputAdornment position="end">
+                        <IconButton size="small" aria-label="Limpiar búsqueda" onClick={handleClearSearch}>
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null,
+                  }}
                 />
               )}
               {showSingleUserGuidance && (
@@ -191,18 +206,11 @@ export default function AdminUsersPage() {
               </Typography>
             )}
             {usersQuery.data?.length && visibleUsers.length === 0 ? (
-              <Stack spacing={1} alignItems="flex-start">
-                <Typography color="text.secondary">
-                  {activeSearchSummary
-                    ? `No hay coincidencias para "${activeSearchSummary}".`
-                    : 'No hay coincidencias para este filtro.'}
-                </Typography>
-                {showClearSearchAction && (
-                  <Button size="small" onClick={() => setSearchQuery('')}>
-                    Limpiar búsqueda
-                  </Button>
-                )}
-              </Stack>
+              <Typography color="text.secondary">
+                {activeSearchSummary
+                  ? `No hay coincidencias para "${activeSearchSummary}".`
+                  : 'No hay coincidencias para este filtro.'}
+              </Typography>
             ) : null}
             {visibleUsers.length ? (
               <Stack spacing={1.5}>
