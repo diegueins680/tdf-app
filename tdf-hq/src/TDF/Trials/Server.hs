@@ -413,6 +413,55 @@ validatePublicSubjectIdInput subjectIdInt
   | otherwise =
       Right subjectIdInt
 
+validateOptionalDriveLink :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalDriveLink Nothing = Right Nothing
+validateOptionalDriveLink (Just rawDriveLink) =
+  case cleanOptional (Just rawDriveLink) of
+    Nothing -> Right Nothing
+    Just driveLinkVal ->
+      if isValidHttpUrl driveLinkVal
+        then Right (Just driveLinkVal)
+        else Left err400 { errBody = "driveLink must be an absolute http(s) URL" }
+
+isValidHttpUrl :: Text -> Bool
+isValidHttpUrl rawUrl
+  | T.any isSpace trimmed = False
+  | "http://" `T.isPrefixOf` lowerUrl = hasValidAuthority (T.drop 7 trimmed)
+  | "https://" `T.isPrefixOf` lowerUrl = hasValidAuthority (T.drop 8 trimmed)
+  | otherwise = False
+  where
+    trimmed = T.strip rawUrl
+    lowerUrl = T.toLower trimmed
+
+    hasValidAuthority remainder =
+      let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
+      in validateAuthority authority
+
+    validateAuthority rawAuthority
+      | T.null rawAuthority = False
+      | "[" `T.isPrefixOf` rawAuthority =
+          let (hostPart, rest) = T.breakOn "]" rawAuthority
+              host = T.drop 1 hostPart
+          in not (T.null rest)
+               && validateHost host
+               && validatePortSuffix (T.drop 1 rest)
+      | T.count ":" rawAuthority > 1 = False
+      | otherwise =
+          let (host, portSuffix) = T.breakOn ":" rawAuthority
+          in validateHost host && validatePortSuffix portSuffix
+
+    validateHost host =
+      not (T.null host)
+        && not (T.isPrefixOf "." host)
+        && not (T.isSuffixOf "." host)
+
+    validatePortSuffix suffix
+      | T.null suffix = True
+      | ":" `T.isPrefixOf` suffix =
+          let port = T.drop 1 suffix
+          in not (T.null port) && T.all isDigit port
+      | otherwise = False
+
 validatePublicInterestInput :: InterestIn -> Either ServerError InterestIn
 validatePublicInterestInput (InterestIn rawInterestType rawSubjectId details driveLink) =
   case cleanOptional (Just rawInterestType) of
@@ -421,7 +470,8 @@ validatePublicInterestInput (InterestIn rawInterestType rawSubjectId details dri
     Just interestTypeVal ->
       do
         subjectId <- traverse validatePublicSubjectIdInput rawSubjectId
-        Right (InterestIn interestTypeVal subjectId (cleanOptional details) (cleanOptional driveLink))
+        driveLinkVal <- validateOptionalDriveLink driveLink
+        Right (InterestIn interestTypeVal subjectId (cleanOptional details) driveLinkVal)
 
 validatePublicSubjectSelection :: Maybe Subject -> Either ServerError ()
 validatePublicSubjectSelection (Just subject)

@@ -143,6 +143,17 @@ spec = do
         Right _ ->
           expectationFailure "Expected invalid subjectId to be rejected"
 
+    it "rejects malformed drive links instead of storing ambiguous free-form text" $ do
+      let assertRejected rawDriveLink =
+            case validatePublicInterestInput (InterestIn "workshop" Nothing Nothing (Just rawDriveLink)) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "driveLink must be an absolute http(s) URL"
+              Right _ ->
+                expectationFailure "Expected invalid driveLink to be rejected"
+      assertRejected "folder-123"
+      assertRejected "https://example.com/shared file"
+
   describe "validatePublicSubjectIdInput" $ do
     it "accepts positive subject ids" $
       validatePublicSubjectIdInput 7 `shouldBe` Right 7
