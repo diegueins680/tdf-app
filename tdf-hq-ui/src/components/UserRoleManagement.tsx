@@ -22,6 +22,8 @@ import {
   OutlinedInput,
   CircularProgress,
   Alert,
+  Tooltip,
+  Typography,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -74,6 +76,16 @@ const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success'
 
 const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
 
+const normalizeContactValue = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+};
+
+const getContactLines = (user: Pick<NormalizedUser, 'email' | 'phone'>) =>
+  [normalizeContactValue(user.email), normalizeContactValue(user.phone)].filter(
+    (value): value is string => value != null,
+  );
+
 export default function UserRoleManagement() {
   const [users, setUsers] = useState<NormalizedUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +114,7 @@ export default function UserRoleManagement() {
       }));
       setUsers(normalized);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load users');
+      setError(err instanceof Error ? err.message : 'No se pudieron cargar los usuarios');
     } finally {
       setLoading(false);
     }
@@ -136,7 +148,7 @@ export default function UserRoleManagement() {
       setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, roles: selectedRoles } : u)));
       handleCloseDialog();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update roles');
+      setError(err instanceof Error ? err.message : 'No se pudieron actualizar los roles');
     } finally {
       setSaving(false);
     }
@@ -165,21 +177,36 @@ export default function UserRoleManagement() {
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell>Usuario</TableCell>
+              <TableCell>Contacto</TableCell>
+              <TableCell>Estado</TableCell>
               <TableCell>Roles</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
+            {users.map((user) => {
+              const contactLines = getContactLines(user);
+
+              return (
+                <TableRow key={user.id}>
                 <TableCell>{user.id}</TableCell>
                 <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email ?? '-'}</TableCell>
-                <TableCell>{user.phone ?? '-'}</TableCell>
+                <TableCell>
+                  {contactLines.length > 0 ? (
+                    <Box display="flex" flexDirection="column" gap={0.25}>
+                      {contactLines.map((line) => (
+                        <Typography key={`${user.id}-${line}`} variant="body2">
+                          {line}
+                        </Typography>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Sin email ni teléfono
+                    </Typography>
+                  )}
+                </TableCell>
                 <TableCell>
                   <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
                 </TableCell>
@@ -192,18 +219,26 @@ export default function UserRoleManagement() {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <IconButton size="small" color="primary" onClick={() => handleEditClick(user)} aria-label="edit roles">
-                    <EditIcon />
-                  </IconButton>
+                  <Tooltip title="Editar roles">
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => handleEditClick(user)}
+                      aria-label={`Editar roles de ${user.name}`}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
                 </TableCell>
-              </TableRow>
-            ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
 
       <Dialog open={editDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Roles for {selectedUser?.name}</DialogTitle>
+        <DialogTitle>Editar roles de {selectedUser?.name}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel id="roles-label">Roles</InputLabel>
@@ -231,10 +266,10 @@ export default function UserRoleManagement() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={saving}>
-            Cancel
+            Cancelar
           </Button>
           <Button onClick={() => void handleSaveRoles()} variant="contained" disabled={saving}>
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? 'Guardando...' : 'Guardar'}
           </Button>
         </DialogActions>
       </Dialog>
