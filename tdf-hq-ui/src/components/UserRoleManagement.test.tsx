@@ -111,6 +111,27 @@ describe('UserRoleManagement', () => {
     updateUserRolesMock.mockResolvedValue();
   });
 
+  it('replaces the blank first-run table with setup guidance for admins', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getUsersMock).toHaveBeenCalledTimes(1);
+        expect(container.textContent).toContain('Roles y permisos');
+        expect(container.textContent).toContain(
+          'Todavía no hay usuarios administrables. Cuando exista el primero, aquí aparecerán contacto, estado y roles para editar permisos desde una sola tabla.',
+        );
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.querySelectorAll('thead th')).toHaveLength(0);
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('consolidates contact details into one column so the admin table avoids repeated empty placeholders', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
@@ -145,21 +166,25 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['ID', 'Usuario', 'Contacto', 'Estado', 'Roles', 'Acciones']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles', 'Acciones']);
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
+        expect(adaRow.textContent).toContain('ID 101');
         expect(adaRow.textContent).toContain('ada@example.com');
         expect(adaRow.textContent).not.toContain('Sin email ni teléfono');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
+        expect(graceRow.textContent).toContain('ID 102');
         expect(graceRow.textContent).toContain('+593999000222');
         expect(graceRow.textContent).not.toContain('Sin email ni teléfono');
 
         const linusRow = getRowByName(container, 'Linus QA');
+        expect(linusRow.textContent).toContain('ID 103');
         expect(linusRow.textContent).toContain('linus@example.com');
         expect(linusRow.textContent).toContain('+593999000333');
 
         const missingContactRow = getRowByName(container, 'Sin Contacto');
+        expect(missingContactRow.textContent).toContain('ID 104');
         expect(missingContactRow.textContent).toContain('Sin email ni teléfono');
         expect(missingContactRow.textContent).not.toContain('--');
       });

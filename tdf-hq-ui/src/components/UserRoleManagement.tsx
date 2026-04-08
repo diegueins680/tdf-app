@@ -24,6 +24,7 @@ import {
   Alert,
   Tooltip,
   Typography,
+  Stack,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import type { SelectChangeEvent } from '@mui/material/Select';
@@ -172,70 +173,91 @@ export default function UserRoleManagement() {
 
   return (
     <Box p={3}>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Usuario</TableCell>
-              <TableCell>Contacto</TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell>Roles</TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => {
-              const contactLines = getContactLines(user);
+      {users.length === 0 ? (
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Stack spacing={1}>
+            <Typography variant="h6" fontWeight={700}>
+              Roles y permisos
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Todavía no hay usuarios administrables. Cuando exista el primero, aquí aparecerán contacto, estado y
+              roles para editar permisos desde una sola tabla.
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Usuario</TableCell>
+                <TableCell>Contacto</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell>Roles</TableCell>
+                <TableCell>Acciones</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => {
+                const contactLines = getContactLines(user);
 
-              return (
-                <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>
-                  {contactLines.length > 0 ? (
-                    <Box display="flex" flexDirection="column" gap={0.25}>
-                      {contactLines.map((line) => (
-                        <Typography key={`${user.id}-${line}`} variant="body2">
-                          {line}
+                return (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <Stack spacing={0.25}>
+                        <Typography variant="body2" fontWeight={600}>
+                          {user.name}
                         </Typography>
-                      ))}
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      Sin email ni teléfono
-                    </Typography>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
-                </TableCell>
-                <TableCell>
-                  <Box display="flex" gap={0.5} flexWrap="wrap">
-                    {user.roles.map((role) => (
-                      <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
-                    ))}
-                    {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Tooltip title="Editar roles">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleEditClick(user)}
-                      aria-label={`Editar roles de ${user.name}`}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                        <Typography variant="caption" color="text.secondary">
+                          ID {user.id}
+                        </Typography>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      {contactLines.length > 0 ? (
+                        <Box display="flex" flexDirection="column" gap={0.25}>
+                          {contactLines.map((line) => (
+                            <Typography key={`${user.id}-${line}`} variant="body2">
+                              {line}
+                            </Typography>
+                          ))}
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          Sin email ni teléfono
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      <Box display="flex" gap={0.5} flexWrap="wrap">
+                        {user.roles.map((role) => (
+                          <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
+                        ))}
+                        {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Editar roles">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => handleEditClick(user)}
+                          aria-label={`Editar roles de ${user.name}`}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       <Dialog open={editDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>Editar roles de {selectedUser?.name}</DialogTitle>
