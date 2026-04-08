@@ -36,6 +36,7 @@ import TDF.ServerExtra (
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validateSessionStatusInput,
+    validateSessionTimeRange,
     validateServiceCatalogCurrency,
     validateServiceCatalogCurrencyUpdate,
     validateServiceCatalogTaxBps,
@@ -145,6 +146,23 @@ spec = do
               expectationFailure ("Expected invalid session status error, got " <> show value)
       assertInvalid (validateSessionStatusInput (Just "   "))
       assertInvalid (validateSessionStatusInput (Just "live"))
+
+  describe "validateSessionTimeRange" $ do
+    it "accepts sessions whose end time is strictly after the start time" $ do
+      startAt <- getCurrentTime
+      let endAt = addUTCTime 3600 startAt
+      validateSessionTimeRange startAt endAt `shouldBe` Right ()
+
+    it "rejects zero-length or backwards sessions before they can be created or patched" $ do
+      startAt <- getCurrentTime
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "sessionEndAt must be after sessionStartAt"
+            Right value ->
+              expectationFailure ("Expected invalid session time range error, got " <> show value)
+      assertInvalid (validateSessionTimeRange startAt startAt)
+      assertInvalid (validateSessionTimeRange startAt (addUTCTime (-60) startAt))
 
   describe "normalizeServiceCatalogNameUpdate" $ do
     it "preserves omitted names and trims meaningful updates" $ do

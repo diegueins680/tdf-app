@@ -568,6 +568,7 @@ sessionsServer user =
       roomKeys <- traverse (parseKey @Room) (scRoomIds req)
       bandKey  <- traverse (parseKey @Band) (scBandId req)
       statusVal <- either throwError pure (validateSessionStatusInput (scStatus req))
+      either throwError pure (validateSessionTimeRange (scStartAt req) (scEndAt req))
       let
           status'   = fromMaybe InPrep statusVal
       (sessionEnt, rooms) <- withPool $ do
@@ -612,6 +613,8 @@ sessionsServer user =
     patchSessionH rawId req = do
       ensureModule ModuleScheduling user
       sessionKey <- parseKey @Session rawId
+      existingSession <- withPool $ getEntity sessionKey
+      existing <- maybe (throwError err404) pure existingSession
       bandUpdate <- case suBandId req of
         Nothing          -> pure Nothing
         Just Nothing     -> pure (Just Nothing)
@@ -622,6 +625,10 @@ sessionsServer user =
         Nothing     -> pure Nothing
         Just rooms  -> Just <$> traverse (parseKey @Room) rooms
       statusVal <- either throwError pure (validateSessionStatusInput (suStatus req))
+      let currentSession = entityVal existing
+          effectiveStartAt = fromMaybe (sessionStartAt currentSession) (suStartAt req)
+          effectiveEndAt = fromMaybe (sessionEndAt currentSession) (suEndAt req)
+      either throwError pure (validateSessionTimeRange effectiveStartAt effectiveEndAt)
       let
           updates     = catMaybes
             [ fmap (SessionBookingRef =.)           (suBookingRef req)
@@ -640,24 +647,20 @@ sessionsServer user =
             , fmap (SessionNotes =.)                (suNotes req)
             ]
       result <- withPool $ do
-        mSession <- getEntity sessionKey
-        case mSession of
-          Nothing -> pure Nothing
-          Just _  -> do
-            unless (null updates) (update sessionKey updates)
-            case roomKeysUpdate of
-              Nothing      -> pure ()
-              Just roomIds -> do
-                deleteWhere [SessionRoomSessionId ==. sessionKey]
-                for_ roomIds $ \roomKey ->
-                  insert_ SessionRoom
-                    { sessionRoomSessionId = sessionKey
-                    , sessionRoomRoomId    = roomKey
-                    }
-            ent <- getJustEntity sessionKey
-            rooms <- selectList [SessionRoomSessionId ==. sessionKey] [Asc SessionRoomId]
-            pure (Just (ent, rooms))
-      maybe (throwError err404) (\(ent, rooms) -> pure (toSessionDTO ent rooms)) result
+        unless (null updates) (update sessionKey updates)
+        case roomKeysUpdate of
+          Nothing      -> pure ()
+          Just roomIds -> do
+            deleteWhere [SessionRoomSessionId ==. sessionKey]
+            for_ roomIds $ \roomKey ->
+              insert_ SessionRoom
+                { sessionRoomSessionId = sessionKey
+                , sessionRoomRoomId    = roomKey
+                }
+        ent <- getJustEntity sessionKey
+        rooms <- selectList [SessionRoomSessionId ==. sessionKey] [Asc SessionRoomId]
+        pure (ent, rooms)
+      pure (toSessionDTO (fst result) (snd result))
 
     sessionInputListH rawId = do
       ensureModule ModuleScheduling user
@@ -1271,6 +1274,13 @@ validateSessionStatusInput (Just rawStatus) =
     Just statusValue -> Right (Just statusValue)
     Nothing -> Left err400
       { errBody = "Invalid session status. Allowed values: in_prep, in_session, break, editing, approved, delivered, closed"
+      }
+
+validateSessionTimeRange :: UTCTime -> UTCTime -> Either ServerError ()
+validateSessionTimeRange startAt endAt
+  | endAt > startAt = Right ()
+  | otherwise = Left err400
+      { errBody = "sessionEndAt must be after sessionStartAt"
       }
 
 ensureModule
