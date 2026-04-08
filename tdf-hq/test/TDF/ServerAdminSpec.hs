@@ -2,9 +2,16 @@
 
 module TDF.ServerAdminSpec (spec) where
 
+import qualified Data.ByteString.Lazy.Char8 as BL8
+import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
-import TDF.ServerAdmin (dedupeAdminEmailRecipients, normalizeAdminEmailAddress, normalizeAdminEmailBodyLines)
+import TDF.ServerAdmin (
+    dedupeAdminEmailRecipients,
+    normalizeAdminEmailAddress,
+    normalizeAdminEmailBodyLines,
+    validateAdminWhatsAppSendMode,
+  )
 
 spec :: Spec
 spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
@@ -37,3 +44,20 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 [ ("Ada", "ada@example.com")
                 , ("Linus", "linus@example.com")
                 ]
+
+    describe "validateAdminWhatsAppSendMode" $ do
+        it "normalizes supported modes and preserves valid reply semantics" $ do
+            validateAdminWhatsAppSendMode " reply " (Just 42) `shouldBe` Right "reply"
+            validateAdminWhatsAppSendMode "NOTIFY" Nothing `shouldBe` Right "notify"
+
+        it "rejects invalid or contradictory reply metadata instead of silently ignoring it" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid WhatsApp send mode error, got " <> show value)
+            assertInvalid "reply|notify" (validateAdminWhatsAppSendMode "broadcast" Nothing)
+            assertInvalid "replyToMessageId requerido" (validateAdminWhatsAppSendMode "reply" Nothing)
+            assertInvalid "entero positivo" (validateAdminWhatsAppSendMode "reply" (Just 0))
+            assertInvalid "solo se permite en mode=reply" (validateAdminWhatsAppSendMode "notify" (Just 99))

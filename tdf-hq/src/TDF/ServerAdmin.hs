@@ -10,6 +10,7 @@ module TDF.ServerAdmin
   , normalizeAdminEmailAddress
   , normalizeAdminEmailBodyLines
   , parseSocialErrorsChannel
+  , validateAdminWhatsAppSendMode
   ) where
 
 import           Control.Exception      (SomeException, try)
@@ -769,14 +770,10 @@ adminServer user =
 
     userCommunicationSendHandler userId AdminWhatsAppSendRequest{..} = do
       ensureStrictAdmin user
-      let mode = T.toLower (T.strip awsrMode)
-          body = T.strip awsrMessage
+      let body = T.strip awsrMessage
+      mode <- either throwError pure (validateAdminWhatsAppSendMode awsrMode awsrReplyToMessageId)
       when (T.null body) $
         throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje vacío") }
-      when (mode /= "reply" && mode /= "notify") $
-        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
-      when (mode == "reply" && awsrReplyToMessageId == Nothing) $
-        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId requerido para responder") }
       mContext <- withPool (loadUserCommunicationContext userId)
       (_, partyEnt) <- maybe (throwError err404) pure mContext
       let partyKey = entityKey partyEnt
@@ -1002,6 +999,24 @@ parseSocialErrorsChannel mChannel =
   where
     missingChannel =
       Left err400 { errBody = "channel requerido (instagram|facebook|whatsapp)" }
+
+validateAdminWhatsAppSendMode :: Text -> Maybe Int64 -> Either ServerError Text
+validateAdminWhatsAppSendMode rawMode mReplyToMessageId =
+  case T.toLower (T.strip rawMode) of
+    "reply" ->
+      case mReplyToMessageId of
+        Nothing ->
+          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId requerido para responder") }
+        Just replyId
+          | replyId <= 0 ->
+              Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId debe ser un entero positivo") }
+          | otherwise -> Right "reply"
+    "notify"
+      | isJust mReplyToMessageId ->
+          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId solo se permite en mode=reply") }
+      | otherwise -> Right "notify"
+    _ ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
 
 loadUserAccount :: Entity UserCredential -> SqlPersistT IO UserAccountDTO
 loadUserAccount (Entity credId cred) = do
