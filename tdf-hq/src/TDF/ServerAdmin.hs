@@ -7,6 +7,7 @@
 module TDF.ServerAdmin
   ( adminServer
   , dedupeAdminEmailRecipients
+  , normalizeAdminEmailAddress
   , normalizeAdminEmailBodyLines
   , parseSocialErrorsChannel
   ) where
@@ -19,7 +20,7 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
-import           Data.Char              (isAlphaNum)
+import           Data.Char              (isAlphaNum, isSpace)
 import           Data.List              (nub)
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import           Data.Int               (Int64)
@@ -174,28 +175,32 @@ adminServer user =
     emailTestHandler EmailTestRequest{..} = do
       ensureModule ModuleAdmin user
       cfg <- asks envConfig
+      targetEmail <- maybe
+        (throwError err400 { errBody = "Invalid email address" })
+        pure
+        (normalizeAdminEmailAddress etrEmail)
       let emailSvc = EmailSvc.mkEmailService cfg
           subj = fromMaybe "Correo de prueba TDF" etrSubject
           body = maybe ["Correo de prueba desde TDF HQ."] (\txt -> [txt]) etrBody
           targetName = fromMaybe "" etrName
-          preMsg = "[Admin][EmailTest] Sending to " <> etrEmail <> " | subject: " <> subj
+          preMsg = "[Admin][EmailTest] Sending to " <> targetEmail <> " | subject: " <> subj
       liftIO $ addLog LogInfo preMsg
       sendResult <- liftIO $ try $
         EmailSvc.sendTestEmail
           emailSvc
           targetName
-          etrEmail
+          targetEmail
           subj
           body
           etrCtaUrl
       case sendResult of
         Left (err :: SomeException) -> do
-          let msg = "[Admin][EmailTest] Failed for " <> etrEmail <> ": " <> T.pack (show err)
+          let msg = "[Admin][EmailTest] Failed for " <> targetEmail <> ": " <> T.pack (show err)
           liftIO $ addLog LogError msg
           liftIO $ hPutStrLn stderr (T.unpack msg)
           pure EmailTestResponse { status = "error", message = Just msg }
         Right () -> do
-          let msg = "[Admin][EmailTest] Sent to " <> etrEmail
+          let msg = "[Admin][EmailTest] Sent to " <> targetEmail
           liftIO $ addLog LogInfo msg
           liftIO $ hPutStrLn stderr (T.unpack msg)
           pure EmailTestResponse { status = "sent", message = Nothing }
@@ -642,10 +647,13 @@ adminServer user =
       partyEnt <- do
         mParty <- withPool $ getEntity partyKey
         maybe (throwError err404 { errBody = "Party not found" }) pure mParty
-      emailAddress <- case fmap T.strip (partyPrimaryEmail (entityVal partyEnt)) of
+      emailAddress <- case partyPrimaryEmail (entityVal partyEnt) of
         Nothing -> throwError err400 { errBody = "Party must have a primary email before creating a user" }
-        Just addr | T.null addr -> throwError err400 { errBody = "Party must have a primary email before creating a user" }
-                  | otherwise -> pure addr
+        Just addr ->
+          maybe
+            (throwError err400 { errBody = "Party must have a valid primary email before creating a user" })
+            pure
+            (normalizeAdminEmailAddress addr)
       baseUsername <-
         case normalizeUsername =<< uacUsername of
           Just provided -> pure provided
@@ -1098,15 +1106,34 @@ normalizeAdminEmailBodyLines :: [Text] -> [Text]
 normalizeAdminEmailBodyLines =
   filter (not . T.null) . map T.strip
 
+normalizeAdminEmailAddress :: Text -> Maybe Text
+normalizeAdminEmailAddress raw =
+  let normalized = T.toLower (T.strip raw)
+  in if isValidAdminEmailAddress normalized then Just normalized else Nothing
+
+isValidAdminEmailAddress :: Text -> Bool
+isValidAdminEmailAddress candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      not (T.null localPart)
+        && not (T.null domain)
+        && not (T.any isSpace candidate)
+        && not (T.isPrefixOf "." domain)
+        && not (T.isSuffixOf "." domain)
+        && T.isInfixOf "." domain
+    _ -> False
+
 dedupeAdminEmailRecipients :: [(Text, Text)] -> [(Text, Text)]
 dedupeAdminEmailRecipients = reverse . snd . foldl step (Set.empty, [])
   where
     step (seen, acc) (rawName, rawEmail) =
-      let emailAddr = T.toLower (T.strip rawEmail)
-          name = T.strip rawName
-      in if T.null emailAddr || Set.member emailAddr seen
-           then (seen, acc)
-           else (Set.insert emailAddr seen, (name, emailAddr) : acc)
+      case normalizeAdminEmailAddress rawEmail of
+        Nothing -> (seen, acc)
+        Just emailAddr ->
+          let name = T.strip rawName
+          in if Set.member emailAddr seen
+               then (seen, acc)
+               else (Set.insert emailAddr seen, (name, emailAddr) : acc)
 
 loadRegisteredUserEmailRecipients :: Bool -> SqlPersistT IO [(Text, Text)]
 loadRegisteredUserEmailRecipients includeInactive = do
@@ -1118,10 +1145,9 @@ loadRegisteredUserEmailRecipients includeInactive = do
       case partyPrimaryEmail party of
         Nothing -> Nothing
         Just emailAddr ->
-          let normalizedEmail = T.toLower (T.strip emailAddr)
-          in if T.null normalizedEmail
-               then Nothing
-               else Just (partyDisplayName party, normalizedEmail)
+          case normalizeAdminEmailAddress emailAddr of
+            Nothing -> Nothing
+            Just normalizedEmail -> Just (partyDisplayName party, normalizedEmail)
   pure (catMaybes pairs)
 
 setPartyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
