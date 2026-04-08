@@ -100,13 +100,17 @@ main = hspec $ do
             validateOptionalFeedbackContactEmail (Just " User@Example.com ")
                 `shouldBe` Right (Just "user@example.com")
 
-        it "rejects malformed feedback contact emails instead of storing unusable contact data" $
-            case validateOptionalFeedbackContactEmail (Just "not-an-email") of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL.unpack (errBody err) `shouldContain` "contactEmail must be a valid email address"
-                Right value ->
-                    expectationFailure ("Expected invalid feedback contact email to be rejected, got " <> show value)
+        it "rejects malformed feedback contact emails instead of storing unusable contact data" $ do
+            let assertInvalid raw = case validateOptionalFeedbackContactEmail (Just raw) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "contactEmail must be a valid email address"
+                    Right value ->
+                        expectationFailure ("Expected invalid feedback contact email to be rejected, got " <> show value)
+            assertInvalid "not-an-email"
+            assertInvalid "user@example..com"
+            assertInvalid "user@-example.com"
+            assertInvalid "user@example-.com"
 
     describe "normalizeInvitationStatus" $ do
         it "falls back to pending when missing" $ do

@@ -14,6 +14,7 @@ import           Control.Monad              (forM_, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask)
+import           Data.Char                  (isAsciiLower, isDigit)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import           Data.Time                  (getCurrentTime)
@@ -117,10 +118,19 @@ isValidFeedbackEmail candidate =
       not (T.null localPart)
         && not (T.null domain)
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
-        && not (T.isPrefixOf "." domain)
-        && not (T.isSuffixOf "." domain)
         && T.isInfixOf "." domain
+        && all isValidDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidDomainLabel :: Text -> Bool
+isValidDomainLabel label =
+  not (T.null label)
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidDomainChar label
+
+isValidDomainChar :: Char -> Bool
+isValidDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
 notify :: EmailSvc.EmailService -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe FilePath -> IO ()
 notify emailSvc title body mCat mSev mContact attachmentPath = do
