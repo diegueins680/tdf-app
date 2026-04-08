@@ -71,6 +71,7 @@ import TDF.Server.SocialEventsHandlers (
     parseNearQueryEither,
     parseInvitationIdsEither,
     validateRsvpStatus,
+    validateEventCurrencyInput,
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
  )
@@ -174,14 +175,18 @@ main = hspec $ do
                 baseUpdate
                     { emuType = FieldValue " FESTIVAL "
                     , emuStatus = FieldValue " canceled "
+                    , emuCurrency = FieldValue " usd "
                     }
                 `shouldBe` Right
                     baseUpdate
                         { emuType = FieldValue "festival"
                         , emuStatus = FieldValue "cancelled"
+                        , emuCurrency = FieldValue "USD"
                         }
             validateEventMetadataUpdate baseUpdate { emuType = FieldValue "   " }
                 `shouldBe` Right baseUpdate { emuType = FieldNull }
+            validateEventMetadataUpdate baseUpdate { emuCurrency = FieldValue "   " }
+                `shouldBe` Right baseUpdate { emuCurrency = FieldNull }
 
         it "rejects invalid explicit event metadata updates instead of silently ignoring them" $ do
             let assertInvalid updateValue expected =
@@ -197,6 +202,9 @@ main = hspec $ do
             assertInvalid
                 baseUpdate { emuStatus = FieldValue "sold_out" }
                 "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
+            assertInvalid
+                baseUpdate { emuCurrency = FieldValue "usdollars" }
+                "eventCurrency must be a 3-letter ISO code"
 
     describe "validateEventCreateTypeStatus" $ do
         it "defaults omitted or blank create values and normalizes supported explicit values" $ do
@@ -221,6 +229,20 @@ main = hspec $ do
             assertInvalid
                 (validateEventCreateTypeStatus Nothing (Just "sold_out"))
                 "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
+
+    describe "validateEventCurrencyInput" $ do
+        it "defaults omitted or blank create currencies to USD and normalizes explicit ISO codes" $ do
+            validateEventCurrencyInput Nothing `shouldBe` Right "USD"
+            validateEventCurrencyInput (Just "   ") `shouldBe` Right "USD"
+            validateEventCurrencyInput (Just " eur ") `shouldBe` Right "EUR"
+
+        it "rejects malformed explicit event currencies instead of storing opaque metadata" $ do
+            case validateEventCurrencyInput (Just "usdollars") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "eventCurrency must be a 3-letter ISO code"
+                Right value ->
+                    expectationFailure ("Expected invalid event currency to be rejected, got " <> show value)
 
     describe "normalizePositivePartyIdText" $ do
         it "accepts positive numeric ids and canonicalizes them" $ do

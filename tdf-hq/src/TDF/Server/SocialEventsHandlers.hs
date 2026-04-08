@@ -28,6 +28,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeMomentReaction
   , normalizeMomentCaption
   , normalizeMomentCommentBody
+  , validateEventCurrencyInput
   ) where
 
 import           Control.Applicative ((<|>))
@@ -36,7 +37,7 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isAlphaNum, isAscii)
+import           Data.Char (isAlphaNum, isAscii, isAsciiUpper)
 import           Data.Int (Int64)
 import           Data.List (foldl', sortOn)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
@@ -240,13 +241,17 @@ validateEventMetadataUpdate EventMetadataUpdateDTO{..} = do
     "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
     normalizeEventStatus
     emuStatus
+  normalizedCurrency <- normalizeNullableTextUpdate
+    "eventCurrency must be a 3-letter ISO code"
+    normalizeEventCurrencyMaybe
+    emuCurrency
   pure EventMetadataUpdateDTO
     { emuTicketUrl = emuTicketUrl
     , emuImageUrl = emuImageUrl
     , emuIsPublic = emuIsPublic
     , emuType = normalizedType
     , emuStatus = normalizedStatus
-    , emuCurrency = emuCurrency
+    , emuCurrency = normalizedCurrency
     , emuBudgetCents = emuBudgetCents
     }
 
@@ -452,6 +457,7 @@ socialEventsServer user = eventsServer
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
       when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
       (eventTypeVal, eventStatusVal) <- either throwError pure (validateEventCreateTypeStatus (eventType dto) (eventStatus dto))
+      currencyVal <- either throwError pure (validateEventCurrencyInput (eventCurrency dto))
       let metadataVal =
             encodeEventMetadata
               EventMetadataDTO
@@ -460,7 +466,7 @@ socialEventsServer user = eventsServer
                 , emIsPublic = eventIsPublic dto <|> Just True
                 , emType = Just eventTypeVal
                 , emStatus = Just eventStatusVal
-                , emCurrency = normalizeCurrencyMaybe (eventCurrency dto) <|> Just "USD"
+                , emCurrency = Just currencyVal
                 , emBudgetCents = normalizeBudgetCentsMaybe (eventBudgetCents dto)
                 }
           createdMetadata = decodeEventMetadata metadataVal
@@ -2196,6 +2202,25 @@ normalizeBudgetCentsMaybe mBudget =
   case mBudget of
     Just n | n >= 0 -> Just n
     _ -> Nothing
+
+validateEventCurrencyInput :: Maybe T.Text -> Either ServerError T.Text
+validateEventCurrencyInput mCurrency =
+  case cleanMaybeText mCurrency of
+    Nothing -> Right "USD"
+    Just rawCurrency ->
+      case normalizeEventCurrencyCode rawCurrency of
+        Just currency -> Right currency
+        Nothing -> Left err400 { errBody = "eventCurrency must be a 3-letter ISO code" }
+
+normalizeEventCurrencyMaybe :: Maybe T.Text -> Maybe T.Text
+normalizeEventCurrencyMaybe = (>>= normalizeEventCurrencyCode) . cleanMaybeText
+
+normalizeEventCurrencyCode :: T.Text -> Maybe T.Text
+normalizeEventCurrencyCode rawCurrency =
+  let normalized = T.toUpper (T.strip rawCurrency)
+  in if T.length normalized == 3 && T.all isAsciiUpper normalized
+       then Just normalized
+       else Nothing
 
 normalizeCurrencyMaybe :: Maybe T.Text -> Maybe T.Text
 normalizeCurrencyMaybe mCurrency = normalizeCurrency <$> cleanMaybeText mCurrency
