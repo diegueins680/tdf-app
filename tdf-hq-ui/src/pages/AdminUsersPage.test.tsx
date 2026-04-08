@@ -263,7 +263,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
-        expect(getButtonsByText(container, 'Perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Perfil y contacto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
         expect(container.textContent).toContain(
@@ -272,6 +272,15 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain(
           '1 usuario sigue sin canal de contacto; usa Completar contacto en esa fila.',
         );
+
+        const readyContactRow = getRowByUserId(container, 101);
+        expect(readyContactRow.textContent).toContain('Perfil y contacto');
+        expect(readyContactRow.querySelectorAll('button')).toHaveLength(1);
+        expect(
+          Array.from(readyContactRow.querySelectorAll<HTMLAnchorElement>('a')).some(
+            (link) => buttonText(link) === 'Perfil y contacto' && link.getAttribute('href') === '/perfil/9',
+          ),
+        ).toBe(true);
 
         const missingContactRow = getRowByUserId(container, 102);
         expect(missingContactRow.textContent).toContain('Falta contacto');
@@ -353,8 +362,16 @@ describe('AdminUsersPage', () => {
         );
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(container.textContent).not.toContain('1 usuario');
-        expect(getButtonsByText(container, 'Perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Perfil y contacto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
+
+        const loneRow = getRowByUserId(container, 101);
+        expect(loneRow.querySelectorAll('button')).toHaveLength(1);
+        expect(
+          Array.from(loneRow.querySelectorAll<HTMLAnchorElement>('a')).some(
+            (link) => buttonText(link) === 'Perfil y contacto' && link.getAttribute('href') === '/perfil/9',
+          ),
+        ).toBe(true);
       });
     } finally {
       await cleanup();

@@ -8,6 +8,7 @@ import {
   Chip,
   FormControlLabel,
   IconButton,
+  Link,
   Stack,
   TextField,
   Tooltip,
@@ -232,6 +233,7 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
   const hasContactInfo = Boolean(contactSummary);
   const rolesSummary = getUserAccessSummary(user.roles);
   const modulesSummary = getUserAccessSummary(user.modules);
+  const profilePath = `/perfil/${user.partyId}`;
 
   return (
     <Box
@@ -256,6 +258,17 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
             {contactSummary}
           </Typography>
         )}
+        {hasContactInfo && (
+          <Link
+            component={RouterLink}
+            to={profilePath}
+            variant="caption"
+            underline="hover"
+            sx={{ display: 'inline-flex', mt: 0.5, fontWeight: 600 }}
+          >
+            Perfil y contacto
+          </Link>
+        )}
       </Box>
       <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />
       {!hasContactInfo && <Chip label="Falta contacto" color="warning" size="small" variant="outlined" />}
@@ -274,9 +287,11 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
         </Box>
       )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
-        <Button component={RouterLink} to={`/perfil/${user.partyId}`} size="small" variant="outlined">
-          {hasContactInfo ? 'Perfil' : 'Completar contacto'}
-        </Button>
+        {!hasContactInfo && (
+          <Button component={RouterLink} to={profilePath} size="small" variant="outlined">
+            Completar contacto
+          </Button>
+        )}
         {hasContactInfo && (
           <Button size="small" variant="contained" onClick={onOpenCommunications}>
             Comunicación
