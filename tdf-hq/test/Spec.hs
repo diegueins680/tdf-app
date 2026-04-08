@@ -47,7 +47,7 @@ import TDF.ServerInternships
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
 import TDF.ServerProposals (validateTemplateKey)
-import TDF.ServerFeedback (normalizeOptionalFeedbackText)
+import TDF.ServerFeedback (normalizeOptionalFeedbackText, validateOptionalFeedbackContactEmail)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -88,6 +88,21 @@ main = hspec $ do
         it "drops explicit blank feedback metadata values instead of storing ambiguous empty strings" $ do
             normalizeOptionalFeedbackText Nothing `shouldBe` Nothing
             normalizeOptionalFeedbackText (Just "   ") `shouldBe` Nothing
+
+    describe "validateOptionalFeedbackContactEmail" $ do
+        it "normalizes valid optional feedback contact emails and keeps blanks unset" $ do
+            validateOptionalFeedbackContactEmail Nothing `shouldBe` Right Nothing
+            validateOptionalFeedbackContactEmail (Just "   ") `shouldBe` Right Nothing
+            validateOptionalFeedbackContactEmail (Just " User@Example.com ")
+                `shouldBe` Right (Just "user@example.com")
+
+        it "rejects malformed feedback contact emails instead of storing unusable contact data" $
+            case validateOptionalFeedbackContactEmail (Just "not-an-email") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "contactEmail must be a valid email address"
+                Right value ->
+                    expectationFailure ("Expected invalid feedback contact email to be rejected, got " <> show value)
 
     describe "normalizeInvitationStatus" $ do
         it "falls back to pending when missing" $ do

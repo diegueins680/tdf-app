@@ -6,6 +6,7 @@
 module TDF.ServerFeedback
   ( feedbackServer
   , normalizeOptionalFeedbackText
+  , validateOptionalFeedbackContactEmail
   ) where
 
 import           Control.Exception         (SomeException, displayException, try)
@@ -49,11 +50,11 @@ feedbackServer user = submitFeedback
           body  = T.strip fpDescription
           category = normalizeOptionalFeedbackText fpCategory
           severity = normalizeOptionalFeedbackText fpSeverity
-          contactEmail = normalizeOptionalFeedbackText fpContactEmail
       when (T.null title) $
         throwError err400 { errBody = "title is required" }
       when (T.null body) $
         throwError err400 { errBody = "description is required" }
+      contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
 
       now <- liftIO getCurrentTime
       attachmentPath <- liftIO $ traverse storeAttachment fpAttachment
@@ -97,6 +98,29 @@ normalizeOptionalFeedbackText mVal =
   case fmap T.strip mVal of
     Just txt | T.null txt -> Nothing
     other                 -> other
+
+validateOptionalFeedbackContactEmail :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalFeedbackContactEmail Nothing = Right Nothing
+validateOptionalFeedbackContactEmail (Just rawEmail) =
+  case normalizeOptionalFeedbackText (Just rawEmail) of
+    Nothing -> Right Nothing
+    Just emailVal ->
+      let normalized = T.toLower emailVal
+      in if isValidFeedbackEmail normalized
+           then Right (Just normalized)
+           else Left err400 { errBody = "contactEmail must be a valid email address" }
+
+isValidFeedbackEmail :: Text -> Bool
+isValidFeedbackEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      not (T.null localPart)
+        && not (T.null domain)
+        && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
+        && not (T.isPrefixOf "." domain)
+        && not (T.isSuffixOf "." domain)
+        && T.isInfixOf "." domain
+    _ -> False
 
 notify :: EmailSvc.EmailService -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe FilePath -> IO ()
 notify emailSvc title body mCat mSev mContact attachmentPath = do
