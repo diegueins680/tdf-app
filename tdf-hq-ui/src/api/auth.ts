@@ -1,7 +1,8 @@
 import type { components } from './generated/types';
 import type { SignupRole } from '../constants/roles';
+import { env } from '../utils/env';
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? '';
+const API_BASE = env.read('VITE_API_BASE') ?? '';
 
 type LoginRequestDTO = components['schemas']['LoginRequest'];
 type GoogleLoginRequestDTO = components['schemas']['GoogleLoginRequest'];

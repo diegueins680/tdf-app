@@ -1,5 +1,14 @@
 import { jest } from '@jest/globals';
-import { confirmPasswordReset } from './auth';
+
+const envReadMock = jest.fn<(key: string) => string | undefined>(() => undefined);
+
+jest.unstable_mockModule('../utils/env', () => ({
+  env: {
+    read: envReadMock,
+  },
+}));
+
+const { confirmPasswordReset } = await import('./auth');
 
 describe('auth api', () => {
   const fetchMock = jest.fn<typeof fetch>();
