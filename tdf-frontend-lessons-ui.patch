@@ -1,0 +1,157 @@
+diff --git a/package.json b/package.json
+index 1111111..2222222 100644
+--- a/package.json
++++ b/package.json
+@@ -10,6 +10,8 @@
+   "dependencies": {
++    "@mui/x-date-pickers": "^7.0.0",
++    "date-fns": "^3.6.0"
+   }
+ }
+diff --git a/src/api/lessons.ts b/src/api/lessons.ts
+new file mode 100644
+index 0000000..3333333
+--- /dev/null
++++ b/src/api/lessons.ts
+@@ -0,0 +1,86 @@
++export type Id = number;
++export type IdName = { id: number; name: string };
++
++export type LessonKind = 'Trial' | 'Regular' | 'Makeup' | 'Group';
++
++export type CreateLesson = {
++  kind: LessonKind;
++  subjectId: Id;
++  teacherId: Id;
++  studentId: Id;
++  scheduledAt?: string;
++  durationMin?: number;
++  roomId?: Id | null;
++  notes?: string;
++};
++
++const API = import.meta.env.VITE_API_BASE;
++
++async function j<T>(res: Response): Promise<T> {
++  if (!res.ok) {
++    const text = await res.text();
++    try { const parsed = JSON.parse(text); throw new Error(parsed.message || text); } catch { throw new Error(text); }
++  }
++  return res.json();
++}
++
++export const LessonsApi = {
++  subjects: () => fetch(`${API}/school/subjects`).then(j<IdName[]>()),
++  teachers: (subjectId?: number) => fetch(`${API}/school/teachers${subjectId ? `?subjectId=${subjectId}` : ''}`).then(j<IdName[]>()),
++  students: () => fetch(`${API}/school/students`).then(j<IdName[]>()),
++  rooms:    () => fetch(`${API}/school/rooms`).then(j<IdName[]>()),
++
++  list: (p?: Record<string, string | number>) => {
++    const qs = p ? `?${new URLSearchParams(p as any).toString()}` : '';
++    return fetch(`${API}/school/lessons${qs}`).then(j<any[]>());
++  },
++  stats: (kind?: LessonKind) =>
++    fetch(`${API}/school/lessons/stats${kind ? `?kind=${kind}` : ''}`)
++      .then(j<{requested:number;assigned:number;scheduled:number;completed:number;canceled:number;}>()),
++  create: (payload: CreateLesson) =>
++    fetch(`${API}/school/lessons`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }).then(j<any>()),
++  update: (id: number, patch: any) =>
++    fetch(`${API}/school/lessons/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(patch) }).then(j<any>()),
++};
+diff --git a/src/features/school/trial-lessons/NewTrialLessonDialog.tsx b/src/features/school/trial-lessons/NewTrialLessonDialog.tsx
+index aaaaaaa..bbbbbbb 100644
+--- a/src/features/school/trial-lessons/NewTrialLessonDialog.tsx
++++ b/src/features/school/trial-lessons/NewTrialLessonDialog.tsx
+@@ -1,14 +1,15 @@
+ import * as React from 'react';
+ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Autocomplete, Stack, Alert } from '@mui/material';
+ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+-import { TrialApi, CreateTrialLesson } from '@/api/trial-lessons';
++import { LessonsApi, CreateLesson, IdName } from '@/api/lessons';
+ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+ 
+ export function NewTrialLessonDialog(props: { open: boolean; onClose: () => void; }) {
+   const qc = useQueryClient();
+-  const { data: subjects = [] } = useQuery({ queryKey: ['subjects'], queryFn: TrialApi.subjects });
+-  const { data: students = [] } = useQuery({ queryKey: ['students'], queryFn: TrialApi.students });
+-  const { data: rooms = [] } = useQuery({ queryKey: ['rooms'], queryFn: TrialApi.rooms });
++  const { data: subjects = [] } = useQuery({ queryKey: ['subjects'], queryFn: LessonsApi.subjects });
++  const { data: students = [] } = useQuery({ queryKey: ['students'], queryFn: LessonsApi.students });
++  const { data: rooms = [] } = useQuery({ queryKey: ['rooms'], queryFn: LessonsApi.rooms });
+@@ -18,8 +19,8 @@
+-  const { data: teachers = [], refetch: refetchTeachers, isFetching: loadingTeachers } =
+-    useQuery({ queryKey: ['teachers', subject?.id ?? null], queryFn: () => TrialApi.teachers(subject?.id), enabled: !!subject });
++  const { data: teachers = [], refetch: refetchTeachers, isFetching: loadingTeachers } =
++    useQuery({ queryKey: ['teachers', subject?.id ?? null], queryFn: () => LessonsApi.teachers(subject?.id), enabled: !!subject });
+@@ -27,7 +28,7 @@
+-  const createMut = useMutation({
+-    mutationFn: (p: CreateTrialLesson) => TrialApi.create(p),
++  const createMut = useMutation({
++    mutationFn: (p: CreateLesson) => LessonsApi.create(p),
+     onSuccess: () => {
+-      qc.invalidateQueries({ queryKey: ['trial-lessons'] });
+-      qc.invalidateQueries({ queryKey: ['trial-lessons-stats'] });
++      qc.invalidateQueries({ queryKey: ['lessons', 'Trial'] });
++      qc.invalidateQueries({ queryKey: ['lessons-stats', 'Trial'] });
+       setErrorMsg('');
+       props.onClose();
+     },
+@@ -36,16 +37,17 @@
+   const submit = () => {
+     if (!subject || !teacher || !student) {
+       setErrorMsg('Completa materia, profesor y alumno.'); return;
+     }
+-    createMut.mutate({
+-      subjectId: subject.id,
+-      teacherId: teacher.id,
+-      studentId: student.id,
+-      scheduledAt: when ? new Date(when).toISOString() : undefined,
+-      notes: notes || undefined,
+-      durationMin: duration || undefined,
+-      roomId: room?.id ?? undefined
+-    });
++    createMut.mutate({
++      kind: 'Trial',
++      subjectId: subject.id,
++      teacherId: teacher.id,
++      studentId: student.id,
++      scheduledAt: when ? new Date(when).toISOString() : undefined,
++      notes: notes || undefined,
++      durationMin: duration || undefined,
++      roomId: room?.id ?? undefined
++    });
+   };
+diff --git a/src/pages/SchoolTrialLessonsPage.tsx b/src/pages/SchoolTrialLessonsPage.tsx
+index cccccc1..cccccc2 100644
+--- a/src/pages/SchoolTrialLessonsPage.tsx
++++ b/src/pages/SchoolTrialLessonsPage.tsx
+@@ -1,12 +1,12 @@
+ import * as React from 'react';
+ import { Button, Stack } from '@mui/material';
+ import { useQuery } from '@tanstack/react-query';
+-import { TrialApi } from '@/api/trial-lessons';
++import { LessonsApi } from '@/api/lessons';
+ import { NewTrialLessonDialog } from '@/features/school/trial-lessons/NewTrialLessonDialog';
+ 
+ export default function SchoolTrialLessonsPage() {
+   const [open, setOpen] = React.useState(false);
+-  const { data: stats } = useQuery({ queryKey: ['trial-lessons-stats'], queryFn: () => TrialApi.stats() });
+-  const { data: rows }  = useQuery({ queryKey: ['trial-lessons'], queryFn: () => TrialApi.list() });
++  const { data: stats } = useQuery({ queryKey: ['lessons-stats','Trial'], queryFn: () => LessonsApi.stats('Trial') });
++  const { data: rows }  = useQuery({ queryKey: ['lessons','Trial'], queryFn: () => LessonsApi.list({ kind: 'Trial' }) });
+ 
+   return (
+     <>
+       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+         <h2>Trial lessons</h2>
+         <Button variant="contained" onClick={() => setOpen(true)}>Nueva clase de prueba</Button>
+       </Stack>
+ 
+       {/* ...existing grid/list... */}
+ 
+       <NewTrialLessonDialog open={open} onClose={() => setOpen(false)} />
+     </>
+   );
+ }

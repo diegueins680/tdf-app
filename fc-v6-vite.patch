@@ -1,0 +1,21 @@
+diff --git a/src/pages/BookingsPage.tsx b/src/pages/BookingsPage.tsx
+index 0000000..0000001 100644
+--- a/src/pages/BookingsPage.tsx
++++ b/src/pages/BookingsPage.tsx
+@@
+-import FullCalendarCore, { Calendar } from '@fullcalendar/core';
++import { Calendar } from '@fullcalendar/core';
+ import dayGridPlugin from '@fullcalendar/daygrid';
+ import timeGridPlugin from '@fullcalendar/timegrid';
+ import interactionPlugin from '@fullcalendar/interaction';
+-
+-// CSS (remove in v6)
+-import '@fullcalendar/core/main.css';
+-import '@fullcalendar/daygrid/main.css';
+-import '@fullcalendar/timegrid/main.css';
+@@
+-      calRef.current = new FullCalendarCore.Calendar(ref.current, {
++      calRef.current = new Calendar(ref.current, {
+         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+         initialView: 'timeGridWeek',
+         height: 'auto',

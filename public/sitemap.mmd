@@ -1,0 +1,69 @@
+%%{init: {'flowchart': {'curve': 'linear'}} }%%
+flowchart TB
+  INICIO[Inicio]
+
+  subgraph CRM
+    CRM1[Contactos]
+    CRM2[Empresas]
+    CRM3[Leads]
+  end
+
+  subgraph ESTUDIO
+    E1[Calendario]
+    E2[Salas y recursos]
+    E3[Órdenes (OS)]
+    E4[Pipelines (Producción)]
+    E5[Reportes]
+  end
+
+  subgraph LABEL
+    L1[Artistas]
+    L2[Proyectos]
+    L3[Releases]
+    L4[Tracks]
+    L5[Assets]
+    L6[Contratos]
+    L7[Regalías]
+    L8[Marketing]
+  end
+
+  subgraph EVENTOS
+    EV1[Agenda]
+    EV2[Fechas y tours]
+    EV3[Venues]
+    EV4[Staff]
+    EV5[Presupuestos]
+    EV6[Post-mortem]
+  end
+
+  subgraph ESCUELA
+    ES1[Programas]
+    ES2[Cursos]
+    ES3[Cohortes]
+    ES4[Estudiantes]
+    ES5[Inscripciones]
+    ES6[Pagos]
+  end
+
+  subgraph FINANZAS
+    F1[Cotizaciones]
+    F2[Facturas]
+    F3[Cobros]
+    F4[Regalías (liquidaciones)]
+  end
+
+  subgraph OPERACION[Operación]
+    OP0[Calendario DOMO]
+    OP1[Inventario]
+    OP2[Reservas de equipo]
+    OP3[Mantenimiento]
+    OP4[Paquetes]
+  end
+
+  INICIO --> CRM
+  INICIO --> ESTUDIO
+  INICIO --> LABEL
+  INICIO --> EVENTOS
+  INICIO --> ESCUELA
+  INICIO --> FINANZAS
+  INICIO --> OPERACION

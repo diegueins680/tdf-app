@@ -1,0 +1,419 @@
+From a553b8aad80732f1c97e810c9b0ae94f76c3b705 Mon Sep 17 00:00:00 2001
+From: TDF Assistant Bot <tdf-bot@example.com>
+Date: Wed, 15 Oct 2025 05:01:39 +0000
+Subject: [PATCH] UI: public signup + trial requests + teacher trials queue + wire routes + deps
+
+Adds public signup (/signup), trial request form (/trial), and teacher trials queue (/teacher/trials).
+New API clients in src/api. Wires routes into App.tsx and adds @mui/x-date-pickers + dayjs.
+If the App.tsx hunk fails to apply due to drift, add the imports and <Route> lines manually.
+
+
+    ---
+diff --git a/src/api/trials.ts b/src/api/trials.ts
+new file mode 100644
+index 0000000..abcd123
+--- /dev/null
++++ b/src/api/trials.ts
+@@ -0,0 +1,51 @@
++/* src/api/trials.ts */
++import { api } from './client';
++
++export type Subject = 'Guitar'|'Bass'|'Voice'|'Ableton'|'Modular'|'DJ';
++
++export interface TrialRequestCreate {
++  subject: Subject;
++  level?: 'Beginner'|'Intermediate'|'Advanced';
++  preferredSlots?: string[]; // ISO datetimes
++  notes?: string;
++}
++
++export interface TrialRequestDTO {
++  id: number;
++  partyId: number;
++  subject: Subject;
++  level?: string;
++  status: 'Requested'|'Assigned'|'Scheduled'|'Attended'|'No-show'|'Cancelled'|'Converted';
++  preferredSlots: string[];
++  scheduledStart?: string;
++  scheduledEnd?: string;
++  teacherId?: number;
++  roomRefId?: number|null;
++  createdAt: string;
++}
++
++export async function listSubjects(): Promise<Subject[]> {
++  const res = await api.get('/subjects');
++  return res.data as Subject[];
++}
++
++export async function createTrialRequest(body: TrialRequestCreate): Promise<TrialRequestDTO> {
++  const res = await api.post('/trial-requests', body);
++  return res.data as TrialRequestDTO;
++}
++
++export async function listTrialRequests(params: {subject?: Subject, status?: string} = {}): Promise<TrialRequestDTO[]> {
++  const res = await api.get('/trial-requests', { params });
++  return res.data as TrialRequestDTO[];
++}
++
++export async function assignTrialRequest(id: number, teacherId: number): Promise<TrialRequestDTO> {
++  const res = await api.post(`/trial-requests/${id}/assign`, { teacherId });
++  return res.data as TrialRequestDTO;
++}
++
++export async function scheduleTrial(id: number, payload: { startAt: string; endAt: string; roomRefId?: number|null }): Promise<TrialRequestDTO> {
++  const res = await api.post(`/trial-assignments/${id}/schedule`, payload);
++  return res.data as TrialRequestDTO;
++}
++
+diff --git a/src/api/packages.ts b/src/api/packages.ts
+new file mode 100644
+index 0000000..abcd123
+--- /dev/null
++++ b/src/api/packages.ts
+@@ -0,0 +1,33 @@
++/* src/api/packages.ts */
++import { api } from './client';
++
++export interface PackageCatalog {
++  id: number;
++  subject?: string;
++  name: string;
++  hours: number;
++  priceCents: number;
++  expiresDays: number;
++  refundPolicy: string;
++}
++
++export interface PackagePurchaseCreate {
++  studentId: number;
++  packageId: number;
++  priceCents: number;
++  discountCents?: number;
++  taxCents?: number;
++  sellerId?: number;
++  trialAssignmentId?: number;
++}
++
++export async function listPackages(subject?: string): Promise<PackageCatalog[]> {
++  const res = await api.get('/packages', { params: { subject } });
++  return res.data as PackageCatalog[];
++}
++
++export async function purchasePackage(body: PackagePurchaseCreate): Promise<{ok: true}> {
++  const res = await api.post('/purchases', body);
++  return res.data;
++}
++
+diff --git a/src/pages/PublicSignup.tsx b/src/pages/PublicSignup.tsx
+new file mode 100644
+index 0000000..abcd123
+--- /dev/null
++++ b/src/pages/PublicSignup.tsx
+@@ -0,0 +1,56 @@
++/* src/pages/PublicSignup.tsx */
++import { useState } from 'react';
++import { z } from 'zod';
++import { useForm } from 'react-hook-form';
++import { zodResolver } from '@hookform/resolvers/zod';
++import { Container, Paper, Stack, Typography, TextField, Button, FormControlLabel, Checkbox } from '@mui/material';
++import { api } from '../api/client';
++
++const schema = z.object({
++  firstName: z.string().min(2, 'Mínimo 2 caracteres'),
++  lastName: z.string().min(2, 'Mínimo 2 caracteres'),
++  email: z.string().email('Email inválido'),
++  phone: z.string().optional(),
++  password: z.string().min(6, 'Mínimo 6 caracteres'),
++  acceptTerms: z.literal(true, { errorMap: () => ({ message: 'Requerido' }) }),
++  marketingOptIn: z.boolean().optional(),
++});
++
++type FormVals = z.infer<typeof schema>;
++
++export default function PublicSignup() {
++  const [ok, setOk] = useState(false);
++  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormVals>({ resolver: zodResolver(schema) });
++  const onSubmit = async (vals: FormVals) => {
++    await api.post('/signup', vals);
++    setOk(true);
++  };
++
++  return (
++    <Container maxWidth="sm" sx={{ py: 6 }}>
++      <Paper variant="outlined" sx={{ p: 3 }}>
++        <Typography variant="h5" sx={{ mb: 2 }}>Crea tu cuenta en TDF</Typography>
++        {ok ? (
++          <Typography>¡Listo! Revisa tu email para verificar tu cuenta.</Typography>
++        ) : (
++          <form onSubmit={handleSubmit(onSubmit)}>
++            <Stack gap={2}>
++              <Stack direction="row" gap={2}>
++                <TextField label="Nombre" fullWidth {...register('firstName')} error={!!errors.firstName} helperText={errors.firstName?.message} />
++                <TextField label="Apellido" fullWidth {...register('lastName')} error={!!errors.lastName} helperText={errors.lastName?.message} />
++              </Stack>
++              <TextField label="Email" {...register('email')} error={!!errors.email} helperText={errors.email?.message} />
++              <TextField label="WhatsApp / Teléfono" {...register('phone')} />
++              <TextField label="Contraseña" type="password" {...register('password')} error={!!errors.password} helperText={errors.password?.message} />
++              <FormControlLabel control={<Checkbox {...register('marketingOptIn')} />} label="Quiero recibir novedades por WhatsApp/email" />
++              <FormControlLabel control={<Checkbox {...register('acceptTerms')} />} label="Acepto Términos y Privacidad" />
++              {errors.acceptTerms && <Typography color="error" variant="body2">{errors.acceptTerms.message}</Typography>}
++              <Button type="submit" variant="contained" disabled={isSubmitting}>Crear cuenta</Button>
++            </Stack>
++          </form>
++        )}
++      </Paper>
++    </Container>
++  );
++}
++
+diff --git a/src/pages/TrialRequestPage.tsx b/src/pages/TrialRequestPage.tsx
+new file mode 100644
+index 0000000..abcd123
+--- /dev/null
++++ b/src/pages/TrialRequestPage.tsx
+@@ -0,0 +1,76 @@
++/* src/pages/TrialRequestPage.tsx */
++import { useEffect, useState } from 'react';
++import { z } from 'zod';
++import { useForm } from 'react-hook-form';
++import { zodResolver } from '@hookform/resolvers/zod';
++import { Container, Paper, Stack, Typography, TextField, Button, MenuItem, Alert } from '@mui/material';
++import dayjs from 'dayjs';
++import { createTrialRequest, listSubjects, Subject, TrialRequestCreate } from '../api/trials';
++
++const schema = z.object({
++  subject: z.string() as unknown as z.ZodType<Subject>,
++  level: z.enum(['Beginner', 'Intermediate', 'Advanced']).optional(),
++  preferred1: z.string().optional(),
++  preferred2: z.string().optional(),
++  preferred3: z.string().optional(),
++  notes: z.string().optional(),
++});
++
++type FormVals = z.infer<typeof schema>;
++
++export default function TrialRequestPage() {
++  const [subjects, setSubjects] = useState<Subject[]>([]);
++  const [ok, setOk] = useState(false);
++  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormVals>({ resolver: zodResolver(schema) });
++
++  useEffect(() => {
++    listSubjects().then(setSubjects).catch(()=>setSubjects(['Guitar','Bass','Voice','Ableton','Modular','DJ']));
++  }, []);
++
++  const onSubmit = async (vals: FormVals) => {
++    const payload: TrialRequestCreate = {
++      subject: vals.subject,
++      level: vals.level,
++      preferredSlots: [vals.preferred1, vals.preferred2, vals.preferred3].filter(Boolean) as string[],
++      notes: vals.notes,
++    };
++    await createTrialRequest(payload);
++    setOk(true);
++  };
++
++  return (
++    <Container maxWidth="sm" sx={{ py: 6 }}>
++      <Paper variant="outlined" sx={{ p: 3 }}>
++        <Typography variant="h5" sx={{ mb: 2 }}>Solicitar clase de prueba</Typography>
++        {ok ? (
++          <Alert severity="success">¡Solicitud enviada! Te contactaremos pronto.</Alert>
++        ) : (
++          <form onSubmit={handleSubmit(onSubmit)}>
++            <Stack gap={2}>
++              <TextField
++                select label="Materia / Subject" defaultValue="" {...register('subject')}
++                error={!!errors.subject} helperText={errors.subject?.message}
++              >
++                <MenuItem value="">—</MenuItem>
++                {subjects.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
++              </TextField>
++              <TextField select label="Nivel" defaultValue="" {...register('level')}>
++                <MenuItem value="">—</MenuItem>
++                <MenuItem value="Beginner">Beginner</MenuItem>
++                <MenuItem value="Intermediate">Intermediate</MenuItem>
++                <MenuItem value="Advanced">Advanced</MenuItem>
++              </TextField>
++              <Typography variant="subtitle1">Horarios preferidos (ISO o “YYYY-MM-DD HH:mm”)</Typography>
++              <TextField label="Opción 1" placeholder={dayjs().add(1,'day').hour(17).minute(0).format('YYYY-MM-DD HH:mm')} {...register('preferred1')} />
++              <TextField label="Opción 2" placeholder={dayjs().add(2,'day').hour(18).minute(0).format('YYYY-MM-DD HH:mm')} {...register('preferred2')} />
++              <TextField label="Opción 3" placeholder={dayjs().add(3,'day').hour(19).minute(0).format('YYYY-MM-DD HH:mm')} {...register('preferred3')} />
++              <TextField label="Comentario" multiline minRows={2} {...register('notes')} />
++              <Button type="submit" variant="contained" disabled={isSubmitting}>Enviar solicitud</Button>
++            </Stack>
++          </form>
++        )}
++      </Paper>
++    </Container>
++  );
++}
++
+diff --git a/src/pages/TeacherTrialsPage.tsx b/src/pages/TeacherTrialsPage.tsx
+new file mode 100644
+index 0000000..abcd123
+--- /dev/null
++++ b/src/pages/TeacherTrialsPage.tsx
+@@ -0,0 +1,119 @@
++/* src/pages/TeacherTrialsPage.tsx */
++import { useEffect, useState } from 'react';
++import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++import {
++  Container, Paper, Stack, Typography, TextField, Button, MenuItem, Table, TableHead, TableRow, TableCell, TableBody,
++  Dialog, DialogTitle, DialogContent, DialogActions
++} from '@mui/material';
++import dayjs from 'dayjs';
++import { Subject, listSubjects, listTrialRequests, assignTrialRequest, scheduleTrial, TrialRequestDTO } from '../api/trials';
++
++function ScheduleDialog({ open, onClose, req }:{open:boolean; onClose:()=>void; req: TrialRequestDTO|null}){
++  const qc = useQueryClient();
++  const [start, setStart] = useState('');
++  const [end, setEnd] = useState('');
++  const [room, setRoom] = useState<number|''>('');
++  React.useEffect(()=>{
++    if(req && (req.preferredSlots||[])[0]){
++      const s = dayjs(req.preferredSlots[0]);
++      setStart(s.format('YYYY-MM-DD HH:mm'));
++      setEnd(s.add(45,'minute').format('YYYY-MM-DD HH:mm'));
++    }
++  },[req]);
++  const m = useMutation({
++    mutationFn: async ()=> {
++      if(!req) return;
++      await scheduleTrial(req.id, { startAt: new Date(start).toISOString(), endAt: new Date(end).toISOString(), roomRefId: room===''?undefined:Number(room) });
++    },
++    onSuccess: ()=>{ qc.invalidateQueries({queryKey:['trials']}); onClose(); }
++  });
++  return (
++    <Dialog open={open} onClose={onClose}>
++      <DialogTitle>Agendar prueba</DialogTitle>
++      <DialogContent>
++        <Stack gap={2} sx={{ mt:1, width: 420 }}>
++          <TextField label="Inicio (YYYY-MM-DD HH:mm)" value={start} onChange={e=>setStart(e.target.value)} />
++          <TextField label="Fin (YYYY-MM-DD HH:mm)" value={end} onChange={e=>setEnd(e.target.value)} />
++          <TextField label="Sala (ID opcional)" value={room} onChange={e=>setRoom(e.target.value as any)} />
++        </Stack>
++      </DialogContent>
++      <DialogActions>
++        <Button onClick={onClose}>Cancelar</Button>
++        <Button onClick={()=>m.mutate()} disabled={m.isPending} variant="contained">Agendar</Button>
++      </DialogActions>
++    </Dialog>
++  );
++}
++
++export default function TeacherTrialsPage(){
++  const [subjects, setSubjects] = useState<Subject[]>([]);
++  const [subject, setSubject] = useState<Subject|''>('');
++  const [status, setStatus] = useState('Requested');
++  const [scheduleOpen, setScheduleOpen] = useState(false);
++  const [picked, setPicked] = useState<TrialRequestDTO|null>(null);
++
++  React.useEffect(()=>{ listSubjects().then(setSubjects).catch(()=>setSubjects(['Guitar','Bass','Voice','Ableton','Modular','DJ'])); },[]);
++  const { data = [], isLoading } = useQuery({
++    queryKey: ['trials', subject, status],
++    queryFn: ()=> listTrialRequests({ subject: subject || undefined, status }),
++  });
++
++  const qc = useQueryClient();
++  const mAssign = useMutation({
++    mutationFn: (id: number)=> assignTrialRequest(id, 0 /* backend infers me or pass teacherId */),
++    onSuccess: ()=> qc.invalidateQueries({ queryKey: ['trials'] }),
++  });
++
++  return (
++    <Container maxWidth="lg" sx={{ py: 4 }}>
++      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
++        <Typography variant="h5">Solicitudes de prueba</Typography>
++        <Stack direction="row" gap={2}>
++          <TextField select label="Subject" value={subject} onChange={e=>setSubject(e.target.value as any)} size="small" sx={{ minWidth: 180 }}>
++            <MenuItem value="">Todos</MenuItem>
++            {subjects.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
++          </TextField>
++          <TextField select label="Estado" value={status} onChange={e=>setStatus(e.target.value)} size="small" sx={{ minWidth: 180 }}>
++            {['Requested','Assigned','Scheduled','Attended','No-show','Cancelled','Converted'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
++          </TextField>
++        </Stack>
++      </Stack>
++
++      <Paper variant="outlined">
++        <Table size="small">
++          <TableHead>
++            <TableRow>
++              <TableCell>ID</TableCell>
++              <TableCell>Alumno</TableCell>
++              <TableCell>Subject</TableCell>
++              <TableCell>Preferidos</TableCell>
++              <TableCell>Estado</TableCell>
++              <TableCell align="right">Acciones</TableCell>
++            </TableRow>
++          </TableHead>
++          <TableBody>
++            {data.map(r => (
++              <TableRow key={r.id} hover>
++                <TableCell>{r.id}</TableCell>
++                <TableCell>{r.partyId}</TableCell>
++                <TableCell>{r.subject}</TableCell>
++                <TableCell>{(r.preferredSlots||[]).map(s=>dayjs(s).format('DD/MM HH:mm')).join(', ')}</TableCell>
++                <TableCell>{r.status}</TableCell>
++                <TableCell align="right">
++                  <Stack direction="row" gap={1} justifyContent="flex-end">
++                    <Button size="small" onClick={()=>mAssign.mutate(r.id)}>Tomar</Button>
++                    <Button size="small" variant="contained" onClick={()=>{ setPicked(r); setScheduleOpen(true); }}>Agendar</Button>
++                  </Stack>
++                </TableCell>
++              </TableRow>
++            ))}
++          </TableBody>
++        </Table>
++        {isLoading && <Typography sx={{ p: 2 }}>Cargando…</Typography>}
++      </Paper>
++
++      <ScheduleDialog open={scheduleOpen} onClose={()=>setScheduleOpen(false)} req={picked} />
++    </Container>
++  );
++}
++
+diff --git a/src/App.tsx b/src/App.tsx
+index 1111111..2222222 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,6 +1,10 @@
+ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+ import Layout from './components/Layout';
+ import PartiesPage from './pages/PartiesPage';
++import PublicSignup from './pages/PublicSignup';
++import TrialRequestPage from './pages/TrialRequestPage';
++import TeacherTrialsPage from './pages/TeacherTrialsPage';
++
+ // ... other imports
+ 
+ export default function App() {
+@@ -12,6 +16,10 @@ export default function App() {
+         <Routes>
+           <Route path="/" element={<Navigate to="/parties" replace />} />
+           <Route path="/parties" element={<PartiesPage />} />
++          {/* Public routes */}
++          <Route path="/signup" element={<PublicSignup />} />
++          <Route path="/trial" element={<TrialRequestPage />} />
++          <Route path="/teacher/trials" element={<TeacherTrialsPage />} />
+           {/* other routes ... */}
+         </Routes>
+       </Layout>
++
+diff --git a/package.json b/package.json
+index 3333333..4444444 100644
+--- a/package.json
++++ b/package.json
+@@ -10,6 +10,8 @@
+     "@hookform/resolvers": "^3.3.4",
+     "@tanstack/react-query": "^5.51.0",
+     "@hello-pangea/dnd": "^16.6.0",
++    "@mui/x-date-pickers": "^7.11.0",
++    "dayjs": "^1.11.10",
+     "react": "^18.2.0",
+     "react-dom": "^18.2.0",
+     "react-router-dom": "^6.23.0",
++
+-- 
++2.45.0

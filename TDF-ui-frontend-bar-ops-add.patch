@@ -1,0 +1,319 @@
+diff --git a/docs/BAR_OPS_UI.md b/docs/BAR_OPS_UI.md
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/docs/BAR_OPS_UI.md
+@@ -0,0 +28 @@
++# Bar Ops UI (TDF-ui) — Add‑only patch
++
++This patch adds a minimal POS and register flow:
++
++- `src/api/bar.ts` — API client for bar endpoints.
++- `src/pages/bar/Sell.tsx` — POS sell screen.
++- `src/pages/bar/Register.tsx` — Register open/cash‑drop/count/close.
++- (Stubs you can add later) `Inventory.tsx`, `Staff.tsx`.
++
++## Wiring routes
++
++In your router (`src/App.tsx` or similar), add routes like:
++
++```tsx
++import SellPage from "./pages/bar/Sell";
++import RegisterPage from "./pages/bar/Register";
++
++// ...
++<Route path="/bar/sell" element={<SellPage/>} />
++<Route path="/bar/register" element={<RegisterPage/>} />
++```
++
++Then run the UI with `VITE_API_BASE` pointing to your backend (e.g. `http://localhost:8080`).
++
++## Usage
++
++- Open a register at `/bar/register?bookingId=1&stationId=<id>` (after creating a station).
++- Sell drinks at `/bar/sell?bookingId=1&stationId=<id>&shiftId=<openShiftId>`.
+diff --git a/src/api/bar.ts b/src/api/bar.ts
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/src/api/bar.ts
+@@ -0,0 +56 @@
++// src/api/bar.ts
++import { queryOptions } from "@tanstack/react-query";
++
++const API = import.meta.env.VITE_API_BASE!; // e.g. http://localhost:8080
++
++export type MenuItem = {
++  miProductId: number; miName: string; miCategory: string; miUnitPriceCents: number;
++};
++export type SaleItem = { productId: number; qty: number; unitPriceCents: number; };
++export type SalePayload = {
++  bookingId: number; stationId: number; shiftId: number; staffName?: string;
++  items: SaleItem[]; discountCents: number; taxCents: number; tipCents: number;
++  paymentMethod: "PayCash" | "PayCard" | "PayTransfer" | "PayComp";
++};
++export type RegisterShift = {
++  barEventId?: number; stationId: number; cashierName?: string;
++  openingFloatCents: number; expectedCloseCents?: number;
++};
++export type RegisterCountPayload = { shiftId: number; counts: Array<[number, number]> };
++export type RegisterCountResult = { declaredCents: number; expectedCents: number; overShortCents: number; };
++
++async function j<T>(res: Response): Promise<T> {
++  if (!res.ok) throw new Error(await res.text());
++  return res.json();
++}
++
++export const getMenu = (bookingId: number) =>
++  fetch(`${API}/bar/menu?bookingId=${bookingId}`).then(j<MenuItem[]>);
++
++export const listStations = (bookingId: number) =>
++  fetch(`${API}/bar/events/${bookingId}/stations`).then(j<any[]>);
++
++export const createStation = (bookingId: number, station: { name: string; location?: string }) =>
++  fetch(`${API}/bar/events/${bookingId}/stations`, {
++    method: "POST",
++    headers: { "Content-Type": "application/json" },
++    body: JSON.stringify({ barEventId: 0, isActive: true, ...station })
++  }).then(j<any>);
++
++export const openRegister = (payload: RegisterShift) =>
++  fetch(`${API}/bar/register/open`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(j<any>);
++
++export const cashDrop = (payload: { shiftId: number; amountCents: number; bagNumber?: string; notes?: string }) =>
++  fetch(`${API}/bar/register/cash-drops`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(j<any>);
++
++export const countRegister = (payload: RegisterCountPayload) =>
++  fetch(`${API}/bar/register/count`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(j<RegisterCountResult>);
++
++export const closeRegister = (payload: { shiftIdClose: number; declaredCloseCents: number }) =>
++  fetch(`${API}/bar/register/close`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(j<any>);
++
++export const postSale = (payload: SalePayload) =>
++  fetch(`${API}/bar/sales`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(j<any>);
++
++export const getShiftSummary = (shiftId: number) =>
++  fetch(`${API}/bar/register/shifts/${shiftId}/summary`).then(j<any>);
+diff --git a/src/pages/bar/Sell.tsx b/src/pages/bar/Sell.tsx
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/src/pages/bar/Sell.tsx
+@@ -0,0 +80 @@
++import { useEffect, useMemo, useState } from "react";
++import { useQuery, useMutation } from "@tanstack/react-query";
++import { getMenu, postSale, type MenuItem, type SaleItem } from "../../api/bar";
++import { Box, Button, Chip, Divider, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
++
++export default function SellPage() {
++  const params = new URLSearchParams(location.search);
++  const bookingId = Number(params.get("bookingId") || "0");
++  const stationId = Number(params.get("stationId") || "0");
++  const shiftId = Number(params.get("shiftId") || "0");
++
++  const { data: menu } = useQuery({ queryKey: ["menu", bookingId], queryFn: () => getMenu(bookingId), enabled: bookingId > 0 });
++  const [items, setItems] = useState<SaleItem[]>([]);
++  const [tipCents, setTipCents] = useState(0);
++  const [discountCents, setDiscountCents] = useState(0);
++  const [paymentMethod, setPaymentMethod] = useState<"PayCash" | "PayCard" | "PayTransfer" | "PayComp">("PayCash");
++
++  const addItem = (mi: MenuItem) => {
++    setItems((prev) => {
++      const idx = prev.findIndex((p) => p.productId === Number(mi.miProductId));
++      if (idx >= 0) { const next = [...prev]; (next[idx].qty as number) += 1; return next; }
++      return [...prev, { productId: Number(mi.miProductId), qty: 1, unitPriceCents: mi.miUnitPriceCents }];
++    });
++  };
++
++  const subtotal = items.reduce((s, i) => s + i.qty * i.unitPriceCents, 0);
++  const taxCents = Math.round(subtotal * 0.00);
++  const total = subtotal - discountCents + taxCents + tipCents;
++
++  const { mutate: submitSale, isPending } = useMutation({
++    mutationFn: () => postSale({ bookingId, stationId, shiftId, items, discountCents, taxCents, tipCents, paymentMethod } as any),
++    onSuccess: () => setItems([])
++  });
++
++  return (
++    <Grid container spacing={2} p={2}>
++      <Grid item xs={8}>
++        <Typography variant="h5">Menu</Typography>
++        <Divider sx={{ my: 1 }}/>
++        <Grid container spacing={1}>
++          {menu?.map(mi => (
++            <Grid item xs={4} key={String(mi.miProductId)}>
++              <Paper onClick={() => addItem(mi)} sx={{ p:2, cursor:"pointer" }}>
++                <Typography fontWeight={700}>{mi.miName}</Typography>
++                <Typography>${(mi.miUnitPriceCents/100).toFixed(2)}</Typography>
++                <Chip size="small" label={mi.miCategory}/>
++              </Paper>
++            </Grid>
++          ))}
++        </Grid>
++      </Grid>
++
++      <Grid item xs={4}>
++        <Typography variant="h5">Order</Typography>
++        <Divider sx={{ my: 1 }}/>
++        <Stack spacing={1}>
++          {items.map((i,idx) => (
++            <Paper key={idx} sx={{ p:1, display:"flex", justifyContent:"space-between" }}>
++              <span>{i.qty} × ${(i.unitPriceCents/100).toFixed(2)}</span>
++              <strong>${((i.qty*i.unitPriceCents)/100).toFixed(2)}</strong>
++            </Paper>
++          ))}
++          <Divider/>
++          <TextField label="Tip ($)" type="number" onChange={e => setTipCents(Math.round(Number(e.target.value||0)*100))}/>
++          <TextField label="Discount ($)" type="number" onChange={e => setDiscountCents(Math.round(Number(e.target.value||0)*100))}/>
++          <Divider/>
++          <Typography>Subtotal: ${(subtotal/100).toFixed(2)}</Typography>
++          <Typography>Tax: ${(taxCents/100).toFixed(2)}</Typography>
++          <Typography variant="h6">Total: ${(total/100).toFixed(2)}</Typography>
++          <Stack direction="row" spacing={1}>
++            {(["PayCash","PayCard","PayTransfer","PayComp"] as const).map(m =>
++              <Button key={m} variant={paymentMethod===m?"contained":"outlined"} onClick={() => setPaymentMethod(m)}>{m.replace("Pay","")}</Button>
++            )}
++          </Stack>
++          <Button disabled={isPending || items.length===0 || !shiftId} variant="contained" onClick={() => submitSale()}>Charge</Button>
++        </Stack>
++      </Grid>
++    </Grid>
++  );
++}
+diff --git a/src/pages/bar/Register.tsx b/src/pages/bar/Register.tsx
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/src/pages/bar/Register.tsx
+@@ -0,0 +92 @@
++import { useMutation } from "@tanstack/react-query";
++import { openRegister, cashDrop, countRegister, closeRegister, type RegisterCountPayload } from "../../api/bar";
++import { Button, Divider, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
++import { useMemo, useState } from "react";
++
++const USD_DENOMS = [10000,5000,2000,1000,500,100,25,10,5,1]; // cents
++
++export default function RegisterPage() {
++  const params = new URLSearchParams(location.search);
++  const bookingId = Number(params.get("bookingId") || "0");
++  const stationId = Number(params.get("stationId") || "0");
++
++  const [shift, setShift] = useState<any | null>(null);
++  const [counts, setCounts] = useState<Record<number, number>>({});
++  const [dropAmount, setDropAmount] = useState(0);
++
++  const { mutate: doOpen } = useMutation({
++    mutationFn: (openingFloat: number) => openRegister({ stationId, openingFloatCents: openingFloat } as any),
++    onSuccess: (s) => setShift(s)
++  });
++
++  const { mutate: doDrop } = useMutation({
++    mutationFn: () => cashDrop({ shiftId: Number(shift?.key || shift?.id || 0), amountCents: dropAmount }),
++    onSuccess: () => setDropAmount(0)
++  });
++
++  const sumDeclared = useMemo(() => Object.entries(counts).reduce((s,[den,cnt]) => s + Number(den) * Number(cnt), 0), [counts]);
++
++  const { mutate: doCount, data: countRes } = useMutation({
++    mutationFn: (): Promise<any> => {
++      const payload: RegisterCountPayload = {
++        shiftId: Number(shift?.key || shift?.id || 0),
++        counts: Object.entries(counts).map(([den,cnt]) => [Number(den), Number(cnt)] as [number,number])
++      };
++      return countRegister(payload);
++    }
++  });
++
++  const { mutate: doClose, data: closed } = useMutation({
++    mutationFn: () => closeRegister({ shiftIdClose: Number(shift?.key || shift?.id || 0), declaredCloseCents: sumDeclared })
++  });
++
++  return (
++    <Grid container spacing={2} p={2}>
++      <Grid item xs={6}>
++        <Paper sx={{ p:2 }}>
++          <Typography variant="h6">Open Register</Typography>
++          <Stack direction="row" spacing={1} mt={1}>
++            <TextField label="Opening Float ($)" type="number" id="opening"
++              onKeyDown={(e) => { if (e.key === "Enter") doOpen(Math.round(Number((e.target as HTMLInputElement).value||0) * 100)); }}/>
++            <Button variant="contained" onClick={() => {
++              const el = document.getElementById("opening") as HTMLInputElement;
++              doOpen(Math.round(Number((el?.value||0)) * 100));
++            }}>Open</Button>
++          </Stack>
++        </Paper>
++
++        <Paper sx={{ p:2, mt:2 }}>
++          <Typography variant="h6">Cash Drop</Typography>
++          <Stack direction="row" spacing={1} mt={1}>
++            <TextField label="Drop ($)" type="number" value={dropAmount/100} onChange={e => setDropAmount(Math.round(Number(e.target.value||0)*100))}/>
++            <Button disabled={!shift} variant="outlined" onClick={() => doDrop()}>Record Drop</Button>
++          </Stack>
++        </Paper>
++      </Grid>
++
++      <Grid item xs={6}>
++        <Paper sx={{ p:2 }}>
++          <Typography variant="h6">Count Drawer</Typography>
++          <Divider sx={{ my:1 }}/>
++          <Grid container spacing={1}>
++            {USD_DENOMS.map(den => (
++              <Grid item xs={6} key={den}>
++                <Stack direction="row" spacing={1} alignItems="center">
++                  <Typography sx={{ minWidth: 80 }}>${(den/100).toFixed(2)}</Typography>
++                  <TextField type="number" size="small" onChange={e => setCounts(c => ({...c, [den]: Number(e.target.value||0)}))}/>
++                </Stack>
++              </Grid>
++            ))}
++          </Grid>
++          <Divider sx={{ my:1 }}/>
++          <Typography>Declared: ${(sumDeclared/100).toFixed(2)}</Typography>
++          <Stack direction="row" spacing={1} mt={1}>
++            <Button disabled={!shift} onClick={() => doCount()} variant="outlined">Compute Over/Short</Button>
++            <Button disabled={!shift} onClick={() => doClose()} variant="contained">Close Shift</Button>
++          </Stack>
++          {countRes && <Typography mt={1}>Expected: ${(countRes.expectedCents/100).toFixed(2)} — Over/Short: ${(countRes.overShortCents/100).toFixed(2)}</Typography>}
++        </Paper>
++      </Grid>
++    </Grid>
++  );
++}
+diff --git a/src/pages/bar/Inventory.tsx b/src/pages/bar/Inventory.tsx
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/src/pages/bar/Inventory.tsx
+@@ -0,0 +13 @@
++import { Typography, Box } from "@mui/material";
++
++export default function InventoryPage() {
++  return (
++    <Box p={2}>
++      <Typography variant="h5">Inventory (Coming Soon)</Typography>
++      <Typography variant="body1" sx={{ mt:1 }}>
++        This screen will let you receive stock, transfer between stations, and record waste/adjustments.
++        Use the backend endpoint <code>POST /bar/stock/movements</code> to drive changes.
++      </Typography>
++    </Box>
++  );
++}
+diff --git a/src/pages/bar/Staff.tsx b/src/pages/bar/Staff.tsx
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/src/pages/bar/Staff.tsx
+@@ -0,0 +14 @@
++import { Typography, Box } from "@mui/material";
++
++export default function StaffPage() {
++  return (
++    <Box p={2}>
++      <Typography variant="h5">Staff (Coming Soon)</Typography>
++      <Typography variant="body1" sx={{ mt:1 }}>
++        This screen will let you view personnel by role (Bartender, Cashier, Security, etc.)
++        and start/stop shifts per event/station. It will call:
++        <code>GET /bar/events/:bookingId/staff</code> and <code>POST /bar/staff/shifts/start|stop</code>.
++      </Typography>
++    </Box>
++  );
++}

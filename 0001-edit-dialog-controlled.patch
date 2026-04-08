@@ -1,0 +1,107 @@
+diff --git a/src/pages/PartiesPage.tsx b/src/pages/PartiesPage.tsx
+index 1111111..2222222 100644
+--- a/src/pages/PartiesPage.tsx
++++ b/src/pages/PartiesPage.tsx
+@@ -1,9 +1,9 @@
+-import { useMemo, useState, useEffect } from 'react';
++import React, { useMemo, useState, useEffect } from 'react';
+ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+ import { Parties } from '../api/parties';
+ import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
+-import { useForm } from 'react-hook-form';
++import { useForm, Controller } from 'react-hook-form';
+ import { z } from 'zod';
+ import { zodResolver } from '@hookform/resolvers/zod';
+ import {
+   Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
+   DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead,
+@@
+ function EditPartyDialog({
+   party, open, onClose
+ }: { party: PartyDTO | null; open: boolean; onClose: () => void }) {
+@@
+-  const { register, handleSubmit, reset, formState: { errors }, watch } = useForm<EditForm>({
+-    resolver: zodResolver(editSchema),
+-    values: party ? {
+-      displayName: party.displayName,
+-      isOrg: party.isOrg,
+-      legalName: party.legalName ?? '',
+-      primaryEmail: party.primaryEmail ?? '',
+-      primaryPhone: party.primaryPhone ?? '',
+-      whatsapp: party.whatsapp ?? '',
+-      instagram: party.instagram ?? '',
+-      taxId: party.taxId ?? '',
+-      emergencyContact: party.emergencyContact ?? '',
+-      notes: party.notes ?? '',
+-    } : undefined,
+-  });
++  const { control, register, handleSubmit, reset, formState: { errors } } = useForm<EditForm>({
++    resolver: zodResolver(editSchema),
++    // Keep the form controlled from the very first render
++    defaultValues: {
++      displayName: '',
++      isOrg: false,
++      legalName: '',
++      primaryEmail: '',
++      primaryPhone: '',
++      whatsapp: '',
++      instagram: '',
++      taxId: '',
++      emergencyContact: '',
++      notes: '',
++    },
++  });
+@@
+   useEffect(() => {
+     // Cuando cambia 'party', refresca los valores
+     if (party) {
+       reset({
+         displayName: party.displayName,
+-        isOrg: party.isOrg,
++        isOrg: party.isOrg,
+         legalName: party.legalName ?? '',
+         primaryEmail: party.primaryEmail ?? '',
+         primaryPhone: party.primaryPhone ?? '',
+         whatsapp: party.whatsapp ?? '',
+         instagram: party.instagram ?? '',
+         taxId: party.taxId ?? '',
+         emergencyContact: party.emergencyContact ?? '',
+         notes: party.notes ?? '',
+       });
+     }
+   }, [party, reset]);
+@@
+-          <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
+-            <FormControlLabel
+-              control={<Switch checked={watch('isOrg')} {...register('isOrg')} />}
+-              label="¿Es organización?"
+-            />
+-          </Grid>
++          <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
++            <Controller
++              name="isOrg"
++              control={control}
++              render={({ field }) => (
++                <FormControlLabel
++                  control={
++                    <Switch
++                      checked={!!field.value}
++                      onChange={(e) => field.onChange(e.target.checked)}
++                      inputRef={field.ref}
++                    />
++                  }
++                  label="¿Es organización?"
++                />
++              )}
++            />
++          </Grid>
+@@
+-      <EditPartyDialog party={editing} open={!!editing} onClose={() => setEditing(null)} />
++      {editing && (
++        <EditPartyDialog
++          key={editing.partyId}
++          party={editing}
++          open
++          onClose={() => setEditing(null)}
++        />
++      )}

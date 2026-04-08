@@ -1,0 +1,29 @@
+
+<!doctype html>
+<html lang="es" class="theme-dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TDF Records</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/tdf-ui/reset.css">
+    <link rel="stylesheet" href="/assets/tdf-ui/tokens.css">
+    <link rel="stylesheet" href="/assets/tdf-ui/components.css">
+    <link rel="icon" href="/assets/tdf-ui/tdf_isotype.svg?v=3" type="image/svg+xml">
+    <link rel="mask-icon" href="/assets/tdf-ui/tdf_isotype.svg?v=3" color="#000000">
+    <style>
+      html, body, #root { height: 100%; margin: 0; }
+    </style>
+    <link rel="stylesheet" href="/assets/tdf-ui/overrides.css?v=3">
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- API status chip mount (self-contained Vite entry) -->
+    <div id="api-status-root"></div>
+    <!-- Vite will bundle this separate entry -->
+    <script type="module" src="/src/status.tsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

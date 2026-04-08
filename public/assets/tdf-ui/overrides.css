@@ -1,0 +1,215 @@
+
+/* === TDF Brand Refresh ===
+   Goals:
+   1) Header/footer logos render via <img> with transparent backgrounds.
+   2) Logos scale to 3× their previous size while remaining responsive.
+   3) Preserve improved header contrast and button legibility from prior hotfix.
+------------------------------------------------------------------ */
+
+/* Header styling + contrast */
+.site-header{
+  background:#0f1117; /* slightly darker */
+  border-bottom:1px solid rgba(255,255,255,.10);
+  backdrop-filter:saturate(160%) blur(10px);
+}
+
+.theme-light .site-header{
+  color:#f5f7ff;
+}
+
+/* Header brand: show large transparent logo and visible wordmark */
+.site-header .brand{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:1rem;
+  white-space:nowrap;
+  font-size:inherit !important;
+  color:inherit !important;
+}
+.site-header .brand::before{ content:none; }
+.site-header .brand > *{ display:revert !important; }
+.site-header .brand .brand-logo{
+  inline-size:clamp(15rem, 36vw, 28rem);
+  max-inline-size:100%;
+}
+.site-header .brand .brand-title{
+  font-size:clamp(1.25rem, 2.2vw, 1.75rem);
+  letter-spacing:0.12em;
+}
+
+/* Nav items + active pill contrast */
+.nav-links a{ color:#f5f7ff !important; font-weight:600; opacity:.95 }
+.nav-links a:hover{ opacity:1 }
+.nav-links a[aria-current="page"]{
+  color:#ffffff !important;
+  background: color-mix(in oklab, var(--brand) 32%, transparent);
+  border:1px solid color-mix(in oklab, var(--brand) 56%, transparent);
+}
+
+/* Header buttons */
+.site-header .btn{ color:#f5f7ff !important; font-weight:600 }
+.site-header .btn.btn-outline{
+  border-color: color-mix(in oklab, white 18%, transparent) !important;
+  background: color-mix(in oklab, white 6%, transparent);
+}
+.site-header .btn.btn-outline:hover{
+  background: color-mix(in oklab, white 12%, transparent) !important;
+  border-color: color-mix(in oklab, white 28%, transparent) !important;
+}
+
+/* Footer brand: mirror header treatment with transparent background */
+.site-footer .brand{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:1.25rem;
+  font-size:inherit !important;
+  color:inherit !important;
+}
+.site-footer .brand::before{ content:none; }
+.site-footer .brand > *{ display:revert !important; }
+.site-footer .brand .brand-logo{
+  inline-size:clamp(15rem, 36vw, 28rem);
+  max-inline-size:100%;
+}
+
+.theme-light .site-header .brand .brand-title{
+  color:#f5f7ff !important;
+}
+
+.theme-light .site-header .user-id{
+  color:rgba(255,255,255,0.75);
+}
+
+@media (max-width: 900px){
+  .site-header .brand .brand-title{
+    display:none;
+  }
+}
+
+/* Keep accessibility text available when present */
+.sr-only{
+  position:absolute !important; width:1px !important; height:1px !important;
+  padding:0 !important; margin:-1px !important; overflow:hidden !important;
+  clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; clip-path:inset(50%) !important;
+}
+
+/* Collapsible side navigation */
+.app-shell{
+  position:relative;
+  transition:grid-template-columns .3s ease;
+}
+
+.app-shell--nav-collapsed{
+  grid-template-columns:1fr;
+}
+
+.app-shell--nav-collapsed .side-nav{
+  display:none;
+}
+
+.side-nav{
+  transition:transform .25s ease, opacity .25s ease, padding .3s ease, border-color .3s ease, background .3s ease;
+}
+
+.side-nav__modules{
+  display:flex;
+  flex-direction:column;
+  gap:1.25rem;
+}
+
+.side-nav__module{
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+}
+
+.side-nav__module-header{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
+
+.side-nav__module-link{
+  flex:1;
+}
+
+.side-nav__module-toggle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  inline-size:2rem;
+  block-size:2rem;
+  border-radius:.65rem;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  color:#f7f8ff;
+  cursor:pointer;
+  transition:background .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.side-nav__module-toggle:hover,
+.side-nav__module-toggle:focus-visible{
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.24);
+  color:#fff;
+  outline:none;
+}
+
+.side-nav__module-toggle-icon{
+  font-size:1rem;
+  line-height:1;
+}
+
+.side-nav__module.is-open .side-nav__module-toggle-icon{
+  transform:translateY(1px);
+}
+
+.side-nav__submenu{
+  display:flex;
+  flex-direction:column;
+  gap:.35rem;
+  padding-left:1.5rem;
+}
+
+.side-nav__submenu[hidden]{
+  display:none !important;
+}
+
+.side-nav-toggle{
+  grid-column:1 / -1;
+  position:sticky;
+  top:5rem;
+  z-index:25;
+  align-self:flex-start;
+  display:inline-flex;
+  align-items:center;
+  gap:0.5rem;
+  margin:0 0 1.5rem;
+  padding:0.5rem 0.9rem;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(13,14,17,0.88);
+  color:#ffffff;
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.side-nav-toggle:hover,
+.side-nav-toggle:focus-visible{
+  background:rgba(116,76,255,0.2);
+  border-color:rgba(255,255,255,0.36);
+  outline:none;
+}
+
+.side-nav-toggle__icon{
+  font-size:1.15rem;
+  line-height:1;
+}
+
+.app-shell--nav-expanded .side-nav-toggle{
+  background:rgba(255,255,255,0.12);
+}

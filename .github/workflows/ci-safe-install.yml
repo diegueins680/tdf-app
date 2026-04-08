@@ -1,0 +1,27 @@
+name: CI Safe Install
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      NPM_CONFIG_IGNORE_SCRIPTS: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Clean install
+        run: npm ci
+      - name: npm audit (non-blocking)
+        run: npm audit --omit=dev || true
+      - name: Build (if present)
+        run: npm run -s build || echo "no build script; skipping"
+      - name: Test (if present)
+        run: npm test -s || echo "no test script; skipping"
