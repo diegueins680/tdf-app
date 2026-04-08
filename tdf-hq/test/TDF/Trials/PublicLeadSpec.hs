@@ -60,6 +60,18 @@ spec = do
         Right _ ->
           expectationFailure "Expected invalid phone input to be rejected"
 
+    it "rejects phone numbers that are too short or too long to be actionable contacts" $ do
+      let assertRejected rawPhone = do
+            result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just rawPhone)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "phone"
+              Right _ ->
+                expectationFailure ("Expected implausible phone input to be rejected: " <> show rawPhone)
+      assertRejected "12345"
+      assertRejected "+1234567890123456"
+
     it "rejects malformed emails instead of creating unusable parties" $ do
       result <- tryCreateOrFetchParty (Just "Test User") (Just "not-an-email") Nothing
       case result of
