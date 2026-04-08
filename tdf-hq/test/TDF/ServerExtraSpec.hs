@@ -19,6 +19,7 @@ import Test.Hspec
 import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
+import TDF.API.Types (AssetCheckinRequest (..))
 import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance), CheckoutTarget (TargetParty, TargetRoom, TargetSession), Room, Session, SessionStatus (InPrep, InSession))
 import TDF.ServerExtra (
     IGInbound (..),
@@ -28,6 +29,7 @@ import TDF.ServerExtra (
     extractMetaInbound,
     normalizeAssetCategory,
     normalizeAssetCategoryUpdate,
+    normalizeAssetCheckinFields,
     normalizeAssetName,
     normalizeAssetNameUpdate,
     normalizeRoomName,
@@ -162,6 +164,17 @@ spec = do
       assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetParty (Just "Crew") Nothing (Just sessionId))
       assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetRoom Nothing (Just roomId) (Just sessionId))
       assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetSession Nothing (Just roomId) (Just sessionId))
+
+  describe "normalizeAssetCheckinFields" $ do
+    it "trims meaningful condition and notes before persisting a check-in" $ do
+      normalizeAssetCheckinFields (AssetCheckinRequest (Just "  Returned OK  ") (Just "  Cables verified  "))
+        `shouldBe` (Just "Returned OK", Just "Cables verified")
+
+    it "drops omitted or blank check-in text so existing checkout context is not silently erased" $ do
+      normalizeAssetCheckinFields (AssetCheckinRequest Nothing Nothing)
+        `shouldBe` (Nothing, Nothing)
+      normalizeAssetCheckinFields (AssetCheckinRequest (Just "   ") (Just "   "))
+        `shouldBe` (Nothing, Nothing)
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do

@@ -308,6 +308,8 @@ inventoryServer user =
       targetKind <- either throwError pure (parseCheckoutTargetKind (coTargetKind req))
       targetRoomKey <- either throwError pure (parseOptionalKeyField @Room "targetRoom" (coTargetRoom req))
       targetSessionKey <- either throwError pure (parseOptionalKeyField @ME.Session "targetSession" (coTargetSession req))
+      let conditionOutVal = normalizeOptionalTextField (coConditionOut req)
+          checkoutNotes = normalizeOptionalTextField (coNotes req)
       let checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
       active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
       when (isJust active) $
@@ -324,11 +326,11 @@ inventoryServer user =
           , assetCheckoutCheckedOutByRef  = checkedOutBy
           , assetCheckoutCheckedOutAt     = now
           , assetCheckoutDueAt            = coDueAt req
-          , assetCheckoutConditionOut     = coConditionOut req
+          , assetCheckoutConditionOut     = conditionOutVal
           , assetCheckoutPhotoDriveFileId = Nothing
           , assetCheckoutReturnedAt       = Nothing
           , assetCheckoutConditionIn      = Nothing
-          , assetCheckoutNotes            = coNotes req
+          , assetCheckoutNotes            = checkoutNotes
           }
         update assetKey [AssetStatus =. Booked]
         getJustEntity checkoutId
@@ -338,16 +340,18 @@ inventoryServer user =
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
       now <- liftIO getCurrentTime
+      let (conditionInUpdate, checkinNotesUpdate) = normalizeAssetCheckinFields req
       mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
       case mOpen of
         Nothing -> throwError err404 { errBody = "No active checkout" }
         Just (Entity checkoutId _) -> do
           recEnt <- withPool $ do
-            update checkoutId
-              [ AssetCheckoutReturnedAt   =. Just now
-              , AssetCheckoutConditionIn  =. ciConditionIn req
-              , AssetCheckoutNotes        =. ciNotes req
-              ]
+            let updates = catMaybes
+                  [ Just (AssetCheckoutReturnedAt =. Just now)
+                  , fmap (\conditionText -> AssetCheckoutConditionIn =. Just conditionText) conditionInUpdate
+                  , fmap (\notesText -> AssetCheckoutNotes =. Just notesText) checkinNotesUpdate
+                  ]
+            update checkoutId updates
             update assetKey [AssetStatus =. Active]
             getJustEntity checkoutId
           pure (toCheckoutDTO recEnt)
@@ -1252,6 +1256,18 @@ parseOptionalKeyField fieldName (Just raw) =
         (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a valid identifier")) })
         (Right . Just)
         (fromPathPiece trimmed)
+
+normalizeOptionalTextField :: Maybe Text -> Maybe Text
+normalizeOptionalTextField Nothing = Nothing
+normalizeOptionalTextField (Just raw) =
+  let trimmed = T.strip raw
+  in if T.null trimmed then Nothing else Just trimmed
+
+normalizeAssetCheckinFields :: AssetCheckinRequest -> (Maybe Text, Maybe Text)
+normalizeAssetCheckinFields AssetCheckinRequest{..} =
+  ( normalizeOptionalTextField ciConditionIn
+  , normalizeOptionalTextField ciNotes
+  )
 
 parseAssetStatus :: Text -> Maybe AssetStatus
 parseAssetStatus = lookupStatus . normalise
