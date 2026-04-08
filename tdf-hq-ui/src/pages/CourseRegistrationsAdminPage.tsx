@@ -1264,6 +1264,11 @@ export default function CourseRegistrationsAdminPage() {
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
+  const followUpSectionTitle = followUps.length > 0
+    ? 'Historial de seguimiento'
+    : isCreatingFirstFollowUp
+      ? 'Primer seguimiento'
+      : 'Seguimiento';
   const followUpComposerTitle = followUpForm.editingId == null ? 'Registrar seguimiento' : 'Editar seguimiento';
   const followUpComposerSummary = followUpForm.editingId != null
     ? editingFollowUpComposerHelpText
@@ -2217,7 +2222,7 @@ export default function CourseRegistrationsAdminPage() {
                   <Stack spacing={2}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
                       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                        <Typography variant="h6">Historial de seguimiento</Typography>
+                        <Typography variant="h6">{followUpSectionTitle}</Typography>
                         {showFollowUpCountChip && (
                           <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
                         )}

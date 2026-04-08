@@ -2449,6 +2449,77 @@ describe('CourseRegistrationsAdminPage', () => {
     await page.cleanup();
   });
 
+  it('keeps history framing out of the follow-up section until there is at least one saved entry', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [],
+      }),
+    );
+
+    let container = document.createElement('div');
+    document.body.appendChild(container);
+    let page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasExactText(document.body, 'Seguimiento')).toBe(true);
+      expect(hasExactText(document.body, 'Historial de seguimiento')).toBe(false);
+      expect(hasExactText(document.body, 'Primer seguimiento')).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasExactText(document.body, 'Primer seguimiento')).toBe(true);
+      expect(hasExactText(document.body, 'Historial de seguimiento')).toBe(false);
+      expect(hasExactText(document.body, 'Seguimiento')).toBe(false);
+    });
+
+    await page.cleanup();
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [buildFollowUp()],
+      }),
+    );
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    page = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasExactText(document.body, 'Historial de seguimiento')).toBe(true);
+      expect(hasExactText(document.body, 'Primer seguimiento')).toBe(false);
+    });
+
+    await page.cleanup();
+  });
+
   it('lets admins close empty optional follow-up details after opening them', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
