@@ -6,6 +6,8 @@
 
 module TDF.ServerProposals
   ( proposalsServer
+  , validateOptionalProposalStatus
+  , validateProposalStatus
   , validateTemplateKey
   ) where
 
@@ -16,7 +18,7 @@ import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Char                  (isAlphaNum, isAscii)
 import           Data.List                  (foldl')
 import qualified Data.Map.Strict            as Map
-import           Data.Maybe                 (catMaybes, fromMaybe, maybeToList)
+import           Data.Maybe                 (catMaybes, maybeToList)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
@@ -88,10 +90,10 @@ proposalsServer user =
       ensureCRM
       title <- requireText "title" pcTitle
       latex <- resolveLatex pcLatex pcTemplateKey
+      statusVal <- either throwError pure (validateProposalStatus pcStatus)
       now <- liftIO getCurrentTime
       pipelineCardKey <- parseOptionalKey @ME.PipelineCard pcPipelineCardId
-      let statusVal = fromMaybe "draft" (normalizeStatus pcStatus)
-          proposalRecord = ME.Proposal
+      let proposalRecord = ME.Proposal
             { ME.proposalTitle          = title
             , ME.proposalServiceKind    = pcServiceKind
             , ME.proposalClientPartyId  = toSqlKey <$> pcClientPartyId
@@ -127,7 +129,7 @@ proposalsServer user =
         Just (Entity key proposal) -> do
           now <- liftIO getCurrentTime
           titleUpdate <- traverse (requireText "title") puTitle
-          statusUpdate <- traverse requireStatus puStatus
+          statusUpdate <- either throwError pure (validateOptionalProposalStatus puStatus)
           pipelineCardUpdate <- parseOptionalKeyUpdate @ME.PipelineCard puPipelineCardId
           let updates = catMaybes
                 [ fmap (ME.ProposalTitle =.) titleUpdate
@@ -324,14 +326,25 @@ requireText label raw =
     Nothing -> throwError err400 { errBody = encodeUtf8Lazy (label <> " required") }
     Just val -> pure val
 
-requireStatus :: MonadError ServerError m => Text -> m Text
-requireStatus raw =
-  case normalizeText raw of
-    Nothing -> throwError err400 { errBody = "status required" }
-    Just val -> pure val
+validateProposalStatus :: Maybe Text -> Either ServerError Text
+validateProposalStatus Nothing = Right "draft"
+validateProposalStatus (Just rawStatus) =
+  case normalizeProposalStatus rawStatus of
+    Just statusVal -> Right statusVal
+    Nothing ->
+      Left err400 { errBody = "status must be one of: draft, sent" }
 
-normalizeStatus :: Maybe Text -> Maybe Text
-normalizeStatus = (>>= normalizeText)
+validateOptionalProposalStatus :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalStatus Nothing = Right Nothing
+validateOptionalProposalStatus (Just rawStatus) =
+  Just <$> validateProposalStatus (Just rawStatus)
+
+normalizeProposalStatus :: Text -> Maybe Text
+normalizeProposalStatus rawStatus =
+  case T.toLower (T.strip rawStatus) of
+    "draft" -> Just "draft"
+    "sent" -> Just "sent"
+    _ -> Nothing
 
 sentAtFromStatus :: Maybe UTCTime -> Text -> UTCTime -> Maybe UTCTime
 sentAtFromStatus current statusVal now =

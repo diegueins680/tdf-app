@@ -46,7 +46,10 @@ import TDF.ServerInternships
     ( validateInternProjectStatusInput,
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
-import TDF.ServerProposals (validateTemplateKey)
+import TDF.ServerProposals
+    ( validateOptionalProposalStatus,
+      validateProposalStatus,
+      validateTemplateKey )
 import TDF.ServerFeedback (normalizeOptionalFeedbackText, validateOptionalFeedbackContactEmail)
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
@@ -402,6 +405,25 @@ main = hspec $ do
                         expectationFailure ("Expected invalid templateKey to be rejected, got: " <> show value)
             assertInvalid "   " "templateKey required"
             assertInvalid "../proposal" "ASCII letters, numbers, hyphens, or underscores"
+
+    describe "proposal status validation" $ do
+        it "defaults omitted create status to draft and normalizes supported explicit statuses" $ do
+            validateProposalStatus Nothing `shouldBe` Right "draft"
+            validateProposalStatus (Just " Sent ") `shouldBe` Right "sent"
+            validateOptionalProposalStatus Nothing `shouldBe` Right Nothing
+            validateOptionalProposalStatus (Just " DRAFT ")
+                `shouldBe` Right (Just "draft")
+
+        it "rejects blank or unknown proposal statuses instead of persisting UI-opaque values" $ do
+            let assertInvalid result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "status must be one of: draft, sent"
+                    Right value ->
+                        expectationFailure ("Expected invalid proposal status to be rejected, got: " <> show value)
+            assertInvalid (validateProposalStatus (Just "   "))
+            assertInvalid (validateProposalStatus (Just "archived"))
+            assertInvalid (validateOptionalProposalStatus (Just "queued"))
 
     describe "validateContractId" $ do
         it "accepts UUID-shaped contract ids and canonicalizes surrounding whitespace" $
