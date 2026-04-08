@@ -122,6 +122,7 @@ export default function AdminUsersPage() {
   const showMixedContactStateGuidance = visibleUsersMissingContactCount > 0 && visibleUsersWithContactCount > 0;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showClearSearchAction = showSearchField && hasActiveSearch;
+  const showProfileLinkGuidance = visibleUsers.length > 0;
   const visibleUsersSummary = useMemo(() => {
     if (!hasUsers || showSingleUserGuidance || visibleUsers.length === 0) return '';
 
@@ -198,6 +199,11 @@ export default function AdminUsersPage() {
               {visibleUsersSummary && (
                 <Typography variant="body2" color="text.secondary">
                   {visibleUsersSummary}
+                </Typography>
+              )}
+              {showProfileLinkGuidance && (
+                <Typography variant="body2" color="text.secondary">
+                  Haz clic en el nombre para abrir el perfil.
                 </Typography>
               )}
             </Stack>
@@ -291,7 +297,17 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
       }}
     >
       <Box sx={{ minWidth: 180 }}>
-        <Typography variant="subtitle1" fontWeight={700}>{identity.primary}</Typography>
+        <Link
+          component={RouterLink}
+          to={profilePath}
+          underline="hover"
+          color="primary"
+          variant="subtitle1"
+          aria-label={`Abrir perfil de ${identity.primary}`}
+          sx={{ display: 'inline-flex', width: 'fit-content', fontWeight: 700 }}
+        >
+          {identity.primary}
+        </Link>
         <Typography variant="body2" color="text.secondary">
           {identity.secondary}
         </Typography>
@@ -299,17 +315,6 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
           <Typography variant="body2" color="text.secondary">
             {contactSummary}
           </Typography>
-        )}
-        {hasContactInfo && (
-          <Link
-            component={RouterLink}
-            to={profilePath}
-            underline="hover"
-            variant="body2"
-            sx={{ display: 'inline-flex', mt: 0.5 }}
-          >
-            Abrir perfil
-          </Link>
         )}
       </Box>
       <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />

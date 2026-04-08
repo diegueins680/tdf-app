@@ -85,6 +85,11 @@ const getButtonsByText = (root: ParentNode, labelText: string) =>
     (element) => buttonText(element) === labelText || element.getAttribute('aria-label') === labelText,
   );
 
+const hasLinkWithTextAndHref = (root: ParentNode, labelText: string, href: string) =>
+  Array.from(root.querySelectorAll<HTMLAnchorElement>('a')).some(
+    (link) => buttonText(link) === labelText && link.getAttribute('href') === href,
+  );
+
 const clickButton = async (button: HTMLElement) => {
   await act(async () => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -297,7 +302,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps one clear missing-contact action per row and summarizes readiness once in the header', async () => {
+  it('moves profile access into the linked identity so each row keeps only one explicit CTA', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),
       buildUser({
@@ -318,25 +323,22 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
-        expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(0);
         expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
         expect(container.textContent).toContain(
           '2 usuarios en esta vista. Busca por nombre, ID, contacto o acceso. 1 listo para comunicación y 1 pendiente de contacto.',
         );
+        expect(container.textContent).toContain('Haz clic en el nombre para abrir el perfil.');
         expect(container.textContent).not.toContain('1 usuario sigue sin canal de contacto');
         expect(container.textContent).not.toContain('1 sin contacto');
 
         const readyContactRow = getRowByUserId(container, 101);
-        expect(readyContactRow.textContent).toContain('Abrir perfil');
+        expect(readyContactRow.textContent).not.toContain('Abrir perfil');
         expect(readyContactRow.textContent).not.toContain('Ver perfil');
         expect(readyContactRow.textContent).not.toContain('Perfil y contacto');
         expect(readyContactRow.querySelectorAll('button')).toHaveLength(1);
-        expect(
-          Array.from(readyContactRow.querySelectorAll<HTMLAnchorElement>('a')).some(
-            (link) => buttonText(link) === 'Abrir perfil' && link.getAttribute('href') === '/perfil/9',
-          ),
-        ).toBe(true);
+        expect(hasLinkWithTextAndHref(readyContactRow, 'Ada Lovelace', '/perfil/9')).toBe(true);
 
         const missingContactRow = getRowByUserId(container, 102);
         expect(missingContactRow.textContent).toContain('Completar contacto');
@@ -344,6 +346,7 @@ describe('AdminUsersPage', () => {
         expect(missingContactRow.textContent).not.toContain('Falta contacto');
         expect(missingContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
         expect(missingContactRow.querySelectorAll('button')).toHaveLength(0);
+        expect(hasLinkWithTextAndHref(missingContactRow, 'Grace Hopper', '/perfil/10')).toBe(true);
         expect(
           Array.from(missingContactRow.querySelectorAll<HTMLAnchorElement>('a')).filter(
             (link) => buttonText(link) === 'Completar contacto',
@@ -423,18 +426,15 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain(
           'Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
         );
+        expect(container.textContent).toContain('Haz clic en el nombre para abrir el perfil.');
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(container.textContent).not.toContain('1 usuario');
-        expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(0);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
 
         const loneRow = getRowByUserId(container, 101);
         expect(loneRow.querySelectorAll('button')).toHaveLength(1);
-        expect(
-          Array.from(loneRow.querySelectorAll<HTMLAnchorElement>('a')).some(
-            (link) => buttonText(link) === 'Abrir perfil' && link.getAttribute('href') === '/perfil/9',
-          ),
-        ).toBe(true);
+        expect(hasLinkWithTextAndHref(loneRow, 'Ada Lovelace', '/perfil/9')).toBe(true);
       });
     } finally {
       await cleanup();
