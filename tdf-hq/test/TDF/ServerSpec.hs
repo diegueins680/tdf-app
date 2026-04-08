@@ -32,7 +32,12 @@ import TDF.Server
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     )
-import TDF.ServerAuth (resolvePasswordResetDelivery, runPasswordResetConfirm)
+import TDF.ServerAuth
+    ( normalizeAuthEmailAddress
+    , resolvePasswordResetDelivery
+    , runPasswordResetConfirm
+    , signupEmailExists
+    )
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -105,6 +110,41 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure ("Expected invalid CMS status to be rejected, got: " <> show statusVal)
             assertInvalid (validateCmsContentStatus (Just "   "))
             assertInvalid (validateCmsContentStatus (Just "scheduled"))
+
+    describe "normalizeAuthEmailAddress" $ do
+        it "trims and lowercases valid auth emails before signup or reset flows use them" $ do
+            normalizeAuthEmailAddress " User@Example.com " `shouldBe` Just "user@example.com"
+
+        it "rejects blank or malformed auth emails instead of sending ambiguous auth responses" $ do
+            normalizeAuthEmailAddress "   " `shouldBe` Nothing
+            normalizeAuthEmailAddress "not-an-email" `shouldBe` Nothing
+            normalizeAuthEmailAddress "user@ example.com" `shouldBe` Nothing
+
+    describe "signupEmailExists" $ do
+        it "treats mixed-case stored usernames or party emails as the same signup identity" $ do
+            exists <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Signup User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "User@Example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                _ <- insert UserCredential
+                    { userCredentialPartyId = partyId
+                    , userCredentialUsername = "User@Example.com"
+                    , userCredentialPasswordHash = "hashed"
+                    , userCredentialActive = True
+                    }
+                signupEmailExists "user@example.com"
+            exists `shouldBe` True
 
     describe "resolvePasswordResetDelivery" $ do
         it "resolves active accounts by stored primary email even when the username differs" $ do

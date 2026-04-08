@@ -16,8 +16,10 @@ module TDF.ServerAuth
   , passwordResetConfirm
   , authV1Server
   , PasswordResetError
+  , normalizeAuthEmailAddress
   , resolvePasswordResetDelivery
   , runPasswordResetConfirm
+  , signupEmailExists
   ) where
 
 import Control.Applicative ((<|>))
@@ -29,6 +31,7 @@ import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, valida
 import Data.Aeson (FromJSON (..), Value (..), eitherDecode, withObject, (.:), (.:?))
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
+import Data.Char (isSpace)
 import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
@@ -227,7 +230,7 @@ signup SignupRequest
   , internshipSkills = rawInternshipSkills
   , internshipAreas = rawInternshipAreas
   } = do
-  let emailClean = T.strip rawEmail
+  let emailInput = T.strip rawEmail
       passwordClean = T.strip rawPassword
       firstClean = T.strip rawFirst
       lastClean = T.strip rawLast
@@ -235,11 +238,12 @@ signup SignupRequest
       claimArtistIdClean = rawClaimArtistId >>= (\val -> if val > 0 then Just val else Nothing)
       internshipSkillsClean = cleanOptional rawInternshipSkills
       internshipAreasClean = cleanOptional rawInternshipAreas
-      displayNameText =
+  when (T.null emailInput) $ throwBadRequest "Email is required"
+  emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
+  let displayNameText =
         case filter (not . T.null) [firstClean, lastClean] of
           [] -> emailClean
           xs -> T.unwords xs
-  when (T.null emailClean) $ throwBadRequest "Email is required"
   when (T.null passwordClean) $ throwBadRequest "Password is required"
   when (T.length passwordClean < 8) $ throwBadRequest "Password must be at least 8 characters"
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
@@ -332,8 +336,9 @@ changePassword mAuthHeader ChangePasswordRequest{..} = do
 
 passwordReset :: PasswordResetRequest -> AppM NoContent
 passwordReset PasswordResetRequest{..} = do
-  let emailClean = T.strip email
-  when (T.null emailClean) $ throwBadRequest "Email is required"
+  let emailInput = T.strip email
+  when (T.null emailInput) $ throwBadRequest "Email is required"
+  emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
   Env pool cfg <- ask
   let emailSvc = EmailSvc.mkEmailService cfg
   mPayload <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
@@ -401,6 +406,38 @@ resolvePasswordResetDelivery rawEmail = do
           let mRecipientEmail = mParty >>= cleanOptional . M.partyPrimaryEmail
               displayName = maybe emailQuery M.partyDisplayName mParty
           pure ((\recipientEmail -> (cred, recipientEmail, displayName)) <$> mRecipientEmail)
+
+normalizeAuthEmailAddress :: Text -> Maybe Text
+normalizeAuthEmailAddress raw =
+  let normalized = T.toLower (T.strip raw)
+  in if isValidAuthEmailAddress normalized then Just normalized else Nothing
+
+isValidAuthEmailAddress :: Text -> Bool
+isValidAuthEmailAddress candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      not (T.null localPart)
+        && not (T.null domain)
+        && not (T.any isSpace candidate)
+        && not (T.isPrefixOf "." domain)
+        && not (T.isSuffixOf "." domain)
+        && T.isInfixOf "." domain
+    _ -> False
+
+signupEmailExists :: Text -> SqlPersistT IO Bool
+signupEmailExists rawEmail = do
+  let emailQuery = T.strip rawEmail
+      query =
+        "SELECT ?? FROM user_credential \
+        \ LEFT JOIN party ON user_credential.party_id = party.id \
+        \ WHERE lower(trim(user_credential.username)) = lower(?) \
+        \    OR lower(trim(COALESCE(party.primary_email, ''))) = lower(?) \
+        \ LIMIT 1"
+  if T.null emailQuery
+    then pure False
+    else do
+      creds <- rawSql query [PersistText emailQuery, PersistText emailQuery]
+      pure (not (null (creds :: [Entity UserCredential])))
 
 verifyGoogleIdToken :: Manager -> Text -> Maybe Text -> IO (Either Text GoogleProfile)
 verifyGoogleIdToken manager rawToken mExpectedClientId = do
@@ -545,10 +582,10 @@ runSignupDb
   -> UTCTime
   -> SqlPersistT IO (Either SignupDbError LoginResponse)
 runSignupDb emailVal passwordVal displayNameText phoneVal rolesVal fanArtistIdsVal mClaimArtistId internStartAt internEndAt internRequiredHours internSkills internAreas nowVal = do
-  existing <- getBy (UniqueCredentialUsername emailVal)
-  case existing of
-    Just _ -> pure (Left SignupEmailExists)
-    Nothing -> do
+  existing <- signupEmailExists emailVal
+  if existing
+    then pure (Left SignupEmailExists)
+    else do
       partyResult <- resolveParty displayNameText mClaimArtistId emailVal phoneVal nowVal
       case partyResult of
         Left err -> pure (Left err)
