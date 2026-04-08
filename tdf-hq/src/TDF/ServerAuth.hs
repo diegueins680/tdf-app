@@ -15,7 +15,9 @@ module TDF.ServerAuth
   , passwordReset
   , passwordResetConfirm
   , authV1Server
+  , PasswordResetError
   , resolvePasswordResetDelivery
+  , runPasswordResetConfirm
   ) where
 
 import Control.Applicative ((<|>))
@@ -697,13 +699,13 @@ runPasswordResetConfirm tokenVal passwordVal = do
       | not (apiTokenActive apiToken) -> pure (Left PasswordResetInvalidToken)
       | not (isResetToken (apiTokenLabel apiToken)) -> pure (Left PasswordResetInvalidToken)
       | otherwise -> do
-          let mResetUsername = do
+          let mResetIdentifier = do
                 labelText <- apiTokenLabel apiToken
-                guardResetTokenUsername labelText
-          case mResetUsername of
+                guardResetTokenIdentifier labelText
+          case mResetIdentifier of
             Nothing -> pure (Left PasswordResetInvalidToken)
-            Just resetUsername -> do
-              mCred <- getBy (UniqueCredentialUsername resetUsername)
+            Just resetIdentifier -> do
+              mCred <- lookupCredential resetIdentifier
               case mCred of
                 Nothing -> pure (Left PasswordResetInvalidToken)
                 Just (Entity credId cred)
@@ -726,7 +728,7 @@ runPasswordResetConfirm tokenVal passwordVal = do
     isResetToken Nothing = False
     isResetToken (Just lbl) = "password-reset:" `T.isPrefixOf` lbl
 
-    guardResetTokenUsername lbl =
+    guardResetTokenIdentifier lbl =
       if "password-reset:" `T.isPrefixOf` T.strip lbl
         then resolveUsernameFromLabel lbl
         else Nothing

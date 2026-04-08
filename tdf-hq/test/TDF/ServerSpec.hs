@@ -8,12 +8,12 @@ import Control.Monad.Trans.Reader (ask, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
 import Data.Time.Clock (getCurrentTime)
-import Database.Persist (Entity(..), insert)
+import Database.Persist (Entity(..), get, insert)
 import Database.Persist.Sql (SqlPersistT, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
-import TDF.Models (BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
+import TDF.Models (ApiToken (..), BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
 import TDF.Server
     ( normalizeOptionalInput
     , parseBookingStatus
@@ -32,7 +32,7 @@ import TDF.Server
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     )
-import TDF.ServerAuth (resolvePasswordResetDelivery)
+import TDF.ServerAuth (resolvePasswordResetDelivery, runPasswordResetConfirm)
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -165,6 +165,51 @@ spec = describe "TDF.Server helpers" $ do
                 Nothing -> pure ()
                 Just _ ->
                     expectationFailure "Expected inactive credential to be ignored for password reset delivery"
+
+    describe "runPasswordResetConfirm" $ do
+        it "accepts reset tokens labeled with the account email even when the username differs" $ do
+            (result, updatedHash, tokenActive) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Reset User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "user@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                credId <- insert UserCredential
+                    { userCredentialPartyId = partyId
+                    , userCredentialUsername = "custom-handle"
+                    , userCredentialPasswordHash = "old-hash"
+                    , userCredentialActive = True
+                    }
+                tokenId <- insert ApiToken
+                    { apiTokenToken = "reset-token"
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = Just "password-reset:user@example.com"
+                    , apiTokenActive = True
+                    }
+                result <- runPasswordResetConfirm "reset-token" "new-password-123"
+                updatedCred <- get credId
+                updatedToken <- get tokenId
+                pure
+                    ( result
+                    , fmap userCredentialPasswordHash updatedCred
+                    , fmap apiTokenActive updatedToken
+                    )
+
+            case result of
+                Left _ ->
+                    expectationFailure "Expected password reset confirmation to succeed for email-labeled reset tokens"
+                Right _ -> pure ()
+            updatedHash `shouldNotBe` Just "old-hash"
+            tokenActive `shouldBe` Just False
 
     describe "parseBookingStatus" $ do
         it "parses a known status and ignores surrounding whitespace" $
@@ -444,6 +489,27 @@ initializeAuthSchema = do
         \\"password_hash\" VARCHAR NOT NULL,\
         \\"active\" BOOLEAN NOT NULL,\
         \CONSTRAINT \"unique_credential_username\" UNIQUE (\"username\"),\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"api_token\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"token\" VARCHAR NOT NULL,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"label\" VARCHAR NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\"),\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party_role\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"role\" VARCHAR NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
