@@ -53,6 +53,14 @@ validateOptionalInternTaskStatusInput Nothing = Right Nothing
 validateOptionalInternTaskStatusInput (Just rawStatus) =
   Just <$> validateInternStatusValue "taskStatus" internTaskStatuses rawStatus
 
+validateInternTaskProgressUpdate :: Maybe Int -> Either ServerError (Maybe Int)
+validateInternTaskProgressUpdate Nothing = Right Nothing
+validateInternTaskProgressUpdate (Just rawProgress)
+  | rawProgress < 0 || rawProgress > 100 =
+      Left err400 { errBody = "taskProgress must be between 0 and 100" }
+  | otherwise =
+      Right (Just rawProgress)
+
 validateInternStatusValue :: Text -> [Text] -> Text -> Either ServerError Text
 validateInternStatusValue fieldName allowedStatuses rawStatus
   | T.null canonical =
@@ -295,7 +303,8 @@ internshipsServer user =
       unless (isAdminUser || isOwner) $
         throwError err403 { errBody = "Only admins or assignees can update tasks" }
       statusUpdate <- either throwError pure (validateOptionalInternTaskStatusInput ituStatus)
-      let safeProgress = fmap (clamp 0 100) ituProgress
+      progressUpdate <- either throwError pure (validateInternTaskProgressUpdate ituProgress)
+      let
           adminUpdates =
             [ fmap (ME.InternTaskTitle =.) ituTitle
             , fmap (ME.InternTaskDescription =.) ituDescription
@@ -304,7 +313,7 @@ internshipsServer user =
             ]
           commonUpdates =
             [ fmap (ME.InternTaskStatus =.) statusUpdate
-            , fmap (ME.InternTaskProgress =.) safeProgress
+            , fmap (ME.InternTaskProgress =.) progressUpdate
             ]
           updates =
             if isAdminUser
@@ -613,9 +622,6 @@ internshipsServer user =
     normalizeOptionalText (Just txt) =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
-
-    clamp :: Int -> Int -> Int -> Int
-    clamp lo hi val = max lo (min hi val)
 
 withPool
   :: (MonadReader Env m, MonadIO m)

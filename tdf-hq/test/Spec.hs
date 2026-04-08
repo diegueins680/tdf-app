@@ -44,6 +44,7 @@ import TDF.ServerAdmin (parseSocialErrorsChannel)
 import TDF.Contracts.Server (validateContractId, validateContractPayload)
 import TDF.ServerInternships
     ( validateInternProjectStatusInput,
+      validateInternTaskProgressUpdate,
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
 import TDF.ServerProposals
@@ -532,6 +533,23 @@ main = hspec $ do
             assertInvalid
                 (validateOptionalInternTaskStatusInput (Just "review"))
                 "taskStatus must be one of: todo, doing, blocked, done"
+
+    describe "internship task progress validation" $ do
+        it "preserves omitted progress and accepts explicit values inside the supported range" $ do
+            validateInternTaskProgressUpdate Nothing `shouldBe` Right Nothing
+            validateInternTaskProgressUpdate (Just 0) `shouldBe` Right (Just 0)
+            validateInternTaskProgressUpdate (Just 67) `shouldBe` Right (Just 67)
+            validateInternTaskProgressUpdate (Just 100) `shouldBe` Right (Just 100)
+
+        it "rejects out-of-range progress updates instead of silently clamping them" $ do
+            let assertInvalid result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "taskProgress must be between 0 and 100"
+                    Right value ->
+                        expectationFailure ("Expected invalid internship task progress to be rejected, got " <> show value)
+            assertInvalid (validateInternTaskProgressUpdate (Just (-1)))
+            assertInvalid (validateInternTaskProgressUpdate (Just 101))
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do
