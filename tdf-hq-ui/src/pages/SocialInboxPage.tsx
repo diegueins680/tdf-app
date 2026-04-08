@@ -1289,6 +1289,8 @@ export default function SocialInboxPage() {
   const showUnifiedEmptyState = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
+  const showManualRefresh = !reviewMode;
+  const showHeaderControls = showLimitControl || showManualRefresh;
   const refetch = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -1349,32 +1351,36 @@ export default function SocialInboxPage() {
               : 'Auto respuestas registradas por el cron diario.'}
           </Typography>
         </Stack>
-        <Stack direction="row" spacing={1} alignItems="center">
-          {showLimitControl && (
-            <TextField
-              select
-              label={reviewMode ? 'Limit' : 'Limite'}
-              size="small"
-              value={limit}
-              onChange={(e) => setLimit(parseInboxLimit(e.target.value))}
-              sx={{ minWidth: 120 }}
-            >
-              {LIMIT_OPTIONS.map((value) => (
-                <MenuItem key={value} value={value}>
-                  {value}
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={refetch}
-            disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
-          >
-            {reviewMode ? 'Refresh' : 'Actualizar'}
-          </Button>
-        </Stack>
+        {showHeaderControls && (
+          <Stack direction="row" spacing={1} alignItems="center">
+            {showLimitControl && (
+              <TextField
+                select
+                label={reviewMode ? 'Limit' : 'Limite'}
+                size="small"
+                value={limit}
+                onChange={(e) => setLimit(parseInboxLimit(e.target.value))}
+                sx={{ minWidth: 120 }}
+              >
+                {LIMIT_OPTIONS.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {value}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+            {showManualRefresh && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={refetch}
+                disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
+              >
+                Actualizar
+              </Button>
+            )}
+          </Stack>
+        )}
       </Stack>
       {reviewMode && (
         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>

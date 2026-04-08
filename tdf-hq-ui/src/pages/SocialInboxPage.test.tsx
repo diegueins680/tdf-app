@@ -95,6 +95,9 @@ const renderPage = async (container: HTMLElement, initialEntry = '/social/inbox?
 const countInstagramSetupLinks = (root: ParentNode) =>
   root.querySelectorAll('a[href="/social/instagram?review=1"]').length;
 
+const countButtonsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('button')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
+
 const getLinkByText = (root: ParentNode, labelText: string) => {
   const link = Array.from(root.querySelectorAll('a')).find((candidate) => (candidate.textContent ?? '').trim() === labelText);
   if (!(link instanceof HTMLAnchorElement)) {
@@ -205,6 +208,41 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).not.toContain('Select asset in Instagram setup');
       expect(container.textContent).not.toContain('Open Instagram setup');
       expect(container.textContent).not.toContain('Re-select asset');
+    });
+
+    await cleanup();
+  });
+
+  it('relies on the built-in App Review auto-refresh instead of showing a duplicate Refresh button', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
+      );
+      expect(countButtonsByText(container, 'Refresh')).toBe(0);
+      expect(countButtonsByText(container, 'Actualizar')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the manual refresh action in the normal inbox where auto-refresh is off', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/social/inbox');
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Inbox social');
+      expect(countButtonsByText(container, 'Actualizar')).toBe(1);
+      expect(countButtonsByText(container, 'Refresh')).toBe(0);
+      expect(container.textContent).not.toContain('App Review mode auto-refreshes every 5 seconds');
     });
 
     await cleanup();
