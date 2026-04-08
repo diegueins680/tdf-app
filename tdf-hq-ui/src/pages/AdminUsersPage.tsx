@@ -259,7 +259,6 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
         )}
       </Box>
       <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />
-      {!hasContactInfo && <Chip label="Falta contacto" color="warning" size="small" variant="outlined" />}
       {(rolesSummary || modulesSummary) && (
         <Box sx={{ minWidth: 220, flex: '1 1 240px' }}>
           {rolesSummary && (

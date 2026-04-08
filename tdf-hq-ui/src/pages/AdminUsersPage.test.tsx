@@ -235,14 +235,15 @@ describe('AdminUsersPage', () => {
         expect(noContactRow.textContent).not.toContain('Sin teléfono');
         expect(noContactRow.textContent).not.toContain('Sin correo');
         expect(noContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
-        expect(noContactRow.textContent).toContain('Falta contacto');
+        expect(noContactRow.textContent).toContain('Completar contacto');
+        expect(noContactRow.textContent).not.toContain('Falta contacto');
       });
     } finally {
       await cleanup();
     }
   });
 
-  it('keeps row actions together by surfacing profile access next to communication and explaining missing-contact rows', async () => {
+  it('keeps one clear missing-contact action per row instead of repeating the same warning as extra chrome', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),
       buildUser({
@@ -284,10 +285,16 @@ describe('AdminUsersPage', () => {
         ).toBe(true);
 
         const missingContactRow = getRowByUserId(container, 102);
-        expect(missingContactRow.textContent).toContain('Falta contacto');
         expect(missingContactRow.textContent).toContain('Completar contacto');
         expect(missingContactRow.textContent).not.toContain('Ver perfil');
+        expect(missingContactRow.textContent).not.toContain('Falta contacto');
         expect(missingContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
+        expect(missingContactRow.querySelectorAll('button')).toHaveLength(0);
+        expect(
+          Array.from(missingContactRow.querySelectorAll<HTMLAnchorElement>('a')).filter(
+            (link) => buttonText(link) === 'Completar contacto',
+          ),
+        ).toHaveLength(1);
       });
 
       await clickButton(getButtonsByText(container, 'Comunicación')[0]!);
@@ -333,11 +340,12 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain('2 sin contacto');
         expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(2);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(0);
+        expect(container.textContent).not.toContain('Falta contacto');
 
         const firstRow = getRowByUserId(container, 201);
         const secondRow = getRowByUserId(container, 202);
-        expect(firstRow.textContent).toContain('Falta contacto');
-        expect(secondRow.textContent).toContain('Falta contacto');
+        expect(firstRow.textContent).toContain('Completar contacto');
+        expect(secondRow.textContent).toContain('Completar contacto');
       });
     } finally {
       await cleanup();
