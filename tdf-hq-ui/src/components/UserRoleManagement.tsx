@@ -95,6 +95,7 @@ export default function UserRoleManagement() {
   const [selectedUser, setSelectedUser] = useState<NormalizedUser | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<RoleValue[]>([]);
   const [saving, setSaving] = useState(false);
+  const showContactColumn = users.some((user) => getContactLines(user).length > 0);
 
   useEffect(() => {
     void loadUsers();
@@ -186,77 +187,87 @@ export default function UserRoleManagement() {
           </Stack>
         </Paper>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Usuario</TableCell>
-                <TableCell>Contacto</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Roles</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.map((user) => {
-                const contactLines = getContactLines(user);
+        <Stack spacing={1.5}>
+          {!showContactColumn && (
+            <Typography variant="body2" color="text.secondary">
+              Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato
+              para revisar.
+            </Typography>
+          )}
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Usuario</TableCell>
+                  {showContactColumn && <TableCell>Contacto</TableCell>}
+                  <TableCell>Estado</TableCell>
+                  <TableCell>Roles</TableCell>
+                  <TableCell>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {users.map((user) => {
+                  const contactLines = getContactLines(user);
 
-                return (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <Stack spacing={0.25}>
-                        <Typography variant="body2" fontWeight={600}>
-                          {user.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          ID {user.id}
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      {contactLines.length > 0 ? (
-                        <Box display="flex" flexDirection="column" gap={0.25}>
-                          {contactLines.map((line) => (
-                            <Typography key={`${user.id}-${line}`} variant="body2">
-                              {line}
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <Stack spacing={0.25}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {user.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            ID {user.id}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                      {showContactColumn && (
+                        <TableCell>
+                          {contactLines.length > 0 ? (
+                            <Box display="flex" flexDirection="column" gap={0.25}>
+                              {contactLines.map((line) => (
+                                <Typography key={`${user.id}-${line}`} variant="body2">
+                                  {line}
+                                </Typography>
+                              ))}
+                            </Box>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              Sin email ni teléfono
                             </Typography>
-                          ))}
-                        </Box>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          Sin email ni teléfono
-                        </Typography>
+                          )}
+                        </TableCell>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
-                    </TableCell>
-                    <TableCell>
-                      <Box display="flex" gap={0.5} flexWrap="wrap">
-                        {user.roles.map((role) => (
-                          <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
-                        ))}
-                        {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title="Editar roles">
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => handleEditClick(user)}
-                          aria-label={`Editar roles de ${user.name}`}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      <TableCell>
+                        <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
+                      </TableCell>
+                      <TableCell>
+                        <Box display="flex" gap={0.5} flexWrap="wrap">
+                          {user.roles.map((role) => (
+                            <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
+                          ))}
+                          {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Editar roles">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleEditClick(user)}
+                            aria-label={`Editar roles de ${user.name}`}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Stack>
       )}
 
       <Dialog open={editDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>

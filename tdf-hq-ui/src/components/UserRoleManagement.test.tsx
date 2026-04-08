@@ -192,4 +192,43 @@ describe('UserRoleManagement', () => {
       await cleanup();
     }
   });
+
+  it('hides the empty contact column until at least one admin user has contact info', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 201,
+        name: 'Ada Lovelace',
+        email: '   ',
+        phone: null,
+      }),
+      buildUser({
+        id: 202,
+        name: 'Grace Hopper',
+        email: null,
+        phone: '   ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getHeaders(container)).toEqual(['Usuario', 'Estado', 'Roles', 'Acciones']);
+        expect(container.textContent).toContain(
+          'Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato para revisar.',
+        );
+        expect(container.textContent).not.toContain('Sin email ni teléfono');
+
+        const adaRow = getRowByName(container, 'Ada Lovelace');
+        expect(adaRow.textContent).toContain('ID 201');
+
+        const graceRow = getRowByName(container, 'Grace Hopper');
+        expect(graceRow.textContent).toContain('ID 202');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
 });
