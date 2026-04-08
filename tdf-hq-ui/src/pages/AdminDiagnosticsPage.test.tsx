@@ -120,7 +120,7 @@ describe('AdminDiagnosticsPage', () => {
     window.localStorage.clear();
   });
 
-  it('replaces empty replied-history tables with first-run guidance for each quiet channel', async () => {
+  it('replaces repeated quiet-channel empty states with one first-run summary for the whole section', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -130,7 +130,10 @@ describe('AdminDiagnosticsPage', () => {
         expect(listInstagramMessagesMock).toHaveBeenCalledWith({ direction: 'incoming' });
         expect(listFacebookMessagesMock).toHaveBeenCalledWith({ direction: 'incoming' });
         expect(listWhatsAppMessagesMock).toHaveBeenCalledWith({ direction: 'incoming' });
-        expect(countOccurrences(container, 'Todavía no hay mensajes entrantes en este canal.')).toBe(3);
+        expect(container.textContent).toContain(
+          'Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal.',
+        );
+        expect(countOccurrences(container, 'Todavía no hay mensajes entrantes en este canal.')).toBe(0);
         expect(container.querySelectorAll('thead')).toHaveLength(0);
         expect(container.textContent).not.toContain('Sin mensajes respondidos.');
       });
