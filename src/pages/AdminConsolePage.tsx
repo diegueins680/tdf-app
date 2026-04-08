@@ -61,6 +61,15 @@ function formatDateOrDash(value?: string | null) {
   }
 }
 
+function summarizeAdminUserIdentity(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
+  const displayName = user.displayName?.trim() ?? '';
+  const username = user.username.trim();
+  const primary = displayName || username;
+  const showUsername = displayName !== '' && displayName.toLowerCase() !== username.toLowerCase();
+
+  return { primary, username, showUsername };
+}
+
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
   ACTIVE: { label: 'Activo', color: 'success' },
   INVITED: { label: 'Invitado', color: 'info' },
@@ -338,33 +347,38 @@ export default function AdminConsolePage() {
                   </TableCell>
                 </TableRow>
               )}
-              {users.map((user) => (
-                <TableRow key={user.userId} hover>
-                  <TableCell>
-                    <Stack spacing={0.25}>
-                      <Typography variant="body2" fontWeight={600}>
-                        {user.displayName?.trim() || user.username}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {user.username}
-                      </Typography>
-                      {user.partyId ? (
-                        <Typography variant="caption" color="text.secondary">
-                          Party #{user.partyId}
+              {users.map((user) => {
+                const identity = summarizeAdminUserIdentity(user);
+                return (
+                  <TableRow key={user.userId} hover>
+                    <TableCell>
+                      <Stack spacing={0.25}>
+                        <Typography variant="body2" fontWeight={600}>
+                          {identity.primary}
                         </Typography>
-                      ) : null}
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{formatRoleList(user.roles)}</TableCell>
-                  <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
-                  <TableCell>{renderStatus(user.status)}</TableCell>
-                  <TableCell align="right">
-                    <Button size="small" startIcon={<EditIcon />} onClick={() => setEditingUser(user)}>
-                      Editar roles
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        {identity.showUsername && (
+                          <Typography variant="caption" color="text.secondary">
+                            Usuario: {identity.username}
+                          </Typography>
+                        )}
+                        {user.partyId ? (
+                          <Typography variant="caption" color="text.secondary">
+                            Party #{user.partyId}
+                          </Typography>
+                        ) : null}
+                      </Stack>
+                    </TableCell>
+                    <TableCell>{formatRoleList(user.roles)}</TableCell>
+                    <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
+                    <TableCell>{renderStatus(user.status)}</TableCell>
+                    <TableCell align="right">
+                      <Button size="small" startIcon={<EditIcon />} onClick={() => setEditingUser(user)}>
+                        Editar roles
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>

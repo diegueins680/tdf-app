@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import AdminConsolePage from '../AdminConsolePage';
+import type { AdminUserDTO } from '../../api/types';
 
 const mockAuditLogs = vi.fn();
 const mockConsolePreview = vi.fn();
@@ -41,6 +42,20 @@ function renderPage(queryClient = createQueryClient()) {
         <AdminConsolePage />
       </QueryClientProvider>,
     ),
+  };
+}
+
+function buildAdminUser(overrides: Partial<AdminUserDTO> = {}): AdminUserDTO {
+  return {
+    userId: 101,
+    username: 'ada',
+    displayName: 'Ada Lovelace',
+    partyId: 9,
+    roles: ['Admin'],
+    status: 'ACTIVE',
+    lastLoginAt: null,
+    lastSeenAt: null,
+    ...overrides,
   };
 }
 
@@ -115,6 +130,39 @@ describe('AdminConsolePage', () => {
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'console'] });
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'users'] });
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'audit'] });
+    });
+  });
+
+  it('shows the system username only when it adds new identity context in the admin table', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser(),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'grace',
+        partyId: 10,
+        roles: ['Manager'],
+      }),
+      buildAdminUser({
+        userId: 103,
+        username: 'linus',
+        displayName: '   ',
+        partyId: 11,
+        roles: ['ReadOnly'],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
+      expect(screen.queryByText('Usuario: grace')).not.toBeInTheDocument();
+      expect(screen.queryByText('Usuario: linus')).not.toBeInTheDocument();
+      expect(screen.getAllByText('grace')).toHaveLength(1);
+      expect(screen.getAllByText('linus')).toHaveLength(1);
     });
   });
 });
