@@ -20,6 +20,7 @@ import TDF.Server
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
     , parsePaymentMethodText
+    , validateRolePayload
     , validateServiceAdCurrency
     , validateCmsContentStatus
     , validateCourseNonNegativeField
@@ -212,6 +213,22 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateServiceAdCurrency (Just "   "))
             assertInvalid (validateServiceAdCurrency (Just "usdollars"))
             assertInvalid (validateServiceAdCurrency (Just "12$"))
+
+    describe "validateRolePayload" $ do
+        it "normalizes known role labels before party-role assignment" $ do
+            validateRolePayload " teacher " `shouldBe` Right Teacher
+            validateRolePayload "studio-manager" `shouldBe` Right StudioManager
+            validateRolePayload "readonly" `shouldBe` Right ReadOnly
+
+        it "rejects unknown roles instead of silently downgrading them to ReadOnly" $
+            case validateRolePayload "not-a-role" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "role must be one of:"
+                    BL8.unpack (errBody serverErr) `shouldContain` "ReadOnly"
+                    BL8.unpack (errBody serverErr) `shouldContain` "Teacher"
+                Right roleVal ->
+                    expectationFailure ("Expected invalid role payload to be rejected, got: " <> show roleVal)
 
     describe "parsePaymentMethodText" $ do
         it "defaults missing or blank payment methods to OtherM while normalizing supported values" $ do

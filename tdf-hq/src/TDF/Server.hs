@@ -4412,16 +4412,23 @@ addRole user pidI (RolePayload roleTxt) = do
   requireModule user ModuleAdmin
   Env pool _ <- ask
   let pid  = toSqlKey pidI :: Key Party
-      role = parseRole roleTxt
+  role <- either throwError pure (validateRolePayload roleTxt)
   liftIO $ flip runSqlPool pool $ void $ upsert
     (PartyRole pid role True)
     [ PartyRoleActive =. True ]
   pure NoContent
-  where
-    parseRole t =
-      case readMaybe (T.unpack (T.strip t)) of
-        Just r  -> r
-        Nothing -> ReadOnly
+
+validateRolePayload :: Text -> Either ServerError RoleEnum
+validateRolePayload raw =
+  case roleFromText raw of
+    Just role -> Right role
+    Nothing ->
+      Left err400
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              "role must be one of: "
+                <> T.intercalate ", " (map roleToText ([minBound .. maxBound] :: [RoleEnum]))
+        }
 
 partyRelated :: AuthedUser -> Int64 -> AppM PartyRelatedDTO
 partyRelated user pidI = do
