@@ -97,23 +97,15 @@ function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
         <Stack gap={2} sx={{ mt: 1 }}>
           <TextField label="Nombre / Display" value={name} onChange={(e) => setName(e.target.value)} required />
           <Typography variant="body2" color="text.secondary">
-            Usa Persona para individuos y Empresa para bandas, sellos o negocios.
+            {`Tipo actual: ${isOrg ? 'Empresa' : 'Persona'}. Usa Persona para individuos y Empresa para bandas, sellos o negocios.`}
           </Typography>
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-            <Chip
-              label={isOrg ? 'Empresa' : 'Persona'}
-              color={isOrg ? 'primary' : 'default'}
-              variant={isOrg ? 'filled' : 'outlined'}
-              size="small"
-            />
-            <Button
-              variant="outlined"
-              onClick={() => setIsOrg((prev) => !prev)}
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              {isOrg ? 'Cambiar a persona' : 'Cambiar a empresa'}
-            </Button>
-          </Stack>
+          <Button
+            variant="outlined"
+            onClick={() => setIsOrg((prev) => !prev)}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            {isOrg ? 'Cambiar a persona' : 'Cambiar a empresa'}
+          </Button>
           {mutation.isError && mutation.error && (
             <Alert severity="error">{mutation.error.message}</Alert>
           )}

@@ -276,9 +276,10 @@ describe('PartiesPage', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain(
-          'Usa Persona para individuos y Empresa para bandas, sellos o negocios.',
+          'Tipo actual: Persona. Usa Persona para individuos y Empresa para bandas, sellos o negocios.',
         );
         expect(getButtonsByText(document.body, 'Cambiar a empresa')).toHaveLength(1);
+        expect(Array.from(document.body.querySelectorAll('.MuiChip-root'))).toHaveLength(0);
       });
 
       await act(async () => {
@@ -288,6 +289,10 @@ describe('PartiesPage', () => {
 
       await waitForExpectation(() => {
         expect(getButtonsByText(document.body, 'Cambiar a persona')).toHaveLength(1);
+        expect(document.body.textContent).toContain(
+          'Tipo actual: Empresa. Usa Persona para individuos y Empresa para bandas, sellos o negocios.',
+        );
+        expect(Array.from(document.body.querySelectorAll('.MuiChip-root'))).toHaveLength(0);
       });
     } finally {
       await cleanup();
