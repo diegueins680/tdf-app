@@ -80,6 +80,11 @@ const hasExactText = (root: ParentNode, labelText: string) =>
     (element) => buttonText(element) === labelText,
   );
 
+const countExactText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('*')).filter(
+    (element) => buttonText(element) === labelText,
+  ).length;
+
 const getButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLElement>('button, a')).filter(
     (element) => buttonText(element) === labelText || element.getAttribute('aria-label') === labelText,
@@ -116,11 +121,23 @@ const getInputByLabelText = (root: ParentNode, labelText: string) => {
   if (!label) throw new Error(`Input label not found: ${labelText}`);
 
   const inputId = label.htmlFor;
-  if (!inputId) throw new Error(`Input label has no associated control: ${labelText}`);
+  if (!inputId) {
+    const nestedInput = label.querySelector('input');
+    if (!(nestedInput instanceof HTMLInputElement)) {
+      throw new Error(`Input label has no associated control: ${labelText}`);
+    }
+    return nestedInput;
+  }
 
   const input = label.ownerDocument.getElementById(inputId);
   if (!(input instanceof HTMLInputElement)) throw new Error(`Input not found for label: ${labelText}`);
 
+  return input;
+};
+
+const getCheckboxByLabelText = (root: ParentNode, labelText: string) => {
+  const input = getInputByLabelText(root, labelText);
+  if (input.type !== 'checkbox') throw new Error(`Checkbox not found for label: ${labelText}`);
   return input;
 };
 
@@ -360,6 +377,72 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Dialogo abierto para ada');
         expect(container.textContent).not.toContain('Dialogo abierto para grace-admin');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('summarizes the default active-only scope once and restores row status chips when inactive accounts are included', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 101,
+              partyId: 9,
+              username: 'ada-admin',
+            }),
+            buildUser({
+              userId: 102,
+              partyId: 10,
+              partyName: 'Grace Hopper',
+              username: 'grace-admin',
+              active: false,
+              primaryEmail: 'grace@example.com',
+            }),
+          ]
+        : [
+            buildUser({
+              userId: 101,
+              partyId: 9,
+              username: 'ada-admin',
+            }),
+            buildUser({
+              userId: 103,
+              partyId: 11,
+              partyName: 'Linus View',
+              username: 'linus-view',
+              primaryEmail: 'linus@example.com',
+            }),
+          ],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
+        expect(countExactText(container, 'Activo')).toBe(0);
+        expect(countExactText(container, 'Inactivo')).toBe(0);
+        expect(hasExactText(getRowByUserId(container, 101), 'Ada Lovelace')).toBe(true);
+        expect(hasExactText(getRowByUserId(container, 103), 'Linus View')).toBe(true);
+      });
+
+      const includeInactiveCheckbox = getCheckboxByLabelText(container, 'Incluir inactivos');
+
+      await clickButton(includeInactiveCheckbox);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(container.textContent).not.toContain(
+          'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
+        expect(hasExactText(getRowByUserId(container, 101), 'Activo')).toBe(true);
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
       });
     } finally {
       await cleanup();

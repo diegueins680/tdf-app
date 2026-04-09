@@ -123,6 +123,9 @@ export default function AdminUsersPage() {
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showClearSearchAction = showSearchField && hasActiveSearch;
   const showProfileLinkGuidance = visibleUsers.length > 0;
+  const activeScopeSummary = hasUsers && !includeInactive
+    ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
+    : '';
   const visibleUsersSummary = useMemo(() => {
     if (!hasUsers || showSingleUserGuidance || visibleUsers.length === 0) return '';
 
@@ -201,6 +204,11 @@ export default function AdminUsersPage() {
                   {visibleUsersSummary}
                 </Typography>
               )}
+              {activeScopeSummary && (
+                <Typography variant="body2" color="text.secondary">
+                  {activeScopeSummary}
+                </Typography>
+              )}
               {showProfileLinkGuidance && (
                 <Typography variant="body2" color="text.secondary">
                   Haz clic en el nombre para abrir el perfil.
@@ -258,6 +266,7 @@ export default function AdminUsersPage() {
                   <UserRow
                     key={user.userId}
                     user={user}
+                    showStatusChip={includeInactive}
                     onOpenCommunications={() => setSelectedUser(user)}
                   />
                 ))}
@@ -275,7 +284,15 @@ export default function AdminUsersPage() {
   );
 }
 
-function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommunications: () => void }) {
+function UserRow({
+  user,
+  showStatusChip,
+  onOpenCommunications,
+}: {
+  user: AdminUser;
+  showStatusChip: boolean;
+  onOpenCommunications: () => void;
+}) {
   const contactSummary = getUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
   const rolesSummary = getUserAccessSummary(user.roles);
@@ -317,7 +334,9 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
           </Typography>
         )}
       </Box>
-      <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />
+      {showStatusChip && (
+        <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />
+      )}
       {(rolesSummary || modulesSummary) && (
         <Box sx={{ minWidth: 220, flex: '1 1 240px' }}>
           {rolesSummary && (
