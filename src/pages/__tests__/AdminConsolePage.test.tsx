@@ -291,8 +291,44 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
   });
 
-  it('keeps the role editing action inside the roles column instead of adding a duplicate permissions column', async () => {
+  it('replaces the single-user table with a compact first-user summary', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Primer usuario administrable\. Revísalo aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
+      expect(screen.getByText('Roles: Admin')).toBeInTheDocument();
+      expect(screen.getByText('Último acceso: —')).toBeInTheDocument();
+      expect(screen.getByText('Estado: Activo')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps the role editing action inside the roles column instead of adding a duplicate permissions column', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser(),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'Grace Hopper',
+        partyId: 10,
+        roles: ['Manager'],
+      }),
+    ]);
 
     renderPage();
 
@@ -302,8 +338,10 @@ describe('AdminConsolePage', () => {
       expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
       expect(screen.getByText('Admin')).toBeInTheDocument();
+      expect(screen.getByText('Manager')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toBeInTheDocument();
-      expect(screen.getByText('Editar roles')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toBeInTheDocument();
+      expect(screen.getAllByText('Editar roles')).toHaveLength(2);
     });
   });
 

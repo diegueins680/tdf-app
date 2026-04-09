@@ -211,7 +211,12 @@ export default function AdminConsolePage() {
   const users = usersQuery.data ?? [];
   const isUsersLoading = usersQuery.isLoading;
   const usersError = usersQuery.isError ? (usersQuery.error as Error).message : null;
-  const showUsersTable = isUsersLoading || users.length > 0;
+  const singleAdminUser = !isUsersLoading && users.length === 1 ? (users[0] ?? null) : null;
+  const singleAdminUserIdentity = singleAdminUser ? summarizeAdminUserIdentity(singleAdminUser) : null;
+  const singleAdminUserStatusLabel = singleAdminUser?.status
+    ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
+    : '—';
+  const showUsersTable = isUsersLoading || users.length > 1;
   const showAuditTable = auditQuery.isLoading || audits.length > 0;
   const showGettingStartedGuidance =
     !consoleQuery.isPending
@@ -460,6 +465,62 @@ export default function AdminConsolePage() {
               </TableBody>
             </Table>
           </TableContainer>
+        ) : singleAdminUser && !usersError ? (
+          <Box sx={{ px: 2, pb: 2 }}>
+            <Stack spacing={1.25}>
+              <Typography variant="body2" color="text.secondary">
+                Primer usuario administrable. Revísalo aquí; cuando exista el segundo, volverá la tabla comparativa.
+              </Typography>
+              <Stack
+                spacing={1}
+                direction={{ xs: 'column', md: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'flex-start', md: 'center' }}
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 1.25,
+                }}
+              >
+                <Stack spacing={0.25}>
+                  <Typography variant="body2" fontWeight={600}>
+                    {singleAdminUserIdentity?.primary}
+                  </Typography>
+                  {singleAdminUserIdentity?.showUsername && (
+                    <Typography variant="caption" color="text.secondary">
+                      Usuario: {singleAdminUserIdentity.username}
+                    </Typography>
+                  )}
+                  {singleAdminUser.partyId ? (
+                    <Typography variant="caption" color="text.secondary">
+                      Party #{singleAdminUser.partyId}
+                    </Typography>
+                  ) : null}
+                </Stack>
+                <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+                  <Typography variant="body2">
+                    Roles: {formatRoleList(singleAdminUser.roles)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Último acceso: {formatDateOrDash(singleAdminUser.lastSeenAt ?? singleAdminUser.lastLoginAt)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Estado: {singleAdminUserStatusLabel}
+                  </Typography>
+                  <Button
+                    size="small"
+                    onClick={() => setEditingUser(singleAdminUser)}
+                    aria-label={`Editar roles de ${singleAdminUserIdentity?.primary ?? singleAdminUser.username}`}
+                    sx={{ px: 0, minWidth: 0 }}
+                  >
+                    Editar roles
+                  </Button>
+                </Stack>
+              </Stack>
+            </Stack>
+          </Box>
         ) : !usersError ? (
           <Box sx={{ px: 2, pb: 2 }}>
             <Typography variant="body2" color="text.secondary">
