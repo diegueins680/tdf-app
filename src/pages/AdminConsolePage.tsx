@@ -213,7 +213,13 @@ export default function AdminConsolePage() {
   const usersError = usersQuery.isError ? (usersQuery.error as Error).message : null;
   const showUsersTable = isUsersLoading || users.length > 0;
   const showAuditTable = auditQuery.isLoading || audits.length > 0;
-  const showGettingStartedGuidance = !consoleQuery.isPending && consoleCards.length === 0;
+  const showGettingStartedGuidance =
+    !consoleQuery.isPending
+    && !usersQuery.isLoading
+    && !auditQuery.isLoading
+    && consoleCards.length === 0
+    && users.length === 0
+    && audits.length === 0;
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;

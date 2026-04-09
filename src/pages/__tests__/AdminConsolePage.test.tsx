@@ -202,6 +202,32 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
   });
 
+  it('shows the first-run checklist only when the console is actually empty', async () => {
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: 101,
+        entity: 'user',
+        entityId: '101',
+        action: 'roles.updated',
+        diff: 'Admin -> Admin, Manager',
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('roles.updated')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
+  });
+
   it('refreshes every admin dataset from the single panel action', async () => {
     const user = userEvent.setup();
     const { queryClient } = renderPage();
