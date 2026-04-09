@@ -11,7 +11,7 @@ import           Control.Exception      (SomeException, displayException, throwI
 import           Control.Monad          (forM, forM_, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
-import           Data.Char              (isAlphaNum, isDigit, isSpace)
+import           Data.Char              (isAlphaNum, isAsciiLower, isDigit, isSpace)
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, maybeToList)
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
@@ -79,7 +79,18 @@ isValidEmail candidate =
         && not (T.isPrefixOf "." domain)
         && not (T.isSuffixOf "." domain)
         && T.isInfixOf "." domain
+        && all isValidEmailDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidEmailDomainLabel :: Text -> Bool
+isValidEmailDomainLabel label =
+  not (T.null label)
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidEmailDomainChar label
+
+isValidEmailDomainChar :: Char -> Bool
+isValidEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
 validateOptionalEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalEmail Nothing = Right Nothing

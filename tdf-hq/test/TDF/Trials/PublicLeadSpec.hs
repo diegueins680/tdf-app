@@ -77,13 +77,18 @@ spec = do
       assertRejected "+1234567890123456"
 
     it "rejects malformed emails instead of creating unusable parties" $ do
-      result <- tryCreateOrFetchParty (Just "Test User") (Just "not-an-email") Nothing
-      case result of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "email"
-        Right _ ->
-          expectationFailure "Expected invalid email input to be rejected"
+      let assertRejected rawEmail = do
+            result <- tryCreateOrFetchParty (Just "Test User") (Just rawEmail) Nothing
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "email"
+              Right _ ->
+                expectationFailure ("Expected invalid email input to be rejected: " <> show rawEmail)
+      assertRejected "not-an-email"
+      assertRejected "user@example..com"
+      assertRejected "user@-example.com"
+      assertRejected "user@example-.com"
 
     it "rejects free-form text that merely contains digits instead of extracting a misleading partial phone" $ do
       result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "call me at 099 123 4567")
