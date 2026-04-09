@@ -34,9 +34,11 @@ import TDF.ServerExtra (
     normalizeAssetNameUpdate,
     normalizeRoomName,
     normalizeRoomNameUpdate,
+    validatePaymentAmountCents,
     parseCheckoutTargetKind,
     parseOptionalKeyField,
     validatePaymentCurrency,
+    validatePaymentConcept,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validatePaymentMethod,
@@ -244,6 +246,33 @@ spec = do
               expectationFailure ("Expected invalid payment currency error, got " <> show value)
       assertInvalid (validatePaymentCurrency "   ")
       assertInvalid (validatePaymentCurrency "EUR")
+
+  describe "validatePaymentAmountCents" $ do
+    it "accepts positive payment amounts without rewriting them" $ do
+      validatePaymentAmountCents 1 `shouldBe` Right 1
+      validatePaymentAmountCents 25000 `shouldBe` Right 25000
+
+    it "rejects zero or negative payment amounts instead of persisting impossible manual payments" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "amountCents must be greater than 0"
+            Right value ->
+              expectationFailure ("Expected invalid payment amount error, got " <> show value)
+      assertInvalid (validatePaymentAmountCents 0)
+      assertInvalid (validatePaymentAmountCents (-500))
+
+  describe "validatePaymentConcept" $ do
+    it "trims meaningful concepts before storing manual payment rows" $ do
+      validatePaymentConcept "  Honorarios abril  " `shouldBe` Right "Honorarios abril"
+
+    it "rejects blank concepts instead of storing ambiguous payment descriptions" $
+      case validatePaymentConcept "   " of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "concept is required"
+        Right value ->
+          expectationFailure ("Expected invalid payment concept error, got " <> show value)
 
   describe "normalizeServiceCatalogNameUpdate" $ do
     it "preserves omitted names and trims meaningful updates" $ do

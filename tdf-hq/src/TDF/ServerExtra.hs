@@ -1350,7 +1350,9 @@ paymentsServer user =
     createPaymentH PaymentCreate{..} = do
       ensureModule ModuleAdmin user
       paidAt <- parseUTCTimeText pcPaidAt
+      amountCents <- either throwError pure (validatePaymentAmountCents pcAmountCents)
       _ <- either throwError pure (validatePaymentCurrency pcCurrency)
+      conceptVal <- either throwError pure (validatePaymentConcept pcConcept)
       paymentMethodVal <- either throwError pure (validatePaymentMethod pcMethod)
       now <- liftIO getCurrentTime
       let partyKey   = toSqlKey pcPartyId
@@ -1362,10 +1364,10 @@ paymentsServer user =
           , paymentOrderId     = mOrderKey
           , paymentPartyId     = partyKey
           , paymentMethod      = paymentMethodVal
-          , paymentAmountCents = pcAmountCents
+          , paymentAmountCents = amountCents
           , paymentReceivedAt  = paidAt
           , paymentReference   = pcReference
-          , paymentConcept     = Just pcConcept
+          , paymentConcept     = Just conceptVal
           , paymentPeriod      = pcPeriod
           , paymentAttachment  = pcAttachmentUrl
           , paymentCreatedBy   = Just (auPartyId user)
@@ -1393,6 +1395,18 @@ paymentsServer user =
       , payPeriod      = paymentPeriod p
       , payAttachment  = paymentAttachment p
       }
+
+validatePaymentAmountCents :: Int -> Either ServerError Int
+validatePaymentAmountCents amountCents
+  | amountCents > 0 = Right amountCents
+  | otherwise = Left err400 { errBody = "amountCents must be greater than 0" }
+
+validatePaymentConcept :: Text -> Either ServerError Text
+validatePaymentConcept rawConcept =
+  let trimmed = T.strip rawConcept
+  in if T.null trimmed
+       then Left err400 { errBody = "concept is required" }
+       else Right trimmed
 
 validatePaymentMethod :: Text -> Either ServerError PaymentMethod
 validatePaymentMethod rawMethod =
