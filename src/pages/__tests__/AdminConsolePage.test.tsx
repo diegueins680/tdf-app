@@ -59,6 +59,18 @@ function buildAdminUser(overrides: Partial<AdminUserDTO> = {}): AdminUserDTO {
   };
 }
 
+function getMenuItemByText(labelText: string) {
+  const item = Array.from(document.body.querySelectorAll('[role="menuitem"], [role="option"]')).find(
+    (element) => (element.textContent ?? '').trim() === labelText,
+  );
+
+  if (!(item instanceof HTMLElement)) {
+    throw new Error(`Menu item not found: ${labelText}`);
+  }
+
+  return item;
+}
+
 describe('AdminConsolePage', () => {
   beforeAll(() => {
     if (!window.matchMedia) {
@@ -266,6 +278,36 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Admin')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toBeInTheDocument();
       expect(screen.getByText('Editar roles')).toBeInTheDocument();
+    });
+  });
+
+  it('keeps save disabled in the role dialog until the admin makes a real change', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+
+    renderPage();
+
+    const editButton = await screen.findByRole('button', { name: 'Editar roles de Ada Lovelace' });
+    await user.click(editButton);
+
+    const saveButton = await screen.findByRole('button', { name: /Guardar cambios/i });
+    expect(
+      screen.getByText(/Sin cambios pendientes\. Modifica la selección para habilitar Guardar cambios\./i),
+    ).toBeInTheDocument();
+    expect(saveButton).toBeDisabled();
+
+    const rolesSelect = document.body.querySelector('[role="combobox"]');
+    if (!(rolesSelect instanceof HTMLElement)) {
+      throw new Error('Roles select not found');
+    }
+
+    await user.click(rolesSelect);
+    await user.click(getMenuItemByText('Manager'));
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(saveButton).toBeEnabled();
+      expect(screen.getByText(/Puedes asignar múltiples roles para combinar permisos\./i)).toBeInTheDocument();
     });
   });
 

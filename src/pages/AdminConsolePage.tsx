@@ -113,6 +113,21 @@ function summarizeAdminUserIdentity(user: Pick<AdminUserDTO, 'displayName' | 'us
   return { primary, username, showUsername };
 }
 
+function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
+  return [...new Set(roles ?? [])].sort();
+}
+
+function hasRoleSelectionChanged(currentRoles?: readonly RoleKey[] | null, nextRoles?: readonly RoleKey[] | null) {
+  const normalizedCurrentRoles = normalizeRoleSelection(currentRoles);
+  const normalizedNextRoles = normalizeRoleSelection(nextRoles);
+
+  if (normalizedCurrentRoles.length !== normalizedNextRoles.length) {
+    return true;
+  }
+
+  return normalizedCurrentRoles.some((role, index) => role !== normalizedNextRoles[index]);
+}
+
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
   ACTIVE: { label: 'Activo', color: 'success' },
   INVITED: { label: 'Invitado', color: 'info' },
@@ -203,6 +218,9 @@ export default function AdminConsolePage() {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
   }, [editingUser]);
+  const hasPendingRoleChanges = useMemo(() => (
+    editingUser ? hasRoleSelectionChanged(editingUser.roles, selectedRoles) : false
+  ), [editingUser, selectedRoles]);
   const isRefreshingPanel =
     healthQuery.isFetching
     || auditQuery.isFetching
@@ -215,7 +233,7 @@ export default function AdminConsolePage() {
   };
 
   const handleSaveRoles = () => {
-    if (!editingUser) return;
+    if (!editingUser || !hasPendingRoleChanges) return;
     setDialogError(null);
     updateRolesMutation.mutate({ userId: editingUser.userId, roles: selectedRoles });
   };
@@ -524,7 +542,7 @@ export default function AdminConsolePage() {
               multiple
               value={selectedRoles}
               onChange={(event) => setSelectedRoles(event.target.value as RoleKey[])}
-              renderValue={(value) => (value as RoleKey[]).join(', ')}
+              renderValue={(value) => formatRoleList(value as RoleKey[])}
             >
               {ROLE_OPTIONS.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
@@ -533,14 +551,22 @@ export default function AdminConsolePage() {
                 </MenuItem>
               ))}
             </Select>
-            <FormHelperText>Puedes asignar múltiples roles para combinar permisos.</FormHelperText>
+            <FormHelperText>
+              {hasPendingRoleChanges
+                ? 'Puedes asignar múltiples roles para combinar permisos.'
+                : 'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.'}
+            </FormHelperText>
           </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={updateRolesMutation.isPending}>
             Cancelar
           </Button>
-          <Button onClick={handleSaveRoles} variant="contained" disabled={updateRolesMutation.isPending}>
+          <Button
+            onClick={handleSaveRoles}
+            variant="contained"
+            disabled={updateRolesMutation.isPending || !hasPendingRoleChanges}
+          >
             {updateRolesMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
           </Button>
         </DialogActions>
