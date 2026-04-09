@@ -13,6 +13,7 @@ module TDF.API.LiveSessions
   ) where
 
 import           Data.Aeson               (FromJSON, eitherDecodeStrict')
+import           Data.Char                (isAsciiLower, isDigit, isSpace)
 import           Data.List                (find)
 import           Data.Text                (Text)
 import qualified Data.Text                as T
@@ -79,7 +80,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
     bandDescription <- optionalText "bandDescription" multipart
     primaryGenre <- optionalText "primaryGenre" multipart
     inputList <- optionalText "inputList" multipart
-    contactEmail <- optionalText "contactEmail" multipart
+    contactEmail <- optionalEmail "contactEmail" multipart
     contactPhone <- optionalText "contactPhone" multipart
     let riderFile    = lookupFile "rider" multipart
     sessionDate <- optionalDay "sessionDate" multipart
@@ -117,6 +118,10 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
         case lookupInputByName name mp of
           Nothing  -> Right Nothing
           Just inp -> Right (normalizeOptionalText (inputValueText inp))
+      optionalEmail name mp =
+        case lookupInputByName name mp of
+          Nothing  -> Right Nothing
+          Just inp -> validateOptionalEmailText name (inputValueText inp)
       lookupFile name mp = lookup name [(fdInputName f, f) | f <- files mp]
       optionalDay name mp =
         case lookupInputByName name mp of
@@ -143,23 +148,72 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           Left err -> Left ("Invalid setlist payload: " <> err)
           Right xs -> Right xs
 
-      validateMusician musician
-        | maybe False (<= 0) (lsmPartyId musician) =
-            Left "musician partyId must be a positive integer"
-        | noReferenceProvided =
-            Left "each musician must include a non-blank name, email, or partyId"
-        | otherwise =
-            Right musician
-        where
-          noReferenceProvided =
-            lsmPartyId musician == Nothing
-              && T.null (T.strip (lsmName musician))
-              && maybe True (T.null . T.strip) (lsmEmail musician)
+      validateMusician musician = do
+        normalizedEmail <-
+          maybe
+            (Right Nothing)
+            (validateOptionalEmailText "musician email")
+            (lsmEmail musician)
+        let normalizedMusician =
+              musician
+                { lsmName = T.strip (lsmName musician)
+                , lsmEmail = normalizedEmail
+                , lsmInstrument = lsmInstrument musician >>= normalizeOptionalText
+                , lsmRole = lsmRole musician >>= normalizeOptionalText
+                , lsmNotes = lsmNotes musician >>= normalizeOptionalText
+                }
+            noReferenceProvided =
+              lsmPartyId normalizedMusician == Nothing
+                && T.null (lsmName normalizedMusician)
+                && maybe True T.null (lsmEmail normalizedMusician)
+        if maybe False (<= 0) (lsmPartyId musician)
+          then Left "musician partyId must be a positive integer"
+          else if noReferenceProvided
+            then Left "each musician must include a non-blank name, email, or partyId"
+            else Right normalizedMusician
 
       normalizeOptionalText :: Text -> Maybe Text
       normalizeOptionalText raw =
         let trimmed = T.strip raw
         in if T.null trimmed then Nothing else Just trimmed
+
+      validateOptionalEmailText :: Text -> Text -> Either String (Maybe Text)
+      validateOptionalEmailText fieldName raw =
+        case normalizeOptionalText raw of
+          Nothing -> Right Nothing
+          Just emailVal ->
+            let normalized = T.toLower emailVal
+            in if isValidEmail normalized
+                 then Right (Just normalized)
+                 else
+                   Left
+                     ( "Invalid field: "
+                         <> T.unpack fieldName
+                         <> " must be a valid email address"
+                     )
+
+      isValidEmail :: Text -> Bool
+      isValidEmail candidate =
+        case T.splitOn "@" candidate of
+          [localPart, domain] ->
+            not (T.null localPart)
+              && not (T.null domain)
+              && not (T.any isSpace candidate)
+              && not (T.isPrefixOf "." domain)
+              && not (T.isSuffixOf "." domain)
+              && T.isInfixOf "." domain
+              && all isValidEmailDomainLabel (T.splitOn "." domain)
+          _ -> False
+
+      isValidEmailDomainLabel :: Text -> Bool
+      isValidEmailDomainLabel label =
+        not (T.null label)
+          && not (T.isPrefixOf "-" label)
+          && not (T.isSuffixOf "-" label)
+          && T.all isValidEmailDomainChar label
+
+      isValidEmailDomainChar :: Char -> Bool
+      isValidEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
       parseBoolField :: Text -> Text -> Either String Bool
       parseBoolField fieldName raw =

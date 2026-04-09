@@ -16,7 +16,7 @@ import Servant.Multipart (FromMultipart (fromMultipart), Input (..), MultipartDa
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 
-import TDF.API.LiveSessions (LiveSessionIntakePayload (..))
+import TDF.API.LiveSessions (LiveSessionIntakePayload (..), LiveSessionMusicianPayload (..))
 import TDF.API.WhatsApp
     ( CompleteReq (..),
       ensureLeadCompletionUpdated,
@@ -910,6 +910,30 @@ main = hspec $ do
                     lsiAcceptedTerms payload `shouldBe` True
                     lsiTermsVersion payload `shouldBe` Just "TDF Live Sessions v2"
 
+        it "normalizes valid contact and musician emails before the intake reaches persistence" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("contactEmail", " Lead@Example.com ")
+                    , ( "musicians"
+                      , "[{\"lsmName\":\"  Keys  \",\"lsmEmail\":\" Player@Example.com \",\"lsmIsExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected valid intake emails to be accepted, got: " <> err)
+                Right payload -> do
+                    lsiContactEmail payload `shouldBe` Just "lead@example.com"
+                    case lsiMusicians payload of
+                        [musician] -> do
+                            lsmPartyId musician `shouldBe` Nothing
+                            lsmName musician `shouldBe` "Keys"
+                            lsmEmail musician `shouldBe` Just "player@example.com"
+                            lsmInstrument musician `shouldBe` Nothing
+                            lsmRole musician `shouldBe` Nothing
+                            lsmNotes musician `shouldBe` Nothing
+                            lsmIsExisting musician `shouldBe` False
+                        musicians ->
+                            expectationFailure ("Expected exactly one normalized musician, got: " <> show musicians)
+
         it "rejects accepted terms without a terms version" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
@@ -931,6 +955,28 @@ main = hspec $ do
                     err `shouldContain` "acceptedTerms must be a boolean"
                 Right payload ->
                     expectationFailure ("Expected invalid acceptedTerms to be rejected, got: " <> show payload)
+
+        it "rejects malformed contact or musician emails instead of storing unusable addresses" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("contactEmail", "not-an-email")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "contactEmail must be a valid email address"
+                Right payload ->
+                    expectationFailure ("Expected invalid contactEmail to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"lsmName\":\"Keys\",\"lsmEmail\":\"not-an-email\",\"lsmIsExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "musician email must be a valid email address"
+                Right payload ->
+                    expectationFailure ("Expected invalid musician email to be rejected, got: " <> show payload)
 
         it "rejects anonymous musician rows instead of creating placeholder parties" $
             case fromMultipart (mkLiveSessionMultipart
