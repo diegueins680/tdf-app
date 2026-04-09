@@ -247,7 +247,7 @@ describe('AdminUsersPage', () => {
         expect(noContactRow.textContent).not.toContain('Sin teléfono');
         expect(noContactRow.textContent).not.toContain('Sin correo');
         expect(noContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
-        expect(noContactRow.textContent).toContain('Completar contacto');
+        expect(noContactRow.textContent).toContain('Contacto pendiente');
         expect(noContactRow.textContent).not.toContain('Falta contacto');
       });
     } finally {
@@ -324,7 +324,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
         expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(0);
-        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(0);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
         expect(container.textContent).toContain(
           '2 usuarios en esta vista. Busca por nombre, ID, contacto o acceso. 1 listo para comunicación y 1 pendiente de contacto.',
@@ -341,15 +341,16 @@ describe('AdminUsersPage', () => {
         expect(hasLinkWithTextAndHref(readyContactRow, 'Ada Lovelace', '/perfil/9')).toBe(true);
 
         const missingContactRow = getRowByUserId(container, 102);
-        expect(missingContactRow.textContent).toContain('Completar contacto');
+        expect(missingContactRow.textContent).toContain('Contacto pendiente');
         expect(missingContactRow.textContent).not.toContain('Abrir perfil');
         expect(missingContactRow.textContent).not.toContain('Falta contacto');
         expect(missingContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
         expect(missingContactRow.querySelectorAll('button')).toHaveLength(0);
+        expect(missingContactRow.querySelectorAll('a')).toHaveLength(1);
         expect(hasLinkWithTextAndHref(missingContactRow, 'Grace Hopper', '/perfil/10')).toBe(true);
         expect(
           Array.from(missingContactRow.querySelectorAll<HTMLAnchorElement>('a')).filter(
-            (link) => buttonText(link) === 'Completar contacto',
+            (link) => link.getAttribute('href') === '/perfil/10',
           ),
         ).toHaveLength(1);
       });
@@ -395,14 +396,14 @@ describe('AdminUsersPage', () => {
           'Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.',
         );
         expect(container.textContent).not.toContain('2 sin contacto');
-        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(2);
+        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(0);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(0);
         expect(container.textContent).not.toContain('Falta contacto');
 
         const firstRow = getRowByUserId(container, 201);
         const secondRow = getRowByUserId(container, 202);
-        expect(firstRow.textContent).toContain('Completar contacto');
-        expect(secondRow.textContent).toContain('Completar contacto');
+        expect(firstRow.textContent).toContain('Contacto pendiente');
+        expect(secondRow.textContent).toContain('Contacto pendiente');
       });
     } finally {
       await cleanup();

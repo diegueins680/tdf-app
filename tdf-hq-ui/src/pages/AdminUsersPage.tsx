@@ -338,9 +338,7 @@ function UserRow({ user, onOpenCommunications }: { user: AdminUser; onOpenCommun
             Comunicación
           </Button>
         ) : (
-          <Button component={RouterLink} to={profilePath} size="small" variant="outlined">
-            Completar contacto
-          </Button>
+          <Chip label="Contacto pendiente" color="warning" variant="outlined" size="small" />
         )}
       </Stack>
     </Box>
