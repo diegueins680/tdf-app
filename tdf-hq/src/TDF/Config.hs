@@ -166,7 +166,7 @@ loadConfig = do
     , dbUser = u
     , dbPass = w
     , dbName = d
-    , appPort = read ap
+    , appPort = parseInt 8080 (Just ap)
     , resetDb = asBool rdb
     , seedDatabase = asBool sdb
     , runMigrations = asBool mig
@@ -240,7 +240,7 @@ loadConfig = do
       pass <- fmap (T.strip . T.pack) mPass
       addr <- fmap (T.strip . T.pack) mFrom
       let name = maybe "TDF Records" (T.strip . T.pack) mFromName
-          portVal = maybe 587 read mPort
+          portVal = parseInt 587 mPort
           useTls = maybe True asBool mTls
       pure EmailConfig
         { emailFromName = if T.null name then "TDF Records" else name

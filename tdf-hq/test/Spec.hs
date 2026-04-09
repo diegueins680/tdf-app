@@ -2,6 +2,7 @@
 
 module Main (main) where
 
+import Control.Exception (bracket)
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
@@ -12,6 +13,7 @@ import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDif
 import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (..))
 import Servant.Multipart (FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
+import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 
 import TDF.API.LiveSessions (LiveSessionIntakePayload (..))
@@ -81,14 +83,48 @@ import TDF.Server.SocialEventsHandlers (
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
  )
+import TDF.Config (appPort, emailConfig, loadConfig, smtpPort)
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 
+withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
+withEnvOverrides overrides action =
+    bracket setup restore (const action)
+  where
+    setup = do
+        previous <- mapM capture overrides
+        apply overrides
+        pure previous
+    restore previous = apply previous
+    capture (key, _) = do
+        value <- lookupEnv key
+        pure (key, value)
+    apply = mapM_ assign
+    assign (key, value) =
+        case value of
+            Just raw -> setEnv key raw
+            Nothing -> unsetEnv key
+
 main :: IO ()
 main = hspec $ do
+    describe "loadConfig" $ do
+        it "falls back to default ports when Fly-style env values are malformed" $
+            withEnvOverrides
+                [ ("APP_PORT", Just "not-a-port")
+                , ("SMTP_PORT", Just "smtp")
+                , ("SMTP_HOST", Just "smtp.example.com")
+                , ("SMTP_USER", Just "mailer")
+                , ("SMTP_PASS", Just "secret")
+                , ("SMTP_FROM", Just "tdf@example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    appPort cfg `shouldBe` 8080
+                    fmap smtpPort (emailConfig cfg) `shouldBe` Just 587
+
     describe "normalizeOptionalFeedbackText" $ do
         it "trims meaningful optional feedback metadata values" $ do
             normalizeOptionalFeedbackText (Just "  bug ") `shouldBe` Just "bug"
