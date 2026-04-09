@@ -14,7 +14,7 @@ import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
-import           Data.Char              (isDigit, isSpace)
+import           Data.Char              (isAlphaNum, isDigit, isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
@@ -108,7 +108,19 @@ validateRadioAuthority rawAuthority
 
     validateAuthorityHost host
       | T.null host = Left err400 { errBody = "streamUrl must include a host" }
+      | T.isPrefixOf "." host || T.isSuffixOf "." host =
+          Left err400 { errBody = "streamUrl must include a valid host" }
+      | any invalidHostLabel (T.splitOn "." host) =
+          Left err400 { errBody = "streamUrl must include a valid host" }
       | otherwise = Right ()
+      where
+        invalidHostLabel label =
+          T.null label
+            || T.isPrefixOf "-" label
+            || T.isSuffixOf "-" label
+            || T.any (not . isValidHostChar) label
+
+        isValidHostChar c = isAlphaNum c || c == '-'
 
     validatePortSuffix suffix
       | T.null suffix = Right ()

@@ -499,6 +499,19 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "streamUrl port must be numeric"
                 Right _ -> expectationFailure "Expected non-numeric port streamUrl to be rejected"
 
+        it "rejects malformed host labels instead of storing unusable stream endpoints" $ do
+            let assertInvalid rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "streamUrl must include a valid host"
+                        Right value ->
+                            expectationFailure ("Expected malformed streamUrl host to be rejected, got " <> show value)
+            assertInvalid "https://-radio.example.com/live"
+            assertInvalid "https://radio-.example.com/live"
+            assertInvalid "https://radio..example.com/live"
+            assertInvalid "https://radio.example.com./live"
+
         it "rejects authorities that embed user info instead of storing credential-like stream URLs" $
             case validateRadioStreamUrl "https://dj@radio.example.com/live" of
                 Left err -> do
