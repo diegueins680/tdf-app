@@ -10,6 +10,7 @@ module TDF.ServerAdmin
   , normalizeAdminEmailAddress
   , normalizeAdminEmailBodyLines
   , parseSocialErrorsChannel
+  , validateSocialErrorsLimit
   , validateAdminWhatsAppSendMode
   ) where
 
@@ -257,7 +258,7 @@ adminServer user =
     socialErrorsHandler mChannel mLimit = do
       ensureModule ModuleAdmin user
       channel <- either throwError pure (parseSocialErrorsChannel mChannel)
-      let limit = max 1 (min 200 (fromMaybe 50 mLimit))
+      limit <- either throwError pure (validateSocialErrorsLimit mLimit)
       case channel of
         "instagram" -> do
           rows <- withPool $ selectList
@@ -999,6 +1000,13 @@ parseSocialErrorsChannel mChannel =
   where
     missingChannel =
       Left err400 { errBody = "channel requerido (instagram|facebook|whatsapp)" }
+
+validateSocialErrorsLimit :: Maybe Int -> Either ServerError Int
+validateSocialErrorsLimit Nothing = Right 50
+validateSocialErrorsLimit (Just rawLimit)
+  | rawLimit < 1 || rawLimit > 200 =
+      Left err400 { errBody = "limit debe estar entre 1 y 200" }
+  | otherwise = Right rawLimit
 
 validateAdminWhatsAppSendMode :: Text -> Maybe Int64 -> Either ServerError Text
 validateAdminWhatsAppSendMode rawMode mReplyToMessageId =

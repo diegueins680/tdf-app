@@ -41,7 +41,7 @@ import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.ServerRadio (validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
-import TDF.ServerAdmin (parseSocialErrorsChannel)
+import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (validateContractId, validateContractPayload)
 import TDF.ServerInternships
     ( validateInternProjectStatusInput,
@@ -796,6 +796,23 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "channel inválido"
                 Right _ -> expectationFailure "Expected invalid channel to be rejected"
+
+    describe "validateSocialErrorsLimit" $ do
+        it "keeps the default only when the caller omits the limit" $ do
+            validateSocialErrorsLimit Nothing `shouldBe` Right 50
+            validateSocialErrorsLimit (Just 1) `shouldBe` Right 1
+            validateSocialErrorsLimit (Just 200) `shouldBe` Right 200
+
+        it "rejects out-of-range explicit limits instead of silently clamping them" $ do
+            let assertRejected rawLimit =
+                    case validateSocialErrorsLimit (Just rawLimit) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "limit debe estar entre 1 y 200"
+                        Right value ->
+                            expectationFailure ("Expected invalid social errors limit to be rejected, got " <> show value)
+            assertRejected 0
+            assertRejected 201
 
     describe "live session intake multipart parsing" $ do
         it "normalizes blank optional text fields to Nothing while preserving versioned consent" $ do
