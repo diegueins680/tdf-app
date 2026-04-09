@@ -493,7 +493,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps the first admin-user view focused on the lone row instead of showing list search chrome', async () => {
+  it('keeps the first admin-user view focused on one combined first-user hint instead of stacked helper copy', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -508,9 +508,11 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Haz clic en el nombre para abrir el perfil; cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
         );
-        expect(container.textContent).toContain('Haz clic en el nombre para abrir el perfil.');
+        expect(
+          container.textContent?.includes('Haz clic en el nombre para abrir el perfil.'),
+        ).toBe(false);
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(container.textContent).not.toContain('1 usuario');
         expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(0);

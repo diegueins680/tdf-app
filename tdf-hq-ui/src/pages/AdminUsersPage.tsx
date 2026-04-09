@@ -122,7 +122,7 @@ export default function AdminUsersPage() {
   const showMixedContactStateGuidance = visibleUsersMissingContactCount > 0 && visibleUsersWithContactCount > 0;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showClearSearchAction = showSearchField && hasActiveSearch;
-  const showProfileLinkGuidance = visibleUsers.length > 0;
+  const showProfileLinkGuidance = visibleUsers.length > 0 && !showSingleUserGuidance;
   const activeScopeSummary = hasUsers && !includeInactive
     ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
     : '';
@@ -191,7 +191,7 @@ export default function AdminUsersPage() {
               )}
               {showSingleUserGuidance && (
                 <Typography variant="body2" color="text.secondary">
-                  Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.
+                  Solo hay un usuario por ahora. Haz clic en el nombre para abrir el perfil; cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.
                 </Typography>
               )}
               {visibleUsersSummary && (
