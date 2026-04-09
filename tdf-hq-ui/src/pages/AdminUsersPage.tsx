@@ -137,10 +137,6 @@ export default function AdminUsersPage() {
       parts.push(`${formatUserCountLabel(visibleUsers.length)} en esta vista.`);
     }
 
-    if (showSearchField && !hasActiveSearch) {
-      parts.push('Busca por nombre, ID, contacto o acceso.');
-    }
-
     if (showMixedContactStateGuidance) {
       parts.push(
         `${visibleUsersWithContactCount} ${visibleUsersWithContactCount === 1 ? 'listo' : 'listos'} para comunicación y `
@@ -155,7 +151,6 @@ export default function AdminUsersPage() {
     hasUsers,
     isFiltered,
     showMixedContactStateGuidance,
-    showSearchField,
     showSingleUserGuidance,
     totalUsersCount,
     visibleUsers.length,

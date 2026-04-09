@@ -344,7 +344,7 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(0);
         expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
         expect(container.textContent).toContain(
-          '2 usuarios en esta vista. Busca por nombre, ID, contacto o acceso. 1 listo para comunicación y 1 pendiente de contacto.',
+          '2 usuarios en esta vista. 1 listo para comunicación y 1 pendiente de contacto.',
         );
         expect(container.textContent).toContain('Haz clic en el nombre para abrir el perfil.');
         expect(container.textContent).not.toContain('1 usuario sigue sin canal de contacto');
@@ -586,7 +586,7 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('3 usuarios en esta vista. Busca por nombre, ID, contacto o acceso.');
+        expect(container.textContent).toContain('3 usuarios en esta vista.');
         expect(container.textContent).toContain('Buscar usuarios');
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
@@ -612,6 +612,40 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps search guidance inside the field instead of repeating the same hint in the header summary', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Usuario, nombre, ID, contacto o acceso');
+        expect(container.textContent).toContain('2 usuarios en esta vista.');
+        expect(container.textContent).not.toContain('Busca por nombre, ID, contacto o acceso.');
       });
     } finally {
       await cleanup();
