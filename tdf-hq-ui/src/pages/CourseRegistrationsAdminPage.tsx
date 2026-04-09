@@ -54,7 +54,8 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
-const dossierScopeHint = 'Expediente reúne notas, pagos, seguimiento y correos de la inscripción.';
+const dossierScopeHint =
+  'Expediente reúne notas, pagos, seguimiento y correos. Ábrelo desde el nombre y usa Estado para cambios rápidos.';
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
@@ -1949,8 +1950,32 @@ export default function CourseRegistrationsAdminPage() {
                   return (
                     <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Box sx={{ minWidth: 240 }}>
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          {rowIdentity.primary}
+                        <Typography variant="subtitle1" fontWeight={700} component="div">
+                          <Link
+                            component="button"
+                            type="button"
+                            underline="hover"
+                            color="inherit"
+                            aria-label={`Abrir expediente de ${rowActionTarget}`}
+                            onClick={() => handleOpenDossier(reg, 'review')}
+                            sx={{
+                              p: 0,
+                              border: 0,
+                              background: 'none',
+                              font: 'inherit',
+                              fontWeight: 'inherit',
+                              textAlign: 'left',
+                              cursor: 'pointer',
+                              '&:focus-visible': {
+                                outline: '2px solid',
+                                outlineColor: 'primary.main',
+                                outlineOffset: 2,
+                                borderRadius: 0.5,
+                              },
+                            }}
+                          >
+                            {rowIdentity.primary}
+                          </Link>
                         </Typography>
                         {rowIdentity.secondary && (
                           <Typography variant="body2" color="text.secondary">
@@ -1963,14 +1988,6 @@ export default function CourseRegistrationsAdminPage() {
                           {rowContextSummary}
                         </Typography>
                       </Box>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        aria-label={`Abrir expediente de ${rowActionTarget}`}
-                        onClick={() => handleOpenDossier(reg, 'review')}
-                      >
-                        Expediente
-                      </Button>
                       <Button
                         size="small"
                         variant="text"

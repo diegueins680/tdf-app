@@ -179,7 +179,7 @@ const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const dossierScopeHint =
-  'Expediente reúne notas, pagos, seguimiento y correos de la inscripción.';
+  'Expediente reúne notas, pagos, seguimiento y correos. Ábrelo desde el nombre y usa Estado para cambios rápidos.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -255,6 +255,12 @@ const getButtonByText = (root: ParentNode, labelText: string) => {
   const buttons = Array.from(root.querySelectorAll('button'));
   const button = buttons.find((el) => (el.textContent ?? '').trim() === labelText);
   if (!(button instanceof HTMLButtonElement)) {
+    if (labelText === 'Expediente') {
+      const dossierButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('button[aria-label^="Abrir expediente de "]'));
+      if (dossierButtons.length === 1) {
+        return dossierButtons[0]!;
+      }
+    }
     throw new Error(`Button not found: ${labelText}`);
   }
   return button;
@@ -266,6 +272,17 @@ const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
     throw new Error(`Button not found: ${labelText}`);
   }
   return button;
+};
+
+const getDossierTriggers = (root: ParentNode) =>
+  Array.from(root.querySelectorAll<HTMLButtonElement>('button[aria-label^="Abrir expediente de "]'));
+
+const getOnlyDossierTrigger = (root: ParentNode) => {
+  const buttons = getDossierTriggers(root);
+  if (buttons.length !== 1) {
+    throw new Error(`Expected exactly one dossier trigger, found ${buttons.length}`);
+  }
+  return buttons[0]!;
 };
 
 const getMenuItemByText = (root: ParentNode, labelText: string) => {
@@ -348,12 +365,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
-      expect(container.textContent).not.toContain(dossierScopeHint);
+      expect(container.textContent).not.toContain(
+        'Expediente reúne notas, pagos, seguimiento y correos de la inscripción.',
+      );
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain('Abrir expediente');
-      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe(
-        'Expediente',
-      );
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(container.textContent).not.toContain('Cambiar estado:');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe(
         'Cambiar estado',
@@ -376,7 +393,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Expediente'));
+      clickButton(getOnlyDossierTrigger(container));
       await flushPromises();
     });
 
@@ -506,7 +523,7 @@ describe('CourseRegistrationsAdminPage', () => {
         container,
         dossierScopeHint,
       )).toBe(1);
-      expect(countButtonsByText(container, 'Expediente')).toBe(2);
+      expect(countButtonsByText(container, 'Expediente')).toBe(0);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(2);
       expect(countButtonsByText(container, 'Cambiar')).toBe(0);
       expect(countButtonsByText(container, 'Estado')).toBe(0);
@@ -515,6 +532,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(2);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(container.textContent).not.toContain('Estado: Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper').textContent?.trim()).toBe('Grace Hopper');
     });
 
     await cleanup();
@@ -542,7 +561,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Expediente'));
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace'));
       await flushPromises();
       await flushPromises();
     });
@@ -1585,7 +1604,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
       expect(container.textContent).toContain(dossierScopeHint);
-      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').className).toContain('MuiButton-outlined');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').className).toContain('MuiButton-text');
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Estado: Pendiente de pago');
