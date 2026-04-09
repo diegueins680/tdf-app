@@ -25,7 +25,6 @@ import QrCode2Icon from '@mui/icons-material/QrCode2';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -250,14 +249,16 @@ export default function InventoryPage() {
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', md: 'center' }} spacing={2}>
         <Typography variant="h5">Inventario</Typography>
-        <Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<UploadFileIcon />} disabled>
-            Importar CSV
-          </Button>
-          <Button variant="outlined" startIcon={<FileDownloadIcon />} onClick={() => downloadCsv(assets)}>
-            Exportar CSV
-          </Button>
-          <Button variant="contained" onClick={() => setCreateOpen(true)}>Agregar activo</Button>
+        <Stack spacing={0.75} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Button variant="outlined" startIcon={<FileDownloadIcon />} onClick={() => downloadCsv(assets)}>
+              Exportar CSV
+            </Button>
+            <Button variant="contained" onClick={() => setCreateOpen(true)}>Agregar activo</Button>
+          </Stack>
+          <Typography variant="caption" color="text.secondary">
+            La importación masiva todavía no está disponible. Por ahora usa Agregar activo para nuevos equipos.
+          </Typography>
         </Stack>
       </Stack>
       {feedback && (

@@ -78,6 +78,23 @@ describe('InventoryPage', () => {
     mockRemove.mockResolvedValue(undefined);
   });
 
+  it('keeps the toolbar focused on live actions and explains that bulk import is not available yet', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Inventario')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /Importar CSV/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Exportar CSV/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Agregar activo/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /La importación masiva todavía no está disponible\. Por ahora usa Agregar activo para nuevos equipos\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+
   it('keeps one edit control per row and sends the QR action directly to print', async () => {
     const user = userEvent.setup();
     const printMock = vi.fn();
