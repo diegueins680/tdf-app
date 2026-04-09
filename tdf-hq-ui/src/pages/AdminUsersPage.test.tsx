@@ -383,7 +383,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('summarizes the default active-only scope once and restores row status chips when inactive accounts are included', async () => {
+  it('summarizes the default active-only scope once and only marks inactive rows when inactive accounts are included', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
         ? [
@@ -441,7 +441,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain(
           'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
-        expect(hasExactText(getRowByUserId(container, 101), 'Activo')).toBe(true);
+        expect(hasExactText(getRowByUserId(container, 101), 'Activo')).toBe(false);
         expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
       });
     } finally {

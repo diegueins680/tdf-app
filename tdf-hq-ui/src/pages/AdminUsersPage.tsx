@@ -261,7 +261,7 @@ export default function AdminUsersPage() {
                   <UserRow
                     key={user.userId}
                     user={user}
-                    showStatusChip={includeInactive}
+                    showInactiveStatusChip={includeInactive && !user.active}
                     onOpenCommunications={() => setSelectedUser(user)}
                   />
                 ))}
@@ -281,11 +281,11 @@ export default function AdminUsersPage() {
 
 function UserRow({
   user,
-  showStatusChip,
+  showInactiveStatusChip,
   onOpenCommunications,
 }: {
   user: AdminUser;
-  showStatusChip: boolean;
+  showInactiveStatusChip: boolean;
   onOpenCommunications: () => void;
 }) {
   const contactSummary = getUserContactSummary(user);
@@ -329,8 +329,8 @@ function UserRow({
           </Typography>
         )}
       </Box>
-      {showStatusChip && (
-        <Chip label={user.active ? 'Activo' : 'Inactivo'} color={user.active ? 'success' : 'default'} size="small" />
+      {showInactiveStatusChip && (
+        <Chip label="Inactivo" color="default" size="small" />
       )}
       {(rolesSummary || modulesSummary) && (
         <Box sx={{ minWidth: 220, flex: '1 1 240px' }}>
