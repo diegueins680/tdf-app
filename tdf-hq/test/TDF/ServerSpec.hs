@@ -30,6 +30,7 @@ import TDF.Server
     , validateCourseRegistrationContactChannels
     , validateCourseRegistrationEmail
     , validateCourseRegistrationPhoneE164
+    , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
     , validateOptionalCourseNonNegativeField
     , validateOptionalPositiveIdField
@@ -514,6 +515,19 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "email o phoneE164 requerido"
                 Right result ->
                     expectationFailure ("Expected missing course-registration contact channels to be rejected, got: " <> show result)
+
+    describe "validateCourseRegistrationReceiptDeletion" $ do
+        it "allows receipt deletion for non-paid registrations or when paid registrations still have other receipts" $ do
+            validateCourseRegistrationReceiptDeletion "pending_payment" 1 `shouldBe` Right ()
+            validateCourseRegistrationReceiptDeletion "paid" 2 `shouldBe` Right ()
+
+        it "rejects deleting the last receipt from a paid registration instead of leaving paid rows without proof" $
+            case validateCourseRegistrationReceiptDeletion "paid" 1 of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr) `shouldContain` "inscripcion pagada"
+                Right result ->
+                    expectationFailure ("Expected paid receipt deletion to be rejected, got: " <> show result)
 
     describe "parseCourseFollowUpType" $ do
         it "defaults missing values to note and canonicalizes supported variants" $ do

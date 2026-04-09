@@ -2601,6 +2601,18 @@ registrationHasReceipts regKey = do
     [Desc ME.CourseRegistrationReceiptCreatedAt]
   pure (isJust mReceipt)
 
+validateCourseRegistrationReceiptDeletion :: Text -> Int -> Either ServerError ()
+validateCourseRegistrationReceiptDeletion rawStatus receiptCount
+  | normalizedStatus == Just "paid" && receiptCount <= 1 =
+      Left err409
+        { errBody =
+            "No puedes eliminar el unico comprobante de una inscripcion pagada. Cambia el estado antes de borrarlo."
+        }
+  | otherwise =
+      Right ()
+  where
+    normalizedStatus = normalizeCourseRegistrationStatus rawStatus
+
 insertCourseRegistrationFollowUp
   :: Key ME.CourseRegistration
   -> Maybe PartyId
@@ -2832,7 +2844,10 @@ deleteCourseRegistrationReceipt
   -> Int64
   -> AppM NoContent
 deleteCourseRegistrationReceipt _ rawSlug regId receiptId = do
-  (_, Entity receiptKey _) <- fetchCourseRegistrationReceiptEntity rawSlug regId receiptId
+  (Entity regKey reg, Entity receiptKey _) <- fetchCourseRegistrationReceiptEntity rawSlug regId receiptId
+  receiptCount <- runDB $ count [ME.CourseRegistrationReceiptRegistrationId ==. regKey]
+  either throwError pure $
+    validateCourseRegistrationReceiptDeletion (ME.courseRegistrationStatus reg) receiptCount
   runDB $ delete receiptKey
   pure NoContent
 
