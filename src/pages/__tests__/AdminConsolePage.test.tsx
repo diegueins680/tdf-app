@@ -115,7 +115,7 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows first-run admin guidance when preview cards only duplicate built-in admin sections', async () => {
+  it('shows a compact first-run checklist when preview cards only duplicate built-in admin sections', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
       cards: [
@@ -138,17 +138,23 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Si es tu primera vez aquí, empieza por validar el estado del servicio para descartar incidentes\./i,
+          /Valida el estado del servicio antes de cambiar permisos o repetir una acción\./i,
         ),
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Después revisa usuarios y auditoría para confirmar si un permiso o cambio ya fue aplicado antes de repetirlo\./i,
+          /Ajusta los accesos desde Usuarios y roles para resolver el caso actual\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Confirma el resultado en Auditoría reciente antes de seguir con otro cambio\./i,
         ),
       ).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Gestión de usuarios')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Si es tu primera vez aquí/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(/La asignación de roles se administra desde la pantalla de Parties\./i),
     ).not.toBeInTheDocument();

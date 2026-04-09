@@ -62,6 +62,11 @@ const BUILT_IN_ADMIN_CARD_TITLES = new Set([
   'gestion de usuarios',
   'auditoria reciente',
 ]);
+const GETTING_STARTED_ADMIN_STEPS = [
+  'Valida el estado del servicio antes de cambiar permisos o repetir una acción.',
+  'Ajusta los accesos desde Usuarios y roles para resolver el caso actual.',
+  'Confirma el resultado en Auditoría reciente antes de seguir con otro cambio.',
+] as const;
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -185,24 +190,15 @@ export default function AdminConsolePage() {
   }, [editingUser]);
 
   const audits = auditQuery.data ?? [];
-  const fallbackCard: AdminConsoleCard = {
-    cardId: 'getting-started',
-    title: 'Primeros pasos',
-    body: [
-      'Si es tu primera vez aquí, empieza por validar el estado del servicio para descartar incidentes.',
-      'Después revisa usuarios y auditoría para confirmar si un permiso o cambio ya fue aplicado antes de repetirlo.',
-    ],
-  };
   const previewCards = consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [];
-  const consoleCards: AdminConsoleCard[] = previewCards.length > 0
-    ? previewCards
-    : [fallbackCard];
+  const consoleCards: AdminConsoleCard[] = previewCards;
   const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;
   const users = usersQuery.data ?? [];
   const isUsersLoading = usersQuery.isLoading;
   const usersError = usersQuery.isError ? (usersQuery.error as Error).message : null;
   const showUsersTable = isUsersLoading || users.length > 0;
   const showAuditTable = auditQuery.isLoading || audits.length > 0;
+  const showGettingStartedGuidance = !consoleQuery.isPending && consoleCards.length === 0;
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
@@ -267,6 +263,27 @@ export default function AdminConsolePage() {
         </Alert>
       )}
 
+      {showGettingStartedGuidance && (
+        <Alert severity="info" variant="outlined">
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Primeros pasos
+          </Typography>
+          <Box component="ol" sx={{ pl: 2.5, m: 0 }}>
+            {GETTING_STARTED_ADMIN_STEPS.map((step) => (
+              <Box component="li" key={step} sx={{ '& + &': { mt: 0.5 } }}>
+                <Typography variant="body2">{step}</Typography>
+              </Box>
+            ))}
+          </Box>
+        </Alert>
+      )}
+
+      {consoleError && (
+        <Alert severity="warning">
+          No se pudo cargar el panel dinámico. Mostrando la consola base. Detalle: {consoleError}
+        </Alert>
+      )}
+
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
           <Card variant="outlined">
@@ -311,7 +328,7 @@ export default function AdminConsolePage() {
           </Card>
         </Grid>
 
-        {consoleCards.map((card, index) => (
+        {consoleCards.map((card) => (
           <Grid item xs={12} md={4} key={card.cardId}>
             <Card variant="outlined">
               <CardHeader title={card.title} />
@@ -330,11 +347,6 @@ export default function AdminConsolePage() {
                   <Typography variant="caption" color="text.secondary">
                     {consoleQuery.isPending ? 'Cargando…' : 'Actualizando…'}
                   </Typography>
-                )}
-                {index === 0 && consoleError && (
-                  <Alert severity="warning" sx={{ mt: 2 }}>
-                    No se pudo cargar el panel dinámico. Mostrando información predeterminada. Detalle: {consoleError}
-                  </Alert>
                 )}
               </CardContent>
             </Card>
