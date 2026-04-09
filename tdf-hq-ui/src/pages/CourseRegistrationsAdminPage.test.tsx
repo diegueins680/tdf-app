@@ -556,6 +556,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('drops the first-time dossier hint after opening the row status menu once', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        dossierScopeHint,
+      );
+      expect(countOccurrences(container, dossierScopeHint)).toBe(1);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(container.textContent).not.toContain(dossierScopeHint);
+    });
+
+    await cleanup();
+  });
+
   it('reveals the limit toggle only when the current batch reaches its cap or a custom limit is active', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

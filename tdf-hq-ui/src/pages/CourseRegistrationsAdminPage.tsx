@@ -445,7 +445,7 @@ export default function CourseRegistrationsAdminPage() {
   const [pageFlash, setPageFlash] = useState<FlashState | null>(null);
   const [dossierFlash, setDossierFlash] = useState<FlashState | null>(null);
   const [selectedDossier, setSelectedDossier] = useState<DossierTarget | null>(null);
-  const [hasOpenedDossier, setHasOpenedDossier] = useState(false);
+  const [hasUsedRowAction, setHasUsedRowAction] = useState(false);
   const [showEmailHistory, setShowEmailHistory] = useState(false);
   const [statusMenuTarget, setStatusMenuTarget] = useState<{
     anchorEl: HTMLElement;
@@ -673,7 +673,7 @@ export default function CourseRegistrationsAdminPage() {
       : `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
-  const showDossierScopeHint = loadedRegistrationCount > 1 && !hasOpenedDossier;
+  const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -946,6 +946,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleOpenStatusMenu = (anchorEl: HTMLElement, reg: CourseRegistrationDTO) => {
+    setHasUsedRowAction(true);
     setStatusMenuTarget({ anchorEl, reg });
   };
 
@@ -985,7 +986,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleOpenDossier = (reg: CourseRegistrationDTO, intent: DossierIntent) => {
-    setHasOpenedDossier(true);
+    setHasUsedRowAction(true);
     setSelectedDossier({ reg, intent });
   };
 
