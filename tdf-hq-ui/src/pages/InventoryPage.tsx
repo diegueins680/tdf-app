@@ -163,6 +163,7 @@ export default function InventoryPage() {
   const grouped = useMemo(() => assets, [assets]);
   const roomOptions = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
+  const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && grouped.length === 0;
 
   return (
     <Box sx={{ color: '#e2e8f0' }}>
@@ -186,59 +187,78 @@ export default function InventoryPage() {
       {assetsQuery.isLoading && <Typography>Cargando inventario…</Typography>}
       {assetsQuery.error && <Alert severity="error">No se pudo cargar inventario.</Alert>}
 
-      <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <CardContent>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Equipo</TableCell>
-                <TableCell>Categoría</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Condición</TableCell>
-                <TableCell>Ubicación</TableCell>
-                <TableCell align="right">Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {grouped.map((asset) => (
-                <TableRow key={asset.assetId} hover>
-                  <TableCell>{asset.name}</TableCell>
-                  <TableCell>{asset.category}</TableCell>
-                  <TableCell>{asset.status}</TableCell>
-                  <TableCell>{asset.condition ?? '—'}</TableCell>
-                  <TableCell>{asset.location ?? '—'}</TableCell>
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>
-                      <QrCodeIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => openCheckout(asset)}
-                      title="Check-out"
-                      aria-label={`Abrir check-out de ${asset.name}`}
-                      disabled={asset.status.toLowerCase() === 'booked'}
-                    >
-                      <ExitToAppIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => openCheckin(asset)}
-                      title="Check-in"
-                      aria-label={`Abrir check-in de ${asset.name}`}
-                      disabled={asset.status.toLowerCase() !== 'booked'}
-                    >
-                      <HowToRegIcon fontSize="small" />
-                    </IconButton>
-                    <Button size="small" onClick={() => openHistory(asset)}>
-                      Historial
-                    </Button>
-                  </TableCell>
+      {showFirstAssetEmptyState ? (
+        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <CardContent>
+            <Stack spacing={1}>
+              <Typography variant="h6" fontWeight={700}>
+                Primeros pasos
+              </Typography>
+              <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                Todavía no hay equipos registrados. Cuando exista el primero, aquí verás estado, ubicación, QR e historial
+                para operar check-out y check-in desde una sola fila.
+              </Typography>
+              <Typography variant="body2" color="rgba(226,232,240,0.68)">
+                Si estás esperando la carga inicial del inventario, usa Actualizar para volver a consultar sin revisar una tabla vacía.
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <CardContent>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Equipo</TableCell>
+                  <TableCell>Categoría</TableCell>
+                  <TableCell>Estado</TableCell>
+                  <TableCell>Condición</TableCell>
+                  <TableCell>Ubicación</TableCell>
+                  <TableCell align="right">Acciones</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHead>
+              <TableBody>
+                {grouped.map((asset) => (
+                  <TableRow key={asset.assetId} hover>
+                    <TableCell>{asset.name}</TableCell>
+                    <TableCell>{asset.category}</TableCell>
+                    <TableCell>{asset.status}</TableCell>
+                    <TableCell>{asset.condition ?? '—'}</TableCell>
+                    <TableCell>{asset.location ?? '—'}</TableCell>
+                    <TableCell align="right">
+                      <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>
+                        <QrCodeIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => openCheckout(asset)}
+                        title="Check-out"
+                        aria-label={`Abrir check-out de ${asset.name}`}
+                        disabled={asset.status.toLowerCase() === 'booked'}
+                      >
+                        <ExitToAppIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => openCheckin(asset)}
+                        title="Check-in"
+                        aria-label={`Abrir check-in de ${asset.name}`}
+                        disabled={asset.status.toLowerCase() !== 'booked'}
+                      >
+                        <HowToRegIcon fontSize="small" />
+                      </IconButton>
+                      <Button size="small" onClick={() => openHistory(asset)}>
+                        Historial
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       <CheckoutDialog
         open={dialogOpen === 'checkout'}
