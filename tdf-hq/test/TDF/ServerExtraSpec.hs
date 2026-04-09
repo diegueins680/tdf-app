@@ -36,6 +36,7 @@ import TDF.ServerExtra (
     normalizeRoomNameUpdate,
     parseCheckoutTargetKind,
     parseOptionalKeyField,
+    validatePaymentCurrency,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validatePaymentMethod,
@@ -228,6 +229,21 @@ spec = do
               expectationFailure ("Expected invalid payment method error, got " <> show value)
       assertInvalid (validatePaymentMethod "   ")
       assertInvalid (validatePaymentMethod "wire-transfer")
+
+  describe "validatePaymentCurrency" $ do
+    it "normalizes supported manual payment currencies to USD" $ do
+      validatePaymentCurrency "USD" `shouldBe` Right "USD"
+      validatePaymentCurrency " usd " `shouldBe` Right "USD"
+
+    it "rejects blank or unsupported payment currencies instead of silently coercing them to USD" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "Only USD manual payments are currently supported"
+            Right value ->
+              expectationFailure ("Expected invalid payment currency error, got " <> show value)
+      assertInvalid (validatePaymentCurrency "   ")
+      assertInvalid (validatePaymentCurrency "EUR")
 
   describe "normalizeServiceCatalogNameUpdate" $ do
     it "preserves omitted names and trims meaningful updates" $ do

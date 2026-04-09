@@ -1350,6 +1350,7 @@ paymentsServer user =
     createPaymentH PaymentCreate{..} = do
       ensureModule ModuleAdmin user
       paidAt <- parseUTCTimeText pcPaidAt
+      _ <- either throwError pure (validatePaymentCurrency pcCurrency)
       paymentMethodVal <- either throwError pure (validatePaymentMethod pcMethod)
       now <- liftIO getCurrentTime
       let partyKey   = toSqlKey pcPartyId
@@ -1428,6 +1429,13 @@ validatePaymentMethod rawMethod =
         { errBody =
             "paymentMethod must be one of: cash, bank_transfer, bank, transferencia, produbanco, card, paypal, stripe, wompi, payphone, crypto, other"
         }
+
+validatePaymentCurrency :: Text -> Either ServerError Text
+validatePaymentCurrency rawCurrency =
+  let normalized = T.toUpper (T.strip rawCurrency)
+  in if normalized == "USD"
+       then Right normalized
+       else Left err400 { errBody = "Only USD manual payments are currently supported" }
 
 data MetaChannel = MetaInstagram | MetaFacebook
   deriving (Eq, Show)
