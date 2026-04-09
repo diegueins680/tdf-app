@@ -21,6 +21,7 @@ import TDF.Server
     , parseCourseRegistrationStatus
     , parsePaymentMethodText
     , validateBookingListFilters
+    , validatePublicBookingDurationMinutes
     , validateRolePayload
     , validateServiceAdCurrency
     , validateCmsContentStatus
@@ -442,6 +443,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "   " Nothing "email requerido"
             assertInvalid "not-an-email" Nothing "email inválido"
             assertInvalid "user@example.com" (Just "call me at 099 123 4567") "phoneE164 inválido"
+
+    describe "validatePublicBookingDurationMinutes" $ do
+        it "defaults omitted durations to one hour and preserves explicit durations >= 30 minutes" $ do
+            validatePublicBookingDurationMinutes Nothing `shouldBe` Right 60
+            validatePublicBookingDurationMinutes (Just 30) `shouldBe` Right 30
+            validatePublicBookingDurationMinutes (Just 90) `shouldBe` Right 90
+
+        it "rejects explicit durations below the booking minimum instead of silently rewriting them to 30 minutes" $ do
+            let assertInvalid rawDuration =
+                    case validatePublicBookingDurationMinutes (Just rawDuration) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "durationMinutes must be at least 30"
+                        Right durationVal ->
+                            expectationFailure ("Expected invalid booking duration to be rejected, got: " <> show durationVal)
+            assertInvalid (-15)
+            assertInvalid 0
+            assertInvalid 29
 
     describe "validateCourseRegistrationContactChannels" $ do
         it "accepts registrations with at least one contact channel" $ do

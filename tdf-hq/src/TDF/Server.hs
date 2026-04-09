@@ -3463,6 +3463,14 @@ validatePublicBookingContactDetails rawEmail rawPhone = do
   phoneClean <- validateCourseRegistrationPhoneE164 rawPhone
   pure (emailClean, phoneClean)
 
+validatePublicBookingDurationMinutes :: Maybe Int -> Either ServerError Int
+validatePublicBookingDurationMinutes Nothing = Right 60
+validatePublicBookingDurationMinutes (Just durationMinutes)
+  | durationMinutes < 30 =
+      Left err400 { errBody = "durationMinutes must be at least 30" }
+  | otherwise =
+      Right durationMinutes
+
 validateCourseRegistrationEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationEmail Nothing = Right Nothing
 validateCourseRegistrationEmail (Just rawEmail) =
@@ -4977,6 +4985,9 @@ createPublicBooking PublicBookingReq{..} = do
   (emailClean, phoneClean) <-
     either throwError pure $
       validatePublicBookingContactDetails pbEmail pbPhone
+  durationMins <-
+    either throwError pure $
+      validatePublicBookingDurationMinutes pbDurationMinutes
   let serviceTypeClean = normalizeOptionalInput (Just pbServiceType)
   when (isNothing serviceTypeClean) (throwBadRequest "serviceType requerido")
   engineerIdClean <-
@@ -4986,8 +4997,7 @@ createPublicBooking PublicBookingReq{..} = do
   case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
     Left msg -> throwBadRequest msg
     Right () -> pure ()
-  let durationMins = max 30 (fromMaybe 60 pbDurationMinutes)
-      endsAt       = addUTCTime (fromIntegral durationMins * 60) pbStartsAt
+  let endsAt       = addUTCTime (fromIntegral durationMins * 60) pbStartsAt
       notesClean   = normalizeOptionalInput pbNotes
   (partyId, _) <- ensurePartyWithAccount (Just (T.strip pbFullName)) emailClean phoneClean
   Env pool _ <- ask
