@@ -10,6 +10,8 @@ module TDF.ServerAdmin
   , normalizeAdminEmailAddress
   , normalizeAdminEmailBodyLines
   , parseSocialErrorsChannel
+  , SocialUnholdLookup(..)
+  , validateSocialUnholdLookup
   , validateSocialErrorsLimit
   , validateAdminWhatsAppSendMode
   ) where
@@ -118,6 +120,11 @@ import           TDF.DTO                ( LogEntryDTO(..) )
 import           TDF.RagStore           (getRagIndexStats, refreshRagIndex)
 import           System.IO              (hPutStrLn, stderr)
 
+data SocialUnholdLookup
+  = SocialUnholdByExternalId Text
+  | SocialUnholdBySenderId Text
+  deriving (Show, Eq)
+
 adminServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -220,17 +227,15 @@ adminServer user =
       ensureModule ModuleAdmin user
       now <- liftIO getCurrentTime
       let channel = T.toLower (T.strip surChannel)
-          mExtId = fmap T.strip surExternalId
-          mSender = fmap T.strip surSenderId
-      case (mExtId, mSender) of
-        (Just extId, _) | not (T.null extId) -> do
+      lookupMode <- either throwError pure (validateSocialUnholdLookup surExternalId surSenderId)
+      case lookupMode of
+        SocialUnholdByExternalId extId -> do
           _ <- unholdByExternalId channel extId
           liftIO $ addLog LogInfo ("[Admin][Social] Unhold " <> channel <> " extId=" <> extId)
           pure (object ["status" .= ("ok" :: Text), "channel" .= channel, "externalId" .= extId, "ts" .= T.pack (show now)])
-        (_, Just sid) | not (T.null sid) -> do
+        SocialUnholdBySenderId sid -> do
           res <- unholdLatestBySender channel sid
           pure res
-        _ -> throwError err400 { errBody = "Provide externalId or senderId" }
 
     socialStatusHandler = do
       ensureModule ModuleAdmin user
@@ -1000,6 +1005,16 @@ parseSocialErrorsChannel mChannel =
   where
     missingChannel =
       Left err400 { errBody = "channel requerido (instagram|facebook|whatsapp)" }
+
+validateSocialUnholdLookup :: Maybe Text -> Maybe Text -> Either ServerError SocialUnholdLookup
+validateSocialUnholdLookup mExternalId mSenderId =
+  case (normaliseText mExternalId, normaliseText mSenderId) of
+    (Just extId, Nothing) -> Right (SocialUnholdByExternalId extId)
+    (Nothing, Just senderId) -> Right (SocialUnholdBySenderId senderId)
+    (Nothing, Nothing) ->
+      Left err400 { errBody = "Provide externalId or senderId" }
+    (Just _, Just _) ->
+      Left err400 { errBody = "Provide only one of externalId or senderId" }
 
 validateSocialErrorsLimit :: Maybe Int -> Either ServerError Int
 validateSocialErrorsLimit Nothing = Right 50

@@ -10,6 +10,8 @@ import TDF.ServerAdmin (
     dedupeAdminEmailRecipients,
     normalizeAdminEmailAddress,
     normalizeAdminEmailBodyLines,
+    SocialUnholdLookup (..),
+    validateSocialUnholdLookup,
     validateAdminWhatsAppSendMode,
   )
 
@@ -61,3 +63,22 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "replyToMessageId requerido" (validateAdminWhatsAppSendMode "reply" Nothing)
             assertInvalid "entero positivo" (validateAdminWhatsAppSendMode "reply" (Just 0))
             assertInvalid "solo se permite en mode=reply" (validateAdminWhatsAppSendMode "notify" (Just 99))
+
+    describe "validateSocialUnholdLookup" $ do
+        it "accepts exactly one lookup key and trims the chosen identifier" $ do
+            validateSocialUnholdLookup (Just "  ig-mid-1  ") Nothing
+                `shouldBe` Right (SocialUnholdByExternalId "ig-mid-1")
+            validateSocialUnholdLookup Nothing (Just "  wa:+593999000111  ")
+                `shouldBe` Right (SocialUnholdBySenderId "wa:+593999000111")
+
+        it "rejects missing or contradictory lookup keys instead of silently picking one" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid social unhold lookup, got " <> show value)
+            assertInvalid "Provide externalId or senderId" (validateSocialUnholdLookup Nothing Nothing)
+            assertInvalid "Provide externalId or senderId" (validateSocialUnholdLookup (Just "   ") (Just ""))
+            assertInvalid "Provide only one of externalId or senderId"
+                (validateSocialUnholdLookup (Just "ext-1") (Just "sender-1"))
