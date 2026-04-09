@@ -200,7 +200,7 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
   });
 
   it('replaces the empty audit table with first-run guidance instead of blank table chrome', async () => {
@@ -247,12 +247,17 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
+      expect(screen.getByRole('columnheader', { name: /^Permisos$/i })).toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
       expect(screen.queryByText('Usuario: grace')).not.toBeInTheDocument();
       expect(screen.queryByText('Usuario: linus')).not.toBeInTheDocument();
       expect(screen.getAllByText('grace')).toHaveLength(1);
       expect(screen.getAllByText('linus')).toHaveLength(1);
+      expect(screen.getByRole('button', { name: 'Editar permisos de Ada Lovelace' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar permisos de grace' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar permisos de linus' })).toBeInTheDocument();
     });
   });
 });

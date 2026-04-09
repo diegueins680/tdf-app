@@ -332,7 +332,7 @@ export default function AdminConsolePage() {
                   <TableCell>Roles</TableCell>
                   <TableCell>Último acceso</TableCell>
                   <TableCell>Estado</TableCell>
-                  <TableCell align="right">Acciones</TableCell>
+                  <TableCell align="right">Permisos</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -373,8 +373,13 @@ export default function AdminConsolePage() {
                       <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
                       <TableCell>{renderStatus(user.status)}</TableCell>
                       <TableCell align="right">
-                        <Button size="small" startIcon={<EditIcon />} onClick={() => setEditingUser(user)}>
-                          Editar roles
+                        <Button
+                          size="small"
+                          startIcon={<EditIcon />}
+                          onClick={() => setEditingUser(user)}
+                          aria-label={`Editar permisos de ${identity.primary}`}
+                        >
+                          Editar
                         </Button>
                       </TableCell>
                     </TableRow>
