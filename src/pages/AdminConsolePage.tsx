@@ -239,6 +239,19 @@ export default function AdminConsolePage() {
     || auditQuery.isFetching
     || consoleQuery.isFetching
     || usersQuery.isFetching;
+  const demoSeedCardCopy = showGettingStartedGuidance
+    ? {
+        title: 'Recorrido con demo',
+        description: 'Si es tu primera vez aquí, carga datos de ejemplo para ver usuarios, roles y auditoría sin tocar producción.',
+        buttonLabel: 'Cargar datos de ejemplo',
+        pendingLabel: 'Cargando ejemplo…',
+      }
+    : {
+        title: 'Datos de demostración',
+        description: 'Restablece los datos de demo en ambientes de prueba cuando necesites repetir el flujo sin refrescos manuales extra.',
+        buttonLabel: 'Restablecer demo',
+        pendingLabel: 'Restableciendo demo…',
+      };
 
   const handleCloseDialog = () => {
     if (updateRolesMutation.isPending) return;
@@ -333,10 +346,10 @@ export default function AdminConsolePage() {
 
         <Grid item xs={12} md={4}>
           <Card variant="outlined">
-            <CardHeader title="Datos de demostración" />
+            <CardHeader title={demoSeedCardCopy.title} />
             <CardContent>
               <Typography variant="body2">
-                Ejecuta la siembra para restablecer datos de demo en ambientes de prueba.
+                {demoSeedCardCopy.description}
               </Typography>
               <Button
                 sx={{ mt: 2 }}
@@ -345,14 +358,11 @@ export default function AdminConsolePage() {
                 onClick={() => seedMutation.mutate()}
                 disabled={seedMutation.isPending}
               >
-                {seedMutation.isPending ? 'Sembrando…' : 'Seed demo data'}
+                {seedMutation.isPending ? demoSeedCardCopy.pendingLabel : demoSeedCardCopy.buttonLabel}
               </Button>
-              <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 1 }}>
-                Al terminar, el panel se actualiza automáticamente para evitar un refresco manual extra.
-              </Typography>
               {seedMutation.isSuccess && (
                 <Alert severity="success" sx={{ mt: 2 }}>
-                  Datos de demo regenerados correctamente.
+                  Datos de demostración preparados correctamente.
                 </Alert>
               )}
             </CardContent>

@@ -100,7 +100,7 @@ describe('AdminConsolePage', () => {
     mockUpdateUserRoles.mockResolvedValue(undefined);
   });
 
-  it('uses one page-level refresh action and a clear header description', async () => {
+  it('uses one page-level refresh action and a clearer first-run demo call to action', async () => {
     renderPage();
 
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
@@ -123,8 +123,38 @@ describe('AdminConsolePage', () => {
       screen.queryByRole('button', { name: /Refrescar/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Al terminar, el panel se actualiza automáticamente para evitar un refresco manual extra\./i),
+      screen.getByText('Recorrido con demo'),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Si es tu primera vez aquí, carga datos de ejemplo para ver usuarios, roles y auditoría sin tocar producción\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Seed demo data/i })).not.toBeInTheDocument();
+  });
+
+  it('switches the demo card back to a reset action once the console already has data', async () => {
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Datos de demostración')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Restablece los datos de demo en ambientes de prueba cuando necesites repetir el flujo sin refrescos manuales extra\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Restablecer demo/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Recorrido con demo')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
   it('shows a compact first-run checklist when preview cards only duplicate built-in admin sections', async () => {
@@ -270,11 +300,11 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() =>
       expect(
-        screen.getByRole('button', { name: /Seed demo data/i }),
+        screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
       ).toBeEnabled(),
     );
 
-    await user.click(screen.getByRole('button', { name: /Seed demo data/i }));
+    await user.click(screen.getByRole('button', { name: /Cargar datos de ejemplo/i }));
 
     await waitFor(() => {
       expect(mockSeed).toHaveBeenCalledTimes(1);
