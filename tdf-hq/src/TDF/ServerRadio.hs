@@ -28,6 +28,7 @@ import qualified Data.Text.Encoding     as TE
 import           Data.Text.Encoding.Error (lenientDecode)
 import           Data.Time              (UTCTime, getCurrentTime)
 import           System.Environment     (lookupEnv)
+import           Text.Read              (readMaybe)
 import qualified Data.ByteString.Lazy   as BL
 import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Desc, LimitTo), deleteBy, getBy, insert,
                                          selectList, selectFirst, update)
@@ -128,7 +129,11 @@ validateRadioAuthority rawAuthority
           let port = T.drop 1 suffix
           in if T.null port || T.any (not . isDigit) port
                then Left err400 { errBody = "streamUrl port must be numeric" }
-               else Right ()
+               else case readMaybe (T.unpack port) :: Maybe Int of
+                 Just portNumber | portNumber >= 1 && portNumber <= 65535 ->
+                   Right ()
+                 _ ->
+                   Left err400 { errBody = "streamUrl port must be between 1 and 65535" }
       | otherwise =
           Left err400 { errBody = "streamUrl must include a valid host" }
 

@@ -499,6 +499,18 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "streamUrl port must be numeric"
                 Right _ -> expectationFailure "Expected non-numeric port streamUrl to be rejected"
 
+        it "rejects out-of-range ports instead of storing unreachable stream endpoints" $ do
+            let assertInvalid rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "streamUrl port must be between 1 and 65535"
+                        Right value ->
+                            expectationFailure ("Expected invalid streamUrl port to be rejected, got " <> show value)
+            assertInvalid "https://radio.example.com:0/live"
+            assertInvalid "https://radio.example.com:65536/live"
+            assertInvalid "https://[2001:db8::1]:70000/live"
+
         it "rejects malformed host labels instead of storing unusable stream endpoints" $ do
             let assertInvalid rawUrl =
                     case validateRadioStreamUrl rawUrl of
