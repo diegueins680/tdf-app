@@ -465,6 +465,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "fileUrl" "receipt.pdf"
             assertInvalid "fileUrl" "ftp://files.example.com/proof.pdf"
             assertInvalid "attachmentUrl" "https://files.example.com/proof copy.pdf"
+            assertInvalid "attachmentUrl" "https://files..example.com/proof.pdf"
+            assertInvalid "fileUrl" "https://files_example.com/proof.pdf"
 
     describe "validatePublicBookingContactDetails" $ do
         it "normalizes the public-booking email and optional phone before party creation" $

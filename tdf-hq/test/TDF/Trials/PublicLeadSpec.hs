@@ -162,6 +162,8 @@ spec = do
                 expectationFailure "Expected invalid driveLink to be rejected"
       assertRejected "folder-123"
       assertRejected "https://example.com/shared file"
+      assertRejected "https://drive..example.com/folder"
+      assertRejected "https://drive_example.com/folder"
 
   describe "validatePublicSubjectIdInput" $ do
     it "accepts positive subject ids" $

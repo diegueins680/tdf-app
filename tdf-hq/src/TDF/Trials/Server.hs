@@ -482,7 +482,7 @@ isValidHttpUrl rawUrl
           let (hostPart, rest) = T.breakOn "]" rawAuthority
               host = T.drop 1 hostPart
           in not (T.null rest)
-               && validateHost host
+               && validateBracketedHost host
                && validatePortSuffix (T.drop 1 rest)
       | T.count ":" rawAuthority > 1 = False
       | otherwise =
@@ -490,9 +490,16 @@ isValidHttpUrl rawUrl
           in validateHost host && validatePortSuffix portSuffix
 
     validateHost host =
+      let normalizedHost = T.toLower host
+      in not (T.null normalizedHost)
+        && not (T.isPrefixOf "." normalizedHost)
+        && not (T.isSuffixOf "." normalizedHost)
+        && all isValidEmailDomainLabel (T.splitOn "." normalizedHost)
+
+    validateBracketedHost host =
       not (T.null host)
-        && not (T.isPrefixOf "." host)
-        && not (T.isSuffixOf "." host)
+        && T.any (== ':') host
+        && T.all (`elem` ("0123456789abcdefABCDEF:." :: String)) host
 
     validatePortSuffix suffix
       | T.null suffix = True
