@@ -69,6 +69,15 @@ const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] 
   { value: 'refunded', label: 'Reembolsado', color: 'default' },
 ];
 
+const QUICK_VIEW_PRESETS = [
+  { value: 'last7', label: 'Últimos 7 días' },
+  { value: 'paid', label: 'Pagado' },
+  { value: 'paypal', label: 'PayPal' },
+  { value: 'card', label: 'Tarjeta pendiente' },
+] as const;
+
+type QuickViewPreset = (typeof QUICK_VIEW_PRESETS)[number]['value'];
+
 const statusColor = (value: string): ChipProps['color'] => {
   const match = STATUS_PRESETS.find((p) => p.value === value);
   return match?.color ?? getOrderStatusMeta(value).color;
@@ -309,7 +318,7 @@ export default function MarketplaceOrdersPage() {
     applyFilters(createDefaultMarketplaceOrderFilters());
   };
 
-  const applyPreset = (preset: 'last7' | 'paid' | 'paypal' | 'card') => {
+  const applyPreset = (preset: QuickViewPreset) => {
     applyFilters(applyMarketplaceOrderPreset(preset));
   };
 
@@ -534,45 +543,60 @@ export default function MarketplaceOrdersPage() {
               />
             </Grid>
           </Grid>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-            Atajos rápidos: cada atajo reemplaza los filtros actuales para dejar una vista limpia antes de revisar resultados.
-          </Typography>
-          <Stack direction="row" spacing={1} mb={2} alignItems="center" flexWrap="wrap">
-            <Button size="small" variant="outlined" onClick={() => applyPreset('last7')}>
-              Últimos 7 días
-            </Button>
-            <Button size="small" variant="outlined" onClick={() => applyPreset('paid')}>
-              Pagado
-            </Button>
-            <Button size="small" variant="outlined" onClick={() => applyPreset('paypal')}>
-              PayPal
-            </Button>
-            <Button size="small" variant="outlined" onClick={() => applyPreset('card')}>
-              Tarjeta pendiente
-            </Button>
-            <Box flex={1} />
-            {filtersActiveCount > 0 && (
-              <Button size="small" onClick={copyFiltersLink}>
-                Copiar enlace de filtros
+          <Stack
+            direction={{ xs: 'column', lg: 'row' }}
+            spacing={1.5}
+            mb={2}
+            alignItems={{ xs: 'stretch', lg: 'flex-start' }}
+          >
+            <TextField
+              select
+              size="small"
+              label="Vista rápida"
+              value=""
+              onChange={(event) => {
+                const nextPreset = event.target.value as QuickViewPreset | '';
+                if (!nextPreset) return;
+                applyPreset(nextPreset);
+              }}
+              helperText="Aplica una vista base y reemplaza los filtros actuales antes de revisar resultados."
+              sx={{ minWidth: { xs: '100%', sm: 280 }, flexShrink: 0 }}
+              SelectProps={{ displayEmpty: true }}
+            >
+              <MenuItem value="" disabled>
+                Elegir…
+              </MenuItem>
+              {QUICK_VIEW_PRESETS.map((preset) => (
+                <MenuItem key={preset.value} value={preset.value}>
+                  {preset.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flex: 1 }}>
+              <Box flex={1} />
+              {filtersActiveCount > 0 && (
+                <Button size="small" onClick={copyFiltersLink}>
+                  Copiar enlace de filtros
+                </Button>
+              )}
+              {statusFilter !== 'all' && (
+                <Chip size="small" label={`Estado: ${statusLabel(statusFilter)}`} onDelete={() => setStatusFilter('all')} />
+              )}
+              {providerFilter !== 'all' && (
+                <Chip
+                  size="small"
+                  label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
+                  onDelete={() => setProviderFilter('all')}
+                />
+              )}
+              {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
+              {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
+              {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
+              {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
+              <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">
+                Limpiar filtros
               </Button>
-            )}
-            {statusFilter !== 'all' && (
-              <Chip size="small" label={`Estado: ${statusLabel(statusFilter)}`} onDelete={() => setStatusFilter('all')} />
-            )}
-            {providerFilter !== 'all' && (
-              <Chip
-                size="small"
-                label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
-                onDelete={() => setProviderFilter('all')}
-              />
-            )}
-            {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
-            {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
-            {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
-            {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
-            <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">
-              Limpiar filtros
-            </Button>
+            </Stack>
           </Stack>
           {paidTotal > 0 && paidVisible === 0 && filtersDirty && (
             <Alert severity="info" sx={{ mb: 2 }}>
