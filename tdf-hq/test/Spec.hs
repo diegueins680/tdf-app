@@ -51,8 +51,10 @@ import TDF.ServerInternships
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
 import TDF.ServerProposals
-    ( validateOptionalProposalContactEmail,
+    ( ProposalContentSource (..),
+      validateOptionalProposalContactEmail,
       validateOptionalProposalStatus,
+      validateProposalContentSource,
       validateProposalStatus,
       validateProposalVersionNumber,
       validateTemplateKey )
@@ -552,6 +554,23 @@ main = hspec $ do
             assertInvalid "   " "templateKey required"
             assertInvalid "../proposal" "ASCII letters, numbers, hyphens, or underscores"
 
+    describe "validateProposalContentSource" $ do
+        it "accepts exactly one normalized proposal content source" $ do
+            validateProposalContentSource (Just "\\section*{Proposal}") Nothing
+                `shouldBe` Right (ProposalInlineLatex "\\section*{Proposal}")
+            validateProposalContentSource (Just "   ") (Just "  tdf_live_sessions  ")
+                `shouldBe` Right (ProposalTemplateKey "tdf_live_sessions")
+
+        it "rejects missing or ambiguous content source input with a 400" $ do
+            let assertInvalid rawLatex rawTemplate expected = case validateProposalContentSource rawLatex rawTemplate of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid proposal content source to be rejected, got: " <> show value)
+            assertInvalid Nothing Nothing "latex or templateKey required"
+            assertInvalid (Just "\\section*{Proposal}") (Just "tdf_live_sessions") "Provide either latex or templateKey, not both"
+
     describe "proposal status validation" $ do
         it "defaults omitted create status to draft and normalizes supported explicit statuses" $ do
             validateProposalStatus Nothing `shouldBe` Right "draft"
@@ -670,7 +689,7 @@ main = hspec $ do
         it "rejects malformed stored contracts instead of letting handlers report a misleading 404" $
             case decodeStoredContract "{\"id\":true}" of
                 Left err ->
-                    err `shouldContain` "Stored contract payload is unreadable"
+                    Data.Text.unpack err `shouldContain` "Stored contract payload is unreadable"
                 Right _ ->
                     expectationFailure "Expected malformed stored contract row to be rejected"
 

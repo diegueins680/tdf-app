@@ -6,8 +6,10 @@
 
 module TDF.ServerProposals
   ( proposalsServer
+  , ProposalContentSource(..)
   , validateOptionalProposalStatus
   , validateOptionalProposalContactEmail
+  , validateProposalContentSource
   , validateProposalStatus
   , validateProposalVersionNumber
   , validateTemplateKey
@@ -41,6 +43,11 @@ import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), h
 import           TDF.DB                     (Env(..))
 import qualified TDF.ModelsExtra            as ME
 import qualified TDF.Handlers.InputList     as InputList
+
+data ProposalContentSource
+  = ProposalInlineLatex Text
+  | ProposalTemplateKey Text
+  deriving (Eq, Show)
 
 proposalsServer
   :: ( MonadReader Env m
@@ -455,15 +462,26 @@ resolveLatex
   -> Maybe Text
   -> m Text
 resolveLatex mLatex mTemplateKey =
-  case normalizeLatex mLatex of
-    Just latex -> pure latex
-    Nothing -> do
-      rawKey <- maybe (throwError err400 { errBody = "latex or templateKey required" }) pure mTemplateKey
-      key <- either throwError pure (validateTemplateKey rawKey)
+  case validateProposalContentSource mLatex mTemplateKey of
+    Left err -> throwError err
+    Right (ProposalInlineLatex latex) -> pure latex
+    Right (ProposalTemplateKey key) -> do
       mTemplate <- liftIO (loadTemplate key)
       case mTemplate of
         Nothing -> throwError err404 { errBody = "Template not found" }
         Just template -> pure template
+
+validateProposalContentSource :: Maybe Text -> Maybe Text -> Either ServerError ProposalContentSource
+validateProposalContentSource mLatex mTemplateKey =
+  case (normalizeLatex mLatex, normalizeOptionalText mTemplateKey) of
+    (Just latex, Nothing) ->
+      Right (ProposalInlineLatex latex)
+    (Nothing, Just rawKey) ->
+      ProposalTemplateKey <$> validateTemplateKey rawKey
+    (Nothing, Nothing) ->
+      Left err400 { errBody = "latex or templateKey required" }
+    (Just _, Just _) ->
+      Left err400 { errBody = "Provide either latex or templateKey, not both" }
 
 validateTemplateKey :: Text -> Either ServerError Text
 validateTemplateKey raw =
