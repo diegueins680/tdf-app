@@ -449,6 +449,7 @@ export default function CourseRegistrationsAdminPage() {
   const [pageFlash, setPageFlash] = useState<FlashState | null>(null);
   const [dossierFlash, setDossierFlash] = useState<FlashState | null>(null);
   const [selectedDossier, setSelectedDossier] = useState<DossierTarget | null>(null);
+  const [hasOpenedDossier, setHasOpenedDossier] = useState(false);
   const [showEmailHistory, setShowEmailHistory] = useState(false);
   const [statusMenuTarget, setStatusMenuTarget] = useState<{
     anchorEl: HTMLElement;
@@ -676,7 +677,7 @@ export default function CourseRegistrationsAdminPage() {
       : `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
-  const showDossierScopeHint = loadedRegistrationCount > 1;
+  const showDossierScopeHint = loadedRegistrationCount > 1 && !hasOpenedDossier;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -985,6 +986,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleOpenDossier = (reg: CourseRegistrationDTO, intent: DossierIntent) => {
+    setHasOpenedDossier(true);
     setSelectedDossier({ reg, intent });
   };
 
