@@ -17,6 +17,22 @@ Use these repo-backed values as the source of truth for the current mobile relea
 
 Important: older notes may still reference `com.tdf.records`. Treat that older identifier as stale unless a deliberate repo change says otherwise.
 
+## Packet A login proof gate before any Packet B store action
+
+Do not advance any Play Console or App Store Connect submission step until the release lane has one same-run canonical login proof pack.
+
+For the current release lane, the control-plane anchors are:
+
+- Android active anchor: `d5802e5c-2446-473a-9fd0-55f6979eacd6`
+- iOS active anchor: `26be7bda-9195-4944-adea-665028aec528`
+- Android build to keep excluded from promotion decisions unless a newer canonical proof pack explicitly supersedes that exclusion: `738e7792-3307-442e-8640-74eacd606c5f`
+
+Before any Packet B store action, confirm all of the following:
+
+- Platform evidence includes the exact line `Release-lane login proof = complete`.
+- One canonical proof-pack path covers successful `username/password` and successful `Google login` on both active anchors above.
+- If that proof is absent, stop and record exactly `Packet B gate = frozen behind Packet A proof` instead of mutating either store console.
+
 ## Publish the public URLs first
 
 Deploy the existing public web app so these routes are reachable without authentication:

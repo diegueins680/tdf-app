@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - 'tdf-mobile'
       - 'tdf-hq/**'
       - 'package.json'
       - 'package-lock.json'

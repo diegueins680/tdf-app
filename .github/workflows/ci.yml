@@ -5,6 +5,7 @@ on:
     paths:
       - 'tdf-hq/**'
       - 'tdf-hq-ui/**'
+      - 'tdf-mobile'
       - 'tdf-mobile/**'
       - 'scripts/**'
       - 'package.json'
