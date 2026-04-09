@@ -7,6 +7,7 @@
 module TDF.ServerProposals
   ( proposalsServer
   , validateOptionalProposalStatus
+  , validateOptionalProposalContactEmail
   , validateProposalStatus
   , validateTemplateKey
   ) where
@@ -15,7 +16,7 @@ import           Control.Monad              (unless)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
-import           Data.Char                  (isAlphaNum, isAscii)
+import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isDigit)
 import           Data.List                  (foldl')
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, maybeToList)
@@ -91,6 +92,7 @@ proposalsServer user =
       title <- requireText "title" pcTitle
       latex <- resolveLatex pcLatex pcTemplateKey
       statusVal <- either throwError pure (validateProposalStatus pcStatus)
+      contactEmail <- either throwError pure (validateOptionalProposalContactEmail pcContactEmail)
       now <- liftIO getCurrentTime
       pipelineCardKey <- parseOptionalKey @ME.PipelineCard pcPipelineCardId
       let proposalRecord = ME.Proposal
@@ -98,7 +100,7 @@ proposalsServer user =
             , ME.proposalServiceKind    = pcServiceKind
             , ME.proposalClientPartyId  = toSqlKey <$> pcClientPartyId
             , ME.proposalContactName    = normalizeOptionalText pcContactName
-            , ME.proposalContactEmail   = normalizeOptionalText pcContactEmail
+            , ME.proposalContactEmail   = contactEmail
             , ME.proposalContactPhone   = normalizeOptionalText pcContactPhone
             , ME.proposalPipelineCardId = pipelineCardKey
             , ME.proposalStatus         = statusVal
@@ -130,6 +132,7 @@ proposalsServer user =
           now <- liftIO getCurrentTime
           titleUpdate <- traverse (requireText "title") puTitle
           statusUpdate <- either throwError pure (validateOptionalProposalStatus puStatus)
+          contactEmailUpdate <- either throwError pure (traverse validateOptionalProposalContactEmail puContactEmail)
           pipelineCardUpdate <- parseOptionalKeyUpdate @ME.PipelineCard puPipelineCardId
           let updates = catMaybes
                 [ fmap (ME.ProposalTitle =.) titleUpdate
@@ -138,7 +141,7 @@ proposalsServer user =
                 , fmap (ME.ProposalClientPartyId =.)
                     (fmap (fmap toSqlKey) puClientPartyId)
                 , fmap (ME.ProposalContactName =.) (normalizeOptionalUpdate puContactName)
-                , fmap (ME.ProposalContactEmail =.) (normalizeOptionalUpdate puContactEmail)
+                , fmap (ME.ProposalContactEmail =.) contactEmailUpdate
                 , fmap (ME.ProposalContactPhone =.) (normalizeOptionalUpdate puContactPhone)
                 , fmap (ME.ProposalPipelineCardId =.) pipelineCardUpdate
                 , fmap (ME.ProposalNotes =.) (normalizeOptionalUpdate puNotes)
@@ -339,12 +342,44 @@ validateOptionalProposalStatus Nothing = Right Nothing
 validateOptionalProposalStatus (Just rawStatus) =
   Just <$> validateProposalStatus (Just rawStatus)
 
+validateOptionalProposalContactEmail :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalContactEmail Nothing = Right Nothing
+validateOptionalProposalContactEmail (Just rawEmail) =
+  case normalizeOptionalText (Just rawEmail) of
+    Nothing -> Right Nothing
+    Just emailVal ->
+      let normalized = T.toLower emailVal
+      in if isValidProposalEmail normalized
+           then Right (Just normalized)
+           else Left err400 { errBody = "contactEmail must be a valid email address" }
+
 normalizeProposalStatus :: Text -> Maybe Text
 normalizeProposalStatus rawStatus =
   case T.toLower (T.strip rawStatus) of
     "draft" -> Just "draft"
     "sent" -> Just "sent"
     _ -> Nothing
+
+isValidProposalEmail :: Text -> Bool
+isValidProposalEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      not (T.null localPart)
+        && not (T.null domain)
+        && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
+        && T.isInfixOf "." domain
+        && all isValidProposalDomainLabel (T.splitOn "." domain)
+    _ -> False
+
+isValidProposalDomainLabel :: Text -> Bool
+isValidProposalDomainLabel label =
+  not (T.null label)
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidProposalDomainChar label
+
+isValidProposalDomainChar :: Char -> Bool
+isValidProposalDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
 sentAtFromStatus :: Maybe UTCTime -> Text -> UTCTime -> Maybe UTCTime
 sentAtFromStatus current statusVal now =

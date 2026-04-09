@@ -49,7 +49,8 @@ import TDF.ServerInternships
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
 import TDF.ServerProposals
-    ( validateOptionalProposalStatus,
+    ( validateOptionalProposalContactEmail,
+      validateOptionalProposalStatus,
       validateProposalStatus,
       validateTemplateKey )
 import TDF.ServerFeedback (normalizeOptionalFeedbackText, validateOptionalFeedbackContactEmail)
@@ -481,6 +482,25 @@ main = hspec $ do
             assertInvalid (validateProposalStatus (Just "   "))
             assertInvalid (validateProposalStatus (Just "archived"))
             assertInvalid (validateOptionalProposalStatus (Just "queued"))
+
+    describe "validateOptionalProposalContactEmail" $ do
+        it "normalizes valid proposal contact emails and treats blanks as unset" $ do
+            validateOptionalProposalContactEmail Nothing `shouldBe` Right Nothing
+            validateOptionalProposalContactEmail (Just "   ") `shouldBe` Right Nothing
+            validateOptionalProposalContactEmail (Just " Sales@Example.com ")
+                `shouldBe` Right (Just "sales@example.com")
+
+        it "rejects malformed proposal contact emails instead of storing unusable CRM contact data" $ do
+            let assertInvalid raw = case validateOptionalProposalContactEmail (Just raw) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "contactEmail must be a valid email address"
+                    Right value ->
+                        expectationFailure ("Expected invalid proposal contact email to be rejected, got " <> show value)
+            assertInvalid "not-an-email"
+            assertInvalid "sales@example..com"
+            assertInvalid "sales@-example.com"
+            assertInvalid "sales@example-.com"
 
     describe "validateContractId" $ do
         it "accepts UUID-shaped contract ids and canonicalizes surrounding whitespace" $
