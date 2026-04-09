@@ -29,6 +29,8 @@ module TDF.Server.SocialEventsHandlers
   , normalizeMomentCaption
   , normalizeMomentCommentBody
   , validateEventCurrencyInput
+  , TicketCheckInLookup(..)
+  , validateTicketCheckInLookup
   ) where
 
 import           Control.Applicative ((<|>))
@@ -100,6 +102,11 @@ import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapaci
 import qualified TDF.Models.SocialEventsModels as SM
 
 type AppM = ReaderT Env Handler
+
+data TicketCheckInLookup
+  = TicketCheckInLookupById T.Text
+  | TicketCheckInLookupByCode T.Text
+  deriving (Show, Eq)
 
 decodeSocialLinks :: Maybe T.Text -> Maybe ArtistSocialLinksDTO
 decodeSocialLinks mTxt = do
@@ -1602,18 +1609,17 @@ socialEventsServer user = eventsServer
       eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
       _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
 
-      ticketEntity <- case (cleanMaybeText ticketCheckInTicketId, cleanMaybeText ticketCheckInTicketCode) of
-        (Just rawTicketId, _) -> do
+      ticketLookup <- either throwError pure (validateTicketCheckInLookup TicketCheckInRequestDTO{..})
+      ticketEntity <- case ticketLookup of
+        TicketCheckInLookupById rawTicketId -> do
           ticketKey <- parseKeyOr400 "ticket" rawTicketId
           mTicket <- liftIO $ runSqlPool (getEntity ticketKey) envPool
           maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
-        (Nothing, Just rawCode) -> do
-          let codeVal = T.toUpper (T.strip rawCode)
+        TicketCheckInLookupByCode codeVal -> do
           mTicket <- liftIO $ runSqlPool
             (selectFirst [EventTicketEventId ==. eventKey, EventTicketCode ==. codeVal] [])
             envPool
           maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
-        _ -> throwError err400 { errBody = "Provide ticketCheckInTicketId or ticketCheckInTicketCode" }
 
       let ticketKey = entityKey ticketEntity
           ticketVal = entityVal ticketEntity
@@ -2114,6 +2120,16 @@ normalizeTicketStatus mStatus =
   case mStatus >>= parseTicketStatus of
     Nothing -> "issued"
     Just s -> s
+
+validateTicketCheckInLookup :: TicketCheckInRequestDTO -> Either ServerError TicketCheckInLookup
+validateTicketCheckInLookup TicketCheckInRequestDTO{..} =
+  case (cleanMaybeText ticketCheckInTicketId, cleanMaybeText ticketCheckInTicketCode) of
+    (Just rawTicketId, Nothing) -> Right (TicketCheckInLookupById rawTicketId)
+    (Nothing, Just rawCode) -> Right (TicketCheckInLookupByCode (T.toUpper (T.strip rawCode)))
+    (Just _, Just _) ->
+      Left err400 { errBody = "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode" }
+    (Nothing, Nothing) ->
+      Left err400 { errBody = "Provide ticketCheckInTicketId or ticketCheckInTicketCode" }
 
 normalizeEventType :: Maybe T.Text -> Maybe T.Text
 normalizeEventType mType =

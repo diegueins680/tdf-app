@@ -28,6 +28,7 @@ import TDF.DTO.SocialEventsDTO
       EventUpdateDTO (..),
       InvitationUpdateDTO (..),
       NullableFieldUpdate (..),
+      TicketCheckInRequestDTO (..),
       VenueUpdateDTO (..),
       eudMetadataUpdate,
       emuBudgetCents,
@@ -71,7 +72,9 @@ import TDF.Server.SocialEventsHandlers (
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    TicketCheckInLookup (..),
     validateRsvpStatus,
+    validateTicketCheckInLookup,
     validateEventCurrencyInput,
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
@@ -364,6 +367,33 @@ main = hspec $ do
         it "normalizes alternate ticket status spellings" $ do
             normalizeTicketStatus (Just "checkedin") `shouldBe` "checked_in"
             normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
+
+    describe "validateTicketCheckInLookup" $ do
+        it "accepts exactly one lookup field and normalizes ticket codes" $ do
+            validateTicketCheckInLookup
+                TicketCheckInRequestDTO
+                    { ticketCheckInTicketId = Just " 42 "
+                    , ticketCheckInTicketCode = Nothing
+                    }
+                `shouldBe` Right (TicketCheckInLookupById "42")
+            validateTicketCheckInLookup
+                TicketCheckInRequestDTO
+                    { ticketCheckInTicketId = Nothing
+                    , ticketCheckInTicketCode = Just " ab-123 "
+                    }
+                `shouldBe` Right (TicketCheckInLookupByCode "AB-123")
+
+        it "rejects ambiguous check-in payloads that provide both id and code" $ do
+            case validateTicketCheckInLookup
+                TicketCheckInRequestDTO
+                    { ticketCheckInTicketId = Just "42"
+                    , ticketCheckInTicketCode = Just "ab-123"
+                    } of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode"
+                Right value ->
+                    expectationFailure ("Expected ambiguous ticket check-in payload to be rejected, got " <> show value)
 
     describe "validateRadioStreamUrl" $ do
         it "trims surrounding whitespace and accepts http(s) stream URLs" $
