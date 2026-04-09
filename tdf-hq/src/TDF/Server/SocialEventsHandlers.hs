@@ -7,6 +7,7 @@
 module TDF.Server.SocialEventsHandlers
   ( socialEventsServer
   , validateRsvpStatus
+  , validateInvitationToPartyId
   , normalizeInvitationStatus
   , normalizeArtistGenres
   , parseInvitationIdsEither
@@ -1129,8 +1130,7 @@ socialEventsServer user = eventsServer
       eventKey <- parseKeyOr400 "event" eventIdStr
       mEvent <- liftIO $ runSqlPool (get eventKey) envPool
       when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
-      let toParty = T.strip (invitationToPartyId dto)
-      when (T.null toParty) $ throwError err400 { errBody = "invitationToPartyId is required" }
+      toParty <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
       let statusVal = normalizeInvitationStatus (invitationStatus dto)
       key <- liftIO $ runSqlPool (insert EventInvitation
         { eventInvitationEventId = eventKey
@@ -1167,19 +1167,18 @@ socialEventsServer user = eventsServer
           when (eventInvitationEventId inv /= eventKey) $ throwError err400 { errBody = "Invitation does not belong to this event" }
           let statusVal = normalizeInvitationStatus (invitationStatus dto)
           let messageVal = applyNullableTextUpdate iudMessageUpdate (eventInvitationMessage inv)
-          let newToParty = cleanMaybeText (Just (invitationToPartyId dto))
-          let toPartyVal = newToParty <|> eventInvitationToPartyId inv
+          toPartyVal <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
           liftIO $ runSqlPool (update invitationKey
             [ EventInvitationStatus =. Just statusVal
             , EventInvitationMessage =. messageVal
-            , EventInvitationToPartyId =. toPartyVal
+            , EventInvitationToPartyId =. Just toPartyVal
             , EventInvitationUpdatedAt =. now
             ]) envPool
           pure InvitationDTO
             { invitationId = Just (renderKeyText invitationKey)
             , invitationEventId = Just (T.strip eventIdStr)
             , invitationFromPartyId = eventInvitationFromPartyId inv
-            , invitationToPartyId = maybe "" id toPartyVal
+            , invitationToPartyId = toPartyVal
             , invitationStatus = Just statusVal
             , invitationMessage = messageVal
             , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
@@ -2091,6 +2090,15 @@ parseFollowerQueryParamEither mFollower =
     Just rawFollower ->
       case normalizePositivePartyIdText rawFollower of
         Nothing -> Left err400 { errBody = "follower query param must be a positive integer" }
+        Just normalized -> Right normalized
+
+validateInvitationToPartyId :: T.Text -> Either ServerError T.Text
+validateInvitationToPartyId rawInvitationPartyId =
+  case cleanMaybeText (Just rawInvitationPartyId) of
+    Nothing -> Left err400 { errBody = "invitationToPartyId is required" }
+    Just trimmed ->
+      case normalizePositivePartyIdText trimmed of
+        Nothing -> Left err400 { errBody = "invitationToPartyId must be a positive integer" }
         Just normalized -> Right normalized
 
 validateRsvpStatus :: T.Text -> Either ServerError T.Text

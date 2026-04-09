@@ -74,6 +74,7 @@ import TDF.Server.SocialEventsHandlers (
     parseNearQueryEither,
     parseInvitationIdsEither,
     TicketCheckInLookup (..),
+    validateInvitationToPartyId,
     validateRsvpStatus,
     validateTicketCheckInLookup,
     validateEventCurrencyInput,
@@ -126,6 +127,22 @@ main = hspec $ do
 
         it "treats blank strings as pending" $ do
             normalizeInvitationStatus (Just "   ") `shouldBe` "pending"
+
+    describe "validateInvitationToPartyId" $ do
+        it "accepts positive numeric ids and canonicalizes them" $ do
+            validateInvitationToPartyId " 0042 " `shouldBe` Right "42"
+
+        it "rejects blank or malformed ids instead of persisting ambiguous invitation recipients" $ do
+            let assertInvalid expected raw =
+                    case validateInvitationToPartyId raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure ("Expected invalid invitationToPartyId to be rejected, got " <> show value)
+            assertInvalid "invitationToPartyId is required" "   "
+            assertInvalid "invitationToPartyId must be a positive integer" "abc"
+            assertInvalid "invitationToPartyId must be a positive integer" "0"
 
     describe "validateRsvpStatus" $ do
         it "trims and canonicalizes supported RSVP states" $ do
