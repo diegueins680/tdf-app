@@ -70,6 +70,8 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentMediaType,
     normalizeMomentReaction,
     normalizePositivePartyIdText,
+    parseEventStatusQueryParamEither,
+    parseEventTypeQueryParamEither,
     parseFollowerQueryParamEither,
     normalizeTicketOrderStatus,
     normalizeTicketStatus,
@@ -677,6 +679,25 @@ main = hspec $ do
             normalizeFinanceSource (Just "nonsense") `shouldBe` "manual"
             normalizeFinanceEntryStatus (Just "draft") `shouldBe` "draft"
             normalizeFinanceEntryStatus (Just "bad") `shouldBe` "posted"
+
+    describe "event list query validation" $ do
+        it "accepts blank filters and canonicalizes supported event type and status values" $ do
+            parseEventTypeQueryParamEither Nothing `shouldBe` Right Nothing
+            parseEventTypeQueryParamEither (Just "   ") `shouldBe` Right Nothing
+            parseEventTypeQueryParamEither (Just " FESTIVAL ") `shouldBe` Right (Just "festival")
+            parseEventStatusQueryParamEither (Just " canceled ") `shouldBe` Right (Just "cancelled")
+
+        it "rejects unsupported filters instead of silently broadening the result set" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid event list filter error, got " <> show value)
+            assertInvalid "eventType must be one of"
+                (parseEventTypeQueryParamEither (Just "meetup"))
+            assertInvalid "eventStatus must be one of"
+                (parseEventStatusQueryParamEither (Just "paused"))
 
     describe "availabilityOverlaps" $ do
         let day = fromGregorian 2025 1 1

@@ -18,6 +18,8 @@ module TDF.Server.SocialEventsHandlers
   , normalizeTicketStatus
   , normalizeEventType
   , normalizeEventStatus
+  , parseEventTypeQueryParamEither
+  , parseEventStatusQueryParamEither
   , validateEventCreateTypeStatus
   , validateEventMetadataUpdate
   , normalizeBudgetLineType
@@ -291,6 +293,31 @@ validateEventCreateTypeStatus mType mStatus = do
     mStatus
   pure (normalizedType, normalizedStatus)
 
+validateNormalizedQueryParamEither
+  :: BL.ByteString
+  -> (Maybe T.Text -> Maybe T.Text)
+  -> Maybe T.Text
+  -> Either ServerError (Maybe T.Text)
+validateNormalizedQueryParamEither invalidMessage normalizeValue rawValue =
+  case cleanMaybeText rawValue of
+    Nothing -> Right Nothing
+    Just cleaned ->
+      case normalizeValue (Just cleaned) of
+        Just normalized -> Right (Just normalized)
+        Nothing -> Left err400 { errBody = invalidMessage }
+
+parseEventTypeQueryParamEither :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+parseEventTypeQueryParamEither =
+  validateNormalizedQueryParamEither
+    "eventType must be one of: party, concert, festival, conference, showcase, other"
+    normalizeEventType
+
+parseEventStatusQueryParamEither :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+parseEventStatusQueryParamEither =
+  validateNormalizedQueryParamEither
+    "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
+    normalizeEventStatus
+
 applyEventMetadataUpdate :: EventMetadataUpdateDTO -> EventMetadataDTO -> EventMetadataDTO
 applyEventMetadataUpdate EventMetadataUpdateDTO{..} existing = EventMetadataDTO
   { emTicketUrl = applyNullableTextUpdate emuTicketUrl (emTicketUrl existing)
@@ -409,6 +436,8 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       limit <- resolveLimit 200 500 mLimit
       offset <- resolveOffset mOffset
+      typeNeedle <- either throwError pure (parseEventTypeQueryParamEither mType)
+      statusNeedle <- either throwError pure (parseEventStatusQueryParamEither mStatus)
       startFilter <- case mStartAfter of
         Nothing -> pure []
         Just raw ->
@@ -446,9 +475,7 @@ socialEventsServer user = eventsServer
             else pure [SocialEventId <-. eventIds]
       let filters = startFilter ++ cityFilter ++ venueFilter ++ artistFilter
       rows <- liftIO $ runSqlPool (selectList filters [Desc SocialEventStartTime, LimitTo limit, OffsetBy offset]) envPool
-      let typeNeedle = normalizeEventType mType
-          statusNeedle = normalizeEventStatus mStatus
-          matchesMeta eventRow =
+      let matchesMeta eventRow =
             let meta = decodeEventMetadata (socialEventMetadata eventRow)
                 typeOk = maybe True (\t -> emType meta == Just t) typeNeedle
                 statusOk = maybe True (\s -> emStatus meta == Just s) statusNeedle
