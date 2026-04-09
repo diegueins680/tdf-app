@@ -122,7 +122,6 @@ export default function AdminUsersPage() {
   const showMixedContactStateGuidance = visibleUsersMissingContactCount > 0 && visibleUsersWithContactCount > 0;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showClearSearchAction = showSearchField && hasActiveSearch;
-  const showProfileLinkGuidance = visibleUsers.length > 0 && !showSingleUserGuidance;
   const activeScopeSummary = hasUsers && !includeInactive
     ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
     : '';
@@ -146,7 +145,6 @@ export default function AdminUsersPage() {
 
     return parts.join(' ');
   }, [
-    hasActiveSearch,
     hasMultipleUsers,
     hasUsers,
     isFiltered,
@@ -157,6 +155,17 @@ export default function AdminUsersPage() {
     visibleUsersMissingContactCount,
     visibleUsersWithContactCount,
   ]);
+  const headerGuidance = useMemo(() => {
+    if (showSingleUserGuidance) return '';
+
+    const parts = [
+      visibleUsersSummary,
+      activeScopeSummary,
+      visibleUsers.length > 0 ? 'Haz clic en el nombre para abrir el perfil.' : '',
+    ].filter(Boolean);
+
+    return parts.join(' ');
+  }, [activeScopeSummary, showSingleUserGuidance, visibleUsers.length, visibleUsersSummary]);
 
   return (
     <>
@@ -194,19 +203,9 @@ export default function AdminUsersPage() {
                   Solo hay un usuario por ahora. Haz clic en el nombre para abrir el perfil; cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.
                 </Typography>
               )}
-              {visibleUsersSummary && (
+              {headerGuidance && (
                 <Typography variant="body2" color="text.secondary">
-                  {visibleUsersSummary}
-                </Typography>
-              )}
-              {activeScopeSummary && (
-                <Typography variant="body2" color="text.secondary">
-                  {activeScopeSummary}
-                </Typography>
-              )}
-              {showProfileLinkGuidance && (
-                <Typography variant="body2" color="text.secondary">
-                  Haz clic en el nombre para abrir el perfil.
+                  {headerGuidance}
                 </Typography>
               )}
             </Stack>

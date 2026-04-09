@@ -383,6 +383,48 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('collapses the default multi-user guidance into one summary line instead of stacked helper copy', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: '   ',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countExactText(
+          container,
+          '2 usuarios en esta vista. 1 listo para comunicación y 1 pendiente de contacto. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Haz clic en el nombre para abrir el perfil.',
+        )).toBe(1);
+        expect(countExactText(
+          container,
+          '2 usuarios en esta vista. 1 listo para comunicación y 1 pendiente de contacto.',
+        )).toBe(0);
+        expect(countExactText(
+          container,
+          'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        )).toBe(0);
+        expect(countExactText(container, 'Haz clic en el nombre para abrir el perfil.')).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes the default active-only scope once and only marks inactive rows when inactive accounts are included', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
