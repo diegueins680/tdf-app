@@ -165,11 +165,7 @@ const buildAutomaticFilterHelpText = ({
   showSingleStatusSummary: boolean;
   singleAvailableCohortLabel: string;
 }) => {
-  if (combinedSingleChoiceSummary) {
-    return showAdvancedLimitControl
-      ? 'Esta vista ya está acotada a una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
-      : '';
-  }
+  if (combinedSingleChoiceSummary) return '';
 
   if (singleAvailableCohortLabel || showSingleStatusSummary) {
     return '';
@@ -745,6 +741,9 @@ export default function CourseRegistrationsAdminPage() {
     showSingleStatusSummary,
     singleAvailableCohortLabel,
   });
+  const combinedSingleChoiceHelperText = showAdvancedLimitControl
+    ? 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
+    : 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.';
   const showFilteredEmptyState = !regsQuery.isLoading
     && !regsQuery.isError
     && hasCustomFilters
@@ -1680,7 +1679,7 @@ export default function CourseRegistrationsAdminPage() {
                       </Typography>
                     )}
                     <Typography variant="caption" color="text.secondary">
-                      No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.
+                      {combinedSingleChoiceHelperText}
                     </Typography>
                   </Stack>
                 </Grid>

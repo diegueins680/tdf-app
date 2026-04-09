@@ -583,8 +583,15 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(secondContainer, 'Límite')).toBe(false);
       expect(getButtonByText(secondContainer, 'Ajustar límite')).toBeTruthy();
       expect(secondContainer.textContent).toContain(
+        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
+      );
+      expect(secondContainer.textContent).not.toContain(
         'Esta vista ya está acotada a una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
       );
+      expect(countOccurrences(
+        secondContainer,
+        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
+      )).toBe(1);
     });
 
     await act(async () => {
