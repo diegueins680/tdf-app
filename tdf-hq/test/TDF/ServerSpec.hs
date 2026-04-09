@@ -412,13 +412,18 @@ spec = describe "TDF.Server helpers" $ do
             validateCourseRegistrationEmail (Just "   ") `shouldBe` Right Nothing
             validateCourseRegistrationEmail (Just " User@Example.com ") `shouldBe` Right (Just "user@example.com")
 
-        it "rejects explicitly invalid email shapes instead of storing unusable addresses" $
-            case validateCourseRegistrationEmail (Just "not-an-email") of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr) `shouldContain` "email inválido"
-                Right emailVal ->
-                    expectationFailure ("Expected invalid course-registration email to be rejected, got: " <> show emailVal)
+        it "rejects explicitly invalid email shapes instead of storing unusable addresses" $ do
+            let assertInvalid rawEmail =
+                    case validateCourseRegistrationEmail (Just rawEmail) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "email inválido"
+                        Right emailVal ->
+                            expectationFailure ("Expected invalid course-registration email to be rejected, got: " <> show emailVal)
+            assertInvalid "not-an-email"
+            assertInvalid "user@example..com"
+            assertInvalid "user@-example.com"
+            assertInvalid "user@example-.com"
 
     describe "validatePublicBookingContactDetails" $ do
         it "normalizes the public-booking email and optional phone before party creation" $

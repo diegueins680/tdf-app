@@ -24,7 +24,7 @@ import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, isPrefixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
-import           Data.Char (isDigit, isAlphaNum, isAsciiUpper, isSpace, toLower)
+import           Data.Char (isDigit, isAlphaNum, isAsciiLower, isAsciiUpper, isSpace, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
@@ -3481,10 +3481,19 @@ isValidCourseRegistrationEmail candidate =
       not (T.null localPart)
         && not (T.null domain)
         && not (T.any isSpace candidate)
-        && not (T.isPrefixOf "." domain)
-        && not (T.isSuffixOf "." domain)
         && T.isInfixOf "." domain
+        && all isValidEmailDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidEmailDomainLabel :: Text -> Bool
+isValidEmailDomainLabel label =
+  not (T.null label)
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidEmailDomainChar label
+
+isValidEmailDomainChar :: Char -> Bool
+isValidEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
 validateCourseRegistrationContactChannels :: Maybe Text -> Maybe Text -> Either ServerError ()
 validateCourseRegistrationContactChannels mEmail mPhone
