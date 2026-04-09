@@ -194,6 +194,11 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
+        expect(countExactText(container, 'Usuarios')).toBe(1);
+        expect(container.textContent).toContain(
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
+        );
+        expect(container.textContent).not.toContain('admin API');
         expect(container.textContent).toContain(
           'No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.',
         );
@@ -346,7 +351,9 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain(
           '2 usuarios en esta vista. 1 listo para comunicación y 1 pendiente de contacto.',
         );
-        expect(container.textContent).toContain('Haz clic en el nombre para abrir el perfil.');
+        expect(container.textContent).toContain(
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
+        );
         expect(container.textContent).not.toContain('1 usuario sigue sin canal de contacto');
         expect(container.textContent).not.toContain('1 sin contacto');
 
@@ -408,7 +415,11 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(countExactText(
           container,
-          '2 usuarios en esta vista. 1 listo para comunicación y 1 pendiente de contacto. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Haz clic en el nombre para abrir el perfil.',
+          '2 usuarios en esta vista. 1 listo para comunicación y 1 pendiente de contacto. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        )).toBe(1);
+        expect(countExactText(
+          container,
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
         )).toBe(1);
         expect(countExactText(
           container,
@@ -550,11 +561,14 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Haz clic en el nombre para abrir el perfil; cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(
           container.textContent?.includes('Haz clic en el nombre para abrir el perfil.'),
         ).toBe(false);
+        expect(container.textContent).toContain(
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
+        );
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(container.textContent).not.toContain('1 usuario');
         expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(0);

@@ -45,6 +45,8 @@ const getUserAccessSummary = (values: string[]) =>
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
+const ADMIN_USERS_PAGE_INTRO =
+  'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.';
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();
@@ -158,14 +160,10 @@ export default function AdminUsersPage() {
   const headerGuidance = useMemo(() => {
     if (showSingleUserGuidance) return '';
 
-    const parts = [
-      visibleUsersSummary,
-      activeScopeSummary,
-      visibleUsers.length > 0 ? 'Haz clic en el nombre para abrir el perfil.' : '',
-    ].filter(Boolean);
+    const parts = [visibleUsersSummary, activeScopeSummary].filter(Boolean);
 
     return parts.join(' ');
-  }, [activeScopeSummary, showSingleUserGuidance, visibleUsers.length, visibleUsersSummary]);
+  }, [activeScopeSummary, showSingleUserGuidance, visibleUsersSummary]);
 
   return (
     <>
@@ -178,7 +176,10 @@ export default function AdminUsersPage() {
             spacing={2}
           >
             <Stack spacing={1} sx={{ minWidth: 0, flex: '1 1 360px' }}>
-              <Typography variant="h4" fontWeight={700}>Usuarios (admin API)</Typography>
+              <Typography variant="h4" fontWeight={700}>Usuarios</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {ADMIN_USERS_PAGE_INTRO}
+              </Typography>
               {showSearchField && (
                 <TextField
                   label="Buscar usuarios"
@@ -200,7 +201,7 @@ export default function AdminUsersPage() {
               )}
               {showSingleUserGuidance && (
                 <Typography variant="body2" color="text.secondary">
-                  Solo hay un usuario por ahora. Haz clic en el nombre para abrir el perfil; cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.
+                  Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.
                 </Typography>
               )}
               {headerGuidance && (
