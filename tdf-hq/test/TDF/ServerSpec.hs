@@ -30,6 +30,7 @@ import TDF.Server
     , validateCourseRegistrationContactChannels
     , validateCourseRegistrationEmail
     , validateCourseRegistrationPhoneE164
+    , validateCourseRegistrationUrlField
     , validateOptionalCourseNonNegativeField
     , validateOptionalPositiveIdField
     , validatePublicBookingContactDetails
@@ -444,6 +445,25 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "user@example..com"
             assertInvalid "user@-example.com"
             assertInvalid "user@example-.com"
+
+    describe "validateCourseRegistrationUrlField" $ do
+        it "trims valid absolute http(s) URLs and still lets optional attachment fields clear to Nothing" $ do
+            validateCourseRegistrationUrlField "attachmentUrl" Nothing `shouldBe` Right Nothing
+            validateCourseRegistrationUrlField "attachmentUrl" (Just "   ") `shouldBe` Right Nothing
+            validateCourseRegistrationUrlField "fileUrl" (Just " https://files.example.com/proof.pdf ")
+                `shouldBe` Right (Just "https://files.example.com/proof.pdf")
+
+        it "rejects malformed or non-http course registration asset URLs instead of storing opaque strings" $ do
+            let assertInvalid fieldName rawUrl = case validateCourseRegistrationUrlField fieldName (Just rawUrl) of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` (T.unpack fieldName <> " must be an absolute http(s) URL")
+                    Right urlVal ->
+                        expectationFailure ("Expected invalid course registration URL to be rejected, got: " <> show urlVal)
+            assertInvalid "fileUrl" "receipt.pdf"
+            assertInvalid "fileUrl" "ftp://files.example.com/proof.pdf"
+            assertInvalid "attachmentUrl" "https://files.example.com/proof copy.pdf"
 
     describe "validatePublicBookingContactDetails" $ do
         it "normalizes the public-booking email and optional phone before party creation" $

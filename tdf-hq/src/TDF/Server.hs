@@ -92,7 +92,7 @@ import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
 import           TDF.Trials.API (TrialsAPI)
-import           TDF.Trials.Server (trialsServer)
+import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl, trialsServer)
 import qualified TDF.Trials.Models as Trials
 import qualified TDF.Meta as Meta
 import           TDF.Version      (VersionInfo(..), getVersionInfo)
@@ -215,7 +215,7 @@ mkApp env =
       combinedProxy = Proxy :: Proxy CombinedAPI
       ctxProxy = Proxy :: Proxy '[AuthHandler Wai.Request AuthedUser]
       ctx      = authContext env
-      trials   = trialsServer (envPool env)
+      trials   = TrialsServer.trialsServer (envPool env)
       apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) (server env)
   in serveWithContext combinedProxy ctx (trials :<|> apiSrv)
 
@@ -2741,7 +2741,9 @@ createCourseRegistrationReceipt
   -> AppM DTO.CourseRegistrationReceiptDTO
 createCourseRegistrationReceipt user rawSlug regId CourseRegistrationReceiptCreate{..} = do
   ent <- fetchCourseRegistrationEntity rawSlug regId >>= ensureCourseRegistrationPartyLink
-  fileUrlVal <- maybe (throwBadRequest "fileUrl requerido") pure (cleanOptional (Just fileUrl))
+  fileUrlVal <- do
+    normalized <- either throwError pure (validateCourseRegistrationUrlField "fileUrl" (Just fileUrl))
+    maybe (throwBadRequest "fileUrl requerido") pure normalized
   now <- liftIO getCurrentTime
   let regKey = entityKey ent
       reg = entityVal ent
@@ -2796,9 +2798,11 @@ updateCourseRegistrationReceipt
 updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationReceiptUpdate{..} = do
   (ent, Entity receiptKey receipt) <- fetchCourseRegistrationReceiptEntity rawSlug regId receiptId
   now <- liftIO getCurrentTime
-  let fileUrlVal = maybe (ME.courseRegistrationReceiptFileUrl receipt) T.strip fileUrl
-  when (T.null fileUrlVal) $
-    throwBadRequest "fileUrl requerido"
+  fileUrlVal <- case fileUrl of
+    Nothing -> pure (ME.courseRegistrationReceiptFileUrl receipt)
+    Just rawUrl -> do
+      normalized <- either throwError pure (validateCourseRegistrationUrlField "fileUrl" (Just rawUrl))
+      maybe (throwBadRequest "fileUrl requerido") pure normalized
   let updated =
         receipt
           { ME.courseRegistrationReceiptPartyId = ME.courseRegistrationPartyId (entityVal ent)
@@ -2860,6 +2864,7 @@ createCourseRegistrationFollowUp user rawSlug regId CourseRegistrationFollowUpCr
   when (T.null notesVal) $
     throwBadRequest "notes requerido"
   entryTypeVal <- either throwError pure (parseCourseFollowUpType entryType)
+  attachmentUrlVal <- either throwError pure (validateCourseRegistrationUrlField "attachmentUrl" attachmentUrl)
   mNextFollowUpAt <- parseOptionalUtcText "nextFollowUpAt" nextFollowUpAt
   now <- liftIO getCurrentTime
   followUp <- runDB $ insertCourseRegistrationFollowUp
@@ -2869,7 +2874,7 @@ createCourseRegistrationFollowUp user rawSlug regId CourseRegistrationFollowUpCr
     entryTypeVal
     subject
     notesVal
-    attachmentUrl
+    attachmentUrlVal
     attachmentName
     mNextFollowUpAt
     now
@@ -2894,6 +2899,9 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
   entryTypeVal <- case entryType of
     Nothing -> pure (ME.courseRegistrationFollowUpEntryType followUp)
     Just raw -> either throwError pure (parseCourseFollowUpType (Just raw))
+  attachmentUrlVal <- case attachmentUrl of
+    Nothing -> pure (ME.courseRegistrationFollowUpAttachmentUrl followUp)
+    Just rawUrl -> either throwError pure (validateCourseRegistrationUrlField "attachmentUrl" (Just rawUrl))
   mNextFollowUpAt <- case nextFollowUpAt of
     Nothing -> pure (ME.courseRegistrationFollowUpNextFollowUpAt followUp)
     Just raw -> parseOptionalUtcText "nextFollowUpAt" (Just raw)
@@ -2905,8 +2913,7 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
           , ME.courseRegistrationFollowUpSubject =
               maybe (ME.courseRegistrationFollowUpSubject followUp) (cleanOptional . Just) subject
           , ME.courseRegistrationFollowUpNotes = notesVal
-          , ME.courseRegistrationFollowUpAttachmentUrl =
-              maybe (ME.courseRegistrationFollowUpAttachmentUrl followUp) (cleanOptional . Just) attachmentUrl
+          , ME.courseRegistrationFollowUpAttachmentUrl = attachmentUrlVal
           , ME.courseRegistrationFollowUpAttachmentName =
               maybe (ME.courseRegistrationFollowUpAttachmentName followUp) (cleanOptional . Just) attachmentName
           , ME.courseRegistrationFollowUpNextFollowUpAt = mNextFollowUpAt
@@ -3481,6 +3488,21 @@ validateCourseRegistrationEmail (Just rawEmail) =
       in if isValidCourseRegistrationEmail normalized
         then Right (Just normalized)
         else Left err400 { errBody = "email inválido" }
+
+validateCourseRegistrationUrlField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateCourseRegistrationUrlField _ Nothing = Right Nothing
+validateCourseRegistrationUrlField fieldName (Just rawUrl) =
+  case cleanOptional (Just rawUrl) of
+    Nothing -> Right Nothing
+    Just urlVal ->
+      if TrialsServer.isValidHttpUrl urlVal
+        then Right (Just urlVal)
+        else
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " must be an absolute http(s) URL"
+            }
 
 isValidCourseRegistrationEmail :: Text -> Bool
 isValidCourseRegistrationEmail candidate =
