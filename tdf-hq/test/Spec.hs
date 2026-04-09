@@ -44,7 +44,7 @@ import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.ServerRadio (validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
-import TDF.Contracts.Server (validateContractId, validateContractPayload)
+import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload)
 import TDF.ServerInternships
     ( validateInternProjectStatusInput,
       validateInternTaskProgressUpdate,
@@ -617,6 +617,21 @@ main = hspec $ do
             assertInvalid (A.object ["kind" .= ("event vendor" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty slug"
+
+    describe "decodeStoredContract" $ do
+        it "accepts persisted contracts with the expected stored shape" $
+            case decodeStoredContract "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\",\"amountCents\":25000},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
+                Left err ->
+                    expectationFailure ("Expected stored contract row to decode, got: " <> show err)
+                Right _ ->
+                    pure ()
+
+        it "rejects malformed stored contracts instead of letting handlers report a misleading 404" $
+            case decodeStoredContract "{\"id\":true}" of
+                Left err ->
+                    err `shouldContain` "Stored contract payload is unreadable"
+                Right _ ->
+                    expectationFailure "Expected malformed stored contract row to be rejected"
 
     describe "internship status validation" $ do
         it "defaults omitted project statuses and normalizes supported explicit values" $ do

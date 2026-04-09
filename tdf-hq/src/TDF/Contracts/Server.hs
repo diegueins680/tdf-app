@@ -3,6 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module TDF.Contracts.Server
   ( server
+  , decodeStoredContract
   , validateContractId
   , validateContractPayload
   ) where
@@ -83,10 +84,12 @@ server = createH :<|> pdfH :<|> sendH
     pdfH :: Text -> Handler BL.ByteString
     pdfH cid = do
       contractId <- either throwError pure (validateContractId cid)
-      mStored <- liftIO (loadContract contractId)
-      case mStored of
-        Nothing -> throwError err404 { errBody = "Contract not found" }
-        Just stored -> do
+      storedResult <- liftIO (loadContract contractId)
+      case storedResult of
+        Left errMsg ->
+          throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
+        Right Nothing -> throwError err404 { errBody = "Contract not found" }
+        Right (Just stored) -> do
           let latex = renderContractLatex stored
           pdfResult <- liftIO (InputList.generateInputListPdf latex)
           case pdfResult of
@@ -96,25 +99,33 @@ server = createH :<|> pdfH :<|> sendH
     sendH :: Text -> A.Value -> Handler A.Value
     sendH cid _body = do
       contractId <- either throwError pure (validateContractId cid)
-      mStored <- liftIO (loadContract contractId)
-      case mStored of
-        Nothing -> throwError err404 { errBody = "Contract not found" }
-        Just _  -> pure (A.object ["status" .= ("sent" :: Text), "id" .= contractId])
+      storedResult <- liftIO (loadContract contractId)
+      case storedResult of
+        Left errMsg ->
+          throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
+        Right Nothing -> throwError err404 { errBody = "Contract not found" }
+        Right (Just _)  -> pure (A.object ["status" .= ("sent" :: Text), "id" .= contractId])
 
 persistContract :: StoredContract -> IO ()
 persistContract stored = do
   createDirectoryIfMissing True contractsDir
   BL.writeFile (contractPath (scId stored)) (A.encode stored)
 
-loadContract :: Text -> IO (Maybe StoredContract)
+loadContract :: Text -> IO (Either Text (Maybe StoredContract))
 loadContract cid = do
   let path = contractPath cid
   exists <- doesFileExist path
   if not exists
-    then pure Nothing
+    then pure (Right Nothing)
     else do
       bytes <- BL.readFile path
-      pure (A.decode bytes)
+      pure (Just <$> decodeStoredContract bytes)
+
+decodeStoredContract :: BL.ByteString -> Either Text StoredContract
+decodeStoredContract bytes =
+  case A.eitherDecode bytes of
+    Left _ -> Left "Stored contract payload is unreadable"
+    Right stored -> Right stored
 
 validateContractId :: Text -> Either ServerError Text
 validateContractId raw =
