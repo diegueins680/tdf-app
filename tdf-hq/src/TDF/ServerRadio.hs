@@ -6,6 +6,8 @@
 module TDF.ServerRadio
   ( radioServer
   , validateRadioStreamUrl
+  , validateRadioImportLimit
+  , validateRadioMetadataRefreshLimit
   ) where
 
 import           Control.Applicative    ((<|>))
@@ -14,7 +16,7 @@ import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
-import           Data.Char              (isAlphaNum, isDigit, isSpace)
+import           Data.Char              (isAlphaNum, isDigit, isHexDigit, isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
@@ -104,8 +106,18 @@ validateRadioAuthority rawAuthority
       if T.null rest
         then Left err400 { errBody = "streamUrl must include a valid host" }
         else do
-          validateAuthorityHost host
+          validateBracketedHost host
           validatePortSuffix (T.drop 1 rest)
+
+    validateBracketedHost host
+      | T.null host = Left err400 { errBody = "streamUrl must include a host" }
+      | not (T.any (== ':') host) = Left err400 { errBody = "streamUrl must include a valid host" }
+      | T.isInfixOf ":::" host = Left err400 { errBody = "streamUrl must include a valid host" }
+      | T.any (not . isValidBracketedHostChar) host =
+          Left err400 { errBody = "streamUrl must include a valid host" }
+      | otherwise = Right ()
+      where
+        isValidBracketedHostChar c = isHexDigit c || c == ':' || c == '.'
 
     validateAuthorityHost host
       | T.null host = Left err400 { errBody = "streamUrl must include a host" }
@@ -136,6 +148,20 @@ validateRadioAuthority rawAuthority
                    Left err400 { errBody = "streamUrl port must be between 1 and 65535" }
       | otherwise =
           Left err400 { errBody = "streamUrl must include a valid host" }
+
+validateRadioImportLimit :: Maybe Int -> Either ServerError Int
+validateRadioImportLimit = validateRadioBatchLimit 800
+
+validateRadioMetadataRefreshLimit :: Maybe Int -> Either ServerError Int
+validateRadioMetadataRefreshLimit = validateRadioBatchLimit 400
+
+validateRadioBatchLimit :: Int -> Maybe Int -> Either ServerError Int
+validateRadioBatchLimit defaultLimit Nothing = Right defaultLimit
+validateRadioBatchLimit _ (Just rawLimit)
+  | rawLimit < 1 || rawLimit > 2000 =
+      Left err400 { errBody = "limit must be between 1 and 2000" }
+  | otherwise =
+      Right rawLimit
 
 radioServer
   :: forall m.
@@ -184,7 +210,7 @@ radioServer user =
             case filter (not . T.null) (map (T.strip . canonicalSource) rawSources) of
               [] -> defaultSources
               xs -> xs
-          cap = max 1 (min 2000 (fromMaybe 800 rirLimit))
+      cap <- either throwError pure (validateRadioImportLimit rirLimit)
       manager <- liftIO $ newManager tlsManagerSettings
       fetchedResults <- liftIO $
         forM cleanedSources $ \src -> do
@@ -219,8 +245,8 @@ radioServer user =
 
     refreshMetadata :: RadioMetadataRefreshRequest -> m RadioMetadataRefreshResult
     refreshMetadata RadioMetadataRefreshRequest{..} = do
-      let cap = max 1 (min 2000 (fromMaybe 400 rmrLimit))
-          onlyMissing = fromMaybe False rmrOnlyMissing
+      cap <- either throwError pure (validateRadioMetadataRefreshLimit rmrLimit)
+      let onlyMissing = fromMaybe False rmrOnlyMissing
       now <- liftIO getCurrentTime
       Env{..} <- ask
       rows <- liftIO $ flip runSqlPool envPool $

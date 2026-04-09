@@ -41,7 +41,7 @@ import TDF.DTO.SocialEventsDTO
 import TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
-import TDF.ServerRadio (validateRadioStreamUrl)
+import TDF.ServerRadio (validateRadioImportLimit, validateRadioMetadataRefreshLimit, validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload)
@@ -539,6 +539,40 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must be http(s)"
                 Right _ -> expectationFailure "Expected non-http streamUrl to be rejected"
+
+    describe "validateRadioImportLimit" $ do
+        it "uses the import default only when the caller omits the limit" $ do
+            validateRadioImportLimit Nothing `shouldBe` Right 800
+            validateRadioImportLimit (Just 1) `shouldBe` Right 1
+            validateRadioImportLimit (Just 2000) `shouldBe` Right 2000
+
+        it "rejects out-of-range explicit import limits instead of silently clamping them" $ do
+            let assertRejected rawLimit =
+                    case validateRadioImportLimit (Just rawLimit) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "limit must be between 1 and 2000"
+                        Right value ->
+                            expectationFailure ("Expected invalid radio import limit to be rejected, got " <> show value)
+            assertRejected 0
+            assertRejected 2001
+
+    describe "validateRadioMetadataRefreshLimit" $ do
+        it "uses the refresh default only when the caller omits the limit" $ do
+            validateRadioMetadataRefreshLimit Nothing `shouldBe` Right 400
+            validateRadioMetadataRefreshLimit (Just 1) `shouldBe` Right 1
+            validateRadioMetadataRefreshLimit (Just 2000) `shouldBe` Right 2000
+
+        it "rejects out-of-range explicit refresh limits instead of silently clamping them" $ do
+            let assertRejected rawLimit =
+                    case validateRadioMetadataRefreshLimit (Just rawLimit) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "limit must be between 1 and 2000"
+                        Right value ->
+                            expectationFailure ("Expected invalid radio refresh limit to be rejected, got " <> show value)
+            assertRejected 0
+            assertRejected 2001
 
     describe "validateTemplateKey" $ do
         it "trims valid proposal template keys before lookup" $
