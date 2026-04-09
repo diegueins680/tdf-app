@@ -66,6 +66,8 @@ const GETTING_STARTED_ADMIN_STEPS = [
   'Ajusta los accesos desde Usuarios y roles para resolver el caso actual.',
   'Confirma el resultado en Auditoría reciente antes de seguir con otro cambio.',
 ] as const;
+const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
+const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
 const ADMIN_USER_TABLE_COLUMN_COUNT = 4;
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
@@ -524,8 +526,9 @@ export default function AdminConsolePage() {
         ) : !usersError ? (
           <Box sx={{ px: 2, pb: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              Todavía no hay usuarios administrables. Cuando exista el primero, aquí verás roles, último acceso y el
-              atajo para editar roles.
+              {showGettingStartedGuidance
+                ? FIRST_RUN_USERS_EMPTY_STATE
+                : 'Todavía no hay usuarios administrables. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles.'}
             </Typography>
           </Box>
         ) : null}
@@ -584,7 +587,9 @@ export default function AdminConsolePage() {
         ) : !auditQuery.isError ? (
           <Box sx={{ px: 2, pb: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              Todavía no hay eventos de auditoría. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo.
+              {showGettingStartedGuidance
+                ? FIRST_RUN_AUDIT_EMPTY_STATE
+                : 'Todavía no hay eventos de auditoría. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo.'}
             </Typography>
           </Box>
         ) : null}

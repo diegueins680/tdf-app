@@ -163,12 +163,26 @@ describe('AdminConsolePage', () => {
           /Confirma el resultado en Auditoría reciente antes de seguir con otro cambio\./i,
         ),
       ).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Gestión de usuarios')).not.toBeInTheDocument();
     expect(screen.queryByText(/Si es tu primera vez aquí/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(/La asignación de roles se administra desde la pantalla de Parties\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Todavía no hay usuarios administrables\. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles\./i,
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Todavía no hay eventos de auditoría\. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo\./i,
+      ),
     ).not.toBeInTheDocument();
   });
 
@@ -271,7 +285,18 @@ describe('AdminConsolePage', () => {
     });
   });
 
-  it('replaces the empty users grid with first-run guidance instead of showing blank table chrome', async () => {
+  it('keeps the detailed users empty state when the page is not in first-run checklist mode', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: ['Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.'],
+        },
+      ],
+    });
+
     renderPage();
 
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
@@ -284,6 +309,7 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
+    expect(screen.queryByText('Aún no hay usuarios administrables.')).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
@@ -375,7 +401,9 @@ describe('AdminConsolePage', () => {
     });
   });
 
-  it('replaces the empty audit table with first-run guidance instead of blank table chrome', async () => {
+  it('keeps the detailed audit empty state when the page is not in first-run checklist mode', async () => {
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+
     renderPage();
 
     expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
@@ -388,6 +416,9 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
+    expect(
+      screen.queryByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Entidad$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();
