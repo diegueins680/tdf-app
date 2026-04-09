@@ -34,6 +34,7 @@ import TDF.ServerExtra (
     normalizeAssetNameUpdate,
     normalizeRoomName,
     normalizeRoomNameUpdate,
+    validateSocialLimit,
     validatePaymentAmountCents,
     parseCheckoutTargetKind,
     parseOptionalKeyField,
@@ -273,6 +274,23 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "concept is required"
         Right value ->
           expectationFailure ("Expected invalid payment concept error, got " <> show value)
+
+  describe "validateSocialLimit" $ do
+    it "keeps the default only when the caller omits the limit" $ do
+      validateSocialLimit Nothing `shouldBe` Right 100
+      validateSocialLimit (Just 1) `shouldBe` Right 1
+      validateSocialLimit (Just 200) `shouldBe` Right 200
+
+    it "rejects out-of-range explicit limits instead of silently clamping inbox queries" $ do
+      let assertInvalid rawLimit =
+            case validateSocialLimit (Just rawLimit) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "limit must be between 1 and 200"
+              Right value ->
+                expectationFailure ("Expected invalid social inbox limit error, got " <> show value)
+      assertInvalid 0
+      assertInvalid 201
 
   describe "normalizeServiceCatalogNameUpdate" $ do
     it "preserves omitted names and trims meaningful updates" $ do

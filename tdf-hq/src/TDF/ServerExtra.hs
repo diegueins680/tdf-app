@@ -2109,7 +2109,7 @@ instagramServer user =
     listMessages mLimit mDirection mRepliedOnly = do
       ensureInboxAccess
       Env{..} <- ask
-      let limit = normalizeSocialLimit mLimit
+      limit <- either throwError pure (validateSocialLimit mLimit)
       direction <- parseSocialDirectionParam mDirection
       repliedOnly <- parseSocialBoolParam mRepliedOnly
       let filters =
@@ -2225,7 +2225,7 @@ facebookServer user =
     listMessages mLimit mDirection mRepliedOnly = do
       ensureInboxAccess
       Env{..} <- ask
-      let limit = normalizeSocialLimit mLimit
+      limit <- either throwError pure (validateSocialLimit mLimit)
       direction <- parseSocialDirectionParam mDirection
       repliedOnly <- parseSocialBoolParam mRepliedOnly
       let filters =
@@ -2459,8 +2459,12 @@ resolveMetaSenderLabels cfg channel senderIds = do
         ) uniqueIds
       pure $ Map.fromList [ (sid, label) | (sid, Just label) <- pairs, not (T.null (T.strip label)) ]
 
-normalizeSocialLimit :: Maybe Int -> Int
-normalizeSocialLimit = max 1 . min 200 . fromMaybe 100
+validateSocialLimit :: Maybe Int -> Either ServerError Int
+validateSocialLimit Nothing = Right 100
+validateSocialLimit (Just rawLimit)
+  | rawLimit < 1 || rawLimit > 200 =
+      Left err400 { errBody = "limit must be between 1 and 200" }
+  | otherwise = Right rawLimit
 
 parseSocialBoolParam :: MonadError ServerError m => Maybe Text -> m Bool
 parseSocialBoolParam Nothing = pure False
