@@ -370,13 +370,17 @@ spec = describe "TDF.Server helpers" $ do
             validateCourseRegistrationPhoneE164 (Just "   ") `shouldBe` Right Nothing
             validateCourseRegistrationPhoneE164 (Just " +593 99 123 4567 ") `shouldBe` Right (Just "+593991234567")
 
-        it "rejects explicitly invalid phones instead of silently discarding them" $
-            case validateCourseRegistrationPhoneE164 (Just "call-me-maybe") of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
-                Right phoneVal ->
-                    expectationFailure ("Expected invalid course-registration phone to be rejected, got: " <> show phoneVal)
+        it "rejects explicitly invalid or implausible phones instead of silently discarding them" $ do
+            let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
+                    Right phoneVal ->
+                        expectationFailure
+                            ("Expected invalid course-registration phone to be rejected, got: " <> show phoneVal)
+            assertInvalid "call-me-maybe"
+            assertInvalid "12345"
+            assertInvalid "+1234567890123456"
 
         it "rejects free-form text that merely contains digits instead of storing a misleading partial phone" $
             case validateCourseRegistrationPhoneE164 (Just "call me at 099 123 4567") of
@@ -390,7 +394,7 @@ spec = describe "TDF.Server helpers" $ do
         it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $
             validateWhatsAppPhoneInput " +593 99 123 4567 " `shouldBe` Right "+593991234567"
 
-        it "rejects blank or mixed-text WhatsApp phone inputs instead of extracting misleading digits" $ do
+        it "rejects blank, mixed-text, or implausible WhatsApp phone inputs" $ do
             let assertInvalid rawPhone = case validateWhatsAppPhoneInput rawPhone of
                     Left serverErr -> do
                         errHTTPCode serverErr `shouldBe` 400
@@ -399,6 +403,8 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure ("Expected invalid WhatsApp phone input to be rejected, got: " <> show phoneVal)
             assertInvalid "   "
             assertInvalid "call me at 099 123 4567"
+            assertInvalid "12345"
+            assertInvalid "+1234567890123456"
 
     describe "validateCourseRegistrationEmail" $ do
         it "preserves omitted and blank emails while normalizing meaningful values" $ do

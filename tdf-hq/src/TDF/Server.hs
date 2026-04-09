@@ -3396,6 +3396,7 @@ normalizeCourseRegistrationPhoneInput :: Text -> Maybe Text
 normalizeCourseRegistrationPhoneInput raw =
   let trimmed = T.strip raw
       onlyDigits = T.filter isDigit trimmed
+      digitCount = T.length onlyDigits
       plusCount = T.count "+" trimmed
       plusIndex = T.findIndex (== '+') trimmed
       firstDigitIndex = T.findIndex isDigit trimmed
@@ -3410,7 +3411,11 @@ normalizeCourseRegistrationPhoneInput raw =
               Nothing -> False
               Just digitIdx -> plusCount == 1 && idx < digitIdx
   in
-    if T.null onlyDigits || hasInvalidChars || not plusIsValid
+    if T.null onlyDigits
+         || digitCount < 8
+         || digitCount > 15
+         || hasInvalidChars
+         || not plusIsValid
       then Nothing
       else Just ("+" <> onlyDigits)
 
