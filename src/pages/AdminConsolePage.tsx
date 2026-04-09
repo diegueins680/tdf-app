@@ -122,6 +122,7 @@ const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | '
 export default function AdminConsolePage() {
   const qc = useQueryClient();
   const [rotationWarning, setRotationWarning] = useState(false);
+  const [showDemoTools, setShowDemoTools] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUserDTO | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<RoleKey[]>([]);
   const [dialogError, setDialogError] = useState<string | null>(null);
@@ -302,27 +303,44 @@ export default function AdminConsolePage() {
 
         <Grid item xs={12} md={4}>
           <Card variant="outlined">
-            <CardHeader title="Datos de demostración" />
+            <CardHeader title="Herramientas de prueba" subheader="Solo para ambientes de prueba" />
             <CardContent>
               <Typography variant="body2">
-                Ejecuta la siembra para restablecer datos de demo en ambientes de prueba.
+                Las herramientas de demo no forman parte del flujo diario. Ábrelas solo cuando necesites preparar o
+                reiniciar un ambiente de prueba.
               </Typography>
               <Button
-                sx={{ mt: 2 }}
-                variant="contained"
-                startIcon={<AutoFixHighIcon />}
-                onClick={() => seedMutation.mutate()}
-                disabled={seedMutation.isPending}
+                sx={{ mt: 1.5 }}
+                size="small"
+                onClick={() => setShowDemoTools((current) => !current)}
+                aria-controls="admin-demo-tools"
+                aria-expanded={showDemoTools}
               >
-                {seedMutation.isPending ? 'Sembrando…' : 'Seed demo data'}
+                {showDemoTools ? 'Ocultar herramientas de prueba' : 'Mostrar herramientas de prueba'}
               </Button>
-              <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 1 }}>
-                Al terminar, el panel se actualiza automáticamente para evitar un refresco manual extra.
-              </Typography>
-              {seedMutation.isSuccess && (
-                <Alert severity="success" sx={{ mt: 2 }}>
-                  Datos de demo regenerados correctamente.
-                </Alert>
+              {showDemoTools && (
+                <Box id="admin-demo-tools" sx={{ mt: 2 }}>
+                  <Typography variant="body2">
+                    Ejecuta la siembra para restablecer datos de demo en ambientes de prueba.
+                  </Typography>
+                  <Button
+                    sx={{ mt: 2 }}
+                    variant="contained"
+                    startIcon={<AutoFixHighIcon />}
+                    onClick={() => seedMutation.mutate()}
+                    disabled={seedMutation.isPending}
+                  >
+                    {seedMutation.isPending ? 'Sembrando…' : 'Regenerar datos de demo'}
+                  </Button>
+                  <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 1 }}>
+                    Al terminar, el panel se actualiza automáticamente para evitar un refresco manual extra.
+                  </Typography>
+                  {seedMutation.isSuccess && (
+                    <Alert severity="success" sx={{ mt: 2 }}>
+                      Datos de demo regenerados correctamente.
+                    </Alert>
+                  )}
+                </Box>
               )}
             </CardContent>
           </Card>

@@ -88,7 +88,8 @@ describe('AdminConsolePage', () => {
     mockUpdateUserRoles.mockResolvedValue(undefined);
   });
 
-  it('uses one page-level refresh action and a clear header description', async () => {
+  it('uses one page-level refresh action and keeps demo reset tools tucked away until requested', async () => {
+    const user = userEvent.setup();
     renderPage();
 
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
@@ -110,6 +111,32 @@ describe('AdminConsolePage', () => {
     expect(
       screen.queryByRole('button', { name: /Refrescar/i }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Las herramientas de demo no forman parte del flujo diario\. Ábrelas solo cuando necesites preparar o reiniciar un ambiente de prueba\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Solo para ambientes de prueba/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Mostrar herramientas de prueba/i }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      screen.queryByRole('button', { name: /Regenerar datos de demo/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Seed demo data/i }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Mostrar herramientas de prueba/i }));
+
+    expect(
+      screen.getByRole('button', { name: /Ocultar herramientas de prueba/i }),
+    ).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.getByRole('button', { name: /Regenerar datos de demo/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/Al terminar, el panel se actualiza automáticamente para evitar un refresco manual extra\./i),
     ).toBeInTheDocument();
@@ -218,11 +245,12 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() =>
       expect(
-        screen.getByRole('button', { name: /Seed demo data/i }),
+        screen.getByRole('button', { name: /Mostrar herramientas de prueba/i }),
       ).toBeEnabled(),
     );
 
-    await user.click(screen.getByRole('button', { name: /Seed demo data/i }));
+    await user.click(screen.getByRole('button', { name: /Mostrar herramientas de prueba/i }));
+    await user.click(screen.getByRole('button', { name: /Regenerar datos de demo/i }));
 
     await waitFor(() => {
       expect(mockSeed).toHaveBeenCalledTimes(1);
