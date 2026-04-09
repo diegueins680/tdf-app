@@ -41,11 +41,21 @@ function listUnmergedConflictPaths(repoRoot) {
   return uniqueStrings(runGit(repoRoot, ['diff', '--name-only', '--diff-filter=U'], { trimOutput: false }).split(/\r?\n/));
 }
 
+function buildMergeCommitMessage(shortName, branchRef) {
+  return `continuous-improvement-loop: merge ${shortName || branchRef} into main`;
+}
+
+function buildConflictResolutionCommitMessage(shortName, branchRef) {
+  return `continuous-improvement-loop: resolve conflicts while merging ${shortName || branchRef} into main`;
+}
+
 function mergeRefOntoHead(repoRoot, branchRef, shortName) {
   const headBefore = runGit(repoRoot, ['rev-parse', 'HEAD']);
+  const mergeMessage = buildMergeCommitMessage(shortName, branchRef);
+  const conflictMessage = buildConflictResolutionCommitMessage(shortName, branchRef);
 
   try {
-    runGit(repoRoot, ['merge', '--no-ff', '--no-edit', branchRef], { capture: false });
+    runGit(repoRoot, ['merge', '--no-ff', '-m', mergeMessage, branchRef], { capture: false });
   } catch (error) {
     const conflicts = listUnmergedConflictPaths(repoRoot);
     if (conflicts.length === 0) {
@@ -54,7 +64,7 @@ function mergeRefOntoHead(repoRoot, branchRef, shortName) {
 
     // Conflict resolution stays on the live main lane and keeps the current HEAD content.
     runGit(repoRoot, ['restore', '--source=HEAD', '--staged', '--worktree', '--', ...conflicts], { capture: false });
-    runGit(repoRoot, ['commit', '--no-edit'], { capture: false });
+    runGit(repoRoot, ['commit', '-m', conflictMessage], { capture: false });
 
     return {
       outcome: 'conflict-resolved',
@@ -77,7 +87,7 @@ function mergeRefOntoHead(repoRoot, branchRef, shortName) {
   };
 }
 
-function syncHeadToRemoteBranch(repoRoot, remoteName, branchName) {
+function rebaseHeadOntoRemoteBranch(repoRoot, remoteName, branchName) {
   const remoteRef = `${remoteName}/${branchName}`;
   const headBefore = runGit(repoRoot, ['rev-parse', 'HEAD']);
 
@@ -110,7 +120,27 @@ function syncHeadToRemoteBranch(repoRoot, remoteName, branchName) {
     };
   }
 
-  return mergeRefOntoHead(repoRoot, remoteRef, branchName);
+  try {
+    runGit(repoRoot, ['rebase', remoteRef], { capture: false });
+  } catch {
+    try {
+      runGit(repoRoot, ['rebase', '--abort'], { capture: false });
+    } catch {}
+    return mergeRefOntoHead(repoRoot, remoteRef, branchName);
+  }
+
+  return {
+    outcome: 'rebased',
+    ref: remoteRef,
+    shortName: branchName,
+    headBefore,
+    headAfter: runGit(repoRoot, ['rev-parse', 'HEAD']),
+    conflicts: [],
+  };
+}
+
+function syncHeadToRemoteBranch(repoRoot, remoteName, branchName) {
+  return rebaseHeadOntoRemoteBranch(repoRoot, remoteName, branchName);
 }
 
 function pushHeadToRemoteBranchWithRetry(repoRoot, remoteName, branchName) {

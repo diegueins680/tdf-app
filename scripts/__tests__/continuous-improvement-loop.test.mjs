@@ -528,6 +528,7 @@ test('dirty-worktree checkpoint helper commits directly to main and keeps the lo
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-dirty-checkpoint-test-'));
   const remoteDir = path.join(tempRoot, 'remote.git');
   const repoDir = path.join(tempRoot, 'repo');
+  const otherDir = path.join(tempRoot, 'other');
   await fs.mkdir(repoDir);
 
   const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
@@ -543,6 +544,14 @@ test('dirty-worktree checkpoint helper commits directly to main and keeps the lo
     await git(['remote', 'add', 'origin', remoteDir]);
     await git(['push', '-u', 'origin', 'main']);
 
+    await execFileAsync('git', ['clone', '--branch', 'main', remoteDir, otherDir], { cwd: tempRoot });
+    await execFileAsync('git', ['config', 'user.name', 'Remote Writer'], { cwd: otherDir });
+    await execFileAsync('git', ['config', 'user.email', 'remote@example.com'], { cwd: otherDir });
+    await fs.writeFile(path.join(otherDir, 'remote-only.txt'), 'remote\n', 'utf8');
+    await execFileAsync('git', ['add', 'remote-only.txt'], { cwd: otherDir });
+    await execFileAsync('git', ['commit', '-m', 'remote advance'], { cwd: otherDir });
+    await execFileAsync('git', ['push', 'origin', 'main'], { cwd: otherDir });
+
     await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\ndirty tracked change\n', 'utf8');
     await fs.writeFile(path.join(repoDir, 'untracked.txt'), 'dirty untracked change\n', 'utf8');
 
@@ -552,8 +561,8 @@ test('dirty-worktree checkpoint helper commits directly to main and keeps the lo
     assert.equal(result.branch, 'main');
     assert.equal((await git(['branch', '--show-current'])).stdout.trim(), 'main');
     assert.equal((await git(['status', '--short'])).stdout.trim(), '');
-
     assert.equal((await git(['rev-parse', 'HEAD'])).stdout.trim(), result.commit);
+    assert.equal(await fs.readFile(path.join(repoDir, 'remote-only.txt'), 'utf8'), 'remote\n');
 
     const remoteMain = await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', 'refs/heads/main'], {
       cwd: tempRoot,
@@ -566,9 +575,19 @@ test('dirty-worktree checkpoint helper commits directly to main and keeps the lo
     assert.match(checkpointLog.stdout, /tracked\.txt/);
     assert.match(checkpointLog.stdout, /untracked\.txt/);
     assert.match(result.summary, /committed dirty worktree directly to main/);
+    const logSubjects = (await git(['log', '-2', '--pretty=%s'])).stdout.trim().split('\n');
+    assert.deepEqual(logSubjects, ['chore(loop): checkpoint dirty worktree', 'remote advance']);
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('dirty-worktree helper rebases onto main before falling back to merge recovery', async () => {
+  const script = await fs.readFile(new URL('../lib/continuous-improvement-loop-dirty-worktree.mjs', import.meta.url), 'utf8');
+  assert.match(script, /function rebaseHeadOntoRemoteBranch\(repoRoot, remoteName, branchName\)/);
+  assert.match(script, /runGit\(repoRoot, \['rebase', remoteRef\], \{ capture: false \}\)/);
+  assert.match(script, /runGit\(repoRoot, \['rebase', '--abort'\], \{ capture: false \}\)/);
+  assert.match(script, /return mergeRefOntoHead\(repoRoot, remoteRef, branchName\);/);
 });
 
 test('continuous-improvement-loop stages tracked files modified during an iteration', async () => {
