@@ -32,7 +32,6 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import EditIcon from '@mui/icons-material/Edit';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { AdminApi } from '../api/admin';
 import { Health } from '../utilities/health';
@@ -67,6 +66,7 @@ const GETTING_STARTED_ADMIN_STEPS = [
   'Ajusta los accesos desde Usuarios y roles para resolver el caso actual.',
   'Confirma el resultado en Auditoría reciente antes de seguir con otro cambio.',
 ] as const;
+const ADMIN_USER_TABLE_COLUMN_COUNT = 4;
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -377,13 +377,12 @@ export default function AdminConsolePage() {
                   <TableCell>Roles</TableCell>
                   <TableCell>Último acceso</TableCell>
                   <TableCell>Estado</TableCell>
-                  <TableCell align="right">Permisos</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {isUsersLoading && (
                   <TableRow>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={ADMIN_USER_TABLE_COLUMN_COUNT}>
                       <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ py: 2 }}>
                         <CircularProgress size={18} />
                         <Typography variant="body2" color="text.secondary">
@@ -414,19 +413,23 @@ export default function AdminConsolePage() {
                           ) : null}
                         </Stack>
                       </TableCell>
-                      <TableCell>{formatRoleList(user.roles)}</TableCell>
+                      <TableCell>
+                        <Stack spacing={0.5} alignItems="flex-start">
+                          <Typography variant="body2">
+                            {formatRoleList(user.roles)}
+                          </Typography>
+                          <Button
+                            size="small"
+                            onClick={() => setEditingUser(user)}
+                            aria-label={`Editar roles de ${identity.primary}`}
+                            sx={{ px: 0, minWidth: 0 }}
+                          >
+                            Editar roles
+                          </Button>
+                        </Stack>
+                      </TableCell>
                       <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
                       <TableCell>{renderStatus(user.status)}</TableCell>
-                      <TableCell align="right">
-                        <Button
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => setEditingUser(user)}
-                          aria-label={`Editar permisos de ${identity.primary}`}
-                        >
-                          Editar
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -437,7 +440,7 @@ export default function AdminConsolePage() {
           <Box sx={{ px: 2, pb: 2 }}>
             <Typography variant="body2" color="text.secondary">
               Todavía no hay usuarios administrables. Cuando exista el primero, aquí verás roles, último acceso y el
-              atajo para editar permisos.
+              atajo para editar roles.
             </Typography>
           </Box>
         ) : null}
