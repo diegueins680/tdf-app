@@ -535,6 +535,11 @@ async function pushHead(repoRoot, remoteName, branchName) {
   await execText('git', ['push', remoteName, `HEAD:${branchName}`], repoRoot);
 }
 
+export async function syncSubmodulesRecursively(repoRoot) {
+  await execText('git', ['submodule', 'sync', '--recursive'], repoRoot);
+  await execText('git', ['submodule', 'update', '--init', '--recursive'], repoRoot);
+}
+
 function buildRemoteBranchRef(remoteName, branchName) {
   return `${remoteName}/${branchName}`;
 }
@@ -555,6 +560,7 @@ async function syncWithPushBranch(repoRoot, remoteName, branchName) {
     await execText('git', ['fetch', remoteName, branchName], repoRoot);
   } catch (error) {
     if (isMissingRemoteRefError(error.message)) {
+      await syncSubmodulesRecursively(repoRoot);
       return {
         remoteExists: false,
         remoteRef,
@@ -575,6 +581,8 @@ async function syncWithPushBranch(repoRoot, remoteName, branchName) {
     }
     throw new Error(`Failed to rebase onto ${remoteRef} before push.\n${error.message}`);
   }
+
+  await syncSubmodulesRecursively(repoRoot);
 
   return {
     remoteExists: true,

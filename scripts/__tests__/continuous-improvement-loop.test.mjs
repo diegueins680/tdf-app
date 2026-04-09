@@ -17,7 +17,7 @@ import {
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
 import { checkpointDirtyWorktree } from '../lib/continuous-improvement-loop-dirty-worktree.mjs';
-import { syncAndPollLatestRemoteCi, waitForGreenCi } from '../continuous-improvement-loop.mjs';
+import { syncAndPollLatestRemoteCi, syncSubmodulesRecursively, waitForGreenCi } from '../continuous-improvement-loop.mjs';
 import {
   buildDefaultIdea,
   chooseDiscoveryLane,
@@ -246,6 +246,59 @@ test('installKoyebCli installs the extracted executable instead of the downloade
     assert.equal(stdout.trim(), 'koyeb 5.10.1');
   } finally {
     global.fetch = originalFetch;
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('syncSubmodulesRecursively initializes nested submodules', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'loop-submodules-test-'));
+  const leafRepo = path.join(tempRoot, 'leaf-repo');
+  const mobileRepo = path.join(tempRoot, 'mobile-repo');
+  const appRepo = path.join(tempRoot, 'app-repo');
+  const cloneRepo = path.join(tempRoot, 'clone-repo');
+  const previousAllowProtocol = process.env.GIT_ALLOW_PROTOCOL;
+
+  async function git(args, cwd) {
+    await execFileAsync('git', args, { cwd });
+  }
+
+  async function initCommittedRepo(repoPath, files) {
+    await fs.mkdir(repoPath, { recursive: true });
+    await git(['init', '--initial-branch=main'], repoPath);
+    await git(['config', 'user.name', 'Loop Test'], repoPath);
+    await git(['config', 'user.email', 'loop-test@example.com'], repoPath);
+    for (const [filePath, content] of files) {
+      const fullPath = path.join(repoPath, filePath);
+      await fs.mkdir(path.dirname(fullPath), { recursive: true });
+      await fs.writeFile(fullPath, content, 'utf8');
+    }
+    await git(['add', '.'], repoPath);
+    await git(['commit', '-m', 'init'], repoPath);
+  }
+
+  process.env.GIT_ALLOW_PROTOCOL = 'file';
+
+  try {
+    await initCommittedRepo(leafRepo, [['leaf.txt', 'leaf\n']]);
+    await initCommittedRepo(mobileRepo, [['mobile.txt', 'mobile\n']]);
+    await git(['-c', 'protocol.file.allow=always', 'submodule', 'add', leafRepo, 'vendor/leaf'], mobileRepo);
+    await git(['commit', '-am', 'add nested submodule'], mobileRepo);
+
+    await initCommittedRepo(appRepo, [['README.md', 'app\n']]);
+    await git(['-c', 'protocol.file.allow=always', 'submodule', 'add', mobileRepo, 'tdf-mobile'], appRepo);
+    await git(['commit', '-am', 'add mobile submodule'], appRepo);
+
+    await execFileAsync('git', ['clone', '--no-recurse-submodules', appRepo, cloneRepo]);
+    await syncSubmodulesRecursively(cloneRepo);
+
+    const nestedLeaf = await fs.readFile(path.join(cloneRepo, 'tdf-mobile', 'vendor', 'leaf', 'leaf.txt'), 'utf8');
+    assert.equal(nestedLeaf, 'leaf\n');
+  } finally {
+    if (previousAllowProtocol === undefined) {
+      delete process.env.GIT_ALLOW_PROTOCOL;
+    } else {
+      process.env.GIT_ALLOW_PROTOCOL = previousAllowProtocol;
+    }
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 });
