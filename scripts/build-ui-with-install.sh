@@ -13,3 +13,10 @@ if ! npm ci --include=dev --progress=false --no-audit; then
 fi
 
 npm run build
+
+# Keep the canonical workspace output and also mirror it to the repo-root dist/
+# so Cloudflare Pages projects still pointing at dist keep deploying after the
+# repo was reorganized into a workspace layout.
+rm -rf ../dist
+mkdir -p ../dist
+cp -R dist/. ../dist/
