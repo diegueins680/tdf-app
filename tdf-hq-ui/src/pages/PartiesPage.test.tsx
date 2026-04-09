@@ -621,6 +621,45 @@ describe('PartiesPage', () => {
     }
   });
 
+  it('summarizes shared user-account access once instead of repeating the same chip on every visible row', async () => {
+    canAccessPathMock.mockReturnValue(true);
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        primaryEmail: 'ada@example.com',
+        instagram: '@ada',
+        hasUserAccount: true,
+      } satisfies PartyDTO,
+      {
+        partyId: 2,
+        displayName: 'Grace Hopper',
+        isOrg: false,
+        primaryEmail: 'grace@example.com',
+        instagram: '@grace',
+        hasUserAccount: true,
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta. Todos los contactos visibles ya tienen usuario. Roles y accesos está disponible desde Acciones.',
+        );
+        expect(container.textContent).not.toContain('Roles y accesos aparece solo cuando ese contacto ya tiene usuario.');
+        expect(container.textContent).not.toContain('Usuario creado');
+        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces the missing-email user action with one clear contact-completion step', async () => {
     listPartiesMock.mockResolvedValue([
       {

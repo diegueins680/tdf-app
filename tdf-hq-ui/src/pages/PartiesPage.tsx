@@ -366,13 +366,29 @@ export default function PartiesPage() {
   const showSingleContactGuidance = !partiesQuery.isLoading && parties.length === 1 && trimmedSearch === '';
   const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0 && !showSingleContactGuidance;
   const showSearchContextSummary = !partiesQuery.isLoading && hasContacts && filtered.length > 0 && trimmedSearch !== '';
+  const visibleContactsWithUserAccountCount = filtered.filter((party) => party.hasUserAccount).length;
+  const allVisibleContactsHaveUserAccount = canManageRoles
+    && filtered.length > 1
+    && visibleContactsWithUserAccountCount === filtered.length;
+  const showMixedUserAccountGuidance = canManageRoles
+    && visibleContactsWithUserAccountCount > 0
+    && !allVisibleContactsHaveUserAccount;
+  const sharedUserAccountGuidanceText = allVisibleContactsHaveUserAccount
+    ? 'Todos los contactos visibles ya tienen usuario. Roles y accesos está disponible desde Acciones.'
+    : '';
   const searchContextSummary = showSearchContextSummary
-    ? `Mostrando ${filtered.length} de ${formatPartyCountLabel(parties.length)} para "${trimmedSearch}".`
+    ? [
+        `Mostrando ${filtered.length} de ${formatPartyCountLabel(parties.length)} para "${trimmedSearch}".`,
+        sharedUserAccountGuidanceText,
+      ].filter(Boolean).join(' ')
     : '';
   const singleContactGuidanceText = 'Solo hay un contacto por ahora. Usa su nombre para ver relaciones y abre Acciones para editarlo o gestionar su acceso. El buscador aparecerá cuando exista el segundo contacto.';
-  const tableGuidanceText = canManageRoles
-    ? 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta. Roles y accesos aparece solo cuando ese contacto ya tiene usuario.'
-    : 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.';
+  const baseTableGuidanceText = 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.';
+  const tableGuidanceText = [
+    baseTableGuidanceText,
+    showMixedUserAccountGuidance ? 'Roles y accesos aparece solo cuando ese contacto ya tiene usuario.' : '',
+    sharedUserAccountGuidanceText,
+  ].filter(Boolean).join(' ');
 
   const openActionsMenu = (event: MouseEvent<HTMLButtonElement>, party: PartyDTO) => {
     setActionsMenuTarget({ anchorEl: event.currentTarget, party });
@@ -514,7 +530,7 @@ export default function PartiesPage() {
                           </Typography>
                         </Button>
                         {party.isOrg && <Chip label="Empresa" size="small" />}
-                        {party.hasUserAccount && (
+                        {party.hasUserAccount && !allVisibleContactsHaveUserAccount && (
                           <Chip label="Usuario creado" size="small" color="success" variant="outlined" />
                         )}
                       </Stack>
