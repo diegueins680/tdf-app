@@ -77,6 +77,9 @@ const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
   return button;
 };
 
+const countButtonsByAriaLabel = (root: ParentNode, labelText: string) =>
+  root.querySelectorAll(`button[aria-label="${labelText}"]`).length;
+
 const getMenuItemByText = (root: ParentNode, labelText: string) => {
   const item = Array.from(root.querySelectorAll('[role="menuitem"]')).find(
     (element) => buttonText(element) === labelText,
@@ -397,6 +400,7 @@ describe('PartiesPage', () => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(container.textContent).toContain('Ada Lovelace');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+        expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(0);
       });
     } finally {
       await cleanup();
@@ -444,6 +448,7 @@ describe('PartiesPage', () => {
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).not.toContain('Los Navegantes');
         expect(container.textContent).not.toContain('No hay contactos que coincidan con');
+        expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(1);
       });
 
       await act(async () => {
@@ -454,13 +459,14 @@ describe('PartiesPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelector('table')).toBeNull();
         expect(container.textContent).toContain(
-          'No hay contactos que coincidan con "sin-coincidencias". Limpia la búsqueda para volver a ver toda la lista.',
+          'No hay contactos que coincidan con "sin-coincidencias". Limpia la búsqueda desde el buscador para volver a ver toda la lista.',
         );
-        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+        expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(1);
       });
 
       await act(async () => {
-        clickButton(getButtonsByText(container, 'Limpiar búsqueda')[0]!);
+        clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
         await flushPromises();
       });
 
@@ -470,6 +476,7 @@ describe('PartiesPage', () => {
         expect(container.textContent).toContain('Los Navegantes');
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).not.toContain('No hay contactos que coincidan con');
+        expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(0);
       });
     } finally {
       await cleanup();
@@ -504,6 +511,7 @@ describe('PartiesPage', () => {
           'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+        expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(0);
       });
 
       await act(async () => {
@@ -516,7 +524,8 @@ describe('PartiesPage', () => {
         expect(container.textContent).not.toContain(
           'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
         );
-        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+        expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(1);
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).not.toContain('Los Navegantes');
       });

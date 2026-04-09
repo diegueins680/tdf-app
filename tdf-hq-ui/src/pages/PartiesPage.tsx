@@ -37,6 +37,7 @@ import AddIcon from '@mui/icons-material/Add';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useNavigate } from 'react-router-dom';
 import type { Role } from '../api/generated/client';
 import { Admin } from '../api/admin';
@@ -360,6 +361,7 @@ export default function PartiesPage() {
     });
   }, [parties, trimmedSearch]);
   const showSearchField = !showInitialLoadingState && (parties.length > 1 || trimmedSearch !== '');
+  const showClearSearchAction = showSearchField && trimmedSearch !== '';
   const showSearchEmptyState = !partiesQuery.isLoading && hasContacts && filtered.length === 0 && trimmedSearch !== '';
   const showSingleContactGuidance = !partiesQuery.isLoading && parties.length === 1 && trimmedSearch === '';
   const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0 && !showSingleContactGuidance;
@@ -374,6 +376,10 @@ export default function PartiesPage() {
 
   const openActionsMenu = (event: MouseEvent<HTMLButtonElement>, party: PartyDTO) => {
     setActionsMenuTarget({ anchorEl: event.currentTarget, party });
+  };
+
+  const handleClearSearch = () => {
+    setSearch('');
   };
 
   const closeActionsMenu = () => {
@@ -421,6 +427,15 @@ export default function PartiesPage() {
                     <SearchIcon sx={{ color: 'text.secondary' }} />
                   </InputAdornment>
                 ),
+                endAdornment: showClearSearchAction ? (
+                  <InputAdornment position="end">
+                    <Tooltip title="Limpiar búsqueda">
+                      <IconButton size="small" aria-label="Limpiar búsqueda" onClick={handleClearSearch}>
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </InputAdornment>
+                ) : null,
               }}
               fullWidth
             />
@@ -447,16 +462,8 @@ export default function PartiesPage() {
             Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto.
           </Alert>
         ) : showSearchEmptyState ? (
-          <Alert
-            severity="info"
-            variant="outlined"
-            action={(
-              <Button color="inherit" size="small" onClick={() => setSearch('')}>
-                Limpiar búsqueda
-              </Button>
-            )}
-          >
-            {`No hay contactos que coincidan con "${trimmedSearch}". Limpia la búsqueda para volver a ver toda la lista.`}
+          <Alert severity="info" variant="outlined">
+            {`No hay contactos que coincidan con "${trimmedSearch}". Limpia la búsqueda desde el buscador para volver a ver toda la lista.`}
           </Alert>
         ) : (
           <>
@@ -467,21 +474,9 @@ export default function PartiesPage() {
             )}
             {showTableGuidance && (
               showSearchContextSummary ? (
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  flexWrap="wrap"
-                  useFlexGap
-                  sx={{ mb: 1.5 }}
-                >
-                  <Typography variant="caption" color="text.secondary">
-                    {searchContextSummary}
-                  </Typography>
-                  <Button size="small" onClick={() => setSearch('')}>
-                    Limpiar búsqueda
-                  </Button>
-                </Stack>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                  {searchContextSummary}
+                </Typography>
               ) : (
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
                   {tableGuidanceText}
