@@ -9,6 +9,7 @@ module TDF.ServerProposals
   , validateOptionalProposalStatus
   , validateOptionalProposalContactEmail
   , validateProposalStatus
+  , validateProposalVersionNumber
   , validateTemplateKey
   ) where
 
@@ -193,9 +194,10 @@ proposalsServer user =
     getVersionH rawId versionNumber = do
       ensureCRM
       proposalKey <- parseKey @ME.Proposal rawId
+      validVersionNumber <- either throwError pure (validateProposalVersionNumber versionNumber)
       mVersion <- withPool $ selectFirst
         [ ME.ProposalVersionProposalId ==. proposalKey
-        , ME.ProposalVersionVersion ==. versionNumber
+        , ME.ProposalVersionVersion ==. validVersionNumber
         ]
         []
       maybe (throwError err404) (pure . proposalVersionToDTO proposalKey) mVersion
@@ -203,11 +205,12 @@ proposalsServer user =
     proposalPdfH rawId mVersion = do
       ensureCRM
       proposalKey <- parseKey @ME.Proposal rawId
+      validVersion <- traverse (either throwError pure . validateProposalVersionNumber) mVersion
       mProposal <- withPool $ getEntity proposalKey
       case mProposal of
         Nothing -> throwError err404
         Just (Entity _ proposal) -> do
-          versionEnt <- fetchVersion proposalKey mVersion
+          versionEnt <- fetchVersion proposalKey validVersion
           let latex = ME.proposalVersionLatex (entityVal versionEnt)
           pdfResult <- liftIO (InputList.generateInputListPdfWithAssets (Just proposalAssetsDir) latex)
           case pdfResult of
@@ -341,6 +344,12 @@ validateOptionalProposalStatus :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalProposalStatus Nothing = Right Nothing
 validateOptionalProposalStatus (Just rawStatus) =
   Just <$> validateProposalStatus (Just rawStatus)
+
+validateProposalVersionNumber :: Int -> Either ServerError Int
+validateProposalVersionNumber rawVersion
+  | rawVersion < 1 =
+      Left err400 { errBody = "version must be a positive integer" }
+  | otherwise = Right rawVersion
 
 validateOptionalProposalContactEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalProposalContactEmail Nothing = Right Nothing

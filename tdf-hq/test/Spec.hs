@@ -54,6 +54,7 @@ import TDF.ServerProposals
     ( validateOptionalProposalContactEmail,
       validateOptionalProposalStatus,
       validateProposalStatus,
+      validateProposalVersionNumber,
       validateTemplateKey )
 import TDF.ServerFeedback (normalizeOptionalFeedbackText, validateOptionalFeedbackContactEmail)
 import TDF.Server.SocialEventsHandlers (
@@ -544,6 +545,21 @@ main = hspec $ do
             assertInvalid (validateProposalStatus (Just "   "))
             assertInvalid (validateProposalStatus (Just "archived"))
             assertInvalid (validateOptionalProposalStatus (Just "queued"))
+
+    describe "validateProposalVersionNumber" $ do
+        it "accepts positive proposal version numbers for explicit version lookups" $ do
+            validateProposalVersionNumber 1 `shouldBe` Right 1
+            validateProposalVersionNumber 7 `shouldBe` Right 7
+
+        it "rejects zero or negative version numbers instead of falling through to a misleading 404" $ do
+            let assertInvalid raw = case validateProposalVersionNumber raw of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "version must be a positive integer"
+                    Right value ->
+                        expectationFailure ("Expected invalid proposal version to be rejected, got " <> show value)
+            assertInvalid 0
+            assertInvalid (-2)
 
     describe "validateOptionalProposalContactEmail" $ do
         it "normalizes valid proposal contact emails and treats blanks as unset" $ do
