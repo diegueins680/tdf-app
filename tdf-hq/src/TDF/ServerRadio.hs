@@ -85,6 +85,8 @@ validateRadioStreamUrl rawUrl
 
 validateRadioAuthority :: Text -> Either ServerError ()
 validateRadioAuthority rawAuthority
+  | T.any (== '@') rawAuthority =
+      Left err400 { errBody = "streamUrl must not include user info" }
   | "[" `T.isPrefixOf` rawAuthority =
       validateBracketedAuthority rawAuthority
   | T.count ":" rawAuthority > 1 =
