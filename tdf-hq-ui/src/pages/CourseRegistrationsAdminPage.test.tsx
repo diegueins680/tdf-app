@@ -1115,7 +1115,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('moves the first-note CTA into the empty state so the header stays focused on saved notes', async () => {
+  it('keeps empty notes in one optional inline state so the dossier stays focused on saved context', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1131,18 +1131,21 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
+      expect(dialogHeadings).toContain('Notas internas (opcional)');
       expect(document.body.textContent).toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
-      expect(getButtonByText(document.body, 'Agregar primera nota')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar nota opcional')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
-      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(1);
+      expect(countButtonsByText(document.body, 'Agregar nota opcional')).toBe(1);
+      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(0);
       expect(countButtonsByText(document.body, 'Abrir notas')).toBe(0);
       expect(countButtonsByText(document.body, 'Editar notas')).toBe(0);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar primera nota'));
+      clickButton(getButtonByText(document.body, 'Agregar nota opcional'));
       await flushPromises();
       await flushPromises();
     });
@@ -1152,7 +1155,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
       expect(countButtonsByText(document.body, 'Ocultar editor')).toBe(0);
-      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar nota opcional')).toBe(0);
       expect(document.body.textContent).not.toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
@@ -1168,7 +1171,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
-      expect(getButtonByText(document.body, 'Agregar primera nota')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar nota opcional')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Cancelar notas')).toBe(0);
       expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
     });
@@ -2333,12 +2336,15 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
+      expect(dialogHeadings).toContain('Notas internas (opcional)');
       expect(document.body.textContent).toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
       expect(hasLabel(document.body, 'Notas internas')).toBe(false);
-      expect(getButtonByText(document.body, 'Agregar primera nota')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(1);
+      expect(getButtonByText(document.body, 'Agregar nota opcional')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Agregar nota opcional')).toBe(1);
+      expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(0);
       expect(countButtonsByText(document.body, 'Abrir notas')).toBe(0);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
@@ -2353,7 +2359,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar primera nota'));
+      clickButton(getButtonByText(document.body, 'Agregar nota opcional'));
       await flushPromises();
       await flushPromises();
     });
