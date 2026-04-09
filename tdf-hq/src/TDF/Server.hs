@@ -4608,6 +4608,7 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
     throwError err400 { errBody = "roleTag and headline are required" }
   when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
   currency <- either throwError pure (validateServiceAdCurrency sacCurrency)
+  slotMinutes <- either throwError pure (validateServiceAdSlotMinutes sacSlotMinutes)
   now <- liftIO getCurrentTime
   pool <- asks envPool
   when (isNothing sacServiceCatalogId) $ throwError err400 { errBody = "serviceCatalogId is required" }
@@ -4617,8 +4618,7 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
     case validateServiceMarketplaceCatalog mCatalog of
       Left serverErr -> liftIO $ throwIO serverErr
       Right _ -> pure ()
-  let slotMinutes = max 15 (fromMaybe 60 sacSlotMinutes)
-      record = ServiceAd
+  let record = ServiceAd
         { serviceAdProviderPartyId = auPartyId user
         , serviceAdServiceCatalogId = catalogKey
         , serviceAdRoleTag = T.strip sacRoleTag
@@ -5389,6 +5389,13 @@ validateServiceAdCurrency (Just rawCurrency) =
       in if T.length normalized == 3 && T.all isAsciiUpper normalized
            then Right normalized
            else Left err400 { errBody = "currency must be a 3-letter ISO code" }
+
+validateServiceAdSlotMinutes :: Maybe Int -> Either ServerError Int
+validateServiceAdSlotMinutes Nothing = Right 60
+validateServiceAdSlotMinutes (Just rawMinutes)
+  | rawMinutes < 15 =
+      Left err400 { errBody = "slotMinutes must be at least 15" }
+  | otherwise = Right rawMinutes
 
 requiresEngineer :: Maybe Text -> Bool
 requiresEngineer Nothing = False

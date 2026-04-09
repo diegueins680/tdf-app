@@ -24,6 +24,7 @@ import TDF.Server
     , validatePublicBookingDurationMinutes
     , validateRolePayload
     , validateServiceAdCurrency
+    , validateServiceAdSlotMinutes
     , validateCmsContentStatus
     , validateCourseNonNegativeField
     , validateCourseRegistrationContactChannels
@@ -318,6 +319,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateServiceAdCurrency (Just "   "))
             assertInvalid (validateServiceAdCurrency (Just "usdollars"))
             assertInvalid (validateServiceAdCurrency (Just "12$"))
+
+    describe "validateServiceAdSlotMinutes" $ do
+        it "defaults omitted values and preserves explicit slot lengths at or above the minimum" $ do
+            validateServiceAdSlotMinutes Nothing `shouldBe` Right 60
+            validateServiceAdSlotMinutes (Just 15) `shouldBe` Right 15
+            validateServiceAdSlotMinutes (Just 45) `shouldBe` Right 45
+
+        it "rejects explicit slot lengths below the marketplace minimum instead of silently rewriting them" $ do
+            let assertInvalid rawMinutes =
+                    case validateServiceAdSlotMinutes (Just rawMinutes) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "slotMinutes must be at least 15"
+                        Right slotMinutesVal ->
+                            expectationFailure ("Expected invalid slotMinutes error, got: " <> show slotMinutesVal)
+            assertInvalid (-5)
+            assertInvalid 0
+            assertInvalid 14
 
     describe "validateRolePayload" $ do
         it "normalizes known role labels before party-role assignment" $ do
