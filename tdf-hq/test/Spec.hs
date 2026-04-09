@@ -860,6 +860,26 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected invalid acceptedTerms to be rejected, got: " <> show payload)
 
+        it "rejects anonymous musician rows instead of creating placeholder parties" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[{\"lsmName\":\"   \",\"lsmEmail\":\"   \",\"lsmIsExisting\":false}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "each musician must include a non-blank name, email, or partyId"
+                Right payload ->
+                    expectationFailure ("Expected anonymous musician row to be rejected, got: " <> show payload)
+
+        it "rejects non-positive musician party ids before any database lookup" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[{\"lsmPartyId\":0,\"lsmName\":\"Existing musician\",\"lsmIsExisting\":true}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "musician partyId must be a positive integer"
+                Right payload ->
+                    expectationFailure ("Expected invalid musician partyId to be rejected, got: " <> show payload)
+
     APITypesSpec.spec
     ArtistSpec.spec
     ServerSpec.spec

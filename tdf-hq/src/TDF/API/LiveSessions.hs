@@ -134,11 +134,27 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       decodeMusicians txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid musicians payload: " <> err)
-          Right xs -> Right xs
+          Right xs ->
+            case traverse validateMusician xs of
+              Left err -> Left ("Invalid musicians payload: " <> err)
+              Right validated -> Right validated
       decodeSetlist txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid setlist payload: " <> err)
           Right xs -> Right xs
+
+      validateMusician musician
+        | maybe False (<= 0) (lsmPartyId musician) =
+            Left "musician partyId must be a positive integer"
+        | noReferenceProvided =
+            Left "each musician must include a non-blank name, email, or partyId"
+        | otherwise =
+            Right musician
+        where
+          noReferenceProvided =
+            lsmPartyId musician == Nothing
+              && T.null (T.strip (lsmName musician))
+              && maybe True (T.null . T.strip) (lsmEmail musician)
 
       normalizeOptionalText :: Text -> Maybe Text
       normalizeOptionalText raw =
