@@ -524,7 +524,7 @@ test('continuous-improvement-loop honors --allow-dirty for tracked baseline chan
   }
 });
 
-test('dirty-worktree checkpoint helper pushes a rescue branch and restores the loop branch clean', async () => {
+test('dirty-worktree checkpoint helper commits directly to main and keeps the loop branch clean', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-dirty-checkpoint-test-'));
   const remoteDir = path.join(tempRoot, 'remote.git');
   const repoDir = path.join(tempRoot, 'repo');
@@ -543,30 +543,29 @@ test('dirty-worktree checkpoint helper pushes a rescue branch and restores the l
     await git(['remote', 'add', 'origin', remoteDir]);
     await git(['push', '-u', 'origin', 'main']);
 
-    const mainHead = (await git(['rev-parse', 'HEAD'])).stdout.trim();
     await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\ndirty tracked change\n', 'utf8');
     await fs.writeFile(path.join(repoDir, 'untracked.txt'), 'dirty untracked change\n', 'utf8');
 
     const result = await checkpointDirtyWorktree({ repoRoot: repoDir, currentBranch: 'main' });
 
     assert.equal(result.recovered, true);
-    assert.match(result.branch, /^continuous-improvement-loop\/dirty\/main\/dirty-worktree-/);
+    assert.equal(result.branch, 'main');
     assert.equal((await git(['branch', '--show-current'])).stdout.trim(), 'main');
-    assert.equal((await git(['rev-parse', 'HEAD'])).stdout.trim(), mainHead);
     assert.equal((await git(['status', '--short'])).stdout.trim(), '');
 
-    const remoteCheckpoint = await execFileAsync(
-      'git',
-      ['--git-dir', remoteDir, 'rev-parse', `refs/heads/${result.branch}`],
-      { cwd: tempRoot },
-    );
-    assert.equal(remoteCheckpoint.stdout.trim(), result.commit);
+    assert.equal((await git(['rev-parse', 'HEAD'])).stdout.trim(), result.commit);
+
+    const remoteMain = await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', 'refs/heads/main'], {
+      cwd: tempRoot,
+    });
+    assert.equal(remoteMain.stdout.trim(), result.commit);
 
     const checkpointLog = await git(['log', '-1', '--pretty=%s%n%b', result.commit]);
     assert.match(checkpointLog.stdout, /^chore\(loop\): checkpoint dirty worktree/m);
     assert.match(checkpointLog.stdout, /Dirty worktree analysis:/);
     assert.match(checkpointLog.stdout, /tracked\.txt/);
     assert.match(checkpointLog.stdout, /untracked\.txt/);
+    assert.match(result.summary, /committed dirty worktree directly to main/);
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }

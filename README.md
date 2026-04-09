@@ -235,7 +235,7 @@ Forever-runner contract:
 - `scripts/install-continuous-improvement-loop-launchd.sh` installs a macOS LaunchAgent with `RunAtLoad` + `KeepAlive`, which is the durable contract for always-on execution across crashes and reboots.
 
 Notes:
-- When the forever runner encounters a dirty worktree, it now checkpoints that work onto a pushed `continuous-improvement-loop/dirty/<base-branch>/...` branch, returns the loop branch to clean state, and only blocks if that checkpoint recovery fails.
+- When the forever runner encounters a dirty worktree, it now commits that work directly onto the live loop branch and pushes it to `main`, resolving sync conflicts in place and only blocking if that direct-to-main recovery fails.
 - Before each new improvement idea, the loop syncs to the latest pushed branch head, polls GitHub Actions for that exact commit, and routes any failing workflow logs through `ciRepairCommand` before starting fresh discovery.
 - `loop:improve` is agent-agnostic: wire `implementationCommand`, `uiFixCommand`, `formalFixCommand`, and `ciRepairCommand` to your preferred coding worker.
 - `commitMessageTemplate` defaults to `{commit_message}` and can use `{commit_type}`, `{commit_summary}`, `{primary_path}`, and `{files_changed}` if you want a custom format.

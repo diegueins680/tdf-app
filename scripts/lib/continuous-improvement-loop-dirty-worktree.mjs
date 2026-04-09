@@ -1,17 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
-function sanitizeGitRefFragment(raw, fallback = 'unknown') {
-  const text = String(raw ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._/-]+/g, '-')
-    .replace(/\/+/g, '/')
-    .replace(/^-+|-+$/g, '')
-    .replace(/^\/+|\/+$/g, '');
-  return text || fallback;
-}
-
 function runGit(repoRoot, args, { capture = true, trimOutput = true } = {}) {
   try {
     const output = execFileSync('git', args, {
@@ -44,10 +33,96 @@ export function parseGitStatusPaths(rawStatus) {
   return Array.from(new Set(paths));
 }
 
-export function buildDirtyCheckpointBranchName({ currentBranch, timestamp }) {
-  const base = sanitizeGitRefFragment(currentBranch || 'main', 'main');
-  const stamp = sanitizeGitRefFragment(String(timestamp ?? '').replace(/[:.]/g, '-'), 'now').replace(/\//g, '-');
-  return `continuous-improvement-loop/dirty/${base}/dirty-worktree-${stamp}`;
+function uniqueStrings(items) {
+  return Array.from(new Set(items.map((item) => String(item).trim()).filter(Boolean)));
+}
+
+function listUnmergedConflictPaths(repoRoot) {
+  return uniqueStrings(runGit(repoRoot, ['diff', '--name-only', '--diff-filter=U'], { trimOutput: false }).split(/\r?\n/));
+}
+
+function mergeRefOntoHead(repoRoot, branchRef, shortName) {
+  const headBefore = runGit(repoRoot, ['rev-parse', 'HEAD']);
+
+  try {
+    runGit(repoRoot, ['merge', '--no-ff', '--no-edit', branchRef], { capture: false });
+  } catch (error) {
+    const conflicts = listUnmergedConflictPaths(repoRoot);
+    if (conflicts.length === 0) {
+      throw error;
+    }
+
+    // Conflict resolution stays on the live main lane and keeps the current HEAD content.
+    runGit(repoRoot, ['restore', '--source=HEAD', '--staged', '--worktree', '--', ...conflicts], { capture: false });
+    runGit(repoRoot, ['commit', '--no-edit'], { capture: false });
+
+    return {
+      outcome: 'conflict-resolved',
+      ref: branchRef,
+      shortName,
+      headBefore,
+      headAfter: runGit(repoRoot, ['rev-parse', 'HEAD']),
+      conflicts,
+    };
+  }
+
+  const headAfter = runGit(repoRoot, ['rev-parse', 'HEAD']);
+  return {
+    outcome: headAfter === headBefore ? 'noop' : 'merged',
+    ref: branchRef,
+    shortName,
+    headBefore,
+    headAfter,
+    conflicts: [],
+  };
+}
+
+function syncHeadToRemoteBranch(repoRoot, remoteName, branchName) {
+  const remoteRef = `${remoteName}/${branchName}`;
+  const headBefore = runGit(repoRoot, ['rev-parse', 'HEAD']);
+
+  try {
+    runGit(repoRoot, ['fetch', remoteName, branchName], { capture: false });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/\bcouldn't find remote ref\b|\bremote ref\b.*\bnot found\b/i.test(message)) {
+      return {
+        outcome: 'missing-remote',
+        ref: remoteRef,
+        shortName: branchName,
+        headBefore,
+        headAfter: headBefore,
+        conflicts: [],
+      };
+    }
+    throw new Error(`Failed to fetch ${remoteRef} before push.\n${message}`);
+  }
+
+  const remoteHead = runGit(repoRoot, ['rev-parse', remoteRef]);
+  if (headBefore === remoteHead) {
+    return {
+      outcome: 'noop',
+      ref: remoteRef,
+      shortName: branchName,
+      headBefore,
+      headAfter: headBefore,
+      conflicts: [],
+    };
+  }
+
+  return mergeRefOntoHead(repoRoot, remoteRef, branchName);
+}
+
+function pushHeadToRemoteBranchWithRetry(repoRoot, remoteName, branchName) {
+  try {
+    runGit(repoRoot, ['push', remoteName, `HEAD:refs/heads/${branchName}`], { capture: false });
+    return { pushed: true, retried: false, retrySync: null };
+  } catch {
+    runGit(repoRoot, ['fetch', remoteName, '--prune'], { capture: false });
+    const retrySync = syncHeadToRemoteBranch(repoRoot, remoteName, branchName);
+    runGit(repoRoot, ['push', remoteName, `HEAD:refs/heads/${branchName}`], { capture: false });
+    return { pushed: true, retried: true, retrySync };
+  }
 }
 
 export function analyzeDirtyWorktree(paths, currentBranch) {
@@ -149,10 +224,6 @@ export async function checkpointDirtyWorktree({ repoRoot, currentBranch, visited
   }
 
   const loopBranch = currentBranch || runGit(normalizedRoot, ['branch', '--show-current']) || 'main';
-  const checkpointBranch = buildDirtyCheckpointBranchName({
-    currentBranch: loopBranch,
-    timestamp: new Date().toISOString(),
-  });
   const analysis = analyzeDirtyWorktree(dirtyPaths, loopBranch);
   const commitBody = [
     analysis.summary,
@@ -167,31 +238,26 @@ export async function checkpointDirtyWorktree({ repoRoot, currentBranch, visited
     runGit(normalizedRoot, ['config', 'user.email', 'continuous-improvement-loop[bot]@users.noreply.github.com'], {
       capture: false,
     });
-    runGit(normalizedRoot, ['checkout', '-b', checkpointBranch], { capture: false });
     runGit(normalizedRoot, ['add', '-A'], { capture: false });
     runGit(normalizedRoot, ['commit', '-m', analysis.commitMessage, '-m', commitBody], { capture: false });
-    runGit(normalizedRoot, ['push', '-u', 'origin', `${checkpointBranch}:refs/heads/${checkpointBranch}`], {
-      capture: false,
-    });
+    const pushResult = pushHeadToRemoteBranchWithRetry(normalizedRoot, 'origin', loopBranch);
     const commit = runGit(normalizedRoot, ['rev-parse', 'HEAD']);
-    runGit(normalizedRoot, ['checkout', loopBranch], { capture: false });
     return {
       recovered: true,
       clean: false,
-      branch: checkpointBranch,
+      branch: loopBranch,
       commit,
+      pushed: pushResult.pushed,
+      retried: pushResult.retried,
+      retrySync: pushResult.retrySync,
       paths: dirtyPaths,
       commitMessage: analysis.commitMessage,
       reason: analysis.summary,
-      summary: `checkpointed dirty worktree to ${checkpointBranch} (${commit})`,
+      summary: pushResult.retried
+        ? `committed dirty worktree directly to ${loopBranch} (${commit}) after syncing origin/${loopBranch}`
+        : `committed dirty worktree directly to ${loopBranch} (${commit})`,
     };
   } catch (error) {
-    try {
-      const branchAfterError = runGit(normalizedRoot, ['branch', '--show-current']);
-      if (branchAfterError && branchAfterError !== loopBranch) {
-        runGit(normalizedRoot, ['checkout', loopBranch], { capture: false });
-      }
-    } catch {}
     return {
       recovered: false,
       clean: false,
