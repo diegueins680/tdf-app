@@ -115,7 +115,21 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows first-run admin guidance instead of a duplicate user-management card when the console preview is empty', async () => {
+  it('shows first-run admin guidance when preview cards only duplicate built-in admin sections', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'user-management',
+          title: 'Gestión de usuarios',
+          body: [
+            'La asignación de roles se administra desde la pantalla de Parties.',
+            'Próximamente aquí se podrá crear usuarios de servicio y tokens API.',
+          ],
+        },
+      ],
+    });
+
     renderPage();
 
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
@@ -136,8 +150,38 @@ describe('AdminConsolePage', () => {
 
     expect(screen.queryByText('Gestión de usuarios')).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/Administra el acceso de los usuarios asignando roles según sus responsabilidades\./i),
+      screen.queryByText(/La asignación de roles se administra desde la pantalla de Parties\./i),
     ).not.toBeInTheDocument();
+  });
+
+  it('keeps unique preview cards that add context beyond the built-in admin sections', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
   });
 
   it('refreshes every admin dataset from the single panel action', async () => {

@@ -45,11 +45,43 @@ const ADMIN_REFRESH_QUERY_KEYS = [
   ['admin', 'users'],
   ['admin', 'audit'],
 ] as const;
+const BUILT_IN_ADMIN_CARD_IDS = new Set([
+  'user-management',
+  'users',
+  'audit',
+  'audit-log',
+  'service-health',
+  'health',
+  'demo-seed',
+  'seed',
+]);
+const BUILT_IN_ADMIN_CARD_TITLES = new Set([
+  'estado del servicio',
+  'datos de demostracion',
+  'usuarios y roles',
+  'gestion de usuarios',
+  'auditoria reciente',
+]);
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
     void queryClient.invalidateQueries({ queryKey: [...queryKey] });
   });
+}
+
+function normalizeAdminConsoleCardKey(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function isDedicatedAdminSectionCard(card: AdminConsoleCard) {
+  const normalizedId = normalizeAdminConsoleCardKey(card.cardId);
+  const normalizedTitle = normalizeAdminConsoleCardKey(card.title);
+
+  return BUILT_IN_ADMIN_CARD_IDS.has(normalizedId) || BUILT_IN_ADMIN_CARD_TITLES.has(normalizedTitle);
 }
 
 function formatDate(value: string) {
@@ -161,8 +193,9 @@ export default function AdminConsolePage() {
       'Después revisa usuarios y auditoría para confirmar si un permiso o cambio ya fue aplicado antes de repetirlo.',
     ],
   };
-  const consoleCards: AdminConsoleCard[] = consoleQuery.data?.cards?.length
-    ? consoleQuery.data.cards
+  const previewCards = consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [];
+  const consoleCards: AdminConsoleCard[] = previewCards.length > 0
+    ? previewCards
     : [fallbackCard];
   const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;
   const users = usersQuery.data ?? [];
