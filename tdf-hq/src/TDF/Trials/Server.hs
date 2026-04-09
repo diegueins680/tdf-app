@@ -320,6 +320,21 @@ teacherAvailableExceptClassSession teacherId slotStart slotEnd classSessionId = 
     ]
   pure (not (hasTrialConflict || hasClassConflict))
 
+teacherAvailableExceptTrialRequest :: PartyId -> UTCTime -> UTCTime -> Key TrialRequest -> AppM Bool
+teacherAvailableExceptTrialRequest teacherId slotStart slotEnd requestId = do
+  hasTrialConflict <- recordExists
+    [ TrialAssignmentTeacherId ==. teacherId
+    , TrialAssignmentRequestId !=. requestId
+    , TrialAssignmentStartAt <. slotEnd
+    , TrialAssignmentEndAt   >. slotStart
+    ]
+  hasClassConflict <- recordExists
+    [ ClassSessionTeacherId ==. teacherId
+    , ClassSessionStartAt <. slotEnd
+    , ClassSessionEndAt   >. slotStart
+    ]
+  pure (not (hasTrialConflict || hasClassConflict))
+
 roomAvailable :: ResourceId -> UTCTime -> UTCTime -> AppM Bool
 roomAvailable roomId slotStart slotEnd = do
   hasClassConflict <- recordExists [ ClassSessionRoomId ==. roomId
@@ -835,6 +850,9 @@ privateTrialsServer user@AuthedUser{..} =
       case mReq of
         Nothing  -> liftIO $ throwIO err404
         Just req -> do
+          teacherFree <- teacherAvailableExceptTrialRequest teacherK startAt endAt rid
+          unless teacherFree $
+            liftIO $ throwIO err409 { errBody = "Profesor no disponible en ese horario" }
           let assignment = TrialAssignment
                 { trialAssignmentRequestId = rid
                 , trialAssignmentTeacherId = teacherK

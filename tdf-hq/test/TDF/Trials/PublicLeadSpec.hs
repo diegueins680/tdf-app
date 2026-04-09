@@ -9,17 +9,19 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
-import Database.Persist (Entity (..), getJustEntity, selectList, (==.))
-import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool)
+import Database.Persist (Entity (..), getBy, getJustEntity, insert, selectList, (==.))
+import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
-import Servant (ServerError (errBody, errHTTPCode))
+import Servant (ServerError (errBody, errHTTPCode), (:<|>) ((:<|>)))
 import Test.Hspec
 
-import TDF.Trials.DTO (PreferredSlot (..), TrialScheduleIn (..))
+import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Trials.DTO (PreferredSlot (..), TrialRequestOut (..), TrialScheduleIn (..))
 import TDF.Trials.API (InterestIn (..))
 import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
+  , privateTrialsServer
   , validatePreferredSlots
   , validatePreferredSlotsAt
   , validatePublicInterestInput
@@ -30,6 +32,7 @@ import TDF.Trials.Server
   )
 import qualified TDF.Models as Models
 import TDF.Trials.Models (Subject (..))
+import qualified TDF.Trials.Models as Trials
 
 spec :: Spec
 spec = do
@@ -264,6 +267,84 @@ spec = do
       assertInvalid "La hora de fin debe ser mayor a la de inicio" $
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
 
+  describe "private trial scheduling" $ do
+    it "rejects scheduling a trial when the teacher is already booked in an overlapping class" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        teacherPartyId <- insertPartyFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        otherStudentPartyId <- insertPartyFixture "Student Two" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        _ <- insert Trials.ClassSession
+          { Trials.classSessionStudentId = otherStudentPartyId
+          , Trials.classSessionTeacherId = teacherPartyId
+          , Trials.classSessionSubjectId = subjectKey
+          , Trials.classSessionStartAt = addUTCTime 900 scheduleStart
+          , Trials.classSessionEndAt = addUTCTime 900 scheduleEnd
+          , Trials.classSessionRoomId = roomResourceId
+          , Trials.classSessionBookingId = Nothing
+          , Trials.classSessionAttended = False
+          , Trials.classSessionPurchaseId = Nothing
+          , Trials.classSessionConsumedMinutes = 60
+          , Trials.classSessionNotes = Nothing
+          }
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey teacherPartyId))
+            scheduleStart
+            scheduleEnd
+            (fromIntegral (fromSqlKey roomResourceId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Profesor no disponible en ese horario"
+        Right _ ->
+          expectationFailure "Expected overlapping teacher schedule to be rejected"
+
+    it "allows rescheduling the same trial request without conflicting with its own existing assignment" $ do
+      (response, assignment, newStart, newEnd) <- runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let oldStart = addUTCTime 3600 now
+            oldEnd = addUTCTime 7200 now
+            newStart = addUTCTime 5400 now
+            newEnd = addUTCTime 9000 now
+        teacherPartyId <- insertPartyFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey oldStart oldEnd now
+        _ <- insert Trials.TrialAssignment
+          { Trials.trialAssignmentRequestId = requestKey
+          , Trials.trialAssignmentTeacherId = teacherPartyId
+          , Trials.trialAssignmentStartAt = oldStart
+          , Trials.trialAssignmentEndAt = oldEnd
+          , Trials.trialAssignmentRoomId = roomResourceId
+          , Trials.trialAssignmentBookingId = Nothing
+          , Trials.trialAssignmentCreatedAt = now
+          }
+        response <- privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey teacherPartyId))
+            newStart
+            newEnd
+            (fromIntegral (fromSqlKey roomResourceId)))
+        mAssignment <- getBy (Trials.UniqueTrialAssignmentRequest requestKey)
+        pure (response, fmap entityVal mAssignment, newStart, newEnd)
+
+      status response `shouldBe` "Scheduled"
+      case assignment of
+        Nothing ->
+          expectationFailure "Expected the trial assignment to remain present after rescheduling"
+        Just storedAssignment -> do
+          Trials.trialAssignmentStartAt storedAssignment `shouldBe` newStart
+          Trials.trialAssignmentEndAt storedAssignment `shouldBe` newEnd
+
 runInMemory :: SqlPersistT IO a -> IO a
 runInMemory action =
   runStdoutLoggingT $ do
@@ -300,6 +381,175 @@ initializePartySchema = do
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
+
+runTrialsInMemory :: SqlPersistT IO a -> IO a
+runTrialsInMemory action =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeTrialsSchema pool
+    liftIO $ runSqlPool action pool
+
+initializeTrialsSchema :: (MonadIO m) => SqlPersistT m ()
+initializeTrialsSchema = do
+  rawExecute "PRAGMA foreign_keys = ON" []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"party\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"legal_name\" VARCHAR NULL,\
+    \\"display_name\" VARCHAR NOT NULL,\
+    \\"is_org\" BOOLEAN NOT NULL,\
+    \\"tax_id\" VARCHAR NULL,\
+    \\"primary_email\" VARCHAR NULL,\
+    \\"primary_phone\" VARCHAR NULL,\
+    \\"whatsapp\" VARCHAR NULL,\
+    \\"instagram\" VARCHAR NULL,\
+    \\"emergency_contact\" VARCHAR NULL,\
+    \\"notes\" VARCHAR NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"resource\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"name\" VARCHAR NOT NULL,\
+    \\"slug\" VARCHAR NOT NULL,\
+    \\"resource_type\" VARCHAR NOT NULL,\
+    \\"capacity\" INTEGER NULL,\
+    \\"active\" BOOLEAN NOT NULL,\
+    \CONSTRAINT \"unique_resource_slug\" UNIQUE (\"slug\")\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"subject\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"name\" VARCHAR NOT NULL,\
+    \\"active\" BOOLEAN NOT NULL,\
+    \CONSTRAINT \"unique_subject_name\" UNIQUE (\"name\")\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"trial_request\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"pref1_start\" TIMESTAMP NOT NULL,\
+    \\"pref1_end\" TIMESTAMP NOT NULL,\
+    \\"pref2_start\" TIMESTAMP NULL,\
+    \\"pref2_end\" TIMESTAMP NULL,\
+    \\"pref3_start\" TIMESTAMP NULL,\
+    \\"pref3_end\" TIMESTAMP NULL,\
+    \\"notes\" VARCHAR NULL,\
+    \\"status\" VARCHAR NOT NULL,\
+    \\"assigned_teacher_id\" INTEGER NULL,\
+    \\"assigned_at\" TIMESTAMP NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"trial_assignment\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"request_id\" INTEGER NOT NULL,\
+    \\"teacher_id\" INTEGER NOT NULL,\
+    \\"start_at\" TIMESTAMP NOT NULL,\
+    \\"end_at\" TIMESTAMP NOT NULL,\
+    \\"room_id\" INTEGER NOT NULL,\
+    \\"booking_id\" INTEGER NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL,\
+    \CONSTRAINT \"unique_trial_assignment_request\" UNIQUE (\"request_id\")\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"class_session\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"student_id\" INTEGER NOT NULL,\
+    \\"teacher_id\" INTEGER NOT NULL,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"start_at\" TIMESTAMP NOT NULL,\
+    \\"end_at\" TIMESTAMP NOT NULL,\
+    \\"room_id\" INTEGER NOT NULL,\
+    \\"booking_id\" INTEGER NULL,\
+    \\"attended\" BOOLEAN NOT NULL,\
+    \\"purchase_id\" INTEGER NULL,\
+    \\"consumed_minutes\" INTEGER NOT NULL,\
+    \\"notes\" VARCHAR NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"teacher_availability\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"teacher_id\" INTEGER NOT NULL,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"room_id\" INTEGER NOT NULL,\
+    \\"start_at\" TIMESTAMP NOT NULL,\
+    \\"end_at\" TIMESTAMP NOT NULL,\
+    \\"notes\" VARCHAR NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+
+adminUser :: AuthedUser
+adminUser =
+  let roles = [Models.Admin]
+  in AuthedUser
+      { auPartyId = toSqlKey 999
+      , auRoles = roles
+      , auModules = modulesForRoles roles
+      }
+
+privateScheduleHandler :: TrialScheduleIn -> SqlPersistT IO TrialRequestOut
+privateScheduleHandler =
+  let _ :<|> _ :<|> scheduleH :<|> _ = privateTrialsServer adminUser
+  in scheduleH
+
+insertPartyFixture :: Text -> UTCTime -> SqlPersistT IO Models.PartyId
+insertPartyFixture displayName now =
+  insert Models.Party
+    { Models.partyLegalName = Nothing
+    , Models.partyDisplayName = displayName
+    , Models.partyIsOrg = False
+    , Models.partyTaxId = Nothing
+    , Models.partyPrimaryEmail = Nothing
+    , Models.partyPrimaryPhone = Nothing
+    , Models.partyWhatsapp = Nothing
+    , Models.partyInstagram = Nothing
+    , Models.partyEmergencyContact = Nothing
+    , Models.partyNotes = Nothing
+    , Models.partyCreatedAt = now
+    }
+
+insertRoomFixture :: Text -> Text -> SqlPersistT IO Models.ResourceId
+insertRoomFixture name slug =
+  insert Models.Resource
+    { Models.resourceName = name
+    , Models.resourceSlug = slug
+    , Models.resourceResourceType = Models.Room
+    , Models.resourceCapacity = Nothing
+    , Models.resourceActive = True
+    }
+
+insertTrialRequestFixture
+  :: Models.PartyId
+  -> Trials.SubjectId
+  -> UTCTime
+  -> UTCTime
+  -> UTCTime
+  -> SqlPersistT IO Trials.TrialRequestId
+insertTrialRequestFixture partyId subjectKey slotStartAt slotEndAt now =
+  insert Trials.TrialRequest
+    { Trials.trialRequestPartyId = partyId
+    , Trials.trialRequestSubjectId = subjectKey
+    , Trials.trialRequestPref1Start = slotStartAt
+    , Trials.trialRequestPref1End = slotEndAt
+    , Trials.trialRequestPref2Start = Nothing
+    , Trials.trialRequestPref2End = Nothing
+    , Trials.trialRequestPref3Start = Nothing
+    , Trials.trialRequestPref3End = Nothing
+    , Trials.trialRequestNotes = Nothing
+    , Trials.trialRequestStatus = "Requested"
+    , Trials.trialRequestAssignedTeacherId = Nothing
+    , Trials.trialRequestAssignedAt = Nothing
+    , Trials.trialRequestCreatedAt = now
+    }
 
 slotStart :: UTCTime
 slotStart = UTCTime (fromGregorian 2026 4 1) (secondsToDiffTime 36000)
