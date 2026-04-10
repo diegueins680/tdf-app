@@ -16,7 +16,7 @@ import Servant (ServerError (errBody, errHTTPCode), (:<|>) ((:<|>)))
 import Test.Hspec
 
 import TDF.Auth (AuthedUser (..), modulesForRoles)
-import TDF.Trials.DTO (PreferredSlot (..), TrialRequestOut (..), TrialScheduleIn (..))
+import TDF.Trials.DTO (PreferredSlot (..), TrialAssignIn (..), TrialRequestOut (..), TrialScheduleIn (..))
 import TDF.Trials.API (InterestIn (..))
 import TDF.Trials.Server
   ( createOrFetchParty
@@ -270,6 +270,25 @@ spec = do
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
 
   describe "private trial scheduling" $ do
+    it "rejects assigning a trial to a non-teacher party instead of storing an invalid assignedTeacherId" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        nonTeacherPartyId <- insertPartyFixture "Student Helper" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        subjectKey <- insert (Subject "Piano" True)
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateAssignHandler
+          (fromIntegral (fromSqlKey requestKey))
+          (TrialAssignIn (fromIntegral (fromSqlKey nonTeacherPartyId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
+        Right _ ->
+          expectationFailure "Expected non-teacher parties to be rejected for trial assignment"
+
     it "rejects scheduling a trial with a missing teacher id instead of creating an orphan assignment" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
@@ -294,13 +313,37 @@ spec = do
         Right _ ->
           expectationFailure "Expected missing teacher to be rejected"
 
+    it "rejects scheduling a trial with a non-teacher party instead of storing an invalid teacher assignment" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        nonTeacherPartyId <- insertPartyFixture "Student Helper" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey nonTeacherPartyId))
+            scheduleStart
+            scheduleEnd
+            (fromIntegral (fromSqlKey roomResourceId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
+        Right _ ->
+          expectationFailure "Expected non-teacher parties to be rejected for trial scheduling"
+
     it "rejects scheduling a trial with a missing room id instead of accepting a dangling room reference" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
         let scheduleStart = addUTCTime 3600 now
             scheduleEnd = addUTCTime 7200 now
             missingRoomId = 999999
-        teacherPartyId <- insertPartyFixture "Teacher One" now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
         studentPartyId <- insertPartyFixture "Student One" now
         subjectKey <- insert (Subject "Piano" True)
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
@@ -323,7 +366,7 @@ spec = do
         now <- liftIO getCurrentTime
         let scheduleStart = addUTCTime 3600 now
             scheduleEnd = addUTCTime 7200 now
-        teacherPartyId <- insertPartyFixture "Teacher One" now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
         studentPartyId <- insertPartyFixture "Student One" now
         nonRoomResourceId <- insertResourceFixture "PA Rack" "pa-rack" Models.Equipment
         subjectKey <- insert (Subject "Piano" True)
@@ -347,7 +390,7 @@ spec = do
         now <- liftIO getCurrentTime
         let scheduleStart = addUTCTime 3600 now
             scheduleEnd = addUTCTime 7200 now
-        teacherPartyId <- insertPartyFixture "Teacher One" now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
         studentPartyId <- insertPartyFixture "Student One" now
         otherStudentPartyId <- insertPartyFixture "Student Two" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
@@ -385,8 +428,8 @@ spec = do
         now <- liftIO getCurrentTime
         let scheduleStart = addUTCTime 3600 now
             scheduleEnd = addUTCTime 7200 now
-        scheduledTeacherPartyId <- insertPartyFixture "Teacher One" now
-        blockingTeacherPartyId <- insertPartyFixture "Teacher Two" now
+        scheduledTeacherPartyId <- insertTeacherFixture "Teacher One" now
+        blockingTeacherPartyId <- insertTeacherFixture "Teacher Two" now
         studentPartyId <- insertPartyFixture "Student One" now
         otherStudentPartyId <- insertPartyFixture "Student Two" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
@@ -426,7 +469,7 @@ spec = do
             oldEnd = addUTCTime 7200 now
             newStart = addUTCTime 5400 now
             newEnd = addUTCTime 9000 now
-        teacherPartyId <- insertPartyFixture "Teacher One" now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
         studentPartyId <- insertPartyFixture "Student One" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
         subjectKey <- insert (Subject "Piano" True)
@@ -519,6 +562,15 @@ initializeTrialsSchema = do
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"party_role\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"role\" VARCHAR NOT NULL,\
+    \\"active\" BOOLEAN NOT NULL,\
+    \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\")\
     \)"
     []
   rawExecute
@@ -640,6 +692,11 @@ privateScheduleHandler =
   let _ :<|> _ :<|> scheduleH :<|> _ = privateTrialsServer adminUser
   in scheduleH
 
+privateAssignHandler :: Int -> TrialAssignIn -> SqlPersistT IO TrialRequestOut
+privateAssignHandler =
+  let _ :<|> assignH :<|> _ :<|> _ = privateTrialsServer adminUser
+  in assignH
+
 insertPartyFixture :: Text -> UTCTime -> SqlPersistT IO Models.PartyId
 insertPartyFixture displayName now =
   insert Models.Party
@@ -655,6 +712,16 @@ insertPartyFixture displayName now =
     , Models.partyNotes = Nothing
     , Models.partyCreatedAt = now
     }
+
+insertTeacherFixture :: Text -> UTCTime -> SqlPersistT IO Models.PartyId
+insertTeacherFixture displayName now = do
+  partyId <- insertPartyFixture displayName now
+  _ <- insert Models.PartyRole
+    { Models.partyRolePartyId = partyId
+    , Models.partyRoleRole = Models.Teacher
+    , Models.partyRoleActive = True
+    }
+  pure partyId
 
 insertRoomFixture :: Text -> Text -> SqlPersistT IO Models.ResourceId
 insertRoomFixture name slug =

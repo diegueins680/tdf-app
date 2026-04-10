@@ -838,6 +838,7 @@ privateTrialsServer user@AuthedUser{..} =
       case mReq of
         Nothing  -> liftIO $ throwIO err404
         Just req -> do
+          ensureTeacherSelection teacherKey
           update rid
             [ TrialRequestAssignedTeacherId =. Just teacherKey
             , TrialRequestAssignedAt        =. Just now
@@ -857,7 +858,7 @@ privateTrialsServer user@AuthedUser{..} =
       case mReq of
         Nothing  -> liftIO $ throwIO err404
         Just req -> do
-          ensureTeacherExists teacherK
+          ensureTeacherSelection teacherK
           ensureSchedulableRoom roomK
           teacherFree <- teacherAvailableExceptTrialRequest teacherK startAt endAt rid
           unless teacherFree $
@@ -1059,12 +1060,18 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing -> liftIO $ throwIO err404
         Just _  -> pure key
 
-    ensureTeacherExists :: PartyId -> AppM ()
-    ensureTeacherExists teacherKey = do
+    ensureTeacherSelection :: PartyId -> AppM ()
+    ensureTeacherSelection teacherKey = do
       mTeacher <- get teacherKey
       case mTeacher of
         Nothing -> liftIO $ throwIO err404 { errBody = "Profesor no encontrado" }
-        Just _  -> pure ()
+        Just _  -> do
+          hasTeacherRole <- recordExists
+            [ Models.PartyRolePartyId ==. teacherKey
+            , Models.PartyRoleRole ==. Teacher
+            ]
+          unless hasTeacherRole $
+            liftIO $ throwIO err422 { errBody = "La persona seleccionada no está registrada como profesor" }
 
     ensureSchedulableRoom :: ResourceId -> AppM ()
     ensureSchedulableRoom roomKey = do
