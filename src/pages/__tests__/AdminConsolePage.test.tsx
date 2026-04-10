@@ -266,6 +266,43 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
   });
 
+  it('deduplicates repeated preview cards so the console only shows each extra workflow once', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-a',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+        {
+          cardId: 'service-tokens-b',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
+      expect(
+        screen.getAllByText(
+          /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+        ),
+      ).toHaveLength(1);
+    });
+
+    expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
+  });
+
   it('shows the first-run checklist only when the console is actually empty', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
     mockAuditLogs.mockResolvedValue([

@@ -93,6 +93,24 @@ function isDedicatedAdminSectionCard(card: AdminConsoleCard) {
   return BUILT_IN_ADMIN_CARD_IDS.has(normalizedId) || BUILT_IN_ADMIN_CARD_TITLES.has(normalizedTitle);
 }
 
+function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
+  const seenCards = new Set<string>();
+
+  return cards.filter((card) => {
+    const fingerprint = [
+      normalizeAdminConsoleCardKey(card.title),
+      card.body.map((paragraph) => normalizeAdminConsoleCardKey(paragraph)).join('|'),
+    ].join('::');
+
+    if (seenCards.has(fingerprint)) {
+      return false;
+    }
+
+    seenCards.add(fingerprint);
+    return true;
+  });
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
@@ -240,7 +258,9 @@ export default function AdminConsolePage() {
   }, [editingUser]);
 
   const audits = auditQuery.data ?? [];
-  const previewCards = consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [];
+  const previewCards = dedupeAdminConsoleCards(
+    consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [],
+  );
   const consoleCards: AdminConsoleCard[] = previewCards;
   const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;
   const users = usersQuery.data ?? [];
