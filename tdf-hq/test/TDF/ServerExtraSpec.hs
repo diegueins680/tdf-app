@@ -41,9 +41,11 @@ import TDF.ServerExtra (
     normalizeAssetCategory,
     normalizeAssetCategoryUpdate,
     normalizeAssetCheckinFields,
+    normalizeAssetNotesUpdate,
     normalizeAssetName,
     normalizeAssetNameUpdate,
     validateAssetPhotoUrl,
+    validateAssetPhotoUrlUpdate,
     normalizeRoomName,
     normalizeRoomNameUpdate,
     validateSocialLimit,
@@ -150,6 +152,32 @@ spec = do
       assertInvalid (validateAssetPhotoUrl (Just "ftp://cdn.example.com/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "assets/serve/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/../roland.jpg"))
+
+  describe "validateAssetPhotoUrlUpdate" $ do
+    it "keeps omitted photo updates untouched, trims valid values, and treats blank strings as clear intents" $ do
+      validateAssetPhotoUrlUpdate Nothing `shouldBe` Right Nothing
+      validateAssetPhotoUrlUpdate (Just "   ") `shouldBe` Right (Just Nothing)
+      validateAssetPhotoUrlUpdate (Just "  https://cdn.example.com/roland.jpg  ")
+        `shouldBe` Right (Just (Just "https://cdn.example.com/roland.jpg"))
+      validateAssetPhotoUrlUpdate (Just " inventory/roland-juno.jpg ")
+        `shouldBe` Right (Just (Just "inventory/roland-juno.jpg"))
+
+    it "rejects malformed explicit photo updates instead of silently ignoring them" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute http(s) URL or an inventory asset path"
+            Right value ->
+              expectationFailure ("Expected invalid asset photo update error, got " <> show value)
+      assertInvalid (validateAssetPhotoUrlUpdate (Just "roland-juno.jpg"))
+      assertInvalid (validateAssetPhotoUrlUpdate (Just "ftp://cdn.example.com/roland.jpg"))
+
+  describe "normalizeAssetNotesUpdate" $ do
+    it "preserves omitted notes, trims meaningful updates, and maps blanks to an explicit clear" $ do
+      normalizeAssetNotesUpdate Nothing `shouldBe` Nothing
+      normalizeAssetNotesUpdate (Just "  Analog poly synth  ")
+        `shouldBe` Just (Just "Analog poly synth")
+      normalizeAssetNotesUpdate (Just "   ") `shouldBe` Just Nothing
 
   describe "normalizeRoomName" $ do
     it "trims meaningful room names on create and update" $ do

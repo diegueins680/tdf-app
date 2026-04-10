@@ -227,14 +227,15 @@ inventoryServer user =
       nameUpdate <- either throwError pure (normalizeAssetNameUpdate (uName req))
       categoryUpdate <- either throwError pure (normalizeAssetCategoryUpdate (uCategory req))
       statusValue <- either throwError pure (validateAssetStatusUpdate (uStatus req))
-      photoUrlValue <- either throwError pure (validateAssetPhotoUrl (uPhotoUrl req))
+      let notesUpdate = normalizeAssetNotesUpdate (uNotes req)
+      photoUrlUpdate <- either throwError pure (validateAssetPhotoUrlUpdate (uPhotoUrl req))
       let updates = catMaybes
             [ (AssetName =.) <$> nameUpdate
             , (AssetCategory =.) <$> categoryUpdate
             , (AssetStatus =.) <$> statusValue
             , fmap (\rid -> AssetLocationId =. Just rid) locationKey
-            , fmap (\noteTxt -> AssetNotes =. Just noteTxt) (uNotes req)
-            , fmap (\url -> AssetPhotoUrl =. Just url) photoUrlValue
+            , (AssetNotes =.) <$> notesUpdate
+            , (AssetPhotoUrl =.) <$> photoUrlUpdate
             ]
       result <- withPool $ do
         mEntity <- getEntity assetKey
@@ -1009,6 +1010,15 @@ validateAssetPhotoUrl (Just rawUrl) =
             { errBody = "photoUrl must be an absolute http(s) URL or an inventory asset path"
             }
 
+validateAssetPhotoUrlUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))
+validateAssetPhotoUrlUpdate Nothing = Right Nothing
+validateAssetPhotoUrlUpdate (Just rawUrl) =
+  case normalizeOptionalTextField (Just rawUrl) of
+    Nothing ->
+      Right (Just Nothing)
+    Just _ ->
+      Just <$> validateAssetPhotoUrl (Just rawUrl)
+
 normalizeAssetPhotoPath :: Text -> Maybe Text
 normalizeAssetPhotoPath rawPath =
   let trimmed = T.strip rawPath
@@ -1345,6 +1355,11 @@ normalizeOptionalTextField Nothing = Nothing
 normalizeOptionalTextField (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+normalizeAssetNotesUpdate :: Maybe Text -> Maybe (Maybe Text)
+normalizeAssetNotesUpdate Nothing = Nothing
+normalizeAssetNotesUpdate (Just rawNotes) =
+  Just (normalizeOptionalTextField (Just rawNotes))
 
 normalizeAssetCheckinFields :: AssetCheckinRequest -> (Maybe Text, Maybe Text)
 normalizeAssetCheckinFields AssetCheckinRequest{..} =
