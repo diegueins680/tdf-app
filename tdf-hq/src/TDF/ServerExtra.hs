@@ -154,8 +154,8 @@ inventoryServer user =
 
     listAssets mq mp mps = do
       ensureInventoryAccess
-      let pageNum    = clampPage (fromMaybe 1 mp)
-          pageSize'  = clampPageSize (fromMaybe 50 mps)
+      (pageNum, pageSize') <- either throwError pure (validateInventoryPageParams mp mps)
+      let
           pageOffset = (pageNum - 1) * pageSize'
       entities <- withPool $ selectList ([] :: [Filter Asset]) [Asc AssetName]
       let filteredEntities = filterAssetsByQuery mq entities
@@ -1258,6 +1258,20 @@ serviceCatalogToDTO (Entity key svc) = ServiceCatalogDTO
 mkPage :: Int -> Int -> Int -> [a] -> Page a
 mkPage current size totalCount values =
   Page { items = values, page = current, pageSize = size, total = totalCount }
+
+validateInventoryPageParams :: Maybe Int -> Maybe Int -> Either ServerError (Int, Int)
+validateInventoryPageParams mPage mPageSize = do
+  pageNum <- case mPage of
+    Nothing -> Right 1
+    Just n
+      | n < 1 -> Left err400 { errBody = "page must be greater than or equal to 1" }
+      | otherwise -> Right n
+  pageSize <- case mPageSize of
+    Nothing -> Right 50
+    Just n
+      | n < 1 || n > 100 -> Left err400 { errBody = "pageSize must be between 1 and 100" }
+      | otherwise -> Right n
+  pure (pageNum, pageSize)
 
 clampPage :: Int -> Int
 clampPage = max 1
