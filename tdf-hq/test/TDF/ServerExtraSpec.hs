@@ -36,6 +36,7 @@ import TDF.ServerExtra (
     normalizeRoomNameUpdate,
     validateSocialLimit,
     validatePaymentAmountCents,
+    validatePaymentAttachmentUrl,
     parseCheckoutTargetKind,
     parseOptionalKeyField,
     validatePaymentCurrency,
@@ -262,6 +263,23 @@ spec = do
               expectationFailure ("Expected invalid payment amount error, got " <> show value)
       assertInvalid (validatePaymentAmountCents 0)
       assertInvalid (validatePaymentAmountCents (-500))
+
+  describe "validatePaymentAttachmentUrl" $ do
+    it "treats omitted or blank attachment URLs as absent and trims valid URLs" $ do
+      validatePaymentAttachmentUrl Nothing `shouldBe` Right Nothing
+      validatePaymentAttachmentUrl (Just "   ") `shouldBe` Right Nothing
+      validatePaymentAttachmentUrl (Just "  https://files.example.com/proof.pdf  ")
+        `shouldBe` Right (Just "https://files.example.com/proof.pdf")
+
+    it "rejects malformed payment attachment URLs instead of storing unusable links" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "attachmentUrl must be an absolute http(s) URL"
+            Right value ->
+              expectationFailure ("Expected invalid payment attachment URL error, got " <> show value)
+      assertInvalid (validatePaymentAttachmentUrl (Just "proof.pdf"))
+      assertInvalid (validatePaymentAttachmentUrl (Just "https://files.example.com/proof copy.pdf"))
 
   describe "validatePaymentConcept" $ do
     it "trims meaningful concepts before storing manual payment rows" $ do

@@ -70,6 +70,7 @@ import qualified TDF.Models                 as M
 import           TDF.ModelsExtra
 import qualified TDF.ModelsExtra as ME
 import           TDF.Pipelines              (canonicalStage, defaultStage, pipelineStages, pipelineTypeSlug, parsePipelineType)
+import qualified TDF.Trials.Server          as TrialsServer (isValidHttpUrl)
 import qualified TDF.Handlers.InputList     as InputList
 
 -- Helpers for simple date parsing (YYYY-MM-DD)
@@ -1354,6 +1355,7 @@ paymentsServer user =
       _ <- either throwError pure (validatePaymentCurrency pcCurrency)
       conceptVal <- either throwError pure (validatePaymentConcept pcConcept)
       paymentMethodVal <- either throwError pure (validatePaymentMethod pcMethod)
+      attachmentUrl <- either throwError pure (validatePaymentAttachmentUrl pcAttachmentUrl)
       now <- liftIO getCurrentTime
       let partyKey   = toSqlKey pcPartyId
           mOrderKey  = toSqlKey <$> pcOrderId
@@ -1366,10 +1368,10 @@ paymentsServer user =
           , paymentMethod      = paymentMethodVal
           , paymentAmountCents = amountCents
           , paymentReceivedAt  = paidAt
-          , paymentReference   = pcReference
+          , paymentReference   = normalizeOptionalTextField pcReference
           , paymentConcept     = Just conceptVal
-          , paymentPeriod      = pcPeriod
-          , paymentAttachment  = pcAttachmentUrl
+          , paymentPeriod      = normalizeOptionalTextField pcPeriod
+          , paymentAttachment  = attachmentUrl
           , paymentCreatedBy   = Just (auPartyId user)
           , paymentCreatedAt   = Just now
           }
@@ -1450,6 +1452,16 @@ validatePaymentCurrency rawCurrency =
   in if normalized == "USD"
        then Right normalized
        else Left err400 { errBody = "Only USD manual payments are currently supported" }
+
+validatePaymentAttachmentUrl :: Maybe Text -> Either ServerError (Maybe Text)
+validatePaymentAttachmentUrl Nothing = Right Nothing
+validatePaymentAttachmentUrl (Just rawUrl) =
+  case normalizeOptionalTextField (Just rawUrl) of
+    Nothing -> Right Nothing
+    Just attachmentUrl
+      | TrialsServer.isValidHttpUrl attachmentUrl -> Right (Just attachmentUrl)
+      | otherwise ->
+          Left err400 { errBody = "attachmentUrl must be an absolute http(s) URL" }
 
 data MetaChannel = MetaInstagram | MetaFacebook
   deriving (Eq, Show)
