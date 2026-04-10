@@ -86,6 +86,8 @@ const getContactLines = (user: Pick<NormalizedUser, 'email' | 'phone'>) =>
   );
 
 const ROLE_MANAGEMENT_INTRO = 'Revisa el acceso actual y ajusta roles sin salir de esta tabla.';
+const ALL_ACTIVE_STATUS_SUMMARY =
+  'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.';
 
 export default function UserRoleManagement() {
   const [users, setUsers] = useState<NormalizedUser[]>([]);
@@ -96,6 +98,7 @@ export default function UserRoleManagement() {
   const [selectedRoles, setSelectedRoles] = useState<RoleValue[]>([]);
   const [saving, setSaving] = useState(false);
   const showContactColumn = users.some((user) => getContactLines(user).length > 0);
+  const showStatusColumn = users.some((user) => user.status === 'Inactive');
 
   useEffect(() => {
     void loadUsers();
@@ -202,13 +205,18 @@ export default function UserRoleManagement() {
               para revisar.
             </Typography>
           )}
+          {!showStatusColumn && (
+            <Typography variant="body2" color="text.secondary">
+              {ALL_ACTIVE_STATUS_SUMMARY}
+            </Typography>
+          )}
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
                   <TableCell>Usuario</TableCell>
                   {showContactColumn && <TableCell>Contacto</TableCell>}
-                  <TableCell>Estado</TableCell>
+                  {showStatusColumn && <TableCell>Estado</TableCell>}
                   <TableCell>Roles y edición</TableCell>
                 </TableRow>
               </TableHead>
@@ -245,9 +253,11 @@ export default function UserRoleManagement() {
                           )}
                         </TableCell>
                       )}
-                      <TableCell>
-                        <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
-                      </TableCell>
+                      {showStatusColumn && (
+                        <TableCell>
+                          <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Stack spacing={1} alignItems="flex-start">
                           <Box display="flex" gap={0.5} flexWrap="wrap">

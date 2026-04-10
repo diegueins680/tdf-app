@@ -166,8 +166,12 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles y edición']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles y edición']);
         expect(container.textContent).toContain('Revisa el acceso actual y ajusta roles sin salir de esta tabla.');
+        expect(container.textContent).toContain(
+          'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.',
+        );
+        expect(container.textContent).not.toContain('Active');
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
         expect(adaRow.textContent).toContain('ID 101');
@@ -217,11 +221,15 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Estado', 'Roles y edición']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Roles y edición']);
         expect(container.textContent).toContain(
           'Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato para revisar.',
         );
+        expect(container.textContent).toContain(
+          'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.',
+        );
         expect(container.textContent).not.toContain('Sin email ni teléfono');
+        expect(container.textContent).not.toContain('Active');
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
         expect(adaRow.textContent).toContain('ID 201');
@@ -251,15 +259,55 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles y edición']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles y edición']);
         expect(container.textContent).toContain('Roles y permisos');
         expect(container.textContent).toContain('Revisa el acceso actual y ajusta roles sin salir de esta tabla.');
+        expect(container.textContent).toContain(
+          'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.',
+        );
         expect(container.textContent).not.toContain('Acciones');
+        expect(container.textContent).not.toContain('Active');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
         expect(graceRow.textContent).toContain('Admin');
         expect(graceRow.textContent).toContain('Manager');
         expect(graceRow.textContent).toContain('Editar roles');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows the status column only when at least one administrable user is inactive', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 401,
+        name: 'Ada Lovelace',
+        status: 'Active',
+      }),
+      buildUser({
+        id: 402,
+        name: 'Grace Hopper',
+        status: 'Inactive',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles y edición']);
+        expect(container.textContent).not.toContain(
+          'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.',
+        );
+
+        const adaRow = getRowByName(container, 'Ada Lovelace');
+        expect(adaRow.textContent).toContain('Active');
+
+        const graceRow = getRowByName(container, 'Grace Hopper');
+        expect(graceRow.textContent).toContain('Inactive');
       });
     } finally {
       await cleanup();
