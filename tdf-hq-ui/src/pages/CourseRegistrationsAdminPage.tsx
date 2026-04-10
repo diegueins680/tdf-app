@@ -63,6 +63,7 @@ const hideSystemEmailsLabel = 'Ocultar correos del sistema';
 const systemEmailHistoryHelperText = 'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
 const emptySystemEmailHistoryMessage = 'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
+const markPaidEmptyFollowUpHelperText = 'Agrega seguimiento solo si necesitas dejar contexto manual aparte del comprobante o del cambio de estado.';
 const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Guárdalo y aparecerá en el historial para revisarlo después.';
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
@@ -1272,7 +1273,12 @@ export default function CourseRegistrationsAdminPage() {
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
-  const followUpSectionTitle = followUps.length > 0
+  const showCompactMarkPaidFollowUpState = selectedDossier?.intent === 'markPaid'
+    && followUps.length === 0
+    && !showFollowUpComposer;
+  const followUpSectionTitle = showCompactMarkPaidFollowUpState
+    ? 'Seguimiento (opcional)'
+    : followUps.length > 0
     ? 'Historial de seguimiento'
     : isCreatingFirstFollowUp
       ? 'Primer seguimiento'
@@ -2397,7 +2403,16 @@ export default function CourseRegistrationsAdminPage() {
                       {showFollowUpHistoryPane && (
                         <Grid item xs={12} md={showFollowUpComposer ? 6 : 12} data-testid="course-registration-follow-up-list-pane">
                           <Stack spacing={1.5}>
-                            {followUps.length === 0 && !showFollowUpComposer && (
+                            {showCompactMarkPaidFollowUpState ? (
+                              <Stack spacing={0.75} alignItems="flex-start">
+                                <Typography variant="body2" color="text.secondary">
+                                  {markPaidEmptyFollowUpHelperText}
+                                </Typography>
+                                <Button size="small" variant="text" onClick={() => setShowFollowUpComposer(true)}>
+                                  Agregar seguimiento opcional
+                                </Button>
+                              </Stack>
+                            ) : followUps.length === 0 && !showFollowUpComposer ? (
                               <Alert
                                 severity="info"
                                 action={(
@@ -2408,7 +2423,7 @@ export default function CourseRegistrationsAdminPage() {
                               >
                                 {emptyFollowUpAlertMessage}
                               </Alert>
-                            )}
+                            ) : null}
                             {followUps.map((entry) => (
                               <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
                                 <Stack spacing={1}>
