@@ -720,7 +720,7 @@ whatsappMessagesServer :: AuthedUser -> ServerT Api.WhatsAppMessagesAPI AppM
 whatsappMessagesServer user mLimit mDirection mRepliedOnly = do
   unless (hasSocialInboxAccess user) $
     throwError err403 { errBody = "Missing required module access" }
-  let limit = normalizeLimit mLimit
+  limit <- either throwError pure (validateWhatsAppMessagesLimit mLimit)
   direction <- parseDirectionParam mDirection
   repliedOnly <- parseBoolParam mRepliedOnly
   let filters =
@@ -987,8 +987,12 @@ whatsappConsentRoutes defaultSource requireGate =
       mRow <- runDB $ getBy (ME.UniqueWhatsAppConsent phoneVal)
       pure (toStatus phoneVal mRow)
 
-normalizeLimit :: Maybe Int -> Int
-normalizeLimit = max 1 . min 200 . fromMaybe 100
+validateWhatsAppMessagesLimit :: Maybe Int -> Either ServerError Int
+validateWhatsAppMessagesLimit Nothing = Right 100
+validateWhatsAppMessagesLimit (Just rawLimit)
+  | rawLimit < 1 || rawLimit > 200 =
+      Left err400 { errBody = "limit must be between 1 and 200" }
+  | otherwise = Right rawLimit
 
 parseBoolParam :: Maybe Text -> AppM Bool
 parseBoolParam Nothing = pure False

@@ -20,6 +20,7 @@ import TDF.Server
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
     , parsePaymentMethodText
+    , validateWhatsAppMessagesLimit
     , validateBookingListFilters
     , validatePublicBookingDurationMinutes
     , validateRolePayload
@@ -117,6 +118,23 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "bookingId must be a positive integer" (validateBookingListFilters (Just 0) Nothing Nothing)
             assertInvalid "partyId must be a positive integer" (validateBookingListFilters Nothing (Just (-1)) Nothing)
             assertInvalid "engineerPartyId must be a positive integer" (validateBookingListFilters Nothing Nothing (Just 0))
+
+    describe "validateWhatsAppMessagesLimit" $ do
+        it "defaults omitted limits and preserves explicit values inside the supported page window" $ do
+            validateWhatsAppMessagesLimit Nothing `shouldBe` Right 100
+            validateWhatsAppMessagesLimit (Just 1) `shouldBe` Right 1
+            validateWhatsAppMessagesLimit (Just 200) `shouldBe` Right 200
+
+        it "rejects out-of-range limits instead of silently clamping WhatsApp inbox queries" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "limit must be between 1 and 200"
+                    Right limitVal ->
+                        expectationFailure ("Expected invalid WhatsApp messages limit to be rejected, got: " <> show limitVal)
+            assertInvalid (validateWhatsAppMessagesLimit (Just 0))
+            assertInvalid (validateWhatsAppMessagesLimit (Just 201))
+            assertInvalid (validateWhatsAppMessagesLimit (Just (-5)))
 
     describe "validateCmsContentStatus" $ do
         it "defaults omitted status to draft and normalizes supported explicit values" $ do
