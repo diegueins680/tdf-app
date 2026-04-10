@@ -128,17 +128,21 @@ describe('AdminConsolePage', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
+      screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
         /Aquí aparecerán los usuarios administrables\. Cuando exista el primero, podrás editar sus roles desde esta misma vista\./i,
       ),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByText(
+      screen.queryByText(
         /Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo\./i,
       ),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
+      screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),

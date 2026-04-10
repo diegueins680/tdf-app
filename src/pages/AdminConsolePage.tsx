@@ -292,12 +292,6 @@ export default function AdminConsolePage() {
   const showUsersTable = isUsersLoading || users.length > 1;
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const showAuditTable = auditQuery.isLoading || audits.length > 1;
-  const usersSectionDescription = showUsersTable || singleAdminUser
-    ? 'Haz clic sobre un rol para editarlo desde esta misma vista.'
-    : 'Aquí aparecerán los usuarios administrables. Cuando exista el primero, podrás editar sus roles desde esta misma vista.';
-  const auditSectionDescription = showAuditTable || singleAuditEntry
-    ? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
-    : 'Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo.';
   const showGettingStartedGuidance =
     !consoleQuery.isPending
     && !usersQuery.isLoading
@@ -305,6 +299,20 @@ export default function AdminConsolePage() {
     && consoleCards.length === 0
     && users.length === 0
     && audits.length === 0;
+  const usersSectionDescription = showGettingStartedGuidance
+    ? null
+    : (
+      showUsersTable || singleAdminUser
+        ? 'Haz clic sobre un rol para editarlo desde esta misma vista.'
+        : 'Aquí aparecerán los usuarios administrables. Cuando exista el primero, podrás editar sus roles desde esta misma vista.'
+    );
+  const auditSectionDescription = showGettingStartedGuidance
+    ? null
+    : (
+      showAuditTable || singleAuditEntry
+        ? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
+        : 'Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo.'
+    );
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
@@ -512,9 +520,11 @@ export default function AdminConsolePage() {
         <Box sx={{ px: 2, py: 1 }}>
           <Box>
             <Typography variant="h6">Usuarios y roles</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {usersSectionDescription}
-            </Typography>
+            {usersSectionDescription && (
+              <Typography variant="body2" color="text.secondary">
+                {usersSectionDescription}
+              </Typography>
+            )}
           </Box>
         </Box>
         {usersError && (
@@ -661,9 +671,11 @@ export default function AdminConsolePage() {
       <Paper variant="outlined" id="admin-recent-audit">
         <Box sx={{ px: 2, py: 1 }}>
           <Typography variant="h6">Auditoría reciente</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {auditSectionDescription}
-          </Typography>
+          {auditSectionDescription && (
+            <Typography variant="body2" color="text.secondary">
+              {auditSectionDescription}
+            </Typography>
+          )}
         </Box>
         {auditQuery.isError && (
           <Alert severity="error" sx={{ mx: 2 }}>
