@@ -115,7 +115,7 @@ validateRadioAuthority rawAuthority
       | T.isInfixOf ":::" host = Left err400 { errBody = "streamUrl must include a valid host" }
       | T.any (not . isValidBracketedHostChar) host =
           Left err400 { errBody = "streamUrl must include a valid host" }
-      | otherwise = Right ()
+      | otherwise = validatePublicRadioHost host
       where
         isValidBracketedHostChar c = isHexDigit c || c == ':' || c == '.'
 
@@ -125,7 +125,7 @@ validateRadioAuthority rawAuthority
           Left err400 { errBody = "streamUrl must include a valid host" }
       | any invalidHostLabel (T.splitOn "." host) =
           Left err400 { errBody = "streamUrl must include a valid host" }
-      | otherwise = Right ()
+      | otherwise = validatePublicRadioHost host
       where
         invalidHostLabel label =
           T.null label
@@ -148,6 +148,76 @@ validateRadioAuthority rawAuthority
                    Left err400 { errBody = "streamUrl port must be between 1 and 65535" }
       | otherwise =
           Left err400 { errBody = "streamUrl must include a valid host" }
+
+validatePublicRadioHost :: Text -> Either ServerError ()
+validatePublicRadioHost rawHost
+  | normalized == "localhost" || ".localhost" `T.isSuffixOf` normalized =
+      Left privateRadioHostError
+  | Just octets <- parseIpv4Octets normalized
+  , isPrivateIpv4 octets =
+      Left privateRadioHostError
+  | Just octets <- trailingIpv4Octets normalized
+  , isPrivateIpv4 octets =
+      Left privateRadioHostError
+  | isPrivateIpv6 normalized =
+      Left privateRadioHostError
+  | otherwise =
+      Right ()
+  where
+    normalized = T.toLower rawHost
+    privateRadioHostError =
+      err400 { errBody = "streamUrl must not target localhost or private network addresses" }
+
+parseIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
+parseIpv4Octets host =
+  case T.splitOn "." host of
+    [a, b, c, d] -> do
+      oa <- parseOctet a
+      ob <- parseOctet b
+      oc <- parseOctet c
+      od <- parseOctet d
+      pure (oa, ob, oc, od)
+    _ -> Nothing
+  where
+    parseOctet octet
+      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | otherwise = do
+          value <- readMaybe (T.unpack octet)
+          if value >= 0 && value <= 255
+            then Just value
+            else Nothing
+
+trailingIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
+trailingIpv4Octets host =
+  let suffix = T.takeWhileEnd (/= ':') host
+  in if T.any (== '.') suffix
+       then parseIpv4Octets suffix
+       else Nothing
+
+isPrivateIpv4 :: (Int, Int, Int, Int) -> Bool
+isPrivateIpv4 (a, b, _, _) =
+  a == 0
+    || a == 10
+    || a == 127
+    || (a == 100 && b >= 64 && b <= 127)
+    || (a == 169 && b == 254)
+    || (a == 172 && b >= 16 && b <= 31)
+    || (a == 192 && b == 168)
+
+isPrivateIpv6 :: Text -> Bool
+isPrivateIpv6 host =
+  host == "::"
+    || host == "::1"
+    || isUniqueLocal firstSegment
+    || isLinkLocal firstSegment
+  where
+    firstSegment = T.takeWhile (/= ':') host
+
+    isUniqueLocal segment =
+      "fc" `T.isPrefixOf` segment || "fd" `T.isPrefixOf` segment
+
+    isLinkLocal segment =
+      any (`T.isPrefixOf` segment) ["fe8", "fe9", "fea", "feb"]
 
 validateRadioImportLimit :: Maybe Int -> Either ServerError Int
 validateRadioImportLimit = validateRadioBatchLimit 800

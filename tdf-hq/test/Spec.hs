@@ -579,6 +579,24 @@ main = hspec $ do
             assertInvalid "https://radio..example.com/live"
             assertInvalid "https://radio.example.com./live"
 
+        it "rejects localhost and private-network targets before the server fetches them" $ do
+            let assertPrivateTarget rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "streamUrl must not target localhost or private network addresses"
+                        Right value ->
+                            expectationFailure
+                                ("Expected private streamUrl target to be rejected, got " <> show value)
+            assertPrivateTarget "https://localhost/live"
+            assertPrivateTarget "https://radio.localhost/live"
+            assertPrivateTarget "https://127.0.0.1/live"
+            assertPrivateTarget "https://192.168.1.23/live"
+            assertPrivateTarget "https://[::1]/live"
+            assertPrivateTarget "https://[fd12::1234]/live"
+            assertPrivateTarget "https://[::ffff:127.0.0.1]/live"
+
         it "rejects authorities that embed user info instead of storing credential-like stream URLs" $
             case validateRadioStreamUrl "https://dj@radio.example.com/live" of
                 Left err -> do
