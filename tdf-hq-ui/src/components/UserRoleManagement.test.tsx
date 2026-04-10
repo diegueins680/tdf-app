@@ -76,6 +76,13 @@ const buildUser = (overrides: Partial<UserSummary> = {}): UserSummary => ({
 const getHeaders = (container: HTMLElement) =>
   Array.from(container.querySelectorAll('thead th')).map((cell) => (cell.textContent ?? '').replace(/\s+/g, ' ').trim());
 
+const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+const getButtonsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('button, a')).filter(
+    (element) => buttonText(element) === labelText || element.getAttribute('aria-label') === labelText,
+  );
+
 const getRowByName = (container: HTMLElement, name: string) => {
   const row = Array.from(container.querySelectorAll('tbody tr')).find((element) =>
     (element.textContent ?? '').includes(name),
@@ -286,6 +293,50 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Editar roles de Grace Hopper');
         expect(document.body.textContent).toContain('Guardar');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps save disabled until the admin makes a real role change', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 302,
+        name: 'Linus QA',
+        email: 'linus@example.com',
+        roles: ['Admin', 'Manager'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+        expect(editButton).not.toBeNull();
+      });
+
+      const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+      if (!(editButton instanceof HTMLButtonElement)) {
+        throw new Error('Edit roles button not found');
+      }
+
+      await act(async () => {
+        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain(
+          'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.',
+        );
+        const saveButton = getButtonsByText(document.body, 'Guardar cambios')[0];
+        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
+        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+        expect(updateUserRolesMock).not.toHaveBeenCalled();
       });
     } finally {
       await cleanup();

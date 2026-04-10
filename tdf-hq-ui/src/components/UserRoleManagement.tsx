@@ -17,6 +17,7 @@ import {
   Select,
   MenuItem,
   FormControl,
+  FormHelperText,
   InputLabel,
   OutlinedInput,
   CircularProgress,
@@ -85,6 +86,24 @@ const getContactLines = (user: Pick<NormalizedUser, 'email' | 'phone'>) =>
     (value): value is string => value != null,
   );
 
+const normalizeRoleSelection = (roles?: readonly RoleValue[] | null) =>
+  Array.from(new Set((roles ?? []).map((role) => role.trim()).filter(Boolean)))
+    .sort((left, right) => left.localeCompare(right));
+
+const hasRoleSelectionChanged = (
+  currentRoles?: readonly RoleValue[] | null,
+  nextRoles?: readonly RoleValue[] | null,
+) => {
+  const normalizedCurrentRoles = normalizeRoleSelection(currentRoles);
+  const normalizedNextRoles = normalizeRoleSelection(nextRoles);
+
+  if (normalizedCurrentRoles.length !== normalizedNextRoles.length) {
+    return true;
+  }
+
+  return normalizedCurrentRoles.some((role, index) => role !== normalizedNextRoles[index]);
+};
+
 const ROLE_MANAGEMENT_INTRO = 'Haz clic sobre los roles para editarlos sin salir de esta tabla.';
 
 const buildRoleManagementSummary = ({
@@ -123,6 +142,9 @@ export default function UserRoleManagement() {
   const showContactColumn = users.some((user) => getContactLines(user).length > 0);
   const showStatusColumn = users.some((user) => user.status === 'Inactive');
   const roleManagementSummary = buildRoleManagementSummary({ showContactColumn, showStatusColumn });
+  const hasPendingRoleChanges = selectedUser
+    ? hasRoleSelectionChanged(selectedUser.roles, selectedRoles)
+    : false;
 
   useEffect(() => {
     void loadUsers();
@@ -169,7 +191,7 @@ export default function UserRoleManagement() {
   };
 
   const handleSaveRoles = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || !hasPendingRoleChanges) return;
 
     try {
       setSaving(true);
@@ -325,14 +347,19 @@ export default function UserRoleManagement() {
                 </MenuItem>
               ))}
             </Select>
+            <FormHelperText>
+              {hasPendingRoleChanges
+                ? 'Listo para guardar esta actualización de permisos.'
+                : 'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.'}
+            </FormHelperText>
           </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={saving}>
             Cancelar
           </Button>
-          <Button onClick={() => void handleSaveRoles()} variant="contained" disabled={saving}>
-            {saving ? 'Guardando...' : 'Guardar'}
+          <Button onClick={() => void handleSaveRoles()} variant="contained" disabled={saving || !hasPendingRoleChanges}>
+            {saving ? 'Guardando...' : 'Guardar cambios'}
           </Button>
         </DialogActions>
       </Dialog>
