@@ -16,8 +16,15 @@ import Servant (ServerError (errBody, errHTTPCode), (:<|>) ((:<|>)))
 import Test.Hspec
 
 import TDF.Auth (AuthedUser (..), modulesForRoles)
-import TDF.Trials.DTO (PreferredSlot (..), TrialAssignIn (..), TrialRequestOut (..), TrialScheduleIn (..))
-import TDF.Trials.API (InterestIn (..))
+import TDF.Trials.DTO
+  ( ClassSessionDTO
+  , ClassSessionUpdate (..)
+  , PreferredSlot (..)
+  , TrialAssignIn (..)
+  , TrialRequestOut (..)
+  , TrialScheduleIn (..)
+  )
+import TDF.Trials.API (ClassSessionIn (..), ClassSessionOut, InterestIn (..))
 import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
@@ -514,6 +521,139 @@ spec = do
           Trials.trialAssignmentStartAt storedAssignment `shouldBe` newStart
           Trials.trialAssignmentEndAt storedAssignment `shouldBe` newEnd
 
+  describe "private class session validation" $ do
+    it "rejects creating a class with a non-teacher party instead of storing an invalid teacher assignment" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let classStart = addUTCTime 3600 now
+            classEnd = addUTCTime 7200 now
+        nonTeacherPartyId <- insertPartyFixture "Student Helper" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        privateCreateClassHandler
+          (ClassSessionIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey nonTeacherPartyId))
+            (fromIntegral (fromSqlKey subjectKey))
+            classStart
+            classEnd
+            (fromIntegral (fromSqlKey roomResourceId))
+            Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
+        Right _ ->
+          expectationFailure "Expected non-teacher parties to be rejected for class creation"
+
+    it "rejects creating a class in a non-room resource instead of treating any resource as a sala" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let classStart = addUTCTime 3600 now
+            classEnd = addUTCTime 7200 now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        nonRoomResourceId <- insertResourceFixture "PA Rack" "pa-rack" Models.Equipment
+        subjectKey <- insert (Subject "Piano" True)
+        privateCreateClassHandler
+          (ClassSessionIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey teacherPartyId))
+            (fromIntegral (fromSqlKey subjectKey))
+            classStart
+            classEnd
+            (fromIntegral (fromSqlKey nonRoomResourceId))
+            Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no es una sala"
+        Right _ ->
+          expectationFailure "Expected non-room resources to be rejected for class creation"
+
+    it "rejects updating a class to a non-teacher party instead of storing an invalid teacher assignment" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let classStart = addUTCTime 3600 now
+            classEnd = addUTCTime 7200 now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
+        nonTeacherPartyId <- insertPartyFixture "Student Helper" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        classSessionKey <- insert Trials.ClassSession
+          { Trials.classSessionStudentId = studentPartyId
+          , Trials.classSessionTeacherId = teacherPartyId
+          , Trials.classSessionSubjectId = subjectKey
+          , Trials.classSessionStartAt = classStart
+          , Trials.classSessionEndAt = classEnd
+          , Trials.classSessionRoomId = roomResourceId
+          , Trials.classSessionBookingId = Nothing
+          , Trials.classSessionAttended = False
+          , Trials.classSessionPurchaseId = Nothing
+          , Trials.classSessionConsumedMinutes = 60
+          , Trials.classSessionNotes = Nothing
+          }
+        privateUpdateClassHandler
+          (fromIntegral (fromSqlKey classSessionKey))
+          (ClassSessionUpdate
+            (Just (fromIntegral (fromSqlKey nonTeacherPartyId)))
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
+        Right _ ->
+          expectationFailure "Expected non-teacher parties to be rejected for class updates"
+
+    it "rejects updating a class to a non-room resource instead of accepting an impossible room reference" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let classStart = addUTCTime 3600 now
+            classEnd = addUTCTime 7200 now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        nonRoomResourceId <- insertResourceFixture "PA Rack" "pa-rack" Models.Equipment
+        subjectKey <- insert (Subject "Piano" True)
+        classSessionKey <- insert Trials.ClassSession
+          { Trials.classSessionStudentId = studentPartyId
+          , Trials.classSessionTeacherId = teacherPartyId
+          , Trials.classSessionSubjectId = subjectKey
+          , Trials.classSessionStartAt = classStart
+          , Trials.classSessionEndAt = classEnd
+          , Trials.classSessionRoomId = roomResourceId
+          , Trials.classSessionBookingId = Nothing
+          , Trials.classSessionAttended = False
+          , Trials.classSessionPurchaseId = Nothing
+          , Trials.classSessionConsumedMinutes = 60
+          , Trials.classSessionNotes = Nothing
+          }
+        privateUpdateClassHandler
+          (fromIntegral (fromSqlKey classSessionKey))
+          (ClassSessionUpdate
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            (Just (fromIntegral (fromSqlKey nonRoomResourceId)))
+            Nothing
+            Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no es una sala"
+        Right _ ->
+          expectationFailure "Expected non-room resources to be rejected for class updates"
+
 runInMemory :: SqlPersistT IO a -> IO a
 runInMemory action =
   runStdoutLoggingT $ do
@@ -709,6 +849,18 @@ privateAssignHandler :: Int -> TrialAssignIn -> SqlPersistT IO TrialRequestOut
 privateAssignHandler =
   let _ :<|> assignH :<|> _ :<|> _ = privateTrialsServer adminUser
   in assignH
+
+privateCreateClassHandler :: ClassSessionIn -> SqlPersistT IO ClassSessionOut
+privateCreateClassHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> createH :<|> _ =
+        privateTrialsServer adminUser
+  in createH
+
+privateUpdateClassHandler :: Int -> ClassSessionUpdate -> SqlPersistT IO ClassSessionDTO
+privateUpdateClassHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> updateH :<|> _ =
+        privateTrialsServer adminUser
+  in updateH
 
 insertPartyFixture :: Text -> UTCTime -> SqlPersistT IO Models.PartyId
 insertPartyFixture displayName now =

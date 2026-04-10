@@ -1243,6 +1243,8 @@ privateTrialsServer user@AuthedUser{..} =
           isSelfTeacher = teacherKey == auPartyId
       unless (isSchoolStaff || isSelfTeacher) $
         liftIO $ throwIO err403
+      ensureTeacherSelection teacherKey
+      ensureSchedulableRoom roomKey
       when (isSelfTeacher && not isSchoolStaff) $ do
         ensureTeacherSubject teacherKey subjectKey
         ownsStudent <- teacherOwnsStudent teacherKey studentKey
@@ -1295,6 +1297,8 @@ privateTrialsServer user@AuthedUser{..} =
               newStudent = maybe (Trials.classSessionStudentId sess) intKey studentId
           when (newEnd <= newStart) $
             liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
+          ensureTeacherSelection newTeacher
+          ensureSchedulableRoom newRoom
           when (isSelfTeacher && not isSchoolStaff) $ do
             ensureTeacherSubject newTeacher newSubject
             ownsStudent <- teacherOwnsStudent newTeacher newStudent
