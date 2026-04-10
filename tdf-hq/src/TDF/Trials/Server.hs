@@ -439,6 +439,15 @@ validatePublicSubjectIdInput subjectIdInt
   | otherwise =
       Right subjectIdInt
 
+validateTrialAssignInput :: Int -> TrialAssignIn -> Either ServerError (Int, TrialAssignIn)
+validateTrialAssignInput requestIdInt input@TrialAssignIn{..}
+  | requestIdInt <= 0 =
+      Left err400 { errBody = "requestId must be a positive integer" }
+  | teacherId <= 0 =
+      Left err400 { errBody = "teacherId must be a positive integer" }
+  | otherwise =
+      Right (requestIdInt, input)
+
 validateTrialScheduleInput :: TrialScheduleIn -> Either ServerError TrialScheduleIn
 validateTrialScheduleInput input@TrialScheduleIn{..}
   | requestId <= 0 =
@@ -829,8 +838,9 @@ privateTrialsServer user@AuthedUser{..} =
       pure (map (trialRequestToQueueItem subjects parties) requests)
 
     assignH :: Int -> TrialAssignIn -> AppM TrialRequestOut
-    assignH requestId TrialAssignIn{..} = do
+    assignH rawRequestId rawInput = do
       ensureSchoolStaffAccess
+      (requestId, TrialAssignIn{..}) <- either (liftIO . throwIO) pure (validateTrialAssignInput rawRequestId rawInput)
       let rid = intKey requestId :: Key TrialRequest
           teacherKey = intKey teacherId :: PartyId
       now <- liftIO getCurrentTime

@@ -270,6 +270,19 @@ spec = do
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
 
   describe "private trial scheduling" $ do
+    it "rejects non-positive assignment identifiers before any lookup so malformed requests return 400" $ do
+      let assertRejected expectedMessage rawRequestId rawTeacherId = do
+            result <- try $ runTrialsInMemory $
+              privateAssignHandler rawRequestId (TrialAssignIn rawTeacherId)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected malformed assignment identifiers to be rejected, got " <> show value)
+      assertRejected "requestId must be a positive integer" 0 42
+      assertRejected "teacherId must be a positive integer" 1 0
+
     it "rejects assigning a trial to a non-teacher party instead of storing an invalid assignedTeacherId" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
