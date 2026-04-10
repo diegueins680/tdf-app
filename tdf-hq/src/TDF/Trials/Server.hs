@@ -21,6 +21,7 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (UTCTime, diffUTCTime, getCurrentTime)
 import           System.IO              (hPutStrLn, stderr)
+import           Text.Read              (readMaybe)
 import           Web.PathPieces         (fromPathPiece, toPathPiece)
 
 import           Network.Wai                     (Request)
@@ -487,6 +488,7 @@ isValidHttpUrl rawUrl
 
     validateAuthority rawAuthority
       | T.null rawAuthority = False
+      | T.any (== '@') rawAuthority = False
       | "[" `T.isPrefixOf` rawAuthority =
           let (hostPart, rest) = T.breakOn "]" rawAuthority
               host = T.drop 1 hostPart
@@ -504,18 +506,77 @@ isValidHttpUrl rawUrl
         && not (T.isPrefixOf "." normalizedHost)
         && not (T.isSuffixOf "." normalizedHost)
         && all isValidEmailDomainLabel (T.splitOn "." normalizedHost)
+        && not (isPrivateHost normalizedHost)
 
     validateBracketedHost host =
       not (T.null host)
         && T.any (== ':') host
         && T.all (`elem` ("0123456789abcdefABCDEF:." :: String)) host
+        && not (isPrivateHost (T.toLower host))
 
     validatePortSuffix suffix
       | T.null suffix = True
       | ":" `T.isPrefixOf` suffix =
           let port = T.drop 1 suffix
-          in not (T.null port) && T.all isDigit port
+          in not (T.null port)
+               && T.all isDigit port
+               && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
+                    (readMaybe (T.unpack port))
       | otherwise = False
+
+    isPrivateHost host =
+      host == "localhost"
+        || ".localhost" `T.isSuffixOf` host
+        || maybe False isPrivateIpv4 (parseIpv4Octets host)
+        || maybe False isPrivateIpv4 (trailingIpv4Octets host)
+        || isPrivateIpv6 host
+
+    parseIpv4Octets host =
+      case T.splitOn "." host of
+        [a, b, c, d] -> do
+          oa <- parseOctet a
+          ob <- parseOctet b
+          oc <- parseOctet c
+          od <- parseOctet d
+          pure (oa, ob, oc, od)
+        _ -> Nothing
+
+    parseOctet octet
+      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | otherwise = do
+          value <- readMaybe (T.unpack octet)
+          if value >= (0 :: Int) && value <= 255
+            then Just value
+            else Nothing
+
+    trailingIpv4Octets host =
+      let suffix = T.takeWhileEnd (/= ':') host
+      in if T.any (== '.') suffix
+           then parseIpv4Octets suffix
+           else Nothing
+
+    isPrivateIpv4 (a, b, _, _) =
+      a == (0 :: Int)
+        || a == 10
+        || a == 127
+        || (a == 100 && b >= 64 && b <= 127)
+        || (a == 169 && b == 254)
+        || (a == 172 && b >= 16 && b <= 31)
+        || (a == 192 && b == 168)
+
+    isPrivateIpv6 host =
+      host == "::"
+        || host == "::1"
+        || isUniqueLocal firstSegment
+        || isLinkLocal firstSegment
+      where
+        firstSegment = T.takeWhile (/= ':') host
+
+        isUniqueLocal segment =
+          "fc" `T.isPrefixOf` segment || "fd" `T.isPrefixOf` segment
+
+        isLinkLocal segment =
+          any (`T.isPrefixOf` segment) ["fe8", "fe9", "fea", "feb"]
 
 validatePublicInterestInput :: InterestIn -> Either ServerError InterestIn
 validatePublicInterestInput (InterestIn rawInterestType rawSubjectId details driveLink) =

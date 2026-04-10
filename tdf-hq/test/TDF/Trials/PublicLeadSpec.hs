@@ -151,6 +151,13 @@ spec = do
           detailsValue `shouldBe` Nothing
           driveLinkValue `shouldBe` Just "https://example.com/file"
 
+    it "accepts public drive links with valid explicit ports" $
+      case validatePublicInterestInput (InterestIn "workshop" Nothing Nothing (Just "https://example.com:8443/file")) of
+        Left err ->
+          expectationFailure ("Expected public driveLink with a valid port to be accepted, got " <> show err)
+        Right (InterestIn _ _ _ driveLinkValue) ->
+          driveLinkValue `shouldBe` Just "https://example.com:8443/file"
+
     it "rejects non-positive subject ids instead of treating them as unavailable subjects" $
       case validatePublicInterestInput (InterestIn "workshop" (Just 0) Nothing Nothing) of
         Left err -> do
@@ -171,6 +178,10 @@ spec = do
       assertRejected "https://example.com/shared file"
       assertRejected "https://drive..example.com/folder"
       assertRejected "https://drive_example.com/folder"
+      assertRejected "http://localhost/folder"
+      assertRejected "http://127.0.0.1/folder"
+      assertRejected "https://[::1]/folder"
+      assertRejected "https://example.com:70000/folder"
 
   describe "validatePublicSubjectIdInput" $ do
     it "accepts positive subject ids" $
