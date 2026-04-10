@@ -154,7 +154,7 @@ inventoryServer user =
 
     listAssets mq mp mps = do
       ensureInventoryAccess
-      (pageNum, pageSize') <- either throwError pure (validateInventoryPageParams mp mps)
+      (pageNum, pageSize') <- either throwError pure (validatePageParams mp mps)
       let
           pageOffset = (pageNum - 1) * pageSize'
       entities <- withPool $ selectList ([] :: [Filter Asset]) [Asc AssetName]
@@ -414,8 +414,8 @@ bandsServer user =
   where
     listBands mp mps = do
       ensureModule ModuleCRM user
-      let pageNum    = clampPage (fromMaybe 1 mp)
-          pageSize'  = clampPageSize (fromMaybe 50 mps)
+      (pageNum, pageSize') <- either throwError pure (validatePageParams mp mps)
+      let
           pageOffset = (pageNum - 1) * pageSize'
           opts       = [Asc BandName, LimitTo pageSize', OffsetBy pageOffset]
       (bandEntities, totalCount, memberEntities, partyEntities) <- withPool $ do
@@ -574,8 +574,8 @@ sessionsServer user =
   where
     listSessions mp mps = do
       ensureModule ModuleScheduling user
-      let pageNum    = clampPage (fromMaybe 1 mp)
-          pageSize'  = clampPageSize (fromMaybe 50 mps)
+      (pageNum, pageSize') <- either throwError pure (validatePageParams mp mps)
+      let
           pageOffset = (pageNum - 1) * pageSize'
           opts       = [Desc SessionStartAt, LimitTo pageSize', OffsetBy pageOffset]
       (sessions, totalCount, roomEntities) <- withPool $ do
@@ -1269,8 +1269,8 @@ mkPage :: Int -> Int -> Int -> [a] -> Page a
 mkPage current size totalCount values =
   Page { items = values, page = current, pageSize = size, total = totalCount }
 
-validateInventoryPageParams :: Maybe Int -> Maybe Int -> Either ServerError (Int, Int)
-validateInventoryPageParams mPage mPageSize = do
+validatePageParams :: Maybe Int -> Maybe Int -> Either ServerError (Int, Int)
+validatePageParams mPage mPageSize = do
   pageNum <- case mPage of
     Nothing -> Right 1
     Just n
@@ -1283,11 +1283,8 @@ validateInventoryPageParams mPage mPageSize = do
       | otherwise -> Right n
   pure (pageNum, pageSize)
 
-clampPage :: Int -> Int
-clampPage = max 1
-
-clampPageSize :: Int -> Int
-clampPageSize = max 1 . min 100
+validateInventoryPageParams :: Maybe Int -> Maybe Int -> Either ServerError (Int, Int)
+validateInventoryPageParams = validatePageParams
 
 normalizeAssetSearchQuery :: Maybe Text -> Maybe Text
 normalizeAssetSearchQuery Nothing = Nothing

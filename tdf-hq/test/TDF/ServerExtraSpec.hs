@@ -71,6 +71,7 @@ import TDF.ServerExtra (
     validateServiceCatalogTaxBps,
     validateServiceCatalogTaxBpsUpdate,
     validateAssetStatusUpdate,
+    validatePageParams,
  )
 
 spec :: Spec
@@ -91,23 +92,24 @@ spec = do
       assetMatchesSearchQuery "analog" synthAsset `shouldBe` True
       assetMatchesSearchQuery "juno" drumAsset `shouldBe` False
 
-  describe "inventory asset pagination validation" $ do
+  describe "shared list pagination validation" $ do
     it "defaults omitted params and preserves explicit supported values" $ do
-      validateInventoryPageParams Nothing Nothing `shouldBe` Right (1, 50)
-      validateInventoryPageParams (Just 3) (Just 25) `shouldBe` Right (3, 25)
-      validateInventoryPageParams (Just 1) (Just 100) `shouldBe` Right (1, 100)
+      validatePageParams Nothing Nothing `shouldBe` Right (1, 50)
+      validatePageParams (Just 3) (Just 25) `shouldBe` Right (3, 25)
+      validatePageParams (Just 1) (Just 100) `shouldBe` Right (1, 100)
+      validateInventoryPageParams (Just 2) (Just 40) `shouldBe` Right (2, 40)
 
-    it "rejects invalid explicit pagination instead of silently clamping the inventory listing" $ do
+    it "rejects invalid explicit pagination instead of silently clamping list endpoints" $ do
       let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
               BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
-              expectationFailure ("Expected invalid inventory pagination error, got " <> show value)
-      assertInvalid "page must be greater than or equal to 1" (validateInventoryPageParams (Just 0) Nothing)
-      assertInvalid "page must be greater than or equal to 1" (validateInventoryPageParams (Just (-2)) Nothing)
-      assertInvalid "pageSize must be between 1 and 100" (validateInventoryPageParams Nothing (Just 0))
-      assertInvalid "pageSize must be between 1 and 100" (validateInventoryPageParams Nothing (Just 101))
+              expectationFailure ("Expected invalid list pagination error, got " <> show value)
+      assertInvalid "page must be greater than or equal to 1" (validatePageParams (Just 0) Nothing)
+      assertInvalid "page must be greater than or equal to 1" (validatePageParams (Just (-2)) Nothing)
+      assertInvalid "pageSize must be between 1 and 100" (validatePageParams Nothing (Just 0))
+      assertInvalid "pageSize must be between 1 and 100" (validatePageParams Nothing (Just 101))
 
   describe "asset name/category normalization" $ do
     it "trims meaningful asset names and categories on create and update" $ do
