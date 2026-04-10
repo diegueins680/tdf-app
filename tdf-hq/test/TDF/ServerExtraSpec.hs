@@ -41,6 +41,8 @@ import TDF.ServerExtra (
     parseOptionalKeyField,
     validatePaymentCurrency,
     validatePaymentConcept,
+    validatePositivePaymentReferenceId,
+    validateOptionalPositivePaymentReferenceId,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validatePaymentMethod,
@@ -263,6 +265,24 @@ spec = do
               expectationFailure ("Expected invalid payment amount error, got " <> show value)
       assertInvalid (validatePaymentAmountCents 0)
       assertInvalid (validatePaymentAmountCents (-500))
+
+  describe "validatePositivePaymentReferenceId" $ do
+    it "accepts positive payment, party, order, and invoice identifiers without rewriting them" $ do
+      validatePositivePaymentReferenceId "paymentId" 9 `shouldBe` Right 9
+      validateOptionalPositivePaymentReferenceId "partyId" (Just 7) `shouldBe` Right (Just 7)
+      validateOptionalPositivePaymentReferenceId "orderId" Nothing `shouldBe` Right Nothing
+      validateOptionalPositivePaymentReferenceId "invoiceId" (Just 12) `shouldBe` Right (Just 12)
+
+    it "rejects zero or negative explicit references instead of silently broadening lookups or deferring to DB failures" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid payment reference error, got " <> show value)
+      assertInvalid "paymentId must be a positive integer" (validatePositivePaymentReferenceId "paymentId" 0)
+      assertInvalid "partyId must be a positive integer" (validateOptionalPositivePaymentReferenceId "partyId" (Just (-1)))
+      assertInvalid "orderId must be a positive integer" (validateOptionalPositivePaymentReferenceId "orderId" (Just 0))
 
   describe "validatePaymentAttachmentUrl" $ do
     it "treats omitted or blank attachment URLs as absent and trims valid URLs" $ do

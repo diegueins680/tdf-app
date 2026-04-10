@@ -34,6 +34,7 @@ import           Data.UUID.V4               (nextRandom)
 import           Data.Aeson                 (object, (.:), (.:?), (.=))
 import           Data.Aeson.Types           (Parser, parseMaybe, withObject, (.!=))
 import qualified Data.Aeson                as A
+import           Data.Int                   (Int64)
 import qualified Data.Scientific            as Sci
 import           Numeric                    (showHex)
 import           System.Directory           (copyFile, createDirectoryIfMissing)
@@ -1344,12 +1345,16 @@ paymentsServer user =
   where
     listPaymentsH mPartyId = do
       ensureModule ModuleAdmin user
-      let filt = maybe [] (\pid -> [M.PaymentPartyId ==. toSqlKey pid]) mPartyId
+      partyIdFilter <- either throwError pure (validateOptionalPositivePaymentReferenceId "partyId" mPartyId)
+      let filt = maybe [] (\pid -> [M.PaymentPartyId ==. toSqlKey pid]) partyIdFilter
       recs <- withPool $ selectList filt [Desc M.PaymentReceivedAt, LimitTo 200]
       pure (map toPaymentDTO recs)
 
     createPaymentH PaymentCreate{..} = do
       ensureModule ModuleAdmin user
+      partyId <- either throwError pure (validatePositivePaymentReferenceId "partyId" pcPartyId)
+      orderId <- either throwError pure (validateOptionalPositivePaymentReferenceId "orderId" pcOrderId)
+      invoiceId <- either throwError pure (validateOptionalPositivePaymentReferenceId "invoiceId" pcInvoiceId)
       paidAt <- parseUTCTimeText pcPaidAt
       amountCents <- either throwError pure (validatePaymentAmountCents pcAmountCents)
       _ <- either throwError pure (validatePaymentCurrency pcCurrency)
@@ -1357,9 +1362,9 @@ paymentsServer user =
       paymentMethodVal <- either throwError pure (validatePaymentMethod pcMethod)
       attachmentUrl <- either throwError pure (validatePaymentAttachmentUrl pcAttachmentUrl)
       now <- liftIO getCurrentTime
-      let partyKey   = toSqlKey pcPartyId
-          mOrderKey  = toSqlKey <$> pcOrderId
-          mInvoiceKey= toSqlKey <$> pcInvoiceId
+      let partyKey   = toSqlKey partyId
+          mOrderKey  = toSqlKey <$> orderId
+          mInvoiceKey= toSqlKey <$> invoiceId
       ent <- withPool $ do
         payId <- insert Payment
           { paymentInvoiceId   = mInvoiceKey
@@ -1380,7 +1385,8 @@ paymentsServer user =
 
     getPaymentH pid = do
       ensureModule ModuleAdmin user
-      mEnt <- withPool $ getEntity (toSqlKey pid :: Key Payment)
+      paymentId <- either throwError pure (validatePositivePaymentReferenceId "paymentId" pid)
+      mEnt <- withPool $ getEntity (toSqlKey paymentId :: Key Payment)
       maybe (throwError err404) (pure . toPaymentDTO) mEnt
 
     toPaymentDTO (Entity key p) = PaymentDTO
@@ -1402,6 +1408,19 @@ validatePaymentAmountCents :: Int -> Either ServerError Int
 validatePaymentAmountCents amountCents
   | amountCents > 0 = Right amountCents
   | otherwise = Left err400 { errBody = "amountCents must be greater than 0" }
+
+validatePositivePaymentReferenceId :: Text -> Int64 -> Either ServerError Int64
+validatePositivePaymentReferenceId fieldName rawId
+  | rawId > 0 = Right rawId
+  | otherwise =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
+        }
+
+validateOptionalPositivePaymentReferenceId :: Text -> Maybe Int64 -> Either ServerError (Maybe Int64)
+validateOptionalPositivePaymentReferenceId _ Nothing = Right Nothing
+validateOptionalPositivePaymentReferenceId fieldName (Just rawId) =
+  Just <$> validatePositivePaymentReferenceId fieldName rawId
 
 validatePaymentConcept :: Text -> Either ServerError Text
 validatePaymentConcept rawConcept =
