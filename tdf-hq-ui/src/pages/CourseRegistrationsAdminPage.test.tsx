@@ -1363,8 +1363,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Estado')).toBe(false);
-      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Todos').textContent?.trim()).toBe('Todos (3)');
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(3);
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Todos"]')).toBeNull();
       expect(container.textContent).not.toContain('Total: 3');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
@@ -1418,7 +1418,8 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 200,
       });
-      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(3);
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Todos"]')).toBeNull();
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).toContain('Katherine Johnson');
@@ -1530,7 +1531,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasExactText(container, 'Filtrar por estado')).toBe(true);
       expect(hasExactText(container, 'Estado')).toBe(false);
-      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(4);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(3);
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Todos"]')).toBeNull();
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Estado: Pendiente de pago');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Estado: Pagado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Estado: Cancelado');
@@ -1556,8 +1558,8 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(3);
-      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Todos"]')).not.toBeNull();
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(2);
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Todos"]')).toBeNull();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pendiente de pago"]')).not.toBeNull();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).not.toBeNull();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Cancelado"]')).toBeNull();
@@ -3200,10 +3202,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Todos').textContent?.trim()).toBe('Todos (3)');
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago').textContent?.trim()).toBe('Pendiente de pago (1)');
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado').textContent?.trim()).toBe('Cancelado (1)');
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Todos"]')).toBeNull();
       expect(container.textContent).not.toContain('Total: 3');
       expect(container.textContent).not.toContain('Pendientes: 1');
       expect(container.textContent).not.toContain('Pagadas: 1');

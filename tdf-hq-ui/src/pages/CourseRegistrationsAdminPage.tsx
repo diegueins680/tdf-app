@@ -611,6 +611,10 @@ export default function CourseRegistrationsAdminPage() {
     if (!hasVisibleRegistrations) return statusFilters;
     return statusFilters.filter((value) => value === 'all' || status === value || statusCounts[value] > 0);
   }, [hasVisibleRegistrations, status, statusCounts]);
+  const actionableStatusFilters = useMemo(
+    () => visibleStatusFilters.filter((value): value is Exclude<StatusFilter, 'all'> => value !== 'all'),
+    [visibleStatusFilters],
+  );
   const hasHiddenStatusFilters = visibleStatusFilters.length < statusFilters.length;
   const singleVisibleStatus = useMemo<Exclude<StatusFilter, 'all'> | null>(() => {
     if (!hasVisibleRegistrations) return null;
@@ -1774,7 +1778,7 @@ export default function CourseRegistrationsAdminPage() {
                           Filtrar por estado
                         </Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {visibleStatusFilters.map((value) => (
+                          {actionableStatusFilters.map((value) => (
                             <Chip
                               key={value}
                               clickable
