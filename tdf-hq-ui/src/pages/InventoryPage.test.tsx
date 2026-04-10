@@ -171,4 +171,29 @@ describe('InventoryPage', () => {
       await cleanup();
     }
   });
+
+  it('shows only the movement action that matches each asset status instead of keeping both check-in and check-out controls per row', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({ assetId: 'asset-1', name: 'Activo Uno', status: 'Active' }),
+      buildAsset({ assetId: 'asset-2', name: 'Prestado Uno', status: 'Booked' }),
+      buildAsset({ assetId: 'asset-3', name: 'Retirado Uno', status: 'Retired' }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('[aria-label="Abrir check-out de Activo Uno"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-in de Activo Uno"]')).toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-in de Prestado Uno"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-out de Prestado Uno"]')).toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-in de Retirado Uno"]')).toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-out de Retirado Uno"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
 });

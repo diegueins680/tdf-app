@@ -42,6 +42,15 @@ function normalizeAssets(payload: { items: AssetDTO[] } | AssetDTO[]): AssetDTO[
   return payload.items ?? [];
 }
 
+function getInventoryMovementState(status: string) {
+  const normalizedStatus = status.trim().toLowerCase();
+
+  return {
+    canCheckout: normalizedStatus === 'active',
+    canCheckin: normalizedStatus === 'booked',
+  };
+}
+
 export default function InventoryPage() {
   const qc = useQueryClient();
   const assetsQuery = useQuery({
@@ -219,41 +228,47 @@ export default function InventoryPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {grouped.map((asset) => (
-                  <TableRow key={asset.assetId} hover>
-                    <TableCell>{asset.name}</TableCell>
-                    <TableCell>{asset.category}</TableCell>
-                    <TableCell>{asset.status}</TableCell>
-                    <TableCell>{asset.condition ?? '—'}</TableCell>
-                    <TableCell>{asset.location ?? '—'}</TableCell>
-                    <TableCell align="right">
-                      <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>
-                        <QrCodeIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => openCheckout(asset)}
-                        title="Check-out"
-                        aria-label={`Abrir check-out de ${asset.name}`}
-                        disabled={asset.status.toLowerCase() === 'booked'}
-                      >
-                        <ExitToAppIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => openCheckin(asset)}
-                        title="Check-in"
-                        aria-label={`Abrir check-in de ${asset.name}`}
-                        disabled={asset.status.toLowerCase() !== 'booked'}
-                      >
-                        <HowToRegIcon fontSize="small" />
-                      </IconButton>
-                      <Button size="small" onClick={() => openHistory(asset)}>
-                        Historial
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {grouped.map((asset) => {
+                  const movementState = getInventoryMovementState(asset.status);
+
+                  return (
+                    <TableRow key={asset.assetId} hover>
+                      <TableCell>{asset.name}</TableCell>
+                      <TableCell>{asset.category}</TableCell>
+                      <TableCell>{asset.status}</TableCell>
+                      <TableCell>{asset.condition ?? '—'}</TableCell>
+                      <TableCell>{asset.location ?? '—'}</TableCell>
+                      <TableCell align="right">
+                        <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>
+                          <QrCodeIcon fontSize="small" />
+                        </IconButton>
+                        {movementState.canCheckout && (
+                          <IconButton
+                            size="small"
+                            onClick={() => openCheckout(asset)}
+                            title="Check-out"
+                            aria-label={`Abrir check-out de ${asset.name}`}
+                          >
+                            <ExitToAppIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                        {movementState.canCheckin && (
+                          <IconButton
+                            size="small"
+                            onClick={() => openCheckin(asset)}
+                            title="Check-in"
+                            aria-label={`Abrir check-in de ${asset.name}`}
+                          >
+                            <HowToRegIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                        <Button size="small" onClick={() => openHistory(asset)}>
+                          Historial
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
