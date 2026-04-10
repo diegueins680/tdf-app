@@ -752,6 +752,9 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
+        expect(container.textContent).toContain(
+          'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
       });
 
       const searchInput = getInputByLabelText(container, 'Buscar usuarios');
@@ -763,6 +766,9 @@ describe('AdminUsersPage', () => {
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).toContain('Mostrando 1 de 2 usuarios.');
+        expect(container.textContent).not.toContain(
+          'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
       });
 
       await changeInputValue(searchInput, '');
@@ -770,6 +776,9 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+        );
+        expect(container.textContent).toContain(
+          'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
       });
     } finally {
