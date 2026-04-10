@@ -9,7 +9,6 @@ import {
   TableRow,
   Paper,
   Chip,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -22,7 +21,6 @@ import {
   OutlinedInput,
   CircularProgress,
   Alert,
-  Tooltip,
   Typography,
   Stack,
 } from '@mui/material';
@@ -86,6 +84,8 @@ const getContactLines = (user: Pick<NormalizedUser, 'email' | 'phone'>) =>
   [normalizeContactValue(user.email), normalizeContactValue(user.phone)].filter(
     (value): value is string => value != null,
   );
+
+const ROLE_MANAGEMENT_INTRO = 'Revisa el acceso actual y ajusta roles sin salir de esta tabla.';
 
 export default function UserRoleManagement() {
   const [users, setUsers] = useState<NormalizedUser[]>([]);
@@ -188,6 +188,14 @@ export default function UserRoleManagement() {
         </Paper>
       ) : (
         <Stack spacing={1.5}>
+          <Stack spacing={0.5}>
+            <Typography variant="h5" fontWeight={700}>
+              Roles y permisos
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {ROLE_MANAGEMENT_INTRO}
+            </Typography>
+          </Stack>
           {!showContactColumn && (
             <Typography variant="body2" color="text.secondary">
               Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato
@@ -201,8 +209,7 @@ export default function UserRoleManagement() {
                   <TableCell>Usuario</TableCell>
                   {showContactColumn && <TableCell>Contacto</TableCell>}
                   <TableCell>Estado</TableCell>
-                  <TableCell>Roles</TableCell>
-                  <TableCell>Acciones</TableCell>
+                  <TableCell>Roles y edición</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -242,24 +249,24 @@ export default function UserRoleManagement() {
                         <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
                       </TableCell>
                       <TableCell>
-                        <Box display="flex" gap={0.5} flexWrap="wrap">
-                          {user.roles.map((role) => (
-                            <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
-                          ))}
-                          {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip title="Editar roles">
-                          <IconButton
+                        <Stack spacing={1} alignItems="flex-start">
+                          <Box display="flex" gap={0.5} flexWrap="wrap">
+                            {user.roles.map((role) => (
+                              <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
+                            ))}
+                            {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
+                          </Box>
+                          <Button
                             size="small"
                             color="primary"
+                            startIcon={<EditIcon fontSize="small" />}
                             onClick={() => handleEditClick(user)}
                             aria-label={`Editar roles de ${user.name}`}
+                            sx={{ px: 0, minWidth: 0 }}
                           >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
+                            Editar roles
+                          </Button>
+                        </Stack>
                       </TableCell>
                     </TableRow>
                   );

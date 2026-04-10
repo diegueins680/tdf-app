@@ -166,11 +166,13 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles', 'Acciones']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles y edición']);
+        expect(container.textContent).toContain('Revisa el acceso actual y ajusta roles sin salir de esta tabla.');
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
         expect(adaRow.textContent).toContain('ID 101');
         expect(adaRow.textContent).toContain('ada@example.com');
+        expect(adaRow.textContent).toContain('Editar roles');
         expect(adaRow.textContent).not.toContain('Sin email ni teléfono');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
@@ -215,7 +217,7 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Estado', 'Roles', 'Acciones']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Estado', 'Roles y edición']);
         expect(container.textContent).toContain(
           'Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato para revisar.',
         );
@@ -226,6 +228,38 @@ describe('UserRoleManagement', () => {
 
         const graceRow = getRowByName(container, 'Grace Hopper');
         expect(graceRow.textContent).toContain('ID 202');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps role editing inside the roles column so the default admin landing page drops a separate actions column', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 301,
+        name: 'Grace Hopper',
+        email: 'grace@example.com',
+        phone: null,
+        roles: ['Admin', 'Manager'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles y edición']);
+        expect(container.textContent).toContain('Roles y permisos');
+        expect(container.textContent).toContain('Revisa el acceso actual y ajusta roles sin salir de esta tabla.');
+        expect(container.textContent).not.toContain('Acciones');
+
+        const graceRow = getRowByName(container, 'Grace Hopper');
+        expect(graceRow.textContent).toContain('Admin');
+        expect(graceRow.textContent).toContain('Manager');
+        expect(graceRow.textContent).toContain('Editar roles');
       });
     } finally {
       await cleanup();
