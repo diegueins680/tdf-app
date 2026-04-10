@@ -375,9 +375,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(container.textContent).not.toContain('Cambiar estado:');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe(
-        'Cambiar estado',
+        'Estado: Pendiente de pago',
       );
-      expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
+      expect(countOccurrences(container, 'Pendiente de pago')).toBe(2);
       expect(container.textContent).not.toContain(showSystemEmailsLabel);
       expect(hasLabel(container, 'Límite')).toBe(false);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
@@ -1473,6 +1473,26 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
         ),
       ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the row status explicit when the shared status summary applies to just one visible registration', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Estado: Pendiente de pago');
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(countOccurrences(container, 'Estado: Pendiente de pago')).toBe(1);
     });
 
     await cleanup();

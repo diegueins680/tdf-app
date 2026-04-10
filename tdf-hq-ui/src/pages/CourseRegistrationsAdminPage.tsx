@@ -205,7 +205,8 @@ const registrationStatusLabel = (status: string) =>
 const registrationStatusButtonLabel = (
   status: string,
   statusAlreadySummarized: boolean,
-) => (statusAlreadySummarized ? 'Cambiar estado' : `Estado: ${registrationStatusLabel(status)}`);
+  useCompactActionLabel: boolean,
+) => (statusAlreadySummarized && useCompactActionLabel ? 'Cambiar estado' : `Estado: ${registrationStatusLabel(status)}`);
 
 const registrationStatusChipColor = (
   status: string,
@@ -671,6 +672,7 @@ export default function CourseRegistrationsAdminPage() {
       : `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
+  const useCompactStatusActionLabel = showSingleStatusSummary && loadedRegistrationCount > 1;
   const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
@@ -2000,7 +2002,7 @@ export default function CourseRegistrationsAdminPage() {
                         disabled={isUpdating}
                         onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
                       >
-                        {registrationStatusButtonLabel(reg.crStatus, showSingleStatusSummary)}
+                        {registrationStatusButtonLabel(reg.crStatus, showSingleStatusSummary, useCompactStatusActionLabel)}
                       </Button>
                       <Box sx={{ flexGrow: 1 }} />
                     </Box>
