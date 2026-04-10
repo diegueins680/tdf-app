@@ -1528,6 +1528,14 @@ validatePaymentReferences partyKey mOrderKey mInvoiceKey = do
   mParty <- getEntity partyKey
   mOrder <- join <$> traverse getEntity mOrderKey
   mInvoice <- join <$> traverse getEntity mInvoiceKey
+  mInvoiceOrderLine <- case (mOrderKey, mInvoiceKey) of
+    (Just orderKey, Just invoiceKey) ->
+      selectFirst
+        [ M.InvoiceLineInvoiceId ==. invoiceKey
+        , M.InvoiceLineServiceOrderId ==. Just orderKey
+        ]
+        []
+    _ -> pure Nothing
   pure $
     if isNothing mParty
       then Left err400 { errBody = "partyId references an unknown party" }
@@ -1539,6 +1547,8 @@ validatePaymentReferences partyKey mOrderKey mInvoiceKey = do
             then Left err400 { errBody = "orderId does not belong to partyId" }
             else if maybe False ((/= partyKey) . M.invoiceCustomerId . entityVal) mInvoice
               then Left err400 { errBody = "invoiceId does not belong to partyId" }
+              else if isJust mOrderKey && isJust mInvoiceKey && isNothing mInvoiceOrderLine
+                then Left err400 { errBody = "invoiceId does not include orderId" }
               else Right ()
 
 validatePaymentConcept :: Text -> Either ServerError Text

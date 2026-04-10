@@ -13,7 +13,7 @@ import Data.Text (Text)
 import Data.Time (utctDay)
 import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
 import Database.Persist hiding (Active)
-import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, runMigration, toSqlKey)
+import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
@@ -420,17 +420,17 @@ spec = do
           expectationFailure ("Expected invalid payment concept error, got " <> show value)
 
   describe "validatePaymentReferences" $ do
-    it "accepts existing party, order, and invoice references when they belong to the same customer" $ do
+    it "accepts existing party, order, and invoice references when the invoice includes that order" $ do
       now <- getCurrentTime
       runPaymentValidationSql $ do
-        (partyId, _, orderId, _, invoiceId, _) <- seedPaymentReferenceFixture now
+        (partyId, _, orderId, _, _, invoiceId, _, _) <- seedPaymentReferenceFixture now
         result <- validatePaymentReferences partyId (Just orderId) (Just invoiceId)
         liftIO $ result `shouldBe` Right ()
 
     it "rejects missing or cross-party references before manual payments hit ambiguous DB errors" $ do
       now <- getCurrentTime
       runPaymentValidationSql $ do
-        (partyId, otherPartyId, orderId, otherOrderId, invoiceId, otherInvoiceId) <- seedPaymentReferenceFixture now
+        (partyId, otherPartyId, orderId, _, otherOrderId, invoiceId, samePartyOtherInvoiceId, otherInvoiceId) <- seedPaymentReferenceFixture now
         let assertInvalid expectedMessage validation = case validation of
               Left err -> do
                 errHTTPCode err `shouldBe` 400
@@ -442,6 +442,7 @@ spec = do
         missingInvoice <- validatePaymentReferences partyId Nothing (Just (toSqlKey 999997))
         orderMismatch <- validatePaymentReferences partyId (Just otherOrderId) (Just invoiceId)
         invoiceMismatch <- validatePaymentReferences partyId (Just orderId) (Just otherInvoiceId)
+        unrelatedInvoice <- validatePaymentReferences partyId (Just orderId) (Just samePartyOtherInvoiceId)
         otherPartyMismatch <- validatePaymentReferences otherPartyId (Just orderId) (Just invoiceId)
         liftIO $ do
           assertInvalid "partyId references an unknown party" missingParty
@@ -449,6 +450,7 @@ spec = do
           assertInvalid "invoiceId references an unknown invoice" missingInvoice
           assertInvalid "orderId does not belong to partyId" orderMismatch
           assertInvalid "invoiceId does not belong to partyId" invoiceMismatch
+          assertInvalid "invoiceId does not include orderId" unrelatedInvoice
           assertInvalid "orderId does not belong to partyId" otherPartyMismatch
 
   describe "validateSocialLimit" $ do
@@ -637,8 +639,7 @@ runMetaInboxSql action =
 runPaymentValidationSql :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a
 runPaymentValidationSql action =
     runSqlite ":memory:" $ do
-        rawExecute "PRAGMA foreign_keys = ON" []
-        runMigration M.migrateAll
+        initializePaymentValidationSchema
         action
 
 initializeMetaInboxSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
@@ -671,6 +672,113 @@ initializeMetaInboxSchema = do
         \)"
         []
 
+initializePaymentValidationSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
+initializePaymentValidationSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"service_catalog\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"kind\" VARCHAR NOT NULL,\
+        \\"pricing_model\" VARCHAR NOT NULL,\
+        \\"default_rate_cents\" INTEGER NULL,\
+        \\"tax_bps\" INTEGER NULL,\
+        \\"currency\" VARCHAR NOT NULL,\
+        \\"billing_unit\" VARCHAR NULL,\
+        \\"active\" BOOLEAN NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"service_order\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"customer_id\" INTEGER NOT NULL REFERENCES \"party\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"artist_id\" INTEGER NULL REFERENCES \"party\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"catalog_id\" INTEGER NOT NULL REFERENCES \"service_catalog\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"service_kind\" VARCHAR NOT NULL,\
+        \\"title\" VARCHAR NULL,\
+        \\"description\" VARCHAR NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"price_quoted_cents\" INTEGER NULL,\
+        \\"quote_sent_at\" TIMESTAMP NULL,\
+        \\"scheduled_start\" TIMESTAMP NULL,\
+        \\"scheduled_end\" TIMESTAMP NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"package_product\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"service_kind\" VARCHAR NOT NULL,\
+        \\"units_kind\" VARCHAR NOT NULL,\
+        \\"units_qty\" INTEGER NOT NULL,\
+        \\"price_cents\" INTEGER NOT NULL,\
+        \\"expires_days\" INTEGER NULL,\
+        \\"transferable\" BOOLEAN NOT NULL,\
+        \\"refund_policy\" VARCHAR NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"package_purchase\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"buyer_id\" INTEGER NOT NULL REFERENCES \"party\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"product_id\" INTEGER NOT NULL REFERENCES \"package_product\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"purchased_at\" TIMESTAMP NOT NULL,\
+        \\"price_cents\" INTEGER NOT NULL,\
+        \\"expires_at\" TIMESTAMP NULL,\
+        \\"remaining_units\" INTEGER NOT NULL,\
+        \\"status\" VARCHAR NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"invoice\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"customer_id\" INTEGER NOT NULL REFERENCES \"party\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"issue_date\" DATE NOT NULL,\
+        \\"due_date\" DATE NOT NULL,\
+        \\"number\" VARCHAR NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"currency\" VARCHAR NOT NULL,\
+        \\"subtotal_cents\" INTEGER NOT NULL,\
+        \\"tax_cents\" INTEGER NOT NULL,\
+        \\"total_cents\" INTEGER NOT NULL,\
+        \\"sri_document_id\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \CONSTRAINT \"unique_invoice_number\" UNIQUE (\"number\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"invoice_line\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"invoice_id\" INTEGER NOT NULL REFERENCES \"invoice\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"service_order_id\" INTEGER NULL REFERENCES \"service_order\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"package_purchase_id\" INTEGER NULL REFERENCES \"package_purchase\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"description\" VARCHAR NOT NULL,\
+        \\"quantity\" INTEGER NOT NULL,\
+        \\"unit_cents\" INTEGER NOT NULL,\
+        \\"tax_bps\" INTEGER NOT NULL,\
+        \\"total_cents\" INTEGER NOT NULL\
+        \)"
+        []
+
 seedPaymentReferenceFixture
   :: UTCTime
   -> SqlPersistT (NoLoggingT (ResourceT IO))
@@ -678,6 +786,8 @@ seedPaymentReferenceFixture
        , Key M.Party
        , Key M.ServiceOrder
        , Key M.ServiceOrder
+       , Key M.ServiceOrder
+       , Key M.Invoice
        , Key M.Invoice
        , Key M.Invoice
        )
@@ -732,6 +842,20 @@ seedPaymentReferenceFixture now = do
     , M.serviceOrderScheduledEnd = Nothing
     , M.serviceOrderCreatedAt = now
     }
+  samePartyOtherOrderId <- insert M.ServiceOrder
+    { M.serviceOrderCustomerId = partyId
+    , M.serviceOrderArtistId = Nothing
+    , M.serviceOrderCatalogId = catalogId
+    , M.serviceOrderServiceKind = M.Recording
+    , M.serviceOrderTitle = Just "Mix revisions"
+    , M.serviceOrderDescription = Nothing
+    , M.serviceOrderStatus = "quoted"
+    , M.serviceOrderPriceQuotedCents = Just 12000
+    , M.serviceOrderQuoteSentAt = Nothing
+    , M.serviceOrderScheduledStart = Nothing
+    , M.serviceOrderScheduledEnd = Nothing
+    , M.serviceOrderCreatedAt = now
+    }
   otherOrderId <- insert M.ServiceOrder
     { M.serviceOrderCustomerId = otherPartyId
     , M.serviceOrderArtistId = Nothing
@@ -761,6 +885,20 @@ seedPaymentReferenceFixture now = do
     , M.invoiceNotes = Nothing
     , M.invoiceCreatedAt = now
     }
+  samePartyOtherInvoiceId <- insert M.Invoice
+    { M.invoiceCustomerId = partyId
+    , M.invoiceIssueDate = today
+    , M.invoiceDueDate = today
+    , M.invoiceNumber = Nothing
+    , M.invoiceStatus = M.Draft
+    , M.invoiceCurrency = "USD"
+    , M.invoiceSubtotalCents = 12000
+    , M.invoiceTaxCents = 0
+    , M.invoiceTotalCents = 12000
+    , M.invoiceSriDocumentId = Nothing
+    , M.invoiceNotes = Nothing
+    , M.invoiceCreatedAt = now
+    }
   otherInvoiceId <- insert M.Invoice
     { M.invoiceCustomerId = otherPartyId
     , M.invoiceIssueDate = today
@@ -775,7 +913,46 @@ seedPaymentReferenceFixture now = do
     , M.invoiceNotes = Nothing
     , M.invoiceCreatedAt = now
     }
-  pure (partyId, otherPartyId, orderId, otherOrderId, invoiceId, otherInvoiceId)
+  _ <- insert M.InvoiceLine
+    { M.invoiceLineInvoiceId = invoiceId
+    , M.invoiceLineServiceOrderId = Just orderId
+    , M.invoiceLinePackagePurchaseId = Nothing
+    , M.invoiceLineDescription = "EP tracking"
+    , M.invoiceLineQuantity = 1
+    , M.invoiceLineUnitCents = 10000
+    , M.invoiceLineTaxBps = 0
+    , M.invoiceLineTotalCents = 10000
+    }
+  _ <- insert M.InvoiceLine
+    { M.invoiceLineInvoiceId = samePartyOtherInvoiceId
+    , M.invoiceLineServiceOrderId = Just samePartyOtherOrderId
+    , M.invoiceLinePackagePurchaseId = Nothing
+    , M.invoiceLineDescription = "Mix revisions"
+    , M.invoiceLineQuantity = 1
+    , M.invoiceLineUnitCents = 12000
+    , M.invoiceLineTaxBps = 0
+    , M.invoiceLineTotalCents = 12000
+    }
+  _ <- insert M.InvoiceLine
+    { M.invoiceLineInvoiceId = otherInvoiceId
+    , M.invoiceLineServiceOrderId = Just otherOrderId
+    , M.invoiceLinePackagePurchaseId = Nothing
+    , M.invoiceLineDescription = "Other session"
+    , M.invoiceLineQuantity = 1
+    , M.invoiceLineUnitCents = 8000
+    , M.invoiceLineTaxBps = 0
+    , M.invoiceLineTotalCents = 8000
+    }
+  pure
+    ( partyId
+    , otherPartyId
+    , orderId
+    , samePartyOtherOrderId
+    , otherOrderId
+    , invoiceId
+    , samePartyOtherInvoiceId
+    , otherInvoiceId
+    )
 
 fixtureAsset :: Text -> Text -> Maybe Text -> Maybe Text -> Text -> Maybe Text -> Asset
 fixtureAsset name category brand model owner notes =
