@@ -448,13 +448,16 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(/Consulta el rol actual y edítalo desde esta misma tabla\./i),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Roles y edición$/i })).toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
       expect(screen.getByText('Admin')).toBeInTheDocument();
       expect(screen.getByText('Manager')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toBeInTheDocument();
-      expect(screen.getAllByText('Editar roles')).toHaveLength(2);
+      expect(screen.getAllByText('Editar')).toHaveLength(2);
     });
   });
 

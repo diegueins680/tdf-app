@@ -489,7 +489,7 @@ export default function AdminConsolePage() {
           <Box>
             <Typography variant="h6">Usuarios y roles</Typography>
             <Typography variant="body2" color="text.secondary">
-              Consulta y ajusta los permisos del equipo.
+              Consulta el rol actual y edítalo desde esta misma tabla.
             </Typography>
           </Box>
         </Box>
@@ -504,7 +504,7 @@ export default function AdminConsolePage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Usuario</TableCell>
-                  <TableCell>Roles</TableCell>
+                  <TableCell>Roles y edición</TableCell>
                   <TableCell>Último acceso</TableCell>
                   <TableCell>Estado</TableCell>
                 </TableRow>
@@ -554,7 +554,7 @@ export default function AdminConsolePage() {
                             aria-label={`Editar roles de ${identity.primary}`}
                             sx={{ px: 0, minWidth: 0 }}
                           >
-                            Editar roles
+                            Editar
                           </Button>
                         </Stack>
                       </TableCell>
