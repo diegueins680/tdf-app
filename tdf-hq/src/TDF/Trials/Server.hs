@@ -857,6 +857,8 @@ privateTrialsServer user@AuthedUser{..} =
       case mReq of
         Nothing  -> liftIO $ throwIO err404
         Just req -> do
+          ensureTeacherExists teacherK
+          ensureSchedulableRoom roomK
           teacherFree <- teacherAvailableExceptTrialRequest teacherK startAt endAt rid
           unless teacherFree $
             liftIO $ throwIO err409 { errBody = "Profesor no disponible en ese horario" }
@@ -1056,6 +1058,22 @@ privateTrialsServer user@AuthedUser{..} =
       case mSubject of
         Nothing -> liftIO $ throwIO err404
         Just _  -> pure key
+
+    ensureTeacherExists :: PartyId -> AppM ()
+    ensureTeacherExists teacherKey = do
+      mTeacher <- get teacherKey
+      case mTeacher of
+        Nothing -> liftIO $ throwIO err404 { errBody = "Profesor no encontrado" }
+        Just _  -> pure ()
+
+    ensureSchedulableRoom :: ResourceId -> AppM ()
+    ensureSchedulableRoom roomKey = do
+      mRoom <- get roomKey
+      case mRoom of
+        Nothing -> liftIO $ throwIO err404 { errBody = "Sala no encontrada" }
+        Just room ->
+          when (Models.resourceResourceType room /= Models.Room) $
+            liftIO $ throwIO err422 { errBody = "El recurso seleccionado no es una sala" }
 
     parseRoomKey :: Text -> AppM ResourceId
     parseRoomKey raw =

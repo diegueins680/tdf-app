@@ -270,6 +270,78 @@ spec = do
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
 
   describe "private trial scheduling" $ do
+    it "rejects scheduling a trial with a missing teacher id instead of creating an orphan assignment" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+            missingTeacherId = 999999
+        studentPartyId <- insertPartyFixture "Student One" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            missingTeacherId
+            scheduleStart
+            scheduleEnd
+            (fromIntegral (fromSqlKey roomResourceId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 404
+          BL8.unpack (errBody err) `shouldContain` "Profesor no encontrado"
+        Right _ ->
+          expectationFailure "Expected missing teacher to be rejected"
+
+    it "rejects scheduling a trial with a missing room id instead of accepting a dangling room reference" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+            missingRoomId = 999999
+        teacherPartyId <- insertPartyFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        subjectKey <- insert (Subject "Piano" True)
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey teacherPartyId))
+            scheduleStart
+            scheduleEnd
+            missingRoomId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 404
+          BL8.unpack (errBody err) `shouldContain` "Sala no encontrada"
+        Right _ ->
+          expectationFailure "Expected missing room to be rejected"
+
+    it "rejects scheduling a trial into a non-room resource instead of treating any resource id as a sala" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        teacherPartyId <- insertPartyFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        nonRoomResourceId <- insertResourceFixture "PA Rack" "pa-rack" Models.Equipment
+        subjectKey <- insert (Subject "Piano" True)
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey teacherPartyId))
+            scheduleStart
+            scheduleEnd
+            (fromIntegral (fromSqlKey nonRoomResourceId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no es una sala"
+        Right _ ->
+          expectationFailure "Expected non-room resources to be rejected for trial scheduling"
+
     it "rejects scheduling a trial when the teacher is already booked in an overlapping class" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
@@ -586,10 +658,14 @@ insertPartyFixture displayName now =
 
 insertRoomFixture :: Text -> Text -> SqlPersistT IO Models.ResourceId
 insertRoomFixture name slug =
+  insertResourceFixture name slug Models.Room
+
+insertResourceFixture :: Text -> Text -> Models.ResourceType -> SqlPersistT IO Models.ResourceId
+insertResourceFixture name slug resourceType =
   insert Models.Resource
     { Models.resourceName = name
     , Models.resourceSlug = slug
-    , Models.resourceResourceType = Models.Room
+    , Models.resourceResourceType = resourceType
     , Models.resourceCapacity = Nothing
     , Models.resourceActive = True
     }
