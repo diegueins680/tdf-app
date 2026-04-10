@@ -36,6 +36,7 @@ import TDF.Server
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
     , validateOptionalCourseNonNegativeField
+    , validatePositiveIdField
     , validateOptionalPositiveIdField
     , validatePublicBookingContactDetails
     , validateServiceMarketplaceCatalog
@@ -88,6 +89,21 @@ spec = describe "TDF.Server helpers" $ do
 
         it "drops strings that only contain whitespace" $
             normalizeOptionalInput (Just "   ") `shouldBe` Nothing
+
+    describe "validatePositiveIdField" $ do
+        it "accepts positive identifiers for public resource lookups" $
+            validatePositiveIdField "artistId" 42 `shouldBe` Right 42
+
+        it "rejects zero or negative identifiers instead of issuing ambiguous lookups" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "artistId must be a positive integer"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid positive id input to be rejected, got: " <> show value)
+            assertInvalid (validatePositiveIdField "artistId" 0)
+            assertInvalid (validatePositiveIdField "artistId" (-7))
 
     describe "validateOptionalPositiveIdField" $ do
         it "preserves omitted ids and accepts positive identifiers" $ do

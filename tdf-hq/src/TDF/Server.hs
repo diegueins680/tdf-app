@@ -509,15 +509,17 @@ fanPublicServer =
 
     fanArtistProfile :: Int64 -> AppM ArtistProfileDTO
     fanArtistProfile artistId = do
+      artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
       Env pool _ <- ask
-      mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfileDTO (toSqlKey artistId)
+      mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfileDTO (toSqlKey artistIdValid)
       maybe (throwError err404) pure mDto
 
     fanArtistReleases :: Int64 -> AppM [ArtistReleaseDTO]
     fanArtistReleases artistId = do
+      artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
       Env pool _ <- ask
       liftIO $ flip runSqlPool pool $ do
-        releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistId] [Desc ArtistReleaseCreatedAt]
+        releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistIdValid] [Desc ArtistReleaseCreatedAt]
         pure (map toArtistReleaseDTO releases)
 
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
@@ -5340,15 +5342,19 @@ normalizeOptionalInput (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
-validateOptionalPositiveIdField :: Text -> Maybe Int64 -> Either ServerError (Maybe Int64)
-validateOptionalPositiveIdField _ Nothing = Right Nothing
-validateOptionalPositiveIdField fieldName (Just rawId)
+validatePositiveIdField :: Text -> Int64 -> Either ServerError Int64
+validatePositiveIdField fieldName rawId
   | rawId <= 0 =
       Left err400
         { errBody =
             BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
         }
-  | otherwise = Right (Just rawId)
+  | otherwise = Right rawId
+
+validateOptionalPositiveIdField :: Text -> Maybe Int64 -> Either ServerError (Maybe Int64)
+validateOptionalPositiveIdField _ Nothing = Right Nothing
+validateOptionalPositiveIdField fieldName (Just rawId)
+  | otherwise = Just <$> validatePositiveIdField fieldName rawId
 
 validateBookingListFilters :: Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> Either ServerError (Maybe Int64, Maybe Int64, Maybe Int64)
 validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do
