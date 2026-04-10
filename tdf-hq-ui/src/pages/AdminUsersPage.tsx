@@ -59,9 +59,9 @@ const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
 const ADMIN_USERS_PAGE_INTRO =
-  'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.';
+  'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.';
 const SINGLE_USER_GUIDANCE =
-  'Solo hay un usuario por ahora. Revisa su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.';
+  'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.';
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();

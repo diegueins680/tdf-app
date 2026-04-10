@@ -196,7 +196,7 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
         expect(hasExactText(container, 'Usuarios')).toBe(true);
         expect(container.textContent).not.toContain(
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).not.toContain('admin API');
         expect(container.textContent).toContain(
@@ -360,7 +360,7 @@ describe('AdminUsersPage', () => {
           '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp.',
         );
         expect(container.textContent).toContain(
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).not.toContain('1 usuario sigue sin canal de contacto');
         expect(container.textContent).not.toContain('1 sin contacto');
@@ -427,7 +427,7 @@ describe('AdminUsersPage', () => {
         );
         expect(countExactText(
           container,
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         )).toBe(1);
         expect(countExactText(
           container,
@@ -569,13 +569,13 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Revisa su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(
           container.textContent?.includes('Haz clic en el nombre para abrir el perfil.'),
         ).toBe(false);
         expect(container.textContent).not.toContain(
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(container.textContent).not.toContain('1 usuario');
@@ -750,7 +750,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
       });
 
@@ -760,7 +760,7 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(container.textContent).not.toContain(
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).toContain('Mostrando 1 de 2 usuarios.');
       });
@@ -769,7 +769,7 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
       });
     } finally {
@@ -803,7 +803,11 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
         expect(searchInput.getAttribute('placeholder')).toBe('Usuario, nombre, ID, contacto o acceso');
+        expect(container.textContent).toContain(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+        );
         expect(container.textContent).toContain('2 usuarios en esta vista.');
+        expect(container.textContent).not.toContain('Busca por identidad');
         expect(container.textContent).not.toContain('Busca por nombre, ID, contacto o acceso.');
       });
     } finally {
