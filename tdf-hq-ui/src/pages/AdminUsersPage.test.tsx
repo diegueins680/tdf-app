@@ -194,8 +194,8 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
-        expect(countExactText(container, 'Usuarios')).toBe(1);
-        expect(container.textContent).toContain(
+        expect(hasExactText(container, 'Usuarios')).toBe(true);
+        expect(container.textContent).not.toContain(
           'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
         );
         expect(container.textContent).not.toContain('admin API');
@@ -561,12 +561,12 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Revisa su perfil desde el nombre y usa Comunicación si ya tiene un canal disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(
           container.textContent?.includes('Haz clic en el nombre para abrir el perfil.'),
         ).toBe(false);
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
         );
         expect(container.textContent).not.toContain('Buscar usuarios');

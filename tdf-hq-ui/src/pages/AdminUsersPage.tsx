@@ -47,6 +47,8 @@ const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
 const ADMIN_USERS_PAGE_INTRO =
   'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.';
+const SINGLE_USER_GUIDANCE =
+  'Solo hay un usuario por ahora. Revisa su perfil desde el nombre y usa Comunicación si ya tiene un canal disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.';
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();
@@ -119,6 +121,7 @@ export default function AdminUsersPage() {
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
   const activeSearchSummary = searchQuery.trim();
   const hasMultipleUsers = totalUsersCount > 1;
+  const showGeneralIntro = hasMultipleUsers || hasActiveSearch;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = hasMultipleUsers || hasActiveSearch;
   const showMixedContactStateGuidance = visibleUsersMissingContactCount > 0 && visibleUsersWithContactCount > 0;
@@ -177,9 +180,11 @@ export default function AdminUsersPage() {
           >
             <Stack spacing={1} sx={{ minWidth: 0, flex: '1 1 360px' }}>
               <Typography variant="h4" fontWeight={700}>Usuarios</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {ADMIN_USERS_PAGE_INTRO}
-              </Typography>
+              {showGeneralIntro && (
+                <Typography variant="body2" color="text.secondary">
+                  {ADMIN_USERS_PAGE_INTRO}
+                </Typography>
+              )}
               {showSearchField && (
                 <TextField
                   label="Buscar usuarios"
@@ -201,7 +206,7 @@ export default function AdminUsersPage() {
               )}
               {showSingleUserGuidance && (
                 <Typography variant="body2" color="text.secondary">
-                  Solo hay un usuario por ahora. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.
+                  {SINGLE_USER_GUIDANCE}
                 </Typography>
               )}
               {headerGuidance && (
