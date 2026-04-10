@@ -38,6 +38,9 @@ internProjectStatuses = ["active", "paused", "completed"]
 internTaskStatuses :: [Text]
 internTaskStatuses = ["todo", "doing", "blocked", "done"]
 
+internPermissionStatuses :: [Text]
+internPermissionStatuses = ["pending", "approved", "rejected"]
+
 validateInternProjectStatusInput :: Maybe Text -> Either ServerError Text
 validateInternProjectStatusInput Nothing = Right "active"
 validateInternProjectStatusInput (Just rawStatus) =
@@ -52,6 +55,11 @@ validateOptionalInternTaskStatusInput :: Maybe Text -> Either ServerError (Maybe
 validateOptionalInternTaskStatusInput Nothing = Right Nothing
 validateOptionalInternTaskStatusInput (Just rawStatus) =
   Just <$> validateInternStatusValue "taskStatus" internTaskStatuses rawStatus
+
+validateOptionalInternPermissionStatusInput :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalInternPermissionStatusInput Nothing = Right Nothing
+validateOptionalInternPermissionStatusInput (Just rawStatus) =
+  Just <$> validateInternStatusValue "permissionStatus" internPermissionStatuses rawStatus
 
 validateInternTaskProgressUpdate :: Maybe Int -> Either ServerError (Maybe Int)
 validateInternTaskProgressUpdate Nothing = Right Nothing
@@ -476,12 +484,13 @@ internshipsServer user =
       ensureAdmin
       permKey <- parseKey @ME.InternPermissionRequest rawId
       now <- liftIO getCurrentTime
+      statusUpdate <- either throwError pure (validateOptionalInternPermissionStatusInput ipuStatus)
       let updates = catMaybes
-            [ fmap (ME.InternPermissionRequestStatus =.) ipuStatus
+            [ fmap (ME.InternPermissionRequestStatus =.) statusUpdate
             , fmap (ME.InternPermissionRequestDecisionNotes =.) ipuDecisionNotes
             ]
           reviewUpdates =
-            if ipuStatus /= Nothing
+            if statusUpdate /= Nothing
               then [ ME.InternPermissionRequestReviewedBy =. Just (auPartyId user)
                    , ME.InternPermissionRequestReviewedAt =. Just now
                    ]

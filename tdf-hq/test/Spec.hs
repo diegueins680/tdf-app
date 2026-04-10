@@ -49,6 +49,7 @@ import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload)
 import TDF.ServerInternships
     ( validateInternProjectStatusInput,
+      validateOptionalInternPermissionStatusInput,
       validateInternTaskProgressUpdate,
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
@@ -789,6 +790,9 @@ main = hspec $ do
             validateOptionalInternTaskStatusInput Nothing `shouldBe` Right Nothing
             validateOptionalInternTaskStatusInput (Just " DOING ")
                 `shouldBe` Right (Just "doing")
+            validateOptionalInternPermissionStatusInput Nothing `shouldBe` Right Nothing
+            validateOptionalInternPermissionStatusInput (Just " APPROVED ")
+                `shouldBe` Right (Just "approved")
 
         it "rejects blank or unknown internship statuses instead of storing values the UI cannot map" $ do
             let assertInvalid result expected = case result of
@@ -806,6 +810,9 @@ main = hspec $ do
             assertInvalid
                 (validateOptionalInternTaskStatusInput (Just "review"))
                 "taskStatus must be one of: todo, doing, blocked, done"
+            assertInvalid
+                (validateOptionalInternPermissionStatusInput (Just "maybe"))
+                "permissionStatus must be one of: pending, approved, rejected"
 
     describe "internship task progress validation" $ do
         it "preserves omitted progress and accepts explicit values inside the supported range" $ do
