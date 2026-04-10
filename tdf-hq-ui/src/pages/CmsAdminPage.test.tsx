@@ -325,9 +325,10 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Sin contenido publicado');
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
       expect(countActionsByText(container, 'Comparar con live')).toBe(0);
       expect(container.textContent).toContain(
-        'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda y podrás compararla desde aquí.',
+        'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.',
       );
     });
 

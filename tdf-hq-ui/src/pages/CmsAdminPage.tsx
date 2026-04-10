@@ -451,7 +451,7 @@ export default function CmsAdminPage() {
       : 'Elige un slug sugerido o escribe uno para empezar a editar.';
   const compareHint = livePayloadPretty
     ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
-    : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda y podrás compararla desde aquí.';
+    : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -766,15 +766,17 @@ export default function CmsAdminPage() {
                       Cargar ejemplo
                     </Button>
                   )}
-                  <Button
-                    variant="outlined"
-                    onClick={() => {
-                      void handleFetchLiveNow();
-                    }}
-                    disabled={loadingLiveOnDemand || !hasSlugSelection}
-                  >
-                    {loadingLiveOnDemand ? 'Cargando versión en vivo...' : 'Usar versión en vivo'}
-                  </Button>
+                  {liveContent && (
+                    <Button
+                      variant="outlined"
+                      onClick={() => {
+                        void handleFetchLiveNow();
+                      }}
+                      disabled={loadingLiveOnDemand || !hasSlugSelection}
+                    >
+                      {loadingLiveOnDemand ? 'Cargando versión en vivo...' : 'Usar versión en vivo'}
+                    </Button>
+                  )}
                   {livePayloadPretty && (
                     <Button variant="text" onClick={() => setShowDraftDiff(true)}>
                       Comparar con live
