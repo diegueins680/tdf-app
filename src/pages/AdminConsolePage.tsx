@@ -489,7 +489,7 @@ export default function AdminConsolePage() {
           <Box>
             <Typography variant="h6">Usuarios y roles</Typography>
             <Typography variant="body2" color="text.secondary">
-              Consulta el rol actual y edítalo desde esta misma tabla.
+              Haz clic sobre un rol para editarlo desde esta misma vista.
             </Typography>
           </Box>
         </Box>
@@ -504,7 +504,7 @@ export default function AdminConsolePage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Usuario</TableCell>
-                  <TableCell>Roles y edición</TableCell>
+                  <TableCell>Roles</TableCell>
                   <TableCell>Último acceso</TableCell>
                   <TableCell>Estado</TableCell>
                 </TableRow>
@@ -544,19 +544,19 @@ export default function AdminConsolePage() {
                         </Stack>
                       </TableCell>
                       <TableCell>
-                        <Stack spacing={0.5} alignItems="flex-start">
-                          <Typography variant="body2">
-                            {formatRoleList(user.roles)}
-                          </Typography>
-                          <Button
-                            size="small"
-                            onClick={() => setEditingUser(user)}
-                            aria-label={`Editar roles de ${identity.primary}`}
-                            sx={{ px: 0, minWidth: 0 }}
-                          >
-                            Editar
-                          </Button>
-                        </Stack>
+                        <Button
+                          size="small"
+                          onClick={() => setEditingUser(user)}
+                          aria-label={`Editar roles de ${identity.primary}`}
+                          sx={{
+                            px: 0,
+                            minWidth: 0,
+                            justifyContent: 'flex-start',
+                            textTransform: 'none',
+                          }}
+                        >
+                          {formatRoleList(user.roles)}
+                        </Button>
                       </TableCell>
                       <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
                       <TableCell>{renderStatus(user.status)}</TableCell>
@@ -601,23 +601,24 @@ export default function AdminConsolePage() {
                   ) : null}
                 </Stack>
                 <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-                  <Typography variant="body2">
+                  <Button
+                    size="small"
+                    onClick={() => setEditingUser(singleAdminUser)}
+                    aria-label={`Editar roles de ${singleAdminUserIdentity?.primary ?? singleAdminUser.username}`}
+                    sx={{
+                      px: 0,
+                      minWidth: 0,
+                      textTransform: 'none',
+                    }}
+                  >
                     Roles: {formatRoleList(singleAdminUser.roles)}
-                  </Typography>
+                  </Button>
                   <Typography variant="body2" color="text.secondary">
                     Último acceso: {formatDateOrDash(singleAdminUser.lastSeenAt ?? singleAdminUser.lastLoginAt)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Estado: {singleAdminUserStatusLabel}
                   </Typography>
-                  <Button
-                    size="small"
-                    onClick={() => setEditingUser(singleAdminUser)}
-                    aria-label={`Editar roles de ${singleAdminUserIdentity?.primary ?? singleAdminUser.username}`}
-                    sx={{ px: 0, minWidth: 0 }}
-                  >
-                    Editar roles
-                  </Button>
                 </Stack>
               </Stack>
             </Stack>

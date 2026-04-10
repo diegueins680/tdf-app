@@ -431,7 +431,7 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
   });
 
-  it('keeps the role editing action inside the roles column instead of adding a duplicate permissions column', async () => {
+  it('uses each rendered role value as the edit affordance instead of showing duplicate edit actions', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
       buildAdminUser({
@@ -449,15 +449,15 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Consulta el rol actual y edítalo desde esta misma tabla\./i),
+        screen.getByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),
       ).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: /^Roles y edición$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /^Roles y edición$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
-      expect(screen.getByText('Admin')).toBeInTheDocument();
-      expect(screen.getByText('Manager')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toBeInTheDocument();
-      expect(screen.getAllByText('Editar')).toHaveLength(2);
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
+      expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveTextContent('Manager');
+      expect(screen.queryByText(/^Editar$/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/^Editar roles$/i)).not.toBeInTheDocument();
     });
   });
 
