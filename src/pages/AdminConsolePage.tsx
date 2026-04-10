@@ -292,6 +292,12 @@ export default function AdminConsolePage() {
   const showUsersTable = isUsersLoading || users.length > 1;
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const showAuditTable = auditQuery.isLoading || audits.length > 1;
+  const usersSectionDescription = showUsersTable || singleAdminUser
+    ? 'Haz clic sobre un rol para editarlo desde esta misma vista.'
+    : 'Aquí aparecerán los usuarios administrables. Cuando exista el primero, podrás editar sus roles desde esta misma vista.';
+  const auditSectionDescription = showAuditTable || singleAuditEntry
+    ? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
+    : 'Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo.';
   const showGettingStartedGuidance =
     !consoleQuery.isPending
     && !usersQuery.isLoading
@@ -507,7 +513,7 @@ export default function AdminConsolePage() {
           <Box>
             <Typography variant="h6">Usuarios y roles</Typography>
             <Typography variant="body2" color="text.secondary">
-              Haz clic sobre un rol para editarlo desde esta misma vista.
+              {usersSectionDescription}
             </Typography>
           </Box>
         </Box>
@@ -656,7 +662,7 @@ export default function AdminConsolePage() {
         <Box sx={{ px: 2, py: 1 }}>
           <Typography variant="h6">Auditoría reciente</Typography>
           <Typography variant="body2" color="text.secondary">
-            Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.
+            {auditSectionDescription}
           </Typography>
         </Box>
         {auditQuery.isError && (

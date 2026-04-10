@@ -128,8 +128,24 @@ describe('AdminConsolePage', () => {
       ),
     ).toBeInTheDocument();
     expect(
+      screen.getByText(
+        /Aquí aparecerán los usuarios administrables\. Cuando exista el primero, podrás editar sus roles desde esta misma vista\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos\./i),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Recorrido con demo')).not.toBeInTheDocument();
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Seed demo data/i })).not.toBeInTheDocument();
@@ -419,12 +435,20 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
+          /Aquí aparecerán los usuarios administrables\. Cuando exista el primero, podrás editar sus roles desde esta misma vista\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
           /Todavía no hay usuarios administrables\. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles\./i,
         ),
       ).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Aún no hay usuarios administrables.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
@@ -594,6 +618,11 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
+          /Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
           /Todavía no hay eventos de auditoría\. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo\./i,
         ),
       ).toBeInTheDocument();
@@ -601,6 +630,9 @@ describe('AdminConsolePage', () => {
 
     expect(
       screen.queryByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos\./i),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Entidad$/i })).not.toBeInTheDocument();
