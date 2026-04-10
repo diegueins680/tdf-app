@@ -43,7 +43,17 @@ const hasUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone
   Boolean(getUserWhatsAppChannel(user));
 
 const getUserAccessSummary = (values: string[]) =>
-  Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))).join(', ');
+  Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)))
+    .sort((left, right) => left.localeCompare(right))
+    .join(', ');
+
+const getSharedAccessSummary = (values: string[]) => {
+  if (values.length < 2) return '';
+  const normalizedValues = values.map((value) => value.trim());
+  if (normalizedValues.some((value) => value === '')) return '';
+  const [firstValue, ...rest] = normalizedValues;
+  return rest.every((value) => value === firstValue) ? (firstValue ?? '') : '';
+};
 
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 
@@ -118,6 +128,14 @@ export default function AdminUsersPage() {
     () => visibleUsers.filter((user) => !hasUserWhatsAppChannel(user)).length,
     [visibleUsers],
   );
+  const sharedRolesSummary = useMemo(
+    () => getSharedAccessSummary(visibleUsers.map((user) => getUserAccessSummary(user.roles))),
+    [visibleUsers],
+  );
+  const sharedModulesSummary = useMemo(
+    () => getSharedAccessSummary(visibleUsers.map((user) => getUserAccessSummary(user.modules))),
+    [visibleUsers],
+  );
   const visibleUsersWithWhatsAppCount = visibleUsers.length - visibleUsersMissingWhatsAppCount;
   const totalUsersCount = usersQuery.data?.length ?? 0;
   const hasUsers = totalUsersCount > 0;
@@ -166,10 +184,16 @@ export default function AdminUsersPage() {
   const headerGuidance = useMemo(() => {
     if (showSingleUserGuidance) return '';
 
-    const parts = [visibleUsersSummary, activeScopeSummary].filter(Boolean);
+    const sharedAccessSummaryParts: string[] = [];
+    if (sharedRolesSummary) sharedAccessSummaryParts.push(`Roles: ${sharedRolesSummary}`);
+    if (sharedModulesSummary) sharedAccessSummaryParts.push(`Módulos: ${sharedModulesSummary}`);
+    const sharedAccessSummary = sharedAccessSummaryParts.length
+      ? `Acceso compartido en esta vista: ${sharedAccessSummaryParts.join(' · ')}.`
+      : '';
+    const parts = [visibleUsersSummary, activeScopeSummary, sharedAccessSummary].filter(Boolean);
 
     return parts.join(' ');
-  }, [activeScopeSummary, showSingleUserGuidance, visibleUsersSummary]);
+  }, [activeScopeSummary, sharedModulesSummary, sharedRolesSummary, showSingleUserGuidance, visibleUsersSummary]);
 
   return (
     <>
@@ -271,6 +295,8 @@ export default function AdminUsersPage() {
                     user={user}
                     showInactiveStatusChip={includeInactive && !user.active}
                     onOpenCommunications={() => setSelectedUser(user)}
+                    sharedModulesSummary={sharedModulesSummary}
+                    sharedRolesSummary={sharedRolesSummary}
                   />
                 ))}
               </Stack>
@@ -291,16 +317,22 @@ function UserRow({
   user,
   showInactiveStatusChip,
   onOpenCommunications,
+  sharedRolesSummary,
+  sharedModulesSummary,
 }: {
   user: AdminUser;
   showInactiveStatusChip: boolean;
   onOpenCommunications: () => void;
+  sharedRolesSummary: string;
+  sharedModulesSummary: string;
 }) {
   const contactSummary = getUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
   const hasWhatsAppChannel = hasUserWhatsAppChannel(user);
   const rolesSummary = getUserAccessSummary(user.roles);
   const modulesSummary = getUserAccessSummary(user.modules);
+  const showRolesSummary = Boolean(rolesSummary) && rolesSummary !== sharedRolesSummary;
+  const showModulesSummary = Boolean(modulesSummary) && modulesSummary !== sharedModulesSummary;
   const identity = summarizeUserIdentity(user);
   const profilePath = `/perfil/${user.partyId}`;
   const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
@@ -342,14 +374,14 @@ function UserRow({
       {showInactiveStatusChip && (
         <Chip label="Inactivo" color="default" size="small" />
       )}
-      {(rolesSummary || modulesSummary) && (
+      {(showRolesSummary || showModulesSummary) && (
         <Box sx={{ minWidth: 220, flex: '1 1 240px' }}>
-          {rolesSummary && (
+          {showRolesSummary && (
             <Typography variant="body2" color="text.secondary">
               Roles: {rolesSummary}
             </Typography>
           )}
-          {modulesSummary && (
+          {showModulesSummary && (
             <Typography variant="body2" color="text.secondary">
               Módulos: {modulesSummary}
             </Typography>

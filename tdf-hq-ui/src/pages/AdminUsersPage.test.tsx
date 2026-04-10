@@ -341,6 +341,8 @@ describe('AdminUsersPage', () => {
         primaryEmail: '   ',
         primaryPhone: null,
         whatsapp: null,
+        roles: ['Manager'],
+        modules: ['crm'],
       }),
     ]);
 
@@ -420,10 +422,9 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(countExactText(
-          container,
+        expect(container.textContent).toContain(
           '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
-        )).toBe(1);
+        );
         expect(countExactText(
           container,
           'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
@@ -610,6 +611,47 @@ describe('AdminUsersPage', () => {
         expect(row.textContent).toContain('Módulos: admin, crm');
         expect(row.textContent).not.toContain('Roles: Admin, Teacher, Admin');
         expect(row.textContent).not.toContain('Módulos: admin, crm, crm');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('moves shared access scope into one page summary when every visible user repeats the same roles and modules', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        roles: [' Admin ', 'Teacher', 'Admin'],
+        modules: [' admin ', 'crm', 'crm'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-admin',
+        partyName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+        roles: ['Teacher', 'Admin', 'Teacher'],
+        modules: ['crm', 'admin', 'crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Acceso compartido en esta vista: Roles: Admin, Teacher · Módulos: admin, crm.',
+        );
+
+        const firstRow = getRowByUserId(container, 101);
+        const secondRow = getRowByUserId(container, 102);
+        expect(firstRow.textContent).not.toContain('Roles:');
+        expect(firstRow.textContent).not.toContain('Módulos:');
+        expect(secondRow.textContent).not.toContain('Roles:');
+        expect(secondRow.textContent).not.toContain('Módulos:');
       });
     } finally {
       await cleanup();
