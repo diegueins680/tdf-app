@@ -283,19 +283,17 @@ export default function AdminConsolePage() {
     || auditQuery.isFetching
     || consoleQuery.isFetching
     || usersQuery.isFetching;
-  const demoSeedCardCopy = showGettingStartedGuidance
-    ? {
-        title: 'Recorrido con demo',
-        description: 'Si es tu primera vez aquí, carga datos de ejemplo para ver usuarios, roles y auditoría sin tocar producción.',
-        buttonLabel: 'Cargar datos de ejemplo',
-        pendingLabel: 'Cargando ejemplo…',
-      }
-    : {
-        title: 'Datos de demostración',
-        description: 'Restablece los datos de demo en ambientes de prueba cuando necesites repetir el flujo sin refrescos manuales extra.',
-        buttonLabel: 'Restablecer demo',
-        pendingLabel: 'Restableciendo demo…',
-      };
+  const firstRunDemoActionCopy = {
+    description: 'Opcional: carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción.',
+    buttonLabel: 'Cargar datos de ejemplo',
+    pendingLabel: 'Cargando ejemplo…',
+  } as const;
+  const demoSeedCardCopy = {
+    title: 'Datos de demostración',
+    description: 'Restablece los datos de demo en ambientes de prueba cuando necesites repetir el flujo sin refrescos manuales extra.',
+    buttonLabel: 'Restablecer demo',
+    pendingLabel: 'Restableciendo demo…',
+  } as const;
 
   const handleCloseDialog = () => {
     if (updateRolesMutation.isPending) return;
@@ -373,6 +371,20 @@ export default function AdminConsolePage() {
                 />
               ))}
             </Stack>
+            <Stack spacing={1} alignItems="flex-start">
+              <Typography variant="body2" color="text.secondary">
+                {firstRunDemoActionCopy.description}
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<AutoFixHighIcon />}
+                onClick={() => seedMutation.mutate()}
+                disabled={seedMutation.isPending}
+              >
+                {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
+              </Button>
+            </Stack>
           </Stack>
         </Alert>
       )}
@@ -399,30 +411,32 @@ export default function AdminConsolePage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
-          <Card variant="outlined">
-            <CardHeader title={demoSeedCardCopy.title} />
-            <CardContent>
-              <Typography variant="body2">
-                {demoSeedCardCopy.description}
-              </Typography>
-              <Button
-                sx={{ mt: 2 }}
-                variant="contained"
-                startIcon={<AutoFixHighIcon />}
-                onClick={() => seedMutation.mutate()}
-                disabled={seedMutation.isPending}
-              >
-                {seedMutation.isPending ? demoSeedCardCopy.pendingLabel : demoSeedCardCopy.buttonLabel}
-              </Button>
-              {seedMutation.isSuccess && (
-                <Alert severity="success" sx={{ mt: 2 }}>
-                  Datos de demostración preparados correctamente.
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+        {!showGettingStartedGuidance && (
+          <Grid item xs={12} md={4}>
+            <Card variant="outlined">
+              <CardHeader title={demoSeedCardCopy.title} />
+              <CardContent>
+                <Typography variant="body2">
+                  {demoSeedCardCopy.description}
+                </Typography>
+                <Button
+                  sx={{ mt: 2 }}
+                  variant="contained"
+                  startIcon={<AutoFixHighIcon />}
+                  onClick={() => seedMutation.mutate()}
+                  disabled={seedMutation.isPending}
+                >
+                  {seedMutation.isPending ? demoSeedCardCopy.pendingLabel : demoSeedCardCopy.buttonLabel}
+                </Button>
+                {seedMutation.isSuccess && (
+                  <Alert severity="success" sx={{ mt: 2 }}>
+                    Datos de demostración preparados correctamente.
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
 
         {consoleCards.map((card) => (
           <Grid item xs={12} md={4} key={card.cardId}>

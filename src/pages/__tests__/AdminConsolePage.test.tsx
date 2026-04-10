@@ -100,7 +100,7 @@ describe('AdminConsolePage', () => {
     mockUpdateUserRoles.mockResolvedValue(undefined);
   });
 
-  it('uses one page-level refresh action and a clearer first-run demo call to action', async () => {
+  it('uses one page-level refresh action and keeps first-run onboarding in a single block', async () => {
     renderPage();
 
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
@@ -123,16 +123,15 @@ describe('AdminConsolePage', () => {
       screen.queryByRole('button', { name: /Refrescar/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText('Recorrido con demo'),
-    ).toBeInTheDocument();
-    expect(
       screen.getByText(
-        /Si es tu primera vez aquí, carga datos de ejemplo para ver usuarios, roles y auditoría sin tocar producción\./i,
+        /Opcional: carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción\./i,
       ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
     ).toBeInTheDocument();
+    expect(screen.queryByText('Recorrido con demo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Seed demo data/i })).not.toBeInTheDocument();
   });
 
@@ -184,6 +183,14 @@ describe('AdminConsolePage', () => {
         ),
       ).toBeInTheDocument();
       expect(
+        screen.getByText(
+          /Opcional: carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
+      ).toBeInTheDocument();
+      expect(
         screen.getByRole('link', { name: /1\. Estado del servicio/i }),
       ).toBeInTheDocument();
       expect(
@@ -201,6 +208,8 @@ describe('AdminConsolePage', () => {
     expect(screen.getByRole('link', { name: /1\. Estado del servicio/i })).toHaveAttribute('href', '#admin-service-health');
     expect(screen.getByRole('link', { name: /2\. Usuarios y roles/i })).toHaveAttribute('href', '#admin-users-and-roles');
     expect(screen.getByRole('link', { name: /3\. Auditoría reciente/i })).toHaveAttribute('href', '#admin-recent-audit');
+    expect(screen.queryByText('Recorrido con demo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
     expect(screen.queryByText('Gestión de usuarios')).not.toBeInTheDocument();
     expect(screen.queryByText(/Si es tu primera vez aquí/i)).not.toBeInTheDocument();
     expect(
