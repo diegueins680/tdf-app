@@ -163,6 +163,9 @@ spec = describe "TDF.Server helpers" $ do
             normalizeAuthEmailAddress "   " `shouldBe` Nothing
             normalizeAuthEmailAddress "not-an-email" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@ example.com" `shouldBe` Nothing
+            normalizeAuthEmailAddress "user@example..com" `shouldBe` Nothing
+            normalizeAuthEmailAddress "user@-example.com" `shouldBe` Nothing
+            normalizeAuthEmailAddress "user@example-.com" `shouldBe` Nothing
 
     describe "parsePasswordChangeAuthToken" $ do
         it "accepts standard bearer headers and preserves the raw-token fallback" $ do

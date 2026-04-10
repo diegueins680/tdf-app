@@ -32,7 +32,7 @@ import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, valida
 import Data.Aeson (FromJSON (..), Value (..), eitherDecode, withObject, (.:), (.:?))
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
-import Data.Char (isSpace)
+import Data.Char (isAsciiLower, isDigit, isSpace)
 import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
@@ -424,10 +424,19 @@ isValidAuthEmailAddress candidate =
       not (T.null localPart)
         && not (T.null domain)
         && not (T.any isSpace candidate)
-        && not (T.isPrefixOf "." domain)
-        && not (T.isSuffixOf "." domain)
         && T.isInfixOf "." domain
+        && all isValidAuthDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidAuthDomainLabel :: Text -> Bool
+isValidAuthDomainLabel label =
+  not (T.null label)
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidAuthDomainChar label
+
+isValidAuthDomainChar :: Char -> Bool
+isValidAuthDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
 signupEmailExists :: Text -> SqlPersistT IO Bool
 signupEmailExists rawEmail = do
