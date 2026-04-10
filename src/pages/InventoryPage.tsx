@@ -240,6 +240,8 @@ export default function InventoryPage() {
 
   const assetsData = assetsQuery.data;
   const assets: AssetDTO[] = assetsData?.items ?? [];
+  const hasSearchQuery = query.trim().length > 0;
+  const showFirstAssetSetup = !assetsQuery.isLoading && !assetsQuery.isError && assets.length === 0 && !hasSearchQuery;
 
   const handleDelete = (asset: AssetDTO) => {
     deleteMutation.mutate(asset.assetId);
@@ -251,13 +253,22 @@ export default function InventoryPage() {
         <Typography variant="h5">Inventario</Typography>
         <Stack spacing={0.75} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Button variant="outlined" startIcon={<FileDownloadIcon />} onClick={() => downloadCsv(assets)}>
-              Exportar CSV
-            </Button>
+            {!showFirstAssetSetup && (
+              <Button
+                variant="outlined"
+                startIcon={<FileDownloadIcon />}
+                onClick={() => downloadCsv(assets)}
+                disabled={assets.length === 0}
+              >
+                Exportar CSV
+              </Button>
+            )}
             <Button variant="contained" onClick={() => setCreateOpen(true)}>Agregar activo</Button>
           </Stack>
           <Typography variant="caption" color="text.secondary">
-            La importación masiva todavía no está disponible. Por ahora usa Agregar activo para nuevos equipos.
+            {showFirstAssetSetup
+              ? 'Empieza con Agregar activo. La exportación CSV aparecerá cuando exista el primer equipo.'
+              : 'La importación masiva todavía no está disponible. Por ahora usa Agregar activo para nuevos equipos.'}
           </Typography>
         </Stack>
       </Stack>
@@ -265,68 +276,82 @@ export default function InventoryPage() {
         <Alert severity="success" onClose={() => setFeedback(null)}>{feedback}</Alert>
       )}
       <Paper variant="outlined">
-        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Buscar"
-            size="small"
-            placeholder="Filtra por nombre, categoría o sala"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Nombre</TableCell>
-                  <TableCell>Categoría</TableCell>
-                  <TableCell>Estado</TableCell>
-                  <TableCell>Ubicación</TableCell>
-                  <TableCell width={120}>Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {assets.map(asset => (
-                  <TableRow key={asset.assetId} hover>
-                    <TableCell>{asset.name}</TableCell>
-                    <TableCell>{asset.category}</TableCell>
-                    <TableCell>{asset.status}</TableCell>
-                    <TableCell>{asset.location ?? '—'}</TableCell>
-                    <TableCell>
-                      <Tooltip title="Editar activo">
-                        <IconButton size="small" aria-label={`Editar activo ${asset.name}`} onClick={() => setEditing(asset)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar">
-                        <IconButton size="small" aria-label={`Eliminar activo ${asset.name}`} onClick={() => handleDelete(asset)}>
-                          <DeleteOutlineIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Imprimir QR">
-                        <IconButton
-                          size="small"
-                          aria-label={`Imprimir QR de ${asset.name}`}
-                          onClick={() => printQr(asset)}
-                        >
-                          <QrCode2Icon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {assets.length === 0 && (
+        {showFirstAssetSetup ? (
+          <Box sx={{ p: 2.5 }}>
+            <Stack spacing={1}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Todavía no hay activos cargados.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Usa Agregar activo para registrar el primero. Cuando exista al menos uno, aquí podrás buscarlo,
+                editarlo, imprimir su QR y exportar el inventario actual.
+              </Typography>
+            </Stack>
+          </Box>
+        ) : (
+          <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Buscar"
+              size="small"
+              placeholder="Filtra por nombre, categoría o sala"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
                   <TableRow>
-                    <TableCell colSpan={5}>
-                      <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-                        No se encontraron activos.
-                      </Typography>
-                    </TableCell>
+                    <TableCell>Nombre</TableCell>
+                    <TableCell>Categoría</TableCell>
+                    <TableCell>Estado</TableCell>
+                    <TableCell>Ubicación</TableCell>
+                    <TableCell width={120}>Acciones</TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
+                </TableHead>
+                <TableBody>
+                  {assets.map(asset => (
+                    <TableRow key={asset.assetId} hover>
+                      <TableCell>{asset.name}</TableCell>
+                      <TableCell>{asset.category}</TableCell>
+                      <TableCell>{asset.status}</TableCell>
+                      <TableCell>{asset.location ?? '—'}</TableCell>
+                      <TableCell>
+                        <Tooltip title="Editar activo">
+                          <IconButton size="small" aria-label={`Editar activo ${asset.name}`} onClick={() => setEditing(asset)}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton size="small" aria-label={`Eliminar activo ${asset.name}`} onClick={() => handleDelete(asset)}>
+                            <DeleteOutlineIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Imprimir QR">
+                          <IconButton
+                            size="small"
+                            aria-label={`Imprimir QR de ${asset.name}`}
+                            onClick={() => printQr(asset)}
+                          >
+                            <QrCode2Icon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {assets.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5}>
+                        <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
+                          No se encontraron activos.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        )}
       </Paper>
 
       <CreateAssetDialog open={createOpen} onClose={() => setCreateOpen(false)} />

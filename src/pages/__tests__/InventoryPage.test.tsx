@@ -85,7 +85,7 @@ describe('InventoryPage', () => {
 
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: /Importar CSV/i })).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Exportar CSV/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Exportar CSV/i })).toBeEnabled();
       expect(screen.getByRole('button', { name: /Agregar activo/i })).toBeInTheDocument();
       expect(
         screen.getByText(
@@ -93,6 +93,43 @@ describe('InventoryPage', () => {
         ),
       ).toBeInTheDocument();
     });
+  });
+
+  it('replaces the first-run empty table with a focused setup state until the first asset exists', async () => {
+    mockList.mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 20,
+      total: 0,
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Inventario')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /Exportar CSV/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Agregar activo/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Empieza con Agregar activo\. La exportación CSV aparecerá cuando exista el primer equipo\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Todavía no hay activos cargados.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Usa Agregar activo para registrar el primero\. Cuando exista al menos uno, aquí podrás buscarlo, editarlo, imprimir su QR y exportar el inventario actual\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('textbox', { name: /Buscar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Nombre$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Categoría$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Ubicación$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('No se encontraron activos.')).not.toBeInTheDocument();
   });
 
   it('keeps one edit control per row and sends the QR action directly to print', async () => {
