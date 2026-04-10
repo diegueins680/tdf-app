@@ -485,25 +485,24 @@ validateProposalContentSource mLatex mTemplateKey =
 
 validateTemplateKey :: Text -> Either ServerError Text
 validateTemplateKey raw =
-  let trimmed = T.strip raw
-  in if T.null trimmed
+  let canonical = canonicalTemplateKey raw
+  in if T.null canonical
       then Left err400 { errBody = "templateKey required" }
       else
-        if isSafeTemplateKey trimmed
-          then Right trimmed
+        if isSafeTemplateKey canonical
+          then Right canonical
           else Left err400
             { errBody = "templateKey must contain only ASCII letters, numbers, hyphens, or underscores"
             }
 
 loadTemplate :: Text -> IO (Maybe Text)
 loadTemplate key =
-  let trimmed = T.strip key
-  in if isSafeTemplateKey trimmed
-    then do
-      let path = templatesDir </> T.unpack trimmed <> ".tex"
+  case validateTemplateKey key of
+    Left _ -> pure Nothing
+    Right canonical -> do
+      let path = templatesDir </> T.unpack canonical <> ".tex"
       exists <- doesFileExist path
       if exists then Just <$> TIO.readFile path else pure Nothing
-    else pure Nothing
 
 templatesDir :: FilePath
 templatesDir = "templates" </> "proposals"
@@ -516,6 +515,9 @@ isSafeTemplateKey key =
   not (T.null key) && T.all isAllowed key
   where
     isAllowed c = isAscii c && (isAlphaNum c || c == '-' || c == '_')
+
+canonicalTemplateKey :: Text -> Text
+canonicalTemplateKey = T.toLower . T.strip
 
 encodeUtf8Lazy :: Text -> BL.ByteString
 encodeUtf8Lazy = BL.fromStrict . TE.encodeUtf8

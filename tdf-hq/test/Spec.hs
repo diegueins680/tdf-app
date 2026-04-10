@@ -649,8 +649,9 @@ main = hspec $ do
             assertRejected 2001
 
     describe "validateTemplateKey" $ do
-        it "trims valid proposal template keys before lookup" $
+        it "trims and canonicalizes proposal template keys before lookup" $ do
             validateTemplateKey "  tdf_live_sessions  " `shouldBe` Right "tdf_live_sessions"
+            validateTemplateKey "  TDF_Live_Sessions  " `shouldBe` Right "tdf_live_sessions"
 
         it "rejects blank or unsafe template keys with a 400 instead of a missing-template 404" $ do
             let assertInvalid raw expected = case validateTemplateKey raw of
@@ -667,6 +668,8 @@ main = hspec $ do
             validateProposalContentSource (Just "\\section*{Proposal}") Nothing
                 `shouldBe` Right (ProposalInlineLatex "\\section*{Proposal}")
             validateProposalContentSource (Just "   ") (Just "  tdf_live_sessions  ")
+                `shouldBe` Right (ProposalTemplateKey "tdf_live_sessions")
+            validateProposalContentSource Nothing (Just "  TDF_Live_Sessions  ")
                 `shouldBe` Right (ProposalTemplateKey "tdf_live_sessions")
 
         it "rejects missing or ambiguous content source input with a 400" $ do
