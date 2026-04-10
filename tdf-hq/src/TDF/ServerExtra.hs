@@ -152,15 +152,16 @@ inventoryServer user =
       unless (hasOperationsAccess user) $
         throwError err403 { errBody = "Missing required module access" }
 
-    listAssets _mq mp mps = do
+    listAssets mq mp mps = do
       ensureInventoryAccess
       let pageNum    = clampPage (fromMaybe 1 mp)
           pageSize'  = clampPageSize (fromMaybe 50 mps)
           pageOffset = (pageNum - 1) * pageSize'
-          opts       = [Asc AssetName, LimitTo pageSize', OffsetBy pageOffset]
-      entities <- withPool $ selectList ([] :: [Filter Asset]) opts
-      totalCount <- withPool $ count ([] :: [Filter Asset])
-      pure (mkPage pageNum pageSize' totalCount (map toAssetDTO entities))
+      entities <- withPool $ selectList ([] :: [Filter Asset]) [Asc AssetName]
+      let filteredEntities = filterAssetsByQuery mq entities
+          totalCount = length filteredEntities
+          pagedEntities = take pageSize' (drop pageOffset filteredEntities)
+      pure (mkPage pageNum pageSize' totalCount (map toAssetDTO pagedEntities))
 
     createAssetH req = do
       ensureInventoryAccess
@@ -1224,6 +1225,33 @@ clampPage = max 1
 
 clampPageSize :: Int -> Int
 clampPageSize = max 1 . min 100
+
+normalizeAssetSearchQuery :: Maybe Text -> Maybe Text
+normalizeAssetSearchQuery Nothing = Nothing
+normalizeAssetSearchQuery (Just rawQuery) =
+  let normalized = T.toCaseFold (T.strip rawQuery)
+  in if T.null normalized then Nothing else Just normalized
+
+assetMatchesSearchQuery :: Text -> Asset -> Bool
+assetMatchesSearchQuery normalizedQuery asset =
+  any (T.isInfixOf normalizedQuery . T.toCaseFold)
+    ( assetName asset
+    : assetCategory asset
+    : catMaybes
+        [ assetBrand asset
+        , assetModel asset
+        , assetSerialNumber asset
+        , Just (assetOwner asset)
+        , assetNotes asset
+        ]
+    )
+
+filterAssetsByQuery :: Maybe Text -> [Entity Asset] -> [Entity Asset]
+filterAssetsByQuery maybeQuery assets =
+  case normalizeAssetSearchQuery maybeQuery of
+    Nothing -> assets
+    Just normalizedQuery ->
+      filter (assetMatchesSearchQuery normalizedQuery . entityVal) assets
 
 withPool
   :: (MonadReader Env m, MonadIO m)

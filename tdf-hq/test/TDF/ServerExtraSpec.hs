@@ -11,7 +11,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
-import Database.Persist
+import Database.Persist hiding (Active)
 import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import Servant (ServerError (errBody, errHTTPCode))
@@ -20,13 +20,24 @@ import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
 import TDF.API.Types (AssetCheckinRequest (..))
-import TDF.ModelsExtra (AssetStatus (Booked, OutForMaintenance), CheckoutTarget (TargetParty, TargetRoom, TargetSession), Room, Session, SessionStatus (InPrep, InSession))
+import TDF.ModelsExtra
+  ( Asset (..)
+  , AssetCondition (Good)
+  , AssetStatus (Active, Booked, OutForMaintenance)
+  , CheckoutTarget (TargetParty, TargetRoom, TargetSession)
+  , MaintenancePolicy (None)
+  , Room
+  , Session
+  , SessionStatus (InPrep, InSession)
+  )
 import TDF.ServerExtra (
     IGInbound (..),
     IGInboundDeleted (..),
     MetaChannel (..),
     MetaInboundEvent (..),
+    assetMatchesSearchQuery,
     extractMetaInbound,
+    normalizeAssetSearchQuery,
     normalizeAssetCategory,
     normalizeAssetCategoryUpdate,
     normalizeAssetCheckinFields,
@@ -58,6 +69,22 @@ import TDF.ServerExtra (
 
 spec :: Spec
 spec = do
+  describe "inventory asset query filtering" $ do
+    it "normalizes missing or blank queries to no filter" $ do
+      normalizeAssetSearchQuery Nothing `shouldBe` Nothing
+      normalizeAssetSearchQuery (Just "   ") `shouldBe` Nothing
+      normalizeAssetSearchQuery (Just "  SYNTH  ") `shouldBe` Just "synth"
+
+    it "matches name/category/brand/model/owner/notes case-insensitively once q is provided" $ do
+      let synthAsset = fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" (Just "Analog poly")
+          drumAsset = fixtureAsset "Ludwig Supraphonic" "Drum" (Just "Ludwig") Nothing "Backline" (Just "Studio snare")
+      assetMatchesSearchQuery "juno" synthAsset `shouldBe` True
+      assetMatchesSearchQuery "synth" synthAsset `shouldBe` True
+      assetMatchesSearchQuery "roland" synthAsset `shouldBe` True
+      assetMatchesSearchQuery "tdf" synthAsset `shouldBe` True
+      assetMatchesSearchQuery "analog" synthAsset `shouldBe` True
+      assetMatchesSearchQuery "juno" drumAsset `shouldBe` False
+
   describe "asset name/category normalization" $ do
     it "trims meaningful asset names and categories on create and update" $ do
       normalizeAssetName "  Roland Juno-106  " `shouldBe` Right "Roland Juno-106"
@@ -525,3 +552,25 @@ initializeMetaInboxSchema = do
         \CONSTRAINT \"unique_instagram_message\" UNIQUE (\"external_id\")\
         \)"
         []
+
+fixtureAsset :: Text -> Text -> Maybe Text -> Maybe Text -> Text -> Maybe Text -> Asset
+fixtureAsset name category brand model owner notes =
+  Asset
+    { assetName = name
+    , assetCategory = category
+    , assetBrand = brand
+    , assetModel = model
+    , assetSerialNumber = Nothing
+    , assetPurchaseDate = Nothing
+    , assetPurchasePriceUsdCents = Nothing
+    , assetCondition = Good
+    , assetStatus = Active
+    , assetLocationId = Nothing
+    , assetOwner = owner
+    , assetQrCode = Nothing
+    , assetPhotoUrl = Nothing
+    , assetNotes = notes
+    , assetWarrantyExpires = Nothing
+    , assetMaintenancePolicy = None
+    , assetNextMaintenanceDue = Nothing
+    }
