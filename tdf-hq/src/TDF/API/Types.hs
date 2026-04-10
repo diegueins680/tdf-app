@@ -6,10 +6,11 @@
 
 module TDF.API.Types where
 
-import           Control.Applicative ((<|>))
+import           Data.Char    (isDigit)
 import           Data.Aeson   (FromJSON(..), ToJSON(..), Value(..), eitherDecode, object, withObject, (.:), (.:?), (.=))
 import           Data.Int     (Int64)
 import           Data.Text    (Text)
+import qualified Data.Text    as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
 import           Data.Time    (UTCTime, Day)
@@ -727,8 +728,15 @@ instance FromJSON RolePayload where
   parseJSON v =
     case v of
       String t -> pure (RolePayload t)
-      Object o -> RolePayload <$> (o .: "role" <|> o .: "value")
-      _        -> fail "Expected role string or object with 'role'"
+      Object o -> do
+        mRole <- o .:? "role"
+        mValue <- o .:? "value"
+        case (mRole, mValue) of
+          (Just role, Nothing) -> pure (RolePayload role)
+          (Nothing, Just value) -> pure (RolePayload value)
+          (Nothing, Nothing) -> fail "Expected role object with either 'role' or 'value'"
+          (Just _, Just _) -> fail "Expected role object with exactly one of 'role' or 'value'"
+      _        -> fail "Expected role string or object with exactly one of 'role' or 'value'"
 
 instance MimeUnrender PlainText RolePayload where
   mimeUnrender _ = Right . RolePayload . TE.decodeUtf8 . BL.toStrict
@@ -745,7 +753,24 @@ instance MimeUnrender LooseJSON RolePayload where
   mimeUnrender _ bs =
     case eitherDecode bs of
       Right rp -> Right rp
-      Left _   -> Right (RolePayload (TE.decodeUtf8 (BL.toStrict bs)))
+      Left decodeErr ->
+        let rawText = TE.decodeUtf8 (BL.toStrict bs)
+            trimmed = T.strip rawText
+        in if T.null trimmed
+             then Left "Expected non-empty role payload"
+             else if looksLikeStructuredJson trimmed
+               then Left decodeErr
+               else Right (RolePayload rawText)
+
+looksLikeStructuredJson :: Text -> Bool
+looksLikeStructuredJson raw =
+  case T.uncons raw of
+    Nothing -> False
+    Just (firstChar, _) ->
+      firstChar `elem` ['{', '[', '"'] ||
+      firstChar == '-' ||
+      isDigit firstChar ||
+      T.toLower raw `elem` ["true", "false", "null"]
 
 data BandMemberDTO = BandMemberDTO
   { bmId         :: Text
