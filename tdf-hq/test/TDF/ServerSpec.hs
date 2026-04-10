@@ -7,7 +7,8 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
-import Data.Time.Clock (getCurrentTime)
+import Data.Time (fromGregorian)
+import Data.Time.Clock (UTCTime (..), getCurrentTime, secondsToDiffTime)
 import Database.Persist (Entity(..), get, insert)
 import Database.Persist.Sql (SqlPersistT, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
@@ -20,6 +21,7 @@ import TDF.Server
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
     , parsePaymentMethodText
+    , validateBookingTimeRange
     , validateWhatsAppMessagesLimit
     , validateBookingListFilters
     , validatePublicBookingDurationMinutes
@@ -538,6 +540,26 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (-15)
             assertInvalid 0
             assertInvalid 29
+
+    describe "validateBookingTimeRange" $ do
+        it "accepts booking ranges whose end is strictly after the start" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 36000)
+                endsAt = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 39600)
+            validateBookingTimeRange startsAt endsAt `shouldBe` Right ()
+
+        it "rejects zero-length or reversed booking ranges before persistence" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 36000)
+                sameEndsAt = startsAt
+                reversedEndsAt = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 32400)
+                assertInvalid endsAtCandidate =
+                    case validateBookingTimeRange startsAt endsAtCandidate of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "endsAt must be after startsAt"
+                        Right result ->
+                            expectationFailure ("Expected invalid booking time range to be rejected, got: " <> show result)
+            assertInvalid sameEndsAt
+            assertInvalid reversedEndsAt
 
     describe "validateCourseRegistrationContactChannels" $ do
         it "accepts registrations with at least one contact channel" $ do

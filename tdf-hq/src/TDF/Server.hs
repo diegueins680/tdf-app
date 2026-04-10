@@ -3497,6 +3497,11 @@ validatePublicBookingDurationMinutes (Just durationMinutes)
   | otherwise =
       Right durationMinutes
 
+validateBookingTimeRange :: UTCTime -> UTCTime -> Either ServerError ()
+validateBookingTimeRange startsAt endsAt
+  | endsAt > startsAt = Right ()
+  | otherwise = Left err400 { errBody = "endsAt must be after startsAt" }
+
 validateCourseRegistrationEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationEmail Nothing = Right Nothing
 validateCourseRegistrationEmail (Just rawEmail) =
@@ -5116,6 +5121,8 @@ createBooking user req = do
   now <- liftIO getCurrentTime
 
   status' <- either throwBadRequest pure (parseBookingStatus (cbStatus req))
+  either throwError pure $
+    validateBookingTimeRange (cbStartsAt req) (cbEndsAt req)
   engineerIdClean <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (cbEngineerPartyId req)
@@ -5232,12 +5239,15 @@ updateBooking user bookingIdI req = do
                         requestedEngineerId
                   , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
                   }
-            case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
-              Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
-              Right () -> do
-                replace bookingId updated
-                dtos <- buildBookingDTOs [Entity bookingId updated]
-                pure (maybe (Left err500) Right (listToMaybe dtos))
+            case validateBookingTimeRange (bookingStartsAt updated) (bookingEndsAt updated) of
+              Left bookingErr -> pure (Left bookingErr)
+              Right () ->
+                case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
+                  Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
+                  Right () -> do
+                    replace bookingId updated
+                    dtos <- buildBookingDTOs [Entity bookingId updated]
+                    pure (maybe (Left err500) Right (listToMaybe dtos))
   either throwError pure result
 
 
