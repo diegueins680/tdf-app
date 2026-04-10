@@ -800,6 +800,20 @@ main = hspec $ do
                 Right _ ->
                     expectationFailure "Expected malformed stored contract row to be rejected"
 
+        it "rejects stored contracts with invalid persisted ids instead of rendering the wrong contract identity" $
+            case decodeStoredContract "{\"id\":\"not-a-uuid\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored contract id is invalid"
+                Right _ ->
+                    expectationFailure "Expected stored contract with invalid id to be rejected"
+
+        it "rejects stored contracts whose top-level kind disagrees with payload.kind" $
+            case decodeStoredContract "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"nda\",\"payload\":{\"kind\":\"msa\",\"amountCents\":25000},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored contract kind does not match payload kind"
+                Right _ ->
+                    expectationFailure "Expected mismatched stored contract kinds to be rejected"
+
     describe "internship status validation" $ do
         it "defaults omitted project statuses and normalizes supported explicit values" $ do
             validateInternProjectStatusInput Nothing `shouldBe` Right "active"

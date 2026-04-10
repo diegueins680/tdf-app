@@ -125,7 +125,38 @@ decodeStoredContract :: BL.ByteString -> Either Text StoredContract
 decodeStoredContract bytes =
   case A.eitherDecode bytes of
     Left _ -> Left "Stored contract payload is unreadable"
-    Right stored -> Right stored
+    Right stored -> validateStoredContract stored
+
+validateStoredContract :: StoredContract -> Either Text StoredContract
+validateStoredContract stored@StoredContract{..} = do
+  contractId <- validateStoredContractId scId
+  storedKind <- validateStoredContractKind scKind
+  (payloadKind, normalizedPayload) <- firstServerErrorText (validateContractPayload scPayload)
+  if storedKind /= payloadKind
+    then Left "Stored contract kind does not match payload kind"
+    else
+      Right
+        stored
+          { scId = contractId
+          , scKind = storedKind
+          , scPayload = normalizedPayload
+          }
+
+validateStoredContractId :: Text -> Either Text Text
+validateStoredContractId rawId =
+  case UUID.fromText (T.strip rawId) of
+    Just uuid -> Right (toText uuid)
+    Nothing -> Left "Stored contract id is invalid"
+
+validateStoredContractKind :: Text -> Either Text Text
+validateStoredContractKind rawKind =
+  case normalizeContractKind rawKind of
+    Left _ -> Left "Stored contract kind is invalid"
+    Right kindText -> Right kindText
+
+firstServerErrorText :: Either ServerError a -> Either Text a
+firstServerErrorText =
+  either (Left . TE.decodeUtf8 . BL.toStrict . errBody) Right
 
 validateContractId :: Text -> Either ServerError Text
 validateContractId raw =
