@@ -99,6 +99,7 @@ import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
+import qualified TDF.WhatsApp.HistorySpec as WhatsAppHistorySpec
 
 withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
 withEnvOverrides overrides action =
@@ -1231,6 +1232,7 @@ main = hspec $ do
     FollowSpec.spec
     FollowHandlerSpec.spec
     PublicLeadSpec.spec
+    WhatsAppHistorySpec.spec
 
 mkLiveSessionMultipart :: [(Text, Text)] -> MultipartData Tmp
 mkLiveSessionMultipart fields =

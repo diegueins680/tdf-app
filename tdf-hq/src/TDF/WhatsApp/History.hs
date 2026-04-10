@@ -86,11 +86,30 @@ data WhatsAppDeliveryUpdate = WhatsAppDeliveryUpdate
 
 normalizeWhatsAppPhone :: Text -> Maybe Text
 normalizeWhatsAppPhone raw =
-  let trimmed = T.filter (not . isSpace) (T.strip raw)
-      digits = T.filter (\c -> isDigit c || c == '+') trimmed
-      withoutPlus = T.dropWhile (== '+') digits
-      onlyDigits = T.filter isDigit withoutPlus
-  in if T.null onlyDigits then Nothing else Just ("+" <> onlyDigits)
+  let trimmed = T.strip raw
+      onlyDigits = T.filter isDigit trimmed
+      digitCount = T.length onlyDigits
+      plusCount = T.count "+" trimmed
+      plusIndex = T.findIndex (== '+') trimmed
+      firstDigitIndex = T.findIndex isDigit trimmed
+      allowedPhoneChar ch =
+        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
+      plusIsValid =
+        case plusIndex of
+          Nothing -> True
+          Just idx ->
+            case firstDigitIndex of
+              Nothing -> False
+              Just digitIdx -> plusCount == 1 && idx < digitIdx
+  in
+    if T.null onlyDigits
+        || digitCount < 8
+        || digitCount > 15
+        || hasInvalidChars
+        || not plusIsValid
+      then Nothing
+      else Just ("+" <> onlyDigits)
 
 resolveWhatsAppContactSnapshot
   :: Maybe PartyId
