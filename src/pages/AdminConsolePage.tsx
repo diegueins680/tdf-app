@@ -69,6 +69,7 @@ const GETTING_STARTED_ADMIN_STEPS = [
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
 const ADMIN_USER_TABLE_COLUMN_COUNT = 4;
+const AUDIT_TABLE_COLUMN_COUNT = 5;
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -113,6 +114,10 @@ function summarizeAdminUserIdentity(user: Pick<AdminUserDTO, 'displayName' | 'us
   const showUsername = displayName !== '' && displayName.toLowerCase() !== username.toLowerCase();
 
   return { primary, username, showUsername };
+}
+
+function formatAuditActor(actorId?: number | null) {
+  return actorId ?? 'Sistema';
 }
 
 function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
@@ -219,7 +224,8 @@ export default function AdminConsolePage() {
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
     : '—';
   const showUsersTable = isUsersLoading || users.length > 1;
-  const showAuditTable = auditQuery.isLoading || audits.length > 0;
+  const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
+  const showAuditTable = auditQuery.isLoading || audits.length > 1;
   const showGettingStartedGuidance =
     !consoleQuery.isPending
     && !usersQuery.isLoading
@@ -574,7 +580,7 @@ export default function AdminConsolePage() {
                     <TableCell>{formatDate(entry.createdAt)}</TableCell>
                     <TableCell>{entry.entity} · {entry.entityId}</TableCell>
                     <TableCell>{entry.action}</TableCell>
-                    <TableCell>{entry.actorId ?? 'Sistema'}</TableCell>
+                    <TableCell>{formatAuditActor(entry.actorId)}</TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
                         {entry.diff ?? '—'}
@@ -584,7 +590,7 @@ export default function AdminConsolePage() {
                 ))}
                 {auditQuery.isLoading && (
                   <TableRow>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={AUDIT_TABLE_COLUMN_COUNT}>
                       <Typography variant="body2" align="center" color="text.secondary" sx={{ py: 2 }}>
                         Cargando auditoría…
                       </Typography>
@@ -594,6 +600,40 @@ export default function AdminConsolePage() {
               </TableBody>
             </Table>
           </TableContainer>
+        ) : singleAuditEntry && !auditQuery.isError ? (
+          <Box sx={{ px: 2, pb: 2 }}>
+            <Stack spacing={1.25}>
+              <Typography variant="body2" color="text.secondary">
+                Primer evento de auditoría. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica.
+              </Typography>
+              <Stack
+                spacing={0.75}
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 1.25,
+                }}
+              >
+                <Typography variant="body2">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Acción:</Box> {singleAuditEntry.action}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Fecha:</Box> {formatDate(singleAuditEntry.createdAt)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Entidad:</Box> {singleAuditEntry.entity} · {singleAuditEntry.entityId}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Actor:</Box> {formatAuditActor(singleAuditEntry.actorId)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                  <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleAuditEntry.diff ?? '—'}
+                </Typography>
+              </Stack>
+            </Stack>
+          </Box>
         ) : !auditQuery.isError ? (
           <Box sx={{ px: 2, pb: 2 }}>
             <Typography variant="body2" color="text.secondary">
