@@ -2106,8 +2106,12 @@ followArtistDb pool artistId followerPartyIdRaw = do
 
 normalizePositivePartyIdText :: T.Text -> Maybe T.Text
 normalizePositivePartyIdText rawPartyId =
-  case readMaybe (T.unpack (T.strip rawPartyId)) :: Maybe Int64 of
-    Just partyId | partyId > 0 -> Just (T.pack (show partyId))
+  normalizePositiveIdentifierText rawPartyId
+
+normalizePositiveIdentifierText :: T.Text -> Maybe T.Text
+normalizePositiveIdentifierText rawIdentifier =
+  case readMaybe (T.unpack (T.strip rawIdentifier)) :: Maybe Int64 of
+    Just identifier | identifier > 0 -> Just (T.pack (show identifier))
     _ -> Nothing
 
 parseFollowerQueryParamEither :: Maybe T.Text -> Either ServerError T.Text
@@ -2159,7 +2163,11 @@ normalizeTicketStatus mStatus =
 validateTicketCheckInLookup :: TicketCheckInRequestDTO -> Either ServerError TicketCheckInLookup
 validateTicketCheckInLookup TicketCheckInRequestDTO{..} =
   case (cleanMaybeText ticketCheckInTicketId, cleanMaybeText ticketCheckInTicketCode) of
-    (Just rawTicketId, Nothing) -> Right (TicketCheckInLookupById rawTicketId)
+    (Just rawTicketId, Nothing) ->
+      case normalizePositiveIdentifierText rawTicketId of
+        Just normalizedTicketId -> Right (TicketCheckInLookupById normalizedTicketId)
+        Nothing ->
+          Left err400 { errBody = "ticketCheckInTicketId must be a positive integer" }
     (Nothing, Just rawCode) -> Right (TicketCheckInLookupByCode (T.toUpper (T.strip rawCode)))
     (Just _, Just _) ->
       Left err400 { errBody = "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode" }

@@ -428,10 +428,10 @@ main = hspec $ do
             normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
 
     describe "validateTicketCheckInLookup" $ do
-        it "accepts exactly one lookup field and normalizes ticket codes" $ do
+        it "accepts exactly one lookup field and canonicalizes ticket ids and codes" $ do
             validateTicketCheckInLookup
                 TicketCheckInRequestDTO
-                    { ticketCheckInTicketId = Just " 42 "
+                    { ticketCheckInTicketId = Just " 0042 "
                     , ticketCheckInTicketCode = Nothing
                     }
                 `shouldBe` Right (TicketCheckInLookupById "42")
@@ -453,6 +453,22 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode"
                 Right value ->
                     expectationFailure ("Expected ambiguous ticket check-in payload to be rejected, got " <> show value)
+
+        it "rejects non-numeric or non-positive ticket ids before lookup" $ do
+            let assertInvalid rawTicketId =
+                    case validateTicketCheckInLookup
+                        TicketCheckInRequestDTO
+                            { ticketCheckInTicketId = Just rawTicketId
+                            , ticketCheckInTicketCode = Nothing
+                            } of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "ticketCheckInTicketId must be a positive integer"
+                        Right value ->
+                            expectationFailure ("Expected invalid ticket id to be rejected, got " <> show value)
+            assertInvalid "0"
+            assertInvalid "-7"
+            assertInvalid "ticket-42"
 
     describe "validateRadioStreamUrl" $ do
         it "trims surrounding whitespace and accepts http(s) stream URLs" $
