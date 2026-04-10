@@ -45,6 +45,24 @@ describe("RegisterPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the manual shift override hidden until the operator opts into an existing shift", async () => {
+    const user = userEvent.setup();
+
+    renderRegister("/bar/register?bookingId=10&stationId=20");
+
+    expect(
+      screen.getByText(/Si la caja ya fue abierta fuera de esta pantalla, continúa con su ID manual\./i),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Continuar con ID de turno")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Ya tengo un turno abierto" }));
+
+    expect(screen.getByLabelText("Continuar con ID de turno")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Úsalo solo si la caja ya fue abierta desde otro flujo\./i),
+    ).toBeInTheDocument();
+  });
+
   it("walks through opening, drop, count and close actions", async () => {
     mockOpenRegister.mockResolvedValueOnce({ shiftId: 55 });
     mockCashDrop.mockResolvedValueOnce({});

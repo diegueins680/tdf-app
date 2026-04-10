@@ -51,6 +51,7 @@ export default function RegisterPage() {
   const [openingFloat, setOpeningFloat] = useState(0);
   const [shift, setShift] = useState<unknown>(null);
   const [shiftId, setShiftId] = useState(initialShiftId);
+  const [showManualShiftIdField, setShowManualShiftIdField] = useState(false);
   const [dropAmount, setDropAmount] = useState(0);
   const [counts, setCounts] = useState<Record<number, number>>({});
   const [countResult, setCountResult] = useState<RegisterCountResult | null>(null);
@@ -166,17 +167,42 @@ export default function RegisterPage() {
               {openMutation.isPending ? "Abriendo…" : "Abrir"}
             </Button>
           </Stack>
-          <TextField
-            sx={{ mt: 2 }}
-            label="ID de turno (manual)"
-            type="number"
-            value={shiftId || ""}
-            onChange={(event) => setShiftId(Number(event.target.value))}
-            helperText="Completa manualmente si ya tienes un turno abierto."
-          />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            {effectiveShiftId > 0
+              ? `Turno activo: #${effectiveShiftId}`
+              : "Si la caja ya fue abierta fuera de esta pantalla, continúa con su ID manual."}
+          </Typography>
+          <Button
+            size="small"
+            onClick={() => setShowManualShiftIdField((current) => !current)}
+            aria-expanded={showManualShiftIdField}
+            aria-controls="register-manual-shift-id"
+            sx={{ mt: 0.5, px: 0, minWidth: 0, alignSelf: "flex-start" }}
+          >
+            {showManualShiftIdField
+              ? "Ocultar turno manual"
+              : effectiveShiftId > 0
+                ? "Cambiar turno manual"
+                : "Ya tengo un turno abierto"}
+          </Button>
+          {showManualShiftIdField && (
+            <TextField
+              id="register-manual-shift-id"
+              sx={{ mt: 1.5 }}
+              label="Continuar con ID de turno"
+              type="number"
+              value={shiftId || ""}
+              onChange={(event) => setShiftId(Number(event.target.value))}
+              helperText={
+                effectiveShiftId > 0
+                  ? "Actualiza el ID solo si necesitas continuar otro turno."
+                  : "Úsalo solo si la caja ya fue abierta desde otro flujo."
+              }
+            />
+          )}
           {effectiveShiftId > 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Turno activo: #{effectiveShiftId}
+              Los depósitos, conteos y cierres usarán este turno mientras no lo cambies.
             </Typography>
           )}
         </Paper>
