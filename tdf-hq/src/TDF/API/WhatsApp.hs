@@ -155,7 +155,7 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
   where
     tokenValue = T.strip rawToken
     nameValue = T.strip rawName
-    emailValue = T.strip rawEmail
+    emailValue = T.toLower (T.strip rawEmail)
 
 validateLeadCompletionId :: Int -> Either ServerError Int
 validateLeadCompletionId leadId

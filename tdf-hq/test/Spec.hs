@@ -1011,8 +1011,8 @@ main = hspec $ do
                 Right _ -> expectationFailure "Expected missing verify-token config to be rejected"
 
     describe "validateLeadCompletionRequest" $ do
-        it "trims meaningful lead-completion payload fields before persistence" $ do
-            validateLeadCompletionRequest (CompleteReq " token-123 " " Ada Lovelace " " ada@example.com ")
+        it "trims and canonicalizes meaningful lead-completion payload fields before persistence" $ do
+            validateLeadCompletionRequest (CompleteReq " token-123 " " Ada Lovelace " " Ada@Example.com ")
                 `shouldBe` Right (CompleteReq "token-123" "Ada Lovelace" "ada@example.com")
 
         it "rejects blank tokens, blank names, and malformed emails with precise 400s" $ do
