@@ -17,6 +17,7 @@ module TDF.ServerAuth
   , authV1Server
   , PasswordResetError
   , normalizeAuthEmailAddress
+  , parsePasswordChangeAuthToken
   , resolvePasswordResetDelivery
   , runPasswordResetConfirm
   , signupEmailExists
@@ -318,21 +319,25 @@ changePassword mAuthHeader ChangePasswordRequest{..} = do
       case mUsername of
         Just uname | not (T.null uname) -> pure uname
         _ -> do
-          tokenValue <- case header >>= parseBearer . T.strip of
-            Nothing -> throwBadRequest "Username is required"
-            Just tok -> pure tok
+          tokenValue <- case traverse parsePasswordChangeAuthToken header of
+            Left err -> throwError err
+            Right Nothing -> throwBadRequest "Username is required"
+            Right (Just tok) -> pure tok
           mResolved <- liftIO $ flip runSqlPool pool (lookupUsernameFromToken tokenValue)
           case fmap T.strip mResolved of
             Nothing ->
               throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 "Invalid or inactive session token") }
             Just uname' -> pure uname'
 
-    parseBearer headerText =
-      case T.words headerText of
-        [scheme, value]
-          | T.toLower scheme == "bearer" -> Just value
-        [value] -> Just value
-        _ -> Nothing
+parsePasswordChangeAuthToken :: Text -> Either ServerError Text
+parsePasswordChangeAuthToken rawHeader =
+  case T.words (T.strip rawHeader) of
+    [scheme, value]
+      | T.toLower scheme == "bearer" -> Right value
+    [value]
+      | T.toLower value /= "bearer" -> Right value
+    _ ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Authorization header must be Bearer <token>") }
 
 passwordReset :: PasswordResetRequest -> AppM NoContent
 passwordReset PasswordResetRequest{..} = do

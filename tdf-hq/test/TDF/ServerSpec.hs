@@ -41,6 +41,7 @@ import TDF.Server
     )
 import TDF.ServerAuth
     ( normalizeAuthEmailAddress
+    , parsePasswordChangeAuthToken
     , resolvePasswordResetDelivery
     , runPasswordResetConfirm
     , signupEmailExists
@@ -160,6 +161,22 @@ spec = describe "TDF.Server helpers" $ do
             normalizeAuthEmailAddress "   " `shouldBe` Nothing
             normalizeAuthEmailAddress "not-an-email" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@ example.com" `shouldBe` Nothing
+
+    describe "parsePasswordChangeAuthToken" $ do
+        it "accepts standard bearer headers and preserves the raw-token fallback" $ do
+            parsePasswordChangeAuthToken " Bearer session-token " `shouldBe` Right "session-token"
+            parsePasswordChangeAuthToken "raw-session-token" `shouldBe` Right "raw-session-token"
+
+        it "rejects malformed authorization headers instead of misreporting them as invalid tokens" $ do
+            let assertInvalid rawHeader = case parsePasswordChangeAuthToken rawHeader of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "Authorization header must be Bearer <token>"
+                    Right tokenVal ->
+                        expectationFailure ("Expected malformed authorization header to be rejected, got: " <> show tokenVal)
+            assertInvalid "Bearer"
+            assertInvalid "Basic session-token"
+            assertInvalid "Bearer too many parts"
 
     describe "signupEmailExists" $ do
         it "treats mixed-case stored usernames or party emails as the same signup identity" $ do
