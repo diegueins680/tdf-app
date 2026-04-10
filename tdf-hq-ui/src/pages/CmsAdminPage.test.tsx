@@ -293,6 +293,29 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces blank custom-slug dead ends with one helper and keeps save disabled until the slug exists', async () => {
+    window.localStorage.setItem(
+      'tdf-cms-admin:last-selection',
+      JSON.stringify({ slug: '', locale: 'es' }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(listMock).toHaveBeenCalledWith({ slug: '', locale: 'es' });
+      expect(getPublicMock).not.toHaveBeenCalled();
+      expect(countActionsByText(container, 'Abrir página en vivo')).toBe(0);
+      expect(container.textContent).toContain(
+        'Completa este slug para habilitar Guardar versión y Abrir página en vivo.',
+      );
+      expect(getButtonByText(container, 'Guardar versión').disabled).toBe(true);
+    });
+
+    await cleanup();
+  });
+
   it('hides the compare action until a live version exists so new slugs do not show a dead-end control', async () => {
     getPublicMock.mockImplementation(async () => null as unknown as CmsContentDTO);
 

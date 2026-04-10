@@ -152,6 +152,9 @@ export default function CmsAdminPage() {
   const normalizedSlugFilter = slugFilter.trim();
   const hasSlugSelection = normalizedSlugFilter.length > 0;
   const slugFieldState = useMemo(() => getCmsSlugFieldState(slugFilter), [slugFilter]);
+  const customSlugHelperText = hasSlugSelection
+    ? 'Usa el mismo slug que consume la ruta pública.'
+    : 'Completa este slug para habilitar Guardar versión y Abrir página en vivo.';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -592,12 +595,8 @@ export default function CmsAdminPage() {
             Crear, publicar y versionar bloques para páginas públicas (records, fan hub, landing cursos).
           </Typography>
         </Box>
-        {hasSlugSelection ? (
+        {hasSlugSelection && (
           <Button variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
-            Abrir página en vivo
-          </Button>
-        ) : (
-          <Button variant="outlined" disabled>
             Abrir página en vivo
           </Button>
         )}
@@ -634,7 +633,7 @@ export default function CmsAdminPage() {
                   value={slugFilter}
                   onChange={(e) => setSlugFilter(e.target.value)}
                   sx={{ mt: 1 }}
-                  helperText="Usa el mismo slug que consume la ruta pública."
+                  helperText={customSlugHelperText}
                 />
               )}
             </Grid>
@@ -804,7 +803,11 @@ export default function CmsAdminPage() {
                   <MenuItem value="published">Publicado</MenuItem>
                 </TextField>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                  <Button variant="contained" onClick={handleCreate} disabled={createMutation.isPending}>
+                  <Button
+                    variant="contained"
+                    onClick={handleCreate}
+                    disabled={createMutation.isPending || !hasSlugSelection}
+                  >
                     Guardar versión
                   </Button>
                   {editingSourceChipLabel && <Chip label={editingSourceChipLabel} size="small" color="info" />}
