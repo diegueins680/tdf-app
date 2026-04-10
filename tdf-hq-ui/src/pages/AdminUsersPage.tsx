@@ -142,7 +142,7 @@ export default function AdminUsersPage() {
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
   const activeSearchSummary = searchQuery.trim();
   const hasMultipleUsers = totalUsersCount > 1;
-  const showGeneralIntro = hasMultipleUsers || hasActiveSearch;
+  const showGeneralIntro = hasMultipleUsers && !hasActiveSearch;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = hasMultipleUsers || hasActiveSearch;
   const showMixedWhatsAppStateGuidance = visibleUsersMissingWhatsAppCount > 0 && visibleUsersWithWhatsAppCount > 0;

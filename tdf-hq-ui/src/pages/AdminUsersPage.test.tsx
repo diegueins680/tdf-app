@@ -725,6 +725,58 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('hides the generic intro while a search is active so header guidance stays focused on the results', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+        );
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).not.toContain(
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+        );
+        expect(container.textContent).toContain('Mostrando 1 de 2 usuarios.');
+      });
+
+      await changeInputValue(searchInput, '');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps search guidance inside the field instead of repeating the same hint in the header summary', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
