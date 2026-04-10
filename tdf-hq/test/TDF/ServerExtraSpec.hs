@@ -43,6 +43,7 @@ import TDF.ServerExtra (
     normalizeAssetCheckinFields,
     normalizeAssetName,
     normalizeAssetNameUpdate,
+    validateAssetPhotoUrl,
     normalizeRoomName,
     normalizeRoomNameUpdate,
     validateSocialLimit,
@@ -105,6 +106,31 @@ spec = do
       assertInvalid "Asset name is required" (normalizeAssetNameUpdate (Just "   "))
       assertInvalid "Asset category is required" (normalizeAssetCategory "   ")
       assertInvalid "Asset category is required" (normalizeAssetCategoryUpdate (Just "   "))
+
+  describe "validateAssetPhotoUrl" $ do
+    it "treats omitted or blank asset photo inputs as absent and canonicalizes supported URL shapes" $ do
+      validateAssetPhotoUrl Nothing `shouldBe` Right Nothing
+      validateAssetPhotoUrl (Just "   ") `shouldBe` Right Nothing
+      validateAssetPhotoUrl (Just "  https://cdn.example.com/roland.jpg  ")
+        `shouldBe` Right (Just "https://cdn.example.com/roland.jpg")
+      validateAssetPhotoUrl (Just " inventory/roland-juno.jpg ")
+        `shouldBe` Right (Just "inventory/roland-juno.jpg")
+      validateAssetPhotoUrl (Just "assets/inventory/roland-juno.jpg")
+        `shouldBe` Right (Just "inventory/roland-juno.jpg")
+      validateAssetPhotoUrl (Just "/assets/serve/inventory/roland-juno.jpg")
+        `shouldBe` Right (Just "inventory/roland-juno.jpg")
+
+    it "rejects malformed or unsupported asset photo inputs instead of storing opaque strings" $ do
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute http(s) URL or an inventory asset path"
+            Right value ->
+              expectationFailure ("Expected invalid asset photo URL error, got " <> show value)
+      assertInvalid (validateAssetPhotoUrl (Just "roland-juno.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "ftp://cdn.example.com/roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "assets/serve/roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "inventory/../roland.jpg"))
 
   describe "normalizeRoomName" $ do
     it "trims meaningful room names on create and update" $ do

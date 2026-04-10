@@ -167,6 +167,7 @@ inventoryServer user =
       ensureInventoryAccess
       nameClean <- either throwError pure (normalizeAssetName (cName req))
       categoryClean <- either throwError pure (normalizeAssetCategory (cCategory req))
+      photoUrlValue <- either throwError pure (validateAssetPhotoUrl (cPhotoUrl req))
       entity <- withPool $ do
         newAssetId <- insert Asset
           { assetName                  = nameClean
@@ -181,7 +182,7 @@ inventoryServer user =
           , assetLocationId            = Nothing
           , assetOwner                 = "TDF"
           , assetQrCode                = Nothing
-          , assetPhotoUrl              = cPhotoUrl req
+          , assetPhotoUrl              = photoUrlValue
           , assetNotes                 = Nothing
           , assetWarrantyExpires       = Nothing
           , assetMaintenancePolicy     = None
@@ -226,13 +227,14 @@ inventoryServer user =
       nameUpdate <- either throwError pure (normalizeAssetNameUpdate (uName req))
       categoryUpdate <- either throwError pure (normalizeAssetCategoryUpdate (uCategory req))
       statusValue <- either throwError pure (validateAssetStatusUpdate (uStatus req))
+      photoUrlValue <- either throwError pure (validateAssetPhotoUrl (uPhotoUrl req))
       let updates = catMaybes
             [ (AssetName =.) <$> nameUpdate
             , (AssetCategory =.) <$> categoryUpdate
             , (AssetStatus =.) <$> statusValue
             , fmap (\rid -> AssetLocationId =. Just rid) locationKey
             , fmap (\noteTxt -> AssetNotes =. Just noteTxt) (uNotes req)
-            , fmap (\url -> AssetPhotoUrl =. Just url) (uPhotoUrl req)
+            , fmap (\url -> AssetPhotoUrl =. Just url) photoUrlValue
             ]
       result <- withPool $ do
         mEntity <- getEntity assetKey
@@ -993,6 +995,43 @@ normalizeAssetCategoryUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizeAssetCategoryUpdate Nothing = Right Nothing
 normalizeAssetCategoryUpdate (Just rawCategory) =
   Just <$> normalizeAssetCategory rawCategory
+
+validateAssetPhotoUrl :: Maybe Text -> Either ServerError (Maybe Text)
+validateAssetPhotoUrl Nothing = Right Nothing
+validateAssetPhotoUrl (Just rawUrl) =
+  case normalizeOptionalTextField (Just rawUrl) of
+    Nothing -> Right Nothing
+    Just trimmedUrl
+      | TrialsServer.isValidHttpUrl trimmedUrl -> Right (Just trimmedUrl)
+      | Just normalizedPath <- normalizeAssetPhotoPath trimmedUrl -> Right (Just normalizedPath)
+      | otherwise ->
+          Left err400
+            { errBody = "photoUrl must be an absolute http(s) URL or an inventory asset path"
+            }
+
+normalizeAssetPhotoPath :: Text -> Maybe Text
+normalizeAssetPhotoPath rawPath =
+  let trimmed = T.strip rawPath
+      path0 = T.dropWhile (== '/') trimmed
+      path1
+        | "assets/serve/" `T.isPrefixOf` path0 = T.drop (T.length ("assets/serve/" :: Text)) path0
+        | "assets/" `T.isPrefixOf` path0 = T.drop (T.length ("assets/" :: Text)) path0
+        | otherwise = path0
+      pathSegments = T.splitOn "/" path1
+  in if "inventory/" `T.isPrefixOf` path1 && all isValidAssetPhotoPathSegment pathSegments
+       then Just path1
+       else Nothing
+
+isValidAssetPhotoPathSegment :: Text -> Bool
+isValidAssetPhotoPathSegment segment =
+  not (T.null segment)
+    && segment /= "."
+    && segment /= ".."
+    && T.all isValidAssetPhotoPathChar segment
+
+isValidAssetPhotoPathChar :: Char -> Bool
+isValidAssetPhotoPathChar ch =
+  isAscii ch && (isAlphaNum ch || ch `elem` ("._-" :: String))
 
 roomsPublicServer
   :: ( MonadReader Env m
