@@ -80,10 +80,26 @@ function invalidateAdminPanelQueries(queryClient: QueryClient) {
 
 function normalizeAdminConsoleCardKey(value: string) {
   return value
+    .replace(/\s+/g, ' ')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
+}
+
+function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
+  return cards.flatMap((card) => {
+    const title = card.title.trim();
+    const body = card.body
+      .map((paragraph) => paragraph.trim())
+      .filter((paragraph) => paragraph.length > 0);
+
+    if (title === '' || body.length === 0) {
+      return [];
+    }
+
+    return [{ ...card, title, body }];
+  });
 }
 
 function isDedicatedAdminSectionCard(card: AdminConsoleCard) {
@@ -259,7 +275,9 @@ export default function AdminConsolePage() {
 
   const audits = auditQuery.data ?? [];
   const previewCards = dedupeAdminConsoleCards(
-    consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [],
+    sanitizeAdminConsoleCards(
+      consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [],
+    ),
   );
   const consoleCards: AdminConsoleCard[] = previewCards;
   const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;

@@ -303,6 +303,34 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
   });
 
+  it('ignores empty preview cards so placeholder admin modules do not hide the first-run checklist', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-placeholder',
+          title: '   Tokens de servicio   ',
+          body: ['   ', '\n\n'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+  });
+
   it('shows the first-run checklist only when the console is actually empty', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
     mockAuditLogs.mockResolvedValue([
