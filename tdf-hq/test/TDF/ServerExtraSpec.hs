@@ -10,9 +10,10 @@ import Data.Aeson ((.=))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
-import Data.Time.Clock (addUTCTime, getCurrentTime)
+import Data.Time (utctDay)
+import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
 import Database.Persist hiding (Active)
-import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, toSqlKey)
+import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, runMigration, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
@@ -54,6 +55,7 @@ import TDF.ServerExtra (
     validatePaymentAttachmentUrl,
     parseCheckoutTargetKind,
     parseOptionalKeyField,
+    validatePaymentReferences,
     validatePaymentCurrency,
     validatePaymentConcept,
     validatePositivePaymentReferenceId,
@@ -413,6 +415,38 @@ spec = do
         Right value ->
           expectationFailure ("Expected invalid payment concept error, got " <> show value)
 
+  describe "validatePaymentReferences" $ do
+    it "accepts existing party, order, and invoice references when they belong to the same customer" $ do
+      now <- getCurrentTime
+      runPaymentValidationSql $ do
+        (partyId, _, orderId, _, invoiceId, _) <- seedPaymentReferenceFixture now
+        result <- validatePaymentReferences partyId (Just orderId) (Just invoiceId)
+        liftIO $ result `shouldBe` Right ()
+
+    it "rejects missing or cross-party references before manual payments hit ambiguous DB errors" $ do
+      now <- getCurrentTime
+      runPaymentValidationSql $ do
+        (partyId, otherPartyId, orderId, otherOrderId, invoiceId, otherInvoiceId) <- seedPaymentReferenceFixture now
+        let assertInvalid expectedMessage validation = case validation of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid payment reference error, got " <> show value)
+        missingParty <- validatePaymentReferences (toSqlKey 999999) Nothing Nothing
+        missingOrder <- validatePaymentReferences partyId (Just (toSqlKey 999998)) Nothing
+        missingInvoice <- validatePaymentReferences partyId Nothing (Just (toSqlKey 999997))
+        orderMismatch <- validatePaymentReferences partyId (Just otherOrderId) (Just invoiceId)
+        invoiceMismatch <- validatePaymentReferences partyId (Just orderId) (Just otherInvoiceId)
+        otherPartyMismatch <- validatePaymentReferences otherPartyId (Just orderId) (Just invoiceId)
+        liftIO $ do
+          assertInvalid "partyId references an unknown party" missingParty
+          assertInvalid "orderId references an unknown service order" missingOrder
+          assertInvalid "invoiceId references an unknown invoice" missingInvoice
+          assertInvalid "orderId does not belong to partyId" orderMismatch
+          assertInvalid "invoiceId does not belong to partyId" invoiceMismatch
+          assertInvalid "orderId does not belong to partyId" otherPartyMismatch
+
   describe "validateSocialLimit" $ do
     it "keeps the default only when the caller omits the limit" $ do
       validateSocialLimit Nothing `shouldBe` Right 100
@@ -596,6 +630,13 @@ runMetaInboxSql action =
         initializeMetaInboxSchema
         action
 
+runPaymentValidationSql :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a
+runPaymentValidationSql action =
+    runSqlite ":memory:" $ do
+        rawExecute "PRAGMA foreign_keys = ON" []
+        runMigration M.migrateAll
+        action
+
 initializeMetaInboxSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializeMetaInboxSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
@@ -625,6 +666,112 @@ initializeMetaInboxSchema = do
         \CONSTRAINT \"unique_instagram_message\" UNIQUE (\"external_id\")\
         \)"
         []
+
+seedPaymentReferenceFixture
+  :: UTCTime
+  -> SqlPersistT (NoLoggingT (ResourceT IO))
+       ( Key M.Party
+       , Key M.Party
+       , Key M.ServiceOrder
+       , Key M.ServiceOrder
+       , Key M.Invoice
+       , Key M.Invoice
+       )
+seedPaymentReferenceFixture now = do
+  partyId <- insert M.Party
+    { M.partyLegalName = Nothing
+    , M.partyDisplayName = "Payment Fixture Party"
+    , M.partyIsOrg = False
+    , M.partyTaxId = Nothing
+    , M.partyPrimaryEmail = Nothing
+    , M.partyPrimaryPhone = Nothing
+    , M.partyWhatsapp = Nothing
+    , M.partyInstagram = Nothing
+    , M.partyEmergencyContact = Nothing
+    , M.partyNotes = Nothing
+    , M.partyCreatedAt = now
+    }
+  otherPartyId <- insert M.Party
+    { M.partyLegalName = Nothing
+    , M.partyDisplayName = "Other Payment Fixture Party"
+    , M.partyIsOrg = False
+    , M.partyTaxId = Nothing
+    , M.partyPrimaryEmail = Nothing
+    , M.partyPrimaryPhone = Nothing
+    , M.partyWhatsapp = Nothing
+    , M.partyInstagram = Nothing
+    , M.partyEmergencyContact = Nothing
+    , M.partyNotes = Nothing
+    , M.partyCreatedAt = now
+    }
+  catalogId <- insert M.ServiceCatalog
+    { M.serviceCatalogName = "Tracking"
+    , M.serviceCatalogKind = M.Recording
+    , M.serviceCatalogPricingModel = M.Hourly
+    , M.serviceCatalogDefaultRateCents = Just 10000
+    , M.serviceCatalogTaxBps = Nothing
+    , M.serviceCatalogCurrency = "USD"
+    , M.serviceCatalogBillingUnit = Just "hour"
+    , M.serviceCatalogActive = True
+    }
+  orderId <- insert M.ServiceOrder
+    { M.serviceOrderCustomerId = partyId
+    , M.serviceOrderArtistId = Nothing
+    , M.serviceOrderCatalogId = catalogId
+    , M.serviceOrderServiceKind = M.Recording
+    , M.serviceOrderTitle = Just "EP tracking"
+    , M.serviceOrderDescription = Nothing
+    , M.serviceOrderStatus = "quoted"
+    , M.serviceOrderPriceQuotedCents = Just 10000
+    , M.serviceOrderQuoteSentAt = Nothing
+    , M.serviceOrderScheduledStart = Nothing
+    , M.serviceOrderScheduledEnd = Nothing
+    , M.serviceOrderCreatedAt = now
+    }
+  otherOrderId <- insert M.ServiceOrder
+    { M.serviceOrderCustomerId = otherPartyId
+    , M.serviceOrderArtistId = Nothing
+    , M.serviceOrderCatalogId = catalogId
+    , M.serviceOrderServiceKind = M.Recording
+    , M.serviceOrderTitle = Just "Other session"
+    , M.serviceOrderDescription = Nothing
+    , M.serviceOrderStatus = "quoted"
+    , M.serviceOrderPriceQuotedCents = Just 8000
+    , M.serviceOrderQuoteSentAt = Nothing
+    , M.serviceOrderScheduledStart = Nothing
+    , M.serviceOrderScheduledEnd = Nothing
+    , M.serviceOrderCreatedAt = now
+    }
+  let today = utctDay now
+  invoiceId <- insert M.Invoice
+    { M.invoiceCustomerId = partyId
+    , M.invoiceIssueDate = today
+    , M.invoiceDueDate = today
+    , M.invoiceNumber = Nothing
+    , M.invoiceStatus = M.Draft
+    , M.invoiceCurrency = "USD"
+    , M.invoiceSubtotalCents = 10000
+    , M.invoiceTaxCents = 0
+    , M.invoiceTotalCents = 10000
+    , M.invoiceSriDocumentId = Nothing
+    , M.invoiceNotes = Nothing
+    , M.invoiceCreatedAt = now
+    }
+  otherInvoiceId <- insert M.Invoice
+    { M.invoiceCustomerId = otherPartyId
+    , M.invoiceIssueDate = today
+    , M.invoiceDueDate = today
+    , M.invoiceNumber = Nothing
+    , M.invoiceStatus = M.Draft
+    , M.invoiceCurrency = "USD"
+    , M.invoiceSubtotalCents = 8000
+    , M.invoiceTaxCents = 0
+    , M.invoiceTotalCents = 8000
+    , M.invoiceSriDocumentId = Nothing
+    , M.invoiceNotes = Nothing
+    , M.invoiceCreatedAt = now
+    }
+  pure (partyId, otherPartyId, orderId, otherOrderId, invoiceId, otherInvoiceId)
 
 fixtureAsset :: Text -> Text -> Maybe Text -> Maybe Text -> Text -> Maybe Text -> Asset
 fixtureAsset name category brand model owner notes =

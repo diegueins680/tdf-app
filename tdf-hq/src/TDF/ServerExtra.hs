@@ -1461,6 +1461,7 @@ paymentsServer user =
       let partyKey   = toSqlKey partyId
           mOrderKey  = toSqlKey <$> orderId
           mInvoiceKey= toSqlKey <$> invoiceId
+      either throwError pure =<< withPool (validatePaymentReferences partyKey mOrderKey mInvoiceKey)
       ent <- withPool $ do
         payId <- insert Payment
           { paymentInvoiceId   = mInvoiceKey
@@ -1517,6 +1518,29 @@ validateOptionalPositivePaymentReferenceId :: Text -> Maybe Int64 -> Either Serv
 validateOptionalPositivePaymentReferenceId _ Nothing = Right Nothing
 validateOptionalPositivePaymentReferenceId fieldName (Just rawId) =
   Just <$> validatePositivePaymentReferenceId fieldName rawId
+
+validatePaymentReferences
+  :: MonadIO m
+  => Key Party
+  -> Maybe (Key M.ServiceOrder)
+  -> Maybe (Key M.Invoice)
+  -> SqlPersistT m (Either ServerError ())
+validatePaymentReferences partyKey mOrderKey mInvoiceKey = do
+  mParty <- getEntity partyKey
+  mOrder <- join <$> traverse getEntity mOrderKey
+  mInvoice <- join <$> traverse getEntity mInvoiceKey
+  pure $
+    if isNothing mParty
+      then Left err400 { errBody = "partyId references an unknown party" }
+      else if isJust mOrderKey && isNothing mOrder
+        then Left err400 { errBody = "orderId references an unknown service order" }
+        else if isJust mInvoiceKey && isNothing mInvoice
+          then Left err400 { errBody = "invoiceId references an unknown invoice" }
+          else if maybe False ((/= partyKey) . M.serviceOrderCustomerId . entityVal) mOrder
+            then Left err400 { errBody = "orderId does not belong to partyId" }
+            else if maybe False ((/= partyKey) . M.invoiceCustomerId . entityVal) mInvoice
+              then Left err400 { errBody = "invoiceId does not belong to partyId" }
+              else Right ()
 
 validatePaymentConcept :: Text -> Either ServerError Text
 validatePaymentConcept rawConcept =
