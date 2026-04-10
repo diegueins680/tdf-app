@@ -24,7 +24,7 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
-import           Data.Char              (isAlphaNum, isSpace)
+import           Data.Char              (isAlphaNum, isAsciiLower, isDigit, isSpace)
 import           Data.List              (nub)
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import           Data.Int               (Int64)
@@ -1156,10 +1156,19 @@ isValidAdminEmailAddress candidate =
       not (T.null localPart)
         && not (T.null domain)
         && not (T.any isSpace candidate)
-        && not (T.isPrefixOf "." domain)
-        && not (T.isSuffixOf "." domain)
         && T.isInfixOf "." domain
+        && all isValidAdminEmailDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidAdminEmailDomainLabel :: Text -> Bool
+isValidAdminEmailDomainLabel label =
+  not (T.null label)
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidAdminEmailDomainChar label
+
+isValidAdminEmailDomainChar :: Char -> Bool
+isValidAdminEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
 dedupeAdminEmailRecipients :: [(Text, Text)] -> [(Text, Text)]
 dedupeAdminEmailRecipients = reverse . snd . foldl step (Set.empty, [])

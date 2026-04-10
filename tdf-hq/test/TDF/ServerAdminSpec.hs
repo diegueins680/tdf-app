@@ -26,6 +26,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             normalizeAdminEmailAddress "ada.example.com" `shouldBe` Nothing
             normalizeAdminEmailAddress "ada@example" `shouldBe` Nothing
             normalizeAdminEmailAddress "ada@ example.com" `shouldBe` Nothing
+            normalizeAdminEmailAddress "ada@example..com" `shouldBe` Nothing
+            normalizeAdminEmailAddress "ada@-example.com" `shouldBe` Nothing
+            normalizeAdminEmailAddress "ada@example-.com" `shouldBe` Nothing
 
     describe "normalizeAdminEmailBodyLines" $ do
         it "trims lines and drops blanks" $
@@ -37,6 +40,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             dedupeAdminEmailRecipients
                 [ ("Ada", " ADA@example.com ")
                 , ("Broken", "not-an-email")
+                , ("Broken domain", "ada@example..com")
                 , ("Ignored duplicate", "ada@example.com")
                 , ("Linus", "linus@example.com")
                 , ("Missing dot", "linus@example")
