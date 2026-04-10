@@ -860,6 +860,9 @@ privateTrialsServer user@AuthedUser{..} =
           teacherFree <- teacherAvailableExceptTrialRequest teacherK startAt endAt rid
           unless teacherFree $
             liftIO $ throwIO err409 { errBody = "Profesor no disponible en ese horario" }
+          roomFree <- roomAvailable roomK startAt endAt
+          unless roomFree $
+            liftIO $ throwIO err409 { errBody = "Sala no disponible en ese horario" }
           let assignment = TrialAssignment
                 { trialAssignmentRequestId = rid
                 , trialAssignmentTeacherId = teacherK

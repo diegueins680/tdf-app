@@ -308,6 +308,45 @@ spec = do
         Right _ ->
           expectationFailure "Expected overlapping teacher schedule to be rejected"
 
+    it "rejects scheduling a trial when the room is already occupied by another class" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        scheduledTeacherPartyId <- insertPartyFixture "Teacher One" now
+        blockingTeacherPartyId <- insertPartyFixture "Teacher Two" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        otherStudentPartyId <- insertPartyFixture "Student Two" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        _ <- insert Trials.ClassSession
+          { Trials.classSessionStudentId = otherStudentPartyId
+          , Trials.classSessionTeacherId = blockingTeacherPartyId
+          , Trials.classSessionSubjectId = subjectKey
+          , Trials.classSessionStartAt = addUTCTime 900 scheduleStart
+          , Trials.classSessionEndAt = addUTCTime 900 scheduleEnd
+          , Trials.classSessionRoomId = roomResourceId
+          , Trials.classSessionBookingId = Nothing
+          , Trials.classSessionAttended = False
+          , Trials.classSessionPurchaseId = Nothing
+          , Trials.classSessionConsumedMinutes = 60
+          , Trials.classSessionNotes = Nothing
+          }
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey scheduledTeacherPartyId))
+            scheduleStart
+            scheduleEnd
+            (fromIntegral (fromSqlKey roomResourceId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Sala no disponible en ese horario"
+        Right _ ->
+          expectationFailure "Expected overlapping room schedule to be rejected"
+
     it "allows rescheduling the same trial request without conflicting with its own existing assignment" $ do
       (response, assignment, newStart, newEnd) <- runTrialsInMemory $ do
         now <- liftIO getCurrentTime
@@ -474,6 +513,32 @@ initializeTrialsSchema = do
     \\"purchase_id\" INTEGER NULL,\
     \\"consumed_minutes\" INTEGER NOT NULL,\
     \\"notes\" VARCHAR NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"booking\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"title\" VARCHAR NOT NULL,\
+    \\"service_order_id\" INTEGER NULL,\
+    \\"party_id\" INTEGER NULL,\
+    \\"service_type\" VARCHAR NULL,\
+    \\"engineer_party_id\" INTEGER NULL,\
+    \\"engineer_name\" VARCHAR NULL,\
+    \\"starts_at\" TIMESTAMP NOT NULL,\
+    \\"ends_at\" TIMESTAMP NOT NULL,\
+    \\"status\" VARCHAR NOT NULL,\
+    \\"created_by\" INTEGER NULL,\
+    \\"notes\" VARCHAR NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"booking_resource\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"booking_id\" INTEGER NOT NULL,\
+    \\"resource_id\" INTEGER NOT NULL,\
+    \\"role\" VARCHAR NOT NULL,\
+    \CONSTRAINT \"unique_booking_res\" UNIQUE (\"booking_id\", \"resource_id\", \"role\")\
     \)"
     []
   rawExecute
