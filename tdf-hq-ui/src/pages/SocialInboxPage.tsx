@@ -434,7 +434,7 @@ interface SocialMessageDialogProps {
   onRefresh: () => void;
 }
 
-const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRefresh }: SocialMessageDialogProps) => {
+export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRefresh }: SocialMessageDialogProps) => {
   const open = Boolean(selection);
   const channel = selection?.channel;
   const msg = selection?.message;
@@ -978,11 +978,6 @@ const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClose, onRe
         <Button onClick={onClose} variant="outlined">
           {reviewMode ? 'Close' : 'Cerrar'}
         </Button>
-        {reviewMode && nativeClientUrl && replyTextValue && (
-          <Button component="a" href={nativeClientUrl} target="_blank" rel="noreferrer" variant="outlined">
-            Open native client
-          </Button>
-        )}
         <Tooltip
           title={
             reviewMode

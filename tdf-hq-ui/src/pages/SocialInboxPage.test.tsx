@@ -37,7 +37,7 @@ jest.unstable_mockModule('../services/instagramAuth', () => ({
   getStoredInstagramResult: () => getStoredInstagramResultMock(),
 }));
 
-const { default: SocialInboxPage } = await import('./SocialInboxPage');
+const { default: SocialInboxPage, SocialMessageDialog } = await import('./SocialInboxPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -92,11 +92,44 @@ const renderPage = async (container: HTMLElement, initialEntry = '/social/inbox?
   };
 };
 
+const renderDialog = async (container: HTMLElement, selection: { channel: 'instagram'; message: SocialMessage }) => {
+  let root: Root | null = createRoot(container);
+
+  await act(async () => {
+    root?.render(
+      <SocialMessageDialog
+        selection={selection}
+        reviewMode
+        activeAsset={null}
+        onClose={() => undefined}
+        onRefresh={() => undefined}
+      />,
+    );
+    await flushPromises();
+    await flushPromises();
+  });
+
+  return {
+    cleanup: async () => {
+      if (!root) return;
+      await act(async () => {
+        root?.unmount();
+        await flushPromises();
+      });
+      root = null;
+      document.body.removeChild(container);
+    },
+  };
+};
+
 const countInstagramSetupLinks = (root: ParentNode) =>
   root.querySelectorAll('a[href="/social/instagram?review=1"]').length;
 
 const countButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
+
+const countInteractiveElementsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('button, a')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
 
 const getLinkByText = (root: ParentNode, labelText: string) => {
   const link = Array.from(root.querySelectorAll('a')).find((candidate) => (candidate.textContent ?? '').trim() === labelText);
@@ -412,6 +445,28 @@ describe('SocialInboxPage', () => {
         'Showing only channels with messages in this view. No messages right now: Facebook, WhatsApp.',
       );
       expect(container.textContent).not.toContain('No messages for this filter.');
+    });
+
+    await cleanup();
+  });
+
+  it('keeps a single native-client CTA in the review dialog once a reply already exists', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        repliedAt: '2030-01-03T03:04:05.000Z',
+        replyText: 'Done.',
+      }),
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Reply from app UI');
+      expect(document.body.textContent).toContain(
+        'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
+      );
+      expect(countInteractiveElementsByText(document.body, 'Open native client')).toBe(1);
     });
 
     await cleanup();
