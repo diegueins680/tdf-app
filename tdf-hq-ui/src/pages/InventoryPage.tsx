@@ -220,9 +220,7 @@ export default function InventoryPage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Equipo</TableCell>
-                  <TableCell>Categoría</TableCell>
                   <TableCell>Estado</TableCell>
-                  <TableCell>Condición</TableCell>
                   <TableCell>Ubicación</TableCell>
                   <TableCell align="right">Acciones</TableCell>
                 </TableRow>
@@ -233,10 +231,20 @@ export default function InventoryPage() {
 
                   return (
                     <TableRow key={asset.assetId} hover>
-                      <TableCell>{asset.name}</TableCell>
-                      <TableCell>{asset.category}</TableCell>
+                      <TableCell>
+                        <Stack spacing={0.25}>
+                          <Typography variant="body2" fontWeight={700}>
+                            {asset.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {asset.category}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Condición: {asset.condition ?? '—'}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
                       <TableCell>{asset.status}</TableCell>
-                      <TableCell>{asset.condition ?? '—'}</TableCell>
                       <TableCell>{asset.location ?? '—'}</TableCell>
                       <TableCell align="right">
                         <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>

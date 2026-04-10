@@ -172,6 +172,25 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('keeps category and condition inside the equipment cell instead of restoring extra detail columns', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(hasTableHeader(container, 'Equipo')).toBe(true);
+        expect(hasTableHeader(container, 'Categoría')).toBe(false);
+        expect(hasTableHeader(container, 'Condición')).toBe(false);
+        expect(container.textContent).toContain('Neumann U87');
+        expect(container.textContent).toContain('Micrófono');
+        expect(container.textContent).toContain('Condición: Excelente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows only the movement action that matches each asset status instead of keeping both check-in and check-out controls per row', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({ assetId: 'asset-1', name: 'Activo Uno', status: 'Active' }),
